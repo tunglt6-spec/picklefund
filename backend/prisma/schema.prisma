@@ -1,0 +1,471 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// CLUBS (Multi-tenant root)
+// ============================================================
+model Club {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(200)
+  code         String   @unique @db.VarChar(20)
+  logoUrl      String?  @map("logo_url")
+  address      String?
+  contactEmail String?  @map("contact_email") @db.VarChar(255)
+  contactPhone String?  @map("contact_phone") @db.VarChar(20)
+  status       ClubStatus @default(active)
+  settings     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  users             User[]
+  members           Member[]
+  fundPeriods       FundPeriod[]
+  attendanceSessions AttendanceSession[]
+  attendanceRecords AttendanceRecord[]
+  contributions     FundContribution[]
+  expenses          LivingExpense[]
+  expenseCategories ExpenseCategory[]
+  personalReceipts  PersonalReceipt[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  minigames         Minigame[]
+
+  @@map("clubs")
+}
+
+enum ClubStatus {
+  active
+  suspended
+  deleted
+}
+
+// ============================================================
+// USERS (Auth accounts)
+// ============================================================
+model User {
+  id           String   @id @default(uuid())
+  clubId       String?  @map("club_id")
+  username     String   @unique @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash")
+  role         Role     @default(CLUB_MEMBER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  club    Club?   @relation(fields: [clubId], references: [id])
+  member  Member?
+  auditLogs AuditLog[]
+  createdFundPeriods    FundPeriod[]        @relation("FundPeriodCreatedBy")
+  createdSessions       AttendanceSession[] @relation("SessionCreatedBy")
+  createdContributions  FundContribution[]  @relation("ContributionCreatedBy")
+  createdExpenses       LivingExpense[]     @relation("ExpenseCreatedBy")
+  refreshTokens RefreshToken[]
+  totpSecret    String?  @map("totp_secret")
+  totpEnabled   Boolean  @default(false) @map("totp_enabled")
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  CLUB_ADMIN
+  CLUB_TREASURER
+  CLUB_MEMBER
+}
+
+// ============================================================
+// MEMBERS (Club member profiles)
+// ============================================================
+model Member {
+  id        String       @id @default(uuid())
+  clubId    String       @map("club_id")
+  userId    String?      @unique @map("user_id")
+  fullName  String       @map("full_name") @db.VarChar(200)
+  phone     String?      @db.VarChar(20)
+  email     String?      @db.VarChar(255)
+  joinDate  DateTime     @map("join_date") @db.Date
+  status    MemberStatus @default(active)
+  avatarUrl String?      @map("avatar_url")
+  notes     String?
+  isDeleted Boolean      @default(false) @map("is_deleted")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  club              Club               @relation(fields: [clubId], references: [id])
+  user              User?              @relation(fields: [userId], references: [id])
+  contributions     FundContribution[]
+  attendanceRecords AttendanceRecord[]
+  personalReceipts  PersonalReceipt[]
+  minigames         MinigameParticipant[]
+  teamsAsPlayer1    MinigameTeam[]     @relation("TeamPlayer1")
+  teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
+
+  @@map("members")
+}
+
+enum MemberStatus {
+  active
+  inactive
+  left
+}
+
+// ============================================================
+// FUND PERIODS (Quarterly cycles)
+// ============================================================
+model FundPeriod {
+  id                 String           @id @default(uuid())
+  clubId             String           @map("club_id")
+  name               String           @db.VarChar(100)
+  startDate          DateTime         @map("start_date") @db.Date
+  endDate            DateTime         @map("end_date") @db.Date
+  contributionAmount Decimal          @map("contribution_amount") @db.Decimal(15, 2)
+  totalSessions      Int              @default(0) @map("total_sessions")
+  status             FundPeriodStatus @default(draft)
+  notes              String?
+  finalizedAt        DateTime?        @map("finalized_at")
+  createdById        String           @map("created_by")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  club               Club               @relation(fields: [clubId], references: [id])
+  createdBy          User               @relation("FundPeriodCreatedBy", fields: [createdById], references: [id])
+  contributions      FundContribution[]
+  attendanceSessions AttendanceSession[]
+  expenses           LivingExpense[]
+  personalReceipts   PersonalReceipt[]
+
+  @@map("fund_periods")
+}
+
+enum FundPeriodStatus {
+  draft
+  active
+  closed
+  finalized
+}
+
+// ============================================================
+// ATTENDANCE SESSIONS (Each play session)
+// ============================================================
+model AttendanceSession {
+  id             String        @id @default(uuid())
+  clubId         String        @map("club_id")
+  fundPeriodId   String        @map("fund_period_id")
+  sessionDate    DateTime      @map("session_date") @db.Date
+  startTime      String?       @map("start_time") @db.VarChar(5)
+  endTime        String?       @map("end_time") @db.VarChar(5)
+  courtFee       Decimal       @default(0) @map("court_fee") @db.Decimal(15, 2)
+  courtName      String?       @map("court_name") @db.VarChar(200)
+  status         SessionStatus @default(scheduled)
+  notes          String?
+  createdById    String        @map("created_by")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  club              Club               @relation(fields: [clubId], references: [id])
+  fundPeriod        FundPeriod         @relation(fields: [fundPeriodId], references: [id])
+  createdBy         User               @relation("SessionCreatedBy", fields: [createdById], references: [id])
+  attendanceRecords AttendanceRecord[]
+  expenses          LivingExpense[]
+
+  @@map("attendance_sessions")
+}
+
+enum SessionStatus {
+  scheduled
+  completed
+  cancelled
+}
+
+// ============================================================
+// ATTENDANCE RECORDS (Per-member attendance)
+// ============================================================
+model AttendanceRecord {
+  id                  String           @id @default(uuid())
+  clubId              String           @map("club_id")
+  attendanceSessionId String           @map("attendance_session_id")
+  memberId            String           @map("member_id")
+  status              AttendanceStatus @default(ABSENT)
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  club              Club              @relation(fields: [clubId], references: [id])
+  attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id])
+  member            Member            @relation(fields: [memberId], references: [id])
+
+  @@unique([attendanceSessionId, memberId])
+  @@map("attendance_records")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
+
+// ============================================================
+// FUND CONTRIBUTIONS (Member payments)
+// ============================================================
+model FundContribution {
+  id            String   @id @default(uuid())
+  clubId        String   @map("club_id")
+  fundPeriodId  String   @map("fund_period_id")
+  memberId      String   @map("member_id")
+  amount        Decimal  @db.Decimal(15, 2)
+  paymentDate   DateTime @map("payment_date") @db.Date
+  paymentMethod String   @default("bank_transfer") @map("payment_method") @db.VarChar(50)
+  isConfirmed   Boolean  @default(false) @map("is_confirmed")
+  notes         String?
+  createdById   String   @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  club       Club       @relation(fields: [clubId], references: [id])
+  fundPeriod FundPeriod @relation(fields: [fundPeriodId], references: [id])
+  member     Member     @relation(fields: [memberId], references: [id])
+  createdBy  User       @relation("ContributionCreatedBy", fields: [createdById], references: [id])
+
+  @@map("fund_contributions")
+}
+
+// ============================================================
+// EXPENSE CATEGORIES
+// ============================================================
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  name      String   @db.VarChar(100)
+  icon      String?  @db.VarChar(10)
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club     Club           @relation(fields: [clubId], references: [id])
+  expenses LivingExpense[]
+
+  @@map("expense_categories")
+}
+
+// ============================================================
+// LIVING EXPENSES (Chi phí sinh hoạt)
+// ============================================================
+model LivingExpense {
+  id                  String         @id @default(uuid())
+  clubId              String         @map("club_id")
+  fundPeriodId        String         @map("fund_period_id")
+  attendanceSessionId String?        @map("attendance_session_id")
+  categoryId          String?        @map("category_id")
+  amount              Decimal        @db.Decimal(15, 2)
+  description         String
+  allocationRule      AllocationRule @map("allocation_rule")
+  expenseDate         DateTime       @map("expense_date") @db.Date
+  receiptUrl          String?        @map("receipt_url")
+  createdById         String         @map("created_by")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  club              Club               @relation(fields: [clubId], references: [id])
+  fundPeriod        FundPeriod         @relation(fields: [fundPeriodId], references: [id])
+  attendanceSession AttendanceSession? @relation(fields: [attendanceSessionId], references: [id])
+  category          ExpenseCategory?   @relation(fields: [categoryId], references: [id])
+  createdBy         User               @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+
+  @@map("living_expenses")
+}
+
+enum AllocationRule {
+  ATTENDANCE
+  EQUAL
+  PRESENT_ONLY
+  FUND_ONLY
+}
+
+// ============================================================
+// PERSONAL RECEIPTS (Snapshot per member per period)
+// ============================================================
+model PersonalReceipt {
+  id              String   @id @default(uuid())
+  clubId          String   @map("club_id")
+  fundPeriodId    String   @map("fund_period_id")
+  memberId        String   @map("member_id")
+  totalSessions   Int      @map("total_sessions")
+  attendedSessions Int     @map("attended_sessions")
+  attendanceRate  Decimal  @map("attendance_rate") @db.Decimal(5, 2)
+  amountPaid      Decimal  @map("amount_paid") @db.Decimal(15, 2)
+  courtCost       Decimal  @map("court_cost") @db.Decimal(15, 2)
+  livingCost      Decimal  @map("living_cost") @db.Decimal(15, 2)
+  totalCost       Decimal  @map("total_cost") @db.Decimal(15, 2)
+  balance         Decimal  @db.Decimal(15, 2)
+  needToPay       Decimal  @default(0) @map("need_to_pay") @db.Decimal(15, 2)
+  snapshotAt      DateTime @default(now()) @map("snapshot_at")
+
+  club       Club       @relation(fields: [clubId], references: [id])
+  fundPeriod FundPeriod @relation(fields: [fundPeriodId], references: [id])
+  member     Member     @relation(fields: [memberId], references: [id])
+
+  @@unique([fundPeriodId, memberId])
+  @@map("personal_receipts")
+}
+
+// ============================================================
+// AUDIT LOGS
+// ============================================================
+model AuditLog {
+  id        String   @id @default(uuid())
+  clubId    String?  @map("club_id")
+  userId    String   @map("user_id")
+  action    String   @db.VarChar(50)
+  resource  String   @db.VarChar(100)
+  resourceId String? @map("resource_id")
+  detail    String?
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club Club? @relation(fields: [clubId], references: [id])
+  user User  @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+model Notification {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  title     String   @db.VarChar(200)
+  body      String
+  type      String   @db.VarChar(50)
+  isRead    Boolean  @default(false) @map("is_read")
+  targetUserId String? @map("target_user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club Club @relation(fields: [clubId], references: [id])
+
+  @@map("notifications")
+}
+
+// ============================================================
+// REFRESH TOKENS
+// ============================================================
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ============================================================
+// MINIGAME (Tournament management)
+// ============================================================
+model Minigame {
+  id          String          @id @default(uuid())
+  clubId      String          @map("club_id")
+  name        String          @db.VarChar(200)
+  format      MinigameFormat
+  status      MinigameStatus  @default(DRAFT)
+  settings    Json?
+  scheduledAt DateTime?       @map("scheduled_at")
+  startedAt   DateTime?       @map("started_at")
+  endedAt     DateTime?       @map("ended_at")
+  createdById String          @map("created_by")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  club         Club                  @relation(fields: [clubId], references: [id])
+  teams        MinigameTeam[]
+  matches      MinigameMatch[]
+  participants MinigameParticipant[]
+
+  @@map("minigames")
+}
+
+enum MinigameFormat {
+  RANDOM_DOUBLES
+  FIXED_DOUBLES_ROUND_ROBIN
+  GROUP_STAGE
+  KNOCKOUT
+  SINGLES
+}
+
+enum MinigameStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model MinigameParticipant {
+  id         String   @id @default(uuid())
+  minigameId String   @map("minigame_id")
+  memberId   String   @map("member_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  minigame Minigame @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  member   Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([minigameId, memberId])
+  @@map("minigame_participants")
+}
+
+model MinigameTeam {
+  id         String   @id @default(uuid())
+  minigameId String   @map("minigame_id")
+  name       String   @db.VarChar(100)
+  player1Id  String   @map("player1_id")
+  player2Id  String?  @map("player2_id")
+  wins       Int      @default(0)
+  losses     Int      @default(0)
+  points     Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  minigame     Minigame       @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  player1      Member         @relation("TeamPlayer1", fields: [player1Id], references: [id])
+  player2      Member?        @relation("TeamPlayer2", fields: [player2Id], references: [id])
+  matchesAsA   MinigameMatch[] @relation("MatchTeamA")
+  matchesAsB   MinigameMatch[] @relation("MatchTeamB")
+
+  @@map("minigame_teams")
+}
+
+model MinigameMatch {
+  id         String      @id @default(uuid())
+  minigameId String      @map("minigame_id")
+  teamAId    String?     @map("team_a_id")
+  teamBId    String?     @map("team_b_id")
+  scoreA     Int?        @map("score_a")
+  scoreB     Int?        @map("score_b")
+  winnerId   String?     @map("winner_id")
+  round      Int         @default(1)
+  courtNo    Int?        @map("court_no")
+  status     MatchStatus @default(PENDING)
+  playedAt   DateTime?   @map("played_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  minigame Minigame      @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  teamA    MinigameTeam? @relation("MatchTeamA", fields: [teamAId], references: [id])
+  teamB    MinigameTeam? @relation("MatchTeamB", fields: [teamBId], references: [id])
+
+  @@map("minigame_matches")
+}
+
+enum MatchStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

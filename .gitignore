@@ -1,0 +1,15 @@
+# Environment files — NEVER commit
+.env
+.env.*
+!.env.example
+
+# SSL certs
+nginx/ssl/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db

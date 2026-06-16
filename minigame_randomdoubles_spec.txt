@@ -1,0 +1,1497 @@
+
+
+🏓
+PICKLEFUND – MODULE MINIGAME v2
+Minigame Đánh Đôi Ngẫu Nhiên · Random Doubles
+Tài Liệu Nâng Cấp Kiến Trúc & Triển Khai – Feature Upgrade Spec v2.0
+
+
+Phiên bản
+v2.0 – 16/06/2026
+Module
+Minigame / Giải Đấu Nội Bộ – Chế Độ: RANDOM_DOUBLES
+Chế độ MVP
+Minigame Đánh Đôi Ngẫu Nhiên (mở rộng thêm Singles, Fixed Doubles, Knockout…)
+Stack
+React 18 + TypeScript + TailwindCSS + NestJS + Prisma + PostgreSQL
+DB thay đổi
+8 bảng mới/refactor (MiniGames + 7 tables mới)
+API
+30+ endpoint – namespace /minigames
+Frontend
+10 màn hình + Dashboard "Tournament Control Center"
+Multi-tenant
+club_id bắt buộc từ JWT, mọi query WHERE club_id = tokenClubId
+
+Tài liệu này thay thế hoàn toàn spec v1. Thiết kế kiến trúc mở (format_type) cho phép sau này bổ sung Đấu Đơn, Đấu Đôi Cố Định, Đấu Đội, Vòng Bảng, Knockout, League Season mà không đập lại nền móng.
+
+1. PHÂN TÍCH NGHIỆP VỤ – RANDOM DOUBLES
+1.1 Vấn đề của mô hình 1 vs 1 cũ
+Không phản ánh thực tế Pickleball – môn thể thao phổ biến nhất ở dạng đánh đôi
+Không có khái niệm cặp đôi → không thống kê ghép cặp, không cân bằng trình độ
+Mỗi trận chỉ 2 người → sân bị bỏ trống, không hiệu quả
+Không hỗ trợ người ngồi ngoài (sit-out) → không công bằng khi số người lẻ
+Không có khái niệm Round/Lượt → không tracking tiến độ buổi đánh
+
+1.2 Mô hình mới – Random Doubles
+Khái niệm
+Mô tả
+Ví dụ
+Minigame
+Toàn bộ giải đấu một buổi/kỳ
+Minigame Q2/2026
+Round (Lượt)
+Một lần bốc thăm tạo N trận
+Lượt 3 – 3 trận – 2 người ngoài
+Match
+1 trận 4 người, 2 cặp 2 vs 2
+Trận 01: A+B vs C+D
+Team
+2 người trong cùng cặp
+Team 1: Nguyễn A + Trần B
+Sit-out
+Người ngồi ngoài lượt này
+Hoàng E, Đặng F (ưu tiên lượt sau)
+Standings
+Bảng XH cá nhân tích lũy qua các lượt
+Nguyễn A: 9 trận, 7 thắng, 21đ
+PairStats
+Thống kê 2 người hay ghép cặp cùng nhau
+A+B: 4 lần, 3 thắng, 75%
+OpponentStats
+Thống kê 2 người hay gặp nhau đối đầu
+A vs C: 5 lần, A thắng 3, C thắng 2
+
+1.3 Kiến trúc mở – format_type
+Thiết kế ngay từ đầu với format_type để sau không phải refactor DB/API/UI.
+
+format_type
+Tên hiển thị
+Trận gồm
+MVP?
+RANDOM_DOUBLES
+Đánh Đôi Ngẫu Nhiên
+4 người / 2 cặp / random
+✅ Triển khai ngay
+SINGLES
+Đấu Đơn
+2 người / 1 vs 1
+❌ Phase 2
+FIXED_DOUBLES
+Đấu Đôi Cố Định
+4 người / cặp đăng ký trước
+❌ Phase 2
+TEAM
+Đấu Đội
+N người / 2 đội cố định
+❌ Phase 3
+GROUP_STAGE
+Vòng Bảng
+4–8 người / bảng đấu
+❌ Phase 3
+KNOCKOUT
+Đấu Loại Trực Tiếp
+2 người hoặc cặp / knock-out
+❌ Phase 3
+LEAGUE_SEASON
+Giải Mùa
+Nhiều vòng / tích lũy cả mùa
+❌ Phase 4
+
+2. USER FLOW – RANDOM DOUBLES
+2.1 Flow tổng quan
+Bước
+Actor
+Hành động
+Kết quả
+1
+Club Admin
+Tạo Minigame mới, chọn format_type=RANDOM_DOUBLES, cấu hình điểm
+Minigame status: DRAFT
+2
+Club Admin
+Thêm thành viên tham gia (chọn từ danh sách members)
+Participants saved
+3
+Club Admin
+Nhấn "Bốc Thăm Lượt Mới", chọn draw_mode
+Round tạo, N trận hiển thị
+4
+Admin/Treasurer
+Các trận diễn ra ngoài sân
+Thực tế
+5
+Admin/Treasurer
+Nhập kết quả từng trận (team1_score vs team2_score)
+Điểm tự động tính cho 4 người
+6
+Club Admin
+Lặp lại Bước 3–5 cho các lượt tiếp theo
+Bảng XH cập nhật real-time
+7
+Tất cả
+Xem Dashboard, Bảng XH, Thống kê cặp
+Minh bạch, công bằng
+8
+Club Admin
+Kết thúc Minigame
+Status: COMPLETED
+
+2.2 Flow chi tiết – Bốc thăm lượt
+Club Admin nhấn [Bốc Thăm Lượt Mới]
+  ↓ Chọn draw_mode: RANDOM | FAIR_ROTATION | BALANCED_SKILL
+  ↓ POST /minigames/:id/draw-round
+  ↓ Backend:
+       1. Tổng hợp participants (status=ACTIVE)
+       2. Sắp xếp theo draw_mode (random / fair / balanced)
+       3. Lấy floor(n/4)*4 người → tạo matches
+       4. Phần dư → sit_out (ghi vào MiniGameRoundSitOuts)
+       5. INSERT MiniGameRound + MiniGameMatches + MiniGameMatchPlayers
+  ↓ Response: round info + matches[team1[2 players], team2[2 players]] + sitOuts[]
+  ↓ UI hiển thị Match Cards 2 vs 2
+
+2.3 Flow nhập kết quả
+Admin nhấn [Nhập KQ] trên Match Card
+  ↓ Drawer mở: Team 1 [ -  11  + ]  vs  Team 2 [ -  7  + ]
+  ↓ PUT /minigames/:id/matches/:matchId/result { team1Score:11, team2Score:7 }
+  ↓ Backend transaction:
+       1. Xác định winning_team (team với score cao hơn)
+       2. UPDATE MiniGameMatches (team1_score, team2_score, winning_team, status=COMPLETED)
+       3. UPDATE MiniGameMatchPlayers (is_winner, score_for, score_against, ranking_points)
+       4. UPSERT MiniGameStandings x4 người (played+1, won/lost+1, points,...)
+       5. UPSERT MiniGamePairStats (Team1 pair & Team2 pair)
+       6. UPSERT MiniGameOpponentStats (Team1[0] vs Team2[0,1], Team1[1] vs Team2[0,1])
+       7. INSERT MiniGameAuditLog
+  ↓ Response: { result, standings_delta }
+  ↓ UI toast: "Team 1 thắng | A+3đ B+3đ C+0đ D+0đ"
+
+3. DATABASE SCHEMA – 8 BẢNG
+3.1 Sơ đồ quan hệ
+Bảng
+Quan hệ
+Ghi chú
+minigames
+clubs, users(created_by)
+Bổ sung format_type, draw_mode
+minigame_participants
+minigames, members
+Ai tham gia giải
+minigame_rounds
+minigames
+Mỗi lần bốc thăm = 1 round
+minigame_round_sitouts
+rounds, members
+Người ngồi ngoài trong round
+minigame_matches
+rounds, minigames
+1 trận = 4 người, team_score
+minigame_match_players
+matches, members
+4 dòng/trận lưu kết quả từng người
+minigame_standings
+minigames, members
+Bảng XH cá nhân tích lũy
+minigame_pair_stats
+minigames, members×2
+Thống kê ghép cặp A+B
+minigame_opponent_stats
+minigames, members×2
+Thống kê đối đầu A vs B
+
+3.2 Bảng minigames (cập nhật)
+Cột mới/thay đổi
+Kiểu
+Default
+Mô tả
+format_type
+VARCHAR(30)
+RANDOM_DOUBLES
+RANDOM_DOUBLES | SINGLES | FIXED_DOUBLES | TEAM | GROUP_STAGE | KNOCKOUT
+draw_mode
+VARCHAR(30)
+FAIR_ROTATION
+RANDOM | FAIR_ROTATION | BALANCED_SKILL
+allow_draw
+BOOLEAN
+false
+Cho phép hòa
+win_points
+INT
+3
+Điểm khi thắng
+draw_points
+INT
+1
+Điểm khi hòa
+loss_points
+INT
+0
+Điểm khi thua
+
+3.3 Bảng minigame_rounds
+Cột
+Kiểu
+Ràng buộc
+Mô tả
+id
+UUID
+PK
+
+club_id
+UUID
+NOT NULL, FK→clubs
+TENANT KEY
+minigame_id
+UUID
+NOT NULL, FK→minigames
+
+round_number
+INT
+NOT NULL
+Số thứ tự lượt (1, 2, 3…)
+draw_mode
+VARCHAR(30)
+NOT NULL
+Chế độ bốc thăm của lượt này
+total_players
+INT
+DEFAULT 0
+Số người chơi trong lượt
+total_matches
+INT
+DEFAULT 0
+Số trận trong lượt
+sit_out_count
+INT
+DEFAULT 0
+Số người ngồi ngoài
+status
+VARCHAR(20)
+DEFAULT DRAFT
+DRAFT|ACTIVE|LOCKED|COMPLETED
+created_by
+UUID
+NOT NULL, FK→users
+
+created_at
+TIMESTAMPTZ
+DEFAULT NOW()
+
+updated_at
+TIMESTAMPTZ
+DEFAULT NOW()
+
+
+3.4 Bảng minigame_matches (refactor)
+Cột
+Kiểu
+Ràng buộc
+Mô tả
+id
+UUID
+PK
+
+club_id
+UUID
+NOT NULL, FK→clubs
+TENANT KEY
+minigame_id
+UUID
+NOT NULL, FK→minigames
+
+round_id
+UUID
+NOT NULL, FK→minigame_rounds
+
+match_number
+INT
+NOT NULL
+Số thứ tự trận trong round
+team1_score
+INT
+NULL
+Điểm team 1 (nhập khi xong)
+team2_score
+INT
+NULL
+Điểm team 2
+winning_team
+INT
+NULL
+1 hoặc 2 hoặc NULL (hòa)
+match_date
+DATE
+NULL
+Ngày thi đấu
+status
+VARCHAR(20)
+DEFAULT PENDING
+PENDING|PLAYING|COMPLETED|CANCELLED
+note
+TEXT
+NULL
+
+entered_by
+UUID
+NULL, FK→users
+
+created_at
+TIMESTAMPTZ
+DEFAULT NOW()
+
+updated_at
+TIMESTAMPTZ
+DEFAULT NOW()
+
+
+3.5 Bảng minigame_match_players
+Đây là bảng cốt lõi – mỗi trận có đúng 4 dòng, mỗi dòng = 1 người trong trận.
+
+Cột
+Kiểu
+Ràng buộc
+Mô tả
+id
+UUID
+PK
+
+club_id
+UUID
+NOT NULL, FK→clubs
+TENANT KEY
+minigame_id
+UUID
+NOT NULL
+
+round_id
+UUID
+NOT NULL
+
+match_id
+UUID
+NOT NULL, FK→minigame_matches
+
+member_id
+UUID
+NOT NULL, FK→members
+
+team_number
+INT
+NOT NULL
+1 hoặc 2
+position_in_team
+INT
+NOT NULL
+1 hoặc 2 (vị trí trong team)
+is_winner
+BOOLEAN
+NULL
+NULL khi chưa có kết quả
+score_for
+INT
+NULL
+Điểm team của người này ghi được
+score_against
+INT
+NULL
+Điểm team đối thủ ghi được
+ranking_points
+INT
+NULL
+Điểm xếp hạng được cộng
+created_at
+TIMESTAMPTZ
+DEFAULT NOW()
+
+
+3.6 Bảng minigame_standings
+Cột
+Kiểu
+Mô tả
+id, club_id, minigame_id, member_id
+UUID
+Composite unique (minigame_id, member_id)
+played
+INT DEFAULT 0
+Số trận đã chơi
+won / drawn / lost
+INT DEFAULT 0
+
+points_for
+INT DEFAULT 0
+Tổng score team mình qua các trận
+points_against
+INT DEFAULT 0
+Tổng score team đối thủ
+point_difference
+INT GENERATED
+points_for - points_against
+ranking_points
+INT DEFAULT 0
+Tổng điểm XH (won×3 + drawn×1)
+win_rate
+DECIMAL(5,2)
+won / played * 100, cập nhật sau mỗi trận
+sit_out_count
+INT DEFAULT 0
+Số lần ngồi ngoài
+rank
+INT NULL
+Xếp hạng (cập nhật sau mỗi lần nhập KQ)
+updated_at
+TIMESTAMPTZ
+
+
+3.7 Bảng minigame_pair_stats
+Cột
+Kiểu
+Mô tả
+id, club_id, minigame_id
+UUID
+
+member_a_id, member_b_id
+UUID
+member_a_id < member_b_id (để tránh duplicate A+B và B+A)
+paired_count
+INT
+Số lần được ghép cùng cặp
+won_together, lost_together, drawn_together
+INT
+Kết quả khi ghép cặp
+win_rate_together
+DECIMAL(5,2)
+won_together / paired_count * 100
+
+3.8 SQL Migration
+-- Migration: minigame_v2_random_doubles
+
+-- 1. Cập nhật bảng minigames
+ALTER TABLE minigames
+  ADD COLUMN format_type VARCHAR(30) NOT NULL DEFAULT 'RANDOM_DOUBLES',
+  ADD COLUMN draw_mode   VARCHAR(30) NOT NULL DEFAULT 'FAIR_ROTATION',
+  ADD COLUMN win_points  INT         NOT NULL DEFAULT 3,
+  ADD COLUMN draw_points INT         NOT NULL DEFAULT 1,
+  ADD COLUMN loss_points INT         NOT NULL DEFAULT 0;
+
+-- 2. Bảng rounds
+CREATE TABLE minigame_rounds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  minigame_id UUID NOT NULL REFERENCES minigames(id) ON DELETE CASCADE,
+  round_number INT NOT NULL,
+  draw_mode VARCHAR(30) NOT NULL,
+  total_players INT DEFAULT 0,
+  total_matches INT DEFAULT 0,
+  sit_out_count INT DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'DRAFT',
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(minigame_id, round_number)
+);
+
+-- 3. Bảng sit-outs
+CREATE TABLE minigame_round_sitouts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  minigame_id UUID NOT NULL,
+  round_id UUID NOT NULL REFERENCES minigame_rounds(id) ON DELETE CASCADE,
+  member_id UUID NOT NULL REFERENCES members(id),
+  reason VARCHAR(100),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Refactor minigame_matches (xóa player1_id, player2_id, thêm team scores)
+ALTER TABLE minigame_matches
+  DROP COLUMN IF EXISTS player1_id,
+  DROP COLUMN IF EXISTS player2_id,
+  DROP COLUMN IF EXISTS winner_id,
+  ADD COLUMN round_id UUID REFERENCES minigame_rounds(id),
+  ADD COLUMN match_number INT,
+  ADD COLUMN team1_score INT,
+  ADD COLUMN team2_score INT,
+  ADD COLUMN winning_team INT;
+
+-- 5. Bảng match players (4 người/trận)
+CREATE TABLE minigame_match_players (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  minigame_id UUID NOT NULL,
+  round_id UUID NOT NULL,
+  match_id UUID NOT NULL REFERENCES minigame_matches(id) ON DELETE CASCADE,
+  member_id UUID NOT NULL REFERENCES members(id),
+  team_number INT NOT NULL CHECK (team_number IN (1, 2)),
+  position_in_team INT NOT NULL CHECK (position_in_team IN (1, 2)),
+  is_winner BOOLEAN,
+  score_for INT,
+  score_against INT,
+  ranking_points INT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(match_id, member_id)
+);
+
+-- 6. Cập nhật standings
+ALTER TABLE minigame_standings
+  DROP COLUMN IF EXISTS group_id,
+  ADD COLUMN win_rate DECIMAL(5,2) DEFAULT 0,
+  ADD COLUMN sit_out_count INT DEFAULT 0;
+
+-- 7. Pair stats
+CREATE TABLE minigame_pair_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  minigame_id UUID NOT NULL,
+  member_a_id UUID NOT NULL,
+  member_b_id UUID NOT NULL,
+  paired_count INT DEFAULT 0,
+  won_together INT DEFAULT 0,
+  lost_together INT DEFAULT 0,
+  drawn_together INT DEFAULT 0,
+  win_rate_together DECIMAL(5,2) DEFAULT 0,
+  UNIQUE(minigame_id, member_a_id, member_b_id)
+);
+
+-- 8. Opponent stats
+CREATE TABLE minigame_opponent_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  minigame_id UUID NOT NULL,
+  member_a_id UUID NOT NULL,
+  member_b_id UUID NOT NULL,
+  opponent_count INT DEFAULT 0,
+  member_a_wins INT DEFAULT 0,
+  member_b_wins INT DEFAULT 0,
+  draws INT DEFAULT 0,
+  UNIQUE(minigame_id, member_a_id, member_b_id)
+);
+
+4. THUẬT TOÁN CỐT LÕI
+4.1 Thuật toán bốc thăm – RANDOM
+// minigame.service.ts – drawRound (RANDOM)
+function drawRandom(participants: Member[]): DrawResult {
+  const shuffled = [...participants].sort(() => Math.random() - 0.5);
+  const matchCount = Math.floor(shuffled.length / 4);
+  const playing = shuffled.slice(0, matchCount * 4);
+  const sitOuts = shuffled.slice(matchCount * 4);
+
+  const matches = [];
+  for (let i = 0; i < matchCount; i++) {
+    const group = playing.slice(i * 4, i * 4 + 4);
+    // random chia team: [0,1] vs [2,3] hoặc [0,2] vs [1,3] hoặc [0,3] vs [1,2]
+    const splits = [[0,1,2,3],[0,2,1,3],[0,3,1,2]];
+    const s = splits[Math.floor(Math.random() * 3)];
+    matches.push({
+      team1: [group[s[0]], group[s[1]]],
+      team2: [group[s[2]], group[s[3]]],
+    });
+  }
+  return { matches, sitOuts };
+}
+
+4.2 Thuật toán bốc thăm – FAIR_ROTATION
+// Sắp xếp theo công bằng: ít trận → nhiều ngồi ngoài → lâu chơi nhất
+function fairSort(participants: ParticipantWithStats[]): Member[] {
+  return [...participants].sort((a, b) => {
+    if (a.played !== b.played) return a.played - b.played;        // ít trận hơn lên trước
+    if (a.sitOutCount !== b.sitOutCount) return b.sitOutCount - a.sitOutCount; // ngồi ngoài nhiều lên trước
+    return a.lastPlayedAt - b.lastPlayedAt;                        // lâu chơi nhất lên trước
+  });
+}
+
+// Chọn phương án chia team tốt nhất trong nhóm 4
+function bestSplit(group: Member[], pairHistory: PairStats[]): [Member[], Member[]] {
+  const splits = [
+    [[0,1],[2,3]], [[0,2],[1,3]], [[0,3],[1,2]]
+  ];
+  let best = null; let bestScore = Infinity;
+  for (const [t1idx, t2idx] of splits) {
+    const t1 = t1idx.map(i => group[i]);
+    const t2 = t2idx.map(i => group[i]);
+    const score = pairRepeatPenalty(t1, t2, pairHistory)
+                + opponentRepeatPenalty(t1, t2)
+                + skillImbalancePenalty(t1, t2);
+    if (score < bestScore) { bestScore = score; best = [t1, t2]; }
+  }
+  return best!;
+}
+
+// Penalty: cặp đã chơi cùng nhiều lần
+function pairRepeatPenalty(t1, t2, history) {
+  const getPaired = (a, b) => history.find(h => 
+    (h.memberAId === a.id && h.memberBId === b.id) ||
+    (h.memberAId === b.id && h.memberBId === a.id)
+  )?.pairedCount ?? 0;
+  return getPaired(t1[0], t1[1]) + getPaired(t2[0], t2[1]);
+}
+
+4.3 Thuật toán BALANCED_SKILL
+// Cân bằng trình độ: |sum_skill(team1) - sum_skill(team2)| tối thiểu
+function balancedSplit(group: Member[]): [Member[], Member[]] {
+  const splits = [[[0,1],[2,3]], [[0,2],[1,3]], [[0,3],[1,2]]];
+  let best = splits[0]; let minDiff = Infinity;
+  for (const [t1idx, t2idx] of splits) {
+    const s1 = t1idx.reduce((s,i) => s + (group[i].skillLevel ?? 50), 0);
+    const s2 = t2idx.reduce((s,i) => s + (group[i].skillLevel ?? 50), 0);
+    const diff = Math.abs(s1 - s2);
+    if (diff < minDiff) { minDiff = diff; best = [t1idx, t2idx]; }
+  }
+  return [best[0].map(i=>group[i]), best[1].map(i=>group[i])];
+}
+
+4.4 Thuật toán tính điểm cá nhân (sau nhập kết quả)
+// Sau PUT /matches/:id/result – chạy trong DB transaction
+async function updateStandingsAfterMatch(
+  matchId: string, team1Score: number, team2Score: number, ctx: PrismaClient
+) {
+  const match = await ctx.miniGameMatch.findUnique({ where: { id: matchId },
+    include: { players: true, miniGame: true } });
+
+  const winningTeam = team1Score > team2Score ? 1 : team2Score > team1Score ? 2 : 0; // 0=hòa
+  const { winPoints, drawPoints, lossPoints, allowDraw } = match.miniGame;
+
+  if (winningTeam === 0 && !allowDraw)
+    throw new BadRequestException("Minigame này không cho phép kết quả hòa");
+
+  const updates = match.players.map(p => {
+    const myScore   = p.teamNumber === 1 ? team1Score : team2Score;
+    const oppScore  = p.teamNumber === 1 ? team2Score : team1Score;
+    const isWinner  = winningTeam === p.teamNumber;
+    const isDraw    = winningTeam === 0;
+    const pts       = isWinner ? winPoints : isDraw ? drawPoints : lossPoints;
+
+    return ctx.miniGameStanding.upsert({
+      where:  { minigameId_memberId: { minigameId: match.minigameId, memberId: p.memberId } },
+      create: { clubId: match.clubId, minigameId: match.minigameId, memberId: p.memberId,
+                played:1, won: isWinner?1:0, drawn: isDraw?1:0, lost: !isWinner&&!isDraw?1:0,
+                pointsFor: myScore, pointsAgainst: oppScore, rankingPoints: pts },
+      update: { played: { increment:1 }, won: { increment: isWinner?1:0 },
+                drawn: { increment: isDraw?1:0 }, lost: { increment: !isWinner&&!isDraw?1:0 },
+                pointsFor: { increment: myScore }, pointsAgainst: { increment: oppScore },
+                rankingPoints: { increment: pts } }
+    });
+  });
+
+  await ctx.$transaction(updates);
+  await recalcWinRate(match.minigameId, ctx);
+  await recalcPairStats(match, winningTeam, ctx);
+  await recalcOpponentStats(match, winningTeam, ctx);
+}
+
+4.5 Quy tắc xếp hạng cá nhân
+Ưu tiên
+Cột
+Thứ tự
+Lý do
+1
+ranking_points
+DESC
+Điểm tích lũy chính
+2
+point_difference
+DESC
+Hiệu số điểm (score hay = chất lượng trận)
+3
+points_for
+DESC
+Tổng điểm ghi được (tấn công tốt hơn)
+4
+won
+DESC
+Số trận thắng
+5
+win_rate
+DESC
+Tỷ lệ thắng (%)
+6
+sit_out_count
+ASC
+Ngồi ngoài ít hơn được ưu tiên
+7
+played
+ASC
+Cân bằng khi tất cả bằng nhau
+
+5. API ENDPOINTS – 30+ ENDPOINT
+Tất cả API: JWT Bearer bắt buộc. club_id lấy từ token. Không nhận club_id từ client.
+
+5.1 Minigame CRUD
+Method
+Endpoint
+Mô tả
+Role
+GET
+/minigames
+Danh sách (filter: status, format_type)
+Auth
+POST
+/minigames
+Tạo minigame
+Admin
+GET
+/minigames/:id
+Chi tiết
+Auth
+PUT
+/minigames/:id
+Cập nhật (DRAFT only)
+Admin
+DELETE
+/minigames/:id
+Xóa (DRAFT/CANCELLED)
+Admin
+PATCH
+/minigames/:id/status
+Đổi trạng thái
+Admin
+
+5.2 Participants API
+Method
+Endpoint
+Mô tả
+Body
+GET
+/minigames/:id/participants
+Danh sách người tham gia
+–
+POST
+/minigames/:id/participants
+Thêm thành viên
+{memberIds:string[]}
+DELETE
+/minigames/:id/participants/:pId
+Loại (DRAFT only)
+–
+
+5.3 Draw Round API – Trung tâm module
+Method
+Endpoint
+Mô tả
+POST
+/minigames/:id/draw-round
+Bốc thăm lượt mới
+GET
+/minigames/:id/rounds
+Danh sách rounds + summary
+GET
+/minigames/:id/rounds/:rid
+Chi tiết round (matches + sit-outs)
+PATCH
+/minigames/:id/rounds/:rid/lock
+Khóa round
+POST
+/minigames/:id/rounds/:rid/redraw
+Random lại round (DRAFT only)
+DELETE
+/minigames/:id/rounds/:rid
+Xóa round (nếu chưa có KQ nào)
+
+POST /minigames/:id/draw-round – Request/Response mẫu
+// Request Body
+{
+  "drawMode": "FAIR_ROTATION",        // RANDOM | FAIR_ROTATION | BALANCED_SKILL
+  "avoidRepeatPartners": true,
+  "avoidRepeatOpponents": true,
+  "prioritizeSitOutPlayers": true
+}
+
+// Response 200
+{
+  "success": true,
+  "data": {
+    "round": { "id": "uuid", "roundNumber": 3, "totalMatches": 3, "sitOutCount": 2 },
+    "matches": [
+      {
+        "matchNumber": 1,
+        "id": "uuid",
+        "team1": [
+          { "memberId": "uuid", "name": "Nguyễn Văn A", "skillLevel": 80 },
+          { "memberId": "uuid", "name": "Trần Văn B", "skillLevel": 70 }
+        ],
+        "team2": [
+          { "memberId": "uuid", "name": "Lê Văn C", "skillLevel": 75 },
+          { "memberId": "uuid", "name": "Phạm Văn D", "skillLevel": 65 }
+        ],
+        "status": "PENDING"
+      }
+    ],
+    "sitOuts": [
+      { "memberId": "uuid", "name": "Hoàng Văn E", "reason": "odd_player_out" },
+      { "memberId": "uuid", "name": "Đặng Thị F", "reason": "odd_player_out" }
+    ]
+  }
+}
+
+5.4 Match Results API
+Method
+Endpoint
+Mô tả
+Body
+GET
+/minigames/:id/matches
+Danh sách trận (filter round, status)
+–
+GET
+/minigames/:id/matches/:mId
+Chi tiết trận + 4 players
+–
+PUT
+/minigames/:id/matches/:mId/result
+Nhập kết quả
+{team1Score, team2Score, note?}
+PATCH
+/minigames/:id/matches/:mId/result
+Sửa kết quả (tính lại standings)
+same
+DELETE
+/minigames/:id/matches/:mId/result
+Xóa KQ (rollback standings)
+–
+GET
+/minigames/:id/matches/pending
+Trận chưa nhập KQ
+–
+
+5.5 Standings & Stats API
+Method
+Endpoint
+Mô tả
+GET
+/minigames/:id/standings
+Bảng XH cá nhân (sort: points DESC, diff DESC…)
+GET
+/minigames/:id/standings/recalc
+Tính lại toàn bộ standings từ đầu
+GET
+/minigames/:id/pair-stats
+Thống kê ghép cặp (sort: winRate DESC)
+GET
+/minigames/:id/opponent-stats
+Thống kê đối đầu
+GET
+/minigames/:id/members/:mId/stats
+Thống kê cá nhân chi tiết
+GET
+/minigames/:id/dashboard
+Tournament Control Center data (KPI + round + standings + alerts)
+GET
+/minigames/:id/export/pdf
+Xuất PDF kết quả
+GET
+/minigames/:id/export/excel
+Xuất Excel bảng XH + lịch sử trận
+GET
+/minigames/:id/fairness-check
+Kiểm tra công bằng (sit-out bias, pair repeat)
+
+6. DASHBOARD – TOURNAMENT CONTROL CENTER
+6.1 KPI Cards – 10 card
+Card
+Tiêu đề
+Giá trị mẫu
+API field
+Icon
+Màu
+1
+Tổng Thành Viên
+24 người
+kpi.totalParticipants
+Users
+#6366F1
+2
+Tổng Lượt Bốc Thăm
+5 lượt
+kpi.totalRounds
+RefreshCw
+#0EA5E9
+3
+Tổng Số Trận
+18 trận
+kpi.totalMatches
+Swords
+#6366F1
+4
+Trận Hoàn Thành
+15 trận (83%)
+kpi.completedMatches
+CheckCircle
+#22C55E
+5
+Chờ Nhập KQ
+3 trận
+kpi.pendingMatches
+Clock
+#F59E0B
+6
+Ngồi Ngoài Lượt Này
+2 người
+kpi.currentSitOuts
+UserMinus
+#EF4444
+7
+Đang Dẫn Đầu
+Nguyễn A (21đ)
+kpi.leader
+Crown
+#F59E0B
+8
+Cặp Thắng Nhiều Nhất
+A + B (5 trận)
+kpi.bestPair
+Users
+#22C55E
+9
+Win Rate Cao Nhất
+Lê C (85%)
+kpi.highestWinRate
+TrendingUp
+#22C55E
+10
+Ngồi Ngoài Nhiều Nhất
+Hoàng E (3 lần)
+kpi.mostSitOuts
+AlertTriangle
+#EF4444
+
+6.2 Wireframe Desktop – Tournament Control Center
+┌── HEADER ──────────────────────────────────────────────────────────────────────────────┐
+│  🏓 Minigame Đánh Đôi Ngẫu Nhiên · Q2/2026             [Bốc Thăm Lượt Mới ▶] [⚙ ] │
+│  CLB Pickleball HN · 24 thành viên · Lượt 5/? · 🟠 Đang diễn ra                     │
+├── 10 KPI CARDS ─────────────────────────────────────────────────────────────────────────┤
+│ [👥24] [🔄5lượt] [⚔18trận] [✅15] [⏳3] [👤2ngoài] [👑NgA] [👫A+B] [📈LêC85%] [⚠HoàngE3]│
+├── MAIN 3-COLUMN LAYOUT ──────────────────────────────────────────────────────────────────┤
+│ ┌─ LƯỢT HIỆN TẠI (35%) ─┐ ┌─ MATCH CARDS (40%) ────────┐ ┌─ RIGHT PANEL (25%) ──┐ │
+│ │ Lượt 5 · 12 người     │ │ Trận 01 · Team1 vs Team2   │ │ Ngồi ngoài:          │ │
+│ │ 3 trận · 0 ngoài      │ │ NgA + TrB  VS  LêC + PhD   │ │ - Hoàng E            │ │
+│ │ Status: ACTIVE        │ │ [     ] vs [     ]         │ │ - Đặng F             │ │
+│ │                       │ │ [Nhập KQ] [Xem]            │ │ ──────────────────── │ │
+│ │ [Bốc Thăm Lượt Mới]  │ │ ─────────────────────────── │ │ Cảnh Báo:            │ │
+│ │ [Random Lại Lượt Này] │ │ Trận 02 · VũH + NgI vs ...  │ │ 🔴 3 trận chưa nhập │ │
+│ │ [Khóa Lượt]           │ │ [Nhập KQ]                  │ │ 🟡 A+B ghép 5 lần    │ │
+│ │                       │ │ ─────────────────────────── │ │ ──────────────────── │ │
+│ │ Lịch sử lượt:         │ │ Trận 03 · ...               │ │ Thao tác nhanh:      │ │
+│ │ Lượt 4 ✅ · Lượt 3 ✅  │ │ [Nhập KQ]                  │ │ [Nhập KQ hàng loạt] │ │
+│ └───────────────────────┘ └────────────────────────────┘ └──────────────────────┘ │
+├── BẢNG XH CÁ NHÂN ──────────────────────────────────────────────────────────────────────┤
+│ # │ Thành viên  │ Trận │ T │ H │ T │ Điểm+ │ Điểm- │ HS   │ Điểm │ Win%  │ Ngoài │    │
+│ 1 │ 👑 Nguyễn A │  7   │ 7 │ 0 │ 0 │  77   │  49   │ +28  │  21  │ 100%  │   1   │    │
+│ 2 │ 🥈 Lê Văn C │  7   │ 6 │ 0 │ 1 │  71   │  55   │ +16  │  18  │  85%  │   0   │    │
+├── THỐNG KÊ CẶP ĐÔI ──────────────── │ BIỂU ĐỒ WIN RATE ────────────────────────────────┤
+│ A+B: 5 lần, 4 thắng, 80%           │ ████████████████████ NgA 100%                      │
+│ C+D: 4 lần, 3 thắng, 75%           │ ████████████████░░░░ LêC 85%                       │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+
+6.3 Card Match 2 vs 2
+┌─────────────────────────── Trận 01 ─────────────────────────────┐
+│  TEAM 1                    VS                    TEAM 2         │
+│  Nguyễn Văn A  ●                                ●  Lê Văn C    │
+│  Trần Văn B    ●                                ●  Phạm Văn D  │
+│                                                                  │
+│  Tỷ số: ──────    vs    ──────    [Chưa nhập]                  │
+│                                                                  │
+│  [✏ Nhập Kết Quả]   [👁 Xem Chi Tiết]   [✕ Hủy Trận]         │
+└──────────────────────────────────────────────────────────────────┘
+
+── Sau khi nhập (11 - 7) ──
+
+┌─────────────────────────── Trận 01 ✅ ──────────────────────────┐
+│  🏆 TEAM 1 THẮNG                          TEAM 2               │
+│  Nguyễn Văn A  ●  +3đ                     ●  Lê Văn C   +0đ   │
+│  Trần Văn B    ●  +3đ                     ●  Phạm Văn D +0đ   │
+│                                                                  │
+│  Tỷ số: ████ 11  vs  7 ████                                    │
+└──────────────────────────────────────────────────────────────────┘
+
+6.4 Cảnh báo công bằng – 6 loại
+Cảnh báo
+Điều kiện kích hoạt
+Mức
+Action
+Ngồi ngoài 2 lượt liên tiếp
+sitOutStreak >= 2 cho bất kỳ TV nào
+🔴 HIGH
+[Ưu tiên ngay]
+Cặp ghép > 4 lần
+pairedCount > 4 cho bất kỳ cặp
+🟠 MED
+[Tránh ghép cặp này]
+Gặp đối thủ > 5 lần
+opponentCount > 5 cho bất kỳ cặp
+🟡 LOW
+[Thông tin]
+Trận chưa nhập KQ
+pendingMatches > 0
+🔴 HIGH
+[Nhập ngay]
+TV ít trận hơn TB 30%
+played < avg*0.7
+🟡 LOW
+[Ưu tiên lượt sau]
+Kết quả hòa không cho phép
+drawnMatches > 0 && !allowDraw
+🔴 HIGH
+[Xem & sửa]
+
+7. MOBILE / PWA
+7.1 Bottom Navigation Minigame Mobile
+📊Tổng Quan
+🎲Bốc Thăm
+⚔️Trận Đấu
+🏆Xếp Hạng
+✏️Kết Quả
+
+7.2 Màn hình Nhập Kết Quả Mobile (ưu tiên thiết kế)
+┌────────────── Trận 01 · Lượt 3 ──────────────┐
+│                                               │
+│  TEAM 1         ██████████   TEAM 2           │
+│  Nguyễn A                   Lê Văn C         │
+│  Trần B                     Phạm D           │
+│                                               │
+│         ┌─────┐       ┌─────┐                │
+│  [ − ]  │  11 │  VS   │   7 │  [ + ]         │
+│         └─────┘       └─────┘                │
+│                                               │
+│  ────────── Team 1 Thắng ──────────           │
+│  Nguyễn A  +3đ  ·  Trần B   +3đ             │
+│  Lê C      +0đ  ·  Phạm D   +0đ             │
+│                                               │
+│         [ 💾 Lưu Kết Quả ]                   │
+│                                               │
+└───────────────────────────────────────────────┘
+
+7.3 Màn hình Bốc Thăm Mobile
+┌──────── Bốc Thăm · Minigame Q2 ──────────────┐
+│                                               │
+│  Lượt 5 · 12 người · 3 trận · 0 ngoài        │
+│                                               │
+│  Chế độ: [FAIR_ROTATION ▼]                   │
+│  Tránh ghép lại cặp cũ: [✓ ON]               │
+│                                               │
+│      [ 🎲 Bốc Thăm Lượt Mới ]               │
+│                                               │
+│  ─── Kết quả bốc thăm ───                    │
+│  Trận 01: NgA + TrB  vs  LêC + PhD           │
+│           [Nhập KQ] [↻ Random lại trận này]  │
+│  Trận 02: VũH + NgI  vs  ĐặngF + BùiG        │
+│           [Nhập KQ] [↻ Random lại trận này]  │
+│  Trận 03: HoàngE + LêL  vs  NguyN + TrM      │
+│           [Nhập KQ]                          │
+│                                               │
+│  Ngồi ngoài: Không có                        │
+│      [ 🔒 Khóa Lượt ]                        │
+└───────────────────────────────────────────────┘
+
+8. FRONTEND COMPONENTS
+8.1 Danh sách component cần xây
+Component
+File
+Mô tả
+MinigameList
+pages/MinigameList.tsx
+Danh sách giải đấu + filter format_type
+MinigameCreate
+pages/MinigameCreate.tsx
+Form wizard: Cấu hình → Thành viên → Xác nhận
+TournamentDashboard
+pages/TournamentDashboard.tsx
+Tournament Control Center đầy đủ
+DrawRoundPanel
+components/DrawRoundPanel.tsx
+Card lượt bốc thăm + nút bốc thăm/khóa
+MatchCard2v2
+components/MatchCard2v2.tsx
+Card hiển thị 1 trận 4 người
+ScoreEntryDrawer
+components/ScoreEntryDrawer.tsx
+Drawer nhập KQ với stepper +/-
+SitOutPanel
+components/SitOutPanel.tsx
+Danh sách ngồi ngoài + badge ưu tiên
+PersonalStandings
+components/PersonalStandings.tsx
+Bảng XH cá nhân với rank badge
+PairStatsCard
+components/PairStatsCard.tsx
+Thống kê cặp đôi tốt nhất/nên tránh
+FairnessAlerts
+components/FairnessAlerts.tsx
+Panel 6 loại cảnh báo công bằng
+MemberStats
+pages/MemberStats.tsx
+Thống kê cá nhân chi tiết + chart
+RoundHistory
+components/RoundHistory.tsx
+Lịch sử các lượt bốc thăm
+WinRateChart
+components/WinRateChart.tsx
+BarChart horizontal win rate
+MatchResultList
+components/MatchResultList.tsx
+Danh sách tất cả trận đã hoàn thành
+
+8.2 MatchCard2v2 – React component mẫu
+// components/MatchCard2v2.tsx
+interface Match {
+  id: string; matchNumber: number; status: string;
+  team1: Player[]; team2: Player[];
+  team1Score?: number; team2Score?: number; winningTeam?: number;
+}
+
+export function MatchCard2v2({ match, onEnterScore }: { match: Match; onEnterScore: () => void }) {
+  const isCompleted = match.status === "COMPLETED";
+  const team1Won = match.winningTeam === 1;
+  const team2Won = match.winningTeam === 2;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-semibold text-gray-700">Trận {match.matchNumber}</span>
+        <StatusBadge status={match.status} />
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center">
+        {/* Team 1 */}
+        <div className={`rounded-xl p-3 ${team1Won ? "bg-green-50 border-2 border-green-400" : "bg-gray-50"}`}>
+          {team1Won && <span className="text-xs font-bold text-green-600">🏆 THẮNG</span>}
+          {match.team1.map(p => <p key={p.id} className="font-medium text-sm">{p.name}</p>)}
+        </div>
+        {/* Score */}
+        <div className="text-center">
+          {isCompleted ? (
+            <div className="text-2xl font-bold text-gray-800">
+              {match.team1Score} – {match.team2Score}
+            </div>
+          ) : <span className="text-gray-400 font-semibold">VS</span>}
+        </div>
+        {/* Team 2 */}
+        <div className={`rounded-xl p-3 ${team2Won ? "bg-green-50 border-2 border-green-400" : "bg-gray-50"}`}>
+          {team2Won && <span className="text-xs font-bold text-green-600">🏆 THẮNG</span>}
+          {match.team2.map(p => <p key={p.id} className="font-medium text-sm">{p.name}</p>)}
+        </div>
+      </div>
+      {!isCompleted && (
+        <button onClick={onEnterScore}
+          className="mt-3 w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">
+          ✏ Nhập Kết Quả
+        </button>
+      )}
+    </div>
+  );
+}
+
+9. VALIDATION & SECURITY
+9.1 Validation rules bắt buộc
+Rule
+Nơi kiểm tra
+Lỗi trả về
+1 trận đúng 4 người, 2 team, mỗi team 2
+Backend draw-round service
+400: Insufficient players for match
+1 TV không xuất hiện 2 lần trong cùng trận
+INSERT unique(match_id, member_id)
+409: Duplicate player in match
+1 TV không chơi 2 trận trong cùng round
+Backend validation trước INSERT
+400: Player already in round
+Điểm không âm
+Zod schema: score >= 0
+400: Score cannot be negative
+Không hòa nếu allow_draw=false
+Backend check trước UPDATE standings
+400: Draw not allowed in this minigame
+Round phải ACTIVE mới nhập KQ
+Guard kiểm tra round.status
+403: Round is not active
+Minigame phải IN_PROGRESS mới nhập KQ
+Guard kiểm tra minigame.status
+403: Minigame not in progress
+Số người < 4 không tạo được round
+Backend: if(participants < 4) throw
+400: Need at least 4 players
+club_id từ JWT, không từ client
+NestJS Guard inject từ token
+403: Access denied
+
+9.2 RBAC – Ma trận quyền Random Doubles
+Quyền
+SUPER_ADMIN
+CLUB_ADMIN
+TREASURER
+MEMBER
+Tạo/Sửa/Xóa Minigame
+✓
+✓
+✗
+✗
+Thêm/Xóa thành viên tham gia
+✓
+✓
+✗
+✗
+Bốc thăm lượt mới
+✓
+✓
+✗
+✗
+Random lại / Khóa lượt
+✓
+✓
+✗
+✗
+Nhập / Sửa kết quả trận
+✓
+✓
+✓
+✗
+Xóa kết quả (rollback)
+✓
+✓
+✗
+✗
+Xem Dashboard / Bảng XH
+✓
+✓
+✓
+✓
+Xem thống kê cặp đôi
+✓
+✓
+✓
+✓
+Xem thống kê cá nhân
+✓
+✓
+✓
+✓ (mình)
+Xuất PDF/Excel
+✓
+✓
+✓
+✗
+Kết thúc Minigame
+✓
+✓
+✗
+✗
+
+9.3 Multi-tenant Guard
+@Injectable()
+export class MinigameGuard implements CanActivate {
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+    const req = ctx.switchToHttp().getRequest();
+    const { clubId, role } = req.user; // từ JWT - KHÔNG từ client
+    if (role === "SUPER_ADMIN") return true;
+    const minigame = await this.prisma.miniGame.findFirst({
+      where: { id: req.params.id, clubId }  // BẮT BUỘC: clubId từ token
+    });
+    if (!minigame) throw new ForbiddenException("Access denied");
+    req.minigame = minigame; // cache
+    return true;
+  }
+}
+
+10. UNIT TESTS – LOGIC BỐC THĂM & TÍNH ĐIỂM
+10.1 Test draw algorithm
+// minigame-draw.spec.ts
+describe("drawRandom", () => {
+  it("8 players → 2 matches, 0 sit-outs", () => {
+    const players = createPlayers(8);
+    const result = drawRandom(players);
+    expect(result.matches).toHaveLength(2);
+    expect(result.sitOuts).toHaveLength(0);
+  });
+
+  it("10 players → 2 matches, 2 sit-outs", () => {
+    const result = drawRandom(createPlayers(10));
+    expect(result.matches).toHaveLength(2);
+    expect(result.sitOuts).toHaveLength(2);
+  });
+
+  it("each match has exactly 4 players", () => {
+    const result = drawRandom(createPlayers(12));
+    result.matches.forEach(m => {
+      expect(m.team1).toHaveLength(2);
+      expect(m.team2).toHaveLength(2);
+    });
+  });
+
+  it("no player appears twice in same match", () => {
+    const result = drawRandom(createPlayers(8));
+    result.matches.forEach(m => {
+      const ids = [...m.team1.map(p=>p.id), ...m.team2.map(p=>p.id)];
+      expect(new Set(ids).size).toBe(4);
+    });
+  });
+});
+
+describe("fairSort", () => {
+  it("player with fewer matches goes first", () => {
+    const players = [
+      { id:"a", played:5, sitOutCount:0, lastPlayedAt: Date.now()-1000 },
+      { id:"b", played:3, sitOutCount:0, lastPlayedAt: Date.now()-2000 },
+    ];
+    const sorted = fairSort(players);
+    expect(sorted[0].id).toBe("b");
+  });
+
+  it("more sit-outs gets priority when played equal", () => {
+    const players = [
+      { id:"a", played:4, sitOutCount:1, lastPlayedAt: Date.now() },
+      { id:"b", played:4, sitOutCount:3, lastPlayedAt: Date.now() },
+    ];
+    expect(fairSort(players)[0].id).toBe("b");
+  });
+});
+
+10.2 Test tính điểm
+describe("updateStandingsAfterMatch", () => {
+  it("team1 wins: team1 players get +3 points", async () => {
+    const result = await service.processMatchResult(matchId, 11, 7);
+    const standingA = await getStanding(matchId, "playerA");
+    expect(standingA.won).toBe(1);
+    expect(standingA.rankingPoints).toBe(3);
+    expect(standingA.pointsFor).toBe(11);
+    expect(standingA.pointsAgainst).toBe(7);
+  });
+
+  it("team2 players get 0 ranking points when losing", async () => {
+    await service.processMatchResult(matchId, 11, 7);
+    const standingC = await getStanding(matchId, "playerC");
+    expect(standingC.lost).toBe(1);
+    expect(standingC.rankingPoints).toBe(0);
+  });
+
+  it("throws error when draw and allow_draw=false", async () => {
+    await expect(service.processMatchResult(matchId, 7, 7))
+      .rejects.toThrow("Draw not allowed");
+  });
+
+  it("win_rate recalculated after each match", async () => {
+    await service.processMatchResult(m1, 11, 7); // win
+    await service.processMatchResult(m2, 5, 11); // loss
+    const s = await getStanding(minigameId, "playerA");
+    expect(s.winRate).toBe(50.00);
+  });
+
+  it("rollback standings when result is deleted", async () => {
+    await service.processMatchResult(matchId, 11, 7);
+    const before = await getStanding(minigameId, "playerA");
+    await service.deleteMatchResult(matchId);
+    const after = await getStanding(minigameId, "playerA");
+    expect(after.played).toBe(before.played - 1);
+    expect(after.rankingPoints).toBe(before.rankingPoints - 3);
+  });
+});
+
+11. MIGRATION TỪ MÔ HÌNH CŨ (v1 → v2)
+11.1 Chiến lược backward-compatible
+Không xóa dữ liệu v1 – thêm format_type = SINGLES cho mọi trận cũ
+Tạo thêm bảng minigame_match_players, minigame_rounds, minigame_round_sitouts
+minigame_matches cũ: backfill round_id = NULL, match_number = NULL
+Các endpoint cũ (/matches/result với player1/player2) vẫn hoạt động cho SINGLES
+Feature flag: nếu format_type = RANDOM_DOUBLES → dùng logic mới
+
+11.2 Migration script
+-- Backfill format_type cho dữ liệu cũ
+UPDATE minigames SET format_type = 'SINGLES' WHERE format_type IS NULL;
+
+-- Backfill match_players từ matches cũ (SINGLES)
+INSERT INTO minigame_match_players
+  (id, club_id, minigame_id, match_id, member_id, team_number, position_in_team)
+SELECT
+  gen_random_uuid(), m.club_id, m.minigame_id, m.id,
+  m.player1_id, 1, 1
+FROM minigame_matches m
+WHERE m.player1_id IS NOT NULL
+ON CONFLICT DO NOTHING;
+
+INSERT INTO minigame_match_players
+  (id, club_id, minigame_id, match_id, member_id, team_number, position_in_team)
+SELECT
+  gen_random_uuid(), m.club_id, m.minigame_id, m.id,
+  m.player2_id, 2, 1
+FROM minigame_matches m
+WHERE m.player2_id IS NOT NULL
+ON CONFLICT DO NOTHING;
+
+11.3 Lộ trình mở rộng format_type
+Phase
+format_type
+Sprint dự kiến
+Ghi chú
+MVP
+RANDOM_DOUBLES
+S1–S7 (14 tuần)
+Tài liệu này
+Phase 2
+SINGLES
+S8–S10
+Chia sẻ match_players model, chỉ cần 2 người/trận
+Phase 2
+FIXED_DOUBLES
+S10–S12
+Cặp đăng ký trước, không random
+Phase 3
+GROUP_STAGE
+S13–S16
+Tái sử dụng standings, thêm group logic
+Phase 3
+KNOCKOUT
+S16–S18
+Bracket tree, single/double elimination
+Phase 4
+LEAGUE_SEASON
+S19+
+Nhiều vòng, tích lũy mùa giải
+
+12. ROADMAP TRIỂN KHAI – RANDOM DOUBLES
+Sprint
+Tuần
+Backend
+Frontend
+Bàn giao
+S1
+1–2
+Migration DB: thêm format_type, tạo 6 bảng mới, Prisma schema
+Route /minigames + Sidebar nav
+DB sẵn, navigation ok
+S2
+3–4
+POST /minigames (có format_type) + CRUD participants
+MinigameCreate wizard + MinigameList
+Tạo/quản lý minigame
+S3
+5–6
+POST /draw-round – RANDOM algorithm + MiniGameRounds
+DrawRoundPanel + SitOutPanel + MatchCard2v2
+Bốc thăm random hoạt động
+S4
+7–8
+PUT /matches/:id/result + auto update 4 bảng (standings/pair/opponent stats)
+ScoreEntryDrawer + toast result
+Nhập KQ, tính điểm tự động
+S5
+9–10
+FAIR_ROTATION + BALANCED_SKILL algorithms + /fairness-check
+FairnessAlerts + PersonalStandings
+Bốc thăm công bằng, cảnh báo
+S6
+11–12
+GET /dashboard full KPI + GET /pair-stats + member/:id/stats
+TournamentDashboard đầy đủ + PairStats
+Dashboard hoàn chỉnh
+S7
+13–14
+Export PDF/Excel + unit tests full coverage + staging UAT
+Mobile responsive, PWA, perf
+Production ready
+
+12.2 Definition of Done cho mỗi Sprint
+API có Swagger docs + Postman collection
+Unit test coverage > 80% cho business logic (draw, score, standings)
+E2E test: Tạo Minigame → Thêm thành viên → Bốc thăm → Nhập KQ → Xem XH
+Multi-tenant test: 2 CLB song song, không lọt dữ liệu chéo
+Mobile test: iPhone SE 375px + Android 390px, touch target ≥ 48dp
+Accessibility: contrast ≥ 4.5:1, ARIA labels, focus visible
+
+
+─── HẾT TÀI LIỆU ───
+PickleFund – Minigame Random Doubles Upgrade Spec v2.0 · 16/06/2026

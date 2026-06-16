@@ -1,0 +1,106 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
+import { PrismaService } from '../prisma/prisma.service'
+import type { FundPeriodStatus } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
+
+@Injectable()
+export class FundPeriodsService {
+  constructor(private prisma: PrismaService) {}
+
+  async findAll(clubId: string) {
+    return this.prisma.fundPeriod.findMany({
+      where: { clubId },
+      orderBy: { startDate: 'desc' },
+      include: {
+        _count: { select: { attendanceSessions: true, contributions: true } },
+      },
+    })
+  }
+
+  async findOne(id: string, clubId: string) {
+    const fp = await this.prisma.fundPeriod.findFirst({ where: { id, clubId } })
+    if (!fp) throw new NotFoundException('Kỳ quỹ không tồn tại')
+    return fp
+  }
+
+  async create(clubId: string, userId: string, dto: { name: string; startDate: string; endDate: string; contributionAmount: number; totalSessions?: number; notes?: string }) {
+    return this.prisma.fundPeriod.create({
+      data: {
+        ...dto,
+        clubId,
+        createdById: userId,
+        startDate: new Date(dto.startDate),
+        endDate: new Date(dto.endDate),
+        contributionAmount: new Decimal(dto.contributionAmount),
+        totalSessions: dto.totalSessions ?? 0,
+      },
+    })
+  }
+
+  async update(id: string, clubId: string, dto: any) {
+    const fp = await this.findOne(id, clubId)
+    if (fp.status === 'finalized') throw new BadRequestException('Kỳ đã chốt không thể sửa')
+    return this.prisma.fundPeriod.update({
+      where: { id },
+      data: {
+        ...dto,
+        ...(dto.startDate ? { startDate: new Date(dto.startDate) } : {}),
+        ...(dto.endDate ? { endDate: new Date(dto.endDate) } : {}),
+        ...(dto.contributionAmount ? { contributionAmount: new Decimal(dto.contributionAmount) } : {}),
+      },
+    })
+  }
+
+  async updateStatus(id: string, clubId: string, status: FundPeriodStatus) {
+    const fp = await this.findOne(id, clubId)
+    const updates: any = { status }
+    if (status === 'finalized') updates.finalizedAt = new Date()
+    return this.prisma.fundPeriod.update({ where: { id }, data: updates })
+  }
+
+  async summary(id: string, clubId: string) {
+    const fp = await this.findOne(id, clubId)
+
+    const [contributions, courtFees, livingExpenses, sessions, members] = await Promise.all([
+      this.prisma.fundContribution.aggregate({ where: { fundPeriodId: id, clubId }, _sum: { amount: true } }),
+      this.prisma.attendanceSession.aggregate({ where: { fundPeriodId: id, clubId }, _sum: { courtFee: true } }),
+      this.prisma.livingExpense.aggregate({ where: { fundPeriodId: id, clubId }, _sum: { amount: true } }),
+      this.prisma.attendanceSession.findMany({ where: { fundPeriodId: id, clubId }, include: { _count: { select: { attendanceRecords: { where: { status: 'PRESENT' } } } } } }),
+      this.prisma.member.findMany({ where: { clubId, isDeleted: false } }),
+    ])
+
+    const totalIncome = Number(contributions._sum.amount ?? 0)
+    const totalCourt = Number(courtFees._sum.courtFee ?? 0)
+    const totalLiving = Number(livingExpenses._sum.amount ?? 0)
+    const totalExpenses = totalCourt + totalLiving
+    const totalAttendance = sessions.reduce((s, sess) => s + sess._count.attendanceRecords, 0)
+    const costPerAttendance = totalAttendance > 0 ? Math.round(totalExpenses / totalAttendance) : 0
+
+    // Per-member calculation
+    const memberRows = await Promise.all(members.map(async (m) => {
+      const [attended, paid] = await Promise.all([
+        this.prisma.attendanceRecord.count({ where: { memberId: m.id, status: 'PRESENT', attendanceSession: { fundPeriodId: id } } }),
+        this.prisma.fundContribution.aggregate({ where: { memberId: m.id, fundPeriodId: id }, _sum: { amount: true } }),
+      ])
+      const amountPaid = Number(paid._sum.amount ?? 0)
+      const courtCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalCourt) : 0
+      const livingCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalLiving) : 0
+      const totalCost = courtCost + livingCost
+      const balance = amountPaid - totalCost
+      return {
+        memberId: m.id, memberName: m.fullName, attendedSessions: attended,
+        amountPaid, courtCost, livingCost, totalCost, balance,
+        contributionPaid: amountPaid >= Number(fp.contributionAmount),
+      }
+    }))
+
+    return {
+      totalIncome, totalExpenses, courtExpenses: totalCourt, livingExpenses: totalLiving,
+      balance: totalIncome - totalExpenses, totalAttendance, costPerAttendance,
+      unpaidCount: memberRows.filter(m => !m.contributionPaid).length,
+      negativeBalanceCount: memberRows.filter(m => m.balance < 0).length,
+      lowAttendanceCount: memberRows.filter(m => sessions.length > 0 && (m.attendedSessions / sessions.length) < 0.5).length,
+      members: memberRows,
+    }
+  }
+}

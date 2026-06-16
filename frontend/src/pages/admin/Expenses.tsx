@@ -1,0 +1,574 @@
+import { useState, useMemo } from 'react'
+import {
+  Plus, Search, Filter, Eye, Edit2, Trash2, Receipt,
+  TrendingUp, TrendingDown, CheckCircle, Clock, CreditCard,
+  FileText, X, ArrowLeft, Calendar, Users,
+} from 'lucide-react'
+import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { useClubDataStore } from '../../store/clubDataStore'
+import { useAuthStore } from '../../store/authStore'
+import type { AllocationRule } from '../../types'
+import { formatVND, formatDate } from '../../lib/utils'
+import toast from 'react-hot-toast'
+
+/* ── Types ── */
+type ExpenseStatus = 'pending' | 'approved' | 'paid' | 'rejected'
+
+interface RichExpense {
+  id: string
+  code: string
+  description: string
+  amount: number
+  expenseDate: string
+  allocationRule: AllocationRule
+  status: ExpenseStatus
+  notes?: string
+  createdBy: string
+  createdAt: string
+  allocations?: { name: string; sessions: number; amount: number }[]
+}
+
+/* ── Constants ── */
+const ruleLabels: Record<AllocationRule, string> = {
+  ATTENDANCE:    'Theo số buổi tham gia',
+  EQUAL:         'Đều nhau',
+  PRESENT_ONLY:  'Theo số người tham gia',
+  FUND_ONLY:     'Quỹ chung',
+}
+const ruleHint: Record<AllocationRule, string> = {
+  ATTENDANCE:   'Phân bổ chi phí theo số buổi tham gia thực tế của từng thành viên',
+  EQUAL:        'Chia đều cho tất cả thành viên CLB',
+  PRESENT_ONLY: 'Chỉ tính cho người có mặt buổi đó',
+  FUND_ONLY:    'Chi quỹ chung, không phân bổ cá nhân',
+}
+
+const statusCfg: Record<ExpenseStatus, { label: string; variant: 'green' | 'yellow' | 'indigo' | 'red' }> = {
+  approved: { label: 'Đã duyệt',      variant: 'green' },
+  pending:  { label: 'Chờ duyệt',     variant: 'yellow' },
+  paid:     { label: 'Đã thanh toán', variant: 'indigo' },
+  rejected: { label: 'Từ chối',       variant: 'red' },
+}
+
+const TABS = [
+  { key: 'all',      label: 'Tất cả' },
+  { key: 'pending',  label: 'Chờ duyệt' },
+  { key: 'approved', label: 'Đã duyệt' },
+  { key: 'paid',     label: 'Đã thanh toán' },
+  { key: 'rejected', label: 'Từ chối' },
+] as const
+
+/* ── Sub-components ── */
+
+function KpiCard({ icon, iconBg, iconColor, label, value, trend, isCount, unit }: {
+  icon: React.ReactNode; iconBg: string; iconColor: string
+  label: string; value: number; trend: number | null
+  isCount?: boolean; unit?: string
+}) {
+  const up = (trend ?? 0) >= 0
+  return (
+    <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>{icon}</div>
+        {trend !== null && (
+          <span className={`flex items-center gap-0.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${up ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+            {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}{Math.abs(trend)}%
+          </span>
+        )}
+      </div>
+      <p className="text-xl font-bold text-slate-900 leading-tight">
+        {isCount ? `${value.toLocaleString('vi-VN')} ${unit}` : formatVND(value)}
+      </p>
+      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-1">{label}</p>
+      {trend !== null && <p className="text-[10px] text-slate-400">so với kỳ trước</p>}
+    </div>
+  )
+}
+
+const emptyForm = {
+  description: '', amount: '', expenseDate: new Date().toISOString().slice(0, 10),
+  allocationRule: 'ATTENDANCE' as AllocationRule, notes: '',
+}
+
+function AddDrawer({ open, onClose, onSave }: {
+  open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
+}) {
+  const [form, setForm] = useState(emptyForm)
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Thêm khoản chi mới</h2>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+        <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            <div>
+              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <FileText size={11} />Thông tin khoản chi
+              </p>
+              <div className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
+                  <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                    placeholder="VD: Tiền sân buổi sáng T7, Nước uống, Bóng thi đấu..." className="input-base" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Số Tiền (VND) <span className="text-red-500">*</span></label>
+                    <input required type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
+                      placeholder="Nhập số tiền" className="input-base" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
+                    <input required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <Users size={11} />Quy tắc phân bổ <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
+              </p>
+              <select value={form.allocationRule}
+                onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
+                {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú <span className="text-slate-400 font-normal">(nếu có)</span></label>
+              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                maxLength={200} rows={3} className="input-base resize-none"
+                placeholder="Nhập ghi chú (nếu có)" />
+              <p className="text-right text-[10px] text-slate-400 mt-1">{form.notes.length}/200</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">Hủy bỏ</Button>
+            <Button type="submit" className="flex-1"><CheckCircle size={14} />Thêm khoản chi</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function FilterPanel({ open, onClose, defaultFrom, defaultTo }: {
+  open: boolean; onClose: () => void; defaultFrom?: string; defaultTo?: string
+}) {
+  const [status, setStatus] = useState('all')
+  const [rule, setRule] = useState('all')
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="w-80 bg-white flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <h2 className="text-sm font-semibold text-slate-900">Bộ lọc</h2>
+          <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"><X size={14} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Trạng thái</label>
+            <select value={status} onChange={e => setStatus(e.target.value)} className="input-base">
+              <option value="all">Tất cả</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="pending">Chờ duyệt</option>
+              <option value="paid">Đã thanh toán</option>
+              <option value="rejected">Từ chối</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Quy tắc phân bổ</label>
+            <select value={rule} onChange={e => setRule(e.target.value)} className="input-base">
+              <option value="all">Tất cả</option>
+              {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">Khoảng thời gian</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="date" defaultValue={defaultFrom ?? ''} className="input-base text-xs" />
+              <input type="date" defaultValue={defaultTo ?? ''} className="input-base text-xs" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">Số tiền</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="number" placeholder="Từ" className="input-base" />
+              <input type="number" placeholder="Đến" className="input-base" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tìm kiếm</label>
+            <input placeholder="Tìm theo nội dung, mã chi..." className="input-base" />
+          </div>
+        </div>
+        <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
+          <Button variant="outline" className="flex-1" onClick={() => { setStatus('all'); setRule('all') }}>Xóa bộ lọc</Button>
+          <Button className="flex-1" onClick={() => { toast.success('Đã áp dụng bộ lọc'); onClose() }}>Áp dụng</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DetailView({ exp, onClose, onEdit, onDelete, onApprove }: {
+  exp: RichExpense; onClose: () => void; onEdit: () => void; onDelete: () => void; onApprove: () => void
+}) {
+  const cfg = statusCfg[exp.status]
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="w-full max-w-lg bg-white flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <button onClick={onClose} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+            <ArrowLeft size={15} />Chi tiết khoản chi
+          </button>
+          <div className="flex gap-2">
+            {exp.status === 'pending' && (
+              <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
+            )}
+            <Button variant="outline" size="sm" onClick={onEdit}><Edit2 size={13} />Sửa</Button>
+            <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4 border-b border-slate-50">
+            {[
+              { label: 'Mã chi',        value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
+              { label: 'Nội dung',      value: <span className="font-medium">{exp.description}</span> },
+              { label: 'Số tiền',       value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
+              { label: 'Ngày chi',      value: exp.expenseDate },
+              { label: 'Quy tắc phân bổ', value: ruleLabels[exp.allocationRule] },
+              { label: 'Trạng thái',   value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
+              { label: 'Ghi chú',      value: exp.notes || <span className="text-slate-400">—</span> },
+              { label: 'Người tạo',    value: (
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700">
+                    {exp.createdBy.split(' ').slice(-1)[0][0]}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-800">{exp.createdBy}</p>
+                    <p className="text-[10px] text-slate-400">{exp.createdAt.slice(0, 10)}</p>
+                  </div>
+                </div>
+              )},
+            ].map((f, i) => (
+              <div key={i}>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</p>
+                <div className="text-xs text-slate-700">{f.value}</div>
+              </div>
+            ))}
+          </div>
+          {exp.allocations && (
+            <div className="px-6 py-5">
+              <p className="text-xs font-bold text-slate-700 mb-3">Phân bổ chi tiết</p>
+              <div className="space-y-2">
+                {exp.allocations.map((a, i) => (
+                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                    <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0">
+                      {a.name.split(' ').slice(-1)[0][0]}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-slate-900">{a.name}</p>
+                      <p className="text-[10px] text-slate-400">{a.sessions} buổi</p>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-900">{formatVND(a.amount)}</p>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs font-bold text-slate-700">Tổng cộng</p>
+                  <p className="text-sm font-bold text-indigo-600">{formatVND(exp.amount)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Main page ── */
+export function Expenses() {
+  const { user } = useAuthStore()
+  const clubId = user?.clubId ?? 'club-1'
+  const { getClubData, setExpenses: storeSetExpenses } = useClubDataStore()
+  const clubData = getClubData(clubId)
+  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
+
+  const [expenses, setExpenses] = useState<RichExpense[]>(() =>
+    clubData.expenses.map((e, i) => ({
+      id: e.id,
+      code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${String(i + 1).padStart(3, '0')}`,
+      description: e.description,
+      amount: e.amount,
+      expenseDate: e.expenseDate,
+      allocationRule: e.allocationRule,
+      status: 'approved' as ExpenseStatus,
+      notes: '',
+      createdBy: e.createdBy,
+      createdAt: e.createdAt,
+    }))
+  )
+  const [tab, setTab] = useState<'all' | ExpenseStatus>('all')
+  const [search, setSearch] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
+  const [showFilter, setShowFilter] = useState(false)
+  const [detailExp, setDetailExp] = useState<RichExpense | null>(null)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
+
+  const filtered = useMemo(() => expenses.filter(e => {
+    const matchTab = tab === 'all' || e.status === tab
+    const q = search.toLowerCase()
+    const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
+    return matchTab && matchQ
+  }), [expenses, tab, search])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const total        = expenses.reduce((s, e) => s + e.amount, 0)
+  const approved     = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
+  const pending      = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+  const paid         = expenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
+  const pendingCount = expenses.filter(e => e.status === 'pending').length
+
+  const syncToStore = (richExpenses: RichExpense[]) => {
+    storeSetExpenses(clubId, richExpenses.map(e => ({
+      id: e.id,
+      clubId,
+      fundPeriodId: activePeriod?.id ?? '',
+      amount: e.amount,
+      description: e.description,
+      allocationRule: e.allocationRule,
+      expenseDate: e.expenseDate,
+      createdBy: e.createdBy,
+      createdAt: e.createdAt,
+    })))
+  }
+
+  const handleAdd = (form: typeof emptyForm) => {
+    const n: RichExpense = {
+      id: `e${Date.now()}`,
+      code: `EXP-${form.expenseDate.replace(/-/g, '').slice(2)}-${String(expenses.length + 1).padStart(3, '0')}`,
+      description: form.description,
+      amount: Number(form.amount),
+      expenseDate: form.expenseDate,
+      allocationRule: form.allocationRule,
+      notes: form.notes,
+      status: 'pending',
+      createdBy: user?.username ?? 'Admin',
+      createdAt: new Date().toISOString(),
+    }
+    const next = [n, ...expenses]
+    setExpenses(next)
+    syncToStore(next)
+    setShowAdd(false)
+    toast.success('Đã thêm khoản chi!')
+  }
+
+  const handleDelete = (id: string) => {
+    const next = expenses.filter(e => e.id !== id)
+    setExpenses(next)
+    syncToStore(next)
+    setDetailExp(null)
+    setConfirmId(null)
+    toast.success('Đã xóa khoản chi')
+  }
+
+  const handleApprove = (id: string) => {
+    const next = expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e)
+    setExpenses(next)
+    syncToStore(next)
+    setDetailExp(null)
+    toast.success('Đã duyệt khoản chi!')
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 px-6 py-4">
+        <div className="flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-base font-bold text-slate-900">Chi Phí</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Quản lý và theo dõi các khoản chi của CLB</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+              <Calendar size={13} className="text-slate-400" />
+              <span>
+                {activePeriod
+                  ? `${formatDate(activePeriod.startDate)} – ${formatDate(activePeriod.endDate)}`
+                  : 'Chưa có kỳ quỹ'}
+              </span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
+            <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+          <KpiCard icon={<Receipt size={18} />}      iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Tổng chi"        value={total}    trend={-12} />
+          <KpiCard icon={<CheckCircle size={18} />}  iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"    value={approved} trend={+12} />
+          <KpiCard icon={<Clock size={18} />}        iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Đang chờ duyệt" value={pending}  trend={+2} />
+          <KpiCard icon={<CreditCard size={18} />}   iconBg="bg-blue-50"    iconColor="text-blue-600"    label="Đã thanh toán"  value={paid}     trend={+15} />
+          <KpiCard icon={<FileText size={18} />}     iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Số khoản chi"   value={expenses.length} trend={+5} isCount unit="khoản" />
+        </div>
+
+        {/* Table card */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)]">
+          {/* Tabs + Search */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100 flex-wrap gap-3">
+            <div className="flex items-center gap-0.5 -mb-px">
+              {TABS.map(t => (
+                <button key={t.key} onClick={() => { setTab(t.key as any); setPage(1) }}
+                  className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                    tab === t.key
+                      ? 'border-indigo-600 text-indigo-600'
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}>
+                  {t.label}
+                  {t.key === 'pending' && pendingCount > 0 && (
+                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold px-1">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="relative pb-3">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
+                placeholder="Tìm kiếm khoản chi..." className="input-base pl-8 w-56 h-8 text-xs" />
+            </div>
+          </div>
+
+          {/* Table */}
+          {paginated.length === 0 ? (
+            <div className="py-16 text-center">
+              <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
+              <p className="text-sm text-slate-400">Không có khoản chi nào</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th>Mã chi</th>
+                    <th>Nội dung</th>
+                    <th className="text-center">Ngày chi</th>
+                    <th className="text-right">Số Tiền (VND)</th>
+                    <th>Quy tắc phân bổ</th>
+                    <th className="text-center">Trạng thái</th>
+                    <th className="text-center w-24">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map(exp => {
+                    const cfg = statusCfg[exp.status]
+                    return (
+                      <tr key={exp.id}>
+                        <td className="font-mono text-xs text-indigo-600">{exp.code}</td>
+                        <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
+                        <td className="text-center text-slate-500 text-xs">{exp.expenseDate}</td>
+                        <td className="text-right font-semibold text-slate-900">{formatVND(exp.amount)}</td>
+                        <td className="text-slate-600 text-xs">{ruleLabels[exp.allocationRule]}</td>
+                        <td className="text-center">
+                          <Badge variant={cfg.variant} dot>{cfg.label}</Badge>
+                        </td>
+                        <td>
+                          <div className="flex items-center justify-center gap-1">
+                            {exp.status === 'pending' && (
+                              <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
+                                className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                <CheckCircle size={13} />
+                              </button>
+                            )}
+                            <button onClick={() => setDetailExp(exp)} title="Xem"
+                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                              <Eye size={13} />
+                            </button>
+                            <button title="Sửa"
+                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                              <Edit2 size={13} />
+                            </button>
+                            <button onClick={() => setConfirmId(exp.id)} title="Xóa"
+                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-50">
+            <span className="text-xs text-slate-500">
+              Hiển thị {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} đến {Math.min(page * PAGE_SIZE, filtered.length)} của {filtered.length} khoản chi
+            </span>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">‹</button>
+              {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map(p => (
+                <button key={p} onClick={() => setPage(p)}
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? 'bg-indigo-600 text-white' : 'border border-slate-200 hover:bg-slate-50'}`}>
+                  {p}
+                </button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">›</button>
+              <select value={PAGE_SIZE} className="ml-2 h-7 rounded-lg border border-slate-200 text-xs px-2 bg-white text-slate-600 focus:outline-none" onChange={() => {}}>
+                <option>8 / trang</option><option>25 / trang</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Drawers & modals */}
+      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} />
+      <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} defaultFrom={activePeriod?.startDate} defaultTo={activePeriod?.endDate} />
+      {detailExp && (
+        <DetailView
+          exp={detailExp}
+          onClose={() => setDetailExp(null)}
+          onEdit={() => { toast('Chỉnh sửa đang phát triển'); setDetailExp(null) }}
+          onDelete={() => setConfirmId(detailExp.id)}
+          onApprove={() => handleApprove(detailExp.id)}
+        />
+      )}
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Bạn có chắc chắn muốn xóa?"
+        message="Khoản chi này sẽ bị xóa vĩnh viễn và không thể khôi phục lại."
+        confirmLabel="Xóa"
+        onConfirm={() => confirmId && handleDelete(confirmId)}
+        onCancel={() => setConfirmId(null)}
+      />
+    </div>
+  )
+}
