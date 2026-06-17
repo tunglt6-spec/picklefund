@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import {
-  Plus, Building2, Trophy, Search, Eye, Pencil, Trash2, CheckCircle,
+  Plus, Building2, Trophy, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, TrendingUp, AlertTriangle,
   FolderOpen, ChevronDown, QrCode
 } from 'lucide-react'
@@ -411,7 +411,7 @@ export function FundPeriods() {
                         <Cell key={i} fill={DONUT_COLORS[i]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => formatVND(v)} />
+                    <Tooltip formatter={(v: number | string) => formatVND(Number(v))} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

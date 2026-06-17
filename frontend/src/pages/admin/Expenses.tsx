@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
-  TrendingUp, TrendingDown, CheckCircle, Clock, CreditCard,
+  CheckCircle, Clock, CreditCard,
   FileText, X, ArrowLeft, Calendar, Users,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
