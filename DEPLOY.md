@@ -110,6 +110,12 @@ API_URL=https://api.picklefund.uk
 ALLOWED_ORIGINS=https://app.picklefund.uk
 ```
 
+Frontend build cần `frontend/.env.production`:
+
+```env
+VITE_API_URL=https://api.picklefund.uk/api
+```
+
 Sinh JWT secrets:
 ```bash
 openssl rand -hex 64   # chay 2 lan lay 2 gia tri khac nhau
@@ -153,7 +159,7 @@ curl -f https://api.picklefund.uk/health
 # Expected: {"status":"ok"}
 
 # Thu login
-curl -X POST https://api.picklefund.uk/auth/login \
+curl -X POST https://api.picklefund.uk/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"superadmin","password":"super123"}'
 # Expected: {"data":{"accessToken":"...","user":{...}}}
