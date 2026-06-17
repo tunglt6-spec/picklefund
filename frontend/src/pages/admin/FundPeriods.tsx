@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import api from '../../lib/api'
 import {
-  Plus, Building2, Trophy, Search, Eye, Pencil, Trash2,
+  Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, TrendingUp, AlertTriangle,
   FolderOpen, ChevronDown, QrCode
 } from 'lucide-react'
@@ -23,7 +23,7 @@ const statusVariant: Record<FundPeriodStatus, 'gray' | 'green' | 'yellow' | 'ind
   draft: 'gray', active: 'green', closed: 'yellow', finalized: 'indigo'
 }
 
-const DONUT_COLORS = ['#6366f1', '#f59e0b']
+const DONUT_COLORS = ['#6366f1', '#7c3aed']
 
 const emptyForm = {
   name: '', startDate: '', endDate: '',
@@ -104,8 +104,8 @@ export function FundPeriods() {
   }, [contributions])
 
   const donutData = [
-    { name: 'Quỹ chung', value: stats.chung.balance },
-    { name: 'Quỹ Game', value: stats.game.balance },
+    { name: 'Quỹ Chung', value: stats.chung.balance },
+    { name: 'Quỹ Mini', value: stats.game.balance },
   ]
 
   const handleCreate = (type: FundPeriodType, form: typeof emptyForm, onClose: () => void) => async (e: React.FormEvent) => {
@@ -145,14 +145,14 @@ export function FundPeriods() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Kỳ Quỹ"
-        subtitle="Quản lý quỹ chung và quỹ game CLB"
+        subtitle="Quản lý Quỹ Chung và Quỹ Mini CLB"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
               <Building2 size={14} />+ Tạo quỹ chung
             </Button>
             <Button onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
-              <Trophy size={14} />+ Tạo quỹ game
+              <Wallet size={14} />+ Tạo quỹ mini
             </Button>
           </div>
         }
@@ -171,10 +171,10 @@ export function FundPeriods() {
             label="Chưa đóng"
           />
           <KpiSummaryCard
-            title="TỔNG QUỸ GAME"
-            icon={<Trophy size={16} className="text-amber-600" />}
-            iconBg="bg-amber-50"
-            accentColor="text-amber-600"
+            title="TỔNG QUỸ MINI"
+            icon={<Wallet size={16} className="text-violet-600" />}
+            iconBg="bg-violet-50"
+            accentColor="text-violet-600"
             stats={stats.game}
             label="Giao dịch"
             labelValue={stats.game.txCount}
@@ -193,10 +193,10 @@ export function FundPeriods() {
             onEdit={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
           />
           <FundDetailCard
-            title="Quỹ Game"
-            icon={<Trophy size={16} className="text-amber-500" />}
+            title="Quỹ Mini"
+            icon={<Wallet size={16} className="text-violet-500" />}
             period={activePeriods.game}
-            color="amber"
+            color="violet"
             memberCount={memberCount}
             contributions={contributions}
             onEdit={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
@@ -230,7 +230,7 @@ export function FundPeriods() {
                     className="input-base py-2 pr-8 text-sm appearance-none">
                     <option value="">Loại quỹ</option>
                     <option value="chung">Quỹ chung</option>
-                    <option value="game">Quỹ Game</option>
+                    <option value="game">Quỹ Mini</option>
                   </select>
                   <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
@@ -289,7 +289,7 @@ export function FundPeriods() {
                             <td className="px-5 py-3.5 font-medium text-slate-900">{p.name}</td>
                             <td className="px-4 py-3.5">
                               {pType === 'game'
-                                ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700"><Trophy size={10} />Game</span>
+                                ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700"><Wallet size={10} />Mini</span>
                                 : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700"><Building2 size={10} />Chung</span>
                               }
                             </td>
@@ -455,12 +455,12 @@ export function FundPeriods() {
         onSubmit={handleCreate('chung', formChung, () => { setShowCreateChung(false); setFormChung({ ...emptyForm }) })}
       />
 
-      {/* Create Quỹ Game modal */}
+      {/* Create Quỹ Mini modal */}
       <FundModal
         open={showCreateGame}
         onClose={() => setShowCreateGame(false)}
-        title="Tạo Quỹ Game"
-        subtitle="Kỳ thu quỹ game / giải đấu"
+        title="Tạo Quỹ Mini"
+        subtitle="Kỳ thu Quỹ Mini / giải đấu"
         formId="form-game"
         form={formGame}
         setForm={setFormGame}
@@ -513,7 +513,7 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
 
 function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
-  color: 'indigo' | 'amber'; memberCount: number
+  color: 'indigo' | 'violet'; memberCount: number
   contributions: import('../../types').FundContribution[]; onEdit: () => void
 }) {
   const target = period ? period.contributionAmount * memberCount : 0
@@ -521,8 +521,8 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
     ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
     : 0
   const pct = target > 0 ? Math.round((collected / target) * 100) : 0
-  const barColor = color === 'indigo' ? 'bg-indigo-500' : 'bg-amber-500'
-  const borderColor = color === 'indigo' ? 'border-indigo-100' : 'border-amber-100'
+  const barColor = color === 'indigo' ? 'bg-indigo-500' : 'bg-violet-500'
+  const borderColor = color === 'indigo' ? 'border-indigo-100' : 'border-violet-100'
 
   return (
     <div className={`bg-white rounded-xl border ${borderColor} shadow-[var(--shadow-card)] p-5`}>
@@ -531,7 +531,7 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
           {icon}
           <span className="font-bold text-slate-800 text-sm">{title}</span>
         </div>
-        {period && <Badge variant={color === 'indigo' ? 'indigo' : 'yellow'} dot>{statusLabel[period.status]}</Badge>}
+        {period && <Badge variant={color === 'indigo' ? 'indigo' : 'purple'} dot>{statusLabel[period.status]}</Badge>}
       </div>
       {period ? (
         <>
