@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
@@ -32,7 +33,9 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 400))
+    try {
+      await api.put(`/clubs/${clubId}`, { name: form.name, address: form.address, contactPhone: form.contactPhone, contactEmail: form.contactEmail, description: form.description })
+    } catch { /* save to local anyway */ }
     setClubSettings(clubId, form)
     setSaving(false)
     toast.success('Đã lưu thông tin CLB')

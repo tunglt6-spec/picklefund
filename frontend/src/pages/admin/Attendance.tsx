@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -46,9 +47,14 @@ export function Attendance() {
     setAttendance(prev => ({ ...prev, [memberId]: !prev[memberId] }))
   }
 
-  const handleSaveAttendance = () => {
-    const count = Object.values(attendance).filter(Boolean).length
-    setSessions(prev => prev.map(s => s.id === selectedSession?.id
+  const handleSaveAttendance = async () => {
+    if (!selectedSession) return
+    const records = members.map(m => ({ memberId: m.id, status: attendance[m.id] ? 'PRESENT' : 'ABSENT' as const }))
+    const count = records.filter(r => r.status === 'PRESENT').length
+    try {
+      await api.put(`/attendance/${selectedSession.id}/attendance`, { attendance: records })
+    } catch { /* local update still applies */ }
+    setSessions(prev => prev.map(s => s.id === selectedSession.id
       ? { ...s, _count: { attendanceRecords: count }, status: 'completed' }
       : s
     ))
@@ -56,14 +62,21 @@ export function Attendance() {
     toast.success(`Đã lưu điểm danh: ${count}/${members.length} người`)
   }
 
-  const handleCreateSession = (e: React.FormEvent) => {
+  const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newSession: AttendanceSession = {
-      id: `sess-${Date.now()}`, clubId, fundPeriodId: activePeriod?.id ?? '',
-      status: 'scheduled', createdBy: user?.id ?? 'user-1', _count: { attendanceRecords: 0 },
-      ...form, courtFee: Number(form.courtFee)
+    const payload = { fundPeriodId: activePeriod?.id ?? '', ...form, courtFee: Number(form.courtFee) }
+    try {
+      const res = await api.post('/attendance', payload)
+      const d = res.data?.data
+      setSessions(prev => [...prev, { ...d, courtFee: Number(d?.courtFee ?? form.courtFee), _count: { attendanceRecords: 0 } }])
+    } catch {
+      const newSession: AttendanceSession = {
+        id: `sess-${Date.now()}`, clubId, fundPeriodId: activePeriod?.id ?? '',
+        status: 'scheduled', createdBy: user?.id ?? 'user-1', _count: { attendanceRecords: 0 },
+        ...form, courtFee: Number(form.courtFee)
+      }
+      setSessions(prev => [...prev, newSession])
     }
-    setSessions(prev => [...prev, newSession])
     setShowCreate(false)
     toast.success('Đã tạo buổi chơi mới!')
   }
