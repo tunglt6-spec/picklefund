@@ -31,13 +31,16 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 20m
           script: |
+            set -e
             cd /opt/picklefund
             git pull origin main
             docker compose build --no-cache
             docker compose up -d --remove-orphans
+            echo "Waiting for containers to start..."
+            sleep 10
             docker compose exec -T backend npx prisma migrate deploy
-            # Health check
             sleep 15
             curl -f https://api.picklefund.uk/health || exit 1
             echo "Deployment successful"
