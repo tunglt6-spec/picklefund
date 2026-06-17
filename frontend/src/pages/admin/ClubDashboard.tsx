@@ -93,7 +93,21 @@ export function ClubDashboard() {
     unpaidCount,
     negativeBalanceCount: 0,
     lowAttendanceCount: 0,
-    members: [] as MemberSummary[],
+    members: clubData.members.map(m => {
+      const paid = commonContribs.filter(c => c.memberId === m.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      const periodContrib = currentPeriod ? commonContribs.find(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id) : undefined
+      const perMemberExpense = clubData.members.length > 0 ? Math.round(commonExpTotal / clubData.members.length) : 0
+      return {
+        memberId: m.id, memberName: m.fullName,
+        attendedSessions: 0,
+        amountPaid: !!periodContrib?.isConfirmed,
+        courtCost: 0,
+        livingCost: perMemberExpense,
+        totalCost: perMemberExpense,
+        balance: paid - perMemberExpense,
+        contributionPaid: !!periodContrib?.isConfirmed,
+      } as MemberSummary
+    }),
   }
 
   const realChartData = clubData.fundPeriods.map(fp => ({
