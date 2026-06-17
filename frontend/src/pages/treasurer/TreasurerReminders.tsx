@@ -16,21 +16,23 @@ export function TreasurerReminders() {
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
 
-  // Members who haven't paid (no confirmed contribution in active period)
+  const commonContribs = data.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+
+  // Members who haven't paid (no confirmed COMMON contribution in active period)
   const unpaidMembers = data.members
     .filter(m => m.status === 'active')
     .filter(m => {
-      const contrib = data.contributions.find(
+      const contrib = commonContribs.find(
         c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id) && c.isConfirmed
       )
       return !contrib
     })
 
-  // Members with unconfirmed contributions (paid but not confirmed yet)
+  // Members with unconfirmed COMMON contributions (paid but not confirmed yet)
   const pendingMembers = data.members
     .filter(m => m.status === 'active')
     .filter(m => {
-      const contrib = data.contributions.find(
+      const contrib = commonContribs.find(
         c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id)
       )
       return contrib && !contrib.isConfirmed
@@ -176,7 +178,7 @@ export function TreasurerReminders() {
               </thead>
               <tbody>
                 {pendingMembers.map(m => {
-                  const contrib = data.contributions.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
+                  const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
                   return (
                     <tr key={m.id}>
                       <td className="font-medium text-slate-900">{m.fullName}</td>
