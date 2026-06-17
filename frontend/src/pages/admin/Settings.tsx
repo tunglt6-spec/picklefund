@@ -163,10 +163,15 @@ function AccountTab() {
     if (pw.new.length < 6) return toast.error('Mật khẩu mới phải tối thiểu 6 ký tự')
     if (pw.new !== pw.confirm) return toast.error('Mật khẩu xác nhận không khớp')
     setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
+    try {
+      await api.patch('/auth/change-password', { oldPassword: pw.old, newPassword: pw.new })
+      setPw({ old: '', new: '', confirm: '' })
+      toast.success('Đã đổi mật khẩu thành công')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Đổi mật khẩu thất bại'
+      toast.error(msg)
+    }
     setSaving(false)
-    setPw({ old: '', new: '', confirm: '' })
-    toast.success('Đã đổi mật khẩu thành công')
   }
 
   return (

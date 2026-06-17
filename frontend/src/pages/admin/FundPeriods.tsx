@@ -131,10 +131,14 @@ export function FundPeriods() {
   }
 
   const handleFinalize = async (p: FundPeriod) => {
-    try { await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' }) } catch { /* local update */ }
+    try {
+      await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' })
+      // Generate personal receipts snapshot for all members
+      await api.post(`/personal-receipts/generate/${p.id}`)
+    } catch { /* local update still applies */ }
     setPeriods(prev => prev.map(x => x.id === p.id
       ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
-    toast.success(`Đã chốt kỳ "${p.name}"`)
+    toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
   }
 
   return (
