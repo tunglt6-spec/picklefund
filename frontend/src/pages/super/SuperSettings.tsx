@@ -19,11 +19,9 @@ export function SuperSettings() {
     requireEmailVerification: false,
   })
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    toast.success('Đã lưu cài đặt hệ thống')
+    setTimeout(() => { setSaving(false); toast.success('Đã lưu cài đặt hệ thống') }, 300)
   }
 
   const S = ({ id: _id, label, type = 'text', value, onChange, placeholder = '' }: {

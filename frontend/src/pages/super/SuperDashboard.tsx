@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Building2, Users, Calendar, Activity, Lock, LogIn } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import api from '../../lib/api'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
@@ -9,17 +11,40 @@ const EMPTY_STATS = {
   totalMembers: 0, totalFundPeriods: 0, loginsLast24h: 0,
 }
 
+type ClubRow = { id: string; name: string; code: string; status: string; _count?: { members: number; fundPeriods: number } }
+
 export function SuperDashboard() {
-  const stats = EMPTY_STATS
-  const clubs: { id: string; name: string; code: string; status: string; _count?: { members: number; fundPeriods: number } }[] = []
-  const barChartData: { month: string; active: number }[] = []
+  const [stats, setStats] = useState(EMPTY_STATS)
+  const [clubs, setClubs] = useState<ClubRow[]>([])
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get('/clubs/stats'),
+      api.get('/clubs'),
+    ]).then(([statsRes, clubsRes]) => {
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value.data?.data ?? EMPTY_STATS)
+      }
+      if (clubsRes.status === 'fulfilled') {
+        const raw = clubsRes.value.data?.data?.clubs ?? clubsRes.value.data?.data ?? []
+        setClubs(raw.slice(0, 10).map((c: any) => ({
+          id: c.id, name: c.name, code: c.code, status: c.status ?? 'active',
+          _count: c._count ?? { members: 0, fundPeriods: 0 },
+        })))
+      }
+    })
+  }, [])
+
+  const barChartData = [
+    { month: 'T1', active: 0 }, { month: 'T2', active: 0 }, { month: 'T3', active: 0 },
+    { month: 'T4', active: 0 }, { month: 'T5', active: 0 }, { month: 'T6', active: stats.activeClubs },
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader title="Super Admin Dashboard" subtitle="Tổng quan toàn hệ thống PickleFund" />
 
       <div className="p-6 space-y-6">
-        {/* KPI Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <KpiCard title="Tổng CLB" value={stats.totalClubs} icon={<Building2 size={18} />} color="blue" />
           <KpiCard title="CLB Hoạt động" value={stats.activeClubs} icon={<Activity size={18} />} color="green" />
@@ -29,23 +54,20 @@ export function SuperDashboard() {
           <KpiCard title="Đăng nhập (24h)" value={stats.loginsLast24h} icon={<LogIn size={18} />} color="yellow" />
         </div>
 
-        {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bar chart - CLB hoạt động theo tháng */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-4">CLB Hoạt Động Theo Tháng</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
                 <Bar dataKey="active" fill="#6366f1" radius={[4, 4, 0, 0]} name="CLB hoạt động" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Bảng CLB */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-4">Danh Sách CLB</h3>
             <div className="overflow-x-auto">
@@ -59,7 +81,9 @@ export function SuperDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {clubs.map(club => (
+                  {clubs.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center py-8 text-gray-400 text-xs">Đang tải...</td></tr>
+                  ) : clubs.map(club => (
                     <tr key={club.id} className="hover:bg-gray-50">
                       <td className="py-2.5 px-2">
                         <div className="font-medium text-gray-900">{club.name}</div>
@@ -77,29 +101,6 @@ export function SuperDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-
-        {/* Activity Log */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <h3 className="font-semibold text-gray-900 mb-4">Log Hoạt Động Hệ Thống (Realtime)</h3>
-          <div className="space-y-2">
-            {[
-              { time: '14:32', user: 'admin@pbhn.vn', action: 'Tạo kỳ quỹ Q2/2026', club: 'CLB HN', type: 'CREATE' },
-              { time: '13:15', user: 'treasurer@pbhcm.vn', action: 'Nhập khoản chi Tiền sân 450k', club: 'CLB HCM', type: 'UPDATE' },
-              { time: '11:40', user: 'superadmin', action: 'Khóa CLB Đà Nẵng', club: 'System', type: 'LOCK' },
-              { time: '10:05', user: 'member@pbhn.vn', action: 'Tải Phiếu Thu Quỹ cá nhân', club: 'CLB HN', type: 'EXPORT' },
-            ].map((log, i) => (
-              <div key={i} className="flex items-center gap-4 rounded-lg bg-gray-50 px-4 py-2.5 text-sm">
-                <span className="text-gray-400 text-xs w-10 shrink-0">{log.time}</span>
-                <Badge variant={log.type === 'CREATE' ? 'green' : log.type === 'LOCK' ? 'red' : log.type === 'EXPORT' ? 'blue' : 'orange'}>
-                  {log.type}
-                </Badge>
-                <span className="text-gray-700 flex-1">{log.action}</span>
-                <span className="text-gray-400 text-xs">{log.club}</span>
-                <span className="text-gray-500 text-xs">{log.user}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
