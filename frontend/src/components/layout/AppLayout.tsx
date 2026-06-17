@@ -4,9 +4,11 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
 import { useApiSync } from '../../hooks/useApiSync'
+import { useMinigameSync } from '../../hooks/useMinigameSync'
 
 export function AppLayout() {
   useApiSync()
+  useMinigameSync()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (

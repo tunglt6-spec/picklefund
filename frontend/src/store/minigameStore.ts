@@ -919,6 +919,7 @@ interface MinigameStore {
 
   getMinigames: (clubId: string) => MiniGame[]
   getMinigame: (id: string) => MiniGame | undefined
+  setMinigamesFromApi: (clubId: string, minigames: MiniGame[]) => void
   createMinigame: (data: Omit<MiniGame, 'id' | 'createdAt'>) => MiniGame
   updateMinigame: (id: string, data: Partial<MiniGame>) => void
   deleteMinigame: (id: string) => void
@@ -991,6 +992,14 @@ export const useMinigameStore = create<MinigameStore>()(
       getMinigames: (clubId) => get().minigames.filter(m => m.clubId === clubId),
 
       getMinigame: (id) => get().minigames.find(m => m.id === id),
+
+      setMinigamesFromApi: (clubId, incoming) =>
+        set(s => ({
+          minigames: [
+            ...s.minigames.filter(m => m.clubId !== clubId),
+            ...incoming,
+          ],
+        })),
 
       createMinigame: (data) => {
         const mg: MiniGame = { ...data, id: `mg-${Date.now()}`, createdAt: new Date().toISOString() }
