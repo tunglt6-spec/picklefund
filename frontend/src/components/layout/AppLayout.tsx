@@ -3,8 +3,10 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
+import { useApiSync } from '../../hooks/useApiSync'
 
 export function AppLayout() {
+  useApiSync()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
