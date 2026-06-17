@@ -21,6 +21,11 @@ export class AttendanceController {
     return ok(await this.service.create(user.clubId, user.userId, body), 'Tạo buổi tập thành công')
   }
 
+  @Get('my-sessions')
+  async myAttendedSessions(@CurrentUser() user: any) {
+    return ok(await this.service.findAttendedByMember(user.memberId, user.clubId))
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.service.findOne(id, user.clubId))

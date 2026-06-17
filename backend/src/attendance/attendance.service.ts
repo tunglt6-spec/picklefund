@@ -69,6 +69,14 @@ export class AttendanceService {
     })
   }
 
+  async findAttendedByMember(memberId: string, clubId: string): Promise<string[]> {
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { memberId, clubId, status: 'PRESENT' },
+      select: { attendanceSessionId: true },
+    })
+    return records.map((r) => r.attendanceSessionId)
+  }
+
   async updateAttendance(sessionId: string, clubId: string, attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[]) {
     await this.findOne(sessionId, clubId)
 

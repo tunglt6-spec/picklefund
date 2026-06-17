@@ -14,7 +14,7 @@ function toNum(v: string | number | null | undefined): number {
 
 export function useApiSync() {
   const { user, accessToken, isAuthenticated } = useAuthStore()
-  const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions } = useClubDataStore()
+  const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds } = useClubDataStore()
   const syncedRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -27,12 +27,13 @@ export function useApiSync() {
 
     const load = async () => {
       try {
-        const [membersRes, periodsRes, contribsRes, expensesRes, sessionsRes] = await Promise.allSettled([
+        const [membersRes, periodsRes, contribsRes, expensesRes, sessionsRes, mySessionsRes] = await Promise.allSettled([
           api.get(`/members?clubId=${clubId}`),
           api.get(`/fund-periods?clubId=${clubId}`),
           api.get(`/contributions?clubId=${clubId}`),
           api.get(`/expenses?clubId=${clubId}`),
           api.get(`/attendance?clubId=${clubId}`),
+          api.get('/attendance/my-sessions'),
         ])
 
         if (membersRes.status === 'fulfilled') {
@@ -113,6 +114,11 @@ export function useApiSync() {
           setExpenses(clubId, expenses)
         }
 
+        if (mySessionsRes.status === 'fulfilled') {
+          const ids: string[] = mySessionsRes.value.data?.data ?? []
+          setMyAttendedSessionIds(clubId, ids)
+        }
+
         if (sessionsRes.status === 'fulfilled') {
           const raw = sessionsRes.value.data?.data ?? []
           const sessions: AttendanceSession[] = raw.map((s: any) => ({
@@ -137,5 +143,5 @@ export function useApiSync() {
     }
 
     load()
-  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions])
+  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds])
 }

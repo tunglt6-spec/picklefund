@@ -12,9 +12,11 @@ export function MemberDashboard() {
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
 
-  const myContribution = clubData.contributions.find(c => c.memberId === user?.id)
-  const totalSessions = clubData.sessions.length
-  const myAttendance = 0
+  const myContribution = clubData.contributions.find(c => c.memberId === user?.memberId)
+  const attended = new Set(clubData.myAttendedSessionIds ?? [])
+  const completedSessions = clubData.sessions.filter(s => s.status === 'completed')
+  const totalSessions = completedSessions.length
+  const myAttendance = completedSessions.filter(s => attended.has(s.id)).length
   const attendanceRate = totalSessions > 0 ? Math.round((myAttendance / totalSessions) * 100) : 0
 
   const amountPaid = myContribution?.isConfirmed ? (myContribution.amount ?? 0) : 0

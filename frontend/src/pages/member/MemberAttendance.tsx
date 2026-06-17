@@ -6,19 +6,13 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
 
-// Deterministic attendance: member attended if (sessionIndex + memberIndex) % 7 !== 0
-function memberAttended(memberId: string, sessionId: string): boolean {
-  const mIdx = parseInt(memberId.replace(/\D/g, '') || '1')
-  const sIdx = parseInt(sessionId.replace(/\D/g, '') || '1')
-  return (sIdx + mIdx) % 7 !== 0
-}
-
 export function MemberAttendance() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const memberId = user?.memberId ?? 'mem-1'
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
+  const attended = new Set(data.myAttendedSessionIds ?? [])
 
   const myMember = data.members.find(m => m.id === memberId)
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
@@ -32,11 +26,11 @@ export function MemberAttendance() {
   )
 
   const completedSessions = periodSessions.filter(s => s.status === 'completed')
-  const attendedCount = completedSessions.filter(s => memberAttended(memberId, s.id)).length
+  const attendedCount = completedSessions.filter(s => attended.has(s.id)).length
   const rate = completedSessions.length > 0 ? Math.round((attendedCount / completedSessions.length) * 100) : 0
 
   const courtCostPerSession = completedSessions.reduce((s, sess) => {
-    const present = memberAttended(memberId, sess.id)
+    const present = attended.has(sess.id)
     const attendees = sess._count?.attendanceRecords ?? 6
     return s + (present ? sess.courtFee / attendees : 0)
   }, 0)
@@ -131,7 +125,7 @@ export function MemberAttendance() {
               </thead>
               <tbody>
                 {filtered.map((s, i) => {
-                  const present = s.status === 'completed' ? memberAttended(memberId, s.id) : null
+                  const present = s.status === 'completed' ? attended.has(s.id) : null
                   const attendees = s._count?.attendanceRecords ?? 6
                   const costShare = present ? Math.round(s.courtFee / attendees) : 0
                   return (
