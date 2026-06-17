@@ -9,8 +9,8 @@ export class UsersService {
 
   async findAll(clubId?: string) {
     return this.prisma.user.findMany({
-      where: { ...(clubId ? { clubId } : {}), isActive: true },
-      select: { id: true, username: true, email: true, role: true, clubId: true, createdAt: true, club: { select: { name: true } } },
+      where: { ...(clubId ? { clubId } : {}) },
+      select: { id: true, username: true, email: true, role: true, clubId: true, isActive: true, createdAt: true, club: { select: { name: true } }, member: { select: { fullName: true } } },
       orderBy: { createdAt: 'desc' },
     })
   }
