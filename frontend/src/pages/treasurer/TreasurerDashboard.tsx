@@ -2,25 +2,22 @@ import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock } fro
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { mockFundSummary, mockContributions, mockExpenses } from '../../lib/mockData'
+import { useClubDataStore } from '../../store/clubDataStore'
+import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
-const ledger = [
-  { date: '01/04', type: 'Thu', desc: 'Nguyễn A đóng quỹ Q2', amount: 1000000, balance: 1000000 },
-  { date: '01/04', type: 'Thu', desc: 'Trần B đóng quỹ Q2', amount: 1000000, balance: 2000000 },
-  { date: '01/04', type: 'Thu', desc: 'Lê C đóng quỹ Q2', amount: 1000000, balance: 3000000 },
-  { date: '01/04', type: 'Thu', desc: 'Phạm D đóng quỹ Q2', amount: 1000000, balance: 4000000 },
-  { date: '01/04', type: 'Thu', desc: 'Hoàng E đóng quỹ Q2', amount: 1000000, balance: 5000000 },
-  { date: '05/04', type: 'Chi', desc: 'Tiền sân buổi 1', amount: -450000, balance: 4550000 },
-  { date: '05/04', type: 'Chi', desc: 'Nước uống buổi 1', amount: -150000, balance: 4400000 },
-  { date: '12/04', type: 'Chi', desc: 'Tiền sân buổi 2', amount: -450000, balance: 3950000 },
-]
-
 export function TreasurerDashboard() {
-  const s = mockFundSummary
-  const unpaid = mockContributions.filter(c => !c.isConfirmed)
-  const noReceipt = mockExpenses.filter(e => !e.receiptUrl)
+  const { user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
+  const clubData = getClubData(user?.clubId ?? '')
+
+  const totalIncome = clubData.contributions.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+  const totalExpenses = clubData.expenses.reduce((a, e) => a + e.amount, 0)
+  const balance = totalIncome - totalExpenses
+  const s = { totalIncome, totalExpenses, balance }
+  const unpaid = clubData.contributions.filter(c => !c.isConfirmed)
+  const noReceipt = clubData.expenses.filter(e => !e.receiptUrl)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -32,7 +29,7 @@ export function TreasurerDashboard() {
           <KpiCard title="Tổng Đã Thu" value={s.totalIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
           <KpiCard title="Tổng Đã Chi" value={s.totalExpenses} isCurrency icon={<CreditCard size={18} />} color="orange" />
           <KpiCard title="Số Dư Quỹ" value={s.balance} isCurrency icon={<Building2 size={18} />} color="blue" />
-          <KpiCard title="Khoản Chi Kỳ" value={`${mockExpenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
+          <KpiCard title="Khoản Chi Kỳ" value={`${clubData.expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -81,21 +78,11 @@ export function TreasurerDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {ledger.map((row, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{row.date}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${row.type === 'Thu' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {row.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">{row.desc}</td>
-                  <td className={`px-4 py-3 text-right font-semibold ${row.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {row.amount > 0 ? '+' : ''}{formatVND(row.amount)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-900 font-medium">{formatVND(row.balance)}</td>
+              {clubData.contributions.length === 0 && clubData.expenses.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">Chưa có giao dịch nào</td>
                 </tr>
-              ))}
+              ) : null}
             </tbody>
           </table>
         </div>

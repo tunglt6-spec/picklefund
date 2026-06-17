@@ -4,12 +4,11 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
-import { mockClubs } from '../../lib/mockData'
 import type { Club } from '../../types'
 import toast from 'react-hot-toast'
 
 export function SuperClubs() {
-  const [clubs, setClubs] = useState(mockClubs)
+  const [clubs, setClubs] = useState<Club[]>([])
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })

@@ -1,13 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Member, FundPeriod, AttendanceSession, FundContribution, LivingExpense } from '../types'
-import {
-  mockMembers,
-  mockFundPeriods,
-  mockSessions,
-  mockContributions,
-  mockExpenses,
-} from '../lib/mockData'
 
 export const DEMO_CLUB_ID = 'club-1'
 
@@ -29,14 +22,6 @@ interface ClubDataStore {
   setExpenses: (clubId: string, expenses: LivingExpense[]) => void
 }
 
-const DEMO_DATA: ClubData = {
-  members: mockMembers,
-  fundPeriods: mockFundPeriods,
-  sessions: mockSessions,
-  contributions: mockContributions,
-  expenses: mockExpenses,
-}
-
 const EMPTY_DATA: ClubData = {
   members: [],
   fundPeriods: [],
@@ -48,10 +33,10 @@ const EMPTY_DATA: ClubData = {
 export const useClubDataStore = create<ClubDataStore>()(
   persist(
     (set, get) => ({
-      dataByClub: { [DEMO_CLUB_ID]: DEMO_DATA },
+      dataByClub: {},
 
       getClubData: (clubId: string) => {
-        if (!clubId || clubId === DEMO_CLUB_ID) return get().dataByClub[DEMO_CLUB_ID] ?? DEMO_DATA
+        if (!clubId) return EMPTY_DATA
         return get().dataByClub[clubId] ?? EMPTY_DATA
       },
 
@@ -72,22 +57,12 @@ export const useClubDataStore = create<ClubDataStore>()(
     }),
     {
       name: 'picklefund-club-data',
-      // Don't persist DEMO_DATA for club-1 — it's large and always available as fallback in initial state.
-      // Only persist data for real (non-demo) clubs created by users.
-      partialize: (state) => ({
-        dataByClub: Object.fromEntries(
-          Object.entries(state.dataByClub).filter(([id]) => id !== DEMO_CLUB_ID)
-        ),
-      }),
-      // When rehydrating, merge stored user-club data back into state that already has demo data.
+      partialize: (state) => ({ dataByClub: state.dataByClub }),
       merge: (persisted: unknown, current) => {
         const p = persisted as Partial<ClubDataStore> | null
         return {
           ...current,
-          dataByClub: {
-            [DEMO_CLUB_ID]: DEMO_DATA,
-            ...(p?.dataByClub ?? {}),
-          },
+          dataByClub: { ...(p?.dataByClub ?? {}) },
         }
       },
     }

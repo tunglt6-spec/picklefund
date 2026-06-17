@@ -10,8 +10,7 @@ import {
   CartesianGrid, Legend, PieChart as RechartPie, Pie, Cell,
 } from 'recharts'
 import { Link } from 'react-router-dom'
-import { mockFundSummary, mockChartData } from '../../lib/mockData'
-import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
+import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { Badge } from '../../components/ui/Badge'
@@ -55,10 +54,9 @@ const PIE_COLORS = ['#6366F1', '#F59E0B', '#22C55E', '#EF4444']
 /* ─── Main ─── */
 export function ClubDashboard() {
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? DEMO_CLUB_ID
+  const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(clubId)
-  const isDemo = clubId === DEMO_CLUB_ID
   const [chartFilter, setChartFilter] = useState<'all' | 'current'>('all')
 
   const currentPeriod = clubData.fundPeriods.find(f => f.status === 'active')
@@ -70,7 +68,7 @@ export function ClubDashboard() {
     !clubData.contributions.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id && c.isConfirmed)
   ).length
 
-  const s = isDemo ? mockFundSummary : {
+  const s = {
     totalIncome,
     totalExpenses,
     courtExpenses: clubData.expenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
@@ -90,7 +88,7 @@ export function ClubDashboard() {
     expense: clubData.expenses.filter(e => e.fundPeriodId === fp.id).reduce((s, e) => s + e.amount, 0),
   }))
 
-  const memberCount = isDemo ? 8 : clubData.members.length
+  const memberCount = clubData.members.length
   const balancePct  = s.totalIncome > 0 ? Math.round((s.balance / s.totalIncome) * 100) : 0
 
   const pieData = [
@@ -101,7 +99,7 @@ export function ClubDashboard() {
   ].filter(d => d.value > 0)
 
   /* ── Empty state ── */
-  if (!isDemo && clubData.members.length === 0 && clubData.fundPeriods.length === 0) {
+  if (clubData.members.length === 0 && clubData.fundPeriods.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-sm w-full text-center">
@@ -229,7 +227,7 @@ export function ClubDashboard() {
               </div>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={isDemo ? mockChartData.incomeExpenseByPeriod : realChartData} barGap={6}>
+              <BarChart data={realChartData} barGap={6}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => `${(v/1000000).toFixed(0)}tr`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={36} />

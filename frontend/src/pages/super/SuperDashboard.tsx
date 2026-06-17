@@ -3,10 +3,16 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
-import { mockSuperStats, mockClubs, mockChartData } from '../../lib/mockData'
+
+const EMPTY_STATS = {
+  totalClubs: 0, activeClubs: 0, suspendedClubs: 0,
+  totalMembers: 0, totalFundPeriods: 0, loginsLast24h: 0,
+}
 
 export function SuperDashboard() {
-  const stats = mockSuperStats
+  const stats = EMPTY_STATS
+  const clubs: { id: string; name: string; code: string; status: string; _count?: { members: number; fundPeriods: number } }[] = []
+  const barChartData: { month: string; active: number }[] = []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,7 +35,7 @@ export function SuperDashboard() {
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-4">CLB Hoạt Động Theo Tháng</h3>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={mockChartData.clubActivityByMonth}>
+              <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -53,7 +59,7 @@ export function SuperDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {mockClubs.map(club => (
+                  {clubs.map(club => (
                     <tr key={club.id} className="hover:bg-gray-50">
                       <td className="py-2.5 px-2">
                         <div className="font-medium text-gray-900">{club.name}</div>

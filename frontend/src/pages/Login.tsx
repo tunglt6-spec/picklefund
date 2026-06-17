@@ -579,17 +579,6 @@ export function Login() {
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {
-        // Fallback: demo accounts for development
-        const demo = demoAccounts.find(a => a.username === username && a.password === password)
-        if (demo) {
-          const user: User = { id: `u-${demo.role}`, username: demo.username, email: `${demo.username}@pickleballfund.vn`, clubId: demo.clubId, role: demo.role, memberId: demo.role === 'CLUB_MEMBER' ? 'mem-1' : undefined }
-          login(user, `token-${demo.role}`, `refresh-${demo.role}`)
-          toast.success(`Chào mừng, ${demo.label}! (demo)`)
-          navigate(routeByRole[demo.role])
-          setLoading(false)
-          return
-        }
-        // Fallback: registered accounts (local store)
         const reg = registeredAccounts.find(a => a.username === username && a.password === password)
         if (reg) {
           const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }
@@ -603,16 +592,7 @@ export function Login() {
       } else if (status === 429) {
         toast.error('Quá nhiều lần thử. Vui lòng đợi một chút.')
       } else {
-        // API offline → fallback to demo/registered accounts
-        const demo = demoAccounts.find(a => a.username === username && a.password === password)
-        if (demo) {
-          const user: User = { id: `u-${demo.role}`, username: demo.username, email: `${demo.username}@pickleballfund.vn`, clubId: demo.clubId, role: demo.role, memberId: demo.role === 'CLUB_MEMBER' ? 'mem-1' : undefined }
-          login(user, `token-${demo.role}`, `refresh-${demo.role}`)
-          toast.success(`Chào mừng, ${demo.label}! (offline mode)`)
-          navigate(routeByRole[demo.role])
-          setLoading(false)
-          return
-        }
+        // API offline → fallback to registered accounts (local store only)
         const reg = registeredAccounts.find(a => a.username === username && a.password === password)
         if (reg) {
           const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }

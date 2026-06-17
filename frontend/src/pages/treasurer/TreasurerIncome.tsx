@@ -1,17 +1,22 @@
 ﻿import { useState } from 'react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
-import { mockMembers } from '../../lib/mockData'
+import { useClubDataStore } from '../../store/clubDataStore'
+import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 export function TreasurerIncome() {
+  const { user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
+  const members = getClubData(user?.clubId ?? '').members
+
   const [form, setForm] = useState({ memberId: '', amount: 1000000, paymentDate: new Date().toISOString().slice(0, 10), paymentMethod: 'bank_transfer', notes: '' })
   const [submitted, setSubmitted] = useState<typeof form[]>([])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const m = mockMembers.find(m => m.id === form.memberId)
+    const m = members.find(m => m.id === form.memberId)
     setSubmitted(prev => [...prev, form])
     toast.success(`Ghi nhận ${m?.fullName} đóng ${formatVND(form.amount)}`)
     setForm({ ...form, memberId: '', notes: '' })
@@ -28,7 +33,7 @@ export function TreasurerIncome() {
               <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white">
                 <option value="">-- Chọn thành viên --</option>
-                {mockMembers.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+                {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
               </select>
             </div>
             <div>
@@ -65,7 +70,7 @@ export function TreasurerIncome() {
             <p className="font-semibold text-gray-900 mb-3">Vừa ghi nhận:</p>
             <div className="space-y-2">
               {submitted.slice(-3).map((s, i) => {
-                const m = mockMembers.find(m => m.id === s.memberId)
+                const m = members.find(m => m.id === s.memberId)
                 return (
                   <div key={i} className="flex justify-between text-sm bg-green-50 rounded-lg px-3 py-2">
                     <span className="text-green-800">{m?.fullName}</span>
