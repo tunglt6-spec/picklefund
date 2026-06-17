@@ -212,25 +212,51 @@ enum AttendanceStatus {
 // FUND CONTRIBUTIONS (Member payments)
 // ============================================================
 model FundContribution {
-  id            String   @id @default(uuid())
-  clubId        String   @map("club_id")
-  fundPeriodId  String   @map("fund_period_id")
-  memberId      String   @map("member_id")
-  amount        Decimal  @db.Decimal(15, 2)
-  paymentDate   DateTime @map("payment_date") @db.Date
-  paymentMethod String   @default("bank_transfer") @map("payment_method") @db.VarChar(50)
-  isConfirmed   Boolean  @default(false) @map("is_confirmed")
-  notes         String?
-  createdById   String   @map("created_by")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id                 String          @id @default(uuid())
+  clubId             String          @map("club_id")
+  fundPeriodId       String?         @map("fund_period_id")
+  memberId           String?         @map("member_id")
+  fundSource         FundSource      @default(COMMON) @map("fund_source")
+  miniIncomeType     MiniIncomeType? @map("mini_income_type")
+  payerName          String?         @map("payer_name") @db.VarChar(200)
+  relatedMinigameId  String?         @map("related_minigame_id")
+  amount             Decimal         @db.Decimal(15, 2)
+  paymentDate        DateTime        @map("payment_date") @db.Date
+  paymentMethod      String          @default("bank_transfer") @map("payment_method") @db.VarChar(50)
+  isConfirmed        Boolean         @default(false) @map("is_confirmed")
+  notes              String?
+  createdById        String          @map("created_by")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
 
-  club       Club       @relation(fields: [clubId], references: [id])
-  fundPeriod FundPeriod @relation(fields: [fundPeriodId], references: [id])
-  member     Member     @relation(fields: [memberId], references: [id])
-  createdBy  User       @relation("ContributionCreatedBy", fields: [createdById], references: [id])
+  club            Club        @relation(fields: [clubId], references: [id])
+  fundPeriod      FundPeriod? @relation(fields: [fundPeriodId], references: [id])
+  member          Member?     @relation(fields: [memberId], references: [id])
+  relatedMinigame Minigame?   @relation("ContributionMinigame", fields: [relatedMinigameId], references: [id])
+  createdBy       User        @relation("ContributionCreatedBy", fields: [createdById], references: [id])
 
   @@map("fund_contributions")
+}
+
+enum FundSource {
+  COMMON
+  MINI
+}
+
+enum MiniIncomeType {
+  BETTING
+  SPONSORSHIP
+  PENALTY
+  DONATION
+  OTHER
+}
+
+enum MiniExpenseType {
+  GAME_REWARD
+  TOURNAMENT_PRIZE
+  PARTY
+  BALL_PURCHASE
+  OTHER
 }
 
 // ============================================================
@@ -254,24 +280,30 @@ model ExpenseCategory {
 // LIVING EXPENSES (Chi phí sinh hoạt)
 // ============================================================
 model LivingExpense {
-  id                  String         @id @default(uuid())
-  clubId              String         @map("club_id")
-  fundPeriodId        String         @map("fund_period_id")
-  attendanceSessionId String?        @map("attendance_session_id")
-  categoryId          String?        @map("category_id")
-  amount              Decimal        @db.Decimal(15, 2)
+  id                  String          @id @default(uuid())
+  clubId              String          @map("club_id")
+  fundPeriodId        String?         @map("fund_period_id")
+  attendanceSessionId String?         @map("attendance_session_id")
+  categoryId          String?         @map("category_id")
+  fundSource          FundSource      @default(COMMON) @map("fund_source")
+  miniExpenseType     MiniExpenseType? @map("mini_expense_type")
+  receiverName        String?         @map("receiver_name") @db.VarChar(200)
+  relatedMinigameId   String?         @map("related_minigame_id")
+  allocationEnabled   Boolean         @default(true) @map("allocation_enabled")
+  amount              Decimal         @db.Decimal(15, 2)
   description         String
-  allocationRule      AllocationRule @map("allocation_rule")
-  expenseDate         DateTime       @map("expense_date") @db.Date
-  receiptUrl          String?        @map("receipt_url")
-  createdById         String         @map("created_by")
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
+  allocationRule      AllocationRule  @default(FUND_ONLY) @map("allocation_rule")
+  expenseDate         DateTime        @map("expense_date") @db.Date
+  receiptUrl          String?         @map("receipt_url")
+  createdById         String          @map("created_by")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
 
   club              Club               @relation(fields: [clubId], references: [id])
-  fundPeriod        FundPeriod         @relation(fields: [fundPeriodId], references: [id])
+  fundPeriod        FundPeriod?        @relation(fields: [fundPeriodId], references: [id])
   attendanceSession AttendanceSession? @relation(fields: [attendanceSessionId], references: [id])
   category          ExpenseCategory?   @relation(fields: [categoryId], references: [id])
+  relatedMinigame   Minigame?          @relation("ExpenseMinigame", fields: [relatedMinigameId], references: [id])
   createdBy         User               @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
 
   @@map("living_expenses")
@@ -386,10 +418,12 @@ model Minigame {
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @updatedAt @map("updated_at")
 
-  club         Club                  @relation(fields: [clubId], references: [id])
-  teams        MinigameTeam[]
-  matches      MinigameMatch[]
-  participants MinigameParticipant[]
+  club              Club                  @relation(fields: [clubId], references: [id])
+  teams             MinigameTeam[]
+  matches           MinigameMatch[]
+  participants      MinigameParticipant[]
+  miniContributions FundContribution[]    @relation("ContributionMinigame")
+  miniExpenses      LivingExpense[]       @relation("ExpenseMinigame")
 
   @@map("minigames")
 }

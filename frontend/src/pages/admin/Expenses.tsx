@@ -2,14 +2,15 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, CreditCard,
-  FileText, X, ArrowLeft, Calendar, Users,
+  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import type { AllocationRule, LivingExpense, ExpenseStatus } from '../../types'
+import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
+import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -78,8 +79,11 @@ function KpiCard({ icon, iconBg, iconColor, label, value, isCount, unit }: {
 }
 
 const emptyForm = {
+  fundSource: 'COMMON' as FundSource,
   description: '', amount: '', expenseDate: new Date().toISOString().slice(0, 10),
   allocationRule: 'ATTENDANCE' as AllocationRule, notes: '',
+  miniExpenseType: 'GAME_REWARD' as MiniExpenseType,
+  receiverName: '',
 }
 
 function AddDrawer({ open, onClose, onSave }: {
@@ -87,6 +91,7 @@ function AddDrawer({ open, onClose, onSave }: {
 }) {
   const [form, setForm] = useState(emptyForm)
   if (!open) return null
+  const isMini = form.fundSource === 'MINI'
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
@@ -99,6 +104,27 @@ function AddDrawer({ open, onClose, onSave }: {
         </div>
         <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            {/* Fund source selector */}
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Chi từ nguồn quỹ</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
+                  <button key={fs} type="button"
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                    className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
+                      form.fundSource === fs
+                        ? fs === 'COMMON'
+                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          : 'border-violet-500 bg-violet-50 text-violet-700'
+                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                    }`}>
+                    {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
+                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                 <FileText size={11} />Thông tin khoản chi
@@ -107,7 +133,8 @@ function AddDrawer({ open, onClose, onSave }: {
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
                   <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                    placeholder="VD: Tiền sân buổi sáng T7, Nước uống, Bóng thi đấu..." className="input-base" />
+                    placeholder={isMini ? 'VD: Thưởng đội vô địch, Chi liên hoan...' : 'VD: Tiền sân buổi sáng T7, Nước uống...'}
+                    className="input-base" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -122,18 +149,45 @@ function AddDrawer({ open, onClose, onSave }: {
                 </div>
               </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <Users size={11} />Quy tắc phân bổ <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
-              </p>
-              <select value={form.allocationRule}
-                onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
-                {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-              <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
-            </div>
+
+            {isMini ? (
+              <div className="space-y-3.5">
+                <div>
+                  <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Wallet size={11} />Chi tiết Quỹ Mini
+                  </p>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại chi <span className="text-red-500">*</span></label>
+                  <select required value={form.miniExpenseType}
+                    onChange={e => setForm({ ...form, miniExpenseType: e.target.value as MiniExpenseType })} className="input-base">
+                    {(Object.entries(MINI_EXPENSE_TYPE_LABELS) as [MiniExpenseType, string][]).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nhận (nếu có)</label>
+                  <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
+                    placeholder="Tên người/đội nhận tiền" className="input-base" />
+                </div>
+                <div className="bg-violet-50 rounded-lg px-3 py-2 text-xs text-violet-700">
+                  Khoản chi này không phân bổ cho thành viên và không ảnh hưởng đến công nợ cá nhân.
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Users size={11} />Quy tắc phân bổ <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
+                </p>
+                <select value={form.allocationRule}
+                  onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
+                  {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú <span className="text-slate-400 font-normal">(nếu có)</span></label>
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
@@ -280,28 +334,37 @@ export function Expenses() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const commonExpenses = richExpenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+  const miniExpenses   = richExpenses.filter(e => e.fundSource === 'MINI')
   const totalAmt    = richExpenses.reduce((s, e) => s + e.amount, 0)
+  const commonAmt   = commonExpenses.reduce((s, e) => s + e.amount, 0)
+  const miniAmt     = miniExpenses.reduce((s, e) => s + e.amount, 0)
   const approvedAmt = richExpenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
   const pendingAmt  = richExpenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
   const paidAmt     = richExpenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
   const pendingCount = richExpenses.filter(e => e.status === 'pending').length
 
   const handleAdd = (form: typeof emptyForm) => {
+    const isMini = form.fundSource === 'MINI'
     const newE: LivingExpense = {
       id: `e${Date.now()}`,
       clubId,
-      fundPeriodId: activePeriod?.id ?? '',
+      fundSource: form.fundSource,
+      fundPeriodId: isMini ? undefined : (activePeriod?.id ?? ''),
       description: form.description,
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
-      allocationRule: form.allocationRule,
+      allocationRule: isMini ? 'FUND_ONLY' : form.allocationRule,
+      allocationEnabled: !isMini,
+      miniExpenseType: isMini ? form.miniExpenseType : undefined,
+      receiverName: isMini && form.receiverName ? form.receiverName : undefined,
       status: 'pending',
       createdBy: user?.username ?? 'Admin',
       createdAt: new Date().toISOString(),
     }
     save([newE, ...clubData.expenses])
     setShowAdd(false)
-    toast.success('Đã thêm khoản chi!')
+    toast.success(isMini ? `Đã thêm khoản chi Quỹ Mini!` : 'Đã thêm khoản chi Quỹ Chung!')
   }
 
   const handleDelete = (id: string) => {
@@ -344,11 +407,11 @@ export function Expenses() {
       <div className="p-6 max-w-[1400px] mx-auto space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <KpiCard icon={<Receipt size={18} />}     iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Tổng chi"        value={totalAmt} />
-          <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"    value={approvedAmt} />
-          <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Đang chờ duyệt" value={pendingAmt} />
-          <KpiCard icon={<CreditCard size={18} />}  iconBg="bg-blue-50"    iconColor="text-blue-600"    label="Đã thanh toán"  value={paidAmt} />
-          <KpiCard icon={<FileText size={18} />}    iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Số khoản chi"   value={richExpenses.length} isCount unit="khoản" />
+          <KpiCard icon={<DollarSign size={18} />}  iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Chi Quỹ Chung"  value={commonAmt} />
+          <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Mini"   value={miniAmt} />
+          <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
+          <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
+          <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={richExpenses.length} isCount unit="khoản" />
         </div>
 
         {/* Table card */}
@@ -392,9 +455,10 @@ export function Expenses() {
                   <tr>
                     <th>Mã chi</th>
                     <th>Nội dung</th>
+                    <th className="text-center">Nguồn quỹ</th>
                     <th className="text-center">Ngày chi</th>
                     <th className="text-right">Số Tiền (VND)</th>
-                    <th>Quy tắc phân bổ</th>
+                    <th>Phân bổ</th>
                     <th className="text-center">Trạng thái</th>
                     <th className="text-center w-24">Hành động</th>
                   </tr>
@@ -402,13 +466,21 @@ export function Expenses() {
                 <tbody>
                   {paginated.map(exp => {
                     const cfg = statusCfg[exp.status]
+                    const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
                     return (
                       <tr key={exp.id}>
                         <td className="font-mono text-xs text-indigo-600">{exp.code}</td>
                         <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
+                        <td className="text-center">
+                          {isMini
+                            ? <Badge variant="indigo">Quỹ Mini</Badge>
+                            : <Badge variant="gray">Quỹ Chung</Badge>}
+                        </td>
                         <td className="text-center text-slate-500 text-xs">{exp.expenseDate}</td>
                         <td className="text-right font-semibold text-slate-900">{formatVND(exp.amount)}</td>
-                        <td className="text-slate-600 text-xs">{ruleLabels[exp.allocationRule]}</td>
+                        <td className="text-slate-600 text-xs">{isMini
+                          ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Mini')
+                          : ruleLabels[exp.allocationRule]}</td>
                         <td className="text-center">
                           <Badge variant={cfg.variant} dot>{cfg.label}</Badge>
                         </td>

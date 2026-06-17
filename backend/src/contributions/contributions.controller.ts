@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Patch, Body, Param, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { ContributionsService } from './contributions.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
+import type { FundSource } from '@prisma/client'
 
 @ApiTags('Contributions')
 @ApiBearerAuth()
@@ -11,14 +12,30 @@ export class ContributionsController {
   constructor(private service: ContributionsService) {}
 
   @Get()
-  async findAll(@CurrentUser() user: any, @Query('fundPeriodId') fundPeriodId?: string) {
-    return ok(await this.service.findAll(user.clubId, fundPeriodId))
+  async findAll(
+    @CurrentUser() user: any,
+    @Query('fundPeriodId') fundPeriodId?: string,
+    @Query('fundSource') fundSource?: FundSource,
+  ) {
+    return ok(await this.service.findAll(user.clubId, fundPeriodId, fundSource))
   }
 
   @Post()
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
   async create(@CurrentUser() user: any, @Body() body: any) {
     return ok(await this.service.create(user.clubId, user.userId, body), 'Ghi nhận đóng quỹ thành công')
+  }
+
+  @Put(':id')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
+    return ok(await this.service.update(id, user.clubId, body))
+  }
+
+  @Delete(':id')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async delete(@Param('id') id: string, @CurrentUser() user: any) {
+    return ok(await this.service.delete(id, user.clubId), 'Đã xóa khoản thu')
   }
 
   @Patch(':id/confirm')
@@ -28,7 +45,7 @@ export class ContributionsController {
   }
 
   @Get('summary')
-  async summary(@CurrentUser() user: any, @Query('fundPeriodId') fundPeriodId: string) {
+  async summary(@CurrentUser() user: any, @Query('fundPeriodId') fundPeriodId?: string) {
     return ok(await this.service.summary(user.clubId, fundPeriodId))
   }
 }

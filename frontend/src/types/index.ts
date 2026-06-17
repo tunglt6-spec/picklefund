@@ -8,6 +8,26 @@ export type SessionStatus = 'scheduled' | 'completed' | 'cancelled'
 export type AttendanceStatus = 'PRESENT' | 'ABSENT'
 export type AllocationRule = 'ATTENDANCE' | 'EQUAL' | 'PRESENT_ONLY' | 'FUND_ONLY'
 
+export type FundSource = 'COMMON' | 'MINI'
+export type MiniIncomeType = 'BETTING' | 'SPONSORSHIP' | 'PENALTY' | 'DONATION' | 'OTHER'
+export type MiniExpenseType = 'GAME_REWARD' | 'TOURNAMENT_PRIZE' | 'PARTY' | 'BALL_PURCHASE' | 'OTHER'
+
+export const MINI_INCOME_TYPE_LABELS: Record<MiniIncomeType, string> = {
+  BETTING: 'Cá cược',
+  SPONSORSHIP: 'Tài trợ',
+  PENALTY: 'Nộp phạt',
+  DONATION: 'Ủng hộ',
+  OTHER: 'Khác',
+}
+
+export const MINI_EXPENSE_TYPE_LABELS: Record<MiniExpenseType, string> = {
+  GAME_REWARD: 'Thưởng game',
+  TOURNAMENT_PRIZE: 'Thưởng giải',
+  PARTY: 'Liên hoan',
+  BALL_PURCHASE: 'Mua bóng',
+  OTHER: 'Chi khác',
+}
+
 export interface User {
   id: string
   username: string
@@ -93,14 +113,21 @@ export interface AttendanceRecord {
 export interface FundContribution {
   id: string
   clubId: string
-  fundPeriodId: string
-  memberId: string
+  fundSource: FundSource
+  // COMMON
+  fundPeriodId?: string
+  memberId?: string
+  member?: Member
+  // MINI
+  miniIncomeType?: MiniIncomeType
+  payerName?: string
+  relatedMinigameId?: string
+  // shared
   amount: number
   paymentDate: string
   paymentMethod: string
   isConfirmed: boolean
   notes?: string
-  member?: Member
   createdAt: string
 }
 
@@ -109,12 +136,20 @@ export type ExpenseStatus = 'pending' | 'approved' | 'paid' | 'rejected'
 export interface LivingExpense {
   id: string
   clubId: string
-  fundPeriodId: string
+  fundSource: FundSource
+  // COMMON
+  fundPeriodId?: string
   attendanceSessionId?: string
   categoryId?: string
+  allocationRule: AllocationRule
+  allocationEnabled: boolean
+  // MINI
+  miniExpenseType?: MiniExpenseType
+  receiverName?: string
+  relatedMinigameId?: string
+  // shared
   amount: number
   description: string
-  allocationRule: AllocationRule
   expenseDate: string
   receiptUrl?: string
   status?: ExpenseStatus

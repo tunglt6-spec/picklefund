@@ -4,7 +4,7 @@ import {
   Users, DollarSign, TrendingUp, AlertTriangle, CreditCard,
   BarChart2, ChevronRight, Link as LinkIcon, Calendar,
   AlertCircle, CheckCircle2, UserX, Activity, Bell, Plus,
-  PieChart, Gauge,
+  PieChart, Gauge, Wallet,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -61,22 +61,35 @@ export function ClubDashboard() {
   const [chartFilter, setChartFilter] = useState<'all' | 'current'>('all')
 
   const currentPeriod = clubData.fundPeriods.find(f => f.status === 'active')
-  const totalIncome   = clubData.contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
-  const totalExpenses = clubData.expenses.reduce((s, e) => s + e.amount, 0)
+
+  const commonContribs = clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const miniContribs   = clubData.contributions.filter(c => c.fundSource === 'MINI')
+  const commonExpenses = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+  const miniExpenses   = clubData.expenses.filter(e => e.fundSource === 'MINI')
+
+  const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+  const commonExpTotal = commonExpenses.reduce((s, e) => s + e.amount, 0)
+  const miniIncome     = miniContribs.reduce((s, c) => s + c.amount, 0)
+  const miniExpTotal   = miniExpenses.reduce((s, e) => s + e.amount, 0)
+
+  const totalIncome   = commonIncome + miniIncome
+  const totalExpenses = commonExpTotal + miniExpTotal
   const totalAttendance = clubData.sessions.reduce((a, se) => a + (se._count?.attendanceRecords ?? 0), 0)
 
   const unpaidCount = !currentPeriod ? 0 : clubData.members.filter(m =>
-    !clubData.contributions.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id && c.isConfirmed)
+    !commonContribs.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id && c.isConfirmed)
   ).length
 
   const s = {
-    totalIncome,
-    totalExpenses,
-    courtExpenses: clubData.expenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
-    livingExpenses: clubData.expenses.filter(e => e.allocationRule !== 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
-    balance: totalIncome - totalExpenses,
+    totalIncome: commonIncome,
+    totalExpenses: commonExpTotal,
+    courtExpenses: commonExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
+    livingExpenses: commonExpenses.filter(e => e.allocationRule !== 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
+    balance: commonIncome - commonExpTotal,
+    miniBalance: miniIncome - miniExpTotal,
+    totalAssets: (commonIncome - commonExpTotal) + (miniIncome - miniExpTotal),
     totalAttendance,
-    costPerAttendance: totalAttendance > 0 ? Math.round(totalExpenses / totalAttendance) : 0,
+    costPerAttendance: totalAttendance > 0 ? Math.round(commonExpTotal / totalAttendance) : 0,
     unpaidCount,
     negativeBalanceCount: 0,
     lowAttendanceCount: 0,
@@ -85,8 +98,8 @@ export function ClubDashboard() {
 
   const realChartData = clubData.fundPeriods.map(fp => ({
     period: fp.name,
-    income: clubData.contributions.filter(c => c.fundPeriodId === fp.id && c.isConfirmed).reduce((s, c) => s + c.amount, 0),
-    expense: clubData.expenses.filter(e => e.fundPeriodId === fp.id).reduce((s, e) => s + e.amount, 0),
+    income: commonContribs.filter(c => c.fundPeriodId === fp.id && c.isConfirmed).reduce((s, c) => s + c.amount, 0),
+    expense: commonExpenses.filter(e => e.fundPeriodId === fp.id).reduce((s, e) => s + e.amount, 0),
   }))
 
   const memberCount = clubData.members.length
@@ -188,12 +201,65 @@ export function ClubDashboard() {
           </div>
         )}
 
+        {/* ── Fund split cards ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Quỹ Chung */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-xl bg-indigo-50 flex items-center justify-center">
+                <DollarSign size={16} className="text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
+                <p className="text-[10px] text-slate-400">Thu / Chi / Số dư</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(s.totalIncome)}</p></div>
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(s.totalExpenses)}</p></div>
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Số dư</p><p className={`text-sm font-bold ${s.balance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>{formatVND(s.balance)}</p></div>
+            </div>
+            {s.unpaidCount > 0 && <p className="text-xs text-amber-600 mt-2">⚠ {s.unpaidCount} thành viên chưa đóng quỹ</p>}
+          </div>
+          {/* Quỹ Mini */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-xl bg-violet-50 flex items-center justify-center">
+                <Wallet size={16} className="text-violet-600" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
+                <p className="text-[10px] text-slate-400">Thu / Chi / Số dư</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(miniIncome)}</p></div>
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(miniExpTotal)}</p></div>
+              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Số dư</p><p className={`text-sm font-bold ${s.miniBalance >= 0 ? 'text-violet-600' : 'text-red-500'}`}>{formatVND(s.miniBalance)}</p></div>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">Không tính vào công nợ thành viên</p>
+          </div>
+          {/* Tổng tài sản */}
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-5 text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp size={16} className="text-indigo-200" />
+              <p className="text-xs font-bold uppercase tracking-wide text-indigo-100">Tổng Tài Sản CLB</p>
+            </div>
+            <p className="text-2xl font-bold">{formatVND(s.totalAssets)}</p>
+            <p className="text-xs text-indigo-200 mt-1">Quỹ Chung + Quỹ Mini</p>
+            <div className="mt-3 pt-3 border-t border-indigo-500/40 grid grid-cols-2 gap-2 text-xs">
+              <div><p className="text-indigo-200">Quỹ Chung</p><p className="font-semibold">{formatVND(s.balance)}</p></div>
+              <div><p className="text-indigo-200">Quỹ Mini</p><p className="font-semibold">{formatVND(s.miniBalance)}</p></div>
+            </div>
+          </div>
+        </div>
+
         {/* ── KPI Row 1 ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="Tổng thu kỳ"  value={s.totalIncome}    isCurrency icon={<DollarSign size={18}/>}  color="green"  trend={18} />
-          <KpiCard title="Tổng chi kỳ"  value={s.totalExpenses}  isCurrency icon={<CreditCard size={18}/>}  color="orange" trend={-12} />
-          <KpiCard title="Số dư quỹ"    value={s.balance}        isCurrency icon={<TrendingUp size={18}/>}  color="indigo" trend={8} />
-          <KpiCard title="Tiền sân"     value={s.courtExpenses}  isCurrency icon={<BarChart2 size={18}/>}   color="purple" trend={15} />
+          <KpiCard title="Thu Quỹ Chung"  value={s.totalIncome}    isCurrency icon={<DollarSign size={18}/>}  color="green"  trend={18} />
+          <KpiCard title="Chi Quỹ Chung"  value={s.totalExpenses}  isCurrency icon={<CreditCard size={18}/>}  color="orange" trend={-12} />
+          <KpiCard title="Số dư Q.Chung"  value={s.balance}        isCurrency icon={<TrendingUp size={18}/>}  color="indigo" trend={8} />
+          <KpiCard title="Tiền sân"        value={s.courtExpenses}  isCurrency icon={<BarChart2 size={18}/>}   color="purple" trend={15} />
         </div>
 
         {/* ── KPI Row 2 ── */}

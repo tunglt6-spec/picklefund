@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   Legend, PieChart, Pie, Cell, Area, AreaChart,
@@ -10,6 +11,7 @@ import { formatVND, formatDate } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel } from '../../lib/export'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
+import type { FundSource } from '../../types'
 import toast from 'react-hot-toast'
 
 const WARNING_THRESHOLD = 20
@@ -100,6 +102,7 @@ export function Reports() {
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
+  const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
 
   const hasData = clubData.fundPeriods.length > 0
 
@@ -108,15 +111,23 @@ export function Reports() {
     ? `${formatDate(activePeriod.startDate)} – ${formatDate(activePeriod.endDate)}`
     : ''
 
-  const totalIncome = clubData.contributions.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-  const totalExpenses = clubData.expenses.reduce((a, e) => a + e.amount, 0)
+  // Apply fund source filter
+  const filteredContribs = clubData.contributions.filter(c =>
+    fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter
+  )
+  const filteredExpenses = clubData.expenses.filter(e =>
+    fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter
+  )
+
+  const totalIncome = filteredContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+  const totalExpenses = filteredExpenses.reduce((a, e) => a + e.amount, 0)
   const balance = totalIncome - totalExpenses
   const balancePct = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0
   const memberCount = clubData.members.length
   const sessionCount = clubData.sessions.length
-  const confirmedCount = clubData.contributions.filter(c => c.isConfirmed).length
+  const confirmedCount = filteredContribs.filter(c => c.isConfirmed).length
 
-  const expenseByCategory = clubData.expenses.reduce<Record<string, number>>((acc, e) => {
+  const expenseByCategory = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
     const key = e.description ?? 'Khác'
     acc[key] = (acc[key] ?? 0) + e.amount
     return acc
@@ -144,8 +155,8 @@ export function Reports() {
   })
 
   const periodHistory = clubData.fundPeriods.map(p => {
-    const inc = clubData.contributions.filter(c => c.isConfirmed && c.fundPeriodId === p.id).reduce((a, c) => a + c.amount, 0)
-    const exp = clubData.expenses.filter(e => e.fundPeriodId === p.id).reduce((a, e) => a + e.amount, 0)
+    const inc = filteredContribs.filter(c => c.isConfirmed && c.fundPeriodId === p.id).reduce((a, c) => a + c.amount, 0)
+    const exp = filteredExpenses.filter(e => e.fundPeriodId === p.id).reduce((a, e) => a + e.amount, 0)
     const sodu = inc - exp
     return {
       ky: p.name,
@@ -185,6 +196,19 @@ export function Reports() {
             {periodName && <p className="text-xs text-slate-500 mt-0.5">{periodName} · {periodDate}</p>}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Fund source filter */}
+            <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-200">
+              {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chung'], ['MINI', 'Quỹ Mini']] as const).map(([val, label]) => (
+                <button key={val} onClick={() => setFundFilter(val)}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
+                    fundFilter === val
+                      ? val === 'MINI' ? 'bg-white text-violet-600 shadow-sm' : 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
             {periodName && (
               <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
                 <Calendar size={13} className="text-slate-400" />
@@ -192,7 +216,6 @@ export function Reports() {
                 <span className="text-slate-400">{periodDate}</span>
               </div>
             )}
-            <Button variant="outline" size="sm"><Filter size={13} />Bộ lọc</Button>
             <Button variant="outline" size="sm"
               className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
               onClick={() => {

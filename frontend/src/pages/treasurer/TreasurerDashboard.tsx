@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown } from 'lucide-react'
+import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -23,10 +23,21 @@ export function TreasurerDashboard() {
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
 
-  const totalIncome = clubData.contributions.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-  const totalExpenses = clubData.expenses.reduce((a, e) => a + e.amount, 0)
-  const balance = totalIncome - totalExpenses
-  const unpaid = clubData.contributions.filter(c => !c.isConfirmed)
+  const commonContribs = clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const miniContribs   = clubData.contributions.filter(c => c.fundSource === 'MINI')
+  const commonExpenses = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+  const miniExpenses   = clubData.expenses.filter(e => e.fundSource === 'MINI')
+
+  const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+  const commonExpTotal = commonExpenses.reduce((a, e) => a + e.amount, 0)
+  const miniIncome     = miniContribs.reduce((a, c) => a + c.amount, 0)
+  const miniExpTotal   = miniExpenses.reduce((a, e) => a + e.amount, 0)
+
+  const totalIncome = commonIncome + miniIncome
+  const totalExpenses = commonExpTotal + miniExpTotal
+  const balance = commonIncome - commonExpTotal
+  const miniBalance = miniIncome - miniExpTotal
+  const unpaid = commonContribs.filter(c => !c.isConfirmed)
   const noReceipt = clubData.expenses.filter(e => !e.receiptUrl)
   const pendingCount = unpaid.length
 
@@ -41,7 +52,9 @@ export function TreasurerDashboard() {
           id: c.id,
           date: c.paymentDate,
           type: 'income' as const,
-          description: `Thu quỹ — ${c.member?.fullName ?? c.memberId}`,
+          description: c.fundSource === 'MINI'
+            ? `Thu Quỹ Mini — ${c.payerName ?? c.member?.fullName ?? ''}`
+            : `Thu Quỹ Chung — ${c.member?.fullName ?? c.memberId ?? ''}`,
           amount: c.amount,
         })),
       ...clubData.expenses.map(e => ({
@@ -68,10 +81,41 @@ export function TreasurerDashboard() {
       <PageHeader title="Thủ Quỹ Dashboard" subtitle={subtitle} />
 
       <div className="p-6 space-y-6 max-w-[1200px] mx-auto">
+        {/* Fund split summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center"><DollarSign size={14} className="text-indigo-600" /></div>
+              <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(commonIncome)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(commonExpTotal)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${balance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>{formatVND(balance)}</p></div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center"><Wallet size={14} className="text-violet-600" /></div>
+              <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(miniIncome)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(miniExpTotal)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${miniBalance >= 0 ? 'text-violet-600' : 'text-red-500'}`}>{formatVND(miniBalance)}</p></div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-4 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-200 mb-2">Tổng Tài Sản CLB</p>
+            <p className="text-xl font-bold">{formatVND(balance + miniBalance)}</p>
+            <p className="text-xs text-indigo-200 mt-1">Quỹ Chung + Quỹ Mini</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard title="Tổng Đã Thu" value={totalIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
-          <KpiCard title="Tổng Đã Chi" value={totalExpenses} isCurrency icon={<CreditCard size={18} />} color="orange" />
-          <KpiCard title="Số Dư Quỹ" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
+          <KpiCard title="Thu Quỹ Chung" value={commonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
+          <KpiCard title="Chi Quỹ Chung" value={commonExpTotal} isCurrency icon={<CreditCard size={18} />} color="orange" />
+          <KpiCard title="Số Dư Q.Chung" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
           <KpiCard title="Khoản Chi" value={`${clubData.expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
         </div>
 

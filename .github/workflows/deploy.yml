@@ -38,6 +38,6 @@ jobs:
             docker compose up -d --remove-orphans
             docker compose exec -T backend npx prisma migrate deploy
             # Health check
-            sleep 10
-            curl -f https://api.picklefund.vn/health || exit 1
+            sleep 15
+            curl -f https://api.picklefund.uk/health || exit 1
             echo "Deployment successful"

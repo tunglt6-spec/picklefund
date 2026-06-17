@@ -57,7 +57,7 @@ export function TreasurerExpense() {
       amount: String(e.amount),
       allocationRule: e.allocationRule,
       expenseDate: e.expenseDate,
-      fundPeriodId: e.fundPeriodId,
+      fundPeriodId: e.fundPeriodId ?? '',
     })
     setShowModal(true)
   }
@@ -75,10 +75,12 @@ export function TreasurerExpense() {
       const newE: LivingExpense = {
         id: `exp-${Date.now()}`,
         clubId,
-        fundPeriodId: form.fundPeriodId,
+        fundSource: 'COMMON',
+        fundPeriodId: form.fundPeriodId || undefined,
         description: form.description,
         amount: Number(form.amount),
         allocationRule: form.allocationRule,
+        allocationEnabled: true,
         expenseDate: form.expenseDate,
         createdBy: user?.id ?? '',
         createdAt: new Date().toISOString(),

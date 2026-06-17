@@ -49,8 +49,8 @@ export function TreasurerIncome() {
   const openEdit = (c: FundContribution) => {
     setEditTarget(c)
     setForm({
-      memberId: c.memberId,
-      fundPeriodId: c.fundPeriodId,
+      memberId: c.memberId ?? '',
+      fundPeriodId: c.fundPeriodId ?? '',
       amount: c.amount,
       paymentDate: c.paymentDate,
       paymentMethod: c.paymentMethod,
@@ -80,6 +80,7 @@ export function TreasurerIncome() {
       const newC: FundContribution = {
         id: `contrib-${Date.now()}`,
         clubId,
+        fundSource: 'COMMON',
         fundPeriodId: form.fundPeriodId,
         isConfirmed: false,
         member,
