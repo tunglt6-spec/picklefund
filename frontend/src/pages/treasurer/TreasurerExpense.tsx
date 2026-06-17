@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Edit2, Trash2, Receipt } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -62,38 +63,37 @@ export function TreasurerExpense() {
     setShowModal(true)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editTarget) {
-      save(expenses.map(x =>
-        x.id === editTarget.id
-          ? { ...x, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, expenseDate: form.expenseDate, fundPeriodId: form.fundPeriodId }
-          : x
-      ))
-      toast.success(`Đã cập nhật: ${form.description}`)
-    } else {
-      const newE: LivingExpense = {
-        id: `exp-${Date.now()}`,
-        clubId,
-        fundSource: 'COMMON',
-        fundPeriodId: form.fundPeriodId || undefined,
-        description: form.description,
-        amount: Number(form.amount),
-        allocationRule: form.allocationRule,
-        allocationEnabled: true,
-        expenseDate: form.expenseDate,
-        createdBy: user?.id ?? '',
-        createdAt: new Date().toISOString(),
+    const payload = { fundSource: 'COMMON', fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
+    try {
+      if (editTarget) {
+        const res = await api.put(`/expenses/${editTarget.id}`, payload)
+        const d = res.data?.data
+        save(expenses.map(x => x.id === editTarget.id ? { ...x, ...d, amount: Number(d?.amount ?? form.amount) } : x))
+        toast.success(`Đã cập nhật: ${form.description}`)
+      } else {
+        const res = await api.post('/expenses', payload)
+        const d = res.data?.data
+        save([...expenses, { ...d, amount: Number(d?.amount ?? form.amount), fundSource: 'COMMON' as const, allocationEnabled: true, createdAt: new Date().toISOString(), createdBy: user?.id ?? '' }])
+        toast.success(`Đã nhập khoản chi: ${form.description} — ${formatVND(Number(form.amount))}`)
       }
-      save([...expenses, newE])
-      toast.success(`Đã nhập khoản chi: ${form.description} — ${formatVND(Number(form.amount))}`)
+    } catch {
+      if (editTarget) {
+        save(expenses.map(x => x.id === editTarget.id ? { ...x, ...payload } : x))
+        toast.success(`Đã cập nhật: ${form.description} (offline)`)
+      } else {
+        save([...expenses, { id: `exp-${Date.now()}`, clubId, fundSource: 'COMMON', fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate, createdBy: user?.id ?? '', createdAt: new Date().toISOString() }])
+        toast.success(`Đã nhập khoản chi: ${form.description} — ${formatVND(Number(form.amount))} (offline)`)
+      }
     }
     setShowModal(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteId) return
     const e = expenses.find(x => x.id === deleteId)
+    try { await api.delete(`/expenses/${deleteId}`) } catch { /* local delete continues */ }
     save(expenses.filter(x => x.id !== deleteId))
     setDeleteId(null)
     toast.success(`Đã xóa: ${e?.description ?? ''}`)

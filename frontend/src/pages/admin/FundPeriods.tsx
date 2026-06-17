@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import api from '../../lib/api'
 import {
   Plus, Building2, Trophy, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, TrendingUp, AlertTriangle,
@@ -107,14 +108,16 @@ export function FundPeriods() {
     { name: 'Quỹ Game', value: stats.game.balance },
   ]
 
-  const handleCreate = (type: FundPeriodType, form: typeof emptyForm, onClose: () => void) => (e: React.FormEvent) => {
+  const handleCreate = (type: FundPeriodType, form: typeof emptyForm, onClose: () => void) => async (e: React.FormEvent) => {
     e.preventDefault()
-    const newPeriod: FundPeriod = {
-      id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? 'user-1',
-      status: 'active', type,
-      ...form,
-      contributionAmount: Number(form.contributionAmount),
-      totalSessions: Number(form.totalSessions),
+    const payload = { ...form, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
+    let newPeriod: FundPeriod
+    try {
+      const res = await api.post('/fund-periods', payload)
+      const d = res.data?.data
+      newPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
+    } catch {
+      newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', type, ...payload }
     }
     setPeriods(prev => [newPeriod, ...prev])
     onClose()
@@ -127,7 +130,8 @@ export function FundPeriods() {
     toast.success('Đã xóa kỳ quỹ')
   }
 
-  const handleFinalize = (p: FundPeriod) => {
+  const handleFinalize = async (p: FundPeriod) => {
+    try { await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' }) } catch { /* local update */ }
     setPeriods(prev => prev.map(x => x.id === p.id
       ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
     toast.success(`Đã chốt kỳ "${p.name}"`)

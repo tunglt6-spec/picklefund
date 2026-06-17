@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, TrendingUp } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -59,47 +60,47 @@ export function TreasurerIncome() {
     setShowModal(true)
   }
 
-  const toggleConfirm = (id: string) => {
+  const toggleConfirm = async (id: string) => {
     save(contributions.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
     toast.success('Đã cập nhật trạng thái')
+    try { await api.patch(`/contributions/${id}/confirm`) } catch { /* local update stays */ }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const member = members.find(m => m.id === form.memberId)
     if (!member) return
 
-    if (editTarget) {
-      save(contributions.map(c =>
-        c.id === editTarget.id
-          ? { ...c, member, memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
-          : c
-      ))
-      toast.success(`Đã cập nhật khoản thu của ${member.fullName}`)
-    } else {
-      const newC: FundContribution = {
-        id: `contrib-${Date.now()}`,
-        clubId,
-        fundSource: 'COMMON',
-        fundPeriodId: form.fundPeriodId,
-        isConfirmed: false,
-        member,
-        createdAt: new Date().toISOString(),
-        memberId: member.id,
-        amount: Number(form.amount),
-        paymentDate: form.paymentDate,
-        paymentMethod: form.paymentMethod,
-        notes: form.notes,
+    const payload = { fundSource: 'COMMON', memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
+
+    try {
+      if (editTarget) {
+        const res = await api.put(`/contributions/${editTarget.id}`, payload)
+        const d = res.data?.data
+        save(contributions.map(c => c.id === editTarget.id ? { ...c, ...d, amount: Number(d?.amount ?? form.amount), member } : c))
+        toast.success(`Đã cập nhật khoản thu của ${member.fullName}`)
+      } else {
+        const res = await api.post('/contributions', payload)
+        const d = res.data?.data
+        save([...contributions, { ...d, amount: Number(d?.amount ?? form.amount), member, fundSource: 'COMMON' as const, createdAt: new Date().toISOString() }])
+        toast.success(`Ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))}`)
       }
-      save([...contributions, newC])
-      toast.success(`Ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))}`)
+    } catch {
+      if (editTarget) {
+        save(contributions.map(c => c.id === editTarget.id ? { ...c, member, memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes } : c))
+        toast.success(`Đã cập nhật khoản thu của ${member.fullName} (offline)`)
+      } else {
+        save([...contributions, { id: `contrib-${Date.now()}`, clubId, fundSource: 'COMMON', fundPeriodId: form.fundPeriodId, isConfirmed: false, member, createdAt: new Date().toISOString(), memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }])
+        toast.success(`Ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} (offline)`)
+      }
     }
     setShowModal(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteId) return
     const c = contributions.find(x => x.id === deleteId)
+    try { await api.delete(`/contributions/${deleteId}`) } catch { /* local delete continues */ }
     save(contributions.filter(x => x.id !== deleteId))
     setDeleteId(null)
     toast.success(`Đã xóa khoản thu của ${c?.member?.fullName ?? ''}`)
