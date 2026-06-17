@@ -718,6 +718,170 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
   downloadPDF(sections, `Bao_Cao_${data.periodName.replace(/\s/g, '_')}`)
 }
 
+/* ════════════════════════════════════════
+   EXPORT: Phiếu Thu Quỹ Mini
+════════════════════════════════════════ */
+export interface MiniIncomeReceiptData {
+  receiptNo?: number
+  payerName: string
+  incomeType: string
+  amount: number
+  paymentDate: string
+  notes?: string
+  clubName: string
+  clubLocation?: string
+}
+
+export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
+  const no = String(data.receiptNo ?? 1).padStart(4, '0')
+  downloadPDF([`
+    <style>
+      .mi-wrap { font-family:'Segoe UI',Arial,sans-serif; }
+      .mi-head { background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; border-radius:10px 10px 0 0; padding:16px 22px 12px; display:flex; justify-content:space-between; align-items:flex-start; }
+      .mi-title { font-size:18px; font-weight:800; }
+      .mi-sub   { font-size:11px; opacity:.85; margin-top:3px; }
+      .mi-no    { text-align:right; font-size:16px; font-weight:700; }
+      .mi-date  { font-size:10px; opacity:.8; margin-top:2px; }
+      .mi-body  { border:1.5px solid #e2e8f0; border-top:none; padding:18px 22px; }
+      .mi-field { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+      .mi-fk    { font-size:12px; color:#64748b; }
+      .mi-fv    { font-size:12px; font-weight:600; color:#1e293b; }
+      .mi-fv.accent { color:#7c3aed; }
+      .mi-amount { margin-top:14px; background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; border-radius:9px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
+      .mi-al    { font-size:11px; opacity:.85; font-weight:600; }
+      .mi-av    { font-size:28px; font-weight:800; }
+      .mi-sig   { border:1.5px solid #e2e8f0; border-top:none; display:grid; grid-template-columns:1fr 1fr; }
+      .mi-scol  { padding:14px 18px; text-align:center; }
+      .mi-scol + .mi-scol { border-left:1.5px solid #e2e8f0; }
+      .mi-stit  { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
+      .mi-sline { border-bottom:1.5px dashed #cbd5e1; margin:24px 10px 5px; }
+      .mi-sname { font-size:11px; font-weight:600; color:#1e293b; }
+      .mi-foot  { border:1.5px solid #e2e8f0; border-top:none; border-radius:0 0 9px 9px; padding:10px 18px; display:flex; justify-content:space-between; background:#f8fafc; font-size:10px; color:#94a3b8; }
+    </style>
+    <div class="mi-wrap">
+      <div class="mi-head">
+        <div>
+          <div class="mi-title">🎮 PHIẾU THU QUỸ MINI</div>
+          <div class="mi-sub">${data.clubName}</div>
+        </div>
+        <div>
+          <div class="mi-no">No. ${no}</div>
+          <div class="mi-date">Ngày in: ${today()}</div>
+        </div>
+      </div>
+      <div class="mi-body">
+        <div class="mi-field"><span class="mi-fk">Người nộp</span><span class="mi-fv">${data.payerName}</span></div>
+        <div class="mi-field"><span class="mi-fk">Loại thu</span><span class="mi-fv accent">${data.incomeType}</span></div>
+        <div class="mi-field"><span class="mi-fk">Ngày nộp</span><span class="mi-fv">${data.paymentDate}</span></div>
+        ${data.notes ? `<div class="mi-field"><span class="mi-fk">Ghi chú</span><span class="mi-fv">${data.notes}</span></div>` : ''}
+        <div class="mi-amount">
+          <div class="mi-al">Số Tiền Thu Quỹ Mini</div>
+          <div class="mi-av">${formatVND(data.amount)}</div>
+        </div>
+      </div>
+      <div class="mi-sig">
+        <div class="mi-scol">
+          <div class="mi-stit">Thủ Quỹ Xác Nhận</div>
+          <div class="mi-sline"></div>
+          <div class="mi-sname">(Ký và ghi rõ họ tên)</div>
+        </div>
+        <div class="mi-scol">
+          <div class="mi-stit">Người Nộp</div>
+          <div class="mi-sline"></div>
+          <div class="mi-sname">${data.payerName}</div>
+        </div>
+      </div>
+      <div class="mi-foot">
+        <span>Phiếu thu Quỹ Mini – không tính vào công nợ thành viên Quỹ Chung</span>
+        <span>${data.clubLocation ?? 'Hà Nội'}, ngày ${today()}</span>
+      </div>
+    </div>
+  `], `Phieu_Thu_Mini_${data.payerName.replace(/\s/g, '_')}`)
+}
+
+/* ════════════════════════════════════════
+   EXPORT: Phiếu Chi Quỹ Mini
+════════════════════════════════════════ */
+export interface MiniExpenseReceiptData {
+  receiptNo?: number
+  receiverName: string
+  expenseType: string
+  amount: number
+  expenseDate: string
+  description: string
+  notes?: string
+  clubName: string
+  clubLocation?: string
+}
+
+export function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
+  const no = String(data.receiptNo ?? 1).padStart(4, '0')
+  downloadPDF([`
+    <style>
+      .me-wrap { font-family:'Segoe UI',Arial,sans-serif; }
+      .me-head { background:linear-gradient(135deg,#6d28d9,#8b5cf6); color:#fff; border-radius:10px 10px 0 0; padding:16px 22px 12px; display:flex; justify-content:space-between; align-items:flex-start; }
+      .me-title { font-size:18px; font-weight:800; }
+      .me-sub   { font-size:11px; opacity:.85; margin-top:3px; }
+      .me-no    { text-align:right; font-size:16px; font-weight:700; }
+      .me-date  { font-size:10px; opacity:.8; margin-top:2px; }
+      .me-body  { border:1.5px solid #e2e8f0; border-top:none; padding:18px 22px; }
+      .me-field { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+      .me-fk    { font-size:12px; color:#64748b; }
+      .me-fv    { font-size:12px; font-weight:600; color:#1e293b; }
+      .me-fv.accent { color:#6d28d9; }
+      .me-amount { margin-top:14px; background:linear-gradient(135deg,#dc2626,#f87171); color:#fff; border-radius:9px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
+      .me-al    { font-size:11px; opacity:.85; font-weight:600; }
+      .me-av    { font-size:28px; font-weight:800; }
+      .me-sig   { border:1.5px solid #e2e8f0; border-top:none; display:grid; grid-template-columns:1fr 1fr; }
+      .me-scol  { padding:14px 18px; text-align:center; }
+      .me-scol + .me-scol { border-left:1.5px solid #e2e8f0; }
+      .me-stit  { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
+      .me-sline { border-bottom:1.5px dashed #cbd5e1; margin:24px 10px 5px; }
+      .me-sname { font-size:11px; font-weight:600; color:#1e293b; }
+      .me-foot  { border:1.5px solid #e2e8f0; border-top:none; border-radius:0 0 9px 9px; padding:10px 18px; display:flex; justify-content:space-between; background:#f8fafc; font-size:10px; color:#94a3b8; }
+    </style>
+    <div class="me-wrap">
+      <div class="me-head">
+        <div>
+          <div class="me-title">🎮 PHIẾU CHI QUỸ MINI</div>
+          <div class="me-sub">${data.clubName}</div>
+        </div>
+        <div>
+          <div class="me-no">No. ${no}</div>
+          <div class="me-date">Ngày in: ${today()}</div>
+        </div>
+      </div>
+      <div class="me-body">
+        <div class="me-field"><span class="me-fk">Mô tả</span><span class="me-fv">${data.description}</span></div>
+        <div class="me-field"><span class="me-fk">Người nhận</span><span class="me-fv">${data.receiverName}</span></div>
+        <div class="me-field"><span class="me-fk">Loại chi</span><span class="me-fv accent">${data.expenseType}</span></div>
+        <div class="me-field"><span class="me-fk">Ngày chi</span><span class="me-fv">${data.expenseDate}</span></div>
+        ${data.notes ? `<div class="me-field"><span class="me-fk">Ghi chú</span><span class="me-fv">${data.notes}</span></div>` : ''}
+        <div class="me-amount">
+          <div class="me-al">Số Tiền Chi Quỹ Mini</div>
+          <div class="me-av">${formatVND(data.amount)}</div>
+        </div>
+      </div>
+      <div class="me-sig">
+        <div class="me-scol">
+          <div class="me-stit">Thủ Quỹ Xác Nhận</div>
+          <div class="me-sline"></div>
+          <div class="me-sname">(Ký và ghi rõ họ tên)</div>
+        </div>
+        <div class="me-scol">
+          <div class="me-stit">Người Nhận</div>
+          <div class="me-sline"></div>
+          <div class="me-sname">${data.receiverName}</div>
+        </div>
+      </div>
+      <div class="me-foot">
+        <span>Phiếu chi Quỹ Mini – không phân bổ cá nhân, không ảnh hưởng Quỹ Chung</span>
+        <span>${data.clubLocation ?? 'Hà Nội'}, ngày ${today()}</span>
+      </div>
+    </div>
+  `], `Phieu_Chi_Mini_${data.receiverName.replace(/\s/g, '_')}`)
+}
+
 export function exportReportsExcel(data: ReportSummary, memberDetails: { name: string; attended: number; paid: string; cost: number; balance: number }[]) {
   exportExcel(`Bao_Cao_${data.periodName.replace(/\s/g, '_')}`, [
     {
