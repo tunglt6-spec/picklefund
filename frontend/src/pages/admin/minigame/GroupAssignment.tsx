@@ -5,11 +5,13 @@ import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { cn } from '../../../lib/utils'
 import toast from 'react-hot-toast'
 
 export function GroupAssignment() {
   const { id } = useParams<{ id: string }>()
+  useMinigameDetailSync(id)
   const navigate = useNavigate()
   const {
     getMinigame, participants, groups, generateGroups,

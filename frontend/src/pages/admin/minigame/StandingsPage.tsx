@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { cn } from '../../../lib/utils'
 
 const RANK_CLASS: Record<number, string> = {
@@ -16,6 +17,7 @@ const BAR_COLORS = ['#f59e0b', '#94a3b8', '#f97316', '#6366f1', '#22c55e', '#06b
 
 export function StandingsPage() {
   const { id } = useParams<{ id: string }>()
+  useMinigameDetailSync(id)
   const navigate = useNavigate()
   const { getMinigame, getStandings, groups } = useMinigameStore()
   const mg = getMinigame(id!)

@@ -920,6 +920,7 @@ interface MinigameStore {
   getMinigames: (clubId: string) => MiniGame[]
   getMinigame: (id: string) => MiniGame | undefined
   setMinigamesFromApi: (clubId: string, minigames: MiniGame[]) => void
+  syncMinigameDetail: (mg: MiniGame, apiParticipants: MiniGameParticipant[]) => void
   createMinigame: (data: Omit<MiniGame, 'id' | 'createdAt'>) => MiniGame
   updateMinigame: (id: string, data: Partial<MiniGame>) => void
   deleteMinigame: (id: string) => void
@@ -998,6 +999,17 @@ export const useMinigameStore = create<MinigameStore>()(
           minigames: [
             ...s.minigames.filter(m => m.clubId !== clubId),
             ...incoming,
+          ],
+        })),
+
+      syncMinigameDetail: (mg, apiParticipants) =>
+        set(s => ({
+          minigames: s.minigames.some(m => m.id === mg.id)
+            ? s.minigames.map(m => m.id === mg.id ? mg : m)
+            : [...s.minigames, mg],
+          participants: [
+            ...s.participants.filter(p => p.minigameId !== mg.id),
+            ...apiParticipants,
           ],
         })),
 

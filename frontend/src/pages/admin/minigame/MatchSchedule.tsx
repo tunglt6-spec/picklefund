@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button'
 import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
 import { ScoreEntryDrawer } from '../../../components/minigame/ScoreEntryDrawer'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
 
@@ -215,6 +216,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
 export function MatchSchedule() {
   const { id } = useParams<{ id: string }>()
+  useMinigameDetailSync(id)
   const navigate = useNavigate()
   const { getMinigame, matches, groups, generateSchedule } = useMinigameStore()
   const mg = getMinigame(id!)
