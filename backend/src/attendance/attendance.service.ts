@@ -27,15 +27,18 @@ export class AttendanceService {
     return s
   }
 
-  async create(clubId: string, userId: string, dto: { fundPeriodId: string; sessionDate: string; courtFee: number; location?: string; notes?: string }) {
+  async create(clubId: string, userId: string, dto: { fundPeriodId: string; sessionDate: string; courtFee: number; courtName?: string; startTime?: string; endTime?: string; notes?: string }) {
     return this.prisma.attendanceSession.create({
       data: {
-        ...dto,
         clubId,
         createdById: userId,
+        fundPeriodId: dto.fundPeriodId,
         sessionDate: new Date(dto.sessionDate),
         courtFee: new Decimal(dto.courtFee),
-        courtName: dto.location,
+        courtName: dto.courtName,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
+        notes: dto.notes,
       },
     })
   }
