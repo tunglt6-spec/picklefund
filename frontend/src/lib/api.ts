@@ -15,6 +15,10 @@ function processQueue(error: any, token: string | null = null) {
   failedQueue = []
 }
 
+function isLocalToken(token?: string | null) {
+  return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
+}
+
 api.interceptors.request.use((config) => {
   const { accessToken } = useAuthStore.getState()
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
@@ -30,7 +34,11 @@ api.interceptors.response.use(
       return Promise.reject(err)
     }
 
-    const { refreshToken, setTokens, logout } = useAuthStore.getState()
+    const { accessToken, refreshToken, setTokens, logout } = useAuthStore.getState()
+    if (isLocalToken(accessToken)) {
+      return Promise.reject(err)
+    }
+
     if (!refreshToken) {
       logout()
       window.location.href = '/login'

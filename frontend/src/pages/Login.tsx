@@ -544,6 +544,22 @@ export function Login() {
     setLoading(true)
 
     try {
+      const localAccount = registeredAccounts.find(a => a.username === username && a.password === password)
+      if (localAccount) {
+        const user: User = {
+          id: `u-${localAccount.username}`,
+          username: localAccount.username,
+          email: localAccount.email,
+          clubId: localAccount.clubId,
+          role: localAccount.role,
+        }
+        login(user, `local-token-${localAccount.clubId}`, `local-refresh-${localAccount.clubId}`)
+        toast.success(`Chào mừng trở lại, ${localAccount.fullName || localAccount.username}!`, { duration: 5000 })
+        navigate(routeByRole[localAccount.role])
+        setLoading(false)
+        return
+      }
+
       const res = await api.post('/auth/login', { username, password, rememberMe: remember })
       const { accessToken, refreshToken, user: apiUser } = res.data.data ?? res.data
       const user: User = {
@@ -574,7 +590,7 @@ export function Login() {
         const reg = registeredAccounts.find(a => a.username === username && a.password === password)
         if (reg) {
           const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }
-          login(user, `token-${reg.clubId}`, `refresh-${reg.clubId}`)
+          login(user, `local-token-${reg.clubId}`, `local-refresh-${reg.clubId}`)
           toast.success(`Chào mừng trở lại, ${reg.fullName || reg.username}!`, { duration: 5000 })
           navigate(routeByRole[reg.role])
           setLoading(false)
@@ -597,7 +613,7 @@ export function Login() {
         const reg = registeredAccounts.find(a => a.username === username && a.password === password)
         if (reg) {
           const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }
-          login(user, `token-${reg.clubId}`, `refresh-${reg.clubId}`)
+          login(user, `local-token-${reg.clubId}`, `local-refresh-${reg.clubId}`)
           toast.success(`Chào mừng trở lại, ${reg.fullName || reg.username}!`, { duration: 5000 })
           navigate(routeByRole[reg.role])
           setLoading(false)
