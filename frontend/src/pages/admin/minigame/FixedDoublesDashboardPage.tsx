@@ -319,7 +319,7 @@ function RankingTable({ standings }: { standings: MiniGameTeamStanding[] }) {
             <th className="text-center px-2 py-2.5">Điểm</th>
           </tr>
         </thead>
-        <tbody className="divide-y" style={{ divideColor: T.border }}>
+        <tbody className="divide-y divide-slate-200">
           {standings.map(s => (
             <tr
               key={s.teamId}
