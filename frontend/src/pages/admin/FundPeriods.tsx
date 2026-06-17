@@ -411,7 +411,7 @@ export function FundPeriods() {
                         <Cell key={i} fill={DONUT_COLORS[i]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number | string) => formatVND(Number(v))} />
+                    <Tooltip formatter={(v) => formatVND(v as number)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
