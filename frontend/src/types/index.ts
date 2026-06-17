@@ -2,6 +2,7 @@ export type Role = 'SUPER_ADMIN' | 'CLUB_ADMIN' | 'CLUB_TREASURER' | 'CLUB_MEMBE
 
 export type ClubStatus = 'active' | 'suspended' | 'deleted'
 export type FundPeriodStatus = 'draft' | 'active' | 'closed' | 'finalized'
+export type FundPeriodType = 'chung' | 'game'
 export type MemberStatus = 'active' | 'inactive' | 'left'
 export type SessionStatus = 'scheduled' | 'completed' | 'cancelled'
 export type AttendanceStatus = 'PRESENT' | 'ABSENT'
@@ -59,6 +60,7 @@ export interface FundPeriod {
   contributionAmount: number
   totalSessions: number
   status: FundPeriodStatus
+  type?: FundPeriodType
   notes?: string
   finalizedAt?: string
   createdBy: string
