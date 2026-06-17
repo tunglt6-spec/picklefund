@@ -32,21 +32,25 @@ export function TreasurerLedger() {
   const rows: LedgerRow[] = useMemo(() => {
     const periodId = activePeriod?.id
     const incomes: LedgerRow[] = data.contributions
-      .filter(c => !periodId || c.fundPeriodId === periodId)
+      .filter(c => !periodId || c.fundPeriodId === periodId || c.fundSource === 'MINI')
       .map(c => ({
         id: c.id,
         date: c.paymentDate,
         type: 'Thu' as const,
-        desc: `${c.member?.fullName ?? 'Thành viên'} đóng quỹ${activePeriod ? ` ${activePeriod.name}` : ''}`,
+        desc: c.fundSource === 'MINI'
+          ? `[Quỹ Mini] ${c.payerName ?? c.member?.fullName ?? 'Thành viên'}`
+          : `${c.member?.fullName ?? 'Thành viên'} đóng quỹ${activePeriod ? ` ${activePeriod.name}` : ''}`,
         amount: c.amount,
       }))
     const expenses: LedgerRow[] = data.expenses
-      .filter(e => !periodId || e.fundPeriodId === periodId)
+      .filter(e => !periodId || e.fundPeriodId === periodId || e.fundSource === 'MINI')
       .map(e => ({
         id: e.id,
         date: e.expenseDate,
         type: 'Chi' as const,
-        desc: e.description,
+        desc: e.fundSource === 'MINI'
+          ? `[Quỹ Mini] ${e.description}`
+          : e.description,
         amount: -e.amount,
       }))
     return [...incomes, ...expenses].sort((a, b) => a.date.localeCompare(b.date))
