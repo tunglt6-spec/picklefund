@@ -42,7 +42,10 @@ export class AuthService {
   }
 
   async login(username: string, password: string, opts?: { rememberMe?: boolean; ip?: string; userAgent?: string }) {
-    const user = await this.prisma.user.findUnique({ where: { username } })
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      include: { member: { select: { id: true } } },
+    })
     if (!user || !user.isActive) throw new UnauthorizedException('Tài khoản không tồn tại hoặc bị khóa')
 
     const valid = await argon2.verify(user.passwordHash, password)
@@ -64,7 +67,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, username: user.username, email: user.email, role: user.role, clubId: user.clubId },
+      user: { id: user.id, username: user.username, email: user.email, role: user.role, clubId: user.clubId, memberId: user.member?.id ?? null },
     }
   }
 
