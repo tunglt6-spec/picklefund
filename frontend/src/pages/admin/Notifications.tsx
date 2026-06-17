@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, DollarSign, Calendar, Users, AlertTriangle, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -43,7 +43,17 @@ export function Notifications() {
   const upcoming = data.sessions.filter(s => s.status === 'scheduled')
 
   // Generate dynamic notifications from store state + static ones
-  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const STORAGE_KEY = `notif-read-${clubId}`
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>()
+    } catch { return new Set<string>() }
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...readIds])) } catch {}
+  }, [readIds, STORAGE_KEY])
 
   const dynamicNotifs: Notif[] = [
     ...unpaid.slice(0, 3).map((c) => ({

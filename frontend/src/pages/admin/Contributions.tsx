@@ -88,7 +88,7 @@ export function Contributions() {
         fundSource: 'COMMON', memberId: member.id,
         fundPeriodId: activePeriod?.id,
         amount: Number(form.amount),
-        paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
+        paidAt: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
       }
       try {
         if (editTarget) {
@@ -115,7 +115,7 @@ export function Contributions() {
       const payload = {
         fundSource: 'MINI' as const, miniIncomeType: form.miniIncomeType,
         payerName: form.payerName || undefined, isConfirmed: true,
-        amount: Number(form.amount), paymentDate: form.paymentDate,
+        amount: Number(form.amount), paidAt: form.paymentDate,
         paymentMethod: form.paymentMethod, notes: form.notes,
       }
       try {

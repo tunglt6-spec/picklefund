@@ -426,7 +426,7 @@ function MobileLinkWidget() {
 
             {tab === 'lan' ? (
               /* ── LAN tab ── */
-              mobileUrl ? (
+              (mobileUrl || !isLocalhost) ? (
                 <div className="flex gap-3 items-start">
                   <QRBlock url={mobileUrl} />
                   <div className="flex-1 min-w-0">
@@ -468,71 +468,110 @@ function MobileLinkWidget() {
               )
             ) : (
               /* ── Internet tab ── */
-              <div>
-                <div className="flex gap-2 items-start mb-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-100">
-                    <Globe size={15} className="text-violet-500" />
+              !isLocalhost ? (
+                /* Already on a public URL — show QR directly */
+                <div>
+                  <div className="flex gap-2 items-start mb-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100">
+                      <Globe size={15} className="text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Ứng dụng đã có thể truy cập từ internet</p>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">Quét QR bên dưới từ bất kỳ mạng nào — WiFi, 4G, 5G.</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Truy cập từ bất kỳ đâu</p>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">Tạo URL công khai qua tunnel — điện thoại 4G/5G cũng vào được.</p>
-                  </div>
-                </div>
-
-                {/* Step 1: run tunnel */}
-                <div className="mb-3">
-                  <p className="text-[11px] font-semibold text-slate-600 mb-1.5">① Chạy lệnh này trong terminal:</p>
-                  <div className="bg-slate-900 rounded-xl px-3 py-2 flex items-center gap-2">
-                    <code className="text-emerald-400 text-[11px] font-mono flex-1">npm run dev:tunnel</code>
-                    <button onClick={() => copy('npm run dev:tunnel', setTunnelCopied)}
-                      className={`shrink-0 transition-colors ${tunnelCopied ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'}`}>
-                      {tunnelCopied ? <Check size={13} /> : <Copy size={13} />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                    Terminal sẽ hiện URL dạng <span className="font-mono text-violet-500">https://xxxx.loca.lt</span>
-                  </p>
-                </div>
-
-                {/* Step 2: paste URL */}
-                <div className="mb-3">
-                  <p className="text-[11px] font-semibold text-slate-600 mb-1.5">② Dán URL tunnel vào đây để tạo QR:</p>
-                  <input
-                    type="url"
-                    value={tunnelInput}
-                    onChange={e => setTunnelInput(e.target.value)}
-                    placeholder="https://xxxx.loca.lt"
-                    className="w-full text-[11px] font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 placeholder:text-slate-300 transition"
-                  />
-                </div>
-
-                {/* QR or placeholder */}
-                {tunnelQrUrl ? (
-                  <div className="flex gap-3 items-start mt-3 pt-3 border-t border-slate-100">
-                    <QRBlock url={tunnelQrUrl} />
+                  <div className="flex gap-3 items-start">
+                    <QRBlock url={mobileUrl} />
                     <div className="flex-1">
                       <p className="text-[11px] font-semibold text-emerald-600 mb-1 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Sẵn sàng quét!
                       </p>
-                      <div className="flex items-center gap-1.5 bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-100">
-                        <span className="text-[10px] text-violet-600 font-mono truncate flex-1">{tunnelQrUrl}</span>
-                        <button onClick={() => copy(tunnelQrUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-violet-500'}`}>
+                      <div className="flex items-center gap-1.5 bg-slate-50 rounded-xl px-2.5 py-1.5 mb-2 border border-slate-100">
+                        <span className="text-[10px] text-violet-600 font-mono truncate flex-1">{mobileUrl}</span>
+                        <button onClick={() => copy(mobileUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-violet-500'}`}>
                           {copied ? <Check size={12} /> : <Copy size={12} />}
                         </button>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
-                        Hoạt động trên mọi mạng — WiFi, 4G, 5G.
-                        <br/>URL hết hạn khi tắt terminal.
-                      </p>
+                      <div className="space-y-1">
+                        {['Mở Camera điện thoại', 'Quét mã QR', 'Đăng nhập và dùng ngay'].map((t, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                              style={{ background: 'linear-gradient(135deg,#00C896,#4F46E5)' }}>{i+1}</span>
+                            <span className="text-[11px] text-slate-500">{t}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-100 text-slate-300">
-                    <QrCode size={18} />
-                    <span className="text-[11px]">QR xuất hiện sau khi dán URL</span>
+                </div>
+              ) : (
+                /* localhost — tunnel paste flow */
+                <div>
+                  <div className="flex gap-2 items-start mb-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-100">
+                      <Globe size={15} className="text-violet-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Truy cập từ bất kỳ đâu</p>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">Tạo URL công khai qua tunnel — điện thoại 4G/5G cũng vào được.</p>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Step 1: run tunnel */}
+                  <div className="mb-3">
+                    <p className="text-[11px] font-semibold text-slate-600 mb-1.5">① Chạy lệnh này trong terminal:</p>
+                    <div className="bg-slate-900 rounded-xl px-3 py-2 flex items-center gap-2">
+                      <code className="text-emerald-400 text-[11px] font-mono flex-1">npm run dev:tunnel</code>
+                      <button onClick={() => copy('npm run dev:tunnel', setTunnelCopied)}
+                        className={`shrink-0 transition-colors ${tunnelCopied ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'}`}>
+                        {tunnelCopied ? <Check size={13} /> : <Copy size={13} />}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                      Terminal sẽ hiện URL dạng <span className="font-mono text-violet-500">https://xxxx.loca.lt</span>
+                    </p>
+                  </div>
+
+                  {/* Step 2: paste URL */}
+                  <div className="mb-3">
+                    <p className="text-[11px] font-semibold text-slate-600 mb-1.5">② Dán URL tunnel vào đây để tạo QR:</p>
+                    <input
+                      type="url"
+                      value={tunnelInput}
+                      onChange={e => setTunnelInput(e.target.value)}
+                      placeholder="https://xxxx.loca.lt"
+                      className="w-full text-[11px] font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 placeholder:text-slate-300 transition"
+                    />
+                  </div>
+
+                  {/* QR or placeholder */}
+                  {tunnelQrUrl ? (
+                    <div className="flex gap-3 items-start mt-3 pt-3 border-t border-slate-100">
+                      <QRBlock url={tunnelQrUrl} />
+                      <div className="flex-1">
+                        <p className="text-[11px] font-semibold text-emerald-600 mb-1 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Sẵn sàng quét!
+                        </p>
+                        <div className="flex items-center gap-1.5 bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-100">
+                          <span className="text-[10px] text-violet-600 font-mono truncate flex-1">{tunnelQrUrl}</span>
+                          <button onClick={() => copy(tunnelQrUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-violet-500'}`}>
+                            {copied ? <Check size={12} /> : <Copy size={12} />}
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                          Hoạt động trên mọi mạng — WiFi, 4G, 5G.
+                          <br/>URL hết hạn khi tắt terminal.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-100 text-slate-300">
+                      <QrCode size={18} />
+                      <span className="text-[11px]">QR xuất hiện sau khi dán URL</span>
+                    </div>
+                  )}
+                </div>
+              )
             )}
           </motion.div>
         )}

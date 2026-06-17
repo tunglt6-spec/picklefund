@@ -376,7 +376,8 @@ export function Expenses() {
     toast.success('Đã xóa khoản chi')
   }
 
-  const handleApprove = (id: string) => {
+  const handleApprove = async (id: string) => {
+    try { await api.patch(`/expenses/${id}/status`, { status: 'approved' }) } catch { /* local update continues */ }
     save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e))
     setDetailExp(null)
     toast.success('Đã duyệt khoản chi!')

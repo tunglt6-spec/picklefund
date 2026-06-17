@@ -26,6 +26,11 @@ export class AttendanceController {
     return ok(await this.service.findAttendedByMember(user.memberId, user.clubId))
   }
 
+  @Get('member-summary')
+  async memberSummary(@CurrentUser() user: any, @Query('fundPeriodId') fundPeriodId?: string) {
+    return ok(await this.service.getMemberSummary(user.clubId, fundPeriodId))
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.service.findOne(id, user.clubId))

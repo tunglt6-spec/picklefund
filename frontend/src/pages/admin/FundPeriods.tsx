@@ -2,17 +2,18 @@ import { useState, useMemo } from 'react'
 import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
-  ChevronLeft, ChevronRight, Download, Lock, TrendingUp, AlertTriangle,
-  FolderOpen, ChevronDown, QrCode
+  ChevronLeft, ChevronRight, Download, Lock, TrendingUp,
+  FolderOpen, ChevronDown, QrCode,
+  Trophy, Star, Filter
 } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import type { FundPeriod, FundPeriodStatus, FundPeriodType } from '../../types'
+import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -28,6 +29,19 @@ const DONUT_COLORS = ['#6366f1', '#7c3aed']
 const emptyForm = {
   name: '', startDate: '', endDate: '',
   contributionAmount: 1000000, totalSessions: 13, notes: ''
+}
+
+type FormData = typeof emptyForm
+
+function periodToForm(p: FundPeriod): FormData {
+  return {
+    name: p.name,
+    startDate: p.startDate,
+    endDate: p.endDate,
+    contributionAmount: p.contributionAmount,
+    totalSessions: p.totalSessions,
+    notes: p.notes ?? '',
+  }
 }
 
 type Tab = 'list' | 'history' | 'highlights'
@@ -47,6 +61,17 @@ export function FundPeriods() {
   const [showCreateGame, setShowCreateGame] = useState(false)
   const [formChung, setFormChung] = useState({ ...emptyForm })
   const [formGame, setFormGame] = useState({ ...emptyForm })
+  const [editingChung, setEditingChung] = useState<FundPeriod | null>(null)
+  const [editingGame, setEditingGame] = useState<FundPeriod | null>(null)
+
+  const openEdit = (p: FundPeriod) => {
+    const form = periodToForm(p)
+    if ((p.type ?? 'chung') === 'chung') {
+      setEditingChung(p); setFormChung(form); setShowCreateChung(true)
+    } else {
+      setEditingGame(p); setFormGame(form); setShowCreateGame(true)
+    }
+  }
 
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<'' | FundPeriodType>('')
@@ -108,24 +133,43 @@ export function FundPeriods() {
     { name: 'Quỹ Mini', value: stats.game.balance },
   ]
 
-  const handleCreate = (type: FundPeriodType, form: typeof emptyForm, onClose: () => void) => async (e: React.FormEvent) => {
+  const handleSave = (
+    type: FundPeriodType,
+    form: FormData,
+    editing: FundPeriod | null,
+    onClose: () => void,
+  ) => async (e: React.FormEvent) => {
     e.preventDefault()
     const payload = { ...form, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
-    let newPeriod: FundPeriod
-    try {
-      const res = await api.post('/fund-periods', payload)
-      const d = res.data?.data
-      newPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
-    } catch {
-      newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', ...payload }
+    if (editing) {
+      try {
+        const res = await api.put(`/fund-periods/${editing.id}`, payload)
+        const d = res.data?.data
+        const updated: FundPeriod = { ...editing, ...payload, ...(d ?? {}), contributionAmount: Number((d ?? payload).contributionAmount) }
+        setPeriods(prev => prev.map(x => x.id === editing.id ? updated : x))
+      } catch {
+        setPeriods(prev => prev.map(x => x.id === editing.id ? { ...x, ...payload } : x))
+      }
+      onClose()
+      toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
+    } else {
+      let newPeriod: FundPeriod
+      try {
+        const res = await api.post('/fund-periods', payload)
+        const d = res.data?.data
+        newPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
+      } catch {
+        newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', ...payload }
+      }
+      setPeriods(prev => [newPeriod, ...prev])
+      onClose()
+      toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
     }
-    setPeriods(prev => [newPeriod, ...prev])
-    onClose()
-    toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
   }
 
-  const handleDelete = (p: FundPeriod) => {
+  const handleDelete = async (p: FundPeriod) => {
     if (!confirm(`Xóa kỳ quỹ "${p.name}"?`)) return
+    try { await api.delete(`/fund-periods/${p.id}`) } catch { /* local delete continues */ }
     setPeriods(prev => prev.filter(x => x.id !== p.id))
     toast.success('Đã xóa kỳ quỹ')
   }
@@ -190,7 +234,7 @@ export function FundPeriods() {
             color="indigo"
             memberCount={memberCount}
             contributions={contributions}
-            onEdit={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
+            onEdit={() => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true))}
           />
           <FundDetailCard
             title="Quỹ Mini"
@@ -199,7 +243,7 @@ export function FundPeriods() {
             color="violet"
             memberCount={memberCount}
             contributions={contributions}
-            onEdit={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
+            onEdit={() => activePeriods.game ? openEdit(activePeriods.game) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
           />
         </div>
 
@@ -313,7 +357,7 @@ export function FundPeriods() {
                                 <button title="Xem" className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors">
                                   <Eye size={14} />
                                 </button>
-                                <button title="Sửa" className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
+                                <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
                                   <Pencil size={14} />
                                 </button>
                                 {p.status === 'active' && (
@@ -361,17 +405,11 @@ export function FundPeriods() {
           )}
 
           {tab === 'history' && (
-            <div className="px-5 py-8 text-center text-slate-400 text-sm">
-              <TrendingUp size={32} className="mx-auto mb-3 text-slate-200" />
-              Lịch sử giao dịch đang được phát triển
-            </div>
+            <HistoryTab contributions={contributions} periods={periods} members={members} />
           )}
 
           {tab === 'highlights' && (
-            <div className="px-5 py-8 text-center text-slate-400 text-sm">
-              <AlertTriangle size={32} className="mx-auto mb-3 text-slate-200" />
-              Giao dịch nổi bật đang được phát triển
-            </div>
+            <HighlightsTab contributions={contributions} periods={periods} members={members} />
           )}
         </div>
 
@@ -443,29 +481,307 @@ export function FundPeriods() {
         </div>
       </div>
 
-      {/* Create Quỹ chung modal */}
+      {/* Quỹ chung modal (create or edit) */}
       <FundModal
         open={showCreateChung}
-        onClose={() => setShowCreateChung(false)}
-        title="Tạo Quỹ Chung"
-        subtitle="Kỳ thu quỹ chung cho CLB"
+        onClose={() => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) }}
+        title={editingChung ? 'Chỉnh sửa Quỹ Chung' : 'Tạo Quỹ Chung'}
+        subtitle={editingChung ? `Đang sửa: ${editingChung.name}` : 'Kỳ thu quỹ chung cho CLB'}
         formId="form-chung"
         form={formChung}
         setForm={setFormChung}
-        onSubmit={handleCreate('chung', formChung, () => { setShowCreateChung(false); setFormChung({ ...emptyForm }) })}
+        editing={!!editingChung}
+        onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) })}
       />
 
-      {/* Create Quỹ Mini modal */}
+      {/* Quỹ Mini modal (create or edit) */}
       <FundModal
         open={showCreateGame}
-        onClose={() => setShowCreateGame(false)}
-        title="Tạo Quỹ Mini"
-        subtitle="Kỳ thu Quỹ Mini / giải đấu"
+        onClose={() => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) }}
+        title={editingGame ? 'Chỉnh sửa Quỹ Mini' : 'Tạo Quỹ Mini'}
+        subtitle={editingGame ? `Đang sửa: ${editingGame.name}` : 'Kỳ thu Quỹ Mini / giải đấu'}
         formId="form-game"
         form={formGame}
         setForm={setFormGame}
-        onSubmit={handleCreate('game', formGame, () => { setShowCreateGame(false); setFormGame({ ...emptyForm }) })}
+        editing={!!editingGame}
+        onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) })}
       />
+    </div>
+  )
+}
+
+// ─── HistoryTab ────────────────────────────────────────────────────────────────
+
+function HistoryTab({ contributions, periods, members }: {
+  contributions: FundContribution[]
+  periods: FundPeriod[]
+  members: Member[]
+}) {
+  const [filterPeriod, setFilterPeriod] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'' | 'confirmed' | 'pending'>('')
+  const [histPage, setHistPage] = useState(1)
+  const PAGE = 12
+
+  const sorted = useMemo(() => {
+    return [...contributions]
+      .filter(c => {
+        if (filterPeriod && c.fundPeriodId !== filterPeriod) return false
+        if (filterStatus === 'confirmed' && !c.isConfirmed) return false
+        if (filterStatus === 'pending' && c.isConfirmed) return false
+        return true
+      })
+      .sort((a, b) => new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime())
+  }, [contributions, filterPeriod, filterStatus])
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE))
+  const paged = sorted.slice((histPage - 1) * PAGE, histPage * PAGE)
+
+  const totalIncome = sorted.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+  const totalPending = sorted.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+
+  return (
+    <div className="p-5 space-y-4">
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
+          <p className="text-xs text-emerald-600 font-medium">Tổng đã xác nhận</p>
+          <p className="text-base font-bold text-emerald-700 mt-0.5">{formatVND(totalIncome)}</p>
+        </div>
+        <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+          <p className="text-xs text-amber-600 font-medium">Chờ xác nhận</p>
+          <p className="text-base font-bold text-amber-700 mt-0.5">{formatVND(totalPending)}</p>
+        </div>
+        <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+          <p className="text-xs text-indigo-600 font-medium">Số giao dịch</p>
+          <p className="text-base font-bold text-indigo-700 mt-0.5">{sorted.length}</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Filter size={14} className="text-slate-400 shrink-0" />
+        <select
+          value={filterPeriod}
+          onChange={e => { setFilterPeriod(e.target.value); setHistPage(1) }}
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-indigo-400"
+        >
+          <option value="">Tất cả kỳ quỹ</option>
+          {periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={e => { setFilterStatus(e.target.value as any); setHistPage(1) }}
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-indigo-400"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="confirmed">Đã xác nhận</option>
+          <option value="pending">Chờ xác nhận</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      {paged.length === 0 ? (
+        <div className="py-10 text-center text-slate-400 text-sm">
+          <TrendingUp size={28} className="mx-auto mb-2 text-slate-200" />Chưa có giao dịch nào
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-slate-100">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Ngày</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Thành viên</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Kỳ quỹ</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Loại quỹ</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-slate-500">Số tiền</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {paged.map(c => {
+                const member = members.find(m => m.id === c.memberId)
+                const period = periods.find(p => p.id === c.fundPeriodId)
+                return (
+                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0">
+                          {(member?.fullName ?? c.payerName ?? '?').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-xs font-medium text-slate-700">{member?.fullName ?? c.payerName ?? '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-xs text-slate-500">{period?.name ?? '—'}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? 'bg-violet-100 text-violet-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        {c.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <span className="text-xs font-bold text-emerald-600">+{formatVND(c.amount)}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-center">
+                      {c.isConfirmed
+                        ? <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đã xác nhận</span>
+                        : <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Chờ xác nhận</span>
+                      }
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-slate-400">{sorted.length} giao dịch</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setHistPage(p => Math.max(1, p - 1))} disabled={histPage === 1}
+              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors">
+              <ChevronLeft size={14} />
+            </button>
+            <span className="text-xs text-slate-600 px-2">{histPage}/{totalPages}</span>
+            <button onClick={() => setHistPage(p => Math.min(totalPages, p + 1))} disabled={histPage === totalPages}
+              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors">
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── HighlightsTab ──────────────────────────────────────────────────────────────
+
+function HighlightsTab({ contributions, periods, members }: {
+  contributions: FundContribution[]
+  periods: FundPeriod[]
+  members: Member[]
+}) {
+  // Top 5 contributors by total confirmed amount
+  const topContributors = useMemo(() => {
+    const map = new Map<string, { name: string; total: number; count: number }>()
+    for (const c of contributions) {
+      if (!c.isConfirmed || !c.memberId) continue
+      const member = members.find(m => m.id === c.memberId)
+      const name = member?.fullName ?? c.payerName ?? c.memberId
+      const prev = map.get(c.memberId) ?? { name, total: 0, count: 0 }
+      map.set(c.memberId, { name, total: prev.total + c.amount, count: prev.count + 1 })
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total).slice(0, 5)
+  }, [contributions, members])
+
+  // Per-period collection stats for bar chart
+  const periodStats = useMemo(() => {
+    return periods
+      .filter(p => contributions.some(c => c.fundPeriodId === p.id))
+      .map(p => {
+        const confirmed = contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+        const pending = contributions.filter(c => c.fundPeriodId === p.id && !c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+        return { name: p.name.length > 12 ? p.name.slice(0, 12) + '…' : p.name, confirmed, pending }
+      })
+      .slice(-6)
+  }, [contributions, periods])
+
+  // Largest single transactions
+  const topTx = useMemo(() => {
+    return [...contributions]
+      .filter(c => c.isConfirmed)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+  }, [contributions])
+
+  const medals = ['🥇', '🥈', '🥉', '4.', '5.']
+
+  return (
+    <div className="p-5 space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Top contributors */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <Trophy size={15} className="text-amber-500" />Top đóng quỹ
+          </h3>
+          {topContributors.length === 0 ? (
+            <p className="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
+          ) : (
+            <div className="space-y-2.5">
+              {topContributors.map((c, i) => (
+                <div key={c.name} className="flex items-center gap-3">
+                  <span className="text-sm w-6 text-center shrink-0">{medals[i]}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-slate-700 truncate">{c.name}</span>
+                      <span className="text-xs font-bold text-emerald-600 shrink-0 ml-2">{formatVND(c.total)}</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-emerald-400"
+                        style={{ width: `${Math.round((c.total / (topContributors[0]?.total || 1)) * 100)}%` }} />
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">{c.count} lần</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Largest single transactions */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <Star size={15} className="text-indigo-500" />Giao dịch lớn nhất
+          </h3>
+          {topTx.length === 0 ? (
+            <p className="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
+          ) : (
+            <div className="space-y-2">
+              {topTx.map((c, i) => {
+                const member = members.find(m => m.id === c.memberId)
+                const period = periods.find(p => p.id === c.fundPeriodId)
+                return (
+                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/60 transition-colors">
+                    <span className="text-sm w-5 text-center shrink-0 font-bold text-slate-400">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700 truncate">{member?.fullName ?? c.payerName ?? '—'}</p>
+                      <p className="text-[10px] text-slate-400">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
+                    </div>
+                    <span className="text-xs font-bold text-emerald-600 shrink-0">{formatVND(c.amount)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Per-period bar chart */}
+      {periodStats.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <TrendingUp size={15} className="text-indigo-500" />Thu quỹ theo kỳ
+          </h3>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={periodStats} margin={{ top: 4, right: 4, left: 0, bottom: 4 }} barSize={18}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={v => `${Math.round(v / 1000)}k`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v) => formatVND(Number(v))} labelStyle={{ fontSize: 11 }} contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+                <Bar dataKey="confirmed" name="Đã xác nhận" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pending" name="Chờ xác nhận" fill="#fbbf24" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex gap-4 justify-center mt-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-3 h-3 rounded-sm bg-indigo-500 inline-block" />Đã xác nhận</div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Chờ xác nhận</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -566,17 +882,18 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   )
 }
 
-function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit }: {
+function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit, editing }: {
   open: boolean; onClose: () => void; title: string; subtitle: string
-  formId: string; form: typeof emptyForm
-  setForm: (f: typeof emptyForm) => void; onSubmit: (e: React.FormEvent) => void
+  formId: string; form: FormData
+  setForm: (f: FormData) => void; onSubmit: (e: React.FormEvent) => void
+  editing?: boolean
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} subtitle={subtitle} size="lg"
       footer={
         <div className="flex gap-3 justify-end">
           <Button variant="outline" type="button" onClick={onClose}>Hủy bỏ</Button>
-          <Button type="submit" form={formId}>Tạo kỳ quỹ</Button>
+          <Button type="submit" form={formId}>{editing ? 'Cập nhật kỳ quỹ' : 'Tạo kỳ quỹ'}</Button>
         </div>
       }
     >

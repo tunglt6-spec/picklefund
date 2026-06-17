@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore'
 import { useClubDataStore } from '../store/clubDataStore'
 import api from '../lib/api'
 import type { Member, FundPeriod, FundContribution, LivingExpense, AttendanceSession } from '../types'
+import type { MemberAttendanceSummary } from '../store/clubDataStore'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -14,7 +15,7 @@ function toNum(v: string | number | null | undefined): number {
 
 export function useApiSync() {
   const { user, accessToken, isAuthenticated } = useAuthStore()
-  const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds } = useClubDataStore()
+  const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings } = useClubDataStore()
   const syncedRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -27,13 +28,15 @@ export function useApiSync() {
 
     const load = async () => {
       try {
-        const [membersRes, periodsRes, contribsRes, expensesRes, sessionsRes, mySessionsRes] = await Promise.allSettled([
+        const [membersRes, periodsRes, contribsRes, expensesRes, sessionsRes, mySessionsRes, memberSummaryRes, clubRes] = await Promise.allSettled([
           api.get(`/members?clubId=${clubId}`),
           api.get(`/fund-periods?clubId=${clubId}`),
           api.get(`/contributions?clubId=${clubId}`),
           api.get(`/expenses?clubId=${clubId}`),
           api.get(`/attendance?clubId=${clubId}`),
           api.get('/attendance/my-sessions'),
+          api.get('/attendance/member-summary'),
+          api.get('/clubs/me'),
         ])
 
         if (membersRes.status === 'fulfilled') {
@@ -108,6 +111,7 @@ export function useApiSync() {
             receiptUrl: e.receiptUrl ?? undefined,
             miniExpenseType: e.miniExpenseType ?? undefined,
             receiverName: e.receiverName ?? undefined,
+            status: (e.status ?? 'pending') as import('../types').ExpenseStatus,
             createdAt: e.createdAt ?? '',
             createdBy: e.createdById ?? '',
           }))
@@ -117,6 +121,36 @@ export function useApiSync() {
         if (mySessionsRes.status === 'fulfilled') {
           const ids: string[] = mySessionsRes.value.data?.data ?? []
           setMyAttendedSessionIds(clubId, ids)
+        }
+
+        if (memberSummaryRes.status === 'fulfilled') {
+          const raw = memberSummaryRes.value.data?.data ?? []
+          const summary: MemberAttendanceSummary[] = raw.map((s: any) => ({
+            memberId: s.memberId,
+            memberName: s.memberName,
+            attendedSessions: s.attendedSessions ?? 0,
+            totalSessions: s.totalSessions ?? 0,
+          }))
+          setMemberAttendanceSummary(clubId, summary)
+        }
+
+        if (clubRes.status === 'fulfilled') {
+          const c = clubRes.value.data?.data
+          if (c) {
+            const extra = (c.settings ?? {}) as Record<string, unknown>
+            setClubSettings(clubId, {
+              ...(extra as any),
+              name: c.name ?? '',
+              code: c.code ?? '',
+              address: c.address ?? '',
+              contactPhone: c.contactPhone ?? '',
+              contactEmail: c.contactEmail ?? '',
+              description: (extra.description as string) ?? '',
+              maxMembers: (extra.maxMembers as string) ?? '',
+              defaultContribution: (extra.defaultContribution as string) ?? '',
+              defaultSessions: (extra.defaultSessions as string) ?? '',
+            })
+          }
         }
 
         if (sessionsRes.status === 'fulfilled') {
@@ -143,5 +177,5 @@ export function useApiSync() {
     }
 
     load()
-  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds])
+  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
 }

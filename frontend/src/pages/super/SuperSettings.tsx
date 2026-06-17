@@ -1,27 +1,89 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Save, Shield, Globe, Bell, Database } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import toast from 'react-hot-toast'
+import api from '../../lib/api'
+
+type Settings = {
+  siteName: string
+  supportEmail: string
+  maxClubs: string
+  maxMembersPerClub: string
+  sessionTimeoutMinutes: string
+  maintenanceMode: boolean
+  emailNotifications: boolean
+  autoBackup: boolean
+  registrationOpen: boolean
+  requireEmailVerification: boolean
+}
+
+const DEFAULTS: Settings = {
+  siteName: 'PickleFund',
+  supportEmail: 'support@pickleballfund.vn',
+  maxClubs: '500',
+  maxMembersPerClub: '200',
+  sessionTimeoutMinutes: '60',
+  maintenanceMode: false,
+  emailNotifications: true,
+  autoBackup: true,
+  registrationOpen: true,
+  requireEmailVerification: false,
+}
+
+function fromApi(raw: Record<string, string>): Settings {
+  return {
+    siteName: raw.siteName ?? DEFAULTS.siteName,
+    supportEmail: raw.supportEmail ?? DEFAULTS.supportEmail,
+    maxClubs: raw.maxClubs ?? DEFAULTS.maxClubs,
+    maxMembersPerClub: raw.maxMembersPerClub ?? DEFAULTS.maxMembersPerClub,
+    sessionTimeoutMinutes: raw.sessionTimeoutMinutes ?? DEFAULTS.sessionTimeoutMinutes,
+    maintenanceMode: raw.maintenanceMode === 'true',
+    emailNotifications: raw.emailNotifications !== 'false',
+    autoBackup: raw.autoBackup !== 'false',
+    registrationOpen: raw.registrationOpen !== 'false',
+    requireEmailVerification: raw.requireEmailVerification === 'true',
+  }
+}
+
+function toApi(s: Settings): Record<string, string> {
+  return {
+    siteName: s.siteName,
+    supportEmail: s.supportEmail,
+    maxClubs: s.maxClubs,
+    maxMembersPerClub: s.maxMembersPerClub,
+    sessionTimeoutMinutes: s.sessionTimeoutMinutes,
+    maintenanceMode: String(s.maintenanceMode),
+    emailNotifications: String(s.emailNotifications),
+    autoBackup: String(s.autoBackup),
+    registrationOpen: String(s.registrationOpen),
+    requireEmailVerification: String(s.requireEmailVerification),
+  }
+}
 
 export function SuperSettings() {
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [settings, setSettings] = useState({
-    siteName: 'PickleFund',
-    supportEmail: 'support@pickleballfund.vn',
-    maxClubs: '500',
-    maxMembersPerClub: '200',
-    sessionTimeoutMinutes: '60',
-    maintenanceMode: false,
-    emailNotifications: true,
-    autoBackup: true,
-    registrationOpen: true,
-    requireEmailVerification: false,
-  })
+  const [settings, setSettings] = useState<Settings>(DEFAULTS)
 
-  const handleSave = () => {
+  useEffect(() => {
+    api.get('/system-settings')
+      .then(r => setSettings(fromApi(r.data.data)))
+      .catch(() => toast.error('Không thể tải cài đặt'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSave = async () => {
     setSaving(true)
-    setTimeout(() => { setSaving(false); toast.success('Đã lưu cài đặt hệ thống') }, 300)
+    try {
+      const res = await api.put('/system-settings', toApi(settings))
+      setSettings(fromApi(res.data.data))
+      toast.success('Đã lưu cài đặt hệ thống')
+    } catch {
+      toast.error('Lưu thất bại')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const S = ({ id: _id, label, type = 'text', value, onChange, placeholder = '' }: {
@@ -54,6 +116,12 @@ export function SuperSettings() {
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
       </div>
       <div className="p-5">{children}</div>
+    </div>
+  )
+
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center bg-slate-50">
+      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
     </div>
   )
 
@@ -110,11 +178,10 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        {/* Version info */}
         <div className="bg-slate-100 rounded-xl p-4 text-xs text-slate-500 space-y-1">
           <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold text-slate-700">v2.1.0</span></div>
           <div className="flex justify-between"><span>Môi trường</span><span className="font-mono text-emerald-600">development</span></div>
-          <div className="flex justify-between"><span>Build</span><span className="font-mono text-slate-600">2026-06-16</span></div>
+          <div className="flex justify-between"><span>Build</span><span className="font-mono text-slate-600">2026-06-17</span></div>
         </div>
       </div>
     </div>

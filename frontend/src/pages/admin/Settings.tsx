@@ -34,7 +34,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await api.put(`/clubs/${clubId}`, { name: form.name, address: form.address, contactPhone: form.contactPhone, contactEmail: form.contactEmail, description: form.description })
+      await api.put(`/clubs/${clubId}`, { name: form.name, address: form.address, contactPhone: form.contactPhone, contactEmail: form.contactEmail, description: form.description, maxMembers: form.maxMembers, defaultContribution: form.defaultContribution, defaultSessions: form.defaultSessions })
     } catch { /* save to local anyway */ }
     setClubSettings(clubId, form)
     setSaving(false)
@@ -275,20 +275,28 @@ const notifSettings: { key: NotifKey; label: string; desc: string }[] = [
   { key: 'memberJoined',   label: 'Thành viên mới',      desc: 'Thông báo khi có thành viên mới tham gia CLB' },
 ]
 
-function NotificationsTab() {
-  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>({
+function NotificationsTab({ clubId }: { clubId: string }) {
+  const { getClubData, setClubSettings } = useClubDataStore()
+  const saved = getClubData(clubId).settings
+  const savedNotifs = (saved as any)?.notifSettings as Record<NotifKey, boolean> | undefined
+  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>(savedNotifs ?? {
     unpaidReminder: true,
     fundLow: true,
     newSession: false,
     periodClosed: true,
     memberJoined: false,
   })
-  const [reminderDays, setReminderDays] = useState('3')
+  const savedDays = (saved as any)?.reminderDays as string | undefined
+  const [reminderDays, setReminderDays] = useState(savedDays ?? '3')
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
+    try {
+      await api.put(`/clubs/${clubId}`, { notifSettings: notifs, reminderDays })
+    } catch { /* persist locally anyway */ }
+    const current = getClubData(clubId).settings ?? emptySettings
+    setClubSettings(clubId, { ...current, notifSettings: notifs, reminderDays } as any)
     setSaving(false)
     toast.success('Đã lưu cài đặt thông báo')
   }
@@ -380,7 +388,7 @@ export function Settings() {
 
         {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
         {activeTab === 'account'       && <AccountTab />}
-        {activeTab === 'notifications' && <NotificationsTab />}
+        {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
       </div>
     </div>
   )

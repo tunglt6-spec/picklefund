@@ -140,13 +140,24 @@ export function Reports() {
     fill: DONUT_COLORS[i % DONUT_COLORS.length],
   }))
 
-  const memberAttendance = clubData.members.map(m => ({
-    name: m.fullName?.split(' ').slice(-2).join(' ') ?? m.id,
-    rate: 0,
-  })).sort((a, b) => b.rate - a.rate)
+  const attSummary = clubData.memberAttendanceSummary ?? []
+  const totalSessionsForRate = attSummary[0]?.totalSessions ?? sessionCount
+
+  const memberAttendance = clubData.members.map(m => {
+    const s = attSummary.find(a => a.memberId === m.id)
+    const attended = s?.attendedSessions ?? 0
+    const total = totalSessionsForRate
+    return {
+      name: m.fullName?.split(' ').slice(-2).join(' ') ?? m.id,
+      rate: total > 0 ? Math.round((attended / total) * 100) : 0,
+    }
+  }).sort((a, b) => b.rate - a.rate)
 
   const memberCosts = clubData.members.map(m => {
-    const share = sessionCount > 0 && memberCount > 0 ? 1 / sessionCount / memberCount : 0
+    const s = attSummary.find(a => a.memberId === m.id)
+    const attended = s?.attendedSessions ?? 0
+    const total = totalSessionsForRate || 1
+    const share = attended / total / (memberCount || 1)
     return {
       name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
       san: Math.round(share * totalExpenses * 0.84),

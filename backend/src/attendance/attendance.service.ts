@@ -80,6 +80,30 @@ export class AttendanceService {
     return records.map((r) => r.attendanceSessionId)
   }
 
+  async getMemberSummary(clubId: string, fundPeriodId?: string) {
+    const members = await this.prisma.member.findMany({ where: { clubId, isDeleted: false } })
+    const sessions = await this.prisma.attendanceSession.findMany({
+      where: { clubId, ...(fundPeriodId ? { fundPeriodId } : {}) },
+      select: { id: true },
+    })
+    const sessionIds = sessions.map((s) => s.id)
+
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { clubId, status: 'PRESENT', attendanceSessionId: { in: sessionIds } },
+      select: { memberId: true },
+    })
+
+    const countByMember: Record<string, number> = {}
+    records.forEach((r) => { countByMember[r.memberId] = (countByMember[r.memberId] ?? 0) + 1 })
+
+    return members.map((m) => ({
+      memberId: m.id,
+      memberName: m.fullName,
+      attendedSessions: countByMember[m.id] ?? 0,
+      totalSessions: sessionIds.length,
+    }))
+  }
+
   async updateAttendance(sessionId: string, clubId: string, attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[]) {
     await this.findOne(sessionId, clubId)
 

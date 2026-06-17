@@ -15,6 +15,7 @@ import { PersonalReceiptsModule } from './personal-receipts/personal-receipts.mo
 import { UsersModule } from './users/users.module'
 import { MinigameModule } from './minigame/minigame.module'
 import { AuditLogsModule } from './audit-logs/audit-logs.module'
+import { SystemSettingsModule } from './system-settings/system-settings.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
@@ -45,6 +46,7 @@ import { RolesGuard } from './common/guards/roles.guard'
     UsersModule,
     MinigameModule,
     AuditLogsModule,
+    SystemSettingsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

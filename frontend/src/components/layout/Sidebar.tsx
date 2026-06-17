@@ -130,31 +130,34 @@ export function Sidebar({ onClose }: SidebarProps) {
         </div>
       </div>
 
-      {/* ── Club selector ── */}
+      {/* ── CLB card ── */}
       <div className="px-3 py-3 border-b border-slate-100">
-        <button className="w-full flex items-center gap-3 rounded-xl bg-slate-50 hover:bg-slate-100 px-3 py-2.5 transition-colors group">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold">
-            {initials}
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'linear-gradient(135deg, #4F46E510, #06B6D415)', border: '1px solid #4F46E520' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white text-xs font-bold"
+              style={{ background: 'linear-gradient(135deg, #4F46E5, #06B6D4)' }}>
+              {(clubData.settings?.name ?? user.username ?? 'C').charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+                {clubData.settings?.name || user.username || 'CLB của tôi'}
+              </p>
+              {clubData.settings?.code ? (
+                <p className="text-[10px] text-slate-400 mt-0.5">Mã CLB: {clubData.settings.code}</p>
+              ) : (
+                <span className={cn('inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5', roleColors[user.role])}>
+                  {roleLabels[user.role]}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="min-w-0 flex-1 text-left">
-            <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
-              {user.username}
-            </p>
-            <span className={cn(
-              'inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5',
-              roleColors[user.role]
-            )}>
-              {roleLabels[user.role]}
-            </span>
-          </div>
-          <ChevronDown size={14} className="text-slate-400 shrink-0 group-hover:text-slate-600" />
-        </button>
-        {activePeriod && (
-          <div className="mt-2 flex items-center gap-1.5 px-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] text-slate-500 truncate">Kỳ Quỹ {activePeriod.name}</span>
-          </div>
-        )}
+          {activePeriod && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] text-slate-500 truncate">Kỳ Quỹ {activePeriod.name}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Navigation ── */}

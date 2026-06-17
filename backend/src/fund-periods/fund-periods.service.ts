@@ -58,6 +58,12 @@ export class FundPeriodsService {
     return this.prisma.fundPeriod.update({ where: { id }, data: updates })
   }
 
+  async delete(id: string, clubId: string) {
+    const fp = await this.findOne(id, clubId)
+    if (fp.status === 'finalized') throw new BadRequestException('Kỳ đã chốt không thể xóa')
+    return this.prisma.fundPeriod.delete({ where: { id } })
+  }
+
   async summary(id: string, clubId: string) {
     const fp = await this.findOne(id, clubId)
 

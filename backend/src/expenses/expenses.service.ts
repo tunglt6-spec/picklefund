@@ -100,6 +100,13 @@ export class ExpensesService {
     })
   }
 
+  async updateStatus(id: string, clubId: string, status: string) {
+    const allowed = ['pending', 'approved', 'paid', 'rejected']
+    if (!allowed.includes(status)) throw new BadRequestException('Trạng thái không hợp lệ')
+    await this.findOne(id, clubId)
+    return this.prisma.livingExpense.update({ where: { id }, data: { status } })
+  }
+
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId)
     return this.prisma.livingExpense.delete({ where: { id } })

@@ -36,8 +36,12 @@ export function SuperDashboard() {
   }, [])
 
   const barChartData = [
-    { month: 'T1', active: 0 }, { month: 'T2', active: 0 }, { month: 'T3', active: 0 },
-    { month: 'T4', active: 0 }, { month: 'T5', active: 0 }, { month: 'T6', active: stats.activeClubs },
+    { label: 'Tổng CLB', value: stats.totalClubs },
+    { label: 'Hoạt động', value: stats.activeClubs },
+    { label: 'Bị khóa', value: stats.suspendedClubs },
+    { label: 'Thành viên', value: stats.totalMembers },
+    { label: 'Kỳ quỹ', value: stats.totalFundPeriods },
+    { label: 'Đăng nhập', value: stats.loginsLast24h },
   ]
 
   return (
@@ -56,14 +60,14 @@ export function SuperDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-4">CLB Hoạt Động Theo Tháng</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Tổng Quan Hệ Thống</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="active" fill="#6366f1" radius={[4, 4, 0, 0]} name="CLB hoạt động" />
+                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} name="Số lượng" />
               </BarChart>
             </ResponsiveContainer>
           </div>

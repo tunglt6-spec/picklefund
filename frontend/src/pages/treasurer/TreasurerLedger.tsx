@@ -205,7 +205,7 @@ export function TreasurerLedger() {
               <tfoot>
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
                   <td colSpan={3} className="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Số dư cuối kỳ</td>
-                  <td className="px-4 py-3 text-right font-bold text-slate-900">{formatVND(totalIncome - totalExpense > 0 ? totalIncome : -totalExpense)}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{currentBalance >= 0 ? '+' : ''}{formatVND(currentBalance)}</td>
                   <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-indigo-700' : 'text-red-600'}`}>{formatVND(currentBalance)}</td>
                 </tr>
               </tfoot>

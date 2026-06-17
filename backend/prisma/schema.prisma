@@ -290,6 +290,7 @@ model LivingExpense {
   receiverName        String?         @map("receiver_name") @db.VarChar(200)
   relatedMinigameId   String?         @map("related_minigame_id")
   allocationEnabled   Boolean         @default(true) @map("allocation_enabled")
+  status              String          @default("pending")
   amount              Decimal         @db.Decimal(15, 2)
   description         String
   allocationRule      AllocationRule  @default(FUND_ONLY) @map("allocation_rule")
@@ -502,4 +503,15 @@ enum MatchStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+// ============================================================
+// SYSTEM SETTINGS (key-value store for SUPER_ADMIN config)
+// ============================================================
+model SystemSetting {
+  key       String   @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }

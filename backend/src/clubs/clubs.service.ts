@@ -34,8 +34,24 @@ export class ClubsService {
     return this.prisma.club.create({ data: dto })
   }
 
-  async update(id: string, dto: Partial<{ name: string; address: string; contactEmail: string; contactPhone: string; logoUrl: string }>) {
-    return this.prisma.club.update({ where: { id }, data: dto })
+  async update(id: string, dto: Record<string, unknown>) {
+    const directKeys = new Set(['name', 'address', 'contactEmail', 'contactPhone', 'logoUrl'])
+    const directFields: Record<string, unknown> = {}
+    const extraSettings: Record<string, unknown> = {}
+
+    for (const [k, v] of Object.entries(dto)) {
+      if (directKeys.has(k)) directFields[k] = v
+      else extraSettings[k] = v
+    }
+
+    if (Object.keys(extraSettings).length > 0) {
+      const current = await this.prisma.club.findUnique({ where: { id }, select: { settings: true } })
+      return this.prisma.club.update({
+        where: { id },
+        data: { ...directFields, settings: { ...(current?.settings as object ?? {}), ...extraSettings } } as any,
+      })
+    }
+    return this.prisma.club.update({ where: { id }, data: directFields as any })
   }
 
   async updateStatus(id: string, status: ClubStatus, reason?: string) {

@@ -1,7 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common'
 import { AuditLogsService } from './audit-logs.service'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { Roles } from '../auth/decorators/roles.decorator'
+import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
 
 @Controller('audit-logs')

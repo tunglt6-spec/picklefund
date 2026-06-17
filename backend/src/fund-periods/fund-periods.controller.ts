@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Body, Param } from '@nestjs/common'
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { FundPeriodsService } from './fund-periods.service'
 import { CurrentUser, Roles } from '../common/decorators'
@@ -36,6 +36,12 @@ export class FundPeriodsController {
   @Roles('CLUB_ADMIN')
   async updateStatus(@Param('id') id: string, @CurrentUser() user: any, @Body() body: { status: any }) {
     return ok(await this.service.updateStatus(id, user.clubId, body.status))
+  }
+
+  @Delete(':id')
+  @Roles('CLUB_ADMIN')
+  async delete(@Param('id') id: string, @CurrentUser() user: any) {
+    return ok(await this.service.delete(id, user.clubId), 'Đã xóa kỳ quỹ')
   }
 
   @Get(':id/summary')

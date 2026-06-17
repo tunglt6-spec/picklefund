@@ -1,490 +1,750 @@
-import { useState } from 'react'
-import type { MemberSummary } from '../../types'
+import { useState, useMemo } from 'react'
 import {
-  Users, DollarSign, TrendingUp, AlertTriangle, CreditCard,
-  BarChart2, ChevronRight, Link as LinkIcon, Calendar,
-  AlertCircle, CheckCircle2, UserX, Activity, Bell, Plus,
-  PieChart, Gauge, Wallet,
+  Users, AlertCircle, Calendar,
+  Plus, Bell, ArrowUpRight, ArrowDownLeft, Activity,
+  ChevronRight, Trophy, Zap, ShieldCheck,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, Legend, PieChart as RechartPie, Pie, Cell,
+  CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { KpiCard } from '../../components/ui/KpiCard'
-import { Badge } from '../../components/ui/Badge'
 import { formatVND } from '../../lib/utils'
 
-/* ─── Tooltip chart ─── */
-function ChartTooltip({ active, payload, label }: any) {
+/* ─── Brand tokens ─── */
+const brand = {
+  primary: '#4F46E5',
+  secondary: '#06B6D4',
+  accent: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  dark: '#0F172A',
+  bg: '#F8FAFC',
+}
+
+/* ─── Helpers ─── */
+function pct(a: number, b: number) {
+  if (!b) return 0
+  return Math.min(100, Math.round((a / b) * 100))
+}
+
+/* ─── Custom bar chart tooltip ─── */
+function BarTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-slate-100 px-3 py-2.5 text-xs">
-      <p className="font-semibold text-slate-700 mb-1.5">{label}</p>
+    <div className="bg-white rounded-xl shadow-xl border border-slate-100 px-3 py-2.5 text-xs min-w-[160px]">
+      <p className="font-semibold text-slate-600 mb-1.5 truncate max-w-[160px]">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="flex items-center gap-2 mb-0.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: p.fill }} />
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.fill }} />
           <span className="text-slate-500">{p.name}:</span>
-          <span className="font-bold text-slate-800">{formatVND(p.value)}</span>
+          <span className="font-bold text-slate-800 tabular-nums">{formatVND(p.value)}</span>
         </p>
       ))}
     </div>
   )
 }
 
-/* ─── Alert Banner ─── */
-function AlertBanner({ type, text, to }: { type: 'warning' | 'danger'; text: string; to?: string }) {
-  const cfg = {
-    warning: { bg: 'bg-amber-50 border-amber-200', icon: 'text-amber-500', text: 'text-amber-800' },
-    danger:  { bg: 'bg-red-50 border-red-200',     icon: 'text-red-500',   text: 'text-red-800'   },
-  }[type]
-  const Inner = (
-    <div className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${cfg.bg}`}>
-      <AlertTriangle size={15} className={`${cfg.icon} shrink-0`} />
-      <span className={`text-xs font-medium flex-1 ${cfg.text}`}>{text}</span>
-      {to && <ChevronRight size={14} className={cfg.icon} />}
+/* ─── Custom donut tooltip ─── */
+function DonutTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null
+  const d = payload[0]
+  return (
+    <div className="bg-white rounded-xl shadow-xl border border-slate-100 px-3 py-2 text-xs">
+      <p className="font-semibold text-slate-700">{d.name}</p>
+      <p className="text-slate-500 tabular-nums mt-0.5">{formatVND(d.value)}</p>
     </div>
   )
-  return to ? <Link to={to}>{Inner}</Link> : Inner
 }
 
-const PIE_COLORS = ['#6366F1', '#F59E0B', '#22C55E', '#EF4444']
+const DONUT_COLORS = ['#4F46E5', '#06B6D4', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6']
+
+/* ─── FundCard ─── */
+interface FundCardProps {
+  title: string
+  balance: number
+  income: number
+  expense: number
+  variant?: 'indigo' | 'cyan' | 'gradient'
+  tag?: string
+}
+function FundCard({ title, balance, income, expense, variant = 'indigo', tag }: FundCardProps) {
+  const isGradient = variant === 'gradient'
+  return (
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-3 shadow-md"
+      style={isGradient
+        ? { background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)`, color: '#fff' }
+        : { background: '#fff', border: '1px solid #E2E8F0' }
+      }
+    >
+      <div className="flex items-center justify-between">
+        <span className={`text-xs font-semibold tracking-wider uppercase ${isGradient ? 'text-white/70' : 'text-slate-400'}`}>
+          {title}
+        </span>
+        {tag && (
+          <span
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            style={isGradient
+              ? { background: 'rgba(255,255,255,0.2)', color: '#fff' }
+              : { background: variant === 'indigo' ? '#EEF2FF' : '#ECFEFF', color: variant === 'indigo' ? brand.primary : brand.secondary }
+            }
+          >
+            {tag}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <p
+          className="text-2xl font-bold tabular-nums leading-none"
+          style={{ letterSpacing: '-0.02em', color: isGradient ? '#fff' : brand.dark }}
+        >
+          {formatVND(balance)}
+        </p>
+        <p className={`text-xs mt-1 ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Số dư hiện tại</p>
+      </div>
+
+      <div className={`h-px ${isGradient ? 'bg-white/20' : 'bg-slate-100'}`} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="flex items-center gap-1 mb-0.5">
+            <ArrowUpRight size={11} className={isGradient ? 'text-green-300' : 'text-emerald-500'} />
+            <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Thu</span>
+          </div>
+          <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(income)}</p>
+        </div>
+        <div>
+          <div className="flex items-center gap-1 mb-0.5">
+            <ArrowDownLeft size={11} className={isGradient ? 'text-red-300' : 'text-red-400'} />
+            <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Chi</span>
+          </div>
+          <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(expense)}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── MiniKpiCard ─── */
+interface MiniKpiProps {
+  icon: React.ReactNode
+  label: string
+  value: string
+  sub?: string
+  color: string
+  bgColor: string
+}
+function MiniKpiCard({ icon, label, value, sub, color, bgColor }: MiniKpiProps) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: bgColor }}>
+          <span style={{ color }}>{icon}</span>
+        </div>
+        <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide leading-tight">{label}</span>
+      </div>
+      <p className="text-xl font-bold tabular-nums text-slate-900" style={{ letterSpacing: '-0.02em' }}>{value}</p>
+      {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
+    </div>
+  )
+}
+
+/* ─── ProgressRow ─── */
+function ProgressRow({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+  const p = pct(value, total)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs font-semibold text-slate-700 tabular-nums">{value}<span className="text-slate-400">/{total}</span></span>
+      </div>
+      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${p}%`, background: color }}
+        />
+      </div>
+    </div>
+  )
+}
+
+/* ─── Empty state ─── */
+function DashboardEmpty({ clubName }: { clubName: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#EEF2FF' }}>
+        <Activity size={28} color={brand.primary} />
+      </div>
+      <div className="text-center">
+        <p className="text-slate-800 font-semibold text-base">{clubName || 'CLB của bạn'} chưa có dữ liệu</p>
+        <p className="text-slate-400 text-sm mt-1">Thêm kỳ quỹ và giao dịch để xem tổng quan</p>
+      </div>
+      <div className="flex gap-3 mt-2">
+        <Link to="/fund-periods">
+          <button className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            Tạo kỳ quỹ
+          </button>
+        </Link>
+        <Link to="/contributions">
+          <button
+            className="text-sm font-semibold px-4 py-2 rounded-xl text-white flex items-center gap-1.5 transition-opacity hover:opacity-90"
+            style={{ background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)` }}
+          >
+            <Plus size={14} />
+            Thêm giao dịch
+          </button>
+        </Link>
+      </div>
+    </div>
+  )
+}
 
 /* ─── Main ─── */
 export function ClubDashboard() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(clubId)
-  const [chartFilter, setChartFilter] = useState<'all' | 'current'>('all')
+  const [txTab, setTxTab] = useState<'income' | 'expense'>('income')
+  const [activePeriodId, setActivePeriodId] = useState<string>('all')
 
-  const currentPeriod = clubData.fundPeriods.find(f => f.status === 'active')
+  /* ── Derived data ── */
+  const activePeriods = clubData.fundPeriods.filter(p => p.status === 'active')
+  const currentPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
 
-  const commonContribs = clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
-  const miniContribs   = clubData.contributions.filter(c => c.fundSource === 'MINI')
-  const commonExpenses = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
-  const miniExpenses   = clubData.expenses.filter(e => e.fundSource === 'MINI')
+  const commonContribs = useMemo(
+    () => clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && c.isConfirmed),
+    [clubData.contributions]
+  )
+  const miniContribs = useMemo(
+    () => clubData.contributions.filter(c => c.fundSource === 'MINI'),
+    [clubData.contributions]
+  )
+  const commonExpenses = useMemo(
+    () => clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON'),
+    [clubData.expenses]
+  )
+  const miniExpenses = useMemo(
+    () => clubData.expenses.filter(e => e.fundSource === 'MINI'),
+    [clubData.expenses]
+  )
 
-  const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
+  const commonIncome = commonContribs.reduce((s, c) => s + c.amount, 0)
   const commonExpTotal = commonExpenses.reduce((s, e) => s + e.amount, 0)
-  const miniIncome     = miniContribs.reduce((s, c) => s + c.amount, 0)
-  const miniExpTotal   = miniExpenses.reduce((s, e) => s + e.amount, 0)
+  const miniIncome = miniContribs.reduce((s, c) => s + c.amount, 0)
+  const miniExpTotal = miniExpenses.reduce((s, e) => s + e.amount, 0)
 
-  const totalAttendance = clubData.sessions.reduce((a, se) => a + (se._count?.attendanceRecords ?? 0), 0)
+  const commonBalance = commonIncome - commonExpTotal
+  const miniBalance = miniIncome - miniExpTotal
+  const totalAssets = commonBalance + miniBalance
 
-  const unpaidCount = !currentPeriod ? 0 : clubData.members.filter(m =>
-    !commonContribs.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id && c.isConfirmed)
+  /* ── KPI values ── */
+  const totalTurns = clubData.sessions.reduce((a, s) => a + (s._count?.attendanceRecords ?? 0), 0)
+  const avgCostPerTurn = totalTurns > 0 ? Math.round(commonExpTotal / totalTurns) : 0
+  const activeMembers = clubData.members.filter(m => m.status === 'active').length
+  const totalMembers = clubData.members.length
+
+  const unpaidCount = !currentPeriod ? 0 : clubData.members.filter(
+    m => !commonContribs.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id)
   ).length
 
-  const s = {
-    totalIncome: commonIncome,
-    totalExpenses: commonExpTotal,
-    courtExpenses: commonExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
-    livingExpenses: commonExpenses.filter(e => e.allocationRule !== 'ATTENDANCE').reduce((s, e) => s + e.amount, 0),
-    balance: commonIncome - commonExpTotal,
-    miniBalance: miniIncome - miniExpTotal,
-    totalAssets: (commonIncome - commonExpTotal) + (miniIncome - miniExpTotal),
-    totalAttendance,
-    costPerAttendance: totalAttendance > 0 ? Math.round(commonExpTotal / totalAttendance) : 0,
-    unpaidCount,
-    negativeBalanceCount: 0,
-    lowAttendanceCount: 0,
-    members: clubData.members.map(m => {
-      const paid = commonContribs.filter(c => c.memberId === m.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-      const periodContrib = currentPeriod ? commonContribs.find(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id) : undefined
-      const perMemberExpense = clubData.members.length > 0 ? Math.round(commonExpTotal / clubData.members.length) : 0
-      return {
-        memberId: m.id, memberName: m.fullName,
-        attendedSessions: 0,
-        amountPaid: !!periodContrib?.isConfirmed,
-        courtCost: 0,
-        livingCost: perMemberExpense,
-        totalCost: perMemberExpense,
-        balance: paid - perMemberExpense,
-        contributionPaid: !!periodContrib?.isConfirmed,
-      } as MemberSummary
-    }),
-  }
+  const currentPeriodSessions = currentPeriod
+    ? clubData.sessions.filter(s => s.fundPeriodId === currentPeriod.id)
+    : []
+  const courtExpense = currentPeriodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
 
-  const realChartData = clubData.fundPeriods.map(fp => ({
-    period: fp.name,
-    income: commonContribs.filter(c => c.fundPeriodId === fp.id && c.isConfirmed).reduce((s, c) => s + c.amount, 0),
-    expense: commonExpenses.filter(e => e.fundPeriodId === fp.id).reduce((s, e) => s + e.amount, 0),
-  }))
+  /* ── Bar chart: Thu/Chi theo kỳ ── */
+  const barData = useMemo(() => {
+    const sortedPeriods = [...clubData.fundPeriods]
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+      .slice(-6)
+    return sortedPeriods.map(p => ({
+      name: p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name,
+      Thu: clubData.contributions
+        .filter(c => c.fundPeriodId === p.id && c.isConfirmed)
+        .reduce((s, c) => s + c.amount, 0),
+      Chi: clubData.expenses
+        .filter(e => e.fundPeriodId === p.id)
+        .reduce((s, e) => s + e.amount, 0),
+    }))
+  }, [clubData.fundPeriods, clubData.contributions, clubData.expenses])
 
-  const memberCount = clubData.members.length
-  const balancePct  = s.totalIncome > 0 ? Math.round((s.balance / s.totalIncome) * 100) : 0
+  /* ── Donut: cơ cấu chi phí Quỹ Chung ── */
+  const donutData = useMemo(() => {
+    const groups: Record<string, number> = {}
+    for (const e of commonExpenses) {
+      const key = e.description.length > 20 ? e.description.slice(0, 20) + '…' : e.description
+      groups[key] = (groups[key] ?? 0) + e.amount
+    }
+    return Object.entries(groups)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value }))
+  }, [commonExpenses])
 
-  const pieData = [
-    { name: 'Tiền sân',    value: s.courtExpenses },
-    { name: 'Ăn uống',    value: s.livingExpenses * 0.4 },
-    { name: 'Nước uống',  value: s.livingExpenses * 0.3 },
-    { name: 'Phát sinh',  value: s.livingExpenses * 0.3 },
-  ].filter(d => d.value > 0)
+  /* ── Recent transactions ── */
+  const recentTx = useMemo(() => {
+    if (txTab === 'income') {
+      return [...clubData.contributions]
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, 8)
+    }
+    return [...clubData.expenses]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 8)
+  }, [txTab, clubData.contributions, clubData.expenses])
+
+  /* ── Quick list: members not paid ── */
+  const unpaidMembers = useMemo(() => {
+    if (!currentPeriod) return []
+    return clubData.members
+      .filter(m => m.status === 'active' &&
+        !commonContribs.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id))
+      .slice(0, 5)
+  }, [currentPeriod, clubData.members, commonContribs])
+
+  /* ── Attendance stats ── */
+  const attendedInPeriod = currentPeriod
+    ? clubData.memberAttendanceSummary?.filter(s => s.attendedSessions > 0).length ?? 0
+    : 0
 
   /* ── Empty state ── */
-  if (clubData.members.length === 0 && clubData.fundPeriods.length === 0) {
+  const isEmpty = clubData.fundPeriods.length === 0 && clubData.contributions.length === 0
+
+  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB'
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Chào buổi sáng'
+    if (h < 18) return 'Chào buổi chiều'
+    return 'Chào buổi tối'
+  })()
+
+  if (isEmpty) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-sm w-full text-center">
-          <div className="inline-flex h-16 w-16 rounded-2xl items-center justify-center mb-5"
-            style={{ background: 'linear-gradient(135deg,#6366F1,#4F46E5)' }}>
-            <Users size={32} className="text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Chào mừng đến với PickleFund!</h2>
-          <p className="text-slate-500 text-sm mb-6">Hoàn thành 3 bước để bắt đầu quản lý quỹ CLB</p>
-          <div className="space-y-3 text-left">
-            {[
-              { num: 1, title: 'Thêm thành viên',  desc: 'Nhập danh sách thành viên CLB',           to: '/members',       icon: <Users size={16}/>,      bg: 'bg-indigo-50 text-indigo-600' },
-              { num: 2, title: 'Tạo kỳ quỹ',       desc: 'Thiết lập kỳ quản lý quỹ (quý/tháng)',  to: '/fund-periods',  icon: <Calendar size={16}/>,   bg: 'bg-emerald-50 text-emerald-600' },
-              { num: 3, title: 'Ghi nhận thu quỹ', desc: 'Ghi lại các khoản đóng quỹ',             to: '/contributions', icon: <DollarSign size={16}/>, bg: 'bg-violet-50 text-violet-600' },
-            ].map(step => (
-              <Link key={step.num} to={step.to}
-                className="flex items-center gap-4 bg-white rounded-xl border border-slate-100 shadow-sm px-4 py-3.5 hover:border-indigo-200 hover:shadow-md transition-all group">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${step.bg}`}>{step.icon}</div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">{step.num}. {step.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{step.desc}</p>
-                </div>
-                <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500" />
-              </Link>
-            ))}
-          </div>
-        </div>
+      <div className="min-h-full" style={{ background: brand.bg, padding: '24px 28px' }}>
+        <DashboardEmpty clubName={clubName} />
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="min-h-full" style={{ background: brand.bg, padding: '24px 28px' }}>
+      <div className="flex flex-col gap-5 max-w-[1400px] mx-auto">
 
-      {/* ── Top bar ── */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-slate-900">
-            Chào mừng trở lại, <span className="text-indigo-600">{user?.username}</span>! 👋
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Dưới đây là tổng quan hoạt động {memberCount} thành viên của CLB
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Period badge */}
-          {currentPeriod && (
-            <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600">
-              <Calendar size={12} className="text-indigo-500" />
-              <span className="font-semibold text-slate-800">Kỳ {currentPeriod.name}</span>
-              <span className="text-slate-400">{currentPeriod.startDate} – {currentPeriod.endDate}</span>
-            </div>
-          )}
-          {/* Bell */}
-          <button className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
-            <Bell size={16} />
-            {s.unpaidCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1">
-                {s.unpaidCount}
-              </span>
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1
+              className="text-xl font-bold text-slate-900"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              {greeting}, Admin 👋
+            </h1>
+            <p className="text-sm text-slate-400 mt-0.5">
+              {clubName} · Cập nhật {new Date().toLocaleDateString('vi-VN')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {activePeriods.length > 0 && (
+              <div className="relative">
+                <select
+                  value={activePeriodId}
+                  onChange={e => setActivePeriodId(e.target.value)}
+                  className="appearance-none text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                >
+                  <option value="all">Tất cả kỳ</option>
+                  {activePeriods.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <Calendar size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             )}
-          </button>
-          {/* CTA */}
-          <Link to="/contributions"
-            className="hidden md:inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200">
-            <Plus size={15} />Thêm nhanh
-          </Link>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
-
-        {/* ── Alerts ── */}
-        {(s.unpaidCount > 0 || s.balance < s.totalIncome * 0.2) && (
-          <div className="space-y-2">
-            {s.unpaidCount > 0 && (
-              <AlertBanner type="warning"
-                text={`${s.unpaidCount} thành viên chưa đóng quỹ kỳ này — Nhắc nhở ngay`}
-                to="/contributions" />
-            )}
-            {s.balance < s.totalIncome * 0.2 && s.totalIncome > 0 && (
-              <AlertBanner type="danger"
-                text={`Quỹ sắp hết — Còn lại ${formatVND(s.balance)} (${balancePct}% tổng thu)`} />
-            )}
-          </div>
-        )}
-
-        {/* ── Fund split cards ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Quỹ Chung */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <DollarSign size={16} className="text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
-                <p className="text-[10px] text-slate-400">Thu / Chi / Số dư</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(s.totalIncome)}</p></div>
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(s.totalExpenses)}</p></div>
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Số dư</p><p className={`text-sm font-bold ${s.balance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>{formatVND(s.balance)}</p></div>
-            </div>
-            {s.unpaidCount > 0 && <p className="text-xs text-amber-600 mt-2">⚠ {s.unpaidCount} thành viên chưa đóng quỹ</p>}
-          </div>
-          {/* Quỹ Mini */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-xl bg-violet-50 flex items-center justify-center">
-                <Wallet size={16} className="text-violet-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
-                <p className="text-[10px] text-slate-400">Thu / Chi / Số dư</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(miniIncome)}</p></div>
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(miniExpTotal)}</p></div>
-              <div><p className="text-[10px] text-slate-400 uppercase tracking-wide">Số dư</p><p className={`text-sm font-bold ${s.miniBalance >= 0 ? 'text-violet-600' : 'text-red-500'}`}>{formatVND(s.miniBalance)}</p></div>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">Không tính vào công nợ thành viên</p>
-          </div>
-          {/* Tổng tài sản */}
-          <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-5 text-white">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={16} className="text-indigo-200" />
-              <p className="text-xs font-bold uppercase tracking-wide text-indigo-100">Tổng Tài Sản CLB</p>
-            </div>
-            <p className="text-2xl font-bold">{formatVND(s.totalAssets)}</p>
-            <p className="text-xs text-indigo-200 mt-1">Quỹ Chung + Quỹ Mini</p>
-            <div className="mt-3 pt-3 border-t border-indigo-500/40 grid grid-cols-2 gap-2 text-xs">
-              <div><p className="text-indigo-200">Quỹ Chung</p><p className="font-semibold">{formatVND(s.balance)}</p></div>
-              <div><p className="text-indigo-200">Quỹ Mini</p><p className="font-semibold">{formatVND(s.miniBalance)}</p></div>
-            </div>
+            <button
+              className="relative w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
+              title="Thông báo"
+            >
+              <Bell size={15} className="text-slate-500" />
+              {unpaidCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
+                  style={{ background: brand.danger }}>{unpaidCount > 9 ? '9+' : unpaidCount}</span>
+              )}
+            </button>
+            <button
+              onClick={() => navigate('/contributions')}
+              className="flex items-center gap-1.5 text-sm font-semibold text-white px-4 py-2 rounded-xl shadow-sm hover:opacity-90 transition-opacity"
+              style={{ background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)` }}
+            >
+              <Plus size={14} />
+              Thêm giao dịch
+            </button>
           </div>
         </div>
 
-        {/* ── KPI Row 1 ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="Thu Quỹ Chung"  value={s.totalIncome}    isCurrency icon={<DollarSign size={18}/>}  color="green"  trend={18} />
-          <KpiCard title="Chi Quỹ Chung"  value={s.totalExpenses}  isCurrency icon={<CreditCard size={18}/>}  color="orange" trend={-12} />
-          <KpiCard title="Số dư Q.Chung"  value={s.balance}        isCurrency icon={<TrendingUp size={18}/>}  color="indigo" trend={8} />
-          <KpiCard title="Tiền sân"        value={s.courtExpenses}  isCurrency icon={<BarChart2 size={18}/>}   color="purple" trend={15} />
+        {/* ── 3 Fund Cards ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FundCard
+            title="Quỹ Chung"
+            balance={commonBalance}
+            income={commonIncome}
+            expense={commonExpTotal}
+            variant="indigo"
+            tag="Quỹ chính"
+          />
+          <FundCard
+            title="Quỹ Mini"
+            balance={miniBalance}
+            income={miniIncome}
+            expense={miniExpTotal}
+            variant="cyan"
+            tag="Phụ trợ"
+          />
+          <FundCard
+            title="Tổng tài sản CLB"
+            balance={totalAssets}
+            income={commonIncome + miniIncome}
+            expense={commonExpTotal + miniExpTotal}
+            variant="gradient"
+            tag="Tổng cộng"
+          />
         </div>
 
-        {/* ── KPI Row 2 ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="Tổng lượt chơi"    value={`${s.totalAttendance} lượt`} icon={<Activity size={18}/>}  color="cyan"  trend={10} />
-          <KpiCard title="CP bình quân/lượt" value={s.costPerAttendance}  isCurrency icon={<BarChart2 size={18}/>} color="slate" trend={-5} />
-          <KpiCard title="Tham gia ít"       value={`${s.lowAttendanceCount} người`} icon={<UserX size={18}/>}   color="orange"
-            badge={s.lowAttendanceCount > 0 ? 'Nhắc nhở' : undefined} />
-          <KpiCard title="Chưa đóng quỹ"    value={`${s.unpaidCount} người`}    icon={<AlertCircle size={18}/>} color="red"
-            badge={s.unpaidCount > 0 ? 'Nhắc nhở' : undefined} />
+        {/* ── 5 KPI mini cards ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <MiniKpiCard
+            icon={<Activity size={15} />}
+            label="Tổng lượt chơi"
+            value={totalTurns.toLocaleString('vi-VN')}
+            sub="Tất cả kỳ"
+            color={brand.primary}
+            bgColor="#EEF2FF"
+          />
+          <MiniKpiCard
+            icon={<Zap size={15} />}
+            label="Chi phí TB/lượt"
+            value={avgCostPerTurn > 0 ? `${Math.round(avgCostPerTurn / 1000)}k` : '—'}
+            sub="Quỹ Chung"
+            color={brand.secondary}
+            bgColor="#ECFEFF"
+          />
+          <MiniKpiCard
+            icon={<Users size={15} />}
+            label="Thành viên"
+            value={`${activeMembers}/${totalMembers}`}
+            sub="đang hoạt động"
+            color={brand.accent}
+            bgColor="#F0FDF4"
+          />
+          <MiniKpiCard
+            icon={<AlertCircle size={15} />}
+            label="Chưa đóng quỹ"
+            value={unpaidCount.toString()}
+            sub={currentPeriod ? currentPeriod.name : 'Kỳ hiện tại'}
+            color={unpaidCount > 0 ? brand.warning : brand.accent}
+            bgColor={unpaidCount > 0 ? '#FFFBEB' : '#F0FDF4'}
+          />
+          <MiniKpiCard
+            icon={<Trophy size={15} />}
+            label="Chi sân kỳ này"
+            value={courtExpense > 0 ? `${Math.round(courtExpense / 1000)}k` : '—'}
+            sub={currentPeriodSessions.length + ' buổi'}
+            color="#8B5CF6"
+            bgColor="#F5F3FF"
+          />
         </div>
 
         {/* ── Charts row ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
-          {/* Bar chart */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 p-5 shadow-[var(--shadow-card)]">
+          {/* Bar chart 60% */}
+          <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Thu / Chi Theo Kỳ Quỹ</h3>
-                <p className="text-xs text-slate-400 mt-0.5">So sánh thu chi qua các kỳ</p>
+                <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
+                  Thu / Chi theo kỳ quỹ
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">6 kỳ gần nhất</p>
               </div>
-              <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-100">
-                {(['all', 'current'] as const).map(f => (
-                  <button key={f} onClick={() => setChartFilter(f)}
-                    className={`text-xs font-medium px-2.5 py-1 rounded-md transition-all ${
-                      chartFilter === f ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                    }`}>
-                    {f === 'all' ? 'Tất cả kỳ' : 'Kỳ hiện tại'}
-                  </button>
-                ))}
+              <div className="flex items-center gap-3 text-xs text-slate-400">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: brand.primary }} />Thu
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#FDA4AF' }} />Chi
+                </span>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={realChartData} barGap={6}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={v => `${(v/1000000).toFixed(0)}tr`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={36} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(99,102,241,0.05)', radius: 8 }} />
-                <Legend iconType="circle" iconSize={7} formatter={v => <span className="text-xs text-slate-500">{v}</span>} />
-                <Bar dataKey="income"  name="Thu" fill="#22c55e" radius={[6,6,0,0]} maxBarSize={32} />
-                <Bar dataKey="expense" name="Chi" fill="#f97316" radius={[6,6,0,0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
+            {barData.length === 0 ? (
+              <div className="h-48 flex items-center justify-center text-slate-300 text-sm">Chưa có dữ liệu</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={barData} barGap={4} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false}
+                    tickFormatter={v => v >= 1000000 ? `${v / 1000000}M` : v >= 1000 ? `${v / 1000}k` : v} />
+                  <Tooltip content={<BarTooltip />} cursor={{ fill: '#F8FAFC' }} />
+                  <Bar dataKey="Thu" fill={brand.primary} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Chi" fill="#FDA4AF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
-          {/* Pie chart */}
-          <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-[var(--shadow-card)]">
+          {/* Donut 40% */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-900">Cơ Cấu Chi Phí</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Phân bổ các khoản chi</p>
+              <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
+                Cơ cấu chi phí
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">Quỹ Chung · Tất cả kỳ</p>
             </div>
-            {pieData.length > 0 ? (
+            {donutData.length === 0 ? (
+              <div className="h-40 flex items-center justify-center text-slate-300 text-sm">Chưa có chi phí</div>
+            ) : (
               <>
-                <ResponsiveContainer width="100%" height={150}>
-                  <RechartPie>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                      {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                <ResponsiveContainer width="100%" height={140}>
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      cx="50%" cy="50%"
+                      innerRadius={38} outerRadius={60}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {donutData.map((_, i) => (
+                        <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                      ))}
                     </Pie>
-                    <Tooltip formatter={(v: unknown) => formatVND(v as number)} />
-                  </RechartPie>
+                    <Tooltip content={<DonutTooltip />} />
+                  </PieChart>
                 </ResponsiveContainer>
-                <div className="space-y-2 mt-3">
-                  {pieData.map((d, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full" style={{ background: PIE_COLORS[i] }} />
-                        <span className="text-slate-500">{d.name}</span>
+                <div className="mt-3 flex flex-col gap-1.5">
+                  {donutData.slice(0, 4).map((d, i) => (
+                    <div key={d.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                        <span className="text-slate-500 truncate">{d.name}</span>
                       </div>
-                      <span className="font-semibold text-slate-700">{formatVND(d.value)}</span>
+                      <span className="text-slate-700 font-medium tabular-nums ml-2 flex-shrink-0">
+                        {pct(d.value, commonExpTotal)}%
+                      </span>
                     </div>
                   ))}
                 </div>
               </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-40 text-slate-300">
-                <PieChart size={32} className="mb-2" />
-                <p className="text-xs">Chưa có dữ liệu</p>
-              </div>
             )}
           </div>
         </div>
 
-        {/* ── Quick cards row ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* ── Bottom row ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 pb-4">
 
-          {/* Tình trạng quỹ */}
-          <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-[var(--shadow-card)]">
-            <div className="flex items-center gap-2 mb-3">
-              <Gauge size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-semibold text-slate-900">Tình Trạng Quỹ</h3>
-            </div>
-            <div className="flex items-center justify-center py-4">
-              <div className="relative flex items-center justify-center">
-                <svg width="120" height="80" viewBox="0 0 120 80">
-                  <path d="M10 70 A50 50 0 0 1 110 70" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
-                  <path d="M10 70 A50 50 0 0 1 110 70" fill="none"
-                    stroke={balancePct < 20 ? '#EF4444' : balancePct < 50 ? '#F59E0B' : '#22C55E'}
-                    strokeWidth="12" strokeLinecap="round"
-                    strokeDasharray={`${(balancePct / 100) * 157} 157`} />
-                </svg>
-                <div className="absolute bottom-0 text-center">
-                  <p className="text-2xl font-extrabold text-slate-900 leading-none">{balancePct}%</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Tỷ lệ còn lại</p>
-                </div>
+          {/* Recent transactions 65% */}
+          <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
+                Giao dịch gần đây
+              </h3>
+              <div className="flex rounded-lg overflow-hidden border border-slate-100">
+                {(['income', 'expense'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setTxTab(tab)}
+                    className="text-xs font-medium px-3 py-1.5 transition-colors"
+                    style={txTab === tab
+                      ? { background: brand.primary, color: '#fff' }
+                      : { background: '#fff', color: '#64748B' }
+                    }
+                  >
+                    {tab === 'income' ? 'Thu' : 'Chi'}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-1.5 mt-2 ${
-              balancePct < 20 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
-            }`}>
-              {balancePct < 20 ? <AlertTriangle size={12} /> : <CheckCircle2 size={12} />}
-              {balancePct < 20 ? 'Ngưỡng cảnh báo < 20%' : `Quỹ an toàn (ngưỡng ${balancePct}%)`}
-            </div>
-          </div>
 
-          {/* Quick stats */}
-          <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-[var(--shadow-card)]">
-            <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-semibold text-slate-900">Thống Kê Nhanh</h3>
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: 'Số dư âm',       value: s.negativeBalanceCount, unit: 'người', color: s.negativeBalanceCount > 0 ? 'text-red-600' : 'text-emerald-600', to: '/members' },
-                { label: 'Buổi chơi kỳ này', value: clubData.sessions.length, unit: 'buổi',  color: 'text-indigo-600',  to: '/attendance' },
-                { label: 'Thành viên',    value: memberCount,             unit: 'người', color: 'text-slate-800',   to: '/members' },
-              ].map(item => (
-                <Link key={item.label} to={item.to}
-                  className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0 hover:opacity-80 transition-opacity">
-                  <span className="text-xs text-slate-500">{item.label}</span>
-                  <span className={`text-sm font-bold tabular-nums ${item.color}`}>
-                    {item.value} <span className="text-xs font-normal text-slate-400">{item.unit}</span>
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Danh sách nhanh */}
-          <div className="bg-white rounded-xl border border-slate-100 p-5 shadow-[var(--shadow-card)]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <LinkIcon size={15} className="text-indigo-500" />
-                <h3 className="text-sm font-semibold text-slate-900">Danh Sách Nhanh</h3>
+            {recentTx.length === 0 ? (
+              <div className="py-10 text-center text-slate-300 text-sm">Không có dữ liệu</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-50">
+                      <th className="text-left text-slate-400 font-medium px-5 py-2.5">Mô tả</th>
+                      <th className="text-right text-slate-400 font-medium px-5 py-2.5">Số tiền</th>
+                      <th className="text-right text-slate-400 font-medium px-5 py-2.5">Ngày</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentTx.map((tx: any) => (
+                      <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ background: txTab === 'income' ? '#EEF2FF' : '#FFF1F2' }}
+                            >
+                              {txTab === 'income'
+                                ? <ArrowUpRight size={11} color={brand.primary} />
+                                : <ArrowDownLeft size={11} color={brand.danger} />}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-700 truncate max-w-[180px]">
+                                {txTab === 'income'
+                                  ? (tx.member?.fullName ?? tx.payerName ?? 'Ẩn danh')
+                                  : tx.description
+                                }
+                              </p>
+                              <p className="text-slate-400 text-[10px]">
+                                {txTab === 'income'
+                                  ? (tx.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung')
+                                  : (tx.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung')
+                                }
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <span
+                            className="font-semibold tabular-nums"
+                            style={{ color: txTab === 'income' ? brand.accent : brand.danger }}
+                          >
+                            {txTab === 'income' ? '+' : '-'}{formatVND(tx.amount)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right text-slate-400">
+                          {new Date(tx.paymentDate ?? tx.expenseDate ?? tx.createdAt).toLocaleDateString('vi-VN')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-            <div className="space-y-1">
-              {[
-                { label: 'Thành viên chưa đóng', count: s.unpaidCount,          to: '/contributions', color: 'bg-orange-100 text-orange-700' },
-                { label: 'Số dư âm',             count: s.negativeBalanceCount, to: '/members',       color: 'bg-red-100 text-red-700' },
-                { label: 'Tham gia ít (<50%)',   count: s.lowAttendanceCount,   to: '/members',       color: 'bg-amber-100 text-amber-700' },
-                { label: 'Kỳ quỹ',               count: clubData.fundPeriods.length, to: '/fund-periods', color: 'bg-indigo-100 text-indigo-700' },
-              ].map(item => (
-                <Link key={item.label} to={item.to}
-                  className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-slate-50 transition-colors group">
-                  <span className="text-xs text-slate-600 group-hover:text-slate-900 transition-colors">{item.label}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.color}`}>{item.count}</span>
-                    <ChevronRight size={13} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+            )}
 
-        {/* ── Member table (desktop) ── */}
-        {s.members.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-              <h3 className="text-sm font-semibold text-slate-900">Tổng Hợp Thành Viên Kỳ Này</h3>
-              <Link to="/reports" className="flex items-center gap-1 text-xs text-indigo-600 font-medium hover:text-indigo-700">
-                Xem báo cáo <ChevronRight size={13} />
+            <div className="px-5 py-3 border-t border-slate-50">
+              <Link
+                to={txTab === 'income' ? '/contributions' : '/expenses'}
+                className="text-xs font-medium flex items-center gap-1 hover:gap-2 transition-all"
+                style={{ color: brand.primary }}
+              >
+                Xem tất cả <ChevronRight size={12} />
               </Link>
             </div>
-            <div className="overflow-x-auto">
-              <table className="table-base">
-                <thead>
-                  <tr>
-                    {['Thành viên','Buổi','Đóng quỹ','Chi sân','Chi SH','Tổng chi','Số dư','Trạng thái'].map(h => (
-                      <th key={h}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {s.members.map(m => (
-                    <tr key={m.memberId}>
-                      <td className="font-medium text-slate-900">{m.memberName}</td>
-                      <td className="text-center">{m.attendedSessions}</td>
-                      <td className="text-center">
-                        {m.contributionPaid
-                          ? <CheckCircle2 size={15} className="text-emerald-500 mx-auto" />
-                          : <AlertCircle size={15} className="text-red-400 mx-auto" />}
-                      </td>
-                      <td className="text-right tabular-nums">{formatVND(m.courtCost)}</td>
-                      <td className="text-right tabular-nums">{formatVND(m.livingCost)}</td>
-                      <td className="text-right font-semibold tabular-nums">{formatVND(m.totalCost)}</td>
-                      <td className={`text-right font-bold tabular-nums ${m.balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {m.balance >= 0 ? '+' : ''}{formatVND(m.balance)}
-                      </td>
-                      <td>
-                        <Badge variant={m.contributionPaid ? 'green' : 'red'} dot>
-                          {m.contributionPaid ? 'OK' : 'Chưa đóng'}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
-        )}
 
+          {/* Quick stats 35% */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+
+            {/* Member payment progress */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
+                  Tiến độ đóng quỹ
+                </h3>
+                {currentPeriod && (
+                  <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                    {currentPeriod.name}
+                  </span>
+                )}
+              </div>
+
+              {currentPeriod ? (
+                <>
+                  <ProgressRow
+                    label="Đã đóng quỹ"
+                    value={activeMembers - unpaidCount}
+                    total={activeMembers}
+                    color={brand.primary}
+                  />
+                  <ProgressRow
+                    label="Đi tập kỳ này"
+                    value={attendedInPeriod}
+                    total={activeMembers}
+                    color={brand.secondary}
+                  />
+                  <ProgressRow
+                    label="Buổi đã tổ chức"
+                    value={currentPeriodSessions.length}
+                    total={currentPeriod.totalSessions || Math.max(currentPeriodSessions.length, 1)}
+                    color={brand.accent}
+                  />
+                </>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-4">Không có kỳ đang hoạt động</p>
+              )}
+            </div>
+
+            {/* Unpaid quick list */}
+            {unpaidMembers.length > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
+                    Chưa đóng quỹ
+                  </h3>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: '#FFF7ED', color: brand.warning }}
+                  >
+                    {unpaidCount} người
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {unpaidMembers.map(m => (
+                    <div key={m.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                          style={{ background: `linear-gradient(135deg, ${brand.primary}, ${brand.secondary})` }}
+                        >
+                          {m.fullName.charAt(m.fullName.lastIndexOf(' ') + 1).toUpperCase()}
+                        </div>
+                        <span className="text-xs text-slate-600 truncate max-w-[120px]">{m.fullName}</span>
+                      </div>
+                      <span className="text-[10px] font-medium text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">
+                        Chưa đóng
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/contributions" className="text-xs font-medium flex items-center gap-1 hover:gap-2 transition-all"
+                  style={{ color: brand.primary }}>
+                  Thu nhanh <ChevronRight size={12} />
+                </Link>
+              </div>
+            )}
+
+            {/* Summary stats */}
+            <div
+              className="rounded-2xl p-5 flex flex-col gap-3"
+              style={{ background: `linear-gradient(135deg, ${brand.primary}10, ${brand.secondary}15)`, border: `1px solid ${brand.primary}20` }}
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} color={brand.primary} />
+                <span className="text-xs font-semibold text-slate-700">Sức khỏe tài chính</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Số dư QC', value: formatVND(commonBalance) },
+                  { label: 'Số dư QM', value: formatVND(miniBalance) },
+                  { label: 'Tổng Thu', value: formatVND(commonIncome + miniIncome) },
+                  { label: 'Tổng Chi', value: formatVND(commonExpTotal + miniExpTotal) },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</p>
+                    <p className="text-xs font-semibold text-slate-700 tabular-nums mt-0.5">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -44,6 +44,7 @@ import { MemberDashboard } from './pages/member/MemberDashboard'
 import { MemberAttendance } from './pages/member/MemberAttendance'
 import { MemberContributions } from './pages/member/MemberContributions'
 import { MemberNotifications } from './pages/member/MemberNotifications'
+import { MemberReceipt } from './pages/member/MemberReceipt'
 
 const queryClient = new QueryClient()
 
@@ -105,7 +106,7 @@ export default function App() {
 
             {/* Member */}
             <Route path="/member/dashboard" element={<MemberDashboard />} />
-            <Route path="/member/receipt" element={<MemberDashboard />} />
+            <Route path="/member/receipt" element={<MemberReceipt />} />
             <Route path="/member/contributions" element={<MemberContributions />} />
             <Route path="/member/attendance" element={<MemberAttendance />} />
             <Route path="/member/notifications" element={<MemberNotifications />} />

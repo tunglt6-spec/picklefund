@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { ExpensesService } from './expenses.service'
 import { CurrentUser, Roles } from '../common/decorators'
@@ -40,6 +40,12 @@ export class ExpensesController {
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
   async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
     return ok(await this.service.update(id, user.clubId, body))
+  }
+
+  @Patch(':id/status')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async updateStatus(@Param('id') id: string, @CurrentUser() user: any, @Body() body: { status: string }) {
+    return ok(await this.service.updateStatus(id, user.clubId, body.status))
   }
 
   @Delete(':id')

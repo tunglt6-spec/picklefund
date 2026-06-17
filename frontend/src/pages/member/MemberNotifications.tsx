@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DollarSign, Calendar, Info, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -28,7 +28,16 @@ export function MemberNotifications() {
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
   const myContrib = data.contributions.find(c => c.memberId === memberId && (!activePeriod || c.fundPeriodId === activePeriod.id))
   const upcoming = data.sessions.filter(s => s.status === 'scheduled').slice(0, 2)
-  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const STORAGE_KEY = `notif-read-member-${clubId}`
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>()
+    } catch { return new Set<string>() }
+  })
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...readIds])) } catch {}
+  }, [readIds, STORAGE_KEY])
 
   const notifs = [
     myContrib

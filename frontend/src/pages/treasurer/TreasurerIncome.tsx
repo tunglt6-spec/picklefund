@@ -87,7 +87,7 @@ export function TreasurerIncome() {
         miniIncomeType: form.miniIncomeType,
         payerName: form.payerName || undefined,
         amount: Number(form.amount),
-        paymentDate: form.paymentDate,
+        paidAt: form.paymentDate,
         paymentMethod: form.paymentMethod,
         notes: form.notes,
       }
@@ -117,7 +117,7 @@ export function TreasurerIncome() {
     } else {
       const member = members.find(m => m.id === form.memberId)
       if (!member) return
-      const payload = { fundSource: 'COMMON', memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
+      const payload = { fundSource: 'COMMON', memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paidAt: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
       try {
         if (editTarget) {
           const res = await api.put(`/contributions/${editTarget.id}`, payload)
