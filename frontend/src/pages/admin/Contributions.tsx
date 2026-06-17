@@ -113,7 +113,7 @@ export function Contributions() {
     } else {
       // MINI
       const payload = {
-        fundSource: 'MINI', miniIncomeType: form.miniIncomeType,
+        fundSource: 'MINI' as const, miniIncomeType: form.miniIncomeType,
         payerName: form.payerName || undefined, isConfirmed: true,
         amount: Number(form.amount), paymentDate: form.paymentDate,
         paymentMethod: form.paymentMethod, notes: form.notes,

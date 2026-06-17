@@ -49,6 +49,7 @@ export const mockSessions: AttendanceSession[] = Array.from({ length: 10 }, (_, 
 export const mockContributions: FundContribution[] = mockMembers.map((m, i) => ({
   id: `contrib-${i + 1}`,
   clubId: 'club-1',
+  fundSource: 'COMMON' as const,
   fundPeriodId: 'fp-2',
   memberId: m.id,
   amount: 1000000,
@@ -60,10 +61,10 @@ export const mockContributions: FundContribution[] = mockMembers.map((m, i) => (
 }))
 
 export const mockExpenses: LivingExpense[] = [
-  { id: 'exp-1', clubId: 'club-1', fundPeriodId: 'fp-2', amount: 450000, description: 'Tiền sân buổi 1', allocationRule: 'ATTENDANCE', expenseDate: '2026-04-05', createdBy: 'user-1', createdAt: '2026-04-05T00:00:00Z' },
-  { id: 'exp-2', clubId: 'club-1', fundPeriodId: 'fp-2', amount: 250000, description: 'Nước uống', allocationRule: 'ATTENDANCE', expenseDate: '2026-04-05', createdBy: 'user-1', createdAt: '2026-04-05T00:00:00Z' },
-  { id: 'exp-3', clubId: 'club-1', fundPeriodId: 'fp-2', amount: 100000, description: 'Phí duy trì nhóm Zalo', allocationRule: 'EQUAL', expenseDate: '2026-04-01', createdBy: 'user-1', createdAt: '2026-04-01T00:00:00Z' },
-  { id: 'exp-4', clubId: 'club-1', fundPeriodId: 'fp-2', amount: 500000, description: 'Mua vợt dùng chung', allocationRule: 'FUND_ONLY', expenseDate: '2026-04-10', createdBy: 'user-1', createdAt: '2026-04-10T00:00:00Z' },
+  { id: 'exp-1', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 450000, description: 'Tiền sân buổi 1', allocationRule: 'ATTENDANCE', expenseDate: '2026-04-05', createdBy: 'user-1', createdAt: '2026-04-05T00:00:00Z' },
+  { id: 'exp-2', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 250000, description: 'Nước uống', allocationRule: 'ATTENDANCE', expenseDate: '2026-04-05', createdBy: 'user-1', createdAt: '2026-04-05T00:00:00Z' },
+  { id: 'exp-3', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 100000, description: 'Phí duy trì nhóm Zalo', allocationRule: 'EQUAL', expenseDate: '2026-04-01', createdBy: 'user-1', createdAt: '2026-04-01T00:00:00Z' },
+  { id: 'exp-4', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 500000, description: 'Mua vợt dùng chung', allocationRule: 'FUND_ONLY', expenseDate: '2026-04-10', createdBy: 'user-1', createdAt: '2026-04-10T00:00:00Z' },
 ]
 
 export const mockFundSummary: FundPeriodSummary = {
