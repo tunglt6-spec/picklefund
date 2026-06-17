@@ -124,6 +124,36 @@ export class AuthService {
     })
   }
 
+  async register(dto: {
+    club: { name: string; code: string; address?: string; contactPhone?: string; contactEmail?: string }
+    admin: { fullName: string; username: string; email?: string; password: string }
+  }) {
+    const existing = await this.prisma.user.findUnique({ where: { username: dto.admin.username } })
+    if (existing) throw new BadRequestException('Tên tài khoản đã tồn tại')
+
+    const clubCode = await this.prisma.club.findFirst({ where: { code: dto.club.code } })
+    if (clubCode) throw new BadRequestException('Mã CLB đã được sử dụng')
+
+    const hash = await argon2.hash(dto.admin.password)
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const club = await tx.club.create({ data: { name: dto.club.name, code: dto.club.code, address: dto.club.address, contactPhone: dto.club.contactPhone, contactEmail: dto.club.contactEmail } })
+      const user = await tx.user.create({ data: { username: dto.admin.username, email: dto.admin.email || `${dto.admin.username}@picklefund.vn`, passwordHash: hash, role: 'CLUB_ADMIN', clubId: club.id } })
+      const member = await tx.member.create({ data: { clubId: club.id, fullName: dto.admin.fullName, joinDate: new Date(), status: 'active', user: { connect: { id: user.id } } } })
+      return { club, user, member }
+    })
+
+    const accessToken = this.signAccess(result.user.id, result.club.id, 'CLUB_ADMIN')
+    const refreshToken = this.signRefresh(result.user.id)
+    await this.prisma.refreshToken.create({ data: { userId: result.user.id, token: this.hashToken(refreshToken), expiresAt: this.getRefreshExpiry() } })
+
+    return {
+      accessToken,
+      refreshToken,
+      user: { id: result.user.id, username: result.user.username, email: result.user.email, role: 'CLUB_ADMIN', clubId: result.club.id, memberId: result.member.id },
+    }
+  }
+
   async changePassword(userId: string, oldPassword: string, newPassword: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } })
     if (!user) throw new BadRequestException('User không tồn tại')

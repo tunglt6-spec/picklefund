@@ -22,6 +22,12 @@ export class AuthController {
   }
 
   @Public()
+  @Post('register')
+  async register(@Body() body: { club: any; admin: any }) {
+    return ok(await this.auth.register(body), 'Đăng ký CLB thành công')
+  }
+
+  @Public()
   @Post('refresh')
   async refresh(@Body() body: { refreshToken: string }, @Req() req: Request) {
     const result = await this.auth.refresh(body.refreshToken, {

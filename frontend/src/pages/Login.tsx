@@ -122,12 +122,25 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
     if (admin.password !== admin.confirmPassword) return toast.error('Mật khẩu xác nhận không khớp')
     if (admin.password.length < 6) return toast.error('Mật khẩu phải có ít nhất 6 ký tự')
     setLoading(true)
-    await new Promise(r => setTimeout(r, 900))
-    const cid = `club-${Date.now()}`
-    const email = admin.email || `${admin.username}@pickleballfund.vn`
-    addAccount({ username: admin.username, password: admin.password, role: 'CLUB_ADMIN', clubId: cid, email, fullName: admin.fullName })
-    login({ id: `u-${Date.now()}`, username: admin.username, email, clubId: cid, role: 'CLUB_ADMIN' } as User, `token-${cid}`, `refresh-${cid}`)
-    setStep(3)
+    try {
+      const res = await api.post('/auth/register', { club, admin: { fullName: admin.fullName, username: admin.username, email: admin.email, password: admin.password } })
+      const { accessToken, refreshToken, user: apiUser } = res.data.data ?? res.data
+      const user: User = { id: apiUser.id, username: apiUser.username, email: apiUser.email, clubId: apiUser.clubId, role: apiUser.role as Role, memberId: apiUser.memberId }
+      login(user, accessToken, refreshToken)
+      setStep(3)
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Đăng ký thất bại, vui lòng thử lại'
+      if (err?.response?.status === undefined) {
+        // API offline: fallback local
+        const cid = `club-${Date.now()}`
+        const email = admin.email || `${admin.username}@picklefund.vn`
+        addAccount({ username: admin.username, password: admin.password, role: 'CLUB_ADMIN', clubId: cid, email, fullName: admin.fullName })
+        login({ id: `u-${Date.now()}`, username: admin.username, email, clubId: cid, role: 'CLUB_ADMIN' } as User, `token-${cid}`, `refresh-${cid}`)
+        setStep(3)
+      } else {
+        toast.error(msg)
+      }
+    }
     setLoading(false)
   }
 
