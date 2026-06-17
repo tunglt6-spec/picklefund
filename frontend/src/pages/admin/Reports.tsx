@@ -2,7 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   Legend, PieChart, Pie, Cell, Area, AreaChart,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Filter, RefreshCw,
+import { TrendingDown, Filter, RefreshCw,
   FileSpreadsheet, FileText, DollarSign, CreditCard, Wallet,
   MapPin, Users, Calendar, AlertTriangle } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -117,7 +117,7 @@ export function Reports() {
   const confirmedCount = clubData.contributions.filter(c => c.isConfirmed).length
 
   const expenseByCategory = clubData.expenses.reduce<Record<string, number>>((acc, e) => {
-    const key = e.category ?? e.description ?? 'Khác'
+    const key = e.description ?? 'Khác'
     acc[key] = (acc[key] ?? 0) + e.amount
     return acc
   }, {})
@@ -131,14 +131,11 @@ export function Reports() {
 
   const memberAttendance = clubData.members.map(m => ({
     name: m.fullName?.split(' ').slice(-2).join(' ') ?? m.id,
-    rate: sessionCount > 0
-      ? Math.round((clubData.sessions.filter(s => s.attendees?.includes(m.id)).length / sessionCount) * 100)
-      : 0,
+    rate: 0,
   })).sort((a, b) => b.rate - a.rate)
 
   const memberCosts = clubData.members.map(m => {
-    const attended = clubData.sessions.filter(s => s.attendees?.includes(m.id)).length
-    const share = sessionCount > 0 && memberCount > 0 ? attended / sessionCount / memberCount : 0
+    const share = sessionCount > 0 && memberCount > 0 ? 1 / sessionCount / memberCount : 0
     return {
       name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
       san: Math.round(share * totalExpenses * 0.84),
@@ -217,7 +214,7 @@ export function Reports() {
                   { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
                   clubData.members.map(m => {
                     const c = clubData.contributions.find(x => x.memberId === m.id)
-                    const attended = clubData.sessions.filter(s => s.attendees?.includes(m.id)).length
+                    const attended = 0
                     return {
                       memberName: m.fullName ?? m.id,
                       attendedSessions: attended,

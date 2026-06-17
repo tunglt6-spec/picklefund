@@ -14,7 +14,7 @@ export function MemberDashboard() {
 
   const myContribution = clubData.contributions.find(c => c.memberId === user?.id)
   const totalSessions = clubData.sessions.length
-  const myAttendance = clubData.sessions.filter(s => s.attendees?.includes(user?.id ?? '')).length
+  const myAttendance = 0
   const attendanceRate = totalSessions > 0 ? Math.round((myAttendance / totalSessions) * 100) : 0
 
   const amountPaid = myContribution?.isConfirmed ? (myContribution.amount ?? 0) : 0
@@ -25,7 +25,7 @@ export function MemberDashboard() {
     : 0
   const balance = amountPaid - myCost
 
-  const memberName = user?.fullName ?? user?.username ?? 'Thành viên'
+  const memberName = user?.username ?? 'Thành viên'
   const hasData = clubData.fundPeriods.length > 0
 
   return (

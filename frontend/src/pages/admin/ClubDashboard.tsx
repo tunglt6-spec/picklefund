@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { MemberSummary } from '../../types'
 import {
   Users, DollarSign, TrendingUp, AlertTriangle, CreditCard,
   BarChart2, ChevronRight, Link as LinkIcon, Calendar,
@@ -79,7 +80,7 @@ export function ClubDashboard() {
     unpaidCount,
     negativeBalanceCount: 0,
     lowAttendanceCount: 0,
-    members: [],
+    members: [] as MemberSummary[],
   }
 
   const realChartData = clubData.fundPeriods.map(fp => ({
