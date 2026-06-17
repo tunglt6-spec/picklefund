@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { Member } from '../../types'
 import { formatDate } from '../../lib/utils'
 import { exportMembersExcel, exportMembersPDF } from '../../lib/export'
+import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
 const emptyForm = { fullName: '', phone: '', email: '', joinDate: new Date().toISOString().slice(0, 10), notes: '' }
@@ -139,19 +140,39 @@ export function Members() {
   const openEdit   = (m: Member) => { setEditMember(m); setShowDrawer(true) }
   const closeDrawer = () => { setShowDrawer(false); setEditMember(null) }
 
-  const handleSave = (form: typeof emptyForm) => {
-    if (editMember) {
-      setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...form } : m))
-      toast.success('Cập nhật thành viên thành công!')
-    } else {
-      setMembers(prev => [...prev, { id: `mem-${Date.now()}`, clubId, status: 'active', ...form }])
-      toast.success(`Đã thêm ${form.fullName}!`)
+  const handleSave = async (form: typeof emptyForm) => {
+    try {
+      if (editMember) {
+        const res = await api.put(`/members/${editMember.id}`, form)
+        const updated = res.data?.data ?? { ...editMember, ...form }
+        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated, amount: Number(updated.amount ?? m.id) } : m))
+        toast.success('Cập nhật thành viên thành công!')
+      } else {
+        const res = await api.post('/members', { ...form, clubId })
+        const created = res.data?.data ?? { id: `mem-${Date.now()}`, clubId, status: 'active', ...form }
+        setMembers(prev => [...prev, { ...created }])
+        toast.success(`Đã thêm ${form.fullName}!`)
+      }
+    } catch {
+      // Fallback to local update if API fails
+      if (editMember) {
+        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...form } : m))
+        toast.success('Cập nhật thành viên thành công! (offline)')
+      } else {
+        setMembers(prev => [...prev, { id: `mem-${Date.now()}`, clubId, status: 'active', ...form }])
+        toast.success(`Đã thêm ${form.fullName}! (offline)`)
+      }
     }
     closeDrawer()
   }
 
-  const handleDelete = (m: Member) => {
+  const handleDelete = async (m: Member) => {
     if (!window.confirm(`Xóa thành viên ${m.fullName}?`)) return
+    try {
+      await api.delete(`/members/${m.id}`)
+    } catch {
+      // Continue with local delete even if API fails
+    }
     setMembers(prev => prev.filter(x => x.id !== m.id))
     toast.success('Đã xóa thành viên')
   }

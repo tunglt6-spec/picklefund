@@ -12,6 +12,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
+import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
 /* ── Constants ── */
@@ -344,11 +345,9 @@ export function Expenses() {
   const paidAmt     = richExpenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
   const pendingCount = richExpenses.filter(e => e.status === 'pending').length
 
-  const handleAdd = (form: typeof emptyForm) => {
+  const handleAdd = async (form: typeof emptyForm) => {
     const isMini = form.fundSource === 'MINI'
-    const newE: LivingExpense = {
-      id: `e${Date.now()}`,
-      clubId,
+    const payload = {
       fundSource: form.fundSource,
       fundPeriodId: isMini ? undefined : (activePeriod?.id ?? ''),
       description: form.description,
@@ -358,16 +357,21 @@ export function Expenses() {
       allocationEnabled: !isMini,
       miniExpenseType: isMini ? form.miniExpenseType : undefined,
       receiverName: isMini && form.receiverName ? form.receiverName : undefined,
-      status: 'pending',
-      createdBy: user?.username ?? 'Admin',
-      createdAt: new Date().toISOString(),
+    }
+    let newE: LivingExpense
+    try {
+      const res = await api.post('/expenses', payload)
+      newE = { ...res.data?.data, amount: Number(res.data?.data?.amount ?? payload.amount), fundSource: form.fundSource, createdAt: new Date().toISOString(), createdBy: user?.username ?? 'Admin' }
+    } catch {
+      newE = { id: `e${Date.now()}`, clubId, ...payload, status: 'pending' as ExpenseStatus, createdBy: user?.username ?? 'Admin', createdAt: new Date().toISOString() }
     }
     save([newE, ...clubData.expenses])
     setShowAdd(false)
-    toast.success(isMini ? `Đã thêm khoản chi Quỹ Mini!` : 'Đã thêm khoản chi Quỹ Chung!')
+    toast.success(isMini ? 'Đã thêm khoản chi Quỹ Mini!' : 'Đã thêm khoản chi Quỹ Chung!')
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    try { await api.delete(`/expenses/${id}`) } catch { /* local delete continues */ }
     save(clubData.expenses.filter(e => e.id !== id))
     setDetailExp(null)
     setConfirmId(null)

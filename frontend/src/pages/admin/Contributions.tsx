@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, CheckCircle, XCircle, DollarSign, TrendingUp, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -69,12 +70,13 @@ export function Contributions() {
     setShowCreate(true)
   }
 
-  const toggleConfirm = (id: string) => {
+  const toggleConfirm = async (id: string) => {
     setContributions(prev => prev.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
     toast.success('Cập nhật trạng thái đóng quỹ')
+    try { await api.patch(`/contributions/${id}/confirm`) } catch { /* local update stays */ }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const isCommon = form.fundSource === 'COMMON'
 
@@ -82,52 +84,67 @@ export function Contributions() {
       const member = members.find(m => m.id === form.memberId)
       if (!member) return
 
-      if (editTarget) {
-        setContributions(prev => prev.map(c => c.id === editTarget.id
-          ? { ...c, member, memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
-          : c
-        ))
-        toast.success(`Đã cập nhật khoản thu của ${member.fullName}`)
-      } else {
-        const newC: FundContribution = {
-          id: `contrib-${Date.now()}`, clubId,
-          fundSource: 'COMMON',
-          fundPeriodId: activePeriod?.id ?? '',
-          isConfirmed: false, member, createdAt: new Date().toISOString(),
-          memberId: member.id, amount: Number(form.amount),
-          paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
-        }
-        setContributions(prev => [...prev, newC])
-        toast.success(`Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
-      }
-    } else {
-      // MINI
-      const newC: FundContribution = {
-        id: `mini-contrib-${Date.now()}`, clubId,
-        fundSource: 'MINI',
-        miniIncomeType: form.miniIncomeType,
-        payerName: form.payerName || undefined,
-        isConfirmed: true, createdAt: new Date().toISOString(),
+      const payload = {
+        fundSource: 'COMMON', memberId: member.id,
+        fundPeriodId: activePeriod?.id,
         amount: Number(form.amount),
         paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
       }
-      if (editTarget) {
-        setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...newC, id: c.id } : c))
-        toast.success('Đã cập nhật khoản thu Quỹ Mini')
-      } else {
-        setContributions(prev => [...prev, newC])
-        toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Mini — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
+      try {
+        if (editTarget) {
+          const res = await api.put(`/contributions/${editTarget.id}`, payload)
+          const updated = res.data?.data ?? { ...editTarget, ...payload }
+          setContributions(prev => prev.map(c => c.id === editTarget.id
+            ? { ...c, ...updated, amount: Number(updated.amount), member } : c))
+        } else {
+          const res = await api.post('/contributions', payload)
+          const created = res.data?.data ?? { id: `contrib-${Date.now()}`, clubId, isConfirmed: false, createdAt: new Date().toISOString(), ...payload }
+          setContributions(prev => [...prev, { ...created, amount: Number(created.amount), member, fundSource: 'COMMON' as const }])
+        }
+      } catch {
+        if (editTarget) {
+          setContributions(prev => prev.map(c => c.id === editTarget.id
+            ? { ...c, member, memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes } : c))
+        } else {
+          setContributions(prev => [...prev, { id: `contrib-${Date.now()}`, clubId, fundSource: 'COMMON', fundPeriodId: activePeriod?.id, isConfirmed: false, member, createdAt: new Date().toISOString(), memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }])
+        }
+      }
+      toast.success(editTarget ? `Đã cập nhật khoản thu của ${member.fullName}` : `Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
+    } else {
+      // MINI
+      const payload = {
+        fundSource: 'MINI', miniIncomeType: form.miniIncomeType,
+        payerName: form.payerName || undefined, isConfirmed: true,
+        amount: Number(form.amount), paymentDate: form.paymentDate,
+        paymentMethod: form.paymentMethod, notes: form.notes,
+      }
+      try {
+        if (editTarget) {
+          await api.put(`/contributions/${editTarget.id}`, payload)
+          setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...payload, id: c.id } : c))
+          toast.success('Đã cập nhật khoản thu Quỹ Mini')
+        } else {
+          const res = await api.post('/contributions', payload)
+          const created = res.data?.data ?? { id: `mini-contrib-${Date.now()}`, clubId, createdAt: new Date().toISOString(), ...payload }
+          setContributions(prev => [...prev, { ...created, amount: Number(created.amount), fundSource: 'MINI' as const }])
+          toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Mini — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
+        }
+      } catch {
+        const localC: FundContribution = { id: `mini-contrib-${Date.now()}`, clubId, fundSource: 'MINI', miniIncomeType: form.miniIncomeType, payerName: form.payerName || undefined, isConfirmed: true, createdAt: new Date().toISOString(), amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
+        if (editTarget) setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...localC, id: c.id } : c))
+        else setContributions(prev => [...prev, localC])
+        toast.success(editTarget ? 'Cập nhật offline' : `Đã ghi nhận vào Quỹ Mini (offline)`)
       }
     }
     setShowCreate(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteId) return
-    const c = contributions.find(x => x.id === deleteId)
+    try { await api.delete(`/contributions/${deleteId}`) } catch { /* local delete continues */ }
     setContributions(prev => prev.filter(x => x.id !== deleteId))
     setDeleteId(null)
-    toast.success(`Đã xóa khoản thu`)
+    toast.success('Đã xóa khoản thu')
   }
 
   return (
