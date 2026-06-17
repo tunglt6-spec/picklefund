@@ -521,14 +521,17 @@ function MobileLinkWidget() {
                   <div className="mb-3">
                     <p className="text-[11px] font-semibold text-slate-600 mb-1.5">① Chạy lệnh này trong terminal:</p>
                     <div className="bg-slate-900 rounded-xl px-3 py-2 flex items-center gap-2">
-                      <code className="text-emerald-400 text-[11px] font-mono flex-1">npm run dev:tunnel</code>
-                      <button onClick={() => copy('npm run dev:tunnel', setTunnelCopied)}
+                      <code className="text-emerald-400 text-[11px] font-mono flex-1">npm run dev:tunnel:all</code>
+                      <button onClick={() => copy('npm run dev:tunnel:all', setTunnelCopied)}
                         className={`shrink-0 transition-colors ${tunnelCopied ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'}`}>
                         {tunnelCopied ? <Check size={13} /> : <Copy size={13} />}
                       </button>
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
                       Terminal sẽ hiện URL dạng <span className="font-mono text-violet-500">https://xxxx.loca.lt</span>
+                    </p>
+                    <p className="text-[10px] text-amber-500 mt-1 leading-relaxed">
+                      ⚠ Lần đầu mở URL: nhấn <strong>"Click to Continue"</strong> để vượt qua trang xác nhận tunnel.
                     </p>
                   </div>
 

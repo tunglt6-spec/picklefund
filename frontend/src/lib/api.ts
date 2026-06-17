@@ -22,6 +22,10 @@ function isLocalToken(token?: string | null) {
 api.interceptors.request.use((config) => {
   const { accessToken } = useAuthStore.getState()
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
+  // bypass localtunnel interstitial page for API calls on loca.lt tunnels
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.loca.lt')) {
+    config.headers['bypass-tunnel-reminder'] = 'true'
+  }
   return config
 })
 
