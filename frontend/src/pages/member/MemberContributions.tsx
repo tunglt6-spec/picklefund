@@ -1,13 +1,33 @@
-import { useState } from 'react'
-import { DollarSign, CheckCircle, Clock, TrendingUp, Search } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { DollarSign, CheckCircle, Clock, TrendingUp, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
+import api from '../../lib/api'
+
+interface PersonalReceipt {
+  id: string
+  fundPeriodId: string
+  fundPeriod?: { name: string; startDate: string; endDate: string }
+  attendedSessions: number
+  totalSessions: number
+  amountPaid: string | number
+  courtCost: string | number
+  livingCost: string | number
+  totalCost: string | number
+  balance: string | number
+  needToPay: string | number
+  snapshotAt: string
+}
+
+function toNum(v: string | number | null | undefined): number {
+  return v == null ? 0 : typeof v === 'number' ? v : Number(v)
+}
 
 export function MemberContributions() {
-  const { user } = useAuthStore()
+  const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const memberId = user?.memberId ?? 'mem-1'
   const { getClubData } = useClubDataStore()
@@ -18,6 +38,17 @@ export function MemberContributions() {
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
 
   const [search, setSearch] = useState('')
+  const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
+  const [expandedReceipt, setExpandedReceipt] = useState<string | null>(null)
+
+  const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
+
+  useEffect(() => {
+    if (isLocal) return
+    api.get('/personal-receipts/mine').then(res => {
+      setReceipts(res.data?.data ?? [])
+    }).catch(() => {})
+  }, [accessToken, isLocal])
 
   const filtered = myContribs.filter(c => {
     const period = data.fundPeriods.find(fp => fp.id === c.fundPeriodId)
@@ -81,7 +112,7 @@ export function MemberContributions() {
           />
         </div>
 
-        {/* Table */}
+        {/* Contribution table */}
         {filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-14 text-center">
             <TrendingUp size={32} className="mx-auto text-slate-200 mb-3" />
@@ -120,6 +151,82 @@ export function MemberContributions() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Personal receipts from finalized periods */}
+        {receipts.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Receipt size={16} className="text-slate-500" />
+              <h3 className="text-sm font-semibold text-slate-700">Sao Kê Kỳ Đã Chốt</h3>
+            </div>
+            <div className="space-y-2">
+              {receipts.map(r => {
+                const balance = toNum(r.balance)
+                const isExpanded = expandedReceipt === r.id
+                return (
+                  <div key={r.id} className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+                    <button
+                      onClick={() => setExpandedReceipt(isExpanded ? null : r.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`h-2 w-2 rounded-full ${balance >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <div className="text-left">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {r.fundPeriod?.name ?? 'Kỳ đã chốt'}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            Chốt ngày {formatDate(r.snapshotAt)} · {r.attendedSessions}/{r.totalSessions} buổi
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className={`text-sm font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {balance >= 0 ? '+' : ''}{formatVND(balance)}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {balance >= 0 ? 'Dư quỹ' : 'Còn nợ'}
+                          </p>
+                        </div>
+                        {isExpanded ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Đã đóng quỹ</span>
+                            <span className="font-semibold text-emerald-600">{formatVND(toNum(r.amountPaid))}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Chi phí sân</span>
+                            <span className="font-semibold text-slate-700">{formatVND(toNum(r.courtCost))}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Chi phí sinh hoạt</span>
+                            <span className="font-semibold text-slate-700">{formatVND(toNum(r.livingCost))}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Tổng chi phí</span>
+                            <span className="font-semibold text-slate-700">{formatVND(toNum(r.totalCost))}</span>
+                          </div>
+                          {toNum(r.needToPay) > 0 && (
+                            <div className="col-span-2 flex justify-between border-t border-slate-200 pt-2 mt-1">
+                              <span className="text-red-600 font-medium">Cần nộp thêm</span>
+                              <span className="font-bold text-red-600">{formatVND(toNum(r.needToPay))}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>

@@ -14,6 +14,7 @@ import { ExpensesModule } from './expenses/expenses.module'
 import { PersonalReceiptsModule } from './personal-receipts/personal-receipts.module'
 import { UsersModule } from './users/users.module'
 import { MinigameModule } from './minigame/minigame.module'
+import { AuditLogsModule } from './audit-logs/audit-logs.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
@@ -43,6 +44,7 @@ import { RolesGuard } from './common/guards/roles.guard'
     PersonalReceiptsModule,
     UsersModule,
     MinigameModule,
+    AuditLogsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -1,25 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, ScrollText } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
+import { useAuthStore } from '../../store/authStore'
+import api from '../../lib/api'
 
-const LOGS = [
-  { id: 1, time: '2026-06-16 09:14', user: 'admin@pbhn.vn', action: 'UPDATE', resource: 'contribution', detail: 'Xác nhận đóng quỹ của Hoàng Ngọc B', club: 'CLB HN' },
-  { id: 2, time: '2026-06-16 08:55', user: 'admin@pbhn.vn', action: 'CREATE', resource: 'contribution', detail: 'Ghi nhận Hoàng Ngọc B đóng 1.000.000đ', club: 'CLB HN' },
-  { id: 3, time: '2026-06-15 16:30', user: 'treasurer@pbhn.vn', action: 'CREATE', resource: 'expense', detail: 'Nhập khoản chi Tiền sân buổi 9 – 450.000đ', club: 'CLB HN' },
-  { id: 4, time: '2026-06-15 14:32', user: 'admin@pbhn.vn', action: 'CREATE', resource: 'fund_period', detail: 'Tạo kỳ quỹ Quý 2/2026', club: 'CLB HN' },
-  { id: 5, time: '2026-06-15 13:15', user: 'treasurer@pbhcm.vn', action: 'UPDATE', resource: 'expense', detail: 'Cập nhật khoản chi Tiền sân 450k → 480k', club: 'CLB HCM' },
-  { id: 6, time: '2026-06-15 11:40', user: 'superadmin', action: 'UPDATE', resource: 'club', detail: 'Khóa CLB Đà Nẵng – lý do: vi phạm điều khoản', club: 'System' },
-  { id: 7, time: '2026-06-15 10:05', user: 'member@pbhn.vn', action: 'EXPORT', resource: 'receipt', detail: 'Tải Phiếu Thu Quỹ cá nhân Q2/2026', club: 'CLB HN' },
-  { id: 8, time: '2026-06-14 16:30', user: 'admin@pbhn.vn', action: 'CREATE', resource: 'member', detail: 'Thêm thành viên mới: Hoàng Ngọc B', club: 'CLB HN' },
-  { id: 9, time: '2026-06-14 12:00', user: 'admin@pbhcm.vn', action: 'DELETE', resource: 'session', detail: 'Xóa buổi tập ngày 10/06 – lý do: hủy sân', club: 'CLB HCM' },
-  { id: 10, time: '2026-06-14 09:00', user: 'treasurer@pbhn.vn', action: 'CREATE', resource: 'contribution', detail: 'Ghi nhận Nguyễn Văn A đóng quỹ 1.000.000đ', club: 'CLB HN' },
-  { id: 11, time: '2026-06-13 17:20', user: 'superadmin', action: 'CREATE', resource: 'club', detail: 'Tạo CLB mới: CLB Pickleball Đà Lạt', club: 'System' },
-  { id: 12, time: '2026-06-13 14:00', user: 'admin@pbdn.vn', action: 'UPDATE', resource: 'fund_period', detail: 'Chốt kỳ quỹ Quý 1/2026', club: 'CLB ĐN' },
-  { id: 13, time: '2026-06-12 10:30', user: 'member@pbhcm.vn', action: 'EXPORT', resource: 'receipt', detail: 'Tải Phiếu Thu Q1/2026', club: 'CLB HCM' },
-  { id: 14, time: '2026-06-11 08:45', user: 'treasurer@pbhn.vn', action: 'DELETE', resource: 'expense', detail: 'Xóa khoản chi nhập nhầm – 200.000đ', club: 'CLB HN' },
-  { id: 15, time: '2026-06-10 15:00', user: 'admin@pbhn.vn', action: 'CREATE', resource: 'session', detail: 'Tạo buổi tập ngày 12/06 – Sân Mỹ Đình', club: 'CLB HN' },
-]
+interface AuditLog {
+  id: string
+  createdAt: string
+  user: { username: string }
+  club?: { name: string } | null
+  action: string
+  resource: string
+  detail?: string | null
+}
 
 const ACTION_COLORS: Record<string, 'green' | 'blue' | 'red' | 'purple' | 'orange'> = {
   CREATE: 'green', UPDATE: 'blue', DELETE: 'red', EXPORT: 'purple', LOCK: 'orange',
@@ -27,22 +21,41 @@ const ACTION_COLORS: Record<string, 'green' | 'blue' | 'red' | 'purple' | 'orang
 const ACTION_OPTIONS = ['Tất cả', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'LOCK']
 
 export function AuditLogs() {
+  const { accessToken } = useAuthStore()
   const [search, setSearch] = useState('')
   const [action, setAction] = useState('Tất cả')
+  const [logs, setLogs] = useState<AuditLog[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = LOGS.filter(l => {
-    if (action !== 'Tất cả' && l.action !== action) return false
-    if (search && !l.user.toLowerCase().includes(search.toLowerCase())
-      && !l.detail.toLowerCase().includes(search.toLowerCase())
-      && !l.club.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
+
+  useEffect(() => {
+    if (isLocal) { setLoading(false); return }
+    const params = new URLSearchParams()
+    if (action !== 'Tất cả') params.set('action', action)
+    if (search) params.set('search', search)
+    params.set('limit', '200')
+
+    setLoading(true)
+    api.get(`/audit-logs?${params.toString()}`).then(res => {
+      setLogs(res.data?.data ?? [])
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [accessToken, action, search, isLocal])
+
+  const filtered = isLocal
+    ? []
+    : logs
+
+  const formatTime = (iso: string) => {
+    const d = new Date(iso)
+    return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Audit Logs"
-        subtitle={`${LOGS.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
+        subtitle={`${filtered.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
       />
 
       <div className="p-6 max-w-[1100px] mx-auto space-y-5">
@@ -74,41 +87,39 @@ export function AuditLogs() {
 
         {/* Table */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-          <table className="table-base">
-            <thead>
-              <tr>
-                <th className="w-36">Thời gian</th>
-                <th>Người dùng</th>
-                <th className="text-center w-20">Action</th>
-                <th>Chi tiết</th>
-                <th className="w-28">CLB</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(log => (
-                <tr key={log.id}>
-                  <td className="text-slate-400 text-xs font-mono">{log.time}</td>
-                  <td className="text-slate-700 text-xs">{log.user}</td>
-                  <td className="text-center">
-                    <Badge variant={ACTION_COLORS[log.action] ?? 'gray'}>{log.action}</Badge>
-                  </td>
-                  <td className="text-slate-800 text-xs">{log.detail}</td>
-                  <td className="text-slate-500 text-xs">{log.club}</td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
+          {loading ? (
+            <div className="py-16 text-center text-slate-400 text-sm">Đang tải...</div>
+          ) : filtered.length === 0 ? (
+            <div className="py-16 text-center">
+              <ScrollText size={32} className="mx-auto text-slate-200 mb-3" />
+              <p className="text-sm text-slate-400">Chưa có log nào</p>
+            </div>
+          ) : (
+            <table className="table-base">
+              <thead>
                 <tr>
-                  <td colSpan={5} className="py-12 text-center">
-                    <ScrollText size={28} className="mx-auto text-slate-200 mb-2" />
-                    <p className="text-sm text-slate-400">Không có log phù hợp</p>
-                  </td>
+                  <th className="w-36">Thời gian</th>
+                  <th>Người dùng</th>
+                  <th className="text-center w-20">Action</th>
+                  <th>Chi tiết</th>
+                  <th className="w-28">CLB</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 text-xs text-slate-400">
-            Hiển thị {filtered.length} / {LOGS.length} bản ghi
-          </div>
+              </thead>
+              <tbody>
+                {filtered.map(log => (
+                  <tr key={log.id}>
+                    <td className="text-xs text-slate-400 whitespace-nowrap">{formatTime(log.createdAt)}</td>
+                    <td className="text-slate-700 text-xs font-mono">{log.user?.username ?? '—'}</td>
+                    <td className="text-center">
+                      <Badge variant={ACTION_COLORS[log.action] ?? 'gray'}>{log.action}</Badge>
+                    </td>
+                    <td className="text-slate-600 text-xs">{log.detail ?? `${log.resource}`}</td>
+                    <td className="text-xs text-slate-500">{log.club?.name ?? 'System'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
