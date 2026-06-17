@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import {
-  Plus, Search, Filter, Eye, Edit2, Trash2, Receipt,
+  Plus, Search, Filter, Eye, Trash2, Receipt,
   TrendingUp, TrendingDown, CheckCircle, Clock, CreditCard,
   FileText, X, ArrowLeft, Calendar, Users,
 } from 'lucide-react'
@@ -9,33 +9,16 @@ import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import type { AllocationRule } from '../../types'
+import type { AllocationRule, LivingExpense, ExpenseStatus } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
-/* ── Types ── */
-type ExpenseStatus = 'pending' | 'approved' | 'paid' | 'rejected'
-
-interface RichExpense {
-  id: string
-  code: string
-  description: string
-  amount: number
-  expenseDate: string
-  allocationRule: AllocationRule
-  status: ExpenseStatus
-  notes?: string
-  createdBy: string
-  createdAt: string
-  allocations?: { name: string; sessions: number; amount: number }[]
-}
-
 /* ── Constants ── */
 const ruleLabels: Record<AllocationRule, string> = {
-  ATTENDANCE:    'Theo số buổi tham gia',
-  EQUAL:         'Đều nhau',
-  PRESENT_ONLY:  'Theo số người tham gia',
-  FUND_ONLY:     'Quỹ chung',
+  ATTENDANCE:   'Theo số buổi tham gia',
+  EQUAL:        'Đều nhau',
+  PRESENT_ONLY: 'Theo số người tham gia',
+  FUND_ONLY:    'Quỹ chung',
 }
 const ruleHint: Record<AllocationRule, string> = {
   ATTENDANCE:   'Phân bổ chi phí theo số buổi tham gia thực tế của từng thành viên',
@@ -59,29 +42,37 @@ const TABS = [
   { key: 'rejected', label: 'Từ chối' },
 ] as const
 
+/* ── RichExpense: UI-only view derived from LivingExpense ── */
+interface RichExpense extends LivingExpense {
+  code: string
+  status: ExpenseStatus   // narrowed from optional
+  notes: string
+}
+
+function toRich(e: LivingExpense, index: number): RichExpense {
+  return {
+    ...e,
+    code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${String(index + 1).padStart(3, '0')}`,
+    status: e.status ?? 'pending',
+    notes: '',
+  }
+}
+
 /* ── Sub-components ── */
 
-function KpiCard({ icon, iconBg, iconColor, label, value, trend, isCount, unit }: {
+function KpiCard({ icon, iconBg, iconColor, label, value, isCount, unit }: {
   icon: React.ReactNode; iconBg: string; iconColor: string
-  label: string; value: number; trend: number | null
-  isCount?: boolean; unit?: string
+  label: string; value: number; isCount?: boolean; unit?: string
 }) {
-  const up = (trend ?? 0) >= 0
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
       <div className="flex items-center justify-between mb-3">
         <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>{icon}</div>
-        {trend !== null && (
-          <span className={`flex items-center gap-0.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${up ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-            {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}{Math.abs(trend)}%
-          </span>
-        )}
       </div>
       <p className="text-xl font-bold text-slate-900 leading-tight">
         {isCount ? `${value.toLocaleString('vi-VN')} ${unit}` : formatVND(value)}
       </p>
       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-1">{label}</p>
-      {trend !== null && <p className="text-[10px] text-slate-400">so với kỳ trước</p>}
     </div>
   )
 }
@@ -101,9 +92,7 @@ function AddDrawer({ open, onClose, onSave }: {
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Thêm khoản chi mới</h2>
-          </div>
+          <h2 className="text-base font-semibold text-slate-900">Thêm khoản chi mới</h2>
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
             <X size={16} />
           </button>
@@ -204,17 +193,6 @@ function FilterPanel({ open, onClose, defaultFrom, defaultTo }: {
               <input type="date" defaultValue={defaultTo ?? ''} className="input-base text-xs" />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">Số tiền</label>
-            <div className="grid grid-cols-2 gap-2">
-              <input type="number" placeholder="Từ" className="input-base" />
-              <input type="number" placeholder="Đến" className="input-base" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tìm kiếm</label>
-            <input placeholder="Tìm theo nội dung, mã chi..." className="input-base" />
-          </div>
         </div>
         <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
           <Button variant="outline" className="flex-1" onClick={() => { setStatus('all'); setRule('all') }}>Xóa bộ lọc</Button>
@@ -225,8 +203,8 @@ function FilterPanel({ open, onClose, defaultFrom, defaultTo }: {
   )
 }
 
-function DetailView({ exp, onClose, onEdit, onDelete, onApprove }: {
-  exp: RichExpense; onClose: () => void; onEdit: () => void; onDelete: () => void; onApprove: () => void
+function DetailView({ exp, onClose, onDelete, onApprove }: {
+  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void
 }) {
   const cfg = statusCfg[exp.status]
   return (
@@ -241,31 +219,19 @@ function DetailView({ exp, onClose, onEdit, onDelete, onApprove }: {
             {exp.status === 'pending' && (
               <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
             )}
-            <Button variant="outline" size="sm" onClick={onEdit}><Edit2 size={13} />Sửa</Button>
             <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4 border-b border-slate-50">
+          <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
             {[
-              { label: 'Mã chi',        value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
-              { label: 'Nội dung',      value: <span className="font-medium">{exp.description}</span> },
-              { label: 'Số tiền',       value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
-              { label: 'Ngày chi',      value: exp.expenseDate },
+              { label: 'Mã chi',           value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
+              { label: 'Nội dung',         value: <span className="font-medium">{exp.description}</span> },
+              { label: 'Số tiền',          value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
+              { label: 'Ngày chi',         value: exp.expenseDate },
               { label: 'Quy tắc phân bổ', value: ruleLabels[exp.allocationRule] },
-              { label: 'Trạng thái',   value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
-              { label: 'Ghi chú',      value: exp.notes || <span className="text-slate-400">—</span> },
-              { label: 'Người tạo',    value: (
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700">
-                    {exp.createdBy.split(' ').slice(-1)[0][0]}
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-slate-800">{exp.createdBy}</p>
-                    <p className="text-[10px] text-slate-400">{exp.createdAt.slice(0, 10)}</p>
-                  </div>
-                </div>
-              )},
+              { label: 'Trạng thái',       value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
+              { label: 'Ngày tạo',         value: exp.createdAt.slice(0, 10) },
             ].map((f, i) => (
               <div key={i}>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</p>
@@ -273,29 +239,6 @@ function DetailView({ exp, onClose, onEdit, onDelete, onApprove }: {
               </div>
             ))}
           </div>
-          {exp.allocations && (
-            <div className="px-6 py-5">
-              <p className="text-xs font-bold text-slate-700 mb-3">Phân bổ chi tiết</p>
-              <div className="space-y-2">
-                {exp.allocations.map((a, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-                    <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0">
-                      {a.name.split(' ').slice(-1)[0][0]}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-slate-900">{a.name}</p>
-                      <p className="text-[10px] text-slate-400">{a.sessions} buổi</p>
-                    </div>
-                    <p className="text-xs font-semibold text-slate-900">{formatVND(a.amount)}</p>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-xs font-bold text-slate-700">Tổng cộng</p>
-                  <p className="text-sm font-bold text-indigo-600">{formatVND(exp.amount)}</p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -306,24 +249,18 @@ function DetailView({ exp, onClose, onEdit, onDelete, onApprove }: {
 export function Expenses() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
-  const { getClubData, setExpenses: storeSetExpenses } = useClubDataStore()
+  const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
 
-  const [expenses, setExpenses] = useState<RichExpense[]>(() =>
-    clubData.expenses.map((e, i) => ({
-      id: e.id,
-      code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${String(i + 1).padStart(3, '0')}`,
-      description: e.description,
-      amount: e.amount,
-      expenseDate: e.expenseDate,
-      allocationRule: e.allocationRule,
-      status: 'approved' as ExpenseStatus,
-      notes: '',
-      createdBy: e.createdBy,
-      createdAt: e.createdAt,
-    }))
+  // Derive display view from store — no local copy
+  const richExpenses = useMemo<RichExpense[]>(
+    () => clubData.expenses.map((e, i) => toRich(e, i)),
+    [clubData.expenses]
   )
+
+  const save = (next: LivingExpense[]) => setExpenses(clubId, next)
+
   const [tab, setTab] = useState<'all' | ExpenseStatus>('all')
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
@@ -333,69 +270,49 @@ export function Expenses() {
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
 
-  const filtered = useMemo(() => expenses.filter(e => {
+  const filtered = useMemo(() => richExpenses.filter(e => {
     const matchTab = tab === 'all' || e.status === tab
     const q = search.toLowerCase()
     const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
     return matchTab && matchQ
-  }), [expenses, tab, search])
+  }), [richExpenses, tab, search])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const total        = expenses.reduce((s, e) => s + e.amount, 0)
-  const approved     = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
-  const pending      = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
-  const paid         = expenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
-  const pendingCount = expenses.filter(e => e.status === 'pending').length
-
-  const syncToStore = (richExpenses: RichExpense[]) => {
-    storeSetExpenses(clubId, richExpenses.map(e => ({
-      id: e.id,
-      clubId,
-      fundPeriodId: activePeriod?.id ?? '',
-      amount: e.amount,
-      description: e.description,
-      allocationRule: e.allocationRule,
-      expenseDate: e.expenseDate,
-      createdBy: e.createdBy,
-      createdAt: e.createdAt,
-    })))
-  }
+  const totalAmt    = richExpenses.reduce((s, e) => s + e.amount, 0)
+  const approvedAmt = richExpenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
+  const pendingAmt  = richExpenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+  const paidAmt     = richExpenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
+  const pendingCount = richExpenses.filter(e => e.status === 'pending').length
 
   const handleAdd = (form: typeof emptyForm) => {
-    const n: RichExpense = {
+    const newE: LivingExpense = {
       id: `e${Date.now()}`,
-      code: `EXP-${form.expenseDate.replace(/-/g, '').slice(2)}-${String(expenses.length + 1).padStart(3, '0')}`,
+      clubId,
+      fundPeriodId: activePeriod?.id ?? '',
       description: form.description,
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
       allocationRule: form.allocationRule,
-      notes: form.notes,
       status: 'pending',
       createdBy: user?.username ?? 'Admin',
       createdAt: new Date().toISOString(),
     }
-    const next = [n, ...expenses]
-    setExpenses(next)
-    syncToStore(next)
+    save([newE, ...clubData.expenses])
     setShowAdd(false)
     toast.success('Đã thêm khoản chi!')
   }
 
   const handleDelete = (id: string) => {
-    const next = expenses.filter(e => e.id !== id)
-    setExpenses(next)
-    syncToStore(next)
+    save(clubData.expenses.filter(e => e.id !== id))
     setDetailExp(null)
     setConfirmId(null)
     toast.success('Đã xóa khoản chi')
   }
 
   const handleApprove = (id: string) => {
-    const next = expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e)
-    setExpenses(next)
-    syncToStore(next)
+    save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e))
     setDetailExp(null)
     toast.success('Đã duyệt khoản chi!')
   }
@@ -427,11 +344,11 @@ export function Expenses() {
       <div className="p-6 max-w-[1400px] mx-auto space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <KpiCard icon={<Receipt size={18} />}      iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Tổng chi"        value={total}    trend={-12} />
-          <KpiCard icon={<CheckCircle size={18} />}  iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"    value={approved} trend={+12} />
-          <KpiCard icon={<Clock size={18} />}        iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Đang chờ duyệt" value={pending}  trend={+2} />
-          <KpiCard icon={<CreditCard size={18} />}   iconBg="bg-blue-50"    iconColor="text-blue-600"    label="Đã thanh toán"  value={paid}     trend={+15} />
-          <KpiCard icon={<FileText size={18} />}     iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Số khoản chi"   value={expenses.length} trend={+5} isCount unit="khoản" />
+          <KpiCard icon={<Receipt size={18} />}     iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Tổng chi"        value={totalAmt} />
+          <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"    value={approvedAmt} />
+          <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Đang chờ duyệt" value={pendingAmt} />
+          <KpiCard icon={<CreditCard size={18} />}  iconBg="bg-blue-50"    iconColor="text-blue-600"    label="Đã thanh toán"  value={paidAmt} />
+          <KpiCard icon={<FileText size={18} />}    iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Số khoản chi"   value={richExpenses.length} isCount unit="khoản" />
         </div>
 
         {/* Table card */}
@@ -440,7 +357,7 @@ export function Expenses() {
           <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100 flex-wrap gap-3">
             <div className="flex items-center gap-0.5 -mb-px">
               {TABS.map(t => (
-                <button key={t.key} onClick={() => { setTab(t.key as any); setPage(1) }}
+                <button key={t.key} onClick={() => { setTab(t.key as 'all' | ExpenseStatus); setPage(1) }}
                   className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                     tab === t.key
                       ? 'border-indigo-600 text-indigo-600'
@@ -507,10 +424,6 @@ export function Expenses() {
                               className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                               <Eye size={13} />
                             </button>
-                            <button title="Sửa"
-                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                              <Edit2 size={13} />
-                            </button>
                             <button onClick={() => setConfirmId(exp.id)} title="Xóa"
                               className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
                               <Trash2 size={13} />
@@ -528,12 +441,14 @@ export function Expenses() {
           {/* Pagination */}
           <div className="flex items-center justify-between px-5 py-3 border-t border-slate-50">
             <span className="text-xs text-slate-500">
-              Hiển thị {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} đến {Math.min(page * PAGE_SIZE, filtered.length)} của {filtered.length} khoản chi
+              {filtered.length === 0
+                ? 'Không có kết quả'
+                : `Hiển thị ${Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} đến ${Math.min(page * PAGE_SIZE, filtered.length)} của ${filtered.length} khoản chi`}
             </span>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">‹</button>
-              {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map(p => (
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <button key={p} onClick={() => setPage(p)}
                   className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? 'bg-indigo-600 text-white' : 'border border-slate-200 hover:bg-slate-50'}`}>
                   {p}
@@ -541,9 +456,6 @@ export function Expenses() {
               ))}
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
                 className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">›</button>
-              <select value={PAGE_SIZE} className="ml-2 h-7 rounded-lg border border-slate-200 text-xs px-2 bg-white text-slate-600 focus:outline-none" onChange={() => {}}>
-                <option>8 / trang</option><option>25 / trang</option>
-              </select>
             </div>
           </div>
         </div>
@@ -556,7 +468,6 @@ export function Expenses() {
         <DetailView
           exp={detailExp}
           onClose={() => setDetailExp(null)}
-          onEdit={() => { toast('Chỉnh sửa đang phát triển'); setDetailExp(null) }}
           onDelete={() => setConfirmId(detailExp.id)}
           onApprove={() => handleApprove(detailExp.id)}
         />

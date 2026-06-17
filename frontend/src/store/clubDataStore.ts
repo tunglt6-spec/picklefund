@@ -4,12 +4,25 @@ import type { Member, FundPeriod, AttendanceSession, FundContribution, LivingExp
 
 export const DEMO_CLUB_ID = 'club-1'
 
+export interface ClubSettings {
+  name: string
+  code: string
+  address: string
+  contactPhone: string
+  contactEmail: string
+  description: string
+  maxMembers: string
+  defaultContribution: string
+  defaultSessions: string
+}
+
 export interface ClubData {
   members: Member[]
   fundPeriods: FundPeriod[]
   sessions: AttendanceSession[]
   contributions: FundContribution[]
   expenses: LivingExpense[]
+  settings?: ClubSettings
 }
 
 interface ClubDataStore {
@@ -20,6 +33,7 @@ interface ClubDataStore {
   setSessions: (clubId: string, sessions: AttendanceSession[]) => void
   setContributions: (clubId: string, contributions: FundContribution[]) => void
   setExpenses: (clubId: string, expenses: LivingExpense[]) => void
+  setClubSettings: (clubId: string, settings: ClubSettings) => void
 }
 
 const EMPTY_DATA: ClubData = {
@@ -54,6 +68,9 @@ export const useClubDataStore = create<ClubDataStore>()(
 
       setExpenses: (clubId, expenses) =>
         set(s => ({ dataByClub: { ...s.dataByClub, [clubId]: { ...(s.dataByClub[clubId] ?? EMPTY_DATA), expenses } } })),
+
+      setClubSettings: (clubId, settings) =>
+        set(s => ({ dataByClub: { ...s.dataByClub, [clubId]: { ...(s.dataByClub[clubId] ?? EMPTY_DATA), settings } } })),
     }),
     {
       name: 'picklefund-club-data',

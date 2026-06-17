@@ -1,37 +1,39 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
+import { useClubDataStore } from '../../store/clubDataStore'
+import type { ClubSettings } from '../../store/clubDataStore'
 import toast from 'react-hot-toast'
 
 type Tab = 'club' | 'account' | 'notifications'
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'club', label: 'Thông tin CLB', icon: <Building2 size={16} /> },
-  { id: 'account', label: 'Tài khoản', icon: <User size={16} /> },
-  { id: 'notifications', label: 'Thông báo', icon: <Bell size={16} /> },
+  { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
+  { id: 'account',       label: 'Tài khoản',     icon: <User size={16} /> },
+  { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
 ]
 
+const emptySettings: ClubSettings = {
+  name: '', code: '', address: '', contactPhone: '', contactEmail: '',
+  description: '', maxMembers: '', defaultContribution: '', defaultSessions: '',
+}
+
 // ─── Tab: Thông tin CLB ──────────────────────────────────────
-function ClubInfoTab() {
-  const [form, setForm] = useState({
-    name: 'CLB Pickleball Sunrise',
-    code: 'SUNRISE',
-    address: '123 Nguyễn Văn Linh, Q.7, TP.HCM',
-    contactPhone: '0901234567',
-    contactEmail: 'sunrise.pickleball@gmail.com',
-    maxMembers: '30',
-    defaultContribution: '500000',
-    defaultSessions: '10',
-    description: 'Câu lạc bộ Pickleball Sunrise - Nơi kết nối đam mê',
-  })
+function ClubInfoTab({ clubId }: { clubId: string }) {
+  const { getClubData, setClubSettings } = useClubDataStore()
+  const saved = getClubData(clubId).settings ?? emptySettings
+  const [form, setForm] = useState<ClubSettings>({ ...emptySettings, ...saved })
   const [saving, setSaving] = useState(false)
+
+  const set = (patch: Partial<ClubSettings>) => setForm(f => ({ ...f, ...patch }))
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
+    await new Promise(r => setTimeout(r, 400))
+    setClubSettings(clubId, form)
     setSaving(false)
     toast.success('Đã lưu thông tin CLB')
   }
@@ -47,7 +49,7 @@ function ClubInfoTab() {
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onChange={e => set({ name: e.target.value })}
             />
           </div>
           <div>
@@ -64,7 +66,7 @@ function ClubInfoTab() {
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.address}
-              onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+              onChange={e => set({ address: e.target.value })}
             />
           </div>
           <div>
@@ -72,7 +74,7 @@ function ClubInfoTab() {
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.contactPhone}
-              onChange={e => setForm(f => ({ ...f, contactPhone: e.target.value }))}
+              onChange={e => set({ contactPhone: e.target.value })}
             />
           </div>
           <div>
@@ -81,7 +83,7 @@ function ClubInfoTab() {
               type="email"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.contactEmail}
-              onChange={e => setForm(f => ({ ...f, contactEmail: e.target.value }))}
+              onChange={e => set({ contactEmail: e.target.value })}
             />
           </div>
           <div className="md:col-span-2">
@@ -90,7 +92,7 @@ function ClubInfoTab() {
               rows={3}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
               value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              onChange={e => set({ description: e.target.value })}
             />
           </div>
         </div>
@@ -106,7 +108,7 @@ function ClubInfoTab() {
               type="number"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.maxMembers}
-              onChange={e => setForm(f => ({ ...f, maxMembers: e.target.value }))}
+              onChange={e => set({ maxMembers: e.target.value })}
             />
           </div>
           <div>
@@ -115,7 +117,7 @@ function ClubInfoTab() {
               type="number"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.defaultContribution}
-              onChange={e => setForm(f => ({ ...f, defaultContribution: e.target.value }))}
+              onChange={e => set({ defaultContribution: e.target.value })}
             />
             <p className="text-xs text-gray-400 mt-1">Áp dụng khi tạo kỳ quỹ mới</p>
           </div>
@@ -125,7 +127,7 @@ function ClubInfoTab() {
               type="number"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={form.defaultSessions}
-              onChange={e => setForm(f => ({ ...f, defaultSessions: e.target.value }))}
+              onChange={e => set({ defaultSessions: e.target.value })}
             />
           </div>
         </div>
@@ -190,8 +192,9 @@ function AccountTab() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
-              defaultValue="admin@sunrise.vn"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+              value={user?.email ?? ''}
+              readOnly
             />
           </div>
         </div>
@@ -202,8 +205,8 @@ function AccountTab() {
         <h3 className="font-semibold text-gray-900 mb-4">Đổi mật khẩu</h3>
         <div className="space-y-4 max-w-md">
           {[
-            { label: 'Mật khẩu hiện tại', key: 'old' as const, show: showOld, toggle: () => setShowOld(v => !v) },
-            { label: 'Mật khẩu mới', key: 'new' as const, show: showNew, toggle: () => setShowNew(v => !v) },
+            { label: 'Mật khẩu hiện tại',    key: 'old' as const, show: showOld,     toggle: () => setShowOld(v => !v) },
+            { label: 'Mật khẩu mới',         key: 'new' as const, show: showNew,     toggle: () => setShowNew(v => !v) },
             { label: 'Xác nhận mật khẩu mới', key: 'confirm' as const, show: showConfirm, toggle: () => setShowConfirm(v => !v) },
           ].map(field => (
             <div key={field.key}>
@@ -216,11 +219,8 @@ function AccountTab() {
                   onChange={e => setPw(p => ({ ...p, [field.key]: e.target.value }))}
                   placeholder="••••••••"
                 />
-                <button
-                  type="button"
-                  onClick={field.toggle}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
+                <button type="button" onClick={field.toggle}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {field.show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -260,15 +260,15 @@ function AccountTab() {
 type NotifKey = 'unpaidReminder' | 'fundLow' | 'newSession' | 'periodClosed' | 'memberJoined'
 
 const notifSettings: { key: NotifKey; label: string; desc: string }[] = [
-  { key: 'unpaidReminder', label: 'Nhắc nhở đóng quỹ', desc: 'Gửi nhắc nhở khi thành viên chưa đóng quỹ sau 3 ngày kỳ bắt đầu' },
-  { key: 'fundLow', label: 'Cảnh báo quỹ thấp', desc: 'Thông báo khi số dư quỹ dưới 20% tổng thu' },
-  { key: 'newSession', label: 'Buổi tập mới', desc: 'Thông báo khi có buổi tập mới được thêm vào kỳ' },
-  { key: 'periodClosed', label: 'Chốt kỳ quỹ', desc: 'Thông báo khi quản trị viên chốt kỳ quỹ' },
-  { key: 'memberJoined', label: 'Thành viên mới', desc: 'Thông báo khi có thành viên mới tham gia CLB' },
+  { key: 'unpaidReminder', label: 'Nhắc nhở đóng quỹ',  desc: 'Gửi nhắc nhở khi thành viên chưa đóng quỹ sau 3 ngày kỳ bắt đầu' },
+  { key: 'fundLow',        label: 'Cảnh báo quỹ thấp',  desc: 'Thông báo khi số dư quỹ dưới 20% tổng thu' },
+  { key: 'newSession',     label: 'Buổi tập mới',        desc: 'Thông báo khi có buổi tập mới được thêm vào kỳ' },
+  { key: 'periodClosed',   label: 'Chốt kỳ quỹ',        desc: 'Thông báo khi quản trị viên chốt kỳ quỹ' },
+  { key: 'memberJoined',   label: 'Thành viên mới',      desc: 'Thông báo khi có thành viên mới tham gia CLB' },
 ]
 
 function NotificationsTab() {
-  const [settings, setSettings] = useState<Record<NotifKey, boolean>>({
+  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>({
     unpaidReminder: true,
     fundLow: true,
     newSession: false,
@@ -297,15 +297,15 @@ function NotificationsTab() {
                 <p className="text-xs text-gray-500 mt-0.5">{n.desc}</p>
               </div>
               <button
-                onClick={() => setSettings(s => ({ ...s, [n.key]: !s[n.key] }))}
+                onClick={() => setNotifs(s => ({ ...s, [n.key]: !s[n.key] }))}
                 className={cn(
                   'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
-                  settings[n.key] ? 'bg-indigo-600' : 'bg-gray-200'
+                  notifs[n.key] ? 'bg-indigo-600' : 'bg-gray-200'
                 )}
               >
                 <span className={cn(
                   'inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 mt-0.5',
-                  settings[n.key] ? 'translate-x-5' : 'translate-x-0.5'
+                  notifs[n.key] ? 'translate-x-5' : 'translate-x-0.5'
                 )} />
               </button>
             </div>
@@ -321,8 +321,7 @@ function NotificationsTab() {
           </label>
           <div className="flex items-center gap-2">
             <input
-              type="number"
-              min={1} max={30}
+              type="number" min={1} max={30}
               className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               value={reminderDays}
               onChange={e => setReminderDays(e.target.value)}
@@ -346,6 +345,8 @@ function NotificationsTab() {
 
 // ─── Main ────────────────────────────────────────────────────
 export function Settings() {
+  const { user } = useAuthStore()
+  const clubId = user?.clubId ?? 'club-1'
   const [activeTab, setActiveTab] = useState<Tab>('club')
 
   return (
@@ -356,25 +357,21 @@ export function Settings() {
         {/* Tab bar */}
         <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
           {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.id
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              )}
-            >
+              )}>
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Tab content */}
-        {activeTab === 'club' && <ClubInfoTab />}
-        {activeTab === 'account' && <AccountTab />}
+        {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
+        {activeTab === 'account'       && <AccountTab />}
         {activeTab === 'notifications' && <NotificationsTab />}
       </div>
     </div>

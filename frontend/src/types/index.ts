@@ -104,6 +104,8 @@ export interface FundContribution {
   createdAt: string
 }
 
+export type ExpenseStatus = 'pending' | 'approved' | 'paid' | 'rejected'
+
 export interface LivingExpense {
   id: string
   clubId: string
@@ -115,6 +117,7 @@ export interface LivingExpense {
   allocationRule: AllocationRule
   expenseDate: string
   receiptUrl?: string
+  status?: ExpenseStatus
   createdBy: string
   createdAt: string
 }
