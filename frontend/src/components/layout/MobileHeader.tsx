@@ -37,7 +37,7 @@ export function MobileHeader() {
 
           {/* Avatar */}
           <button className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white shadow-sm active:opacity-80 transition-opacity"
-            style={{ background: 'linear-gradient(135deg,#00C896,#4F46E5)' }}>
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
             {initials}
           </button>
         </div>

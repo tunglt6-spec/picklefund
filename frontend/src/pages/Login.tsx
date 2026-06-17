@@ -53,25 +53,28 @@ const cardAnim = {
 
 /* ─── Logo SVG ─── */
 function PickleFundLogo({ size = 48, className = '' }: { size?: number; className?: string }) {
+  const cx = 24, cy = 24, orbit = 14
+  const nodes = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * Math.PI * 2) / 8 - Math.PI / 2
+    return { x: cx + orbit * Math.cos(a), y: cy + orbit * Math.sin(a) }
+  })
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
-      {/* Shield body */}
-      <path d="M24 4L6 11v12c0 10.5 7.6 20.3 18 23 10.4-2.7 18-12.5 18-23V11L24 4z"
-        fill="url(#lgShield)" />
-      {/* Pickleball holes pattern */}
-      <circle cx="18" cy="20" r="2.5" fill="rgba(255,255,255,0.7)" />
-      <circle cx="24" cy="17" r="2.5" fill="rgba(255,255,255,0.7)" />
-      <circle cx="30" cy="20" r="2.5" fill="rgba(255,255,255,0.7)" />
-      <circle cx="18" cy="27" r="2.5" fill="rgba(255,255,255,0.7)" />
-      <circle cx="24" cy="30" r="2.5" fill="rgba(255,255,255,0.7)" />
-      <circle cx="30" cy="27" r="2.5" fill="rgba(255,255,255,0.7)" />
-      {/* Shield outline */}
-      <path d="M24 4L6 11v12c0 10.5 7.6 20.3 18 23 10.4-2.7 18-12.5 18-23V11L24 4z"
-        stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
+      <rect width="48" height="48" rx="12" fill="url(#lgNetL)" />
+      {nodes.map((n, i) => (
+        <line key={i} x1={cx} y1={cy} x2={n.x} y2={n.y}
+          stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
+      ))}
+      {nodes.map((n, i) => (
+        <circle key={i} cx={n.x} cy={n.y} r="3" fill="rgba(255,255,255,0.75)" />
+      ))}
+      <circle cx={cx} cy={cy} r="7" fill="white" />
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+        fontSize="9" fontWeight="800" fill="#4F46E5" fontFamily="Inter,system-ui,sans-serif">P</text>
       <defs>
-        <linearGradient id="lgShield" x1="6" y1="4" x2="42" y2="46" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#00C896" />
-          <stop offset="1" stopColor="#4F46E5" />
+        <linearGradient id="lgNetL" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#4F46E5" />
+          <stop offset="1" stopColor="#06B6D4" />
         </linearGradient>
       </defs>
     </svg>
@@ -638,13 +641,13 @@ export function Login() {
         <div className="absolute inset-0 mesh-bg" />
 
         {/* Gradient overlay for depth */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,200,150,0.15) 0%, rgba(15,23,42,0.4) 50%, rgba(79,70,229,0.25) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.6) 0%, rgba(79,70,229,0.35) 50%, rgba(6,182,212,0.25) 100%)' }} />
 
         {/* Floating orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="orb-1 absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #00C896, transparent 70%)' }} />
-          <div className="orb-2 absolute top-1/2 -right-24 w-80 h-80 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #818cf8, transparent 70%)' }} />
-          <div className="orb-3 absolute -bottom-24 left-1/4 w-64 h-64 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #34d399, transparent 70%)' }} />
+          <div className="orb-1 absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #4F46E5, transparent 70%)' }} />
+          <div className="orb-2 absolute top-1/2 -right-24 w-80 h-80 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #06B6D4, transparent 70%)' }} />
+          <div className="orb-3 absolute -bottom-24 left-1/4 w-64 h-64 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #818cf8, transparent 70%)' }} />
           {/* Dot grid */}
           <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -664,7 +667,7 @@ export function Login() {
             <PickleFundLogo size={44} />
             <div>
               <span className="text-white font-extrabold text-xl tracking-tight">PickleFund</span>
-              <p className="text-emerald-300 text-xs font-medium mt-0.5">by SportsTech Vietnam</p>
+              <p className="text-cyan-300 text-xs font-medium mt-0.5">Sports Community Platform</p>
             </div>
           </motion.div>
 
@@ -795,7 +798,7 @@ export function Login() {
                     {/* Remember me toggle */}
                     <label className="flex items-center gap-3 cursor-pointer group py-1">
                       <div className="relative shrink-0" onClick={() => setRemember(!remember)}>
-                        <div className={`w-11 h-6 rounded-full transition-all duration-300 ${remember ? 'bg-gradient-to-r from-emerald-500 to-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                        <div className={`w-11 h-6 rounded-full transition-all duration-300 ${remember ? 'bg-gradient-to-r from-indigo-500 to-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
                         <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${remember ? 'translate-x-5' : 'translate-x-0'}`} />
                       </div>
                       <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Ghi nhớ đăng nhập</span>

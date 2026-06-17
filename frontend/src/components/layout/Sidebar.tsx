@@ -126,7 +126,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <PickleFundLogoMark size={30} />
         <div className="leading-tight">
           <p className="text-sm font-bold text-slate-900">PickleFund</p>
-          <p className="text-[10px] text-slate-400 font-medium">Quản lý Quỹ CLB</p>
+          <p className="text-[10px] text-slate-400 font-medium">Sports Community Platform</p>
         </div>
       </div>
 
@@ -167,9 +167,13 @@ export function Sidebar({ onClose }: SidebarProps) {
             className={({ isActive }) => cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
               isActive
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                ? 'text-white shadow-sm shadow-indigo-200'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             )}
+            style={({ isActive }: { isActive: boolean }) => isActive ? {
+              background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
+              borderLeft: '3px solid #06B6D4',
+            } : {}}
           >
             {({ isActive }) => (
               <>
@@ -189,7 +193,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       </nav>
 
       {/* ── Plan info ── */}
-      <div className="mx-3 mb-3 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 p-3.5 text-white">
+      <div className="mx-3 mb-3 rounded-xl p-3.5 text-white" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)' }}>
         <div className="flex items-center gap-1.5 mb-2">
           <Star size={13} className="text-yellow-300" />
           <span className="text-xs font-semibold">Gói Professional</span>

@@ -1,10 +1,10 @@
 {
-  "name": "PickleFund - Quản lý Quỹ CLB",
+  "name": "PickleFund - Sports Community Platform",
   "short_name": "PickleFund",
-  "description": "Quản lý quỹ câu lạc bộ Pickleball",
+  "description": "Sports Community Platform — Kết nối CLB thể thao",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f9fafb",
+  "background_color": "#F8FAFC",
   "theme_color": "#4f46e5",
   "orientation": "portrait",
   "icons": [

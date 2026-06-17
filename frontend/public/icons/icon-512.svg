@@ -1,4 +1,28 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'>
-  <rect width='512' height='512' rx='102' fill='#4f46e5'/>
-  <text x='256' y='256' font-family='Arial,sans-serif' font-size='290' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>P</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="102" fill="url(#ic512-lg)"/>
+  <line x1="256" y1="256" x2="256" y2="96"    stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="369.14" y2="142.86" stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="416" y2="256"   stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="369.14" y2="369.14" stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="256" y2="416"   stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="142.86" y2="369.14" stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="96" y2="256"    stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <line x1="256" y1="256" x2="142.86" y2="142.86" stroke="rgba(255,255,255,0.35)" stroke-width="13"/>
+  <circle cx="256"   cy="96"    r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="369.14" cy="142.86" r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="416"   cy="256"   r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="369.14" cy="369.14" r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="256"   cy="416"   r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="142.86" cy="369.14" r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="96"    cy="256"   r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="142.86" cy="142.86" r="35" fill="rgba(255,255,255,0.75)"/>
+  <circle cx="256" cy="256" r="80" fill="white"/>
+  <text x="256" y="256" text-anchor="middle" dominant-baseline="central"
+    font-size="96" font-weight="800" fill="#4F46E5" font-family="Inter,Arial,sans-serif">P</text>
+  <defs>
+    <linearGradient id="ic512-lg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
 </svg>
