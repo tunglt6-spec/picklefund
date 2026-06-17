@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      selfDestroying: true,
       manifest: false, // we use our own public/manifest.json
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
