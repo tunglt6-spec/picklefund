@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Edit2, Bell, MoreHorizontal, Calendar, Trophy,
   ChevronDown, ChevronUp, Shuffle, RefreshCw, Plus, Trash2,
-  Check, X, MoreVertical, AlertCircle, TrendingUp, Clock,
+  Check, X, MoreVertical, AlertCircle, TrendingUp,
   Users, Target, Activity,
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
