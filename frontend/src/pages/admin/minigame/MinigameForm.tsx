@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, ChevronLeft, Check, UserPlus, X } from 'lucide-react'
+import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -129,7 +130,7 @@ export function MinigameForm() {
     return form.selectedMemberIds.length >= 4
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (form.selectedMemberIds.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
     const selectedMembers = form.selectedMemberIds.map(mid => {
       const m = members.find(x => x.id === mid)
@@ -147,6 +148,16 @@ export function MinigameForm() {
       syncParticipants(id, selectedMembers)
       toast.success('Đã cập nhật minigame!')
     } else {
+      let mgId: string | null = null
+      try {
+        const res = await api.post('/minigames', {
+          name: form.name, description: form.description || undefined,
+          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
+        })
+        mgId = res.data?.data?.id ?? null
+        if (mgId) await api.post(`/minigames/${mgId}/participants`, { memberIds: form.selectedMemberIds })
+      } catch { /* fall through to local */ }
+
       const mg = createMinigame({
         clubId, name: form.name, description: form.description || undefined,
         startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT',
@@ -155,6 +166,7 @@ export function MinigameForm() {
         createdBy: user?.id ?? 'user-1',
         formatType: form.formatType, drawMode: form.drawMode,
         pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined,
+        ...(mgId ? { id: mgId } : {}),
       })
       addParticipants(mg.id, selectedMembers)
       toast.success('Đã tạo minigame!')

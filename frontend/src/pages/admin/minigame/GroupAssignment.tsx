@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown } from 'lucide-react'
+import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -39,20 +40,24 @@ export function GroupAssignment() {
     )
   }
 
-  const handleAutoGenerate = () => {
+  const handleAutoGenerate = async () => {
     generateGroups(id!)
     generateSchedule(id!)
+    try { await api.post(`/minigames/${id}/generate-teams`) } catch { /* local state already updated */ }
+    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
     toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
   }
 
-  const handleLock = () => {
+  const handleLock = async () => {
     lockGroups(id!)
     generateSchedule(id!)
+    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
     toast.success('Đã khóa bảng đấu và cập nhật lịch thi đấu!')
   }
 
-  const handleCreateSchedule = () => {
+  const handleCreateSchedule = async () => {
     generateSchedule(id!)
+    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
     toast.success('Đã cập nhật lịch thi đấu!')
     navigate(`/minigames/${id}/schedule`)
   }

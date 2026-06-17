@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
+import api from '../../lib/api'
 import { useMinigameStore } from '../../store/minigameStore'
 import type { MiniGameMatch, MiniGame } from '../../types/minigame'
 import toast from 'react-hot-toast'
@@ -38,10 +39,11 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
   const noDrawAllowed = isDraw && !minigame.allowDraw
   const winner = bothEntered && !isDraw ? (s1 > s2 ? match.player1Name : match.player2Name) : null
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!bothEntered) { toast.error('Vui lòng nhập điểm cho cả hai người chơi'); return }
     if (noDrawAllowed) { toast.error('Không cho phép hòa trong giải đấu này'); return }
     enterScore(match.id, s1!, s2!, notes || undefined)
+    try { await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1!, scoreB: s2! }) } catch { /* local state already saved */ }
     toast.success('Đã lưu kết quả trận đấu!')
     onClose()
   }

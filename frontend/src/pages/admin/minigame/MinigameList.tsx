@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Edit2, Trash2, Trophy } from 'lucide-react'
+import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -35,8 +36,9 @@ export function MinigameList() {
   const { getMinigames, deleteMinigame, participants, groups, matches } = useMinigameStore()
   const minigames = getMinigames(clubId)
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     deleteMinigame(id)
+    try { await api.post(`/minigames/${id}/cancel`) } catch { /* local delete already done */ }
     toast.success('Đã xóa minigame')
   }
 
