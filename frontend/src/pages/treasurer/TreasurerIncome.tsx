@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, TrendingUp, Wallet } from 'lucide-react'
+import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'

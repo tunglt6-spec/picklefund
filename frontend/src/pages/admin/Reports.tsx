@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   Legend, PieChart, Pie, Cell, Area, AreaChart,
 } from 'recharts'
-import { TrendingDown, Filter, RefreshCw,
+import { TrendingDown, RefreshCw,
   FileSpreadsheet, FileText, DollarSign, CreditCard, Wallet,
   MapPin, Users, Calendar, AlertTriangle } from 'lucide-react'
 import { Button } from '../../components/ui/Button'

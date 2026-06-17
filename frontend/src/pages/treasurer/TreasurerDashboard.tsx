@@ -33,8 +33,6 @@ export function TreasurerDashboard() {
   const miniIncome     = miniContribs.reduce((a, c) => a + c.amount, 0)
   const miniExpTotal   = miniExpenses.reduce((a, e) => a + e.amount, 0)
 
-  const totalIncome = commonIncome + miniIncome
-  const totalExpenses = commonExpTotal + miniExpTotal
   const balance = commonIncome - commonExpTotal
   const miniBalance = miniIncome - miniExpTotal
   const unpaid = commonContribs.filter(c => !c.isConfirmed)

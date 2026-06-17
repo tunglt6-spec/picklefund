@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
-  CheckCircle, Clock, CreditCard,
+  CheckCircle, Clock,
   FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -337,12 +337,10 @@ export function Expenses() {
 
   const commonExpenses = richExpenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
   const miniExpenses   = richExpenses.filter(e => e.fundSource === 'MINI')
-  const totalAmt    = richExpenses.reduce((s, e) => s + e.amount, 0)
   const commonAmt   = commonExpenses.reduce((s, e) => s + e.amount, 0)
   const miniAmt     = miniExpenses.reduce((s, e) => s + e.amount, 0)
   const approvedAmt = richExpenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
   const pendingAmt  = richExpenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
-  const paidAmt     = richExpenses.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
   const pendingCount = richExpenses.filter(e => e.status === 'pending').length
 
   const handleAdd = async (form: typeof emptyForm) => {

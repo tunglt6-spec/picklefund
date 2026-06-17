@@ -117,7 +117,7 @@ export function FundPeriods() {
       const d = res.data?.data
       newPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
     } catch {
-      newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', type, ...payload }
+      newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', ...payload }
     }
     setPeriods(prev => [newPeriod, ...prev])
     onClose()

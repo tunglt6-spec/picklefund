@@ -65,7 +65,7 @@ export function TreasurerExpense() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const payload = { fundSource: 'COMMON', fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
+    const payload = { fundSource: 'COMMON' as const, fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
     try {
       if (editTarget) {
         const res = await api.put(`/expenses/${editTarget.id}`, payload)

@@ -72,8 +72,6 @@ export function ClubDashboard() {
   const miniIncome     = miniContribs.reduce((s, c) => s + c.amount, 0)
   const miniExpTotal   = miniExpenses.reduce((s, e) => s + e.amount, 0)
 
-  const totalIncome   = commonIncome + miniIncome
-  const totalExpenses = commonExpTotal + miniExpTotal
   const totalAttendance = clubData.sessions.reduce((a, se) => a + (se._count?.attendanceRecords ?? 0), 0)
 
   const unpaidCount = !currentPeriod ? 0 : clubData.members.filter(m =>
