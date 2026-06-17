@@ -1,5 +1,6 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Plus, Search, Lock, Unlock, Eye } from 'lucide-react'
+import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -13,23 +14,46 @@ export function SuperClubs() {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })
 
+  useEffect(() => {
+    api.get('/clubs').then(res => {
+      const raw = res.data?.data?.clubs ?? res.data?.data ?? []
+      setClubs(raw.map((c: any) => ({
+        id: c.id, name: c.name, code: c.code, address: c.address ?? '', logoUrl: undefined,
+        contactEmail: c.contactEmail ?? '', contactPhone: c.contactPhone ?? '',
+        status: c.status ?? 'active', settings: {},
+        createdAt: c.createdAt, updatedAt: c.updatedAt,
+        _count: c._count ?? { members: 0, fundPeriods: 0 },
+      })))
+    }).catch(() => { /* silent fail */ })
+  }, [])
+
   const filtered = clubs.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase())
   )
 
-  const toggleStatus = (club: Club) => {
-    setClubs(prev => prev.map(c => c.id === club.id ? { ...c, status: c.status === 'active' ? 'suspended' : 'active' } : c))
-    toast.success(club.status === 'active' ? `Đã khóa ${club.name}` : `Đã mở khóa ${club.name}`)
+  const toggleStatus = async (club: Club) => {
+    const next = club.status === 'active' ? 'suspended' : 'active'
+    try {
+      await api.patch(`/clubs/${club.id}/status`, { status: next })
+      setClubs(prev => prev.map(c => c.id === club.id ? { ...c, status: next } : c))
+      toast.success(next === 'suspended' ? `Đã khóa ${club.name}` : `Đã mở khóa ${club.name}`)
+    } catch { toast.error('Thao tác thất bại') }
   }
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newClub: Club = {
-      ...form, id: `club-${Date.now()}`, logoUrl: undefined, status: 'active',
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-      settings: {}, _count: { members: 0, fundPeriods: 0 }
+    try {
+      const res = await api.post('/clubs', form)
+      const d = res.data?.data
+      setClubs(prev => [...prev, { ...d, logoUrl: undefined, settings: {}, _count: { members: 0, fundPeriods: 0 } }])
+    } catch {
+      const newClub: Club = {
+        ...form, id: `club-${Date.now()}`, logoUrl: undefined, status: 'active',
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        settings: {}, _count: { members: 0, fundPeriods: 0 }
+      }
+      setClubs(prev => [...prev, newClub])
     }
-    setClubs(prev => [...prev, newClub])
     setShowCreate(false)
     setForm({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })
     toast.success(`Tạo CLB ${form.name} thành công!`)
