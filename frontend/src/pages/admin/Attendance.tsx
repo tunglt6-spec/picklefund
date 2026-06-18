@@ -97,7 +97,6 @@ export function Attendance() {
             className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
             onClick={() => setShowCreate(true)}
-            disabled={!activePeriod || members.length === 0}
           >
             <Plus size={14} />Tạo buổi
           </button>
@@ -204,6 +203,11 @@ export function Attendance() {
           }
         >
           <form id="form-session-m" onSubmit={handleCreateSession} className="space-y-4">
+            {!activePeriod && (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+                Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
               <input required type="date" value={form.sessionDate} onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
@@ -238,7 +242,7 @@ export function Attendance() {
         title="Điểm Danh"
         subtitle="Quản lý điểm danh từng buổi chơi pickleball"
         actions={
-          <Button onClick={() => setShowCreate(true)} disabled={!activePeriod || members.length === 0}>
+          <Button onClick={() => setShowCreate(true)}>
             <Plus size={15} />Tạo buổi chơi
           </Button>
         }
@@ -367,6 +371,11 @@ export function Attendance() {
         }
       >
         <form id="form-session" onSubmit={handleCreateSession} className="space-y-4">
+          {!activePeriod && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+              Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
             <input required type="date" value={form.sessionDate}
