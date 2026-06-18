@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -10,6 +10,7 @@ import { TrendingDown, RefreshCw,
 import { Button } from '../../components/ui/Button'
 import { formatVND, formatDate } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel } from '../../lib/export'
+import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
@@ -100,11 +101,25 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 
 export function Reports() {
   const { user } = useAuthStore()
-  const { getClubData } = useClubDataStore()
+  const { getClubData, setMemberAttendanceSummary } = useClubDataStore()
   const isMobile = useIsMobile()
   const clubData = getClubData(user?.clubId ?? '')
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
+
+  useEffect(() => {
+    if (!user?.clubId) return
+    const params = activePeriod?.id ? `?fundPeriodId=${activePeriod.id}` : ''
+    api.get(`/attendance/member-summary${params}`).then(res => {
+      const raw = res.data?.data ?? []
+      setMemberAttendanceSummary(user.clubId!, raw.map((s: any) => ({
+        memberId: s.memberId,
+        memberName: s.memberName,
+        attendedSessions: s.attendedSessions ?? 0,
+        totalSessions: s.totalSessions ?? 0,
+      })))
+    }).catch(() => {})
+  }, [user?.clubId, activePeriod?.id])
 
   const hasData = clubData.fundPeriods.length > 0
 
