@@ -5,6 +5,11 @@ import api from '../../lib/api'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileWelcomeCard } from '../../components/mobile/MobileWelcomeCard'
+import { MobileKpiGrid } from '../../components/mobile/MobileKpiGrid'
+import { MobileSystemHealthCard } from '../../components/mobile/MobileSystemHealthCard'
+import { MobileClubCard } from '../../components/mobile/MobileClubCard'
 
 const EMPTY_STATS = {
   totalClubs: 0, activeClubs: 0, suspendedClubs: 0,
@@ -16,6 +21,7 @@ type ClubRow = { id: string; name: string; code: string; status: string; _count?
 export function SuperDashboard() {
   const [stats, setStats] = useState(EMPTY_STATS)
   const [clubs, setClubs] = useState<ClubRow[]>([])
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     Promise.allSettled([
@@ -35,6 +41,67 @@ export function SuperDashboard() {
     })
   }, [])
 
+  /* ── Mobile layout ─────────────────────────────────────────── */
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="px-4 pt-4 pb-6 space-y-4">
+
+          {/* Welcome / context card */}
+          <MobileWelcomeCard
+            title="Super Admin"
+            subtitle="Tổng quan hệ thống"
+            stats={[
+              { label: 'CLB', value: stats.totalClubs },
+              { label: 'Thành viên', value: stats.totalMembers },
+              { label: 'Kỳ quỹ', value: stats.totalFundPeriods },
+            ]}
+          />
+
+          {/* KPI 2×2 */}
+          <MobileKpiGrid
+            totalClubs={stats.totalClubs}
+            activeClubs={stats.activeClubs}
+            totalMembers={stats.totalMembers}
+            totalFundPeriods={stats.totalFundPeriods}
+          />
+
+          {/* System health */}
+          <MobileSystemHealthCard
+            suspendedClubs={stats.suspendedClubs}
+            loginsLast24h={stats.loginsLast24h}
+            activeClubs={stats.activeClubs}
+          />
+
+          {/* Club cards */}
+          {clubs.length > 0 && (
+            <div>
+              <h3 className="text-[16px] font-[700] text-slate-800 mb-3">Danh sách CLB</h3>
+              <div className="space-y-3">
+                {clubs.map(club => (
+                  <MobileClubCard
+                    key={club.id}
+                    id={club.id}
+                    name={club.name}
+                    code={club.code}
+                    memberCount={club._count?.members ?? 0}
+                    fundPeriodCount={club._count?.fundPeriods ?? 0}
+                    status={club.status}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {clubs.length === 0 && (
+            <div className="text-center py-10 text-slate-400 text-[13px]">Đang tải dữ liệu...</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Desktop layout ────────────────────────────────────────── */
   const barChartData = [
     { label: 'Tổng CLB', value: stats.totalClubs },
     { label: 'Hoạt động', value: stats.activeClubs },

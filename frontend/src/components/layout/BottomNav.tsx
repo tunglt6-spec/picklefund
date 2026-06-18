@@ -53,9 +53,11 @@ export function BottomNav() {
   const items = navByRole[user.role]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-stretch h-[58px]">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="flex items-stretch" style={{ height: 60 }}>
         {items.map(item => (
           <NavLink
             key={item.to}
@@ -64,31 +66,33 @@ export function BottomNav() {
           >
             {({ isActive }) => (
               <>
-                {/* Active pill background */}
+                {/* Active pill */}
                 {isActive && (
-                  <span className="absolute top-1.5 left-1/2 -translate-x-1/2 h-8 w-14 rounded-full opacity-100"
-                    style={{ background: 'linear-gradient(135deg,rgba(0,200,150,0.12),rgba(79,70,229,0.12))' }} />
+                  <span
+                    className="absolute top-1 left-1/2 -translate-x-1/2 h-8 w-14 rounded-full"
+                    style={{ background: 'linear-gradient(135deg,rgba(79,70,229,0.12),rgba(6,182,212,0.12))' }}
+                  />
                 )}
 
                 {/* Icon */}
-                <span className={`relative z-10 transition-all duration-200 ${
-                  isActive
-                    ? 'text-indigo-600 scale-105'
-                    : 'text-slate-400'
-                }`}>
+                <span className={`relative z-10 transition-all duration-150 ${
+                  isActive ? 'scale-105' : ''
+                }`} style={{ color: isActive ? '#4F46E5' : '#94A3B8' }}>
                   {item.icon}
                 </span>
 
                 {/* Label */}
-                <span className={`text-[10px] font-medium tracking-tight transition-colors duration-200 leading-none ${
-                  isActive ? 'text-indigo-600' : 'text-slate-400'
-                }`}>
+                <span
+                  className="text-[11px] font-[600] leading-none"
+                  style={{ color: isActive ? '#4F46E5' : '#94A3B8' }}
+                >
                   {item.label}
                 </span>
 
                 {/* Active dot */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-500" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                    style={{ background: '#4F46E5' }} />
                 )}
               </>
             )}

@@ -13,6 +13,8 @@ import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportContribExcel, exportContribPDF } from '../../lib/export'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 
 const BLANK_COMMON = {
   fundSource: 'COMMON' as FundSource,
@@ -145,6 +147,77 @@ export function Contributions() {
     setContributions(prev => prev.filter(x => x.id !== deleteId))
     setDeleteId(null)
     toast.success('Đã xóa khoản thu')
+  }
+
+  const isMobile = useIsMobile()
+
+  /* ── Mobile layout ── */
+  if (isMobile) {
+    const sorted = [...contributions].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
+            <p className="text-[12px] text-slate-400">{activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
+          </div>
+          <button
+            onClick={openCreate}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+          >
+            <Plus size={18} />
+          </button>
+        </div>
+
+        {/* Summary row */}
+        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chung</p>
+            <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
+          </div>
+          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Mini</p>
+            <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
+          </div>
+        </div>
+
+        <div className="px-4 pt-3 pb-6 space-y-2">
+          {sorted.length === 0 ? (
+            <div className="text-center py-14 text-slate-400 text-sm">
+              <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+              Chưa có khoản thu nào
+            </div>
+          ) : sorted.map(c => {
+            const memberName = members.find(m => m.id === c.memberId)?.fullName ?? c.payerName ?? 'N/A'
+            return (
+              <div key={c.id} className="relative">
+                <MobileTransactionCard
+                  name={memberName}
+                  description={c.notes ?? c.paymentMethod}
+                  amount={c.amount}
+                  type="income"
+                  fundSource={c.fundSource ?? 'COMMON'}
+                  status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                />
+                <div className="absolute right-3 top-3 flex gap-1">
+                  <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1"><Edit2 size={13} /></button>
+                  <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1"><Trash2 size={13} /></button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Dialogs */}
+        {(showCreate || editTarget) && (
+          <Modal open title={editTarget ? 'Sửa khoản thu' : 'Thêm khoản thu'} onClose={() => { setShowCreate(false); setEditTarget(null) }} size="sm">
+            <div className="p-4 text-sm text-slate-500">Form nhập thu — xem desktop để nhập đầy đủ</div>
+          </Modal>
+        )}
+        <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" description="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+      </div>
+    )
   }
 
   return (

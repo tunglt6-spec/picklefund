@@ -30,16 +30,19 @@ export function AppLayout() {
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile header */}
+        {/* Mobile header — 64px */}
         <div className="md:hidden">
           <MobileHeader />
         </div>
 
-        <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
-          <Outlet />
+        {/* Page content — extra bottom padding on mobile so bottom nav never covers content */}
+        <main className="flex-1 flex flex-col overflow-hidden md:pb-0" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' }}>
+          <div className="flex-1 overflow-y-auto md:pb-0">
+            <Outlet />
+          </div>
         </main>
 
-        {/* Mobile bottom nav */}
+        {/* Mobile bottom nav — 60px + safe area */}
         <div className="md:hidden">
           <BottomNav />
         </div>

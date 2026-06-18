@@ -12,6 +12,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileWelcomeCard } from '../../components/mobile/MobileWelcomeCard'
+import { MobileKpiCard } from '../../components/mobile/MobileKpiCard'
+import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 
 /* ─── Brand tokens ─── */
 const brand = {
@@ -210,6 +214,7 @@ export function ClubDashboard() {
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(clubId)
+  const isMobile = useIsMobile()
   const [txTab, setTxTab] = useState<'income' | 'expense'>('income')
   const [activePeriodId, setActivePeriodId] = useState<string>('all')
 
@@ -324,10 +329,105 @@ export function ClubDashboard() {
     return 'Chào buổi tối'
   })()
 
+  if (isEmpty && isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] px-4 pt-4">
+        <MobileWelcomeCard title={clubName} subtitle="Chưa có dữ liệu" stats={[]} />
+        <div className="text-center py-10 text-slate-400 text-sm">
+          <p>Thêm kỳ quỹ để bắt đầu</p>
+          <Link to="/fund-periods">
+            <button className="mt-4 px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              Tạo kỳ quỹ
+            </button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   if (isEmpty) {
     return (
       <div className="min-h-full" style={{ background: brand.bg, padding: '24px 28px' }}>
         <DashboardEmpty clubName={clubName} />
+      </div>
+    )
+  }
+
+  /* ── Mobile layout ─────────────────────────────────────────── */
+  if (isMobile) {
+    const recentTxAll = [...clubData.contributions]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 5)
+    const recentExpAll = [...clubData.expenses]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 5)
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          <MobileWelcomeCard
+            title={clubName}
+            subtitle={`${greeting} 👋`}
+            stats={[
+              { label: 'Thành viên', value: activeMembers },
+              { label: 'Tổng tài sản', value: formatVND(totalAssets) },
+              { label: 'Chưa đóng', value: unpaidCount },
+            ]}
+          />
+
+          {/* KPI row */}
+          <div className="grid grid-cols-2 gap-3">
+            <MobileKpiCard label="Quỹ Chung" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
+            <MobileKpiCard label="Quỹ Mini" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#06B6D4" />
+            <MobileKpiCard label="Thành viên" value={String(activeMembers)} icon={<Users size={18} />} accent="#8B5CF6" />
+            <MobileKpiCard label="Chưa đóng" value={String(unpaidCount)} icon={<AlertCircle size={18} />} accent={unpaidCount > 0 ? '#EF4444' : '#22C55E'} />
+          </div>
+
+          {/* Recent income */}
+          {recentTxAll.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[16px] font-[700] text-slate-800">Thu gần đây</h3>
+                <Link to="/contributions" className="text-[13px] font-[600]" style={{ color: '#4F46E5' }}>Xem thêm</Link>
+              </div>
+              <div className="space-y-2">
+                {recentTxAll.map(tx => (
+                  <MobileTransactionCard
+                    key={tx.id}
+                    name={clubData.members.find(m => m.id === tx.memberId)?.fullName ?? 'N/A'}
+                    description={tx.note ?? ''}
+                    amount={tx.amount}
+                    type="income"
+                    fundSource={tx.fundSource}
+                    status={tx.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent expenses */}
+          {recentExpAll.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[16px] font-[700] text-slate-800">Chi gần đây</h3>
+                <Link to="/expenses" className="text-[13px] font-[600]" style={{ color: '#4F46E5' }}>Xem thêm</Link>
+              </div>
+              <div className="space-y-2">
+                {recentExpAll.map(ex => (
+                  <MobileTransactionCard
+                    key={ex.id}
+                    name={ex.description}
+                    description={ex.note ?? ''}
+                    amount={ex.amount}
+                    type="expense"
+                    fundSource={ex.fundSource}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     )
   }

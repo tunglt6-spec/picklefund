@@ -9,6 +9,7 @@ import { formatDate } from '../../lib/utils'
 import { exportMembersExcel, exportMembersPDF } from '../../lib/export'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const emptyForm = { fullName: '', phone: '', email: '', joinDate: new Date().toISOString().slice(0, 10), notes: '' }
 
@@ -178,6 +179,68 @@ export function Members() {
   }
 
   const activeCount = members.filter(m => m.status === 'active').length
+  const isMobile = useIsMobile()
+
+  /* ── Mobile layout ── */
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <MemberDrawer open={showDrawer} onClose={closeDrawer} editMember={editMember} onSave={handleSave} />
+
+        {/* Sticky search bar */}
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm thành viên..." className="input-base pl-8 w-full text-sm" />
+            </div>
+            <button
+              onClick={openCreate}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-white flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+          <div className="flex gap-1.5">
+            {([['all','Tất cả'],['active','Hoạt động'],['inactive','Tạm nghỉ']] as const).map(([v, l]) => (
+              <button key={v} onClick={() => setStatusFilter(v)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  statusFilter === v ? 'text-white' : 'bg-slate-100 text-slate-500'
+                }`}
+                style={statusFilter === v ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}
+              >{l}</button>
+            ))}
+            <span className="ml-auto text-xs text-slate-400 self-center">{activeCount} hoạt động</span>
+          </div>
+        </div>
+
+        {/* Member cards */}
+        <div className="px-4 pt-3 pb-6 space-y-2">
+          {filtered.length === 0 ? (
+            <div className="text-center py-14 text-slate-400 text-sm">
+              <Users size={36} className="mx-auto text-slate-200 mb-3" />
+              {search ? `Không tìm thấy "${search}"` : 'Chưa có thành viên'}
+            </div>
+          ) : filtered.map(m => (
+            <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+              <MemberAvatar name={m.fullName} id={m.id} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] font-[600] text-slate-900 truncate">{m.fullName}</div>
+                <div className="text-[12px] text-slate-400">{m.phone || m.email || 'Không có SĐT'}</div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge variant={statusVariant[m.status] ?? 'gray'}>{statusLabel[m.status] ?? m.status}</Badge>
+                <button onClick={() => openEdit(m)} className="text-slate-400 active:text-indigo-600"><Edit2 size={15} /></button>
+                <button onClick={() => handleDelete(m)} className="text-slate-300 active:text-red-500"><Trash2 size={15} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">

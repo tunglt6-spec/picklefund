@@ -13,6 +13,8 @@ import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpe
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import api from '../../lib/api'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import toast from 'react-hot-toast'
 
 /* ── Constants ── */
@@ -381,6 +383,64 @@ export function Expenses() {
     save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e))
     setDetailExp(null)
     toast.success('Đã duyệt khoản chi!')
+  }
+
+  const isMobile = useIsMobile()
+
+  /* ── Mobile layout ── */
+  if (isMobile) {
+    const sorted = [...clubData.expenses].sort((a, b) => (b.date ?? b.id).localeCompare(a.date ?? a.id))
+    const commonTotal = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON').reduce((s, e) => s + e.amount, 0)
+    const miniTotal = clubData.expenses.filter(e => e.fundSource === 'MINI').reduce((s, e) => s + e.amount, 0)
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
+            <p className="text-[12px] text-slate-400">Quản lý khoản chi của CLB</p>
+          </div>
+          <button onClick={() => setShowCreate(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+            <Plus size={18} />
+          </button>
+        </div>
+        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chung</p>
+            <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
+          </div>
+          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Mini</p>
+            <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
+          </div>
+        </div>
+        <div className="px-4 pt-3 pb-6 space-y-2">
+          {sorted.length === 0 ? (
+            <div className="text-center py-14 text-slate-400 text-sm">
+              <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
+              Chưa có khoản chi nào
+            </div>
+          ) : sorted.map(e => (
+            <div key={e.id} className="relative">
+              <MobileTransactionCard
+                name={e.description}
+                description={e.note ?? e.date ?? ''}
+                amount={e.amount}
+                type="expense"
+                fundSource={e.fundSource ?? 'COMMON'}
+                status={e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : undefined}
+              />
+              <button onClick={() => setConfirmId(e.id)}
+                className="absolute right-3 top-3 text-slate-300 active:text-red-500 p-1">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" description="Hành động này không thể hoàn tác." onConfirm={() => confirmId && handleDelete(confirmId)} onCancel={() => setConfirmId(null)} />
+      </div>
+    )
   }
 
   return (
