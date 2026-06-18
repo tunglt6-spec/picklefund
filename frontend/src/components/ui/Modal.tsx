@@ -29,13 +29,13 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] pointer-events-none" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className={cn(
-        'relative w-full bg-white rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
+        'relative z-10 w-full bg-white rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
         'max-h-[calc(100vh-2rem)]',
         sizeClasses[size]
-      )} onClick={e => e.stopPropagation()}>
+      )}>
         {/* Header */}
         <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div>
