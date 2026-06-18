@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface PersonalReceipt {
   id: string
@@ -35,6 +36,7 @@ function BalanceBadge({ val }: { val: number }) {
 }
 
 export function MemberReceipt() {
+  const isMobile = useIsMobile()
   const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const memberId = user?.memberId ?? ''
@@ -102,6 +104,104 @@ export function MemberReceipt() {
 
   const handleExport = () => {
     toast.success('Tính năng xuất PDF sẽ sớm ra mắt')
+  }
+
+  if (isMobile && loading) return (
+    <div className="flex-1 flex items-center justify-center min-h-screen bg-[#F8FAFC]">
+      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+    </div>
+  )
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-[800] text-slate-900">Phiếu Thu Cá Nhân</div>
+            {myMember && <div className="text-[12px] text-slate-400">{myMember.fullName}</div>}
+          </div>
+          <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
+            <Download size={13} />Xuất PDF
+          </button>
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Đã đóng', value: formatVND(totalPaid), color: 'text-indigo-600' },
+              { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
+              { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
+            ].map(k => (
+              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                <div className={`text-[13px] font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">{k.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Receipt cards */}
+          {displayReceipts.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có phiếu thu nào</div>
+          ) : (
+            <div className="space-y-2">
+              {displayReceipts.map(r => {
+                const isExp = expanded === r.id
+                const period = r.fundPeriod ?? data.fundPeriods.find(p => p.id === r.fundPeriodId)
+                const bal = n(r.balance)
+                const needToPay = n(r.needToPay)
+                const amountPaid = n(r.amountPaid)
+                const totalCostR = n(r.totalCost)
+                return (
+                  <div key={r.id} className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+                    <button onClick={() => setExpanded(isExp ? null : r.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 active:bg-slate-50">
+                      <div className="text-left">
+                        <div className="text-[14px] font-[700] text-slate-900">Kỳ {period?.name ?? r.fundPeriodId}</div>
+                        <div className="text-[11px] text-slate-400">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {needToPay > 0 && <Badge variant="orange">Nợ {formatVND(needToPay)}</Badge>}
+                        <span className={`text-[14px] font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {bal >= 0 ? '+' : ''}{formatVND(bal)}
+                        </span>
+                        {isExp ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+                      </div>
+                    </button>
+                    {isExp && (
+                      <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5">
+                        {[
+                          ['Tiền sân', n(r.courtCost)],
+                          ['Chi phí SH', n(r.livingCost)],
+                          ['Tổng chi phí', totalCostR],
+                          ['Đã đóng', amountPaid],
+                        ].map(([lbl, val]) => (
+                          <div key={lbl as string} className="flex justify-between text-[12px]">
+                            <span className="text-slate-500">{lbl}</span>
+                            <span className="font-[600] text-slate-700">{formatVND(val as number)}</span>
+                          </div>
+                        ))}
+                        {needToPay > 0 && (
+                          <div className="flex items-center gap-2 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 text-[12px] mt-2">
+                            <AlertCircle size={12} className="shrink-0" />
+                            <span>Còn thiếu <strong>{formatVND(needToPay)}</strong></span>
+                          </div>
+                        )}
+                        {bal > 0 && (
+                          <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2 text-[12px] mt-2">
+                            <Receipt size={12} className="shrink-0" />
+                            <span>Đóng dư <strong>{formatVND(bal)}</strong> — khấu trừ kỳ sau</span>
+                          </div>
+                        )}
+                        <p className="text-[11px] text-slate-400 text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   if (loading) return (

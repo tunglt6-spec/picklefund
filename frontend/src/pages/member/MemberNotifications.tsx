@@ -5,6 +5,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 type NotifType = 'payment' | 'session' | 'info'
 const ICON: Record<NotifType, React.ReactNode> = {
@@ -19,6 +20,7 @@ const BG: Record<NotifType, string> = {
 }
 
 export function MemberNotifications() {
+  const isMobile = useIsMobile()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const memberId = user?.memberId ?? 'mem-1'
@@ -85,6 +87,46 @@ export function MemberNotifications() {
   const markAll = () => {
     setReadIds(new Set(notifs.map(n => n.id)))
     toast.success('Đã đánh dấu tất cả là đã đọc')
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-[800] text-slate-900">Thông báo</div>
+            {unreadCount > 0 && <div className="text-[12px] text-slate-400">{unreadCount} chưa đọc</div>}
+          </div>
+          {unreadCount > 0 && (
+            <button onClick={markAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
+              <Check size={13} />Đánh dấu đã đọc
+            </button>
+          )}
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-2">
+          {notifs.map(n => {
+            const read = isRead(n.id, n.read)
+            return (
+              <div key={n.id} onClick={() => setReadIds(prev => new Set([...prev, n.id]))}
+                className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
+                  ${read ? 'bg-white border-slate-100 opacity-70' : 'bg-white border-indigo-100'}`}>
+                <div className={`h-9 w-9 rounded-[12px] ${BG[n.type]} flex items-center justify-center shrink-0`}>
+                  {ICON[n.type]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className={`text-[14px] font-[700] ${read ? 'text-slate-500' : 'text-slate-900'}`}>{n.title}</p>
+                    {!read && <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0" />}
+                  </div>
+                  <p className="text-[12px] text-slate-500 leading-relaxed">{n.body}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">{n.time.slice(0, 10)}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
   }
 
   return (

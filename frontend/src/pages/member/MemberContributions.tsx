@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, TrendingUp, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
@@ -58,6 +59,95 @@ export function MemberContributions() {
   const totalPaid = myContribs.reduce((s, c) => s + c.amount, 0)
   const confirmedCount = myContribs.filter(c => c.isConfirmed).length
   const pendingCount = myContribs.filter(c => !c.isConfirmed).length
+
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+          <div className="text-[17px] font-[800] text-slate-900">Lịch Sử Đóng Quỹ</div>
+          {myMember && <div className="text-[12px] text-slate-400">{myMember.fullName}</div>}
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Tổng đóng', value: formatVND(totalPaid), color: 'text-indigo-600' },
+              { label: 'Xác nhận', value: `${confirmedCount}`, color: 'text-emerald-600' },
+              { label: 'Chờ', value: `${pendingCount}`, color: 'text-amber-600' },
+            ].map(k => (
+              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                <div className={`text-[15px] font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">{k.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo kỳ quỹ..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:border-indigo-400" />
+          </div>
+          {filtered.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có khoản đóng quỹ nào</div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map(c => {
+                const period = data.fundPeriods.find(fp => fp.id === c.fundPeriodId)
+                return (
+                  <div key={c.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[15px] font-[700] text-slate-900">{period?.name ?? 'Kỳ quỹ'}</span>
+                      {c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>}
+                    </div>
+                    <div className="text-[12px] text-slate-500 mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
+                    <div className="text-[17px] font-[800] text-emerald-600">{formatVND(c.amount)}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {receipts.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Receipt size={14} className="text-slate-500" /><span className="text-[13px] font-[700] text-slate-700">Sao Kê Đã Chốt</span>
+              </div>
+              {receipts.map(r => {
+                const bal = toNum(r.balance)
+                const isExp = expandedReceipt === r.id
+                return (
+                  <div key={r.id} className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+                    <button onClick={() => setExpandedReceipt(isExp ? null : r.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 active:bg-slate-50">
+                      <div className="text-left">
+                        <div className="text-[14px] font-[700] text-slate-800">{r.fundPeriod?.name ?? 'Kỳ đã chốt'}</div>
+                        <div className="text-[11px] text-slate-400">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[14px] font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {bal >= 0 ? '+' : ''}{formatVND(bal)}
+                        </span>
+                        {isExp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </div>
+                    </button>
+                    {isExp && (
+                      <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5 text-[12px]">
+                        {[['Đã đóng quỹ', toNum(r.amountPaid), 'text-emerald-600'], ['Chi phí sân', toNum(r.courtCost), ''], ['Chi phí SH', toNum(r.livingCost), ''], ['Tổng chi phí', toNum(r.totalCost), '']].map(([lbl, val, cls]) => (
+                          <div key={lbl as string} className="flex justify-between">
+                            <span className="text-slate-500">{lbl}</span>
+                            <span className={`font-[600] text-slate-700 ${cls}`}>{formatVND(val as number)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
