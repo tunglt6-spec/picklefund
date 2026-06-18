@@ -652,12 +652,7 @@ export function Login() {
         toast.error(`Lỗi server: ${status}. Vui lòng thử lại.`)
       } else {
         // Network error — no response received
-        const isNetworkErr = err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED' || !err?.response
-        if (isNetworkErr) {
-          toast.error('Không thể kết nối server. Kiểm tra mạng và thử lại.')
-        } else {
-          toast.error(`Lỗi: ${err?.message ?? 'unknown'}`)
-        }
+        toast.error(`Lỗi kết nối: ${err?.code ?? 'NO_CODE'} — ${err?.message?.slice(0, 80) ?? 'unknown'}`)
       }
     } finally {
       setLoading(false)
