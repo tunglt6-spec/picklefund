@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet } from 'lucide-react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -26,6 +27,7 @@ const BLANK = {
 }
 
 export function TreasurerIncome() {
+  const isMobile = useIsMobile()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getClubData, setContributions } = useClubDataStore()
@@ -150,6 +152,184 @@ export function TreasurerIncome() {
     save(contributions.filter(x => x.id !== deleteId))
     setDeleteId(null)
     toast.success(`Đã xóa khoản thu${c?.member?.fullName ? ` của ${c.member.fullName}` : ''}`)
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div className="text-[17px] font-[800] text-slate-900">Khoản Thu</div>
+          <button onClick={openCreate}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] bg-indigo-600 text-white active:opacity-80">
+            <Plus size={13} />Ghi nhận
+          </button>
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: 'text-emerald-600' },
+              { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600' },
+              { label: 'Quỹ Mini', value: formatVND(miniTotal), color: 'text-violet-600' },
+            ].map(k => (
+              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                <div className={`text-[12px] font-[800] ${k.color} truncate`}>{k.value}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {contributions.length === 0 ? (
+            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-14 text-center">
+              <DollarSign size={28} className="mx-auto text-slate-200 mb-2" />
+              <p className="text-[13px] text-slate-400">Chưa có khoản thu nào</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {contributions.map(c => {
+                const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
+                const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
+                return (
+                  <div key={c.id} className={`bg-white rounded-[16px] border p-4 shadow-sm ${!c.isConfirmed ? 'border-amber-100' : 'border-slate-100'}`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] font-[700] text-slate-900 truncate">
+                          {isMiniRow ? (c.payerName || 'Quỹ Mini') : (c.member?.fullName ?? c.memberId)}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {isMiniRow
+                            ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Mini')
+                            : (period?.name ?? '—')} · {formatDate(c.paymentDate)}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-[15px] font-[800] text-slate-900">{formatVND(c.amount)}</div>
+                        {isMiniRow
+                          ? <Badge variant="indigo">Mini</Badge>
+                          : (c.isConfirmed
+                            ? <Badge variant="green" dot>Xác nhận</Badge>
+                            : <Badge variant="yellow" dot>Chờ</Badge>)}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
+                      <div className="flex items-center gap-1">
+                        {!isMiniRow && (
+                          <button onClick={() => toggleConfirm(c.id)}
+                            className={`h-8 w-8 flex items-center justify-center rounded-[10px] ${c.isConfirmed ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-300'} active:opacity-70`}>
+                            {c.isConfirmed ? <CheckCircle size={15} /> : <XCircle size={15} />}
+                          </button>
+                        )}
+                        <button onClick={() => openEdit(c)} className="h-8 w-8 flex items-center justify-center rounded-[10px] bg-slate-50 text-slate-400 active:bg-indigo-50 active:text-indigo-600">
+                          <Edit2 size={14} />
+                        </button>
+                        <button onClick={() => setDeleteId(c.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] bg-slate-50 text-slate-400 active:bg-red-50 active:text-red-500">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <Modal open={showModal} onClose={() => setShowModal(false)}
+          title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
+          subtitle={editTarget ? 'Cập nhật thông tin' : 'Quỹ Chung hoặc Quỹ Mini'}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
+              <Button type="submit" form="form-income-m">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
+            </div>
+          }
+        >
+          <form id="form-income-m" onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Nguồn quỹ</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
+                  <button key={fs} type="button" onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                    className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium flex items-center gap-2 ${
+                      form.fundSource === fs
+                        ? fs === 'COMMON' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-violet-500 bg-violet-50 text-violet-700'
+                        : 'border-slate-200 text-slate-500'
+                    }`}>
+                    {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
+                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {isMini ? (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu <span className="text-red-500">*</span></label>
+                  <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                    {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
+                  <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                    placeholder="Tên người nộp tiền"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                    <option value="">-- Chọn thành viên --</option>
+                    {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                    <option value="">-- Chọn kỳ quỹ --</option>
+                    {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <input required type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày đóng</label>
+                <input type="date" value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức</label>
+              <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                <option value="bank_transfer">Chuyển khoản</option>
+                <option value="cash">Tiền mặt</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
+              <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                placeholder="Thông tin thêm..."
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+            </div>
+          </form>
+        </Modal>
+        <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" message="Khoản thu này sẽ bị xóa vĩnh viễn."
+          confirmLabel="Xóa" onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+      </div>
+    )
   }
 
   return (

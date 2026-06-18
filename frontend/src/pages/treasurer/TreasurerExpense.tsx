@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Edit2, Trash2, Receipt } from 'lucide-react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -28,6 +29,7 @@ const BLANK = {
 }
 
 export function TreasurerExpense() {
+  const isMobile = useIsMobile()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
@@ -100,6 +102,135 @@ export function TreasurerExpense() {
   }
 
   const ruleLabel = (r: AllocationRule) => RULES.find(x => x.value === r)?.label ?? r
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div className="text-[17px] font-[800] text-slate-900">Khoản Chi</div>
+          <button onClick={openCreate} disabled={activePeriods.length === 0}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] bg-indigo-600 text-white disabled:opacity-40 active:opacity-80">
+            <Plus size={13} />Thêm
+          </button>
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {activePeriods.length === 0 ? (
+            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-14 text-center">
+              <Receipt size={28} className="mx-auto text-slate-200 mb-2" />
+              <p className="text-[13px] text-slate-400">Chưa có kỳ quỹ nào đang mở</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white rounded-[14px] border border-slate-100 p-3 shadow-sm">
+                  <div className="text-[15px] font-[800] text-red-600">{formatVND(totalExpenses)}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
+                </div>
+                <div className="bg-white rounded-[14px] border border-slate-100 p-3 shadow-sm">
+                  <div className="text-[15px] font-[800] text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">Thiếu hóa đơn</div>
+                </div>
+              </div>
+
+              {expenses.length === 0 ? (
+                <div className="text-center py-12 text-[13px] text-slate-400">Chưa có khoản chi nào</div>
+              ) : (
+                <div className="space-y-2">
+                  {expenses.map(e => {
+                    const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
+                    return (
+                      <div key={e.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[14px] font-[700] text-slate-900 truncate">{e.description}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
+                          </div>
+                          <div className="text-[15px] font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="gray">{ruleLabel(e.allocationRule)}</Badge>
+                            {e.receiptUrl
+                              ? <Badge variant="green" dot>HĐ</Badge>
+                              : <Badge variant="yellow" dot>Chưa có HĐ</Badge>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:bg-indigo-50 active:text-indigo-600">
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:bg-red-50 active:text-red-500">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <Modal open={showModal} onClose={() => setShowModal(false)}
+          title={editTarget ? 'Sửa Khoản Chi' : 'Thêm Khoản Chi'}
+          subtitle={editTarget ? 'Cập nhật thông tin khoản chi' : 'Ghi nhận chi phí của CLB'}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
+              <Button type="submit" form="form-expense-m">{editTarget ? 'Lưu' : 'Thêm'}</Button>
+            </div>
+          }
+        >
+          <form id="form-expense-m" onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Mô tả <span className="text-red-500">*</span></label>
+              <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder="VD: Tiền sân, Nước uống..."
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+              <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                <option value="">-- Chọn kỳ quỹ --</option>
+                {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <input required type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi</label>
+                <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">Quy tắc phân bổ</label>
+              <div className="space-y-2">
+                {RULES.map(r => (
+                  <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer ${form.allocationRule === r.value ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
+                    <input type="radio" name="rule-m" value={r.value} checked={form.allocationRule === r.value}
+                      onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-indigo-600" />
+                    <div>
+                      <p className="font-semibold text-sm text-slate-900">{r.label}</p>
+                      <p className="text-xs text-slate-500">{r.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </form>
+        </Modal>
+        <ConfirmDialog open={!!deleteId} title="Xóa khoản chi?" message="Khoản chi này sẽ bị xóa vĩnh viễn."
+          confirmLabel="Xóa" onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
