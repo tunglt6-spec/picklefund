@@ -167,6 +167,35 @@ export function Reports() {
     }
   })
 
+  const courtExpTotal = filteredExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
+  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
+  const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
+  const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
+  const presentCount = attSummary.filter(s => s.attendedSessions > 0).length
+
+  const memberBillRows = clubData.members.map(m => {
+    const contrib = filteredContribs.find(x => x.memberId === m.id)
+    const summ = attSummary.find(a => a.memberId === m.id)
+    const attended = summ?.attendedSessions ?? 0
+    const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
+    const courtFrac = totalAttendances > 0 ? attended / totalAttendances : 1 / (memberCount || 1)
+    const courtCost = Math.round(courtExpTotal * courtFrac)
+    const presentShare = presentCount > 0 && attended > 0 ? Math.round(presentOnlyExpTotal / presentCount) : 0
+    const livingCost = Math.round(livingExpTotal / (memberCount || 1))
+    const totalCost = courtCost + presentShare + livingCost
+    return {
+      memberName: m.fullName ?? m.id,
+      attendedSessions: attended,
+      totalSessions: sessionCount,
+      amountPaid,
+      contributionPaid: contrib?.isConfirmed ?? false,
+      courtCost: courtCost + presentShare,
+      livingCost,
+      totalCost,
+      balance: amountPaid - totalCost,
+    }
+  })
+
   const periodHistory = clubData.fundPeriods.map(p => {
     const inc = filteredContribs.filter(c => c.isConfirmed && c.fundPeriodId === p.id).reduce((a, c) => a + c.amount, 0)
     const exp = filteredExpenses.filter(e => e.fundPeriodId === p.id).reduce((a, e) => a + e.amount, 0)
@@ -297,10 +326,7 @@ export function Reports() {
               onClick={() => {
                 exportReportsPDF(
                   { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
-                  clubData.members.map(m => {
-                    const c = clubData.contributions.find(x => x.memberId === m.id)
-                    return { memberName: m.fullName ?? m.id, attendedSessions: 0, totalSessions: sessionCount, amountPaid: c?.isConfirmed ? (c.amount ?? 0) : 0, contributionPaid: c?.isConfirmed ?? false, courtCost: 0, livingCost: 0, totalCost: 0, balance: 0 }
-                  })
+                  memberBillRows
                 )
                 toast.success('Đang tạo PDF...')
               }}>
@@ -310,10 +336,13 @@ export function Reports() {
               onClick={() => {
                 exportReportsExcel(
                   { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
-                  clubData.members.map(m => {
-                    const c = clubData.contributions.find(x => x.memberId === m.id)
-                    return { name: m.fullName ?? m.id, attended: 0, paid: c?.isConfirmed ? 'Đã đóng' : 'Chưa đóng', cost: 0, balance: 0 }
-                  })
+                  memberBillRows.map(r => ({
+                    name: r.memberName,
+                    attended: r.attendedSessions,
+                    paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng',
+                    cost: r.totalCost,
+                    balance: r.balance,
+                  }))
                 )
                 toast.success('Đang xuất Excel...')
               }}>
@@ -359,10 +388,13 @@ export function Reports() {
               onClick={() => {
                 exportReportsExcel(
                   { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
-                  clubData.members.map(m => {
-                    const c = clubData.contributions.find(c => c.memberId === m.id)
-                    return { name: m.fullName ?? m.id, attended: 0, paid: c?.isConfirmed ? 'Đã đóng' : 'Chưa đóng', cost: 0, balance: 0 }
-                  })
+                  memberBillRows.map(r => ({
+                    name: r.memberName,
+                    attended: r.attendedSessions,
+                    paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng',
+                    cost: r.totalCost,
+                    balance: r.balance,
+                  }))
                 )
                 toast.success('Đã xuất Excel báo cáo!')
               }}>
@@ -373,21 +405,7 @@ export function Reports() {
               onClick={() => {
                 exportReportsPDF(
                   { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
-                  clubData.members.map(m => {
-                    const c = clubData.contributions.find(x => x.memberId === m.id)
-                    const attended = 0
-                    return {
-                      memberName: m.fullName ?? m.id,
-                      attendedSessions: attended,
-                      totalSessions: sessionCount,
-                      amountPaid: c?.isConfirmed ? (c.amount ?? 0) : 0,
-                      contributionPaid: c?.isConfirmed ?? false,
-                      courtCost: 0,
-                      livingCost: 0,
-                      totalCost: 0,
-                      balance: (c?.isConfirmed ? (c.amount ?? 0) : 0),
-                    }
-                  })
+                  memberBillRows
                 )
                 toast.success('Đã xuất PDF báo cáo!')
               }}>
