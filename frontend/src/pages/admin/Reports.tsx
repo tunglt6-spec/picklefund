@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   Legend, PieChart, Pie, Cell, Area, AreaChart,
@@ -197,6 +198,134 @@ export function Reports() {
     { label: 'Buổi chơi',      value: sessionCount,  icon: <Calendar size={18} />,   color: 'text-amber-600',  bg: 'bg-amber-50',   isCount: true, unit: 'buổi' },
     { label: 'Đã đóng quỹ',    value: confirmedCount, icon: <MapPin size={18} />,    color: 'text-purple-600', bg: 'bg-purple-50',  isCount: true, unit: 'người' },
   ]
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[17px] font-[800] text-slate-900">Báo Cáo</span>
+            <div className="flex gap-1 bg-slate-100 rounded-[10px] p-0.5">
+              {([['ALL', 'Tất cả'], ['COMMON', 'Chung'], ['MINI', 'Mini']] as const).map(([val, lbl]) => (
+                <button key={val} onClick={() => setFundFilter(val)}
+                  className={`text-[12px] font-[600] px-2.5 py-1 rounded-[8px] transition-all ${fundFilter === val ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+          {periodName && <p className="text-[12px] text-slate-400 mt-0.5">{periodName}</p>}
+        </div>
+
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPI grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {kpiCards.map(k => (
+              <div key={k.label} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                <div className={`w-8 h-8 rounded-[10px] flex items-center justify-center mb-2 ${k.bg}`}>
+                  <span className={k.color}>{k.icon}</span>
+                </div>
+                <div className={`text-[18px] font-[800] ${k.color}`}>
+                  {k.isCount ? k.value : formatVND(k.value as number)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Balance chart */}
+          {balanceTrend.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div className="text-[13px] font-[700] text-slate-800 mb-3">Xu hướng số dư</div>
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={balanceTrend}>
+                  <defs>
+                    <linearGradient id="m-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                  <XAxis dataKey="ky" tick={{ fontSize: 10 }} />
+                  <YAxis tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 10 }} width={36} />
+                  <Tooltip formatter={(v) => formatVND(v as number)} />
+                  <Area type="monotone" dataKey="sodu" stroke="#4F46E5" fill="url(#m-grad)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Cost breakdown */}
+          {costBreakdown.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div className="text-[13px] font-[700] text-slate-800 mb-3">Chi phí theo danh mục</div>
+              <div className="space-y-2">
+                {costBreakdown.slice(0, 5).map(c => (
+                  <div key={c.name} className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: c.fill }} />
+                    <span className="text-[13px] text-slate-700 flex-1 truncate">{c.name}</span>
+                    <span className="text-[13px] font-[600] text-slate-800">{c.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Member attendance top 5 */}
+          {memberAttendance.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div className="text-[13px] font-[700] text-slate-800 mb-3">Tỷ lệ điểm danh</div>
+              <div className="space-y-2">
+                {memberAttendance.slice(0, 5).map(m => (
+                  <div key={m.name} className="flex items-center gap-2">
+                    <span className="text-[13px] text-slate-700 flex-1 truncate">{m.name}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-1.5 max-w-[80px]">
+                      <div className="h-1.5 rounded-full bg-indigo-500" style={{ width: `${m.rate}%` }} />
+                    </div>
+                    <span className="text-[12px] font-[600] text-slate-600 w-8 text-right">{m.rate}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Export */}
+          <div className="flex gap-2">
+            <button className="flex-1 py-2.5 rounded-[12px] border border-slate-200 text-[13px] font-[600] text-slate-600 flex items-center justify-center gap-1 active:bg-slate-50"
+              onClick={() => {
+                exportReportsPDF(
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  clubData.members.map(m => {
+                    const c = clubData.contributions.find(x => x.memberId === m.id)
+                    return { memberName: m.fullName ?? m.id, attendedSessions: 0, totalSessions: sessionCount, amountPaid: c?.isConfirmed ? (c.amount ?? 0) : 0, contributionPaid: c?.isConfirmed ?? false, courtCost: 0, livingCost: 0, totalCost: 0, balance: 0 }
+                  })
+                )
+                toast.success('Đang tạo PDF...')
+              }}>
+              <FileText size={14} />PDF
+            </button>
+            <button className="flex-1 py-2.5 rounded-[12px] border border-emerald-200 text-[13px] font-[600] text-emerald-600 flex items-center justify-center gap-1 active:bg-emerald-50"
+              onClick={() => {
+                exportReportsExcel(
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  clubData.members.map(m => {
+                    const c = clubData.contributions.find(x => x.memberId === m.id)
+                    return { name: m.fullName ?? m.id, attended: 0, paid: c?.isConfirmed ? 'Đã đóng' : 'Chưa đóng', cost: 0, balance: 0 }
+                  })
+                )
+                toast.success('Đang xuất Excel...')
+              }}>
+              <FileSpreadsheet size={14} />Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">

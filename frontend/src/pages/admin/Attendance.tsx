@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -81,9 +82,155 @@ export function Attendance() {
     toast.success('Đã tạo buổi chơi mới!')
   }
 
+  const isMobile = useIsMobile()
   const presentCount = Object.values(attendance).filter(Boolean).length
   const completedSessions = sessions.filter(s => s.status === 'completed').length
   const totalAttendance = sessions.reduce((s, sess) => s + (sess._count?.attendanceRecords ?? 0), 0)
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <span className="text-[17px] font-[800] text-slate-900">Điểm Danh</span>
+          <button
+            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            onClick={() => setShowCreate(true)}
+            disabled={!activePeriod || members.length === 0}
+          >
+            <Plus size={14} />Tạo buổi
+          </button>
+        </div>
+
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPI row */}
+          {sessions.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Buổi chơi', value: sessions.length, sub: `${completedSessions} xong` },
+                { label: 'Lượt tham gia', value: totalAttendance, sub: 'lượt' },
+                { label: 'TB/buổi', value: completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—', sub: 'người' },
+              ].map(k => (
+                <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                  <div className="text-[18px] font-[800] text-indigo-600">{k.value}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{k.sub}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Sessions */}
+          {sessions.length === 0 ? (
+            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-14 text-center">
+              <CalendarX size={32} className="mx-auto text-slate-200 mb-2" />
+              <p className="text-[14px] font-[600] text-slate-500">Chưa có buổi chơi nào</p>
+              <p className="text-[12px] text-slate-400 mt-1">
+                {!activePeriod ? 'Tạo kỳ quỹ trước' : members.length === 0 ? 'Thêm thành viên trước' : 'Nhấn + để tạo buổi chơi'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...sessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate)).map(session => (
+                <div key={session.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="text-[15px] font-[700] text-slate-900">{formatDate(session.sessionDate)}</div>
+                      <div className="flex items-center gap-1 text-[12px] text-slate-500 mt-0.5">
+                        <Clock size={11} />{session.startTime} – {session.endTime}
+                      </div>
+                      {session.courtName && (
+                        <div className="flex items-center gap-1 text-[12px] text-slate-400 mt-0.5">
+                          <MapPin size={11} />{session.courtName}
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant={session.status === 'completed' ? 'green' : session.status === 'cancelled' ? 'red' : 'indigo'} dot>
+                      {session.status === 'completed' ? 'Xong' : session.status === 'cancelled' ? 'Hủy' : 'Chờ'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-[12px] text-slate-500 pt-2.5 border-t border-slate-50 mb-3">
+                    <span>Tiền sân: <strong className="text-slate-700">{formatVND(session.courtFee)}</strong></span>
+                    <span className="flex items-center gap-1">
+                      <Users size={11} /><strong>{session._count?.attendanceRecords}</strong>/{members.length}
+                    </span>
+                  </div>
+                  <button
+                    className="w-full py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 flex items-center justify-center gap-1 active:bg-indigo-50"
+                    onClick={() => openAttendance(session)}
+                  >
+                    <CheckSquare size={14} />Điểm danh
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {selectedSession && (
+          <Modal open={!!selectedSession} onClose={() => setSelectedSession(null)}
+            title={`Điểm danh — ${formatDate(selectedSession.sessionDate)}`}
+            subtitle={`${selectedSession.courtName} · ${selectedSession.startTime}–${selectedSession.endTime}`}
+            footer={
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500">Có mặt: <strong className="text-emerald-600">{presentCount}</strong> / {members.length}</span>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setSelectedSession(null)}>Hủy</Button>
+                  <Button onClick={handleSaveAttendance}>Lưu</Button>
+                </div>
+              </div>
+            }
+          >
+            <div className="space-y-1.5 max-h-80 overflow-y-auto">
+              {members.map(m => (
+                <label key={m.id} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${
+                  attendance[m.id] ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white hover:bg-slate-50'
+                }`}>
+                  <input type="checkbox" checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)} className="h-4 w-4 rounded accent-emerald-500 shrink-0" />
+                  <MemberAvatar name={m.fullName} id={m.id} />
+                  <span className="font-medium text-slate-900 flex-1 text-sm">{m.fullName}</span>
+                  <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : 'text-slate-300'}`}>{attendance[m.id] ? 'Có mặt' : 'Vắng'}</span>
+                </label>
+              ))}
+            </div>
+          </Modal>
+        )}
+        <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới" subtitle="Lên lịch buổi chơi"
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
+              <Button type="submit" form="form-session-m">Tạo buổi chơi</Button>
+            </div>
+          }
+        >
+          <form id="form-session-m" onSubmit={handleCreateSession} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+              <input required type="date" value={form.sessionDate} onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+                <input type="time" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} className="input-base" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+                <input type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} className="input-base" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+              <input required value={form.courtName} onChange={e => setForm({ ...form, courtName: e.target.value })} placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ)</label>
+              <input type="number" value={form.courtFee} onChange={e => setForm({ ...form, courtFee: Number(e.target.value) })} className="input-base" />
+            </div>
+          </form>
+        </Modal>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
