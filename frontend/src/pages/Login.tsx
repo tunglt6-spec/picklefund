@@ -9,7 +9,6 @@ import {
   Copy, Check, Wifi, QrCode, AlertCircle, Globe,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
-import { useRegisteredAccountsStore } from '../store/registeredAccountsStore'
 import api from '../lib/api'
 import toast from 'react-hot-toast'
 import type { User, Role } from '../types'
@@ -108,7 +107,6 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
   const [club, setClub] = useState<ClubForm>({ name: '', code: '', address: '', contactPhone: '', contactEmail: '' })
   const [admin, setAdmin] = useState<AdminForm>({ fullName: '', username: '', email: '', password: '', confirmPassword: '' })
   const { login } = useAuthStore()
-  const { addAccount } = useRegisteredAccountsStore()
   const navigate = useNavigate()
 
   const nextClub = (e: React.FormEvent) => {
@@ -130,16 +128,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
       setStep(3)
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Đăng ký thất bại, vui lòng thử lại'
-      if (err?.response?.status === undefined) {
-        // API offline: fallback local
-        const cid = `club-${Date.now()}`
-        const email = admin.email || `${admin.username}@picklefund.vn`
-        addAccount({ username: admin.username, password: admin.password, role: 'CLUB_ADMIN', clubId: cid, email, fullName: admin.fullName })
-        login({ id: `u-${Date.now()}`, username: admin.username, email, clubId: cid, role: 'CLUB_ADMIN' } as User, `token-${cid}`, `refresh-${cid}`)
-        setStep(3)
-      } else {
-        toast.error(msg)
-      }
+      toast.error(msg)
     }
     setLoading(false)
   }
@@ -593,7 +582,6 @@ export function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [showDemo, setShowDemo] = useState(false)
   const { login } = useAuthStore()
-  const { accounts: registeredAccounts } = useRegisteredAccountsStore()
   const navigate = useNavigate()
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -602,22 +590,6 @@ export function Login() {
     setLoading(true)
 
     try {
-      const localAccount = registeredAccounts.find(a => a.username === username && a.password === password)
-      if (localAccount) {
-        const user: User = {
-          id: `u-${localAccount.username}`,
-          username: localAccount.username,
-          email: localAccount.email,
-          clubId: localAccount.clubId,
-          role: localAccount.role,
-        }
-        login(user, `local-token-${localAccount.clubId}`, `local-refresh-${localAccount.clubId}`)
-        toast.success(`Chào mừng trở lại, ${localAccount.fullName || localAccount.username}!`, { duration: 5000 })
-        navigate(routeByRole[localAccount.role])
-        setLoading(false)
-        return
-      }
-
       const res = await api.post('/auth/login', { username, password, rememberMe: remember })
       const { accessToken, refreshToken, user: apiUser } = res.data.data ?? res.data
       const user: User = {
@@ -634,15 +606,6 @@ export function Login() {
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {
-        const reg = registeredAccounts.find(a => a.username === username && a.password === password)
-        if (reg) {
-          const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }
-          login(user, `local-token-${reg.clubId}`, `local-refresh-${reg.clubId}`)
-          toast.success(`Chào mừng trở lại, ${reg.fullName || reg.username}!`, { duration: 5000 })
-          navigate(routeByRole[reg.role])
-          setLoading(false)
-          return
-        }
         toast.error('Tài khoản hoặc mật khẩu không đúng')
       } else if (status === 429) {
         toast.error('Quá nhiều lần thử. Vui lòng đợi một chút.')
@@ -652,7 +615,7 @@ export function Login() {
         toast.error(`Lỗi server: ${status}. Vui lòng thử lại.`)
       } else {
         // Network error — no response received
-        toast.error(`Lỗi kết nối: ${err?.code ?? 'NO_CODE'} — ${err?.message?.slice(0, 80) ?? 'unknown'}`)
+        toast.error('Không thể kết nối server. Vui lòng kiểm tra kết nối mạng.')
       }
     } finally {
       setLoading(false)
