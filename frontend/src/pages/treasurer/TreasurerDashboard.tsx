@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -19,6 +20,7 @@ type LedgerRow = {
 }
 
 export function TreasurerDashboard() {
+  const isMobile = useIsMobile()
   const { user } = useAuthStore()
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
@@ -73,6 +75,103 @@ export function TreasurerDashboard() {
   }, [clubData.contributions, clubData.expenses])
 
   const recent = ledger.slice(-20).reverse()
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+          <div className="text-[17px] font-[800] text-slate-900">Thủ Quỹ</div>
+          <div className="text-[12px] text-slate-400">{subtitle}</div>
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* Fund cards */}
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Quỹ Chung', income: commonIncome, expense: commonExpTotal, balance, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Quỹ Mini', income: miniIncome, expense: miniExpTotal, balance: miniBalance, color: 'text-violet-600', bg: 'bg-violet-50' },
+            ].map(f => (
+              <div key={f.label} className="bg-white rounded-[16px] border border-slate-100 p-3 shadow-sm">
+                <div className={`text-[11px] font-[700] ${f.color} mb-2`}>{f.label}</div>
+                <div className="space-y-1 text-[11px]">
+                  <div className="flex justify-between"><span className="text-slate-400">Thu</span><span className="text-emerald-600 font-[600]">{formatVND(f.income)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Chi</span><span className="text-orange-500 font-[600]">{formatVND(f.expense)}</span></div>
+                  <div className="flex justify-between border-t border-slate-100 pt-1"><span className="text-slate-600 font-[600]">Số dư</span><span className={`font-[800] ${f.balance >= 0 ? f.color : 'text-red-500'}`}>{formatVND(f.balance)}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Total asset */}
+          <div className="rounded-[16px] p-4 text-white" style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+            <div className="text-[11px] font-[700] text-indigo-200 uppercase mb-1">Tổng Tài Sản CLB</div>
+            <div className="text-[22px] font-[800]">{formatVND(balance + miniBalance)}</div>
+            <div className="text-[11px] text-indigo-200 mt-0.5">Quỹ Chung + Quỹ Mini</div>
+          </div>
+          {/* Alert KPIs */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Chưa đóng', value: `${unpaid.length}`, color: unpaid.length > 0 ? 'text-red-500' : 'text-slate-500' },
+              { label: 'Thiếu HĐ', value: `${noReceipt.length}`, color: noReceipt.length > 0 ? 'text-amber-600' : 'text-slate-500' },
+              { label: 'Chờ xác nhận', value: `${pendingCount}`, color: 'text-slate-600' },
+            ].map(k => (
+              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                <div className={`text-[16px] font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5">{k.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Action items */}
+          {(unpaid.length > 0 || noReceipt.length > 0) && (
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm space-y-2">
+              <div className="text-[13px] font-[700] text-slate-800 mb-2">Cần xử lý</div>
+              {unpaid.slice(0, 3).map(c => (
+                <div key={c.id} className="flex items-center gap-2 bg-red-50 rounded-[10px] px-3 py-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                  <span className="text-[12px] text-red-700 flex-1 truncate"><strong>{c.member?.fullName}</strong> chưa xác nhận</span>
+                  <button onClick={() => toast.success(`Đã gửi nhắc ${c.member?.fullName}`)} className="text-[11px] text-indigo-600 font-[600] shrink-0">Nhắc</button>
+                </div>
+              ))}
+              {noReceipt.slice(0, 2).map(e => (
+                <div key={e.id} className="flex items-center gap-2 bg-amber-50 rounded-[10px] px-3 py-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-[12px] text-amber-700 flex-1 truncate"><strong>{e.description}</strong> thiếu HĐ</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Recent ledger */}
+          <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+              <span className="text-[14px] font-[700] text-slate-800">Sổ Quỹ Gần Đây</span>
+              <button onClick={() => toast.success('Xuất sổ quỹ Excel!')} className="text-[12px] font-[600] text-indigo-600 active:opacity-70">Xuất</button>
+            </div>
+            {recent.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-[13px]">Chưa có giao dịch</div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recent.slice(0, 10).map(row => (
+                  <div key={row.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className={`h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0 ${row.type === 'income' ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                      {row.type === 'income' ? <TrendingUp size={13} className="text-emerald-600" /> : <TrendingDown size={13} className="text-red-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-[600] text-slate-800 truncate">{row.description}</div>
+                      <div className="text-[11px] text-slate-400">{formatDate(row.date)}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className={`text-[13px] font-[700] ${row.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {row.type === 'income' ? '+' : '-'}{formatVND(row.amount)}
+                      </div>
+                      <div className="text-[11px] text-slate-500">{formatVND(row.balance)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">

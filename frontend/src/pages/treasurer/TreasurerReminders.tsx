@@ -6,8 +6,10 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 export function TreasurerReminders() {
+  const isMobile = useIsMobile()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const { getClubData } = useClubDataStore()
@@ -50,6 +52,111 @@ export function TreasurerReminders() {
   }
 
   const amount = activePeriod?.contributionAmount ?? 1000000
+
+  if (isMobile) {
+    const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length - pendingMembers.length
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <div className="text-[17px] font-[800] text-slate-900">Nhắc Nhở Đóng Quỹ</div>
+            {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} · {formatVND(amount)}/người</div>}
+          </div>
+          {unpaidMembers.length > 0 && (
+            <button onClick={sendAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
+              <Send size={13} />Nhắc tất cả
+            </button>
+          )}
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Chưa đóng', value: `${unpaidMembers.length}`, color: 'text-red-500', Icon: Bell },
+              { label: 'Chờ xác nhận', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
+              { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
+            ].map(k => (
+              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+                <div className={`text-[16px] font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Unpaid */}
+          {unpaidMembers.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-1">
+                <Bell size={13} className="text-red-500" />
+                <span className="text-[13px] font-[700] text-slate-800">Chưa đóng quỹ</span>
+                <span className="ml-auto text-[12px] font-[600] text-red-500">{unpaidMembers.length} người</span>
+              </div>
+              {unpaidMembers.map(m => {
+                const sent = sentIds.has(m.id)
+                return (
+                  <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-[14px] font-[700] text-slate-900">{m.fullName}</div>
+                        <div className="text-[12px] text-slate-400 mt-0.5">{m.phone ?? m.email ?? '—'}</div>
+                      </div>
+                      <div className="text-[14px] font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
+                    </div>
+                    {!sent ? (
+                      <div className="flex gap-2 mt-3">
+                        <button onClick={() => sendReminder(m.id, m.fullName, 'zalo')}
+                          className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-blue-50 text-blue-600 active:bg-blue-100">
+                          <MessageSquare size={12} />Zalo
+                        </button>
+                        <button onClick={() => sendReminder(m.id, m.fullName, 'sms')}
+                          className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-slate-100 text-slate-600 active:bg-slate-200">
+                          <Phone size={12} />SMS
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex items-center gap-1 text-[12px] text-emerald-600 font-[600]">
+                        <CheckCircle size={13} />Đã gửi nhắc nhở
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Pending */}
+          {pendingMembers.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-1">
+                <Clock size={13} className="text-amber-500" />
+                <span className="text-[13px] font-[700] text-slate-800">Chờ xác nhận</span>
+                <span className="ml-auto text-[12px] font-[600] text-amber-600">{pendingMembers.length} người</span>
+              </div>
+              {pendingMembers.map(m => {
+                const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
+                return (
+                  <div key={m.id} className="bg-white rounded-[16px] border border-amber-100 p-4 shadow-sm flex items-center justify-between">
+                    <div>
+                      <div className="text-[14px] font-[700] text-slate-900">{m.fullName}</div>
+                      {contrib?.notes && <div className="text-[12px] text-slate-400 mt-0.5">{contrib.notes}</div>}
+                    </div>
+                    <div className="text-[14px] font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? amount)}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
+            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-16 text-center">
+              <CheckCircle size={32} className="mx-auto text-emerald-300 mb-3" />
+              <p className="text-[14px] font-[600] text-slate-600">Tất cả thành viên đã đóng quỹ!</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
