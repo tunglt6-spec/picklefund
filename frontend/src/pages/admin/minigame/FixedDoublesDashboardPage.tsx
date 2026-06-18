@@ -9,6 +9,7 @@ import {
 import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
 import toast from 'react-hot-toast'
 
@@ -641,6 +642,7 @@ export function FixedDoublesDashboardPage() {
 
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   const mg = getMinigame(id!)
   if (!mg) {
@@ -683,9 +685,9 @@ export function FixedDoublesDashboardPage() {
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
 
-      {/* ── sticky header, max 64px ── */}
-      <div className="bg-white border-b sticky top-0 z-20" style={{ borderColor: T.border, minHeight: 64 }}>
-        <div className="flex items-center gap-3 px-4 sm:px-6 h-16">
+      {/* ── sticky header ── */}
+      <div className="bg-white border-b sticky top-0 z-20" style={{ borderColor: T.border }}>
+        <div className="flex items-center gap-3 px-4 sm:px-6 min-h-[56px] py-2">
           <button
             onClick={() => navigate('/minigames')}
             className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors shrink-0"
@@ -693,19 +695,19 @@ export function FixedDoublesDashboardPage() {
             <ArrowLeft size={18} />
           </button>
 
-          <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
-            <div className="min-w-0">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-sm font-extrabold truncate leading-tight" style={{ color: T.txt1 }}>
                 {mg.name}
               </h1>
-              {(mg.startDate || mg.endDate) && (
-                <p className="text-[11px] leading-none mt-0.5" style={{ color: T.txt2 }}>
+              {!isMobile && (mg.startDate || mg.endDate) && (
+                <p className="text-[11px] leading-none" style={{ color: T.txt2 }}>
                   {mg.startDate}{mg.endDate ? ` → ${mg.endDate}` : ''}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-semibold rounded-full px-2.5 py-0.5"
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <span className="text-[11px] font-semibold rounded-full px-2 py-0.5"
                 style={{ background: '#FEF3C7', color: '#D97706' }}>
                 🤝 Đôi Cố Định
               </span>
@@ -721,12 +723,16 @@ export function FixedDoublesDashboardPage() {
             >
               <Edit2 size={16} />
             </button>
-            <button title="Thông báo" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
-              <Bell size={16} />
-            </button>
-            <button title="Thêm" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
-              <MoreHorizontal size={16} />
-            </button>
+            {!isMobile && (
+              <>
+                <button title="Thông báo" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                  <Bell size={16} />
+                </button>
+                <button title="Thêm" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                  <MoreHorizontal size={16} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
