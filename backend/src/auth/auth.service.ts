@@ -139,7 +139,7 @@ export class AuthService {
     const result = await this.prisma.$transaction(async (tx) => {
       const club = await tx.club.create({ data: { name: dto.club.name, code: dto.club.code, address: dto.club.address, contactPhone: dto.club.contactPhone, contactEmail: dto.club.contactEmail } })
       const user = await tx.user.create({ data: { username: dto.admin.username, email: dto.admin.email || `${dto.admin.username}@picklefund.vn`, passwordHash: hash, role: 'CLUB_ADMIN', clubId: club.id } })
-      const member = await tx.member.create({ data: { clubId: club.id, fullName: dto.admin.fullName, joinDate: new Date(), status: 'active', user: { connect: { id: user.id } } } })
+      const member = await tx.member.create({ data: { clubId: club.id, fullName: dto.admin.fullName, joinDate: new Date(), status: 'active', userId: user.id } })
       return { club, user, member }
     })
 
