@@ -32,7 +32,7 @@ export function AppLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header — 64px */}
         <div className="md:hidden">
-          <MobileHeader />
+          <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </div>
 
         {/* Page content — extra bottom padding on mobile so bottom nav never covers content */}

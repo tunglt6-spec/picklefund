@@ -468,6 +468,7 @@ export function ClubDashboard() {
             <button
               className="relative w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors"
               title="Thông báo"
+              onClick={() => navigate('/notifications')}
             >
               <Bell size={15} className="text-slate-500" />
               {unpaidCount > 0 && (

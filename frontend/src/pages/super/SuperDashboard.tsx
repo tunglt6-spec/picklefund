@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Building2, Users, Calendar, Activity, Lock, LogIn } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -19,6 +20,7 @@ const EMPTY_STATS = {
 type ClubRow = { id: string; name: string; code: string; status: string; _count?: { members: number; fundPeriods: number } }
 
 export function SuperDashboard() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState(EMPTY_STATS)
   const [clubs, setClubs] = useState<ClubRow[]>([])
   const isMobile = useIsMobile()
@@ -155,7 +157,7 @@ export function SuperDashboard() {
                   {clubs.length === 0 ? (
                     <tr><td colSpan={4} className="text-center py-8 text-gray-400 text-xs">Đang tải...</td></tr>
                   ) : clubs.map(club => (
-                    <tr key={club.id} className="hover:bg-gray-50">
+                    <tr key={club.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                       <td className="py-2.5 px-2">
                         <div className="font-medium text-gray-900">{club.name}</div>
                         <div className="text-xs text-gray-400">{club.code}</div>

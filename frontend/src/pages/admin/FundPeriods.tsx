@@ -64,6 +64,7 @@ export function FundPeriods() {
   const [formGame, setFormGame] = useState({ ...emptyForm })
   const [editingChung, setEditingChung] = useState<FundPeriod | null>(null)
   const [editingGame, setEditingGame] = useState<FundPeriod | null>(null)
+  const [viewPeriod, setViewPeriod] = useState<FundPeriod | null>(null)
 
   const openEdit = (p: FundPeriod) => {
     const form = periodToForm(p)
@@ -393,6 +394,7 @@ export function FundPeriods() {
             memberCount={memberCount}
             contributions={contributions}
             onEdit={() => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true))}
+            onView={() => activePeriods.chung && setViewPeriod(activePeriods.chung)}
           />
           <FundDetailCard
             title="Quỹ Mini"
@@ -402,6 +404,7 @@ export function FundPeriods() {
             memberCount={memberCount}
             contributions={contributions}
             onEdit={() => activePeriods.game ? openEdit(activePeriods.game) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
+            onView={() => activePeriods.game && setViewPeriod(activePeriods.game)}
           />
         </div>
 
@@ -512,7 +515,7 @@ export function FundPeriods() {
                             </td>
                             <td className="px-4 py-3.5">
                               <div className="flex items-center justify-center gap-1">
-                                <button title="Xem" className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors">
+                                <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors">
                                   <Eye size={14} />
                                 </button>
                                 <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
@@ -664,6 +667,48 @@ export function FundPeriods() {
         editing={!!editingGame}
         onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) })}
       />
+
+      {/* View period detail modal */}
+      {viewPeriod && (
+        <Modal open title={viewPeriod.name} onClose={() => setViewPeriod(null)} size="sm">
+          <div className="p-4 space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Loại quỹ</span>
+              <span className="font-medium">{(viewPeriod.type ?? 'chung') === 'chung' ? 'Quỹ Chung' : 'Quỹ Mini'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Trạng thái</span>
+              <Badge variant={statusVariant[viewPeriod.status]} dot>{statusLabel[viewPeriod.status]}</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Ngày bắt đầu</span>
+              <span className="font-medium">{formatDate(viewPeriod.startDate)}</span>
+            </div>
+            {viewPeriod.endDate && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Ngày kết thúc</span>
+                <span className="font-medium">{formatDate(viewPeriod.endDate)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-slate-500">Số tiền/người</span>
+              <span className="font-medium text-indigo-600">{formatVND(viewPeriod.contributionAmount)}</span>
+            </div>
+            {viewPeriod.notes && (
+              <div>
+                <span className="text-slate-500">Ghi chú</span>
+                <p className="mt-1 text-slate-700 bg-slate-50 rounded-lg p-2">{viewPeriod.notes}</p>
+              </div>
+            )}
+            <div className="pt-2 flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => setViewPeriod(null)}>Đóng</Button>
+              <Button size="sm" className="flex-1" onClick={() => { openEdit(viewPeriod); setViewPeriod(null) }}>
+                <Pencil size={13} />Sửa
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
@@ -985,10 +1030,10 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
   )
 }
 
-function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit }: {
+function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
   color: 'indigo' | 'violet'; memberCount: number
-  contributions: import('../../types').FundContribution[]; onEdit: () => void
+  contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
 }) {
   const target = period ? period.contributionAmount * memberCount : 0
   const collected = period
@@ -1022,7 +1067,7 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
             <span>Mục tiêu: <strong className="text-slate-800">{formatVND(target)}</strong></span>
           </div>
           <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
               <Eye size={13} />Chi tiết
             </Button>
             <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>

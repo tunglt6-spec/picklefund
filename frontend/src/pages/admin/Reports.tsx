@@ -101,6 +101,7 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 export function Reports() {
   const { user } = useAuthStore()
   const { getClubData } = useClubDataStore()
+  const isMobile = useIsMobile()
   const clubData = getClubData(user?.clubId ?? '')
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
@@ -198,9 +199,6 @@ export function Reports() {
     { label: 'Buổi chơi',      value: sessionCount,  icon: <Calendar size={18} />,   color: 'text-amber-600',  bg: 'bg-amber-50',   isCount: true, unit: 'buổi' },
     { label: 'Đã đóng quỹ',    value: confirmedCount, icon: <MapPin size={18} />,    color: 'text-purple-600', bg: 'bg-purple-50',  isCount: true, unit: 'người' },
   ]
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const isMobile = useIsMobile()
 
   if (isMobile) {
     return (

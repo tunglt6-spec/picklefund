@@ -209,12 +209,93 @@ export function Contributions() {
           })}
         </div>
 
-        {/* Dialogs */}
-        {(showCreate || editTarget) && (
-          <Modal open title={editTarget ? 'Sửa khoản thu' : 'Thêm khoản thu'} onClose={() => { setShowCreate(false); setEditTarget(null) }} size="sm">
-            <div className="p-4 text-sm text-slate-500">Form nhập thu — xem desktop để nhập đầy đủ</div>
-          </Modal>
-        )}
+        {/* Create / Edit Modal — full form on mobile */}
+        <Modal
+          open={showCreate}
+          onClose={() => { setShowCreate(false); setEditTarget(null) }}
+          title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditTarget(null) }}>Hủy</Button>
+              <Button type="submit" form="form-contrib-mobile">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
+            </div>
+          }
+        >
+          <form id="form-contrib-mobile" onSubmit={handleSubmit} className="space-y-4 p-1">
+            {!editTarget && (
+              <div className="grid grid-cols-2 gap-2">
+                {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
+                  <button key={fs} type="button"
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                    className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
+                      form.fundSource === fs
+                        ? fs === 'COMMON' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-violet-500 bg-violet-50 text-violet-700'
+                        : 'border-slate-200 text-slate-500'
+                    }`}>
+                    {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
+                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {form.fundSource === 'COMMON' ? (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
+                    <option value="">-- Chọn thành viên --</option>
+                    {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+                  </select>
+                </div>
+                {activePeriod && (
+                  <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
+                    Kỳ quỹ: <span className="font-semibold">{activePeriod.name}</span> — Mức đóng: {formatVND(activePeriod.contributionAmount)}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Mini <span className="text-red-500">*</span></label>
+                  <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
+                    {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
+                  <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                    placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
+                </div>
+              </>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+                <input required type="number" min={0} value={form.amount}
+                  onChange={e => setForm({ ...form, amount: Number(e.target.value) })} className="input-base" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
+                <input type="date" value={form.paymentDate}
+                  onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức thanh toán</label>
+              <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
+                <option value="bank_transfer">Chuyển khoản</option>
+                <option value="cash">Tiền mặt</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
+              <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                placeholder="Thông tin thêm..." className="input-base" />
+            </div>
+          </form>
+        </Modal>
         <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" message="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
       </div>
     )

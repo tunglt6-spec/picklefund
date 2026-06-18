@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
-  CheckCircle, Clock,
+  CheckCircle, Clock, Pencil,
   FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -89,10 +89,25 @@ const emptyForm = {
   receiverName: '',
 }
 
-function AddDrawer({ open, onClose, onSave }: {
+function AddDrawer({ open, onClose, onSave, editExpense }: {
   open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
+  editExpense?: LivingExpense | null
 }) {
+  const isEdit = !!editExpense
   const [form, setForm] = useState(emptyForm)
+  // Sync form when editExpense changes
+  if (open && isEdit && form.description !== (editExpense?.description ?? '') && form.description === emptyForm.description) {
+    setForm({
+      fundSource: editExpense!.fundSource ?? 'COMMON',
+      description: editExpense!.description,
+      amount: String(editExpense!.amount),
+      expenseDate: editExpense!.expenseDate,
+      allocationRule: (editExpense as any).allocationRule ?? 'ATTENDANCE',
+      notes: (editExpense as any).notes ?? '',
+      miniExpenseType: (editExpense as any).miniExpenseType ?? 'GAME_REWARD',
+      receiverName: (editExpense as any).receiverName ?? '',
+    })
+  }
   if (!open) return null
   const isMini = form.fundSource === 'MINI'
   return (
@@ -100,12 +115,12 @@ function AddDrawer({ open, onClose, onSave }: {
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-semibold text-slate-900">Thêm khoản chi mới</h2>
+          <h2 className="text-base font-semibold text-slate-900">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi mới'}</h2>
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
             <X size={16} />
           </button>
         </div>
-        <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden">
+        <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden" key={editExpense?.id ?? 'new'}>
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {/* Fund source selector */}
             <div>
@@ -200,8 +215,8 @@ function AddDrawer({ open, onClose, onSave }: {
             </div>
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">Hủy bỏ</Button>
-            <Button type="submit" className="flex-1"><CheckCircle size={14} />Thêm khoản chi</Button>
+            <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1">Hủy bỏ</Button>
+            <Button type="submit" className="flex-1"><CheckCircle size={14} />{isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi'}</Button>
           </div>
         </form>
       </div>
@@ -209,12 +224,28 @@ function AddDrawer({ open, onClose, onSave }: {
   )
 }
 
-function FilterPanel({ open, onClose, defaultFrom, defaultTo }: {
-  open: boolean; onClose: () => void; defaultFrom?: string; defaultTo?: string
+interface FilterValues { status: string; rule: string; from: string; to: string }
+
+function FilterPanel({ open, onClose, values, onApply }: {
+  open: boolean; onClose: () => void; values: FilterValues
+  onApply: (v: FilterValues) => void
 }) {
-  const [status, setStatus] = useState('all')
-  const [rule, setRule] = useState('all')
+  const [status, setStatus] = useState(values.status)
+  const [rule, setRule]     = useState(values.rule)
+  const [from, setFrom]     = useState(values.from)
+  const [to, setTo]         = useState(values.to)
+
   if (!open) return null
+  const handleApply = () => {
+    onApply({ status, rule, from, to })
+    toast.success('Đã áp dụng bộ lọc')
+    onClose()
+  }
+  const handleClear = () => {
+    setStatus('all'); setRule('all'); setFrom(''); setTo('')
+    onApply({ status: 'all', rule: 'all', from: '', to: '' })
+    onClose()
+  }
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
@@ -246,24 +277,50 @@ function FilterPanel({ open, onClose, defaultFrom, defaultTo }: {
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-2">Khoảng thời gian</label>
             <div className="grid grid-cols-2 gap-2">
-              <input type="date" defaultValue={defaultFrom ?? ''} className="input-base text-xs" />
-              <input type="date" defaultValue={defaultTo ?? ''} className="input-base text-xs" />
+              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
+              <input type="date" value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
             </div>
           </div>
         </div>
         <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
-          <Button variant="outline" className="flex-1" onClick={() => { setStatus('all'); setRule('all') }}>Xóa bộ lọc</Button>
-          <Button className="flex-1" onClick={() => { toast.success('Đã áp dụng bộ lọc'); onClose() }}>Áp dụng</Button>
+          <Button variant="outline" className="flex-1" onClick={handleClear}>Xóa bộ lọc</Button>
+          <Button className="flex-1" onClick={handleApply}>Áp dụng</Button>
         </div>
       </div>
     </div>
   )
 }
 
-function DetailView({ exp, onClose, onDelete, onApprove }: {
-  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void
+function DetailView({ exp, onClose, onDelete, onApprove, onEdit }: {
+  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onEdit: () => void
 }) {
   const cfg = statusCfg[exp.status]
+  const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
+  const miniType = (exp as any).miniExpenseType as MiniExpenseType | undefined
+  const receiverName = (exp as any).receiverName as string | undefined
+
+  type FieldRow = { label: string; value: React.ReactNode; span?: boolean }
+  const fields: FieldRow[] = [
+    { label: 'Mã chi',     value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
+    { label: 'Nguồn quỹ', value: isMini
+      ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Mini</Badge>
+      : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chung</Badge> },
+    { label: 'Nội dung',   value: <span className="font-medium">{exp.description}</span>, span: true },
+    { label: 'Số tiền',    value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
+    { label: 'Ngày chi',   value: exp.expenseDate },
+    ...(isMini
+      ? [
+          { label: 'Loại chi',    value: miniType ? MINI_EXPENSE_TYPE_LABELS[miniType] : '—' },
+          { label: 'Người nhận', value: receiverName || '—' },
+        ]
+      : [
+          { label: 'Quy tắc phân bổ', value: ruleLabels[exp.allocationRule] },
+        ]
+    ),
+    { label: 'Trạng thái', value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
+    { label: 'Ngày tạo',   value: exp.createdAt.slice(0, 10) },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
@@ -276,21 +333,14 @@ function DetailView({ exp, onClose, onDelete, onApprove }: {
             {exp.status === 'pending' && (
               <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
             )}
+            <Button size="sm" variant="outline" onClick={onEdit}><Pencil size={13} />Sửa</Button>
             <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
-            {[
-              { label: 'Mã chi',           value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
-              { label: 'Nội dung',         value: <span className="font-medium">{exp.description}</span> },
-              { label: 'Số tiền',          value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
-              { label: 'Ngày chi',         value: exp.expenseDate },
-              { label: 'Quy tắc phân bổ', value: ruleLabels[exp.allocationRule] },
-              { label: 'Trạng thái',       value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
-              { label: 'Ngày tạo',         value: exp.createdAt.slice(0, 10) },
-            ].map((f, i) => (
-              <div key={i}>
+            {fields.map((f, i) => (
+              <div key={i} className={f.span ? 'col-span-2' : ''}>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</p>
                 <div className="text-xs text-slate-700">{f.value}</div>
               </div>
@@ -321,7 +371,9 @@ export function Expenses() {
   const [tab, setTab] = useState<'all' | ExpenseStatus>('all')
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [editTarget, setEditTarget] = useState<LivingExpense | null>(null)
   const [showFilter, setShowFilter] = useState(false)
+  const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', rule: 'all', from: '', to: '' })
   const [detailExp, setDetailExp] = useState<RichExpense | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
@@ -331,8 +383,12 @@ export function Expenses() {
     const matchTab = tab === 'all' || e.status === tab
     const q = search.toLowerCase()
     const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
-    return matchTab && matchQ
-  }), [richExpenses, tab, search])
+    const matchStatus = filterValues.status === 'all' || e.status === filterValues.status
+    const matchRule = filterValues.rule === 'all' || e.allocationRule === filterValues.rule
+    const matchFrom = !filterValues.from || e.expenseDate >= filterValues.from
+    const matchTo   = !filterValues.to   || e.expenseDate <= filterValues.to
+    return matchTab && matchQ && matchStatus && matchRule && matchFrom && matchTo
+  }), [richExpenses, tab, search, filterValues])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -376,6 +432,23 @@ export function Expenses() {
     setDetailExp(null)
     setConfirmId(null)
     toast.success('Đã xóa khoản chi')
+  }
+
+  const handleEdit = async (form: typeof emptyForm) => {
+    if (!editTarget) return
+    const payload = {
+      description: form.description,
+      amount: Number(form.amount),
+      expenseDate: form.expenseDate,
+      allocationRule: form.fundSource === 'MINI' ? 'FUND_ONLY' : form.allocationRule,
+      notes: form.notes,
+      miniExpenseType: form.fundSource === 'MINI' ? form.miniExpenseType : undefined,
+      receiverName: form.fundSource === 'MINI' && form.receiverName ? form.receiverName : undefined,
+    }
+    try { await api.put(`/expenses/${editTarget.id}`, payload) } catch { /* local update continues */ }
+    save(clubData.expenses.map(e => e.id === editTarget.id ? { ...e, ...payload } : e))
+    setEditTarget(null)
+    toast.success('Đã cập nhật khoản chi!')
   }
 
   const handleApprove = async (id: string) => {
@@ -431,14 +504,22 @@ export function Expenses() {
                 fundSource={e.fundSource ?? 'COMMON'}
                 status={e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : undefined}
               />
-              <button onClick={() => setConfirmId(e.id)}
-                className="absolute right-3 top-3 text-slate-300 active:text-red-500 p-1">
-                <Trash2 size={13} />
-              </button>
+              <div className="absolute right-2 top-2 flex gap-0.5">
+                <button onClick={() => setEditTarget(e)}
+                  className="text-slate-300 active:text-indigo-500 p-1.5">
+                  <Pencil size={13} />
+                </button>
+                <button onClick={() => setConfirmId(e.id)}
+                  className="text-slate-300 active:text-red-500 p-1.5">
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
         <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" message="Hành động này không thể hoàn tác." onConfirm={() => { if (confirmId) handleDelete(confirmId) }} onCancel={() => setConfirmId(null)} />
+        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} />
+        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} />
       </div>
     )
   }
@@ -598,13 +679,14 @@ export function Expenses() {
 
       {/* Drawers & modals */}
       <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} />
-      <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} defaultFrom={activePeriod?.startDate} defaultTo={activePeriod?.endDate} />
+      <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
       {detailExp && (
         <DetailView
           exp={detailExp}
           onClose={() => setDetailExp(null)}
           onDelete={() => setConfirmId(detailExp.id)}
           onApprove={() => handleApprove(detailExp.id)}
+          onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
         />
       )}
       <ConfirmDialog

@@ -129,12 +129,17 @@ export function Members() {
   const [showDrawer, setShowDrawer] = useState(false)
   const [editMember, setEditMember] = useState<Member | null>(null)
   const [statusFilter, setStatusFilter] = useState<'all'|'active'|'inactive'>('all')
+  const [showFilter, setShowFilter] = useState(false)
+  const [joinFrom, setJoinFrom] = useState('')
+  const [joinTo, setJoinTo] = useState('')
 
   const filtered = members.filter(m => {
     const q = search.toLowerCase()
     const matchQ = m.fullName.toLowerCase().includes(q) || (m.phone || '').includes(q)
     const matchS = statusFilter === 'all' || m.status === statusFilter
-    return matchQ && matchS
+    const matchFrom = !joinFrom || (m.joinDate ?? '') >= joinFrom
+    const matchTo   = !joinTo   || (m.joinDate ?? '') <= joinTo
+    return matchQ && matchS && matchFrom && matchTo
   })
 
   const openCreate = () => { setEditMember(null); setShowDrawer(true) }
@@ -279,8 +284,23 @@ export function Members() {
                 }`}>{l}</button>
             ))}
           </div>
-          <Button variant="outline" size="sm"><Filter size={13} />Lọc</Button>
+          <Button variant={showFilter ? 'primary' : 'outline'} size="sm" onClick={() => setShowFilter(v => !v)}><Filter size={13} />Lọc</Button>
         </div>
+
+        {/* Inline filter panel */}
+        {showFilter && (
+          <div className="bg-white rounded-xl border border-slate-100 p-4 flex flex-wrap gap-3 items-end mb-4 shadow-sm">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Gia nhập từ</label>
+              <input type="date" value={joinFrom} onChange={e => setJoinFrom(e.target.value)} className="input-base text-sm h-8" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Đến ngày</label>
+              <input type="date" value={joinTo} onChange={e => setJoinTo(e.target.value)} className="input-base text-sm h-8" />
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { setJoinFrom(''); setJoinTo('') }}>Xóa lọc</Button>
+          </div>
+        )}
 
         {/* Table / Empty */}
         {filtered.length === 0 ? (

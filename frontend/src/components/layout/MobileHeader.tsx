@@ -1,12 +1,26 @@
 import { Bell } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 
-export function MobileHeader() {
+interface MobileHeaderProps {
+  onMenuClick?: () => void
+}
+
+export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   if (!user) return null
 
   const initials = user.username ? user.username.slice(0, 2).toUpperCase() : 'U'
+
+  const notifRoute = user.role === 'CLUB_MEMBER'
+    ? '/member/notifications'
+    : user.role === 'SUPER_ADMIN'
+      ? '/super/dashboard'
+      : '/notifications'
+
+  const profileRoute = user.role === 'CLUB_MEMBER' ? '/member/dashboard' : '/dashboard'
 
   return (
     <header
@@ -21,7 +35,10 @@ export function MobileHeader() {
 
       {/* Right: Bell + Avatar */}
       <div className="flex items-center gap-2">
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100">
+        <button
+          onClick={() => navigate(notifRoute)}
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100"
+        >
           <Bell size={18} />
           <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
@@ -29,6 +46,7 @@ export function MobileHeader() {
           </span>
         </button>
         <button
+          onClick={() => navigate(profileRoute)}
           className="flex h-9 w-9 items-center justify-center rounded-xl text-[12px] font-[800] text-white active:opacity-80"
           style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
         >
