@@ -29,8 +29,11 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] pointer-events-none" />
       <div className={cn(
         'relative z-10 w-full bg-white rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
         'max-h-[calc(100vh-2rem)]',
