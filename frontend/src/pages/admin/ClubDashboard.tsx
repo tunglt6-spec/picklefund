@@ -395,7 +395,7 @@ export function ClubDashboard() {
                   <MobileTransactionCard
                     key={tx.id}
                     name={clubData.members.find(m => m.id === tx.memberId)?.fullName ?? 'N/A'}
-                    description={tx.note ?? ''}
+                    description={tx.notes ?? ''}
                     amount={tx.amount}
                     type="income"
                     fundSource={tx.fundSource}
@@ -418,7 +418,7 @@ export function ClubDashboard() {
                   <MobileTransactionCard
                     key={ex.id}
                     name={ex.description}
-                    description={ex.note ?? ''}
+                    description={ex.expenseDate ?? ''}
                     amount={ex.amount}
                     type="expense"
                     fundSource={ex.fundSource}

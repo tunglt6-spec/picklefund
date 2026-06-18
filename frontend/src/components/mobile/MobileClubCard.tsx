@@ -16,7 +16,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
   deleted:   { label: 'Đã xóa',   color: '#EF4444', bg: '#FEF2F2' },
 }
 
-export function MobileClubCard({ id, name, code, memberCount, fundPeriodCount, status }: MobileClubCardProps) {
+export function MobileClubCard({ name, code, memberCount, fundPeriodCount, status }: MobileClubCardProps) {
   const navigate = useNavigate()
   const s = STATUS_MAP[status] ?? STATUS_MAP.active
 

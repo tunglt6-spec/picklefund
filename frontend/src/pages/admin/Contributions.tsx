@@ -215,7 +215,7 @@ export function Contributions() {
             <div className="p-4 text-sm text-slate-500">Form nhập thu — xem desktop để nhập đầy đủ</div>
           </Modal>
         )}
-        <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" description="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+        <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" message="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
       </div>
     )
   }

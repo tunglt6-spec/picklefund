@@ -389,7 +389,7 @@ export function Expenses() {
 
   /* ── Mobile layout ── */
   if (isMobile) {
-    const sorted = [...clubData.expenses].sort((a, b) => (b.date ?? b.id).localeCompare(a.date ?? a.id))
+    const sorted = [...clubData.expenses].sort((a, b) => (b.expenseDate ?? b.id).localeCompare(a.expenseDate ?? a.id))
     const commonTotal = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON').reduce((s, e) => s + e.amount, 0)
     const miniTotal = clubData.expenses.filter(e => e.fundSource === 'MINI').reduce((s, e) => s + e.amount, 0)
     return (
@@ -399,7 +399,7 @@ export function Expenses() {
             <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
             <p className="text-[12px] text-slate-400">Quản lý khoản chi của CLB</p>
           </div>
-          <button onClick={() => setShowCreate(true)}
+          <button onClick={() => setShowAdd(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
             style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
             <Plus size={18} />
@@ -425,7 +425,7 @@ export function Expenses() {
             <div key={e.id} className="relative">
               <MobileTransactionCard
                 name={e.description}
-                description={e.note ?? e.date ?? ''}
+                description={e.expenseDate ?? ''}
                 amount={e.amount}
                 type="expense"
                 fundSource={e.fundSource ?? 'COMMON'}
@@ -438,7 +438,7 @@ export function Expenses() {
             </div>
           ))}
         </div>
-        <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" description="Hành động này không thể hoàn tác." onConfirm={() => confirmId && handleDelete(confirmId)} onCancel={() => setConfirmId(null)} />
+        <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" message="Hành động này không thể hoàn tác." onConfirm={() => { if (confirmId) handleDelete(confirmId) }} onCancel={() => setConfirmId(null)} />
       </div>
     )
   }
