@@ -182,7 +182,7 @@ export function MinigameForm() {
       />
 
       {/* Step indicator */}
-      <div className="bg-white border-b border-slate-100 px-6 py-3">
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-3">
         <div className="flex items-center gap-2">
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center gap-2">

@@ -206,7 +206,7 @@ export function MinigameDashboardPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <button

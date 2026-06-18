@@ -6,6 +6,7 @@ import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -22,6 +23,7 @@ export function GroupAssignment() {
   const myParts = participants.filter(p => p.minigameId === id && p.status === 'ACTIVE')
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
   const [openMove, setOpenMove] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
@@ -71,9 +73,43 @@ export function GroupAssignment() {
     toast.success('Đã chuyển thành viên và cập nhật lịch thi đấu!')
   }
 
+  const mobileHeader = isMobile ? (
+    <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+      <div className="flex items-center gap-3 mb-2">
+        <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+          <ArrowLeft size={18} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-bold text-slate-800 truncate">Chia Bảng</p>
+          <p className="text-[11px] text-slate-400">{mg.name} · {myParts.length} người</p>
+        </div>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-0.5">
+        <button onClick={handleAutoGenerate}
+          className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-[8px]">
+          <Shuffle size={12} /> Chia Tự Động
+        </button>
+        {myGroups.length > 0 && (
+          <>
+            <button onClick={handleLock}
+              className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-[8px]">
+              <Lock size={12} /> Khóa Bảng
+            </button>
+            <button onClick={handleCreateSchedule}
+              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-white px-3 py-1.5 rounded-[8px]"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              <Calendar size={12} /> Tạo Lịch
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  ) : null
+
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
-      <PageHeader
+    <div className={isMobile ? 'min-h-screen bg-[#F8FAFC]' : 'flex-1 overflow-y-auto bg-slate-50'}>
+      {isMobile ? mobileHeader : null}
+      {!isMobile && <PageHeader
         title={`Chia Bảng – ${mg.name}`}
         subtitle={`${myParts.length} người tham gia`}
         actions={
@@ -93,12 +129,10 @@ export function GroupAssignment() {
             )}
           </div>
         }
-      />
+      />}
 
-      <div className="p-6">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors">
-          <ArrowLeft size={14} /> {mg.name}
-        </button>
+      <div className={isMobile ? 'px-4 py-4' : 'p-6'}>
+        {!isMobile && <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>}
 
         {myGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
