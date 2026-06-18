@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { ClubSettings } from '../../store/clubDataStore'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
 type Tab = 'club' | 'account' | 'notifications'
@@ -364,6 +365,42 @@ export function Settings() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? 'club-1'
   const [activeTab, setActiveTab] = useState<Tab>('club')
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+          <p className="text-[15px] font-bold text-slate-800">Cài đặt</p>
+          <p className="text-[11px] text-slate-400">Quản lý thông tin CLB và tài khoản</p>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex gap-1 bg-white border-b border-slate-100 px-3 py-2">
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-2 py-2 text-[12px] font-medium transition-colors',
+                activeTab === tab.id
+                  ? 'text-white shadow-sm'
+                  : 'text-slate-500 bg-slate-50'
+              )}
+              style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 py-4 space-y-4">
+          {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
+          {activeTab === 'account'       && <AccountTab />}
+          {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
