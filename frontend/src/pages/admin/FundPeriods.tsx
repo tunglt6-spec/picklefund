@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
@@ -174,6 +175,8 @@ export function FundPeriods() {
     toast.success('Đã xóa kỳ quỹ')
   }
 
+  const isMobile = useIsMobile()
+
   const handleFinalize = async (p: FundPeriod) => {
     try {
       await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' })
@@ -183,6 +186,161 @@ export function FundPeriods() {
     setPeriods(prev => prev.map(x => x.id === p.id
       ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
     toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
+  }
+
+  if (isMobile) {
+    const chungPeriods = filtered.filter(p => (p.type ?? 'chung') === 'chung')
+    const gamePeriods = filtered.filter(p => p.type === 'game')
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
+          <span className="text-[17px] font-[800] text-slate-900">Kỳ Quỹ</span>
+          <div className="flex gap-2">
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 active:bg-indigo-50"
+              onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
+            >
+              <Plus size={14} />Quỹ chung
+            </button>
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+              onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
+            >
+              <Plus size={14} />Quỹ mini
+            </button>
+          </div>
+        </div>
+
+        <div className="px-4 pt-4 pb-6 space-y-4">
+          {/* KPI summary */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Chung</div>
+              <div className="text-[20px] font-[800] text-indigo-600">{formatVND(stats.chung.balance)}</div>
+              <div className="text-[12px] text-slate-500 mt-0.5">{stats.chung.pct}% đã thu</div>
+            </div>
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Mini</div>
+              <div className="text-[20px] font-[800] text-violet-600">{formatVND(stats.game.balance)}</div>
+              <div className="text-[12px] text-slate-500 mt-0.5">{stats.game.pct}% đã thu</div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm kỳ quỹ..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] text-slate-800 outline-none focus:border-indigo-400"
+            />
+          </div>
+
+          {/* Quỹ Chung periods */}
+          {chungPeriods.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 size={14} className="text-indigo-500" />
+                <span className="text-[13px] font-[700] text-slate-700">Quỹ Chung ({chungPeriods.length})</span>
+              </div>
+              <div className="space-y-2">
+                {chungPeriods.map(p => (
+                  <div key={p.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <div className="text-[15px] font-[700] text-slate-900">{p.name}</div>
+                        <div className="text-[12px] text-slate-400">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                      </div>
+                      <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-[13px] mb-3">
+                      <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 active:bg-indigo-50 flex items-center justify-center gap-1"
+                        onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
+                      {p.status === 'active' && (
+                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-violet-600 border border-violet-200 active:bg-violet-50 flex items-center justify-center gap-1"
+                          onClick={() => handleFinalize(p)}><Lock size={13} />Chốt</button>
+                      )}
+                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                        onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quỹ Mini periods */}
+          {gamePeriods.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy size={14} className="text-violet-500" />
+                <span className="text-[13px] font-[700] text-slate-700">Quỹ Mini ({gamePeriods.length})</span>
+              </div>
+              <div className="space-y-2">
+                {gamePeriods.map(p => (
+                  <div key={p.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <div className="text-[15px] font-[700] text-slate-900">{p.name}</div>
+                        <div className="text-[12px] text-slate-400">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                      </div>
+                      <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-[13px] mb-3">
+                      <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 active:bg-indigo-50 flex items-center justify-center gap-1"
+                        onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
+                      {p.status === 'active' && (
+                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-violet-600 border border-violet-200 active:bg-violet-50 flex items-center justify-center gap-1"
+                          onClick={() => handleFinalize(p)}><Lock size={13} />Chốt</button>
+                      )}
+                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                        onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {filtered.length === 0 && (
+            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có kỳ quỹ nào</div>
+          )}
+        </div>
+
+        {/* Modals reused from desktop */}
+        <FundModal
+          open={showCreateChung}
+          onClose={() => { setShowCreateChung(false); setEditingChung(null) }}
+          title={editingChung ? 'Sửa Kỳ Quỹ Chung' : 'Tạo Kỳ Quỹ Chung'}
+          subtitle="Quỹ Chung CLB"
+          formId="form-chung-m"
+          form={formChung}
+          setForm={setFormChung}
+          onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null) })}
+          editing={!!editingChung}
+        />
+        <FundModal
+          open={showCreateGame}
+          onClose={() => { setShowCreateGame(false); setEditingGame(null) }}
+          title={editingGame ? 'Sửa Kỳ Quỹ Mini' : 'Tạo Kỳ Quỹ Mini'}
+          subtitle="Quỹ Mini CLB"
+          formId="form-game-m"
+          form={formGame}
+          setForm={setFormGame}
+          onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null) })}
+          editing={!!editingGame}
+        />
+      </div>
+    )
   }
 
   return (
