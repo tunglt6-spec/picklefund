@@ -646,18 +646,18 @@ export function Login() {
         toast.error('Tài khoản hoặc mật khẩu không đúng')
       } else if (status === 429) {
         toast.error('Quá nhiều lần thử. Vui lòng đợi một chút.')
+      } else if (status === 503) {
+        toast.error('Server quá tải, thử lại sau vài giây.')
+      } else if (status) {
+        toast.error(`Lỗi server: ${status}. Vui lòng thử lại.`)
       } else {
-        // API offline → fallback to registered accounts (local store only)
-        const reg = registeredAccounts.find(a => a.username === username && a.password === password)
-        if (reg) {
-          const user: User = { id: `u-${reg.username}`, username: reg.username, email: reg.email, clubId: reg.clubId, role: reg.role }
-          login(user, `local-token-${reg.clubId}`, `local-refresh-${reg.clubId}`)
-          toast.success(`Chào mừng trở lại, ${reg.fullName || reg.username}!`, { duration: 5000 })
-          navigate(routeByRole[reg.role])
-          setLoading(false)
-          return
+        // Network error — no response received
+        const isNetworkErr = err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED' || !err?.response
+        if (isNetworkErr) {
+          toast.error('Không thể kết nối server. Kiểm tra mạng và thử lại.')
+        } else {
+          toast.error(`Lỗi: ${err?.message ?? 'unknown'}`)
         }
-        toast.error('Không thể kết nối server. Vui lòng thử lại.')
       }
     } finally {
       setLoading(false)
