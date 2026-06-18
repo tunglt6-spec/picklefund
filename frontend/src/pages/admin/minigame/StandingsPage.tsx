@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
 
 const RANK_CLASS: Record<number, string> = {
@@ -25,6 +26,7 @@ export function StandingsPage() {
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
 
   const [activeTab, setActiveTab] = useState<'all' | string>('all')
+  const isMobile = useIsMobile()
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
@@ -46,6 +48,102 @@ export function StandingsPage() {
     { id: 'all' as const, label: 'Tổng Quan' },
     ...myGroups.map(g => ({ id: g.id, label: g.groupName })),
   ]
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-bold text-slate-800 truncate">Bảng Xếp Hạng</p>
+            <p className="text-[11px] text-slate-400 truncate">{mg.name} · {standings.length} thành viên</p>
+          </div>
+        </div>
+
+        {/* Scrollable group tabs */}
+        <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={cn(
+                'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition-colors',
+                activeTab === t.id ? 'text-white shadow-sm' : 'text-slate-500 bg-slate-50'
+              )}
+              style={activeTab === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 py-4 space-y-3">
+          {/* Bar chart */}
+          {sorted.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <p className="text-[13px] font-semibold text-slate-800 mb-3">Điểm Xếp Hạng</p>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} barSize={22}>
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} width={28} />
+                    <Tooltip formatter={(v) => [`${v} điểm`, 'Điểm']} />
+                    <Bar dataKey="points" radius={[4, 4, 0, 0]}>
+                      {chartData.map((_, i) => <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Rank cards */}
+          {sorted.length === 0 ? (
+            <div className="flex flex-col items-center py-12 text-center">
+              <p className="text-slate-400 text-[13px]">Chưa có dữ liệu xếp hạng</p>
+            </div>
+          ) : sorted.map(s => (
+            <div key={`${s.memberId}-${s.groupId}`}
+              className={cn('bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm', RANK_CLASS[s.overallRank] ?? '')}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-[13px] font-bold',
+                  s.overallRank === 1 ? 'bg-yellow-400 text-white' :
+                  s.overallRank === 2 ? 'bg-slate-400 text-white' :
+                  s.overallRank === 3 ? 'bg-amber-500 text-white' :
+                  'bg-slate-100 text-slate-500'
+                )}>
+                  {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900 text-[14px]">{s.memberName}</p>
+                  <p className="text-[11px] text-slate-400">{s.groupName}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[20px] font-black text-indigo-700 leading-tight">{s.rankingPoints}</p>
+                  <p className="text-[10px] text-slate-400">điểm</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-5 gap-1.5">
+                {[
+                  { label: 'Trận', value: s.played, cls: 'text-slate-900' },
+                  { label: 'Thắng', value: s.won, cls: 'text-green-700' },
+                  { label: 'Hòa', value: s.drawn, cls: 'text-amber-600' },
+                  { label: 'Thua', value: s.lost, cls: 'text-red-500' },
+                  { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500' },
+                ].map(item => (
+                  <div key={item.label} className="bg-slate-50 rounded-[8px] py-1.5 text-center">
+                    <p className={cn('text-[13px] font-bold', item.cls)}>{item.value}</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">

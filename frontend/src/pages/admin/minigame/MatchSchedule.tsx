@@ -7,6 +7,7 @@ import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
 import { ScoreEntryDrawer } from '../../../components/minigame/ScoreEntryDrawer'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
 
@@ -25,6 +26,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameDoublesMatch | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<MiniGameDoublesMatch | null>(null)
+  const isMobile = useIsMobile()
 
   const filtered = myMatches.filter(m => {
     if (filter === 'all') return true
@@ -43,6 +45,135 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
     { id: 'completed', label: `Hoàn thành (${myMatches.filter(m => m.status === 'COMPLETED').length})` },
     ...myRounds.map(r => ({ id: r.id, label: `Vòng ${r.roundNumber}` })),
   ]
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${minigameId}`)} className="text-slate-500">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
+            <p className="text-[11px] text-slate-400 truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
+          </div>
+          <button
+            onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
+            className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+          >
+            Nhập KQ
+          </button>
+        </div>
+
+        {myRounds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <p className="text-slate-500 font-medium text-[14px]">Chưa có lịch thi đấu</p>
+            <p className="text-slate-400 text-[12px] mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
+            <button onClick={() => navigate(`/minigames/${minigameId}`)}
+              className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              Tới Rút Thăm
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+              {tabs.map(t => (
+                <button key={t.id} onClick={() => setFilter(t.id)}
+                  className={cn(
+                    'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
+                    filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
+                  )}
+                  style={filter === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="px-4 py-4 space-y-3">
+              {filtered.length === 0 ? (
+                <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
+              ) : filtered.map((m, idx) => {
+                const rnd = myRounds.find(r => r.id === m.roundId)
+                const team1Won = m.winningTeam === 1
+                const team2Won = m.winningTeam === 2
+                return (
+                  <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] text-slate-400">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
+                      <span className={cn('text-[11px] font-medium',
+                        m.status === 'COMPLETED' ? 'text-green-600' :
+                        m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                      )}>
+                        {m.status === 'COMPLETED' ? '✅ Hoàn thành' : m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? 'bg-green-50' : 'bg-slate-50')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? 'text-green-700' : 'text-slate-800')}>
+                          {m.team1.map(p => p.memberName.split(' ').pop()).join(' & ')}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-center">
+                        {m.status === 'COMPLETED'
+                          ? <p className="text-[16px] font-black text-slate-900 font-mono">{m.team1Score}–{m.team2Score}</p>
+                          : <p className="text-[13px] font-bold text-slate-300">vs</p>}
+                      </div>
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? 'bg-green-50' : 'bg-slate-50')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? 'text-green-700' : 'text-slate-800')}>
+                          {m.team2.map(p => p.memberName.split(' ').pop()).join(' & ')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setScoreMatch(m)}
+                        className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-indigo-600 bg-indigo-50 py-2 rounded-[10px]"
+                      >
+                        <Pencil size={12} /> {m.status === 'PENDING' ? 'Nhập KQ' : 'Sửa KQ'}
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(m)}
+                        className="px-3 py-2 text-red-500 bg-red-50 rounded-[10px]"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        <ScoreEntryDrawer open={!!scoreMatch} onClose={() => setScoreMatch(null)} match={scoreMatch} minigame={mg ?? null} />
+
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-t-[20px] p-6 w-full">
+              <p className="font-semibold text-slate-800 mb-1">Xóa trận đấu?</p>
+              <p className="text-[12px] text-slate-500 mb-3">
+                {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
+              </p>
+              {deleteTarget.status === 'COMPLETED' && (
+                <p className="text-[11px] text-amber-600 bg-amber-50 rounded-[10px] px-3 py-2 mb-3">
+                  Trận này đã có kết quả. Xóa sẽ hủy kết quả.
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-slate-600 bg-slate-100">Hủy</button>
+                <button onClick={() => { removeDoublesMatch(deleteTarget.id); setDeleteTarget(null) }}
+                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-600">Xóa</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
@@ -234,6 +365,7 @@ export function MatchSchedule() {
 
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameMatch | null>(null)
+  const isMobile = useIsMobile()
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
@@ -258,6 +390,106 @@ export function MatchSchedule() {
     { id: 'completed', label: `Hoàn thành (${myMatches.filter(m => m.status === 'COMPLETED').length})` },
     ...myGroups.map(g => ({ id: g.id, label: g.groupName })),
   ]
+
+  if (isMobile) {
+    const mTabs: Array<{ id: Filter; label: string }> = [
+      { id: 'all', label: `Tất cả (${myMatches.length})` },
+      { id: 'pending', label: `Chờ (${myMatches.filter(m => m.status === 'PENDING').length})` },
+      { id: 'completed', label: `Xong (${myMatches.filter(m => m.status === 'COMPLETED').length})` },
+      ...myGroups.map(g => ({ id: g.id, label: g.groupName })),
+    ]
+    const mFiltered = myMatches.filter(m => {
+      if (filter === 'all') return true
+      if (filter === 'pending') return m.status === 'PENDING'
+      if (filter === 'completed') return m.status === 'COMPLETED'
+      return m.groupId === filter
+    })
+    return (
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
+            <p className="text-[11px] text-slate-400 truncate">{mg.name} · {myMatches.length} trận</p>
+          </div>
+          <button
+            onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
+            className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+          >
+            Nhập KQ
+          </button>
+        </div>
+
+        <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+          {mTabs.map(t => (
+            <button key={t.id} onClick={() => setFilter(t.id)}
+              className={cn(
+                'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
+                filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
+              )}
+              style={filter === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 py-4 space-y-3">
+          {mFiltered.length === 0 ? (
+            <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
+          ) : mFiltered.map((m, idx) => {
+            const grp = myGroups.find(g => g.id === m.groupId)
+            const p1Won = m.winnerId === m.player1Id
+            const p2Won = m.winnerId === m.player2Id
+            return (
+              <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] text-slate-400">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
+                  <span className={cn('text-[11px] font-medium',
+                    m.status === 'COMPLETED' ? 'text-green-600' :
+                    m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                  )}>
+                    {m.status === 'COMPLETED' ? '✅ Xong' : m.status === 'PLAYING' ? '🔴 Đấu' : '⏳ Chờ'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? 'bg-green-50' : 'bg-slate-50')}>
+                    <p className={cn('text-[12px] font-semibold', p1Won ? 'text-green-700' : 'text-slate-800')}>{m.player1Name}</p>
+                  </div>
+                  <div className="shrink-0">
+                    {m.status === 'COMPLETED'
+                      ? <p className="text-[16px] font-black text-slate-900 font-mono">{m.player1Score}–{m.player2Score}</p>
+                      : <p className="text-[13px] font-bold text-slate-300">vs</p>}
+                  </div>
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? 'bg-green-50' : 'bg-slate-50')}>
+                    <p className={cn('text-[12px] font-semibold', p2Won ? 'text-green-700' : 'text-slate-800')}>{m.player2Name}</p>
+                  </div>
+                </div>
+
+                {m.status === 'PENDING' && (
+                  <button
+                    onClick={() => setScoreMatch(m)}
+                    className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium text-indigo-600 bg-indigo-50 py-2 rounded-[10px]"
+                  >
+                    <ClipboardEdit size={12} /> Nhập Kết Quả
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <ScoreEntryModal
+          open={!!scoreMatch} onClose={() => setScoreMatch(null)}
+          match={scoreMatch} minigame={mg}
+          groupName={scoreMatch ? myGroups.find(g => g.id === scoreMatch.groupId)?.groupName : undefined}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
