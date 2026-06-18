@@ -20,6 +20,7 @@ import { WinRateChart } from '../../../components/minigame/WinRateChart'
 import { RecentActivitiesPanel } from '../../../components/minigame/v2/RecentActivitiesPanel'
 import { useMinigameStore } from '../../../store/minigameStore'
 import type { MinigameStatus, MiniGameDoublesMatch } from '../../../types/minigame'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -61,6 +62,7 @@ export function TournamentDashboard() {
   const dashboard = getTournamentDashboard(id!)
   const [scoreMatch, setScoreMatch] = useState<MiniGameDoublesMatch | null>(null)
   const [isDrawModalOpen, setIsDrawModalOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   if (!mg || !dashboard) {
     return (
@@ -91,28 +93,57 @@ export function TournamentDashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
-      <PageHeader
-        title={mg.name}
-        subtitle={`${mg.startDate}${mg.endDate ? ' → ' + mg.endDate : ''}`}
-        actions={
-          <div className="flex items-center gap-2">
-            <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', STATUS_CLASS[mg.status])}>
-              {currentRound ? `Lượt ${currentRound.roundNumber} · ` : ''}{STATUS_LABEL[mg.status]}
-            </span>
+      {isMobile ? (
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center gap-3 mb-2">
+            <button onClick={() => navigate('/minigames')} className="text-slate-500"><ArrowLeft size={18} /></button>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-bold text-slate-800 truncate">{mg.name}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn('text-[10px] font-medium rounded-full px-1.5 py-0.5', STATUS_CLASS[mg.status])}>
+                  {currentRound ? `Lượt ${currentRound.roundNumber} · ` : ''}{STATUS_LABEL[mg.status]}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
             {noActiveRound && mg.status !== 'COMPLETED' && (
-              <Button size="sm" onClick={() => setIsDrawModalOpen(true)}>Bốc Thăm Lượt Mới</Button>
+              <button onClick={() => setIsDrawModalOpen(true)}
+                className="flex-1 text-[12px] font-semibold text-white py-2 rounded-[10px]"
+                style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+                Bốc Thăm Lượt Mới
+              </button>
             )}
             {mg.status === 'IN_PROGRESS' && (
-              <Button size="sm" variant="outline" onClick={handleComplete}>Hoàn Thành Giải</Button>
+              <button onClick={handleComplete}
+                className="flex-1 text-[12px] font-medium text-slate-700 bg-slate-100 py-2 rounded-[10px]">
+                Hoàn Thành Giải
+              </button>
             )}
           </div>
-        }
-      />
+        </div>
+      ) : (
+        <PageHeader
+          title={mg.name}
+          subtitle={`${mg.startDate}${mg.endDate ? ' → ' + mg.endDate : ''}`}
+          actions={
+            <div className="flex items-center gap-2">
+              <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', STATUS_CLASS[mg.status])}>
+                {currentRound ? `Lượt ${currentRound.roundNumber} · ` : ''}{STATUS_LABEL[mg.status]}
+              </span>
+              {noActiveRound && mg.status !== 'COMPLETED' && (
+                <Button size="sm" onClick={() => setIsDrawModalOpen(true)}>Bốc Thăm Lượt Mới</Button>
+              )}
+              {mg.status === 'IN_PROGRESS' && (
+                <Button size="sm" variant="outline" onClick={handleComplete}>Hoàn Thành Giải</Button>
+              )}
+            </div>
+          }
+        />
+      )}
 
       <div className="p-4">
-        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors">
-          <ArrowLeft size={14} /> Danh Sách
-        </button>
+        {!isMobile && <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors"><ArrowLeft size={14} /> Danh Sách</button>}
 
         {/* KPI Cards (10) */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
