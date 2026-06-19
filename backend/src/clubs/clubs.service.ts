@@ -58,6 +58,11 @@ export class ClubsService {
     return this.prisma.club.update({ where: { id }, data: { status } })
   }
 
+  async delete(id: string) {
+    await this.findOne(id)
+    return this.prisma.club.update({ where: { id }, data: { status: 'deleted' } })
+  }
+
   async stats() {
     const [total, active, suspended, totalMembers, totalPeriods] = await Promise.all([
       this.prisma.club.count({ where: { status: { not: 'deleted' } } }),
