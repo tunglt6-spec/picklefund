@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -76,9 +76,9 @@ export function Contributions() {
     try {
       await api.patch(`/contributions/${id}/confirm`)
       setContributions(prev => prev.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
-      toast.success('Cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Ã³ng quá»¹')
+      toast.success('Cập nhật trạng thái đóng quỹ')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Cáº­p nháº­t tráº¡ng thÃ¡i tháº¥t báº¡i')
+      toast.error(err?.response?.data?.message ?? 'Cập nhật trạng thái thất bại')
     }
   }
 
@@ -102,15 +102,15 @@ export function Contributions() {
           const updated = res.data?.data
           setContributions(prev => prev.map(c => c.id === editTarget.id
             ? { ...c, ...updated, amount: Number(updated.amount), member } : c))
-          toast.success(`ÄÃ£ cáº­p nháº­t khoáº£n thu cá»§a ${member.fullName}`)
+          toast.success(`Đã cập nhật khoản thu của ${member.fullName}`)
         } else {
           const res = await api.post('/contributions', payload)
           const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), member, fundSource: 'COMMON' as const }])
-          toast.success(`ÄÃ£ ghi nháº­n ${member.fullName} Ä‘Ã³ng ${formatVND(Number(form.amount))} vÃ o Quá»¹ Chung`)
+          toast.success(`Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
         }
       } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'LÆ°u khoáº£n thu tháº¥t báº¡i')
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
         return
       }
     } else {
@@ -125,15 +125,15 @@ export function Contributions() {
         if (editTarget) {
           await api.put(`/contributions/${editTarget.id}`, payload)
           setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...payload, id: c.id } : c))
-          toast.success('ÄÃ£ cáº­p nháº­t khoáº£n thu Quá»¹ Mini')
+          toast.success('Đã cập nhật khoản thu Quỹ Mini')
         } else {
           const res = await api.post('/contributions', payload)
           const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), fundSource: 'MINI' as const }])
-          toast.success(`ÄÃ£ ghi nháº­n ${formatVND(Number(form.amount))} vÃ o Quá»¹ Mini â€” ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
+          toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Mini — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
         }
       } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'LÆ°u khoáº£n thu tháº¥t báº¡i')
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
         return
       }
     }
@@ -146,23 +146,23 @@ export function Contributions() {
       await api.delete(`/contributions/${deleteId}`)
       setContributions(prev => prev.filter(x => x.id !== deleteId))
       setDeleteId(null)
-      toast.success('ÄÃ£ xÃ³a khoáº£n thu')
+      toast.success('Đã xóa khoản thu')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'XÃ³a khoáº£n thu tháº¥t báº¡i')
+      toast.error(err?.response?.data?.message ?? 'Xóa khoản thu thất bại')
     }
   }
 
   const isMobile = useIsMobile()
 
-  /* â”€â”€ Mobile layout â”€â”€ */
+  /* ── Mobile layout ── */
   if (isMobile) {
     const sorted = [...contributions].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
-            <h2 className="text-[16px] font-[700] text-slate-900">Thu Quá»¹</h2>
-            <p className="text-[12px] text-slate-400">{activePeriod?.name ?? 'ChÆ°a cÃ³ ká»³ quá»¹'}</p>
+            <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
+            <p className="text-[12px] text-slate-400">{activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <button
             onClick={openCreate}
@@ -176,11 +176,11 @@ export function Contributions() {
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quá»¹ Chung</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chung</p>
             <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
           </div>
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quá»¹ Mini</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Mini</p>
             <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>
@@ -189,7 +189,7 @@ export function Contributions() {
           {sorted.length === 0 ? (
             <div className="text-center py-14 text-slate-400 text-sm">
               <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
-              ChÆ°a cÃ³ khoáº£n thu nÃ o
+              Chưa có khoản thu nào
             </div>
           ) : sorted.map(c => {
             const memberName = members.find(m => m.id === c.memberId)?.fullName ?? c.payerName ?? 'N/A'
@@ -201,7 +201,7 @@ export function Contributions() {
                   amount={c.amount}
                   type="income"
                   fundSource={c.fundSource ?? 'COMMON'}
-                  status={c.isConfirmed ? 'ÄÃ£ xÃ¡c nháº­n' : 'Chá» xÃ¡c nháº­n'}
+                  status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                 />
                 <div className="absolute right-3 top-3 flex gap-1">
                   <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1"><Edit2 size={13} /></button>
@@ -212,15 +212,15 @@ export function Contributions() {
           })}
         </div>
 
-        {/* Create / Edit Modal â€” full form on mobile */}
+        {/* Create / Edit Modal — full form on mobile */}
         <Modal
           open={showCreate}
           onClose={() => { setShowCreate(false); setEditTarget(null) }}
-          title={editTarget ? 'Sá»­a Khoáº£n Thu' : 'Ghi Nháº­n Khoáº£n Thu'}
+          title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
           footer={
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditTarget(null) }}>Há»§y</Button>
-              <Button type="submit" form="form-contrib-mobile">{editTarget ? 'LÆ°u' : 'Ghi nháº­n'}</Button>
+              <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditTarget(null) }}>Hủy</Button>
+              <Button type="submit" form="form-contrib-mobile">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
             </div>
           }
         >
@@ -236,7 +236,7 @@ export function Contributions() {
                         : 'border-slate-200 text-slate-500'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quá»¹ Chung' : 'Quá»¹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
                   </button>
                 ))}
               </div>
@@ -244,22 +244,22 @@ export function Contributions() {
             {form.fundSource === 'COMMON' ? (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">ThÃ nh viÃªn <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                   <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
-                    <option value="">-- Chá»n thÃ nh viÃªn --</option>
+                    <option value="">-- Chọn thành viên --</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                   </select>
                 </div>
                 {activePeriod && (
                   <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
-                    Ká»³ quá»¹: <span className="font-semibold">{activePeriod.name}</span> â€” Má»©c Ä‘Ã³ng: {formatVND(activePeriod.contributionAmount)}
+                    Kỳ quỹ: <span className="font-semibold">{activePeriod.name}</span> — Mức đóng: {formatVND(activePeriod.contributionAmount)}
                   </div>
                 )}
               </>
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loáº¡i thu Quá»¹ Mini <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Mini <span className="text-red-500">*</span></label>
                   <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                     {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -267,39 +267,39 @@ export function Contributions() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÆ°á»i ná»™p</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
                   <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
-                    placeholder="TÃªn ngÆ°á»i ná»™p (náº¿u khÃ´ng pháº£i thÃ nh viÃªn)" className="input-base" />
+                    placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
                 </div>
               </>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Sá»‘ tiá»n (VNÄ) <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input required type="number" min={0} value={form.amount}
                   onChange={e => setForm({ ...form, amount: Number(e.target.value) })} className="input-base" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÃ y thu</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
                 <input type="date" value={form.paymentDate}
                   onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">HÃ¬nh thá»©c thanh toÃ¡n</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức thanh toán</label>
               <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
-                <option value="bank_transfer">Chuyá»ƒn khoáº£n</option>
-                <option value="cash">Tiá»n máº·t</option>
+                <option value="bank_transfer">Chuyển khoản</option>
+                <option value="cash">Tiền mặt</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chÃº</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
               <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                placeholder="ThÃ´ng tin thÃªm..." className="input-base" />
+                placeholder="Thông tin thêm..." className="input-base" />
             </div>
           </form>
         </Modal>
-        <ConfirmDialog open={!!deleteId} title="XÃ³a khoáº£n thu?" message="HÃ nh Ä‘á»™ng nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+        <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" message="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
       </div>
     )
   }
@@ -307,51 +307,51 @@ export function Contributions() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Thu Quá»¹"
-        subtitle={activePeriod ? `${activePeriod.name} â€” Quá»¹ Chung: ${formatVND(commonTotal)} | Quá»¹ Mini: ${formatVND(miniTotal)}` : 'ChÆ°a cÃ³ ká»³ quá»¹ nÃ o Ä‘ang má»Ÿ'}
+        title="Thu Quỹ"
+        subtitle={activePeriod ? `${activePeriod.name} — Quỹ Chung: ${formatVND(commonTotal)} | Quỹ Mini: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào đang mở'}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => {
               const pName = activePeriod?.name ?? 'Thu_Quy'
               exportContribExcel(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))
-              toast.success('ÄÃ£ xuáº¥t Excel danh sÃ¡ch thu quá»¹!')
+              toast.success('Đã xuất Excel danh sách thu quỹ!')
             }}><FileSpreadsheet size={14} />Excel</Button>
             <Button variant="outline" onClick={() => {
-              const pName = activePeriod?.name ?? 'Thu Quá»¹'
+              const pName = activePeriod?.name ?? 'Thu Quỹ'
               exportContribPDF(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)
-              toast.success('ÄÃ£ xuáº¥t PDF danh sÃ¡ch thu quá»¹!')
+              toast.success('Đã xuất PDF danh sách thu quỹ!')
             }}><FileText size={14} />PDF</Button>
             <Button onClick={openCreate}>
-              <Plus size={15} />Ghi nháº­n thu
+              <Plus size={15} />Ghi nhận thu
             </Button>
           </div>
         }
       />
 
       <div className="p-6 max-w-[1200px] mx-auto space-y-5">
-        {/* Summary cards â€” split by fund source */}
+        {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Quá»¹ Chung */}
+          {/* Quỹ Chung */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <DollarSign size={14} className="text-indigo-600" />
               </div>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Quá»¹ Chung</p>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(commonTotal)}</p>
             <div className="flex gap-4 mt-2 text-xs text-slate-500">
-              <span className="text-emerald-600">âœ“ {confirmed.length} xÃ¡c nháº­n ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
-              <span className="text-amber-600">â³ {unconfirmed.length} chá»</span>
+              <span className="text-emerald-600">✓ {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
+              <span className="text-amber-600">⏳ {unconfirmed.length} chờ</span>
             </div>
           </div>
-          {/* Quá»¹ Mini */}
+          {/* Quỹ Mini */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center">
                 <Wallet size={14} className="text-violet-600" />
               </div>
-              <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Quá»¹ Mini</p>
+              <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(miniTotal)}</p>
             <div className="flex gap-3 mt-2 flex-wrap">
@@ -360,7 +360,7 @@ export function Contributions() {
                 if (!amt) return null
                 return <span key={k} className="text-xs text-slate-500">{label}: {formatVND(amt)}</span>
               })}
-              {miniContribs.length === 0 && <span className="text-xs text-slate-400">ChÆ°a cÃ³ giao dá»‹ch</span>}
+              {miniContribs.length === 0 && <span className="text-xs text-slate-400">Chưa có giao dịch</span>}
             </div>
           </div>
         </div>
@@ -369,24 +369,24 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded bg-indigo-100 flex items-center justify-center"><DollarSign size={11} className="text-indigo-600" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quá»¹ Chung</h3>
+            <h3 className="text-sm font-semibold text-slate-700">Quỹ Chung</h3>
           </div>
           {commonContribs.length === 0 ? (
             <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">ChÆ°a cÃ³ khoáº£n thu Quá»¹ Chung nÃ o.</p>
+              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Chung nào.</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
               <table className="table-base">
                 <thead>
                   <tr>
-                    <th>ThÃ nh viÃªn</th>
-                    <th className="text-center">NgÃ y Ä‘Ã³ng</th>
-                    <th className="text-right">Sá»‘ tiá»n</th>
-                    <th className="text-center">HÃ¬nh thá»©c</th>
-                    <th className="text-center">Tráº¡ng thÃ¡i</th>
-                    <th className="text-center w-16">XÃ¡c nháº­n</th>
-                    <th className="text-center w-20">Thao tÃ¡c</th>
+                    <th>Thành viên</th>
+                    <th className="text-center">Ngày đóng</th>
+                    <th className="text-right">Số tiền</th>
+                    <th className="text-center">Hình thức</th>
+                    <th className="text-center">Trạng thái</th>
+                    <th className="text-center w-16">Xác nhận</th>
+                    <th className="text-center w-20">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -396,12 +396,12 @@ export function Contributions() {
                       <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
                       <td className="text-right font-semibold text-slate-900">{formatVND(c.amount)}</td>
                       <td className="text-center">
-                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyá»ƒn khoáº£n' : 'Tiá»n máº·t'}</Badge>
+                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
                       </td>
                       <td className="text-center">
                         {c.isConfirmed
-                          ? <Badge variant="green" dot>XÃ¡c nháº­n</Badge>
-                          : <Badge variant="yellow" dot>Chá»</Badge>}
+                          ? <Badge variant="green" dot>Xác nhận</Badge>
+                          : <Badge variant="yellow" dot>Chờ</Badge>}
                       </td>
                       <td className="text-center">
                         <button onClick={() => toggleConfirm(c.id)}
@@ -413,10 +413,10 @@ export function Contributions() {
                         <div className="flex items-center justify-center gap-1">
                           <button onClick={() => openEdit(c)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                            title="Sá»­a"><Edit2 size={13} /></button>
+                            title="Sửa"><Edit2 size={13} /></button>
                           <button onClick={() => setDeleteId(c.id)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            title="XÃ³a"><Trash2 size={13} /></button>
+                            title="Xóa"><Trash2 size={13} /></button>
                         </div>
                       </td>
                     </tr>
@@ -431,45 +431,45 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded bg-violet-100 flex items-center justify-center"><Wallet size={11} className="text-violet-600" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quá»¹ Mini</h3>
+            <h3 className="text-sm font-semibold text-slate-700">Quỹ Mini</h3>
           </div>
           {miniContribs.length === 0 ? (
             <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">ChÆ°a cÃ³ khoáº£n thu Quá»¹ Mini nÃ o.</p>
+              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Mini nào.</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
               <table className="table-base">
                 <thead>
                   <tr>
-                    <th>NgÆ°á»i ná»™p</th>
-                    <th>Loáº¡i thu</th>
-                    <th className="text-center">NgÃ y</th>
-                    <th className="text-right">Sá»‘ tiá»n</th>
-                    <th className="text-center">HÃ¬nh thá»©c</th>
-                    <th className="text-center w-20">Thao tÃ¡c</th>
+                    <th>Người nộp</th>
+                    <th>Loại thu</th>
+                    <th className="text-center">Ngày</th>
+                    <th className="text-right">Số tiền</th>
+                    <th className="text-center">Hình thức</th>
+                    <th className="text-center w-20">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {miniContribs.map(c => (
                     <tr key={c.id}>
-                      <td className="font-medium text-slate-900">{c.payerName ?? c.member?.fullName ?? 'KhÃ´ng rÃµ'}</td>
+                      <td className="font-medium text-slate-900">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
                       <td>
                         <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>
                       </td>
                       <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
                       <td className="text-right font-semibold text-violet-700">{formatVND(c.amount)}</td>
                       <td className="text-center">
-                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyá»ƒn khoáº£n' : 'Tiá»n máº·t'}</Badge>
+                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
                       </td>
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button onClick={() => openEdit(c)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors"
-                            title="Sá»­a"><Edit2 size={13} /></button>
+                            title="Sửa"><Edit2 size={13} /></button>
                           <button onClick={() => setDeleteId(c.id)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            title="XÃ³a"><Trash2 size={13} /></button>
+                            title="Xóa"><Trash2 size={13} /></button>
                         </div>
                       </td>
                     </tr>
@@ -485,12 +485,12 @@ export function Contributions() {
       <Modal
         open={showCreate}
         onClose={() => setShowCreate(false)}
-        title={editTarget ? 'Sá»­a Khoáº£n Thu' : 'Ghi Nháº­n Khoáº£n Thu'}
-        subtitle={editTarget ? 'Cáº­p nháº­t thÃ´ng tin Ä‘Ã³ng quá»¹' : 'Chá»n nguá»“n quá»¹ Ä‘á»ƒ ghi nháº­n'}
+        title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
+        subtitle={editTarget ? 'Cập nhật thông tin đóng quỹ' : 'Chọn nguồn quỹ để ghi nhận'}
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Há»§y bá»</Button>
-            <Button type="submit" form="form-contrib">{editTarget ? 'LÆ°u thay Ä‘á»•i' : 'Ghi nháº­n'}</Button>
+            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
+            <Button type="submit" form="form-contrib">{editTarget ? 'Lưu thay đổi' : 'Ghi nhận'}</Button>
           </div>
         }
       >
@@ -498,7 +498,7 @@ export function Contributions() {
           {/* Fund source selector */}
           {!editTarget && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Nguá»“n quá»¹ <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Nguồn quỹ <span className="text-red-500">*</span></label>
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button
@@ -514,7 +514,7 @@ export function Contributions() {
                     }`}
                   >
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quá»¹ Chung' : 'Quá»¹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
                   </button>
                 ))}
               </div>
@@ -524,22 +524,22 @@ export function Contributions() {
           {form.fundSource === 'COMMON' ? (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">ThÃ nh viÃªn <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                 <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
-                  <option value="">-- Chá»n thÃ nh viÃªn --</option>
+                  <option value="">-- Chọn thành viên --</option>
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
               </div>
               {activePeriod && (
                 <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
-                  Ká»³ quá»¹: <span className="font-semibold">{activePeriod.name}</span> â€” Má»©c Ä‘Ã³ng: {formatVND(activePeriod.contributionAmount)}
+                  Kỳ quỹ: <span className="font-semibold">{activePeriod.name}</span> — Mức đóng: {formatVND(activePeriod.contributionAmount)}
                 </div>
               )}
             </>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Loáº¡i thu Quá»¹ Mini <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Mini <span className="text-red-500">*</span></label>
                 <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -547,49 +547,48 @@ export function Contributions() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÆ°á»i ná»™p</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
                 <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
-                  placeholder="TÃªn ngÆ°á»i ná»™p (náº¿u khÃ´ng pháº£i thÃ nh viÃªn)" className="input-base" />
+                  placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
               </div>
             </>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Sá»‘ tiá»n (VNÄ) <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={0} value={form.amount}
                 onChange={e => setForm({ ...form, amount: Number(e.target.value) })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÃ y thu</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
               <input type="date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">HÃ¬nh thá»©c thanh toÃ¡n</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức thanh toán</label>
             <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
-              <option value="bank_transfer">Chuyá»ƒn khoáº£n</option>
-              <option value="cash">Tiá»n máº·t</option>
+              <option value="bank_transfer">Chuyển khoản</option>
+              <option value="cash">Tiền mặt</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chÃº</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
             <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-              placeholder="ThÃ´ng tin thÃªm..." className="input-base" />
+              placeholder="Thông tin thêm..." className="input-base" />
           </div>
         </form>
       </Modal>
 
       <ConfirmDialog
         open={!!deleteId}
-        title="XÃ³a khoáº£n thu?"
-        message="Khoáº£n thu nÃ y sáº½ bá»‹ xÃ³a vÄ©nh viá»…n vÃ  khÃ´ng thá»ƒ khÃ´i phá»¥c láº¡i."
-        confirmLabel="XÃ³a"
+        title="Xóa khoản thu?"
+        message="Khoản thu này sẽ bị xóa vĩnh viễn và không thể khôi phục lại."
+        confirmLabel="Xóa"
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />
     </div>
   )
 }
-

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Bell, Send, CheckCircle, Clock, Phone, MessageSquare } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
@@ -42,13 +42,13 @@ export function TreasurerReminders() {
 
   const sendReminder = (memberId: string, name: string, channel: 'zalo' | 'sms') => {
     setSentIds(prev => new Set([...prev, memberId]))
-    toast.success(`ÄÃ£ gá»­i nháº¯c nhá»Ÿ qua ${channel === 'zalo' ? 'Zalo' : 'SMS'} tá»›i ${name}`)
+    toast.success(`Đã gửi nhắc nhở qua ${channel === 'zalo' ? 'Zalo' : 'SMS'} tới ${name}`)
   }
 
   const sendAll = () => {
     const ids = unpaidMembers.map(m => m.id)
     setSentIds(prev => new Set([...prev, ...ids]))
-    toast.success(`ÄÃ£ gá»­i nháº¯c nhá»Ÿ tá»›i ${ids.length} thÃ nh viÃªn chÆ°a Ä‘Ã³ng quá»¹`)
+    toast.success(`Đã gửi nhắc nhở tới ${ids.length} thành viên chưa đóng quỹ`)
   }
 
   const amount = activePeriod?.contributionAmount ?? 1000000
@@ -59,12 +59,12 @@ export function TreasurerReminders() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Nháº¯c Nhá»Ÿ ÄÃ³ng Quá»¹</div>
-            {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} Â· {formatVND(amount)}/ngÆ°á»i</div>}
+            <div className="text-[17px] font-[800] text-slate-900">Nhắc Nhở Đóng Quỹ</div>
+            {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} · {formatVND(amount)}/người</div>}
           </div>
           {unpaidMembers.length > 0 && (
             <button onClick={sendAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
-              <Send size={13} />Nháº¯c táº¥t cáº£
+              <Send size={13} />Nhắc tất cả
             </button>
           )}
         </div>
@@ -72,9 +72,9 @@ export function TreasurerReminders() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'ChÆ°a Ä‘Ã³ng', value: `${unpaidMembers.length}`, color: 'text-red-500', Icon: Bell },
-              { label: 'Chá» xÃ¡c nháº­n', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
-              { label: 'HoÃ n thÃ nh', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
+              { label: 'Chưa đóng', value: `${unpaidMembers.length}`, color: 'text-red-500', Icon: Bell },
+              { label: 'Chờ xác nhận', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
+              { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
             ].map(k => (
               <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
                 <div className={`text-[16px] font-[800] ${k.color}`}>{k.value}</div>
@@ -88,8 +88,8 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Bell size={13} className="text-red-500" />
-                <span className="text-[13px] font-[700] text-slate-800">ChÆ°a Ä‘Ã³ng quá»¹</span>
-                <span className="ml-auto text-[12px] font-[600] text-red-500">{unpaidMembers.length} ngÆ°á»i</span>
+                <span className="text-[13px] font-[700] text-slate-800">Chưa đóng quỹ</span>
+                <span className="ml-auto text-[12px] font-[600] text-red-500">{unpaidMembers.length} người</span>
               </div>
               {unpaidMembers.map(m => {
                 const sent = sentIds.has(m.id)
@@ -98,7 +98,7 @@ export function TreasurerReminders() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-[14px] font-[700] text-slate-900">{m.fullName}</div>
-                        <div className="text-[12px] text-slate-400 mt-0.5">{m.phone ?? m.email ?? 'â€”'}</div>
+                        <div className="text-[12px] text-slate-400 mt-0.5">{m.phone ?? m.email ?? '—'}</div>
                       </div>
                       <div className="text-[14px] font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
                     </div>
@@ -115,7 +115,7 @@ export function TreasurerReminders() {
                       </div>
                     ) : (
                       <div className="mt-3 flex items-center gap-1 text-[12px] text-emerald-600 font-[600]">
-                        <CheckCircle size={13} />ÄÃ£ gá»­i nháº¯c nhá»Ÿ
+                        <CheckCircle size={13} />Đã gửi nhắc nhở
                       </div>
                     )}
                   </div>
@@ -129,8 +129,8 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Clock size={13} className="text-amber-500" />
-                <span className="text-[13px] font-[700] text-slate-800">Chá» xÃ¡c nháº­n</span>
-                <span className="ml-auto text-[12px] font-[600] text-amber-600">{pendingMembers.length} ngÆ°á»i</span>
+                <span className="text-[13px] font-[700] text-slate-800">Chờ xác nhận</span>
+                <span className="ml-auto text-[12px] font-[600] text-amber-600">{pendingMembers.length} người</span>
               </div>
               {pendingMembers.map(m => {
                 const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
@@ -150,7 +150,7 @@ export function TreasurerReminders() {
           {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
             <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-16 text-center">
               <CheckCircle size={32} className="mx-auto text-emerald-300 mb-3" />
-              <p className="text-[14px] font-[600] text-slate-600">Táº¥t cáº£ thÃ nh viÃªn Ä‘Ã£ Ä‘Ã³ng quá»¹!</p>
+              <p className="text-[14px] font-[600] text-slate-600">Tất cả thành viên đã đóng quỹ!</p>
             </div>
           )}
         </div>
@@ -161,13 +161,13 @@ export function TreasurerReminders() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Nháº¯c Nhá»Ÿ ÄÃ³ng Quá»¹"
-        subtitle={activePeriod ? `${activePeriod.name} Â· ${formatVND(amount)}/ngÆ°á»i` : 'ChÆ°a cÃ³ ká»³ quá»¹ má»Ÿ'}
+        title="Nhắc Nhở Đóng Quỹ"
+        subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
         actions={
           unpaidMembers.length > 0
             ? <button onClick={sendAll}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors">
-                <Send size={14} />Nháº¯c táº¥t cáº£ ({unpaidMembers.length})
+                <Send size={14} />Nhắc tất cả ({unpaidMembers.length})
               </button>
             : undefined
         }
@@ -181,9 +181,9 @@ export function TreasurerReminders() {
               <div className="h-7 w-7 rounded-lg bg-red-50 flex items-center justify-center">
                 <Bell size={14} className="text-red-500" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">ChÆ°a Ä‘Ã³ng</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chưa đóng</p>
             </div>
-            <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} ngÆ°á»i</p>
+            <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} người</p>
             <p className="text-xs text-slate-500 mt-0.5">{formatVND(unpaidMembers.length * amount)}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
@@ -191,22 +191,22 @@ export function TreasurerReminders() {
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock size={14} className="text-amber-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chá» xÃ¡c nháº­n</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chờ xác nhận</p>
             </div>
-            <p className="text-2xl font-bold text-amber-600">{pendingMembers.length} ngÆ°á»i</p>
-            <p className="text-xs text-slate-500 mt-0.5">ÄÃ£ ná»™p tiá»n, chÆ°a duyá»‡t</p>
+            <p className="text-2xl font-bold text-amber-600">{pendingMembers.length} người</p>
+            <p className="text-xs text-slate-500 mt-0.5">Đã nộp tiền, chưa duyệt</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle size={14} className="text-emerald-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">ÄÃ£ hoÃ n thÃ nh</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đã hoàn thành</p>
             </div>
             <p className="text-2xl font-bold text-emerald-600">
-              {data.members.filter(m => m.status === 'active').length - unpaidMembers.length - pendingMembers.length} ngÆ°á»i
+              {data.members.filter(m => m.status === 'active').length - unpaidMembers.length - pendingMembers.length} người
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">ÄÃ£ xÃ¡c nháº­n Ä‘Ã³ng quá»¹</p>
+            <p className="text-xs text-slate-500 mt-0.5">Đã xác nhận đóng quỹ</p>
           </div>
         </div>
 
@@ -215,17 +215,17 @@ export function TreasurerReminders() {
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
               <Bell size={14} className="text-red-500" />
-              <h3 className="text-sm font-semibold text-slate-800">ThÃ nh viÃªn chÆ°a Ä‘Ã³ng quá»¹</h3>
+              <h3 className="text-sm font-semibold text-slate-800">Thành viên chưa đóng quỹ</h3>
               <Badge variant="red" className="ml-auto">{unpaidMembers.length}</Badge>
             </div>
             <table className="table-base">
               <thead>
                 <tr>
-                  <th>ThÃ nh viÃªn</th>
-                  <th>LiÃªn há»‡</th>
-                  <th className="text-right">Sá»‘ tiá»n cáº§n Ä‘Ã³ng</th>
-                  <th className="text-center w-28">Tráº¡ng thÃ¡i</th>
-                  <th className="text-center w-32">Nháº¯c nhá»Ÿ</th>
+                  <th>Thành viên</th>
+                  <th>Liên hệ</th>
+                  <th className="text-right">Số tiền cần đóng</th>
+                  <th className="text-center w-28">Trạng thái</th>
+                  <th className="text-center w-32">Nhắc nhở</th>
                 </tr>
               </thead>
               <tbody>
@@ -234,12 +234,12 @@ export function TreasurerReminders() {
                   return (
                     <tr key={m.id}>
                       <td className="font-medium text-slate-900">{m.fullName}</td>
-                      <td className="text-slate-500 text-xs">{m.phone ?? m.email ?? 'â€”'}</td>
+                      <td className="text-slate-500 text-xs">{m.phone ?? m.email ?? '—'}</td>
                       <td className="text-right font-semibold text-red-500">{formatVND(amount)}</td>
                       <td className="text-center">
                         {sent
-                          ? <Badge variant="green" dot>ÄÃ£ nháº¯c</Badge>
-                          : <Badge variant="red" dot>ChÆ°a Ä‘Ã³ng</Badge>}
+                          ? <Badge variant="green" dot>Đã nhắc</Badge>
+                          : <Badge variant="red" dot>Chưa đóng</Badge>}
                       </td>
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-1">
@@ -272,15 +272,15 @@ export function TreasurerReminders() {
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
               <Clock size={14} className="text-amber-500" />
-              <h3 className="text-sm font-semibold text-slate-800">Chá» xÃ¡c nháº­n thanh toÃ¡n</h3>
+              <h3 className="text-sm font-semibold text-slate-800">Chờ xác nhận thanh toán</h3>
               <Badge variant="yellow" className="ml-auto">{pendingMembers.length}</Badge>
             </div>
             <table className="table-base">
               <thead>
                 <tr>
-                  <th>ThÃ nh viÃªn</th>
-                  <th className="text-right">Sá»‘ tiá»n</th>
-                  <th className="text-center">Ghi chÃº</th>
+                  <th>Thành viên</th>
+                  <th className="text-right">Số tiền</th>
+                  <th className="text-center">Ghi chú</th>
                 </tr>
               </thead>
               <tbody>
@@ -290,7 +290,7 @@ export function TreasurerReminders() {
                     <tr key={m.id}>
                       <td className="font-medium text-slate-900">{m.fullName}</td>
                       <td className="text-right font-semibold text-amber-600">{formatVND(contrib?.amount ?? amount)}</td>
-                      <td className="text-center text-slate-400 text-xs">{contrib?.notes || 'â€”'}</td>
+                      <td className="text-center text-slate-400 text-xs">{contrib?.notes || '—'}</td>
                     </tr>
                   )
                 })}
@@ -302,12 +302,11 @@ export function TreasurerReminders() {
         {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <CheckCircle size={36} className="mx-auto text-emerald-300 mb-3" />
-            <p className="text-sm font-semibold text-slate-600">Táº¥t cáº£ thÃ nh viÃªn Ä‘Ã£ Ä‘Ã³ng quá»¹!</p>
-            <p className="text-xs text-slate-400 mt-1">KhÃ´ng cáº§n gá»­i nháº¯c nhá»Ÿ trong ká»³ nÃ y.</p>
+            <p className="text-sm font-semibold text-slate-600">Tất cả thành viên đã đóng quỹ!</p>
+            <p className="text-xs text-slate-400 mt-1">Không cần gửi nhắc nhở trong kỳ này.</p>
           </div>
         )}
       </div>
     </div>
   )
 }
-

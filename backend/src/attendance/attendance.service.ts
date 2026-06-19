@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -106,6 +106,16 @@ export class AttendanceService {
 
   async updateAttendance(sessionId: string, clubId: string, attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[]) {
     await this.findOne(sessionId, clubId)
+
+    if (attendance.length > 0) {
+      const validMembers = await this.prisma.member.findMany({
+        where: { id: { in: attendance.map(a => a.memberId) }, clubId, isDeleted: false },
+        select: { id: true },
+      })
+      if (validMembers.length !== attendance.length) {
+        throw new BadRequestException('Một số thành viên không thuộc CLB này')
+      }
+    }
 
     await Promise.all(
       attendance.map((a) =>

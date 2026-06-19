@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, ForbiddenException } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { ClubsService } from './clubs.service'
 import { AuditLogsService } from '../audit-logs/audit-logs.service'
@@ -45,6 +45,7 @@ export class ClubsController {
 
   @Put(':id')
   async update(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
+    if (user.role !== 'SUPER_ADMIN' && user.clubId !== id) throw new ForbiddenException()
     const club = await this.clubs.update(id, body)
     this.audit.log({ userId: user.id, clubId: id, action: 'UPDATE', resource: 'Club', resourceId: id, detail: `Cập nhật CLB: ${club.name}` })
     return ok(club)
