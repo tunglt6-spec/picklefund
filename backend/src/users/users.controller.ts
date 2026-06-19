@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { UsersService } from './users.service'
+import { AuditLogsService } from '../audit-logs/audit-logs.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
 
@@ -8,7 +9,7 @@ import { ok } from '../common/response'
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
-  constructor(private service: UsersService) {}
+  constructor(private service: UsersService, private audit: AuditLogsService) {}
 
   @Get()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
@@ -19,13 +20,17 @@ export class UsersController {
 
   @Post()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
-  async create(@Body() body: any) {
-    return ok(await this.service.create(body), 'Tạo tài khoản thành công')
+  async create(@CurrentUser() user: any, @Body() body: any) {
+    const created = await this.service.create(body)
+    this.audit.log({ userId: user.id, clubId: created.clubId ?? body.clubId, action: 'CREATE', resource: 'User', resourceId: created.id, detail: `Tạo user: ${created.username ?? created.email}` })
+    return ok(created, 'Tạo tài khoản thành công')
   }
 
   @Put(':id')
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
-  async update(@Param('id') id: string, @Body() body: any) {
-    return ok(await this.service.update(id, body))
+  async update(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
+    const updated = await this.service.update(id, body)
+    this.audit.log({ userId: user.id, clubId: updated.clubId, action: 'UPDATE', resource: 'User', resourceId: id, detail: `Cập nhật user: ${updated.username ?? updated.email}` })
+    return ok(updated)
   }
 }

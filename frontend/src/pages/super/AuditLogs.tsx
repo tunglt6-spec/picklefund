@@ -60,22 +60,22 @@ export function AuditLogs() {
 
       <div className="p-6 max-w-[1100px] mx-auto space-y-5">
         {/* Filters */}
-        <div className="flex gap-3">
-          <div className="relative flex-1">
+        <div className="space-y-3">
+          <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm theo người dùng, mô tả, CLB..."
-              className="input-base pl-9"
+              className="input-base pl-9 w-full"
             />
           </div>
-          <div className="flex gap-1 bg-white rounded-lg border border-slate-200 p-1 flex-wrap">
+          <div className="flex gap-1 bg-white rounded-lg border border-slate-200 p-1 overflow-x-auto">
             {ACTION_OPTIONS.map(opt => (
               <button
                 key={opt}
                 onClick={() => setAction(opt)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
                   action === opt ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
