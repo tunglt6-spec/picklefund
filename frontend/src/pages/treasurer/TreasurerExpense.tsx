@@ -80,14 +80,9 @@ export function TreasurerExpense() {
         save([...expenses, { ...d, amount: Number(d?.amount ?? form.amount), fundSource: 'COMMON' as const, allocationEnabled: true, createdAt: new Date().toISOString(), createdBy: user?.id ?? '' }])
         toast.success(`Đã nhập khoản chi: ${form.description} — ${formatVND(Number(form.amount))}`)
       }
-    } catch {
-      if (editTarget) {
-        save(expenses.map(x => x.id === editTarget.id ? { ...x, ...payload } : x))
-        toast.success(`Đã cập nhật: ${form.description} (offline)`)
-      } else {
-        save([...expenses, { id: `exp-${Date.now()}`, clubId, fundSource: 'COMMON', fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate, createdBy: user?.id ?? '', createdAt: new Date().toISOString() }])
-        toast.success(`Đã nhập khoản chi: ${form.description} — ${formatVND(Number(form.amount))} (offline)`)
-      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu khoản chi thất bại')
+      return
     }
     setShowModal(false)
   }

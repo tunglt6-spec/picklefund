@@ -414,16 +414,15 @@ export function Expenses() {
       miniExpenseType: isMini ? form.miniExpenseType : undefined,
       receiverName: isMini && form.receiverName ? form.receiverName : undefined,
     }
-    let newE: LivingExpense
     try {
       const res = await api.post('/expenses', payload)
-      newE = { ...res.data?.data, amount: Number(res.data?.data?.amount ?? payload.amount), fundSource: form.fundSource, createdAt: new Date().toISOString(), createdBy: user?.username ?? 'Admin' }
-    } catch {
-      newE = { id: `e${Date.now()}`, clubId, ...payload, status: 'pending' as ExpenseStatus, createdBy: user?.username ?? 'Admin', createdAt: new Date().toISOString() }
+      const newE: LivingExpense = { ...res.data?.data, amount: Number(res.data?.data?.amount ?? payload.amount), fundSource: form.fundSource, createdAt: new Date().toISOString(), createdBy: user?.username ?? 'Admin' }
+      save([newE, ...clubData.expenses])
+      setShowAdd(false)
+      toast.success(isMini ? 'Đã thêm khoản chi Quỹ Mini!' : 'Đã thêm khoản chi Quỹ Chung!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Thêm khoản chi thất bại')
     }
-    save([newE, ...clubData.expenses])
-    setShowAdd(false)
-    toast.success(isMini ? 'Đã thêm khoản chi Quỹ Mini!' : 'Đã thêm khoản chi Quỹ Chung!')
   }
 
   const handleDelete = async (id: string) => {

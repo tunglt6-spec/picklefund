@@ -106,15 +106,9 @@ export function TreasurerIncome() {
           save([...contributions, { ...d, fundSource: 'MINI' as const, amount: Number(d?.amount ?? form.amount), miniIncomeType: form.miniIncomeType, payerName: form.payerName, isConfirmed: false, createdAt: new Date().toISOString(), clubId }])
           toast.success(`Ghi nhận thu Quỹ Mini: ${formatVND(Number(form.amount))}`)
         }
-      } catch {
-        if (editTarget) {
-          save(contributions.map(c => c.id === editTarget.id
-            ? { ...c, fundSource: 'MINI' as const, miniIncomeType: form.miniIncomeType, payerName: form.payerName, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes } : c))
-          toast.success('Đã cập nhật khoản thu Quỹ Mini (offline)')
-        } else {
-          save([...contributions, { id: `contrib-${Date.now()}`, clubId, fundSource: 'MINI' as const, miniIncomeType: form.miniIncomeType, payerName: form.payerName, isConfirmed: false, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes, createdAt: new Date().toISOString() }])
-          toast.success(`Ghi nhận thu Quỹ Mini ${formatVND(Number(form.amount))} (offline)`)
-        }
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        return
       }
     } else {
       const member = members.find(m => m.id === form.memberId)
@@ -132,14 +126,9 @@ export function TreasurerIncome() {
           save([...contributions, { ...d, amount: Number(d?.amount ?? form.amount), member, fundSource: 'COMMON' as const, createdAt: new Date().toISOString() }])
           toast.success(`Ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))}`)
         }
-      } catch {
-        if (editTarget) {
-          save(contributions.map(c => c.id === editTarget.id ? { ...c, member, memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes } : c))
-          toast.success(`Đã cập nhật khoản thu của ${member.fullName} (offline)`)
-        } else {
-          save([...contributions, { id: `contrib-${Date.now()}`, clubId, fundSource: 'COMMON' as const, fundPeriodId: form.fundPeriodId, isConfirmed: false, member, createdAt: new Date().toISOString(), memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }])
-          toast.success(`Ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} (offline)`)
-        }
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        return
       }
     }
     setShowModal(false)

@@ -151,25 +151,18 @@ export function Members() {
       if (editMember) {
         const res = await api.put(`/members/${editMember.id}`, form)
         const updated = res.data?.data ?? { ...editMember, ...form }
-        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated, amount: Number(updated.amount ?? m.id) } : m))
+        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated } : m))
         toast.success('Cập nhật thành viên thành công!')
       } else {
         const res = await api.post('/members', { ...form, clubId })
-        const created = res.data?.data ?? { id: `mem-${Date.now()}`, clubId, status: 'active', ...form }
+        const created = res.data?.data
         setMembers(prev => [...prev, { ...created }])
         toast.success(`Đã thêm ${form.fullName}!`)
       }
-    } catch {
-      // Fallback to local update if API fails
-      if (editMember) {
-        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...form } : m))
-        toast.success('Cập nhật thành viên thành công! (offline)')
-      } else {
-        setMembers(prev => [...prev, { id: `mem-${Date.now()}`, clubId, status: 'active', ...form }])
-        toast.success(`Đã thêm ${form.fullName}! (offline)`)
-      }
+      closeDrawer()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu thành viên thất bại')
     }
-    closeDrawer()
   }
 
   const handleDelete = async (m: Member) => {

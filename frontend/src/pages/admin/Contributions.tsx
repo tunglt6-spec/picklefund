@@ -95,23 +95,20 @@ export function Contributions() {
       try {
         if (editTarget) {
           const res = await api.put(`/contributions/${editTarget.id}`, payload)
-          const updated = res.data?.data ?? { ...editTarget, ...payload }
+          const updated = res.data?.data
           setContributions(prev => prev.map(c => c.id === editTarget.id
             ? { ...c, ...updated, amount: Number(updated.amount), member } : c))
+          toast.success(`Đã cập nhật khoản thu của ${member.fullName}`)
         } else {
           const res = await api.post('/contributions', payload)
-          const created = res.data?.data ?? { id: `contrib-${Date.now()}`, clubId, isConfirmed: false, createdAt: new Date().toISOString(), ...payload }
+          const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), member, fundSource: 'COMMON' as const }])
+          toast.success(`Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
         }
-      } catch {
-        if (editTarget) {
-          setContributions(prev => prev.map(c => c.id === editTarget.id
-            ? { ...c, member, memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes } : c))
-        } else {
-          setContributions(prev => [...prev, { id: `contrib-${Date.now()}`, clubId, fundSource: 'COMMON', fundPeriodId: activePeriod?.id, isConfirmed: false, member, createdAt: new Date().toISOString(), memberId: member.id, amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }])
-        }
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        return
       }
-      toast.success(editTarget ? `Đã cập nhật khoản thu của ${member.fullName}` : `Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
     } else {
       // MINI
       const payload = {
@@ -127,15 +124,13 @@ export function Contributions() {
           toast.success('Đã cập nhật khoản thu Quỹ Mini')
         } else {
           const res = await api.post('/contributions', payload)
-          const created = res.data?.data ?? { id: `mini-contrib-${Date.now()}`, clubId, createdAt: new Date().toISOString(), ...payload }
+          const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), fundSource: 'MINI' as const }])
           toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Mini — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
         }
-      } catch {
-        const localC: FundContribution = { id: `mini-contrib-${Date.now()}`, clubId, fundSource: 'MINI', miniIncomeType: form.miniIncomeType, payerName: form.payerName || undefined, isConfirmed: true, createdAt: new Date().toISOString(), amount: Number(form.amount), paymentDate: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
-        if (editTarget) setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...localC, id: c.id } : c))
-        else setContributions(prev => [...prev, localC])
-        toast.success(editTarget ? 'Cập nhật offline' : `Đã ghi nhận vào Quỹ Mini (offline)`)
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        return
       }
     }
     setShowCreate(false)
