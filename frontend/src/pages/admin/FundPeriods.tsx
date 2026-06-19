@@ -155,25 +155,28 @@ export function FundPeriods() {
       onClose()
       toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
     } else {
-      let newPeriod: FundPeriod
       try {
         const res = await api.post('/fund-periods', payload)
         const d = res.data?.data
-        newPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
-      } catch {
-        newPeriod = { id: `fp-${Date.now()}`, clubId, createdBy: user?.id ?? '', status: 'active', ...payload }
+        const newPeriod: FundPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
+        setPeriods(prev => [newPeriod, ...prev])
+        onClose()
+        toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Tạo kỳ quỹ thất bại')
       }
-      setPeriods(prev => [newPeriod, ...prev])
-      onClose()
-      toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
     }
   }
 
   const handleDelete = async (p: FundPeriod) => {
     if (!confirm(`Xóa kỳ quỹ "${p.name}"?`)) return
-    try { await api.delete(`/fund-periods/${p.id}`) } catch { /* local delete continues */ }
-    setPeriods(prev => prev.filter(x => x.id !== p.id))
-    toast.success('Đã xóa kỳ quỹ')
+    try {
+      await api.delete(`/fund-periods/${p.id}`)
+      setPeriods(prev => prev.filter(x => x.id !== p.id))
+      toast.success('Đã xóa kỳ quỹ')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa kỳ quỹ thất bại')
+    }
   }
 
   const isMobile = useIsMobile()
@@ -181,12 +184,13 @@ export function FundPeriods() {
   const handleFinalize = async (p: FundPeriod) => {
     try {
       await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' })
-      // Generate personal receipts snapshot for all members
       await api.post(`/personal-receipts/generate/${p.id}`)
-    } catch { /* local update still applies */ }
-    setPeriods(prev => prev.map(x => x.id === p.id
-      ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
-    toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
+      setPeriods(prev => prev.map(x => x.id === p.id
+        ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
+      toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Chốt kỳ quỹ thất bại')
+    }
   }
 
   if (isMobile) {

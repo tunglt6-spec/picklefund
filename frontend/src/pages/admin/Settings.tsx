@@ -36,10 +36,13 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
     setSaving(true)
     try {
       await api.put(`/clubs/${clubId}`, { name: form.name, address: form.address, contactPhone: form.contactPhone, contactEmail: form.contactEmail, description: form.description, maxMembers: form.maxMembers, defaultContribution: form.defaultContribution, defaultSessions: form.defaultSessions })
-    } catch { /* save to local anyway */ }
-    setClubSettings(clubId, form)
-    setSaving(false)
-    toast.success('Đã lưu thông tin CLB')
+      setClubSettings(clubId, form)
+      toast.success('Đã lưu thông tin CLB')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu thông tin CLB thất bại')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -295,11 +298,14 @@ function NotificationsTab({ clubId }: { clubId: string }) {
     setSaving(true)
     try {
       await api.put(`/clubs/${clubId}`, { notifSettings: notifs, reminderDays })
-    } catch { /* persist locally anyway */ }
-    const current = getClubData(clubId).settings ?? emptySettings
-    setClubSettings(clubId, { ...current, notifSettings: notifs, reminderDays } as any)
-    setSaving(false)
-    toast.success('Đã lưu cài đặt thông báo')
+      const current = getClubData(clubId).settings ?? emptySettings
+      setClubSettings(clubId, { ...current, notifSettings: notifs, reminderDays } as any)
+      toast.success('Đã lưu cài đặt thông báo')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu cài đặt thông báo thất bại')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

@@ -73,9 +73,13 @@ export function Contributions() {
   }
 
   const toggleConfirm = async (id: string) => {
-    setContributions(prev => prev.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
-    toast.success('Cập nhật trạng thái đóng quỹ')
-    try { await api.patch(`/contributions/${id}/confirm`) } catch { /* local update stays */ }
+    try {
+      await api.patch(`/contributions/${id}/confirm`)
+      setContributions(prev => prev.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
+      toast.success('Cập nhật trạng thái đóng quỹ')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật trạng thái thất bại')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,10 +142,14 @@ export function Contributions() {
 
   const handleDelete = async () => {
     if (!deleteId) return
-    try { await api.delete(`/contributions/${deleteId}`) } catch { /* local delete continues */ }
-    setContributions(prev => prev.filter(x => x.id !== deleteId))
-    setDeleteId(null)
-    toast.success('Đã xóa khoản thu')
+    try {
+      await api.delete(`/contributions/${deleteId}`)
+      setContributions(prev => prev.filter(x => x.id !== deleteId))
+      setDeleteId(null)
+      toast.success('Đã xóa khoản thu')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa khoản thu thất bại')
+    }
   }
 
   const isMobile = useIsMobile()

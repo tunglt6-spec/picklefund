@@ -75,9 +75,13 @@ export function TreasurerIncome() {
   }
 
   const toggleConfirm = async (id: string) => {
-    save(contributions.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
-    toast.success('Đã cập nhật trạng thái')
-    try { await api.patch(`/contributions/${id}/confirm`) } catch { /* local update stays */ }
+    try {
+      await api.patch(`/contributions/${id}/confirm`)
+      save(contributions.map(c => c.id === id ? { ...c, isConfirmed: !c.isConfirmed } : c))
+      toast.success('Đã cập nhật trạng thái')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật trạng thái thất bại')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,10 +141,14 @@ export function TreasurerIncome() {
   const handleDelete = async () => {
     if (!deleteId) return
     const c = contributions.find(x => x.id === deleteId)
-    try { await api.delete(`/contributions/${deleteId}`) } catch { /* local delete continues */ }
-    save(contributions.filter(x => x.id !== deleteId))
-    setDeleteId(null)
-    toast.success(`Đã xóa khoản thu${c?.member?.fullName ? ` của ${c.member.fullName}` : ''}`)
+    try {
+      await api.delete(`/contributions/${deleteId}`)
+      save(contributions.filter(x => x.id !== deleteId))
+      setDeleteId(null)
+      toast.success(`Đã xóa khoản thu${c?.member?.fullName ? ` của ${c.member.fullName}` : ''}`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa khoản thu thất bại')
+    }
   }
 
   if (isMobile) {

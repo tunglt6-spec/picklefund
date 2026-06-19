@@ -426,11 +426,15 @@ export function Expenses() {
   }
 
   const handleDelete = async (id: string) => {
-    try { await api.delete(`/expenses/${id}`) } catch { /* local delete continues */ }
-    save(clubData.expenses.filter(e => e.id !== id))
-    setDetailExp(null)
-    setConfirmId(null)
-    toast.success('Đã xóa khoản chi')
+    try {
+      await api.delete(`/expenses/${id}`)
+      save(clubData.expenses.filter(e => e.id !== id))
+      setDetailExp(null)
+      setConfirmId(null)
+      toast.success('Đã xóa khoản chi')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa khoản chi thất bại')
+    }
   }
 
   const handleEdit = async (form: typeof emptyForm) => {
@@ -444,17 +448,25 @@ export function Expenses() {
       miniExpenseType: form.fundSource === 'MINI' ? form.miniExpenseType : undefined,
       receiverName: form.fundSource === 'MINI' && form.receiverName ? form.receiverName : undefined,
     }
-    try { await api.put(`/expenses/${editTarget.id}`, payload) } catch { /* local update continues */ }
-    save(clubData.expenses.map(e => e.id === editTarget.id ? { ...e, ...payload } : e))
-    setEditTarget(null)
-    toast.success('Đã cập nhật khoản chi!')
+    try {
+      await api.put(`/expenses/${editTarget.id}`, payload)
+      save(clubData.expenses.map(e => e.id === editTarget.id ? { ...e, ...payload } : e))
+      setEditTarget(null)
+      toast.success('Đã cập nhật khoản chi!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật khoản chi thất bại')
+    }
   }
 
   const handleApprove = async (id: string) => {
-    try { await api.patch(`/expenses/${id}/status`, { status: 'approved' }) } catch { /* local update continues */ }
-    save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e))
-    setDetailExp(null)
-    toast.success('Đã duyệt khoản chi!')
+    try {
+      await api.patch(`/expenses/${id}/status`, { status: 'approved' })
+      save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'approved' as ExpenseStatus } : e))
+      setDetailExp(null)
+      toast.success('Đã duyệt khoản chi!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Duyệt khoản chi thất bại')
+    }
   }
 
   const isMobile = useIsMobile()

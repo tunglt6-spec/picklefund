@@ -90,10 +90,14 @@ export function TreasurerExpense() {
   const handleDelete = async () => {
     if (!deleteId) return
     const e = expenses.find(x => x.id === deleteId)
-    try { await api.delete(`/expenses/${deleteId}`) } catch { /* local delete continues */ }
-    save(expenses.filter(x => x.id !== deleteId))
-    setDeleteId(null)
-    toast.success(`Đã xóa: ${e?.description ?? ''}`)
+    try {
+      await api.delete(`/expenses/${deleteId}`)
+      save(expenses.filter(x => x.id !== deleteId))
+      setDeleteId(null)
+      toast.success(`Đã xóa: ${e?.description ?? ''}`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa khoản chi thất bại')
+    }
   }
 
   const ruleLabel = (r: AllocationRule) => RULES.find(x => x.value === r)?.label ?? r
