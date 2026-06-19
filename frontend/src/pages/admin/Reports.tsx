@@ -193,7 +193,7 @@ export function Reports() {
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = summ?.attendedSessions ?? 0
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    const courtFrac = totalAttendances > 0 ? attended / totalAttendances : 1 / (memberCount || 1)
+    const courtFrac = 1 / (memberCount || 1)
     const courtCost = Math.round(courtExpTotal * courtFrac)
     const presentShare = presentCount > 0 && attended > 0 ? Math.round(presentOnlyExpTotal / presentCount) : 0
     const livingCost = Math.round(livingExpTotal / (memberCount || 1))
