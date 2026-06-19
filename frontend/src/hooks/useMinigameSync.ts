@@ -11,15 +11,15 @@ function isLocalToken(token?: string | null) {
 export function useMinigameSync() {
   const { user, accessToken, isAuthenticated } = useAuthStore()
   const { setMinigamesFromApi } = useMinigameStore()
-  const syncedRef = useRef<string | null>(null)
+  const syncedRef = useRef(false)
 
   useEffect(() => {
     if (!isAuthenticated || !user?.clubId || !accessToken) return
     if (isLocalToken(accessToken)) return
-    if (syncedRef.current === accessToken) return
+    if (syncedRef.current) return
 
     const clubId = user.clubId
-    syncedRef.current = accessToken
+    syncedRef.current = true
 
     api.get('/minigames').then(res => {
       const raw: any[] = res.data?.data ?? []
@@ -44,5 +44,6 @@ export function useMinigameSync() {
       }))
       setMinigamesFromApi(clubId, minigames)
     }).catch(() => { /* keep local store data */ })
-  }, [isAuthenticated, user?.clubId, accessToken, setMinigamesFromApi])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user?.clubId, setMinigamesFromApi])
 }

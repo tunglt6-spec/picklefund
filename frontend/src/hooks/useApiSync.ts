@@ -16,15 +16,17 @@ function toNum(v: string | number | null | undefined): number {
 export function useApiSync() {
   const { user, accessToken, isAuthenticated } = useAuthStore()
   const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings } = useClubDataStore()
-  const syncedRef = useRef<string | null>(null)
+  // Boolean ref — persists across renders but resets on component unmount (logout/remount).
+  // Prevents silent-refresh token rotation from re-triggering a wipe-and-replace sync mid-session.
+  const syncedRef = useRef(false)
 
   useEffect(() => {
     if (!isAuthenticated || !user?.clubId || !accessToken) return
     if (isLocalToken(accessToken)) return
-    if (syncedRef.current === accessToken) return
+    if (syncedRef.current) return
 
     const clubId = user.clubId
-    syncedRef.current = accessToken
+    syncedRef.current = true
 
     const load = async () => {
       try {
@@ -177,5 +179,6 @@ export function useApiSync() {
     }
 
     load()
-  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user?.clubId, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
 }
