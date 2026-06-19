@@ -57,6 +57,11 @@ export function Notifications() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...readIds])) } catch {}
   }, [readIds, STORAGE_KEY])
 
+  const today = new Date()
+  const daysUntilEnd = activePeriod
+    ? Math.ceil((new Date(activePeriod.endDate).getTime() - today.getTime()) / 86400000)
+    : null
+
   const dynamicNotifs: Notif[] = [
     ...unpaid.slice(0, 3).map((c) => ({
       id: `pay-${c.id}`,
@@ -74,30 +79,32 @@ export function Notifications() {
       time: s.sessionDate,
       read: false,
     })),
-    {
-      id: 'sys-1',
-      type: 'system',
-      title: 'Hệ thống cập nhật',
-      body: 'PickleFund v2.1 ra mắt với giao diện mới và tính năng báo cáo nâng cao.',
-      time: '2026-06-10T08:00:00Z',
-      read: true,
-    },
-    {
-      id: 'warn-1',
-      type: 'warning',
-      title: activePeriod ? `Kỳ quỹ ${activePeriod.name} sắp kết thúc` : 'Cảnh báo kỳ quỹ',
-      body: activePeriod ? `Kỳ quỹ ${activePeriod.name} kết thúc ngày ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ trước ngày này.` : 'Không có kỳ quỹ đang mở.',
-      time: '2026-06-12T10:00:00Z',
+    ...(activePeriod && daysUntilEnd !== null && daysUntilEnd <= 14 ? [{
+      id: `warn-period-${activePeriod.id}`,
+      type: 'warning' as NotifType,
+      title: `Kỳ quỹ "${activePeriod.name}" sắp kết thúc`,
+      body: daysUntilEnd <= 0
+        ? `Kỳ quỹ đã kết thúc ngày ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ.`
+        : `Còn ${daysUntilEnd} ngày đến ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ trước ngày này.`,
+      time: activePeriod.endDate,
       read: false,
-    },
-    {
-      id: 'mem-1',
-      type: 'member',
-      title: 'Thành viên mới tham gia',
-      body: `CLB có ${data.members.filter(m => m.status === 'active').length} thành viên đang hoạt động trong kỳ này.`,
-      time: '2026-06-08T09:00:00Z',
-      read: true,
-    },
+    }] : []),
+    ...(data.members.filter(m => m.status === 'active').length === 0 ? [{
+      id: 'warn-no-members',
+      type: 'warning' as NotifType,
+      title: 'Chưa có thành viên',
+      body: 'CLB chưa có thành viên nào đang hoạt động. Hãy thêm thành viên để bắt đầu.',
+      time: today.toISOString(),
+      read: false,
+    }] : []),
+    ...(data.fundPeriods.length === 0 ? [{
+      id: 'warn-no-period',
+      type: 'warning' as NotifType,
+      title: 'Chưa có kỳ quỹ',
+      body: 'CLB chưa tạo kỳ quỹ nào. Hãy tạo kỳ quỹ để bắt đầu quản lý thu chi.',
+      time: today.toISOString(),
+      read: false,
+    }] : []),
   ]
 
   const isRead = (id: string, defaultRead: boolean) => readIds.has(id) || defaultRead
