@@ -30,9 +30,10 @@ export class MembersService {
 
   async update(id: string, clubId: string, dto: any) {
     await this.findOne(id, clubId)
+    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto
     return this.prisma.member.update({
       where: { id },
-      data: { ...dto, ...(dto.joinDate ? { joinDate: new Date(dto.joinDate) } : {}) },
+      data: { ...safeDto, ...(safeDto.joinDate ? { joinDate: new Date(safeDto.joinDate) } : {}) },
     })
   }
 

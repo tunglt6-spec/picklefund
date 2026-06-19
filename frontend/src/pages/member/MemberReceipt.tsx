@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -32,13 +32,13 @@ function n(v: string | number | null | undefined) {
 function BalanceBadge({ val }: { val: number }) {
   if (val > 0) return <span className="text-xs font-semibold text-emerald-600">+{formatVND(val)}</span>
   if (val < 0) return <span className="text-xs font-semibold text-red-500">{formatVND(val)}</span>
-  return <span className="text-xs font-semibold text-slate-500">0 ₫</span>
+  return <span className="text-xs font-semibold text-slate-500">0 â‚«</span>
 }
 
 export function MemberReceipt() {
   const isMobile = useIsMobile()
   const { user, accessToken } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const memberId = user?.memberId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
@@ -103,7 +103,7 @@ export function MemberReceipt() {
   const netBalance = totalPaid - totalCost
 
   const handleExport = () => {
-    toast.success('Tính năng xuất PDF sẽ sớm ra mắt')
+    toast.success('TÃ­nh nÄƒng xuáº¥t PDF sáº½ sá»›m ra máº¯t')
   }
 
   if (isMobile && loading) return (
@@ -117,20 +117,20 @@ export function MemberReceipt() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Phiếu Thu Cá Nhân</div>
+            <div className="text-[17px] font-[800] text-slate-900">Phiáº¿u Thu CÃ¡ NhÃ¢n</div>
             {myMember && <div className="text-[12px] text-slate-400">{myMember.fullName}</div>}
           </div>
           <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
-            <Download size={13} />Xuất PDF
+            <Download size={13} />Xuáº¥t PDF
           </button>
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Đã đóng', value: formatVND(totalPaid), color: 'text-indigo-600' },
-              { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
-              { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
+              { label: 'ÄÃ£ Ä‘Ã³ng', value: formatVND(totalPaid), color: 'text-indigo-600' },
+              { label: 'Chi phÃ­', value: formatVND(totalCost), color: 'text-amber-600' },
+              { label: 'Sá»‘ dÆ°', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
                 <div className={`text-[13px] font-[800] ${k.color}`}>{k.value}</div>
@@ -140,7 +140,7 @@ export function MemberReceipt() {
           </div>
           {/* Receipt cards */}
           {displayReceipts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có phiếu thu nào</div>
+            <div className="text-center py-12 text-slate-400 text-[14px]">ChÆ°a cÃ³ phiáº¿u thu nÃ o</div>
           ) : (
             <div className="space-y-2">
               {displayReceipts.map(r => {
@@ -155,11 +155,11 @@ export function MemberReceipt() {
                     <button onClick={() => setExpanded(isExp ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 active:bg-slate-50">
                       <div className="text-left">
-                        <div className="text-[14px] font-[700] text-slate-900">Kỳ {period?.name ?? r.fundPeriodId}</div>
-                        <div className="text-[11px] text-slate-400">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                        <div className="text-[14px] font-[700] text-slate-900">Ká»³ {period?.name ?? r.fundPeriodId}</div>
+                        <div className="text-[11px] text-slate-400">{r.attendedSessions}/{r.totalSessions} buá»•i</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {needToPay > 0 && <Badge variant="orange">Nợ {formatVND(needToPay)}</Badge>}
+                        {needToPay > 0 && <Badge variant="orange">Ná»£ {formatVND(needToPay)}</Badge>}
                         <span className={`text-[14px] font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {bal >= 0 ? '+' : ''}{formatVND(bal)}
                         </span>
@@ -169,10 +169,10 @@ export function MemberReceipt() {
                     {isExp && (
                       <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5">
                         {[
-                          ['Tiền sân', n(r.courtCost)],
-                          ['Chi phí SH', n(r.livingCost)],
-                          ['Tổng chi phí', totalCostR],
-                          ['Đã đóng', amountPaid],
+                          ['Tiá»n sÃ¢n', n(r.courtCost)],
+                          ['Chi phÃ­ SH', n(r.livingCost)],
+                          ['Tá»•ng chi phÃ­', totalCostR],
+                          ['ÄÃ£ Ä‘Ã³ng', amountPaid],
                         ].map(([lbl, val]) => (
                           <div key={lbl as string} className="flex justify-between text-[12px]">
                             <span className="text-slate-500">{lbl}</span>
@@ -182,16 +182,16 @@ export function MemberReceipt() {
                         {needToPay > 0 && (
                           <div className="flex items-center gap-2 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 text-[12px] mt-2">
                             <AlertCircle size={12} className="shrink-0" />
-                            <span>Còn thiếu <strong>{formatVND(needToPay)}</strong></span>
+                            <span>CÃ²n thiáº¿u <strong>{formatVND(needToPay)}</strong></span>
                           </div>
                         )}
                         {bal > 0 && (
                           <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2 text-[12px] mt-2">
                             <Receipt size={12} className="shrink-0" />
-                            <span>Đóng dư <strong>{formatVND(bal)}</strong> — khấu trừ kỳ sau</span>
+                            <span>ÄÃ³ng dÆ° <strong>{formatVND(bal)}</strong> â€” kháº¥u trá»« ká»³ sau</span>
                           </div>
                         )}
-                        <p className="text-[11px] text-slate-400 text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
+                        <p className="text-[11px] text-slate-400 text-right pt-1">Cáº­p nháº­t: {formatDate(r.snapshotAt)}</p>
                       </div>
                     )}
                   </div>
@@ -213,11 +213,11 @@ export function MemberReceipt() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Phiếu Thu Cá Nhân"
-        subtitle={myMember?.fullName ?? user?.username ?? 'Thành viên'}
+        title="Phiáº¿u Thu CÃ¡ NhÃ¢n"
+        subtitle={myMember?.fullName ?? user?.username ?? 'ThÃ nh viÃªn'}
         actions={
           <Button variant="secondary" onClick={handleExport}>
-            <Download size={14} />Xuất PDF
+            <Download size={14} />Xuáº¥t PDF
           </Button>
         }
       />
@@ -231,7 +231,7 @@ export function MemberReceipt() {
               <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <DollarSign size={14} className="text-indigo-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tổng đã đóng</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tá»•ng Ä‘Ã£ Ä‘Ã³ng</p>
             </div>
             <p className="text-xl font-bold text-indigo-600">{formatVND(totalPaid)}</p>
           </div>
@@ -240,7 +240,7 @@ export function MemberReceipt() {
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <TrendingUp size={14} className="text-amber-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chi phí phân bổ</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chi phÃ­ phÃ¢n bá»•</p>
             </div>
             <p className="text-xl font-bold text-amber-600">{formatVND(totalCost)}</p>
           </div>
@@ -249,7 +249,7 @@ export function MemberReceipt() {
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <Receipt size={14} className="text-emerald-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Số dư</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sá»‘ dÆ°</p>
             </div>
             <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
               {netBalance >= 0 ? '+' : ''}{formatVND(netBalance)}
@@ -261,8 +261,8 @@ export function MemberReceipt() {
         {displayReceipts.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-500 font-medium">Chưa có phiếu thu nào</p>
-            <p className="text-xs text-slate-400 mt-1">Phiếu thu sẽ được tạo sau khi kỳ quỹ kết thúc</p>
+            <p className="text-sm text-slate-500 font-medium">ChÆ°a cÃ³ phiáº¿u thu nÃ o</p>
+            <p className="text-xs text-slate-400 mt-1">Phiáº¿u thu sáº½ Ä‘Æ°á»£c táº¡o sau khi ká»³ quá»¹ káº¿t thÃºc</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -287,24 +287,24 @@ export function MemberReceipt() {
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-semibold text-slate-900">
-                          Kỳ {period?.name ?? r.fundPeriodId}
+                          Ká»³ {period?.name ?? r.fundPeriodId}
                         </p>
                         <p className="text-xs text-slate-400">
-                          {period ? `${formatDate(period.startDate)} – ${formatDate(period.endDate)}` : 'N/A'}
+                          {period ? `${formatDate(period.startDate)} â€“ ${formatDate(period.endDate)}` : 'N/A'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-xs text-slate-400">Số buổi tham gia</p>
+                        <p className="text-xs text-slate-400">Sá»‘ buá»•i tham gia</p>
                         <p className="text-sm font-semibold text-slate-700">{r.attendedSessions}/{r.totalSessions}</p>
                       </div>
                       <div className="text-right min-w-[90px]">
-                        <p className="text-xs text-slate-400">Số dư</p>
+                        <p className="text-xs text-slate-400">Sá»‘ dÆ°</p>
                         <BalanceBadge val={bal} />
                       </div>
                       {needToPay > 0 && (
-                        <Badge variant="orange">Còn nợ {formatVND(needToPay)}</Badge>
+                        <Badge variant="orange">CÃ²n ná»£ {formatVND(needToPay)}</Badge>
                       )}
                       {isExpanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                     </div>
@@ -315,19 +315,19 @@ export function MemberReceipt() {
                     <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50/50">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                         <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500">Tiền sân (phân bổ)</span>
+                          <span className="text-slate-500">Tiá»n sÃ¢n (phÃ¢n bá»•)</span>
                           <span className="font-medium text-slate-700">{formatVND(n(r.courtCost))}</span>
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500">Chi phí sinh hoạt</span>
+                          <span className="text-slate-500">Chi phÃ­ sinh hoáº¡t</span>
                           <span className="font-medium text-slate-700">{formatVND(n(r.livingCost))}</span>
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500 font-semibold">Tổng chi phí</span>
+                          <span className="text-slate-500 font-semibold">Tá»•ng chi phÃ­</span>
                           <span className="font-bold text-slate-900">{formatVND(totalCostR)}</span>
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500 font-semibold">Đã đóng</span>
+                          <span className="text-slate-500 font-semibold">ÄÃ£ Ä‘Ã³ng</span>
                           <span className="font-bold text-indigo-600">{formatVND(amountPaid)}</span>
                         </div>
                       </div>
@@ -335,18 +335,18 @@ export function MemberReceipt() {
                       {needToPay > 0 && (
                         <div className="flex items-center gap-2 bg-amber-50 text-amber-700 rounded-lg px-3 py-2.5 text-xs">
                           <AlertCircle size={14} className="shrink-0" />
-                          <span>Còn thiếu <strong>{formatVND(needToPay)}</strong>. Vui lòng liên hệ thủ quỹ để thanh toán.</span>
+                          <span>CÃ²n thiáº¿u <strong>{formatVND(needToPay)}</strong>. Vui lÃ²ng liÃªn há»‡ thá»§ quá»¹ Ä‘á»ƒ thanh toÃ¡n.</span>
                         </div>
                       )}
                       {bal > 0 && (
                         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2.5 text-xs">
                           <Receipt size={14} className="shrink-0" />
-                          <span>Bạn đóng dư <strong>{formatVND(bal)}</strong> — sẽ được khấu trừ vào kỳ sau.</span>
+                          <span>Báº¡n Ä‘Ã³ng dÆ° <strong>{formatVND(bal)}</strong> â€” sáº½ Ä‘Æ°á»£c kháº¥u trá»« vÃ o ká»³ sau.</span>
                         </div>
                       )}
 
                       <p className="text-[11px] text-slate-400 text-right">
-                        Cập nhật lần cuối: {formatDate(r.snapshotAt)}
+                        Cáº­p nháº­t láº§n cuá»‘i: {formatDate(r.snapshotAt)}
                       </p>
                     </div>
                   )}
@@ -359,3 +359,4 @@ export function MemberReceipt() {
     </div>
   )
 }
+

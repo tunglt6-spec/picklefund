@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Edit2, Trash2, Trophy } from 'lucide-react'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
@@ -11,13 +11,13 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
 const STATUS_LABEL: Record<MinigameStatus, string> = {
-  DRAFT: 'Nháp',
-  GROUPED: 'Đã Chia Bảng',
-  PAIRED: 'Đã Ghép Cặp',
-  SCHEDULED: 'Có Lịch',
-  IN_PROGRESS: 'Đang Diễn Ra',
-  COMPLETED: 'Hoàn Thành',
-  CANCELLED: 'Đã Hủy',
+  DRAFT: 'NhÃ¡p',
+  GROUPED: 'ÄÃ£ Chia Báº£ng',
+  PAIRED: 'ÄÃ£ GhÃ©p Cáº·p',
+  SCHEDULED: 'CÃ³ Lá»‹ch',
+  IN_PROGRESS: 'Äang Diá»…n Ra',
+  COMPLETED: 'HoÃ n ThÃ nh',
+  CANCELLED: 'ÄÃ£ Há»§y',
 }
 
 const STATUS_CLASS: Record<MinigameStatus, string> = {
@@ -33,7 +33,7 @@ const STATUS_CLASS: Record<MinigameStatus, string> = {
 export function MinigameList() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const { getMinigames, deleteMinigame, participants, groups, matches } = useMinigameStore()
   const minigames = getMinigames(clubId)
   const isMobile = useIsMobile()
@@ -42,9 +42,9 @@ export function MinigameList() {
     try {
       await api.post(`/minigames/${id}/cancel`)
       deleteMinigame(id)
-      toast.success('Đã xóa minigame')
+      toast.success('ÄÃ£ xÃ³a minigame')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Xóa minigame thất bại')
+      toast.error(err?.response?.data?.message ?? 'XÃ³a minigame tháº¥t báº¡i')
     }
   }
 
@@ -54,14 +54,14 @@ export function MinigameList() {
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-[15px] font-bold text-slate-800">Minigame</p>
-            <p className="text-[11px] text-slate-400">Giải đấu nội bộ CLB</p>
+            <p className="text-[11px] text-slate-400">Giáº£i Ä‘áº¥u ná»™i bá»™ CLB</p>
           </div>
           <button
             onClick={() => navigate('/minigames/new')}
             className="flex items-center gap-1.5 text-[13px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
             style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
           >
-            <Plus size={14} /> Tạo mới
+            <Plus size={14} /> Táº¡o má»›i
           </button>
         </div>
 
@@ -69,14 +69,14 @@ export function MinigameList() {
           {minigames.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Trophy size={40} className="text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium text-[14px]">Chưa có giải đấu nào</p>
-              <p className="text-slate-400 text-[12px] mt-1 mb-4">Tạo giải đấu đầu tiên</p>
+              <p className="text-slate-500 font-medium text-[14px]">ChÆ°a cÃ³ giáº£i Ä‘áº¥u nÃ o</p>
+              <p className="text-slate-400 text-[12px] mt-1 mb-4">Táº¡o giáº£i Ä‘áº¥u Ä‘áº§u tiÃªn</p>
               <button
                 onClick={() => navigate('/minigames/new')}
                 className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
                 style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
               >
-                Tạo Minigame
+                Táº¡o Minigame
               </button>
             </div>
           ) : minigames.map(mg => {
@@ -104,18 +104,18 @@ export function MinigameList() {
                     : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? 'bg-orange-100 text-orange-700'
                     : 'bg-cyan-100 text-cyan-700'
                   )}>
-                    {mg.formatType === 'RANDOM_DOUBLES' ? '🏓 Đánh Đôi'
-                    : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? '🤝 Đôi Cố Định'
-                    : '👥 Vòng Bảng'}
+                    {mg.formatType === 'RANDOM_DOUBLES' ? 'ðŸ“ ÄÃ¡nh ÄÃ´i'
+                    : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? 'ðŸ¤ ÄÃ´i Cá»‘ Äá»‹nh'
+                    : 'ðŸ‘¥ VÃ²ng Báº£ng'}
                   </span>
-                  <span className="text-[11px] text-slate-400">{mg.startDate}{mg.endDate ? ` → ${mg.endDate}` : ''}</span>
+                  <span className="text-[11px] text-slate-400">{mg.startDate}{mg.endDate ? ` â†’ ${mg.endDate}` : ''}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {[
-                    { label: 'Người', value: parts.length },
-                    { label: 'Bảng', value: grps.length },
-                    { label: 'Trận', value: mts.length },
+                    { label: 'NgÆ°á»i', value: parts.length },
+                    { label: 'Báº£ng', value: grps.length },
+                    { label: 'Tráº­n', value: mts.length },
                   ].map(item => (
                     <div key={item.label} className="bg-slate-50 rounded-[10px] py-2 text-center">
                       <p className="text-[15px] font-bold text-slate-900">{item.value}</p>
@@ -127,7 +127,7 @@ export function MinigameList() {
                 {mts.length > 0 && (
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] text-slate-400">Hoàn thành</span>
+                      <span className="text-[11px] text-slate-400">HoÃ n thÃ nh</span>
                       <span className="text-[11px] font-semibold text-slate-700">{pct}%</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -147,7 +147,7 @@ export function MinigameList() {
                     onClick={() => navigate(`/minigames/${mg.id}/edit`)}
                     className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-slate-600 bg-slate-50 py-2 rounded-[10px]"
                   >
-                    <Edit2 size={13} /> Sửa
+                    <Edit2 size={13} /> Sá»­a
                   </button>
                   <button
                     onClick={() => handleDelete(mg.id)}
@@ -167,11 +167,11 @@ export function MinigameList() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="🏆 Minigame / Giải Đấu Nội Bộ"
-        subtitle="Quản lý các giải đấu nội bộ của câu lạc bộ"
+        title="ðŸ† Minigame / Giáº£i Äáº¥u Ná»™i Bá»™"
+        subtitle="Quáº£n lÃ½ cÃ¡c giáº£i Ä‘áº¥u ná»™i bá»™ cá»§a cÃ¢u láº¡c bá»™"
         actions={
           <Button onClick={() => navigate('/minigames/new')}>
-            <Plus size={16} /> Tạo Minigame
+            <Plus size={16} /> Táº¡o Minigame
           </Button>
         }
       />
@@ -180,10 +180,10 @@ export function MinigameList() {
         {minigames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Trophy size={48} className="text-slate-300 mb-4" />
-            <p className="text-slate-500 font-medium">Chưa có giải đấu nào</p>
-            <p className="text-slate-400 text-sm mt-1 mb-4">Tạo giải đấu đầu tiên cho câu lạc bộ</p>
+            <p className="text-slate-500 font-medium">ChÆ°a cÃ³ giáº£i Ä‘áº¥u nÃ o</p>
+            <p className="text-slate-400 text-sm mt-1 mb-4">Táº¡o giáº£i Ä‘áº¥u Ä‘áº§u tiÃªn cho cÃ¢u láº¡c bá»™</p>
             <Button onClick={() => navigate('/minigames/new')}>
-              <Plus size={16} /> Tạo Minigame
+              <Plus size={16} /> Táº¡o Minigame
             </Button>
           </div>
         ) : (
@@ -191,12 +191,12 @@ export function MinigameList() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Tên</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Thời gian</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Người / Bảng / Trận</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Hoàn thành</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Trạng thái</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Hành động</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">TÃªn</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Thá»i gian</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">NgÆ°á»i / Báº£ng / Tráº­n</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">HoÃ n thÃ nh</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Tráº¡ng thÃ¡i</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">HÃ nh Ä‘á»™ng</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -217,15 +217,15 @@ export function MinigameList() {
                             : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? 'bg-orange-100 text-orange-700'
                             : 'bg-cyan-100 text-cyan-700'
                           )}>
-                            {mg.formatType === 'RANDOM_DOUBLES' ? '🏓 Đánh Đôi'
-                            : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? '🤝 Đôi Cố Định'
-                            : '👥 Vòng Bảng'}
+                            {mg.formatType === 'RANDOM_DOUBLES' ? 'ðŸ“ ÄÃ¡nh ÄÃ´i'
+                            : mg.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? 'ðŸ¤ ÄÃ´i Cá»‘ Äá»‹nh'
+                            : 'ðŸ‘¥ VÃ²ng Báº£ng'}
                           </span>
                         </div>
                         {mg.description && <p className="text-xs text-slate-400 mt-0.5">{mg.description}</p>}
                       </td>
                       <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
-                        {mg.startDate}{mg.endDate ? ` → ${mg.endDate}` : ''}
+                        {mg.startDate}{mg.endDate ? ` â†’ ${mg.endDate}` : ''}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="font-medium text-slate-900">{parts.length}</span>
@@ -242,7 +242,7 @@ export function MinigameList() {
                               <div className="h-full bg-green-500 rounded-full" style={{ width: `${pct}%` }} />
                             </div>
                           </div>
-                        ) : <span className="text-slate-400">–</span>}
+                        ) : <span className="text-slate-400">â€“</span>}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', STATUS_CLASS[mg.status])}>
@@ -255,7 +255,7 @@ export function MinigameList() {
                             <Eye size={14} /> Xem
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => navigate(`/minigames/${mg.id}/edit`)}>
-                            <Edit2 size={14} /> Sửa
+                            <Edit2 size={14} /> Sá»­a
                           </Button>
                           <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(mg.id)}>
                             <Trash2 size={14} />
@@ -273,3 +273,4 @@ export function MinigameList() {
     </div>
   )
 }
+

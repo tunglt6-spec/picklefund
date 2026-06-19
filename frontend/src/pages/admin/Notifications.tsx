@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, DollarSign, Calendar, Users, AlertTriangle, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -36,7 +36,7 @@ const BG: Record<NotifType, string> = {
 export function Notifications() {
   const isMobile = useIsMobile()
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
 
@@ -66,42 +66,42 @@ export function Notifications() {
     ...unpaid.slice(0, 3).map((c) => ({
       id: `pay-${c.id}`,
       type: 'payment' as NotifType,
-      title: 'Khoản thu chờ xác nhận',
-      body: `${c.member?.fullName ?? 'Thành viên'} đã đóng quỹ nhưng chưa được xác nhận.`,
+      title: 'Khoáº£n thu chá» xÃ¡c nháº­n',
+      body: `${c.member?.fullName ?? 'ThÃ nh viÃªn'} Ä‘Ã£ Ä‘Ã³ng quá»¹ nhÆ°ng chÆ°a Ä‘Æ°á»£c xÃ¡c nháº­n.`,
       time: c.createdAt,
       read: false,
     })),
     ...upcoming.slice(0, 2).map((s) => ({
       id: `sess-${s.id}`,
       type: 'session' as NotifType,
-      title: 'Buổi tập sắp diễn ra',
-      body: `Buổi tập ngày ${formatDate(s.sessionDate)} tại ${s.courtName ?? 'sân'} – nhớ điểm danh.`,
+      title: 'Buá»•i táº­p sáº¯p diá»…n ra',
+      body: `Buá»•i táº­p ngÃ y ${formatDate(s.sessionDate)} táº¡i ${s.courtName ?? 'sÃ¢n'} â€“ nhá»› Ä‘iá»ƒm danh.`,
       time: s.sessionDate,
       read: false,
     })),
     ...(activePeriod && daysUntilEnd !== null && daysUntilEnd <= 14 ? [{
       id: `warn-period-${activePeriod.id}`,
       type: 'warning' as NotifType,
-      title: `Kỳ quỹ "${activePeriod.name}" sắp kết thúc`,
+      title: `Ká»³ quá»¹ "${activePeriod.name}" sáº¯p káº¿t thÃºc`,
       body: daysUntilEnd <= 0
-        ? `Kỳ quỹ đã kết thúc ngày ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ.`
-        : `Còn ${daysUntilEnd} ngày đến ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ trước ngày này.`,
+        ? `Ká»³ quá»¹ Ä‘Ã£ káº¿t thÃºc ngÃ y ${formatDate(activePeriod.endDate)}. Vui lÃ²ng chá»‘t sá»•.`
+        : `CÃ²n ${daysUntilEnd} ngÃ y Ä‘áº¿n ${formatDate(activePeriod.endDate)}. Vui lÃ²ng chá»‘t sá»• trÆ°á»›c ngÃ y nÃ y.`,
       time: activePeriod.endDate,
       read: false,
     }] : []),
     ...(data.members.filter(m => m.status === 'active').length === 0 ? [{
       id: 'warn-no-members',
       type: 'warning' as NotifType,
-      title: 'Chưa có thành viên',
-      body: 'CLB chưa có thành viên nào đang hoạt động. Hãy thêm thành viên để bắt đầu.',
+      title: 'ChÆ°a cÃ³ thÃ nh viÃªn',
+      body: 'CLB chÆ°a cÃ³ thÃ nh viÃªn nÃ o Ä‘ang hoáº¡t Ä‘á»™ng. HÃ£y thÃªm thÃ nh viÃªn Ä‘á»ƒ báº¯t Ä‘áº§u.',
       time: today.toISOString(),
       read: false,
     }] : []),
     ...(data.fundPeriods.length === 0 ? [{
       id: 'warn-no-period',
       type: 'warning' as NotifType,
-      title: 'Chưa có kỳ quỹ',
-      body: 'CLB chưa tạo kỳ quỹ nào. Hãy tạo kỳ quỹ để bắt đầu quản lý thu chi.',
+      title: 'ChÆ°a cÃ³ ká»³ quá»¹',
+      body: 'CLB chÆ°a táº¡o ká»³ quá»¹ nÃ o. HÃ£y táº¡o ká»³ quá»¹ Ä‘á»ƒ báº¯t Ä‘áº§u quáº£n lÃ½ thu chi.',
       time: today.toISOString(),
       read: false,
     }] : []),
@@ -112,7 +112,7 @@ export function Notifications() {
 
   const markAll = () => {
     setReadIds(new Set(dynamicNotifs.map(n => n.id)))
-    toast.success('Đã đánh dấu tất cả là đã đọc')
+    toast.success('ÄÃ£ Ä‘Ã¡nh dáº¥u táº¥t cáº£ lÃ  Ä‘Ã£ Ä‘á»c')
   }
 
   const markOne = (id: string) => setReadIds(prev => new Set([...prev, id]))
@@ -122,18 +122,18 @@ export function Notifications() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Thông báo</div>
-            {unreadCount > 0 && <div className="text-[12px] text-slate-400">{unreadCount} chưa đọc</div>}
+            <div className="text-[17px] font-[800] text-slate-900">ThÃ´ng bÃ¡o</div>
+            {unreadCount > 0 && <div className="text-[12px] text-slate-400">{unreadCount} chÆ°a Ä‘á»c</div>}
           </div>
           {unreadCount > 0 && (
             <button onClick={markAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
-              <Check size={13} />Đánh dấu đã đọc
+              <Check size={13} />ÄÃ¡nh dáº¥u Ä‘Ã£ Ä‘á»c
             </button>
           )}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-2">
           {dynamicNotifs.length === 0 && (
-            <div className="text-center py-12 text-slate-400 text-[14px]">Không có thông báo nào</div>
+            <div className="text-center py-12 text-slate-400 text-[14px]">KhÃ´ng cÃ³ thÃ´ng bÃ¡o nÃ o</div>
           )}
           {dynamicNotifs.map(n => {
             const read = isRead(n.id, n.read)
@@ -164,12 +164,12 @@ export function Notifications() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Thông báo"
-        subtitle={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Tất cả đã đọc'}
+        title="ThÃ´ng bÃ¡o"
+        subtitle={unreadCount > 0 ? `${unreadCount} thÃ´ng bÃ¡o chÆ°a Ä‘á»c` : 'Táº¥t cáº£ Ä‘Ã£ Ä‘á»c'}
         actions={
           unreadCount > 0
             ? <button onClick={markAll} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
-                <Check size={14} />Đánh dấu tất cả đã đọc
+                <Check size={14} />ÄÃ¡nh dáº¥u táº¥t cáº£ Ä‘Ã£ Ä‘á»c
               </button>
             : undefined
         }
@@ -206,10 +206,11 @@ export function Notifications() {
         {dynamicNotifs.length === 0 && (
           <div className="py-16 text-center">
             <Bell size={36} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Không có thông báo nào</p>
+            <p className="text-sm text-slate-400">KhÃ´ng cÃ³ thÃ´ng bÃ¡o nÃ o</p>
           </div>
         )}
       </div>
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { DollarSign, Calendar, Info, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -22,7 +22,7 @@ const BG: Record<NotifType, string> = {
 export function MemberNotifications() {
   const isMobile = useIsMobile()
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const memberId = user?.memberId ?? 'mem-1'
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
@@ -46,36 +46,36 @@ export function MemberNotifications() {
       ? {
           id: 'pay-confirm',
           type: 'payment' as NotifType,
-          title: myContrib.isConfirmed ? 'Đóng quỹ đã được xác nhận' : 'Đóng quỹ đang chờ xác nhận',
+          title: myContrib.isConfirmed ? 'ÄÃ³ng quá»¹ Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n' : 'ÄÃ³ng quá»¹ Ä‘ang chá» xÃ¡c nháº­n',
           body: myContrib.isConfirmed
-            ? `Khoản đóng ${formatVND(myContrib.amount)} của bạn đã được thủ quỹ xác nhận.`
-            : `Khoản đóng ${formatVND(myContrib.amount)} đang chờ thủ quỹ xác nhận. Vui lòng kiên nhẫn.`,
+            ? `Khoáº£n Ä‘Ã³ng ${formatVND(myContrib.amount)} cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c thá»§ quá»¹ xÃ¡c nháº­n.`
+            : `Khoáº£n Ä‘Ã³ng ${formatVND(myContrib.amount)} Ä‘ang chá» thá»§ quá»¹ xÃ¡c nháº­n. Vui lÃ²ng kiÃªn nháº«n.`,
           time: myContrib.paymentDate,
           read: myContrib.isConfirmed,
         }
       : {
           id: 'pay-due',
           type: 'payment' as NotifType,
-          title: 'Nhắc đóng quỹ',
+          title: 'Nháº¯c Ä‘Ã³ng quá»¹',
           body: activePeriod
-            ? `Bạn chưa đóng quỹ kỳ ${activePeriod.name}. Mức đóng: ${formatVND(activePeriod.contributionAmount ?? 1000000)}.`
-            : 'Không có kỳ quỹ nào đang mở.',
+            ? `Báº¡n chÆ°a Ä‘Ã³ng quá»¹ ká»³ ${activePeriod.name}. Má»©c Ä‘Ã³ng: ${formatVND(activePeriod.contributionAmount ?? 1000000)}.`
+            : 'KhÃ´ng cÃ³ ká»³ quá»¹ nÃ o Ä‘ang má»Ÿ.',
           time: new Date().toISOString().slice(0, 10),
           read: false,
         },
     ...upcoming.map(s => ({
       id: `sess-${s.id}`,
       type: 'session' as NotifType,
-      title: 'Buổi tập sắp diễn ra',
-      body: `Buổi tập ngày ${formatDate(s.sessionDate)} tại ${s.courtName ?? 'sân'}. Nhớ tham gia và điểm danh!`,
+      title: 'Buá»•i táº­p sáº¯p diá»…n ra',
+      body: `Buá»•i táº­p ngÃ y ${formatDate(s.sessionDate)} táº¡i ${s.courtName ?? 'sÃ¢n'}. Nhá»› tham gia vÃ  Ä‘iá»ƒm danh!`,
       time: s.sessionDate,
       read: false,
     })),
     {
       id: 'info-1',
       type: 'info' as NotifType,
-      title: 'Chào mừng đến PickleFund!',
-      body: 'Bạn có thể xem lịch sử đóng quỹ, lịch tham gia và phiếu thu cá nhân trong menu bên trái.',
+      title: 'ChÃ o má»«ng Ä‘áº¿n PickleFund!',
+      body: 'Báº¡n cÃ³ thá»ƒ xem lá»‹ch sá»­ Ä‘Ã³ng quá»¹, lá»‹ch tham gia vÃ  phiáº¿u thu cÃ¡ nhÃ¢n trong menu bÃªn trÃ¡i.',
       time: '2026-04-01',
       read: true,
     },
@@ -86,7 +86,7 @@ export function MemberNotifications() {
 
   const markAll = () => {
     setReadIds(new Set(notifs.map(n => n.id)))
-    toast.success('Đã đánh dấu tất cả là đã đọc')
+    toast.success('ÄÃ£ Ä‘Ã¡nh dáº¥u táº¥t cáº£ lÃ  Ä‘Ã£ Ä‘á»c')
   }
 
   if (isMobile) {
@@ -94,12 +94,12 @@ export function MemberNotifications() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Thông báo</div>
-            {unreadCount > 0 && <div className="text-[12px] text-slate-400">{unreadCount} chưa đọc</div>}
+            <div className="text-[17px] font-[800] text-slate-900">ThÃ´ng bÃ¡o</div>
+            {unreadCount > 0 && <div className="text-[12px] text-slate-400">{unreadCount} chÆ°a Ä‘á»c</div>}
           </div>
           {unreadCount > 0 && (
             <button onClick={markAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
-              <Check size={13} />Đánh dấu đã đọc
+              <Check size={13} />ÄÃ¡nh dáº¥u Ä‘Ã£ Ä‘á»c
             </button>
           )}
         </div>
@@ -132,12 +132,12 @@ export function MemberNotifications() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Thông báo"
-        subtitle={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : 'Tất cả đã đọc'}
+        title="ThÃ´ng bÃ¡o"
+        subtitle={unreadCount > 0 ? `${unreadCount} thÃ´ng bÃ¡o chÆ°a Ä‘á»c` : 'Táº¥t cáº£ Ä‘Ã£ Ä‘á»c'}
         actions={
           unreadCount > 0
             ? <button onClick={markAll} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800">
-                <Check size={14} />Đánh dấu đã đọc
+                <Check size={14} />ÄÃ¡nh dáº¥u Ä‘Ã£ Ä‘á»c
               </button>
             : undefined
         }
@@ -171,3 +171,4 @@ export function MemberNotifications() {
     </div>
   )
 }
+

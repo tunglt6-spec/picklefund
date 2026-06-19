@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, ChevronLeft, Check, UserPlus, X } from 'lucide-react'
 import api from '../../../lib/api'
@@ -11,7 +11,7 @@ import type { MinigameFormatType, DrawMode, PairingMode } from '../../../types/m
 import { cn } from '../../../lib/utils'
 import toast from 'react-hot-toast'
 
-const STEPS = ['Thông Tin Cơ Bản', 'Cấu Hình Điểm Số', 'Chọn Thành Viên']
+const STEPS = ['ThÃ´ng Tin CÆ¡ Báº£n', 'Cáº¥u HÃ¬nh Äiá»ƒm Sá»‘', 'Chá»n ThÃ nh ViÃªn']
 
 interface FormState {
   name: string
@@ -54,7 +54,7 @@ export function MinigameForm() {
   const { id } = useParams()
   const isEdit = !!id
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const { getMinigame, createMinigame, updateMinigame, addParticipants, syncParticipants, participants } = useMinigameStore()
   const members = getClubData(clubId).members
@@ -131,7 +131,7 @@ export function MinigameForm() {
   }
 
   const handleSubmit = async () => {
-    if (form.selectedMemberIds.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
+    if (form.selectedMemberIds.length < 4) { toast.error('Cáº§n Ã­t nháº¥t 4 thÃ nh viÃªn'); return }
     const selectedMembers = form.selectedMemberIds.map(mid => {
       const m = members.find(x => x.id === mid)
       const guest = form.guestMembers.find(g => g.id === mid)
@@ -153,9 +153,9 @@ export function MinigameForm() {
           formatType: form.formatType, drawMode: form.drawMode,
         })
         syncParticipants(id, selectedMembers)
-        toast.success('Đã cập nhật minigame!')
+        toast.success('ÄÃ£ cáº­p nháº­t minigame!')
       } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'Cập nhật minigame thất bại')
+        toast.error(err?.response?.data?.message ?? 'Cáº­p nháº­t minigame tháº¥t báº¡i')
         return
       }
     } else {
@@ -177,9 +177,9 @@ export function MinigameForm() {
           id: mgId,
         })
         addParticipants(mg.id, selectedMembers)
-        toast.success('Đã tạo minigame!')
+        toast.success('ÄÃ£ táº¡o minigame!')
       } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'Tạo minigame thất bại')
+        toast.error(err?.response?.data?.message ?? 'Táº¡o minigame tháº¥t báº¡i')
         return
       }
     }
@@ -189,8 +189,8 @@ export function MinigameForm() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title={isEdit ? '✏️ Chỉnh Sửa Minigame' : '🏆 Tạo Minigame Mới'}
-        subtitle={`Bước ${step + 1}/3: ${STEPS[step]}`}
+        title={isEdit ? 'âœï¸ Chá»‰nh Sá»­a Minigame' : 'ðŸ† Táº¡o Minigame Má»›i'}
+        subtitle={`BÆ°á»›c ${step + 1}/3: ${STEPS[step]}`}
       />
 
       {/* Step indicator */}
@@ -218,12 +218,12 @@ export function MinigameForm() {
           {step === 0 && (
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Hình Thức Giải Đấu *</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">HÃ¬nh Thá»©c Giáº£i Äáº¥u *</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {([
-                    { value: 'RANDOM_DOUBLES' as const, label: '🏓 Đánh Đôi Ngẫu Nhiên', sub: 'Random Doubles — 2v2 mỗi trận' },
-                    { value: 'GROUP_STAGE' as const, label: '👥 Vòng Bảng', sub: 'Group Stage — 1v1 theo bảng' },
-                    { value: 'FIXED_DOUBLES_ROUND_ROBIN' as const, label: '🤝 Đôi Cố Định Vòng Tròn', sub: 'Fixed Doubles — Ghép đôi cố định, đấu vòng tròn' },
+                    { value: 'RANDOM_DOUBLES' as const, label: 'ðŸ“ ÄÃ¡nh ÄÃ´i Ngáº«u NhiÃªn', sub: 'Random Doubles â€” 2v2 má»—i tráº­n' },
+                    { value: 'GROUP_STAGE' as const, label: 'ðŸ‘¥ VÃ²ng Báº£ng', sub: 'Group Stage â€” 1v1 theo báº£ng' },
+                    { value: 'FIXED_DOUBLES_ROUND_ROBIN' as const, label: 'ðŸ¤ ÄÃ´i Cá»‘ Äá»‹nh VÃ²ng TrÃ²n', sub: 'Fixed Doubles â€” GhÃ©p Ä‘Ã´i cá»‘ Ä‘á»‹nh, Ä‘áº¥u vÃ²ng trÃ²n' },
                   ]).map(opt => (
                     <label key={opt.value} className={cn(
                       'flex flex-col gap-0.5 rounded-lg px-3 py-2.5 cursor-pointer border transition-colors',
@@ -246,12 +246,12 @@ export function MinigameForm() {
                 </div>
                 {form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' && !isEdit && (
                   <div className="mt-3">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Cách Ghép Cặp</label>
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">CÃ¡ch GhÃ©p Cáº·p</label>
                     <div className="grid grid-cols-1 gap-2">
                       {([
-                        { value: 'RANDOM_PAIRING' as const, label: '🎲 Ngẫu Nhiên', sub: 'Ghép cặp tự động ngẫu nhiên' },
-                        { value: 'BALANCED_SKILL_PAIRING' as const, label: '⚖️ Cân Bằng Trình Độ', sub: 'Ghép cặp để cân bằng skill giữa các đội' },
-                        { value: 'MANUAL_PAIRING' as const, label: '✋ Thủ Công', sub: 'Tự chọn cặp đôi trong dashboard' },
+                        { value: 'RANDOM_PAIRING' as const, label: 'ðŸŽ² Ngáº«u NhiÃªn', sub: 'GhÃ©p cáº·p tá»± Ä‘á»™ng ngáº«u nhiÃªn' },
+                        { value: 'BALANCED_SKILL_PAIRING' as const, label: 'âš–ï¸ CÃ¢n Báº±ng TrÃ¬nh Äá»™', sub: 'GhÃ©p cáº·p Ä‘á»ƒ cÃ¢n báº±ng skill giá»¯a cÃ¡c Ä‘á»™i' },
+                        { value: 'MANUAL_PAIRING' as const, label: 'âœ‹ Thá»§ CÃ´ng', sub: 'Tá»± chá»n cáº·p Ä‘Ã´i trong dashboard' },
                       ] as const).map(opt => (
                         <label key={opt.value} className={cn(
                           'flex flex-col gap-0.5 rounded-lg px-3 py-2 cursor-pointer border transition-colors',
@@ -270,7 +270,7 @@ export function MinigameForm() {
                 )}
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Tên Giải Đấu *</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">TÃªn Giáº£i Äáº¥u *</label>
                 <input
                   type="text"
                   value={form.name}
@@ -280,25 +280,25 @@ export function MinigameForm() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mô tả</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">MÃ´ táº£</label>
                 <textarea rows={2} value={form.description} onChange={e => set({ description: e.target.value })}
-                  placeholder="Mô tả giải đấu..."
+                  placeholder="MÃ´ táº£ giáº£i Ä‘áº¥u..."
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày bắt đầu</label>
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">NgÃ y báº¯t Ä‘áº§u</label>
                   <input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày kết thúc</label>
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">NgÃ y káº¿t thÃºc</label>
                   <input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ghi chú</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ghi chÃº</label>
                 <textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
               </div>
@@ -310,7 +310,7 @@ export function MinigameForm() {
             <div className="space-y-5">
               {form.formatType === 'GROUP_STAGE' ? (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số người mỗi bảng ({form.groupSize})</label>
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Sá»‘ ngÆ°á»i má»—i báº£ng ({form.groupSize})</label>
                   <input type="range" min={2} max={6} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })}
                     className="w-full accent-indigo-600" />
                   <div className="flex justify-between text-xs text-slate-400 mt-1">
@@ -319,22 +319,22 @@ export function MinigameForm() {
                 </div>
               ) : (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Chế độ bốc thăm mặc định</label>
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Cháº¿ Ä‘á»™ bá»‘c thÄƒm máº·c Ä‘á»‹nh</label>
                   <select
                     value={form.drawMode}
                     onChange={e => set({ drawMode: e.target.value as DrawMode })}
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="RANDOM">Ngẫu Nhiên (Random)</option>
-                    <option value="FAIR_ROTATION">Công Bằng Theo Lượt (Fair Rotation)</option>
-                    <option value="BALANCED_SKILL">Cân Bằng Trình Độ (Balanced Skill)</option>
+                    <option value="RANDOM">Ngáº«u NhiÃªn (Random)</option>
+                    <option value="FAIR_ROTATION">CÃ´ng Báº±ng Theo LÆ°á»£t (Fair Rotation)</option>
+                    <option value="BALANCED_SKILL">CÃ¢n Báº±ng TrÃ¬nh Äá»™ (Balanced Skill)</option>
                   </select>
                 </div>
               )}
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">Cho phép hòa</p>
-                  <p className="text-xs text-slate-500">Trận có thể kết thúc với tỷ số bằng nhau</p>
+                  <p className="text-sm font-medium text-slate-900">Cho phÃ©p hÃ²a</p>
+                  <p className="text-xs text-slate-500">Tráº­n cÃ³ thá»ƒ káº¿t thÃºc vá»›i tá»· sá»‘ báº±ng nhau</p>
                 </div>
                 <button
                   onClick={() => set({ allowDraw: !form.allowDraw })}
@@ -345,9 +345,9 @@ export function MinigameForm() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: 'Điểm thắng', key: 'winPoints', disabled: false },
-                  { label: 'Điểm hòa', key: 'drawPoints', disabled: !form.allowDraw },
-                  { label: 'Điểm thua', key: 'lossPoints', disabled: true },
+                  { label: 'Äiá»ƒm tháº¯ng', key: 'winPoints', disabled: false },
+                  { label: 'Äiá»ƒm hÃ²a', key: 'drawPoints', disabled: !form.allowDraw },
+                  { label: 'Äiá»ƒm thua', key: 'lossPoints', disabled: true },
                 ].map(({ label, key, disabled }) => (
                   <div key={key}>
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">{label}</label>
@@ -365,9 +365,9 @@ export function MinigameForm() {
           {step === 2 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-slate-600">Chọn thành viên tham gia (tối thiểu 4)</p>
+                <p className="text-sm text-slate-600">Chá»n thÃ nh viÃªn tham gia (tá»‘i thiá»ƒu 4)</p>
                 <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', form.selectedMemberIds.length >= 4 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
-                  {form.selectedMemberIds.length} đã chọn
+                  {form.selectedMemberIds.length} Ä‘Ã£ chá»n
                 </span>
               </div>
 
@@ -396,14 +396,14 @@ export function MinigameForm() {
               {/* Guest section */}
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Khách Mời</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">KhÃ¡ch Má»i</span>
                   {!showAddGuest && (
                     <button
                       type="button"
                       onClick={() => { setShowAddGuest(true); setTimeout(() => guestInputRef.current?.focus(), 50) }}
                       className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                     >
-                      <UserPlus size={14} /> Thêm Khách
+                      <UserPlus size={14} /> ThÃªm KhÃ¡ch
                     </button>
                   )}
                 </div>
@@ -425,7 +425,7 @@ export function MinigameForm() {
                             className="accent-purple-600 h-4 w-4 cursor-pointer"
                           />
                           <span className="text-sm font-medium text-slate-800 flex-1">{g.name}</span>
-                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">KhÃ¡ch</span>
                           <button
                             type="button"
                             onClick={() => removeGuest(g.id)}
@@ -448,7 +448,7 @@ export function MinigameForm() {
                       value={guestName}
                       onChange={e => setGuestName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') { setShowAddGuest(false); setGuestName('') } }}
-                      placeholder="Tên khách mời..."
+                      placeholder="TÃªn khÃ¡ch má»i..."
                       className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                     />
                     <button
@@ -457,7 +457,7 @@ export function MinigameForm() {
                       disabled={!guestName.trim()}
                       className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
-                      Thêm
+                      ThÃªm
                     </button>
                     <button
                       type="button"
@@ -470,7 +470,7 @@ export function MinigameForm() {
                 )}
 
                 {form.guestMembers.length === 0 && !showAddGuest && (
-                  <p className="text-xs text-slate-400 italic">Chưa có khách mời. Nhấn "Thêm Khách" để thêm người ngoài CLB.</p>
+                  <p className="text-xs text-slate-400 italic">ChÆ°a cÃ³ khÃ¡ch má»i. Nháº¥n "ThÃªm KhÃ¡ch" Ä‘á»ƒ thÃªm ngÆ°á»i ngoÃ i CLB.</p>
                 )}
               </div>
             </div>
@@ -480,15 +480,15 @@ export function MinigameForm() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-4">
           <Button variant="secondary" onClick={() => step > 0 ? setStep(s => s - 1) : navigate('/minigames')}>
-            <ChevronLeft size={16} /> {step === 0 ? 'Hủy' : 'Quay lại'}
+            <ChevronLeft size={16} /> {step === 0 ? 'Há»§y' : 'Quay láº¡i'}
           </Button>
           {step < 2 ? (
             <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
-              Tiếp theo <ChevronRight size={16} />
+              Tiáº¿p theo <ChevronRight size={16} />
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={form.selectedMemberIds.length < 4}>
-              <Check size={16} /> {isEdit ? 'Lưu Thay Đổi' : 'Tạo Minigame'}
+              <Check size={16} /> {isEdit ? 'LÆ°u Thay Äá»•i' : 'Táº¡o Minigame'}
             </Button>
           )}
         </div>
@@ -496,3 +496,4 @@ export function MinigameForm() {
     </div>
   )
 }
+

@@ -40,13 +40,14 @@ export class FundPeriodsService {
   async update(id: string, clubId: string, dto: any) {
     const fp = await this.findOne(id, clubId)
     if (fp.status === 'finalized') throw new BadRequestException('Kỳ đã chốt không thể sửa')
+    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto
     return this.prisma.fundPeriod.update({
       where: { id },
       data: {
-        ...dto,
-        ...(dto.startDate ? { startDate: new Date(dto.startDate) } : {}),
-        ...(dto.endDate ? { endDate: new Date(dto.endDate) } : {}),
-        ...(dto.contributionAmount ? { contributionAmount: new Decimal(dto.contributionAmount) } : {}),
+        ...safeDto,
+        ...(safeDto.startDate ? { startDate: new Date(safeDto.startDate) } : {}),
+        ...(safeDto.endDate ? { endDate: new Date(safeDto.endDate) } : {}),
+        ...(safeDto.contributionAmount ? { contributionAmount: new Decimal(safeDto.contributionAmount) } : {}),
       },
     })
   }

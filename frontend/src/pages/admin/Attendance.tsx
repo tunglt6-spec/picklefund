@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users } from 'lucide-react'
 import api from '../../lib/api'
@@ -24,7 +24,7 @@ function MemberAvatar({ name, id }: { name: string; id: string }) {
 
 export function Attendance() {
   const { user } = useAuthStore()
-  const clubId = user?.clubId ?? 'club-1'
+  const clubId = user?.clubId ?? ''
   const { getClubData, setSessions: saveSessions } = useClubDataStore()
   const data = getClubData(clubId)
   const sessions = data.sessions
@@ -69,9 +69,9 @@ export function Attendance() {
         : s
       ))
       setSelectedSession(null)
-      toast.success(`Đã lưu điểm danh: ${count}/${members.length} người`)
+      toast.success(`ÄÃ£ lÆ°u Ä‘iá»ƒm danh: ${count}/${members.length} ngÆ°á»i`)
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Lưu điểm danh thất bại'
+      const msg = err?.response?.data?.message ?? 'LÆ°u Ä‘iá»ƒm danh tháº¥t báº¡i'
       toast.error(msg)
     }
   }
@@ -84,9 +84,9 @@ export function Attendance() {
       const d = res.data?.data
       setSessions(prev => [...prev, { ...d, courtFee: Number(d?.courtFee ?? form.courtFee), _count: { attendanceRecords: 0 } }])
       setShowCreate(false)
-      toast.success('Đã tạo buổi chơi mới!')
+      toast.success('ÄÃ£ táº¡o buá»•i chÆ¡i má»›i!')
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Tạo buổi thất bại'
+      const msg = err?.response?.data?.message ?? 'Táº¡o buá»•i tháº¥t báº¡i'
       toast.error(msg)
     }
   }
@@ -101,13 +101,13 @@ export function Attendance() {
       <div className="min-h-screen bg-[#F8FAFC]">
         {/* Sticky header */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-          <span className="text-[17px] font-[800] text-slate-900">Điểm Danh</span>
+          <span className="text-[17px] font-[800] text-slate-900">Äiá»ƒm Danh</span>
           <button
             className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
             onClick={() => setShowCreate(true)}
           >
-            <Plus size={14} />Tạo buổi
+            <Plus size={14} />Táº¡o buá»•i
           </button>
         </div>
 
@@ -116,9 +116,9 @@ export function Attendance() {
           {sessions.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Buổi chơi', value: sessions.length, sub: `${completedSessions} xong` },
-                { label: 'Lượt tham gia', value: totalAttendance, sub: 'lượt' },
-                { label: 'TB/buổi', value: completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—', sub: 'người' },
+                { label: 'Buá»•i chÆ¡i', value: sessions.length, sub: `${completedSessions} xong` },
+                { label: 'LÆ°á»£t tham gia', value: totalAttendance, sub: 'lÆ°á»£t' },
+                { label: 'TB/buá»•i', value: completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : 'â€”', sub: 'ngÆ°á»i' },
               ].map(k => (
                 <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
                   <div className="text-[18px] font-[800] text-indigo-600">{k.value}</div>
@@ -132,9 +132,9 @@ export function Attendance() {
           {sessions.length === 0 ? (
             <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-14 text-center">
               <CalendarX size={32} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-[14px] font-[600] text-slate-500">Chưa có buổi chơi nào</p>
+              <p className="text-[14px] font-[600] text-slate-500">ChÆ°a cÃ³ buá»•i chÆ¡i nÃ o</p>
               <p className="text-[12px] text-slate-400 mt-1">
-                {!activePeriod ? 'Tạo kỳ quỹ trước' : members.length === 0 ? 'Thêm thành viên trước' : 'Nhấn + để tạo buổi chơi'}
+                {!activePeriod ? 'Táº¡o ká»³ quá»¹ trÆ°á»›c' : members.length === 0 ? 'ThÃªm thÃ nh viÃªn trÆ°á»›c' : 'Nháº¥n + Ä‘á»ƒ táº¡o buá»•i chÆ¡i'}
               </p>
             </div>
           ) : (
@@ -145,7 +145,7 @@ export function Attendance() {
                     <div>
                       <div className="text-[15px] font-[700] text-slate-900">{formatDate(session.sessionDate)}</div>
                       <div className="flex items-center gap-1 text-[12px] text-slate-500 mt-0.5">
-                        <Clock size={11} />{session.startTime} – {session.endTime}
+                        <Clock size={11} />{session.startTime} â€“ {session.endTime}
                       </div>
                       {session.courtName && (
                         <div className="flex items-center gap-1 text-[12px] text-slate-400 mt-0.5">
@@ -154,11 +154,11 @@ export function Attendance() {
                       )}
                     </div>
                     <Badge variant={session.status === 'completed' ? 'green' : session.status === 'cancelled' ? 'red' : 'indigo'} dot>
-                      {session.status === 'completed' ? 'Xong' : session.status === 'cancelled' ? 'Hủy' : 'Chờ'}
+                      {session.status === 'completed' ? 'Xong' : session.status === 'cancelled' ? 'Há»§y' : 'Chá»'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-[12px] text-slate-500 pt-2.5 border-t border-slate-50 mb-3">
-                    <span>Tiền sân: <strong className="text-slate-700">{formatVND(session.courtFee)}</strong></span>
+                    <span>Tiá»n sÃ¢n: <strong className="text-slate-700">{formatVND(session.courtFee)}</strong></span>
                     <span className="flex items-center gap-1">
                       <Users size={11} /><strong>{session._count?.attendanceRecords}</strong>/{members.length}
                     </span>
@@ -167,7 +167,7 @@ export function Attendance() {
                     className="w-full py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 flex items-center justify-center gap-1 active:bg-indigo-50"
                     onClick={() => openAttendance(session)}
                   >
-                    <CheckSquare size={14} />Điểm danh
+                    <CheckSquare size={14} />Äiá»ƒm danh
                   </button>
                 </div>
               ))}
@@ -177,14 +177,14 @@ export function Attendance() {
 
         {selectedSession && (
           <Modal open={!!selectedSession} onClose={() => setSelectedSession(null)}
-            title={`Điểm danh — ${formatDate(selectedSession.sessionDate)}`}
-            subtitle={`${selectedSession.courtName} · ${selectedSession.startTime}–${selectedSession.endTime}`}
+            title={`Äiá»ƒm danh â€” ${formatDate(selectedSession.sessionDate)}`}
+            subtitle={`${selectedSession.courtName} Â· ${selectedSession.startTime}â€“${selectedSession.endTime}`}
             footer={
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Có mặt: <strong className="text-emerald-600">{presentCount}</strong> / {members.length}</span>
+                <span className="text-sm text-slate-500">CÃ³ máº·t: <strong className="text-emerald-600">{presentCount}</strong> / {members.length}</span>
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setSelectedSession(null)}>Hủy</Button>
-                  <Button onClick={handleSaveAttendance}>Lưu</Button>
+                  <Button variant="outline" onClick={() => setSelectedSession(null)}>Há»§y</Button>
+                  <Button onClick={handleSaveAttendance}>LÆ°u</Button>
                 </div>
               </div>
             }
@@ -197,46 +197,46 @@ export function Attendance() {
                   <input type="checkbox" checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)} className="h-4 w-4 rounded accent-emerald-500 shrink-0" />
                   <MemberAvatar name={m.fullName} id={m.id} />
                   <span className="font-medium text-slate-900 flex-1 text-sm">{m.fullName}</span>
-                  <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : 'text-slate-300'}`}>{attendance[m.id] ? 'Có mặt' : 'Vắng'}</span>
+                  <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : 'text-slate-300'}`}>{attendance[m.id] ? 'CÃ³ máº·t' : 'Váº¯ng'}</span>
                 </label>
               ))}
             </div>
           </Modal>
         )}
-        <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới" subtitle="Lên lịch buổi chơi"
+        <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Táº¡o Buá»•i ChÆ¡i Má»›i" subtitle="LÃªn lá»‹ch buá»•i chÆ¡i"
           footer={
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-              <Button type="submit" form="form-session-m">Tạo buổi chơi</Button>
+              <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Há»§y bá»</Button>
+              <Button type="submit" form="form-session-m">Táº¡o buá»•i chÆ¡i</Button>
             </div>
           }
         >
           <form id="form-session-m" onSubmit={handleCreateSession} className="space-y-4">
             {!activePeriod && (
               <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-                Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+                ChÆ°a cÃ³ ká»³ quá»¹ Ä‘ang hoáº¡t Ä‘á»™ng. Buá»•i chÆ¡i sáº½ Ä‘Æ°á»£c lÆ°u cá»¥c bá»™ cho Ä‘áº¿n khi táº¡o ká»³ quá»¹.
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÃ y chÆ¡i <span className="text-red-500">*</span></label>
               <input required type="date" value={form.sessionDate} onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giá» báº¯t Ä‘áº§u</label>
                 <input type="time" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} className="input-base" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giá» káº¿t thÃºc</label>
                 <input type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} className="input-base" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
-              <input required value={form.courtName} onChange={e => setForm({ ...form, courtName: e.target.value })} placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">TÃªn sÃ¢n <span className="text-red-500">*</span></label>
+              <input required value={form.courtName} onChange={e => setForm({ ...form, courtName: e.target.value })} placeholder="VD: SÃ¢n Má»¹ ÄÃ¬nh Indoor" className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ)</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiá»n sÃ¢n (VNÄ)</label>
               <input type="number" value={form.courtFee} onChange={e => setForm({ ...form, courtFee: Number(e.target.value) })} className="input-base" />
             </div>
           </form>
@@ -248,11 +248,11 @@ export function Attendance() {
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
-        title="Điểm Danh"
-        subtitle="Quản lý điểm danh từng buổi chơi pickleball"
+        title="Äiá»ƒm Danh"
+        subtitle="Quáº£n lÃ½ Ä‘iá»ƒm danh tá»«ng buá»•i chÆ¡i pickleball"
         actions={
           <Button onClick={() => setShowCreate(true)}>
-            <Plus size={15} />Tạo buổi chơi
+            <Plus size={15} />Táº¡o buá»•i chÆ¡i
           </Button>
         }
       />
@@ -261,21 +261,21 @@ export function Attendance() {
         {sessions.length > 0 && (
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Tổng buổi chơi</p>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Tá»•ng buá»•i chÆ¡i</p>
               <p className="text-2xl font-bold text-slate-900">{sessions.length}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{completedSessions} đã hoàn thành</p>
+              <p className="text-xs text-slate-400 mt-0.5">{completedSessions} Ä‘Ã£ hoÃ n thÃ nh</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Tổng lượt tham gia</p>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Tá»•ng lÆ°á»£t tham gia</p>
               <p className="text-2xl font-bold text-indigo-600">{totalAttendance}</p>
-              <p className="text-xs text-slate-400 mt-0.5">lượt</p>
+              <p className="text-xs text-slate-400 mt-0.5">lÆ°á»£t</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Trung bình/buổi</p>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Trung bÃ¬nh/buá»•i</p>
               <p className="text-2xl font-bold text-emerald-600">
-                {completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—'}
+                {completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : 'â€”'}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">người/buổi</p>
+              <p className="text-xs text-slate-400 mt-0.5">ngÆ°á»i/buá»•i</p>
             </div>
           </div>
         )}
@@ -283,12 +283,12 @@ export function Attendance() {
         {sessions.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <CalendarX size={36} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm font-medium text-slate-500">Chưa có buổi chơi nào</p>
+            <p className="text-sm font-medium text-slate-500">ChÆ°a cÃ³ buá»•i chÆ¡i nÃ o</p>
             <p className="text-xs text-slate-400 mt-1 mb-4">
-              {!activePeriod ? 'Tạo kỳ quỹ trước khi tạo buổi chơi' : members.length === 0 ? 'Thêm thành viên trước khi tạo buổi chơi' : 'Tạo buổi chơi đầu tiên cho kỳ này'}
+              {!activePeriod ? 'Táº¡o ká»³ quá»¹ trÆ°á»›c khi táº¡o buá»•i chÆ¡i' : members.length === 0 ? 'ThÃªm thÃ nh viÃªn trÆ°á»›c khi táº¡o buá»•i chÆ¡i' : 'Táº¡o buá»•i chÆ¡i Ä‘áº§u tiÃªn cho ká»³ nÃ y'}
             </p>
             {activePeriod && members.length > 0 && (
-              <Button onClick={() => setShowCreate(true)} size="sm"><Plus size={14} />Tạo buổi chơi đầu tiên</Button>
+              <Button onClick={() => setShowCreate(true)} size="sm"><Plus size={14} />Táº¡o buá»•i chÆ¡i Ä‘áº§u tiÃªn</Button>
             )}
           </div>
         ) : (
@@ -300,7 +300,7 @@ export function Attendance() {
                     <p className="font-bold text-slate-900">{formatDate(session.sessionDate)}</p>
                     <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
                       <Clock size={11} />
-                      <span>{session.startTime} – {session.endTime}</span>
+                      <span>{session.startTime} â€“ {session.endTime}</span>
                     </div>
                     {session.courtName && (
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-400">
@@ -310,12 +310,12 @@ export function Attendance() {
                     )}
                   </div>
                   <Badge variant={session.status === 'completed' ? 'green' : session.status === 'cancelled' ? 'red' : 'indigo'} dot>
-                    {session.status === 'completed' ? 'Hoàn thành' : session.status === 'cancelled' ? 'Đã hủy' : 'Chờ'}
+                    {session.status === 'completed' ? 'HoÃ n thÃ nh' : session.status === 'cancelled' ? 'ÄÃ£ há»§y' : 'Chá»'}
                   </Badge>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-50">
-                  <span>Tiền sân: <strong className="text-slate-700">{formatVND(session.courtFee)}</strong></span>
+                  <span>Tiá»n sÃ¢n: <strong className="text-slate-700">{formatVND(session.courtFee)}</strong></span>
                   <div className="flex items-center gap-1">
                     <Users size={11} />
                     <strong className="text-slate-700">{session._count?.attendanceRecords}</strong>
@@ -328,7 +328,7 @@ export function Attendance() {
                   onClick={() => openAttendance(session)}
                   disabled={members.length === 0}
                 >
-                  <CheckSquare size={13} />Điểm danh
+                  <CheckSquare size={13} />Äiá»ƒm danh
                 </Button>
               </div>
             ))}
@@ -339,14 +339,14 @@ export function Attendance() {
       {/* Attendance modal */}
       {selectedSession && (
         <Modal open={!!selectedSession} onClose={() => setSelectedSession(null)}
-          title={`Điểm danh — ${formatDate(selectedSession.sessionDate)}`}
-          subtitle={`${selectedSession.courtName} · ${selectedSession.startTime}–${selectedSession.endTime}`}
+          title={`Äiá»ƒm danh â€” ${formatDate(selectedSession.sessionDate)}`}
+          subtitle={`${selectedSession.courtName} Â· ${selectedSession.startTime}â€“${selectedSession.endTime}`}
           footer={
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">Có mặt: <strong className="text-emerald-600">{presentCount}</strong> / {members.length}</span>
+              <span className="text-sm text-slate-500">CÃ³ máº·t: <strong className="text-emerald-600">{presentCount}</strong> / {members.length}</span>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setSelectedSession(null)}>Hủy</Button>
-                <Button onClick={handleSaveAttendance}>Lưu điểm danh</Button>
+                <Button variant="outline" onClick={() => setSelectedSession(null)}>Há»§y</Button>
+                <Button onClick={handleSaveAttendance}>LÆ°u Ä‘iá»ƒm danh</Button>
               </div>
             </div>
           }
@@ -361,7 +361,7 @@ export function Attendance() {
                 <MemberAvatar name={m.fullName} id={m.id} />
                 <span className="font-medium text-slate-900 flex-1 text-sm">{m.fullName}</span>
                 <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : 'text-slate-300'}`}>
-                  {attendance[m.id] ? 'Có mặt' : 'Vắng'}
+                  {attendance[m.id] ? 'CÃ³ máº·t' : 'Váº¯ng'}
                 </span>
               </label>
             ))}
@@ -370,45 +370,45 @@ export function Attendance() {
       )}
 
       {/* Create session modal */}
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới"
-        subtitle="Lên lịch buổi chơi cho kỳ quỹ hiện tại"
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Táº¡o Buá»•i ChÆ¡i Má»›i"
+        subtitle="LÃªn lá»‹ch buá»•i chÆ¡i cho ká»³ quá»¹ hiá»‡n táº¡i"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-            <Button type="submit" form="form-session">Tạo buổi chơi</Button>
+            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Há»§y bá»</Button>
+            <Button type="submit" form="form-session">Táº¡o buá»•i chÆ¡i</Button>
           </div>
         }
       >
         <form id="form-session" onSubmit={handleCreateSession} className="space-y-4">
           {!activePeriod && (
             <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-              Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+              ChÆ°a cÃ³ ká»³ quá»¹ Ä‘ang hoáº¡t Ä‘á»™ng. Buá»•i chÆ¡i sáº½ Ä‘Æ°á»£c lÆ°u cá»¥c bá»™ cho Ä‘áº¿n khi táº¡o ká»³ quá»¹.
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">NgÃ y chÆ¡i <span className="text-red-500">*</span></label>
             <input required type="date" value={form.sessionDate}
               onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giá» báº¯t Ä‘áº§u</label>
               <input type="time" value={form.startTime}
                 onChange={e => setForm({ ...form, startTime: e.target.value })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giá» káº¿t thÃºc</label>
               <input type="time" value={form.endTime}
                 onChange={e => setForm({ ...form, endTime: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">TÃªn sÃ¢n <span className="text-red-500">*</span></label>
             <input required value={form.courtName} onChange={e => setForm({ ...form, courtName: e.target.value })}
-              placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
+              placeholder="VD: SÃ¢n Má»¹ ÄÃ¬nh Indoor" className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ)</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiá»n sÃ¢n (VNÄ)</label>
             <input type="number" value={form.courtFee}
               onChange={e => setForm({ ...form, courtFee: Number(e.target.value) })} className="input-base" />
           </div>
@@ -417,3 +417,4 @@ export function Attendance() {
     </div>
   )
 }
+
