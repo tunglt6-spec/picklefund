@@ -9,6 +9,7 @@ import { NotFound } from './pages/NotFound'
 // Super Admin pages
 import { SuperDashboard } from './pages/super/SuperDashboard'
 import { SuperClubs } from './pages/super/SuperClubs'
+import { SuperClubDetail } from './pages/super/SuperClubDetail'
 import { SuperUsers } from './pages/super/SuperUsers'
 import { AuditLogs } from './pages/super/AuditLogs'
 import { SuperSettings } from './pages/super/SuperSettings'
@@ -75,6 +76,7 @@ export default function App() {
             {/* Super Admin */}
             <Route path="/super/dashboard" element={<SuperDashboard />} />
             <Route path="/super/clubs" element={<SuperClubs />} />
+            <Route path="/super/clubs/:id" element={<SuperClubDetail />} />
             <Route path="/super/users" element={<SuperUsers />} />
             <Route path="/super/audit-logs" element={<AuditLogs />} />
             <Route path="/super/settings" element={<SuperSettings />} />
