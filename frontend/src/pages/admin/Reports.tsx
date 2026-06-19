@@ -182,10 +182,9 @@ export function Reports() {
     }
   })
 
-  const courtExpTotal = filteredExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
-  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
-  const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
-  const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
+  const periodSessions = clubData.sessions.filter(s => s.fundPeriodId === activePeriod?.id)
+  const courtExpTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
+  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL' || e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
   const presentCount = attSummary.filter(s => s.attendedSessions > 0).length
 
   const memberBillRows = clubData.members.map(m => {
@@ -193,18 +192,16 @@ export function Reports() {
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = summ?.attendedSessions ?? 0
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    const courtFrac = 1 / (memberCount || 1)
-    const courtCost = Math.round(courtExpTotal * courtFrac)
-    const presentShare = presentCount > 0 && attended > 0 ? Math.round(presentOnlyExpTotal / presentCount) : 0
-    const livingCost = Math.round(livingExpTotal / (memberCount || 1))
-    const totalCost = courtCost + presentShare + livingCost
+    const courtCost = Math.round(courtExpTotal / (memberCount || 1))
+    const livingCost = attended > 0 && presentCount > 0 ? Math.round(livingExpTotal / presentCount) : 0
+    const totalCost = courtCost + livingCost
     return {
       memberName: m.fullName ?? m.id,
       attendedSessions: attended,
       totalSessions: sessionCount,
       amountPaid,
       contributionPaid: contrib?.isConfirmed ?? false,
-      courtCost: courtCost + presentShare,
+      courtCost,
       livingCost,
       totalCost,
       balance: amountPaid - totalCost,
