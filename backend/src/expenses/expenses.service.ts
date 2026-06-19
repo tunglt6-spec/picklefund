@@ -45,6 +45,10 @@ export class ExpensesService {
   async create(clubId: string, userId: string, dto: CreateExpenseDto) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON'
 
+    if (!dto.amount || isNaN(Number(dto.amount)) || Number(dto.amount) <= 0) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0')
+    }
+
     if (fundSource === 'COMMON') {
       if (!dto.fundPeriodId) throw new BadRequestException('fundPeriodId bắt buộc cho Quỹ Chung')
       if (!dto.allocationRule) throw new BadRequestException('allocationRule bắt buộc cho Quỹ Chung')
@@ -80,6 +84,9 @@ export class ExpensesService {
 
   async update(id: string, clubId: string, dto: any) {
     const existing = await this.findOne(id, clubId)
+    if (dto.amount !== undefined && (isNaN(Number(dto.amount)) || Number(dto.amount) <= 0)) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0')
+    }
     const fundSource = dto.fundSource ?? existing.fundSource
     return this.prisma.livingExpense.update({
       where: { id },

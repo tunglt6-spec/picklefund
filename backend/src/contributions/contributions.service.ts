@@ -44,6 +44,10 @@ export class ContributionsService {
   async create(clubId: string, userId: string, dto: CreateContributionDto) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON'
 
+    if (!dto.amount || isNaN(Number(dto.amount)) || Number(dto.amount) <= 0) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0')
+    }
+
     if (fundSource === 'COMMON') {
       if (!dto.memberId) throw new BadRequestException('memberId bắt buộc cho Quỹ Chung')
       if (!dto.fundPeriodId) throw new BadRequestException('fundPeriodId bắt buộc cho Quỹ Chung')
@@ -76,6 +80,9 @@ export class ContributionsService {
 
   async update(id: string, clubId: string, dto: Partial<CreateContributionDto>) {
     await this.findOne(id, clubId)
+    if (dto.amount !== undefined && (isNaN(Number(dto.amount)) || Number(dto.amount) <= 0)) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0')
+    }
     return this.prisma.fundContribution.update({
       where: { id },
       data: {

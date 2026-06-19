@@ -45,13 +45,14 @@ export class AttendanceService {
 
   async update(id: string, clubId: string, dto: any) {
     await this.findOne(id, clubId)
+    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto
     return this.prisma.attendanceSession.update({
       where: { id },
       data: {
-        ...dto,
-        ...(dto.sessionDate ? { sessionDate: new Date(dto.sessionDate) } : {}),
-        ...(dto.courtFee !== undefined ? { courtFee: new Decimal(dto.courtFee) } : {}),
-        ...(dto.location ? { courtName: dto.location } : {}),
+        ...safeDto,
+        ...(safeDto.sessionDate ? { sessionDate: new Date(safeDto.sessionDate) } : {}),
+        ...(safeDto.courtFee !== undefined ? { courtFee: new Decimal(safeDto.courtFee) } : {}),
+        ...(safeDto.location ? { courtName: safeDto.location } : {}),
       },
     })
   }
