@@ -659,7 +659,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
           <span class="bc-rv g">${formatVND(m.amountPaid)}</span>
         </div>
         <div class="bc-row">
-          <span class="bc-rk">Chi phí sân <em>(chia đều)</em></span>
+          <span class="bc-rk">Chi phí sân <em>(${m.attendedSessions} buổi)</em></span>
           <span class="bc-rv v">${formatVND(m.courtCost)}</span>
         </div>
         <div class="bc-row">
