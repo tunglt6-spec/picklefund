@@ -39,9 +39,19 @@ export function Attendance() {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
 
-  const openAttendance = (session: AttendanceSession) => {
+  const openAttendance = async (session: AttendanceSession) => {
     setSelectedSession(session)
-    setAttendance(Object.fromEntries(members.map(m => [m.id, true])))
+    // Default all present, then load existing records from server
+    const defaultMap = Object.fromEntries(members.map(m => [m.id, true]))
+    setAttendance(defaultMap)
+    try {
+      const res = await api.get(`/attendance/${session.id}/attendance`)
+      const records: { memberId: string; status: string }[] = res.data?.data ?? []
+      if (records.length > 0) {
+        const loaded = Object.fromEntries(records.map(r => [r.memberId, r.status === 'PRESENT']))
+        setAttendance(loaded)
+      }
+    } catch { /* keep default */ }
   }
 
   const handleToggle = (memberId: string) => {
@@ -54,13 +64,16 @@ export function Attendance() {
     const count = records.filter(r => r.status === 'PRESENT').length
     try {
       await api.put(`/attendance/${selectedSession.id}/attendance`, { attendance: records })
-    } catch { /* local update still applies */ }
-    setSessions(prev => prev.map(s => s.id === selectedSession.id
-      ? { ...s, _count: { attendanceRecords: count }, status: 'completed' }
-      : s
-    ))
-    setSelectedSession(null)
-    toast.success(`Đã lưu điểm danh: ${count}/${members.length} người`)
+      setSessions(prev => prev.map(s => s.id === selectedSession.id
+        ? { ...s, _count: { attendanceRecords: count }, status: 'completed' }
+        : s
+      ))
+      setSelectedSession(null)
+      toast.success(`Đã lưu điểm danh: ${count}/${members.length} người`)
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Lưu điểm danh thất bại'
+      toast.error(msg)
+    }
   }
 
   const handleCreateSession = async (e: React.FormEvent) => {
@@ -70,16 +83,12 @@ export function Attendance() {
       const res = await api.post('/attendance', payload)
       const d = res.data?.data
       setSessions(prev => [...prev, { ...d, courtFee: Number(d?.courtFee ?? form.courtFee), _count: { attendanceRecords: 0 } }])
-    } catch {
-      const newSession: AttendanceSession = {
-        id: `sess-${Date.now()}`, clubId, fundPeriodId: activePeriod?.id ?? '',
-        status: 'scheduled', createdBy: user?.id ?? 'user-1', _count: { attendanceRecords: 0 },
-        ...form, courtFee: Number(form.courtFee)
-      }
-      setSessions(prev => [...prev, newSession])
+      setShowCreate(false)
+      toast.success('Đã tạo buổi chơi mới!')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Tạo buổi thất bại'
+      toast.error(msg)
     }
-    setShowCreate(false)
-    toast.success('Đã tạo buổi chơi mới!')
   }
 
   const isMobile = useIsMobile()
