@@ -1014,7 +1014,7 @@ export const useMinigameStore = create<MinigameStore>()(
         })),
 
       createMinigame: (data) => {
-        const mg: MiniGame = { ...data, id: `mg-${Date.now()}`, createdAt: new Date().toISOString() }
+        const mg: MiniGame = { createdAt: new Date().toISOString(), ...data }
         set(s => ({ minigames: [...s.minigames, mg] }))
         return mg
       },
