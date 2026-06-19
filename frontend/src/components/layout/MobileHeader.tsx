@@ -1,4 +1,5 @@
-import { Bell } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Bell, LogOut, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
@@ -7,9 +8,26 @@ interface MobileHeaderProps {
   onMenuClick?: () => void
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Quản trị CLB',
+  CLUB_TREASURER: 'Thủ quỹ', CLUB_MEMBER: 'Thành viên',
+}
+
 export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
   if (!user) return null
 
   const initials = user.username ? user.username.slice(0, 2).toUpperCase() : 'U'
@@ -20,7 +38,11 @@ export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
       ? '/super/dashboard'
       : '/notifications'
 
-  const profileRoute = user.role === 'CLUB_MEMBER' ? '/member/dashboard' : '/dashboard'
+  const handleLogout = () => {
+    setOpen(false)
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <header
@@ -45,13 +67,55 @@ export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
           </span>
         </button>
-        <button
-          onClick={() => navigate(profileRoute)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-[12px] font-[800] text-white active:opacity-80"
-          style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
-        >
-          {initials}
-        </button>
+
+        {/* Avatar with dropdown */}
+        <div className="relative" ref={ref}>
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-[12px] font-[800] text-white active:opacity-80"
+            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+          >
+            {initials}
+          </button>
+
+          {open && (
+            <div className="absolute right-0 top-11 w-52 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/60 overflow-hidden z-50">
+              {/* User info */}
+              <div className="px-4 py-3 border-b border-slate-50">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-[11px] font-[800] text-white shrink-0"
+                    style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+                  >
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-900 truncate">{user.username}</div>
+                    <div className="text-xs text-slate-400">{ROLE_LABEL[user.role] ?? user.role}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile link */}
+              <button
+                onClick={() => { setOpen(false); navigate(user.role === 'CLUB_MEMBER' ? '/member/dashboard' : '/dashboard') }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 active:bg-slate-100"
+              >
+                <User size={15} className="text-slate-400" />
+                Trang cá nhân
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 active:bg-red-100 border-t border-slate-50"
+              >
+                <LogOut size={15} />
+                Đăng xuất
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
