@@ -39,9 +39,13 @@ export function MinigameList() {
   const isMobile = useIsMobile()
 
   const handleDelete = async (id: string) => {
-    deleteMinigame(id)
-    try { await api.post(`/minigames/${id}/cancel`) } catch { /* local delete already done */ }
-    toast.success('Đã xóa minigame')
+    try {
+      await api.post(`/minigames/${id}/cancel`)
+      deleteMinigame(id)
+      toast.success('Đã xóa minigame')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa minigame thất bại')
+    }
   }
 
   if (isMobile) {

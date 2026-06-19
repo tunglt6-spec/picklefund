@@ -139,37 +139,49 @@ export function MinigameForm() {
     })
 
     if (isEdit && id) {
-      updateMinigame(id, {
-        name: form.name, description: form.description, startDate: form.startDate,
-        endDate: form.endDate || undefined, notes: form.notes, groupSize: form.groupSize,
-        allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, lossPoints: 0,
-        formatType: form.formatType, drawMode: form.drawMode,
-      })
-      syncParticipants(id, selectedMembers)
-      toast.success('Đã cập nhật minigame!')
+      try {
+        await api.put(`/minigames/${id}`, {
+          name: form.name, description: form.description || undefined,
+          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
+          notes: form.notes || undefined,
+        })
+        await api.post(`/minigames/${id}/participants`, { memberIds: form.selectedMemberIds })
+        updateMinigame(id, {
+          name: form.name, description: form.description, startDate: form.startDate,
+          endDate: form.endDate || undefined, notes: form.notes, groupSize: form.groupSize,
+          allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, lossPoints: 0,
+          formatType: form.formatType, drawMode: form.drawMode,
+        })
+        syncParticipants(id, selectedMembers)
+        toast.success('Đã cập nhật minigame!')
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Cập nhật minigame thất bại')
+        return
+      }
     } else {
-      let mgId: string | null = null
       try {
         const res = await api.post('/minigames', {
           name: form.name, description: form.description || undefined,
           format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
-        mgId = res.data?.data?.id ?? null
-        if (mgId) await api.post(`/minigames/${mgId}/participants`, { memberIds: form.selectedMemberIds })
-      } catch { /* fall through to local */ }
-
-      const mg = createMinigame({
-        clubId, name: form.name, description: form.description || undefined,
-        startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT',
-        groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints,
-        drawPoints: form.drawPoints, lossPoints: 0, notes: form.notes || undefined,
-        createdBy: user?.id ?? 'user-1',
-        formatType: form.formatType, drawMode: form.drawMode,
-        pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined,
-        ...(mgId ? { id: mgId } : {}),
-      })
-      addParticipants(mg.id, selectedMembers)
-      toast.success('Đã tạo minigame!')
+        const mgId: string = res.data?.data?.id
+        await api.post(`/minigames/${mgId}/participants`, { memberIds: form.selectedMemberIds })
+        const mg = createMinigame({
+          clubId, name: form.name, description: form.description || undefined,
+          startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT',
+          groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints,
+          drawPoints: form.drawPoints, lossPoints: 0, notes: form.notes || undefined,
+          createdBy: user?.id ?? 'user-1',
+          formatType: form.formatType, drawMode: form.drawMode,
+          pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined,
+          id: mgId,
+        })
+        addParticipants(mg.id, selectedMembers)
+        toast.success('Đã tạo minigame!')
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Tạo minigame thất bại')
+        return
+      }
     }
     navigate('/minigames')
   }

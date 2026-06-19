@@ -47,23 +47,35 @@ export function GroupAssignment() {
   const handleAutoGenerate = async () => {
     generateGroups(id!)
     generateSchedule(id!)
-    try { await api.post(`/minigames/${id}/generate-teams`) } catch { /* local state already updated */ }
-    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
-    toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
+    try {
+      await api.post(`/minigames/${id}/generate-teams`)
+      await api.post(`/minigames/${id}/generate-schedule`)
+      toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu bảng đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
+    }
   }
 
   const handleLock = async () => {
     lockGroups(id!)
     generateSchedule(id!)
-    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
-    toast.success('Đã khóa bảng đấu và cập nhật lịch thi đấu!')
+    try {
+      await api.post(`/minigames/${id}/generate-schedule`)
+      toast.success('Đã khóa bảng đấu và cập nhật lịch thi đấu!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu lịch thi đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
+    }
   }
 
   const handleCreateSchedule = async () => {
     generateSchedule(id!)
-    try { await api.post(`/minigames/${id}/generate-schedule`) } catch { }
-    toast.success('Đã cập nhật lịch thi đấu!')
-    navigate(`/minigames/${id}/schedule`)
+    try {
+      await api.post(`/minigames/${id}/generate-schedule`)
+      toast.success('Đã cập nhật lịch thi đấu!')
+      navigate(`/minigames/${id}/schedule`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu lịch thi đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
+    }
   }
 
   const handleMove = (memberId: string, targetGroupId: string) => {
