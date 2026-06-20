@@ -188,7 +188,11 @@ export function Reports() {
     }
   })
 
-  const courtExpTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
+  // CHI PHÍ SÂN: tiền sân từ buổi chơi + expenses có allocationRule ATTENDANCE (chia đều)
+  const sessionCourtTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
+  const attendanceExpTotal = filteredExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
+  const courtExpTotal = sessionCourtTotal + attendanceExpTotal
+  // SINH HOẠT: chỉ EQUAL + PRESENT_ONLY (nước, ăn uống — không bao gồm tiền sân)
   const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
   const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
@@ -198,9 +202,9 @@ export function Reports() {
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = summ?.attendedSessions ?? 0
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    // CHI PHÍ SÂN: equal split among all members
+    // CHI PHÍ SÂN: chia đều cho tất cả thành viên
     const courtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
-    // SINH HOẠT: per-session, split by attendees — approximated as proportional to sessions attended
+    // SINH HOẠT: tỉ lệ theo số buổi đã tham gia
     const allLivingTotal = livingExpTotal + presentOnlyExpTotal
     const livingCost = totalAttendances > 0 ? Math.round(allLivingTotal / totalAttendances * attended) : 0
     const totalCost = courtCost + livingCost
