@@ -180,5 +180,5 @@ export function useApiSync() {
 
     load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.clubId, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
+  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
 }
