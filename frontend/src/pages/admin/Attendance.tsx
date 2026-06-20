@@ -223,7 +223,7 @@ export function Attendance() {
           <form id="form-session-m" onSubmit={handleCreateSession} className="space-y-4">
             {!activePeriod && (
               <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-                Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+                Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước — buổi chơi yêu cầu có kỳ quỹ mới lưu được.
               </div>
             )}
             <div>

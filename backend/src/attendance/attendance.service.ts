@@ -34,6 +34,10 @@ export class AttendanceService {
     if (!dto.courtFee || dto.courtFee <= 0) {
       throw new BadRequestException('Tiền sân phải lớn hơn 0')
     }
+    const period = await this.prisma.fundPeriod.findFirst({ where: { id: dto.fundPeriodId, clubId } })
+    if (!period) {
+      throw new BadRequestException('Kỳ quỹ không tồn tại hoặc không thuộc câu lạc bộ này')
+    }
     return this.prisma.attendanceSession.create({
       data: {
         clubId,
@@ -89,10 +93,17 @@ export class AttendanceService {
 
   async getMemberSummary(clubId: string, fundPeriodId?: string) {
     const members = await this.prisma.member.findMany({ where: { clubId, isDeleted: false } })
-    const sessions = await this.prisma.attendanceSession.findMany({
+    let sessions = await this.prisma.attendanceSession.findMany({
       where: { clubId, ...(fundPeriodId ? { fundPeriodId } : {}) },
       select: { id: true },
     })
+    // Fallback: if no sessions found for this period, use sessions without any period link
+    if (fundPeriodId && sessions.length === 0) {
+      sessions = await this.prisma.attendanceSession.findMany({
+        where: { clubId, fundPeriodId: null },
+        select: { id: true },
+      })
+    }
     const sessionIds = sessions.map((s) => s.id)
 
     const records = await this.prisma.attendanceRecord.findMany({
