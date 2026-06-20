@@ -153,6 +153,10 @@ export class AttendanceService {
     )
 
     const presentCount = attendance.filter((a) => a.status === 'PRESENT').length
+    await this.prisma.attendanceSession.update({
+      where: { id: sessionId },
+      data: { status: 'completed' },
+    })
     return { updated: attendance.length, presentCount }
   }
 }
