@@ -244,7 +244,7 @@ export function TreasurerIncome() {
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-              <Button type="submit" form="form-income-m" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
+              <Button type="submit" form="form-income-m" disabled={isSaving || (!isMini && !activePeriods[0])}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
             </div>
           }
         >
@@ -476,7 +476,7 @@ export function TreasurerIncome() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-            <Button type="submit" form="form-income" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
+            <Button type="submit" form="form-income" disabled={isSaving || (!isMini && !activePeriods[0])}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
           </div>
         }
       >

@@ -231,7 +231,7 @@ export function Contributions() {
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditTarget(null) }}>Hủy</Button>
-              <Button type="submit" form="form-contrib-mobile" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
+              <Button type="submit" form="form-contrib-mobile" disabled={isSaving || (form.fundSource === 'COMMON' && !activePeriod)}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
             </div>
           }
         >
@@ -506,7 +506,7 @@ export function Contributions() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-            <Button type="submit" form="form-contrib" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu thay đổi' : 'Ghi nhận')}</Button>
+            <Button type="submit" form="form-contrib" disabled={isSaving || (form.fundSource === 'COMMON' && !activePeriod)}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu thay đổi' : 'Ghi nhận')}</Button>
           </div>
         }
       >
