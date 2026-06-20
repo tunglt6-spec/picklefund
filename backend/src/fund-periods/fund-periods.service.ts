@@ -23,13 +23,14 @@ export class FundPeriodsService {
     return fp
   }
 
-  async create(clubId: string, userId: string, dto: { name: string; startDate: string; endDate: string; contributionAmount: number; totalSessions?: number; notes?: string }) {
+  async create(clubId: string, userId: string, dto: { name: string; startDate: string; endDate: string; contributionAmount: number; totalSessions?: number; notes?: string; type?: string }) {
     if (new Date(dto.endDate) <= new Date(dto.startDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu')
     }
+    const { type: _type, ...safeDto } = dto
     return this.prisma.fundPeriod.create({
       data: {
-        ...dto,
+        ...safeDto,
         clubId,
         createdById: userId,
         startDate: new Date(dto.startDate),
