@@ -90,6 +90,11 @@ export function Contributions() {
     const isCommon = form.fundSource === 'COMMON'
 
     if (isCommon) {
+      if (!activePeriod) {
+        toast.error('Cần có kỳ quỹ đang hoạt động để ghi nhận Quỹ Chung')
+        setIsSaving(false)
+        return
+      }
       const member = members.find(m => m.id === form.memberId)
       if (!member) { setIsSaving(false); return }
 
@@ -249,6 +254,11 @@ export function Contributions() {
             )}
             {form.fundSource === 'COMMON' ? (
               <>
+                {!activePeriod && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                    Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chung.
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                   <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
@@ -529,6 +539,11 @@ export function Contributions() {
 
           {form.fundSource === 'COMMON' ? (
             <>
+              {!activePeriod && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                  Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chung.
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                 <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
