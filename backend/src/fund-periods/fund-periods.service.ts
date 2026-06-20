@@ -37,6 +37,7 @@ export class FundPeriodsService {
         endDate: new Date(dto.endDate),
         contributionAmount: new Decimal(dto.contributionAmount),
         totalSessions: dto.totalSessions ?? 0,
+        status: 'active',
       },
     })
   }
