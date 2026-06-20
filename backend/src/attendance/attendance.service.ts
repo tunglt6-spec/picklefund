@@ -53,6 +53,11 @@ export class AttendanceService {
     })
   }
 
+  async delete(id: string, clubId: string) {
+    await this.findOne(id, clubId)
+    return this.prisma.attendanceSession.delete({ where: { id } })
+  }
+
   async update(id: string, clubId: string, dto: any) {
     await this.findOne(id, clubId)
     const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto

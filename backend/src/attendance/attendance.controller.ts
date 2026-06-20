@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { AttendanceService } from './attendance.service'
 import { CurrentUser, Roles } from '../common/decorators'
@@ -40,6 +40,12 @@ export class AttendanceController {
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
   async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
     return ok(await this.service.update(id, user.clubId, body))
+  }
+
+  @Delete(':id')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async delete(@Param('id') id: string, @CurrentUser() user: any) {
+    return ok(await this.service.delete(id, user.clubId), 'Xóa buổi chơi thành công')
   }
 
   @Get(':id/attendance')

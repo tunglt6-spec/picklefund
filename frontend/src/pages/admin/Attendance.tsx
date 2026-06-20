@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users } from 'lucide-react'
+import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2 } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -39,6 +39,10 @@ export function Attendance() {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
   const [isSaving, setIsSaving] = useState(false)
+  const [editSession, setEditSession] = useState<AttendanceSession | null>(null)
+  const [editForm, setEditForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const openAttendance = async (session: AttendanceSession) => {
     setSelectedSession(session)
@@ -74,6 +78,51 @@ export function Attendance() {
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Lưu điểm danh thất bại'
       toast.error(msg)
+    }
+  }
+
+  const openEdit = (session: AttendanceSession) => {
+    setEditSession(session)
+    setEditForm({
+      sessionDate: session.sessionDate,
+      startTime: session.startTime ?? '08:00',
+      endTime: session.endTime ?? '11:00',
+      courtFee: Number(session.courtFee),
+      courtName: session.courtName ?? '',
+    })
+  }
+
+  const handleEditSession = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editSession || isSaving) return
+    setIsSaving(true)
+    try {
+      await api.put(`/attendance/${editSession.id}`, { ...editForm, courtFee: Number(editForm.courtFee) })
+      setSessions(prev => prev.map(s => s.id === editSession.id
+        ? { ...s, ...editForm, courtFee: Number(editForm.courtFee) }
+        : s
+      ))
+      setEditSession(null)
+      toast.success('Đã cập nhật buổi chơi!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật thất bại')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteSession = async () => {
+    if (!deleteId || isDeleting) return
+    setIsDeleting(true)
+    try {
+      await api.delete(`/attendance/${deleteId}`)
+      setSessions(prev => prev.filter(s => s.id !== deleteId))
+      setDeleteId(null)
+      toast.success('Đã xóa buổi chơi!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa thất bại')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -172,12 +221,26 @@ export function Attendance() {
                       <Users size={11} /><strong>{session._count?.attendanceRecords}</strong>/{members.length}
                     </span>
                   </div>
-                  <button
-                    className="w-full py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 flex items-center justify-center gap-1 active:bg-indigo-50"
-                    onClick={() => openAttendance(session)}
-                  >
-                    <CheckSquare size={14} />Điểm danh
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      className="flex-1 py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 flex items-center justify-center gap-1 active:bg-indigo-50"
+                      onClick={() => openAttendance(session)}
+                    >
+                      <CheckSquare size={14} />Điểm danh
+                    </button>
+                    <button
+                      className="px-3 py-2 rounded-[10px] text-slate-400 border border-slate-100 active:bg-slate-50 active:text-indigo-600"
+                      onClick={() => openEdit(session)}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      className="px-3 py-2 rounded-[10px] text-slate-400 border border-slate-100 active:bg-red-50 active:text-red-500"
+                      onClick={() => setDeleteId(session.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -212,6 +275,55 @@ export function Attendance() {
             </div>
           </Modal>
         )}
+        {/* Mobile edit modal */}
+        <Modal open={!!editSession} onClose={() => setEditSession(null)} title="Sửa Buổi Chơi" subtitle="Cập nhật thông tin buổi chơi"
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" type="button" onClick={() => setEditSession(null)} disabled={isSaving}>Hủy</Button>
+              <Button type="submit" form="form-edit-session-m" disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</Button>
+            </div>
+          }
+        >
+          <form id="form-edit-session-m" onSubmit={handleEditSession} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+              <input required type="date" value={editForm.sessionDate} onChange={e => setEditForm({ ...editForm, sessionDate: e.target.value })} className="input-base" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+                <input type="time" value={editForm.startTime} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="input-base" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+                <input type="time" value={editForm.endTime} onChange={e => setEditForm({ ...editForm, endTime: e.target.value })} className="input-base" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+              <input required value={editForm.courtName} onChange={e => setEditForm({ ...editForm, courtName: e.target.value })} placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
+              <input type="number" required min="1" value={editForm.courtFee} onChange={e => setEditForm({ ...editForm, courtFee: Number(e.target.value) })} className="input-base" />
+            </div>
+          </form>
+        </Modal>
+
+        {/* Mobile delete confirm modal */}
+        <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title="Xóa buổi chơi" subtitle="Hành động này không thể hoàn tác"
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>Hủy</Button>
+              <Button onClick={handleDeleteSession} disabled={isDeleting} className="bg-red-600 hover:bg-red-700 text-white border-red-600">
+                {isDeleting ? 'Đang xóa...' : 'Xóa buổi chơi'}
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-slate-600">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
+        </Modal>
+
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới" subtitle="Lên lịch buổi chơi"
           footer={
             <div className="flex gap-3 justify-end">
@@ -332,13 +444,21 @@ export function Attendance() {
                   </div>
                 </div>
 
-                <Button
-                  variant="outline" size="sm" className="w-full mt-3 justify-center"
-                  onClick={() => openAttendance(session)}
-                  disabled={members.length === 0}
-                >
-                  <CheckSquare size={13} />Điểm danh
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline" size="sm" className="flex-1 justify-center"
+                    onClick={() => openAttendance(session)}
+                    disabled={members.length === 0}
+                  >
+                    <CheckSquare size={13} />Điểm danh
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => openEdit(session)}>
+                    <Edit2 size={13} />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setDeleteId(session.id)}>
+                    <Trash2 size={13} className="text-red-400" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -377,6 +497,57 @@ export function Attendance() {
           </div>
         </Modal>
       )}
+
+      {/* Edit session modal */}
+      <Modal open={!!editSession} onClose={() => setEditSession(null)} title="Sửa Buổi Chơi"
+        subtitle="Cập nhật thông tin buổi chơi"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" type="button" onClick={() => setEditSession(null)} disabled={isSaving}>Hủy</Button>
+            <Button type="submit" form="form-edit-session" disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</Button>
+          </div>
+        }
+      >
+        <form id="form-edit-session" onSubmit={handleEditSession} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+            <input required type="date" value={editForm.sessionDate} onChange={e => setEditForm({ ...editForm, sessionDate: e.target.value })} className="input-base" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+              <input type="time" value={editForm.startTime} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="input-base" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+              <input type="time" value={editForm.endTime} onChange={e => setEditForm({ ...editForm, endTime: e.target.value })} className="input-base" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+            <input required value={editForm.courtName} onChange={e => setEditForm({ ...editForm, courtName: e.target.value })} placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
+            <input type="number" required min="1" value={editForm.courtFee} onChange={e => setEditForm({ ...editForm, courtFee: Number(e.target.value) })} className="input-base" />
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete confirm modal */}
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title="Xóa buổi chơi"
+        subtitle="Hành động này không thể hoàn tác"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>Hủy</Button>
+            <Button onClick={handleDeleteSession} disabled={isDeleting} className="bg-red-600 hover:bg-red-700 text-white border-red-600">
+              {isDeleting ? 'Đang xóa...' : 'Xóa buổi chơi'}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
+      </Modal>
 
       {/* Create session modal */}
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới"
