@@ -55,6 +55,7 @@ export class AttendanceService {
 
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId)
+    await this.prisma.attendanceRecord.deleteMany({ where: { attendanceSessionId: id } })
     return this.prisma.attendanceSession.delete({ where: { id } })
   }
 
