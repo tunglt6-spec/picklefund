@@ -41,6 +41,7 @@ export function Contributions() {
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
 
   const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
@@ -84,11 +85,13 @@ export function Contributions() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSaving) return
+    setIsSaving(true)
     const isCommon = form.fundSource === 'COMMON'
 
     if (isCommon) {
       const member = members.find(m => m.id === form.memberId)
-      if (!member) return
+      if (!member) { setIsSaving(false); return }
 
       const payload = {
         fundSource: 'COMMON', memberId: member.id,
@@ -111,6 +114,7 @@ export function Contributions() {
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        setIsSaving(false)
         return
       }
     } else {
@@ -134,9 +138,11 @@ export function Contributions() {
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        setIsSaving(false)
         return
       }
     }
+    setIsSaving(false)
     setShowCreate(false)
   }
 
@@ -220,7 +226,7 @@ export function Contributions() {
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" type="button" onClick={() => { setShowCreate(false); setEditTarget(null) }}>Hủy</Button>
-              <Button type="submit" form="form-contrib-mobile">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
+              <Button type="submit" form="form-contrib-mobile" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
             </div>
           }
         >
@@ -490,7 +496,7 @@ export function Contributions() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-            <Button type="submit" form="form-contrib">{editTarget ? 'Lưu thay đổi' : 'Ghi nhận'}</Button>
+            <Button type="submit" form="form-contrib" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu thay đổi' : 'Ghi nhận')}</Button>
           </div>
         }
       >

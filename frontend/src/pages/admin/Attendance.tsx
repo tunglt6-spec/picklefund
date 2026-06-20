@@ -38,6 +38,7 @@ export function Attendance() {
   const [attendance, setAttendance] = useState<Record<string, boolean>>({})
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
+  const [isSaving, setIsSaving] = useState(false)
 
   const openAttendance = async (session: AttendanceSession) => {
     setSelectedSession(session)
@@ -78,7 +79,13 @@ export function Attendance() {
 
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault()
-    const payload = { fundPeriodId: activePeriod?.id ?? '', ...form, courtFee: Number(form.courtFee) }
+    if (isSaving) return
+    if (!activePeriod?.id) {
+      toast.error('Cần tạo kỳ quỹ trước khi tạo buổi chơi')
+      return
+    }
+    setIsSaving(true)
+    const payload = { fundPeriodId: activePeriod.id, ...form, courtFee: Number(form.courtFee) }
     try {
       const res = await api.post('/attendance', payload)
       const d = res.data?.data
@@ -88,6 +95,8 @@ export function Attendance() {
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Tạo buổi thất bại'
       toast.error(msg)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -206,8 +215,8 @@ export function Attendance() {
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới" subtitle="Lên lịch buổi chơi"
           footer={
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-              <Button type="submit" form="form-session-m">Tạo buổi chơi</Button>
+              <Button variant="outline" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy bỏ</Button>
+              <Button type="submit" form="form-session-m" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo buổi chơi'}</Button>
             </div>
           }
         >
@@ -374,15 +383,15 @@ export function Attendance() {
         subtitle="Lên lịch buổi chơi cho kỳ quỹ hiện tại"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
-            <Button type="submit" form="form-session">Tạo buổi chơi</Button>
+            <Button variant="outline" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy bỏ</Button>
+            <Button type="submit" form="form-session" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo buổi chơi'}</Button>
           </div>
         }
       >
         <form id="form-session" onSubmit={handleCreateSession} className="space-y-4">
           {!activePeriod && (
             <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-              Chưa có kỳ quỹ đang hoạt động. Buổi chơi sẽ được lưu cục bộ cho đến khi tạo kỳ quỹ.
+              Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi tạo buổi chơi.
             </div>
           )}
           <div>
@@ -408,8 +417,8 @@ export function Attendance() {
               placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ)</label>
-            <input type="number" value={form.courtFee}
+            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
+            <input type="number" required min="1" value={form.courtFee}
               onChange={e => setForm({ ...form, courtFee: Number(e.target.value) })} className="input-base" />
           </div>
         </form>

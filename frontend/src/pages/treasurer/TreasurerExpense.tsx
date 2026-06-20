@@ -44,6 +44,7 @@ export function TreasurerExpense() {
   const [editTarget, setEditTarget] = useState<LivingExpense | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState({ ...BLANK, fundPeriodId: defaultPeriodId })
+  const [isSaving, setIsSaving] = useState(false)
 
   const totalExpenses = expenses.reduce((a, e) => a + e.amount, 0)
 
@@ -67,6 +68,8 @@ export function TreasurerExpense() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSaving) return
+    setIsSaving(true)
     const payload = { fundSource: 'COMMON' as const, fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
     try {
       if (editTarget) {
@@ -82,8 +85,10 @@ export function TreasurerExpense() {
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Lưu khoản chi thất bại')
+      setIsSaving(false)
       return
     }
+    setIsSaving(false)
     setShowModal(false)
   }
 
@@ -176,8 +181,8 @@ export function TreasurerExpense() {
           subtitle={editTarget ? 'Cập nhật thông tin khoản chi' : 'Ghi nhận chi phí của CLB'}
           footer={
             <div className="flex gap-3 justify-end">
-              <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-              <Button type="submit" form="form-expense-m">{editTarget ? 'Lưu' : 'Thêm'}</Button>
+              <Button variant="outline" type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Hủy</Button>
+              <Button type="submit" form="form-expense-m" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Thêm')}</Button>
             </div>
           }
         >
@@ -327,8 +332,8 @@ export function TreasurerExpense() {
         subtitle={editTarget ? 'Cập nhật thông tin khoản chi' : 'Ghi nhận chi phí của CLB'}
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-            <Button type="submit" form="form-expense">{editTarget ? 'Lưu' : 'Thêm'}</Button>
+            <Button variant="outline" type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Hủy</Button>
+            <Button type="submit" form="form-expense" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Thêm')}</Button>
           </div>
         }
       >

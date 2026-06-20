@@ -160,7 +160,7 @@ export function useApiSync() {
           const sessions: AttendanceSession[] = raw.map((s: any) => ({
             id: s.id,
             clubId: s.clubId,
-            fundPeriodId: s.fundPeriodId ?? undefined,
+            fundPeriodId: s.fundPeriodId || undefined,
             sessionDate: s.sessionDate?.slice(0, 10) ?? '',
             startTime: s.startTime ?? '',
             endTime: s.endTime ?? '',

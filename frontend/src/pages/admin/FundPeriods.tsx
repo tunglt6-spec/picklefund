@@ -75,6 +75,8 @@ export function FundPeriods() {
     }
   }
 
+  const [isSaving, setIsSaving]       = useState(false)
+  const [finalizingId, setFinalizingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<'' | FundPeriodType>('')
   const [filterStatus, setFilterStatus] = useState<'' | FundPeriodStatus>('')
@@ -142,30 +144,32 @@ export function FundPeriods() {
     onClose: () => void,
   ) => async (e: React.FormEvent) => {
     e.preventDefault()
-    const payload = { ...form, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
-    if (editing) {
-      try {
+    if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate)) {
+      toast.error('Ngày kết thúc phải sau ngày bắt đầu')
+      return
+    }
+    setIsSaving(true)
+    try {
+      const payload = { ...form, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
+      if (editing) {
         const res = await api.put(`/fund-periods/${editing.id}`, payload)
         const d = res.data?.data
         const updated: FundPeriod = { ...editing, ...payload, ...(d ?? {}), contributionAmount: Number((d ?? payload).contributionAmount) }
         setPeriods(prev => prev.map(x => x.id === editing.id ? updated : x))
-      } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'Cảp nhật kỳ quỹ thất bại')
-        return
-      }
-      onClose()
-      toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
-    } else {
-      try {
+        onClose()
+        toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
+      } else {
         const res = await api.post('/fund-periods', payload)
         const d = res.data?.data
         const newPeriod: FundPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
         setPeriods(prev => [newPeriod, ...prev])
         onClose()
         toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
-      } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'Tạo kỳ quỹ thất bại')
       }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? (editing ? 'Cập nhật kỳ quỹ thất bại' : 'Tạo kỳ quỹ thất bại'))
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -183,14 +187,22 @@ export function FundPeriods() {
   const isMobile = useIsMobile()
 
   const handleFinalize = async (p: FundPeriod) => {
+    if (finalizingId) return
+    setFinalizingId(p.id)
     try {
       await api.patch(`/fund-periods/${p.id}/status`, { status: 'finalized' })
-      await api.post(`/personal-receipts/generate/${p.id}`)
       setPeriods(prev => prev.map(x => x.id === p.id
         ? { ...x, status: 'finalized', finalizedAt: new Date().toISOString() } : x))
-      toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
+      try {
+        await api.post(`/personal-receipts/generate/${p.id}`)
+        toast.success(`Đã chốt kỳ "${p.name}" và tạo phiếu thu cá nhân`)
+      } catch {
+        toast.error(`Kỳ đã chốt nhưng tạo phiếu thu thất bại — vui lòng thử lại`)
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Chốt kỳ quỹ thất bại')
+    } finally {
+      setFinalizingId(null)
     }
   }
 
@@ -333,6 +345,7 @@ export function FundPeriods() {
           setForm={setFormChung}
           onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null) })}
           editing={!!editingChung}
+          isSaving={isSaving}
         />
         <FundModal
           open={showCreateGame}
@@ -344,6 +357,7 @@ export function FundPeriods() {
           setForm={setFormGame}
           onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null) })}
           editing={!!editingGame}
+          isSaving={isSaving}
         />
       </div>
     )
@@ -657,6 +671,7 @@ export function FundPeriods() {
         form={formChung}
         setForm={setFormChung}
         editing={!!editingChung}
+        isSaving={isSaving}
         onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) })}
       />
 
@@ -670,6 +685,7 @@ export function FundPeriods() {
         form={formGame}
         setForm={setFormGame}
         editing={!!editingGame}
+        isSaving={isSaving}
         onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) })}
       />
 
@@ -1090,18 +1106,18 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   )
 }
 
-function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit, editing }: {
+function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit, editing, isSaving }: {
   open: boolean; onClose: () => void; title: string; subtitle: string
   formId: string; form: FormData
   setForm: (f: FormData) => void; onSubmit: (e: React.FormEvent) => void
-  editing?: boolean
+  editing?: boolean; isSaving?: boolean
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} subtitle={subtitle} size="lg"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" type="button" onClick={onClose}>Hủy bỏ</Button>
-          <Button type="submit" form={formId}>{editing ? 'Cập nhật kỳ quỹ' : 'Tạo kỳ quỹ'}</Button>
+          <Button variant="outline" type="button" onClick={onClose} disabled={isSaving}>Hủy bỏ</Button>
+          <Button type="submit" form={formId} disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editing ? 'Cập nhật kỳ quỹ' : 'Tạo kỳ quỹ')}</Button>
         </div>
       }
     >

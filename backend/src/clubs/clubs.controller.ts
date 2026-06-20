@@ -31,7 +31,8 @@ export class ClubsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    if (user.role !== 'SUPER_ADMIN' && user.clubId !== id) throw new ForbiddenException()
     return ok(await this.clubs.findOne(id))
   }
 

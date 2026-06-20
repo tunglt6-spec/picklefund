@@ -24,6 +24,9 @@ export class FundPeriodsService {
   }
 
   async create(clubId: string, userId: string, dto: { name: string; startDate: string; endDate: string; contributionAmount: number; totalSessions?: number; notes?: string }) {
+    if (new Date(dto.endDate) <= new Date(dto.startDate)) {
+      throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu')
+    }
     return this.prisma.fundPeriod.create({
       data: {
         ...dto,
@@ -41,6 +44,9 @@ export class FundPeriodsService {
     const fp = await this.findOne(id, clubId)
     if (fp.status === 'finalized') throw new BadRequestException('Kỳ đã chốt không thể sửa')
     const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto
+    const effectiveStart = safeDto.startDate ? new Date(safeDto.startDate) : fp.startDate
+    const effectiveEnd = safeDto.endDate ? new Date(safeDto.endDate) : fp.endDate
+    if (effectiveEnd <= effectiveStart) throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu')
     return this.prisma.fundPeriod.update({
       where: { id },
       data: {

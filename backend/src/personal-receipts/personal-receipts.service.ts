@@ -39,7 +39,7 @@ export class PersonalReceiptsService {
 
     const [courtAgg, livingAgg] = await Promise.all([
       this.prisma.attendanceSession.aggregate({ where: { fundPeriodId, clubId }, _sum: { courtFee: true } }),
-      this.prisma.livingExpense.aggregate({ where: { fundPeriodId, clubId }, _sum: { amount: true } }),
+      this.prisma.livingExpense.aggregate({ where: { fundPeriodId, clubId, fundSource: 'COMMON' }, _sum: { amount: true } }),
     ])
 
     const totalCourt = Number(courtAgg._sum.courtFee ?? 0)

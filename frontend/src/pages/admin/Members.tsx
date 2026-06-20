@@ -31,10 +31,11 @@ function MemberAvatar({ name, id }: { name: string; id: string }) {
 }
 
 function MemberDrawer({
-  open, onClose, editMember, onSave,
+  open, onClose, editMember, onSave, isSaving,
 }: {
   open: boolean; onClose: () => void; editMember: Member | null
   onSave: (form: typeof emptyForm) => void
+  isSaving?: boolean
 }) {
   const [form, setForm] = useState(() => editMember
     ? { fullName: editMember.fullName, phone: editMember.phone || '', email: editMember.email || '', joinDate: editMember.joinDate, notes: editMember.notes || '' }
@@ -108,7 +109,7 @@ function MemberDrawer({
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">Hủy bỏ</Button>
-            <Button type="submit" className="flex-1">{isEdit ? 'Lưu thay đổi' : 'Thêm thành viên'}</Button>
+            <Button type="submit" className="flex-1" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (isEdit ? 'Lưu thay đổi' : 'Thêm thành viên')}</Button>
           </div>
         </form>
       </div>
@@ -125,9 +126,10 @@ export function Members() {
   const setMembers = (fn: (prev: Member[]) => Member[]) =>
     saveMembers(clubId, fn(getClubData(clubId).members))
 
-  const [search, setSearch]       = useState('')
-  const [showDrawer, setShowDrawer] = useState(false)
-  const [editMember, setEditMember] = useState<Member | null>(null)
+  const [search, setSearch]         = useState('')
+  const [showDrawer, setShowDrawer]  = useState(false)
+  const [editMember, setEditMember]  = useState<Member | null>(null)
+  const [isSaving, setIsSaving]      = useState(false)
   const [statusFilter, setStatusFilter] = useState<'all'|'active'|'inactive'>('all')
   const [showFilter, setShowFilter] = useState(false)
   const [joinFrom, setJoinFrom] = useState('')
@@ -147,6 +149,30 @@ export function Members() {
   const closeDrawer = () => { setShowDrawer(false); setEditMember(null) }
 
   const handleSave = async (form: typeof emptyForm) => {
+    setIsSaving(true)
+    try {
+      if (editMember) {
+        const res = await api.put(`/members/${editMember.id}`, form)
+        const updated = res.data?.data ?? { ...editMember, ...form }
+        setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated } : m))
+        closeDrawer()
+        toast.success('Cập nhật thành viên thành công!')
+      } else {
+        const res = await api.post('/members', { ...form, clubId })
+        const created = res.data?.data
+        setMembers(prev => [...prev, { ...created }])
+        closeDrawer()
+        toast.success(`Đã thêm ${form.fullName}!`)
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu thành viên thất bại')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDelete = async (m: Member) => {
+    if (!window.confirm(`Xóa thành viên ${m.fullName}?`)) return
     try {
       await api.delete(`/members/${m.id}`)
       setMembers(prev => prev.filter(x => x.id !== m.id))
@@ -163,7 +189,7 @@ export function Members() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <MemberDrawer open={showDrawer} onClose={closeDrawer} editMember={editMember} onSave={handleSave} />
+        <MemberDrawer open={showDrawer} onClose={closeDrawer} editMember={editMember} onSave={handleSave} isSaving={isSaving} />
 
         {/* Sticky search bar */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">

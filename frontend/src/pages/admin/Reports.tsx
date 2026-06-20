@@ -141,8 +141,14 @@ export function Reports() {
   const balance = totalIncome - totalExpenses
   const balancePct = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0
   const memberCount = clubData.members.length
-  const sessionCount = clubData.sessions.length
   const confirmedCount = filteredContribs.filter(c => c.isConfirmed).length
+
+  // Sessions for the active period; fall back to unlinked sessions (fundPeriodId='') for clubs
+  // that created sessions before creating a fund period.
+  const exactPeriodSessions = clubData.sessions.filter(s => s.fundPeriodId === activePeriod?.id)
+  const unlinkedSessions = clubData.sessions.filter(s => !s.fundPeriodId)
+  const periodSessions = exactPeriodSessions.length > 0 ? exactPeriodSessions : unlinkedSessions
+  const sessionCount = periodSessions.length
 
   const expenseByCategory = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
     const key = e.description ?? 'Khác'
@@ -182,7 +188,6 @@ export function Reports() {
     }
   })
 
-  const periodSessions = clubData.sessions.filter(s => s.fundPeriodId === activePeriod?.id)
   const courtExpTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
   const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
   const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)

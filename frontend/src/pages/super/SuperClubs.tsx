@@ -37,6 +37,7 @@ export function SuperClubs() {
   // Edit modal
   const [editClub, setEditClub] = useState<Club | null>(null)
   const [editForm, setEditForm] = useState({ name: '', address: '', contactEmail: '', contactPhone: '' })
+  const [isSaving, setIsSaving] = useState(false)
 
   // Delete confirmation
   const [deleteClub, setDeleteClub] = useState<Club | null>(null)
@@ -77,6 +78,8 @@ export function SuperClubs() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSaving) return
+    setIsSaving(true)
     try {
       const res = await api.post('/clubs', form)
       const d = res.data?.data
@@ -85,6 +88,7 @@ export function SuperClubs() {
       setForm({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })
       toast.success(`Tạo CLB ${form.name} thành công!`)
     } catch { toast.error('Tạo CLB thất bại. Vui lòng thử lại.') }
+    finally { setIsSaving(false) }
   }
 
   const openEdit = (club: Club) => {
@@ -94,13 +98,15 @@ export function SuperClubs() {
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editClub) return
+    if (!editClub || isSaving) return
+    setIsSaving(true)
     try {
       await api.put(`/clubs/${editClub.id}`, editForm)
       setClubs(prev => prev.map(c => c.id === editClub.id ? { ...c, ...editForm } : c))
       setEditClub(null)
       toast.success('Đã cập nhật thông tin CLB')
     } catch { toast.error('Cập nhật thất bại') }
+    finally { setIsSaving(false) }
   }
 
   const handleDelete = async () => {
@@ -165,8 +171,8 @@ export function SuperClubs() {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
-          <Button variant="secondary" type="button" onClick={() => setShowCreate(false)}>Hủy</Button>
-          <Button type="submit">Tạo CLB</Button>
+          <Button variant="secondary" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy</Button>
+          <Button type="submit" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo CLB'}</Button>
         </div>
       </form>
     </Modal>
@@ -194,8 +200,8 @@ export function SuperClubs() {
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
-          <Button variant="secondary" type="button" onClick={() => setEditClub(null)}>Hủy</Button>
-          <Button type="submit">Lưu thay đổi</Button>
+          <Button variant="secondary" type="button" onClick={() => setEditClub(null)} disabled={isSaving}>Hủy</Button>
+          <Button type="submit" disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</Button>
         </div>
       </form>
     </Modal>

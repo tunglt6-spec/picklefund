@@ -12,15 +12,16 @@ export function MemberDashboard() {
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
 
-  const myContribution = clubData.contributions.find(c => c.memberId === user?.memberId)
+  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
+  const myContribution = clubData.contributions.find(c => c.memberId === user?.memberId && (!activePeriod || c.fundPeriodId === activePeriod.id))
   const attended = new Set(clubData.myAttendedSessionIds ?? [])
-  const completedSessions = clubData.sessions.filter(s => s.status === 'completed')
+  const completedSessions = clubData.sessions.filter(s => s.status === 'completed' && (!activePeriod || s.fundPeriodId === activePeriod.id))
   const totalSessions = completedSessions.length
   const myAttendance = completedSessions.filter(s => attended.has(s.id)).length
   const attendanceRate = totalSessions > 0 ? Math.round((myAttendance / totalSessions) * 100) : 0
 
   const amountPaid = myContribution?.isConfirmed ? (myContribution.amount ?? 0) : 0
-  const totalExpenses = clubData.expenses.reduce((a, e) => a + e.amount, 0)
+  const totalExpenses = clubData.expenses.filter(e => !activePeriod || e.fundPeriodId === activePeriod.id).reduce((a, e) => a + e.amount, 0)
   const memberCount = clubData.members.length || 1
   const myCost = totalSessions > 0 && memberCount > 0
     ? Math.round((myAttendance / totalSessions) * (totalExpenses / memberCount))

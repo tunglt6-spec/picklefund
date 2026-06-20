@@ -53,6 +53,10 @@ export class MinigameService {
 
   async addParticipants(id: string, clubId: string, memberIds: string[]) {
     await this.assertOwnership(id, clubId)
+    if (memberIds.length > 0) {
+      const valid = await this.prisma.member.findMany({ where: { id: { in: memberIds }, clubId, isDeleted: false }, select: { id: true } })
+      if (valid.length !== memberIds.length) throw new BadRequestException('Một số thành viên không thuộc CLB này')
+    }
     await this.prisma.minigameParticipant.createMany({
       data: memberIds.map(memberId => ({ minigameId: id, memberId })),
       skipDuplicates: true,

@@ -42,6 +42,7 @@ export function TreasurerIncome() {
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK, fundPeriodId: defaultPeriodId })
 
   const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
@@ -86,6 +87,8 @@ export function TreasurerIncome() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSaving) return
+    setIsSaving(true)
 
     if (isMini) {
       const payload = {
@@ -112,11 +115,12 @@ export function TreasurerIncome() {
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        setIsSaving(false)
         return
       }
     } else {
       const member = members.find(m => m.id === form.memberId)
-      if (!member) return
+      if (!member) { setIsSaving(false); return }
       const payload = { fundSource: 'COMMON', memberId: member.id, fundPeriodId: form.fundPeriodId, amount: Number(form.amount), paidAt: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes }
       try {
         if (editTarget) {
@@ -132,9 +136,11 @@ export function TreasurerIncome() {
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
+        setIsSaving(false)
         return
       }
     }
+    setIsSaving(false)
     setShowModal(false)
   }
 
@@ -238,7 +244,7 @@ export function TreasurerIncome() {
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-              <Button type="submit" form="form-income-m">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
+              <Button type="submit" form="form-income-m" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
             </div>
           }
         >
@@ -470,7 +476,7 @@ export function TreasurerIncome() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
-            <Button type="submit" form="form-income">{editTarget ? 'Lưu' : 'Ghi nhận'}</Button>
+            <Button type="submit" form="form-income" disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu' : 'Ghi nhận')}</Button>
           </div>
         }
       >

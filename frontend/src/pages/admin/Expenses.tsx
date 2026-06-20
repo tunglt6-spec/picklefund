@@ -89,9 +89,9 @@ const emptyForm = {
   receiverName: '',
 }
 
-function AddDrawer({ open, onClose, onSave, editExpense }: {
+function AddDrawer({ open, onClose, onSave, editExpense, isSaving }: {
   open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
-  editExpense?: LivingExpense | null
+  editExpense?: LivingExpense | null; isSaving?: boolean
 }) {
   const isEdit = !!editExpense
   const [form, setForm] = useState(emptyForm)
@@ -215,8 +215,8 @@ function AddDrawer({ open, onClose, onSave, editExpense }: {
             </div>
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-            <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1">Hủy bỏ</Button>
-            <Button type="submit" className="flex-1"><CheckCircle size={14} />{isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi'}</Button>
+            <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}>Hủy bỏ</Button>
+            <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu...' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
           </div>
         </form>
       </div>
@@ -372,6 +372,7 @@ export function Expenses() {
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [editTarget, setEditTarget] = useState<LivingExpense | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', rule: 'all', from: '', to: '' })
   const [detailExp, setDetailExp] = useState<RichExpense | null>(null)
@@ -402,6 +403,7 @@ export function Expenses() {
   const pendingCount = richExpenses.filter(e => e.status === 'pending').length
 
   const handleAdd = async (form: typeof emptyForm) => {
+    setIsSaving(true)
     const isMini = form.fundSource === 'MINI'
     const payload = {
       fundSource: form.fundSource,
@@ -422,6 +424,8 @@ export function Expenses() {
       toast.success(isMini ? 'Đã thêm khoản chi Quỹ Mini!' : 'Đã thêm khoản chi Quỹ Chung!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Thêm khoản chi thất bại')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -439,6 +443,7 @@ export function Expenses() {
 
   const handleEdit = async (form: typeof emptyForm) => {
     if (!editTarget) return
+    setIsSaving(true)
     const payload = {
       description: form.description,
       amount: Number(form.amount),
@@ -455,6 +460,8 @@ export function Expenses() {
       toast.success('Đã cập nhật khoản chi!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Cập nhật khoản chi thất bại')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -529,8 +536,8 @@ export function Expenses() {
           ))}
         </div>
         <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" message="Hành động này không thể hoàn tác." onConfirm={() => { if (confirmId) handleDelete(confirmId) }} onCancel={() => setConfirmId(null)} />
-        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} />
-        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} />
+        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} />
+        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} />
       </div>
     )
   }
@@ -689,7 +696,7 @@ export function Expenses() {
       </div>
 
       {/* Drawers & modals */}
-      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} />
+      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} />
       <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
       {detailExp && (
         <DetailView

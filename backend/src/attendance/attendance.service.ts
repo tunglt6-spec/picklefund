@@ -28,6 +28,12 @@ export class AttendanceService {
   }
 
   async create(clubId: string, userId: string, dto: { fundPeriodId: string; sessionDate: string; courtFee: number; courtName?: string; startTime?: string; endTime?: string; notes?: string }) {
+    if (!dto.fundPeriodId) {
+      throw new BadRequestException('Cần có kỳ quỹ đang hoạt động để tạo buổi chơi')
+    }
+    if (!dto.courtFee || dto.courtFee <= 0) {
+      throw new BadRequestException('Tiền sân phải lớn hơn 0')
+    }
     return this.prisma.attendanceSession.create({
       data: {
         clubId,
