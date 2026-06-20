@@ -921,7 +921,7 @@ interface MinigameStore {
   getMinigame: (id: string) => MiniGame | undefined
   setMinigamesFromApi: (clubId: string, minigames: MiniGame[]) => void
   syncMinigameDetail: (mg: MiniGame, apiParticipants: MiniGameParticipant[]) => void
-  createMinigame: (data: Omit<MiniGame, 'id' | 'createdAt'>) => MiniGame
+  createMinigame: (data: Omit<MiniGame, 'createdAt'>) => MiniGame
   updateMinigame: (id: string, data: Partial<MiniGame>) => void
   deleteMinigame: (id: string) => void
 
