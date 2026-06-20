@@ -191,7 +191,6 @@ export function Reports() {
   const courtExpTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
   const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
   const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
-  const presentCount = attSummary.filter(s => s.attendedSessions > 0).length
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
 
   const memberBillRows = clubData.members.map(m => {
