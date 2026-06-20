@@ -76,18 +76,21 @@ export class FundPeriodsService {
   async summary(id: string, clubId: string) {
     const fp = await this.findOne(id, clubId)
 
-    const [contributions, courtFees, livingExpenses, sessions, members] = await Promise.all([
+    const [contributions, courtExpAgg, livingExpAgg, sessions, members] = await Promise.all([
       this.prisma.fundContribution.aggregate({ where: { fundPeriodId: id, clubId, fundSource: 'COMMON' }, _sum: { amount: true } }),
-      this.prisma.attendanceSession.aggregate({ where: { fundPeriodId: id, clubId }, _sum: { courtFee: true } }),
-      this.prisma.livingExpense.aggregate({ where: { fundPeriodId: id, clubId, fundSource: 'COMMON' }, _sum: { amount: true } }),
+      // CHI PHÍ SÂN: expenses phân bổ EQUAL ("Đều nhau") — chia đều tất cả thành viên
+      this.prisma.livingExpense.aggregate({ where: { fundPeriodId: id, clubId, fundSource: 'COMMON', allocationRule: 'EQUAL' }, _sum: { amount: true } }),
+      // SINH HOẠT: expenses phân bổ PRESENT_ONLY/ATTENDANCE ("Theo số người tham gia")
+      this.prisma.livingExpense.aggregate({ where: { fundPeriodId: id, clubId, fundSource: 'COMMON', allocationRule: { in: ['PRESENT_ONLY', 'ATTENDANCE'] } }, _sum: { amount: true } }),
       this.prisma.attendanceSession.findMany({ where: { fundPeriodId: id, clubId }, include: { _count: { select: { attendanceRecords: { where: { status: 'PRESENT' } } } } } }),
       this.prisma.member.findMany({ where: { clubId, isDeleted: false } }),
     ])
 
     const totalIncome = Number(contributions._sum.amount ?? 0)
-    const totalCourt = Number(courtFees._sum.courtFee ?? 0)
-    const totalLiving = Number(livingExpenses._sum.amount ?? 0)
+    const totalCourt = Number(courtExpAgg._sum.amount ?? 0)
+    const totalLiving = Number(livingExpAgg._sum.amount ?? 0)
     const totalExpenses = totalCourt + totalLiving
+    const memberCount = members.length
     const totalAttendance = sessions.reduce((s, sess) => s + sess._count.attendanceRecords, 0)
     const costPerAttendance = totalAttendance > 0 ? Math.round(totalExpenses / totalAttendance) : 0
 
@@ -98,7 +101,7 @@ export class FundPeriodsService {
         this.prisma.fundContribution.aggregate({ where: { memberId: m.id, fundPeriodId: id, fundSource: 'COMMON' }, _sum: { amount: true } }),
       ])
       const amountPaid = Number(paid._sum.amount ?? 0)
-      const courtCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalCourt) : 0
+      const courtCost = memberCount > 0 ? Math.round(totalCourt / memberCount) : 0
       const livingCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalLiving) : 0
       const totalCost = courtCost + livingCost
       const balance = amountPaid - totalCost
