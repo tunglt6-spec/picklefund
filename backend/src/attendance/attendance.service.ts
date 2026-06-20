@@ -98,9 +98,10 @@ export class AttendanceService {
       select: { id: true },
     })
     // Fallback: if no sessions found for this period, use sessions without any period link
+    // (fundPeriodId stored as '' for sessions created before fund period validation was added)
     if (fundPeriodId && sessions.length === 0) {
       sessions = await this.prisma.attendanceSession.findMany({
-        where: { clubId, fundPeriodId: null },
+        where: { clubId, fundPeriodId: '' },
         select: { id: true },
       })
     }
