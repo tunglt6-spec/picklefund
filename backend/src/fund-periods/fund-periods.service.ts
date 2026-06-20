@@ -45,7 +45,7 @@ export class FundPeriodsService {
   async update(id: string, clubId: string, dto: any) {
     const fp = await this.findOne(id, clubId)
     if (fp.status === 'finalized') throw new BadRequestException('Kỳ đã chốt không thể sửa')
-    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto
+    const { clubId: _c, createdById: _b, id: _id, type: _t, ...safeDto } = dto
     const effectiveStart = safeDto.startDate ? new Date(safeDto.startDate) : fp.startDate
     const effectiveEnd = safeDto.endDate ? new Date(safeDto.endDate) : fp.endDate
     if (effectiveEnd <= effectiveStart) throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu')
