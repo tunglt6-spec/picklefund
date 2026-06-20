@@ -199,10 +199,11 @@ export function Reports() {
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = summ?.attendedSessions ?? 0
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    const courtFrac = totalAttendances > 0 ? attended / totalAttendances : 1 / (memberCount || 1)
-    const courtCost = Math.round(courtExpTotal * courtFrac)
-    const presentShare = attended > 0 && presentCount > 0 ? Math.round(presentOnlyExpTotal / presentCount) : 0
-    const livingCost = Math.round(livingExpTotal / (memberCount || 1)) + presentShare
+    // CHI PHÍ SÂN: equal split among all members
+    const courtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
+    // SINH HOẠT: per-session, split by attendees — approximated as proportional to sessions attended
+    const allLivingTotal = livingExpTotal + presentOnlyExpTotal
+    const livingCost = totalAttendances > 0 ? Math.round(allLivingTotal / totalAttendances * attended) : 0
     const totalCost = courtCost + livingCost
     return {
       memberName: m.fullName ?? m.id,
