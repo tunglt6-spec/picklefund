@@ -188,13 +188,10 @@ export function Reports() {
     }
   })
 
-  // CHI PHÍ SÂN: tiền sân từ buổi chơi + expenses có allocationRule ATTENDANCE (chia đều)
-  const sessionCourtTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
-  const attendanceExpTotal = filteredExpenses.filter(e => e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
-  const courtExpTotal = sessionCourtTotal + attendanceExpTotal
-  // SINH HOẠT: chỉ EQUAL + PRESENT_ONLY (nước, ăn uống — không bao gồm tiền sân)
-  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
-  const presentOnlyExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY').reduce((a, e) => a + e.amount, 0)
+  // CHI PHÍ SÂN: expenses "Đều nhau" (EQUAL) — tiền thuê sân, chia đều tất cả thành viên
+  const courtExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
+  // SINH HOẠT: expenses "Theo số người tham gia" (PRESENT_ONLY/ATTENDANCE) — nước, ăn uống
+  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY' || e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
 
   const memberBillRows = clubData.members.map(m => {
@@ -205,8 +202,7 @@ export function Reports() {
     // CHI PHÍ SÂN: chia đều cho tất cả thành viên
     const courtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
     // SINH HOẠT: tỉ lệ theo số buổi đã tham gia
-    const allLivingTotal = livingExpTotal + presentOnlyExpTotal
-    const livingCost = totalAttendances > 0 ? Math.round(allLivingTotal / totalAttendances * attended) : 0
+    const livingCost = totalAttendances > 0 ? Math.round(livingExpTotal / totalAttendances * attended) : 0
     const totalCost = courtCost + livingCost
     return {
       memberName: m.fullName ?? m.id,
