@@ -205,20 +205,21 @@ export function Contributions() {
           ) : sorted.map(c => {
             const memberName = members.find(m => m.id === c.memberId)?.fullName ?? c.payerName ?? 'N/A'
             return (
-              <div key={c.id} className="relative">
-                <MobileTransactionCard
-                  name={memberName}
-                  description={c.notes ?? c.paymentMethod}
-                  amount={c.amount}
-                  type="income"
-                  fundSource={c.fundSource ?? 'COMMON'}
-                  status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                />
-                <div className="absolute right-3 top-3 flex gap-1">
-                  <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1"><Edit2 size={13} /></button>
-                  <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1"><Trash2 size={13} /></button>
-                </div>
-              </div>
+              <MobileTransactionCard
+                key={c.id}
+                name={memberName}
+                description={c.notes ?? c.paymentMethod}
+                amount={c.amount}
+                type="income"
+                fundSource={c.fundSource ?? 'COMMON'}
+                status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                actions={
+                  <>
+                    <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
+                    <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                  </>
+                }
+              />
             )
           })}
         </div>
