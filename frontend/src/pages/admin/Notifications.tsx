@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Bell, CheckCircle, DollarSign, Calendar, Users, AlertTriangle, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -95,6 +96,13 @@ export function Notifications() {
       read: false,
     }] : []),
   ]
+
+  // Auto-mark all as read when user opens this page
+  useEffect(() => {
+    const unread = dynamicNotifs.filter(n => !readIds.has(n.id)).map(n => n.id)
+    if (unread.length > 0) markNotifRead(clubId, unread)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
 
   const isRead = (id: string, defaultRead: boolean) => readIds.has(id) || defaultRead
   const unreadCount = dynamicNotifs.filter(n => !isRead(n.id, n.read)).length
