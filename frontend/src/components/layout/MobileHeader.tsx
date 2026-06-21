@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Bell, LogOut, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useClubDataStore } from '../../store/clubDataStore'
+import { buildNotifications } from '../../lib/notifications'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 
 interface MobileHeaderProps {
@@ -15,7 +17,13 @@ const ROLE_LABEL: Record<string, string> = {
 
 export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
   const { user, logout } = useAuthStore()
+  const { getClubData, readNotifIds } = useClubDataStore()
   const navigate = useNavigate()
+
+  const clubId = user?.clubId ?? ''
+  const data = getClubData(clubId)
+  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
+  const unreadCount = buildNotifications(data).filter(n => !readIds.has(n.id)).length
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -62,10 +70,12 @@ export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
           className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100"
         >
           <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-          </span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+            </span>
+          )}
         </button>
 
         {/* Avatar with dropdown */}
