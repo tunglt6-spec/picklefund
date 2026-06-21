@@ -87,9 +87,9 @@ export function FundPeriods() {
 
   // KPI computations
   const stats = useMemo(() => {
-    // COMMON: contributions linked to 'chung' type periods
+    // COMMON: only active (Đang mở) periods — exclude draft and closed
     const calcChung = () => {
-      const fps = periods.filter(p => (p.type ?? 'chung') === 'chung')
+      const fps = periods.filter(p => (p.type ?? 'chung') === 'chung' && p.status === 'active')
       const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
       const periodIds = new Set(fps.map(p => p.id))
       const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' || periodIds.has(c.fundPeriodId ?? ''))
