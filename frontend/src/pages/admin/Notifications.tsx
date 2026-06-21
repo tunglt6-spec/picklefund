@@ -3,20 +3,9 @@ import { Bell, CheckCircle, DollarSign, Calendar, Users, AlertTriangle, Check } 
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatDate } from '../../lib/utils'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
-
-type NotifType = 'payment' | 'session' | 'member' | 'system' | 'warning'
-
-interface Notif {
-  id: string
-  type: NotifType
-  title: string
-  body: string
-  time: string
-  read: boolean
-}
+import { buildNotifications, type NotifType } from '../../lib/notifications'
 
 const ICON: Record<NotifType, React.ReactNode> = {
   payment: <DollarSign size={15} className="text-emerald-500" />,
@@ -42,60 +31,7 @@ export function Notifications() {
 
   const { markNotifRead, readNotifIds } = useClubDataStore()
   const readIds = new Set<string>(readNotifIds[clubId] ?? [])
-
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-  const unpaid = data.contributions.filter(c => !c.isConfirmed)
-  const upcoming = data.sessions.filter(s => s.status === 'scheduled')
-
-  const today = new Date()
-  const daysUntilEnd = activePeriod
-    ? Math.ceil((new Date(activePeriod.endDate).getTime() - today.getTime()) / 86400000)
-    : null
-
-  const dynamicNotifs: Notif[] = [
-    ...unpaid.slice(0, 3).map((c) => ({
-      id: `pay-${c.id}`,
-      type: 'payment' as NotifType,
-      title: 'Khoản thu chờ xác nhận',
-      body: `${c.member?.fullName ?? 'Thành viên'} đã đóng quỹ nhưng chưa được xác nhận.`,
-      time: c.createdAt,
-      read: false,
-    })),
-    ...upcoming.slice(0, 2).map((s) => ({
-      id: `sess-${s.id}`,
-      type: 'session' as NotifType,
-      title: 'Buổi tập sắp diễn ra',
-      body: `Buổi tập ngày ${formatDate(s.sessionDate)} tại ${s.courtName ?? 'sân'} – nhớ điểm danh.`,
-      time: s.sessionDate,
-      read: false,
-    })),
-    ...(activePeriod && daysUntilEnd !== null && daysUntilEnd <= 14 ? [{
-      id: `warn-period-${activePeriod.id}`,
-      type: 'warning' as NotifType,
-      title: `Kỳ quỹ "${activePeriod.name}" sắp kết thúc`,
-      body: daysUntilEnd <= 0
-        ? `Kỳ quỹ đã kết thúc ngày ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ.`
-        : `Còn ${daysUntilEnd} ngày đến ${formatDate(activePeriod.endDate)}. Vui lòng chốt sổ trước ngày này.`,
-      time: activePeriod.endDate,
-      read: false,
-    }] : []),
-    ...(data.members.filter(m => m.status === 'active').length === 0 ? [{
-      id: 'warn-no-members',
-      type: 'warning' as NotifType,
-      title: 'Chưa có thành viên',
-      body: 'CLB chưa có thành viên nào đang hoạt động. Hãy thêm thành viên để bắt đầu.',
-      time: today.toISOString(),
-      read: false,
-    }] : []),
-    ...(data.fundPeriods.length === 0 ? [{
-      id: 'warn-no-period',
-      type: 'warning' as NotifType,
-      title: 'Chưa có kỳ quỹ',
-      body: 'CLB chưa tạo kỳ quỹ nào. Hãy tạo kỳ quỹ để bắt đầu quản lý thu chi.',
-      time: today.toISOString(),
-      read: false,
-    }] : []),
-  ]
+  const dynamicNotifs = buildNotifications(data)
 
   // Auto-mark all as read when user opens this page
   useEffect(() => {
@@ -104,8 +40,8 @@ export function Notifications() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId])
 
-  const isRead = (id: string, defaultRead: boolean) => readIds.has(id) || defaultRead
-  const unreadCount = dynamicNotifs.filter(n => !isRead(n.id, n.read)).length
+  const isRead = (id: string) => readIds.has(id)
+  const unreadCount = dynamicNotifs.filter(n => !isRead(n.id)).length
 
   const markAll = () => {
     markNotifRead(clubId, dynamicNotifs.map(n => n.id))
@@ -133,7 +69,7 @@ export function Notifications() {
             <div className="text-center py-12 text-slate-400 text-[14px]">Không có thông báo nào</div>
           )}
           {dynamicNotifs.map(n => {
-            const read = isRead(n.id, n.read)
+            const read = isRead(n.id)
             return (
               <div key={n.id} onClick={() => markOne(n.id)}
                 className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
@@ -174,7 +110,7 @@ export function Notifications() {
 
       <div className="p-6 max-w-[800px] mx-auto space-y-3">
         {dynamicNotifs.map(n => {
-          const read = isRead(n.id, n.read)
+          const read = isRead(n.id)
           return (
             <div
               key={n.id}

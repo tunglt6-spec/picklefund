@@ -8,6 +8,7 @@ import {
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { cn } from '../../lib/utils'
+import { buildNotifications } from '../../lib/notifications'
 import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 
@@ -82,20 +83,8 @@ function useUnreadCount(clubId: string) {
   const { getClubData, readNotifIds } = useClubDataStore()
   const data = getClubData(clubId)
   const readIds = new Set<string>(readNotifIds[clubId] ?? [])
-
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-
-  const unconfirmedCount = data.contributions
-    .filter(c => !c.isConfirmed && !readIds.has(`pay-${c.id}`))
-    .length
-
-  const upcomingUnread = data.sessions
-    .filter(s => s.status === 'scheduled' && !readIds.has(`sess-${s.id}`))
-    .length
-
-  const periodWarning = activePeriod && !readIds.has(`warn-period-${activePeriod.id}`) ? 1 : 0
-
-  return Math.min(unconfirmedCount + (upcomingUnread > 0 ? 1 : 0) + periodWarning, 9)
+  const notifs = buildNotifications(data)
+  return Math.min(notifs.filter(n => !readIds.has(n.id)).length, 9)
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
