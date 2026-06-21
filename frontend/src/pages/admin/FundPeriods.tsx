@@ -126,6 +126,12 @@ export function FundPeriods() {
     game: periods.find(p => p.type === 'game' && p.status === 'active'),
   }), [periods])
 
+  // Latest game period regardless of status (for showing buttons even when no active period)
+  const latestGamePeriod = useMemo(() =>
+    [...periods].filter(p => p.type === 'game').sort((a, b) => b.startDate.localeCompare(a.startDate))[0],
+    [periods]
+  )
+
   // Filtered + paginated table
   const filtered = useMemo(() => {
     return periods.filter(p => {
@@ -432,12 +438,13 @@ export function FundPeriods() {
           <FundDetailCard
             title="Quỹ Mini"
             icon={<Wallet size={16} className="text-violet-500" />}
-            period={activePeriods.game}
+            period={activePeriods.game ?? latestGamePeriod}
             color="violet"
             memberCount={memberCount}
             contributions={contributions}
-            onEdit={() => activePeriods.game ? openEdit(activePeriods.game) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
-            onView={() => activePeriods.game && setViewPeriod(activePeriods.game)}
+            miniMode
+            onEdit={() => (activePeriods.game ?? latestGamePeriod) ? openEdit((activePeriods.game ?? latestGamePeriod)!) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
+            onView={() => { const p = activePeriods.game ?? latestGamePeriod; if (p) setViewPeriod(p) }}
           />
         </div>
 
@@ -1074,16 +1081,19 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
   )
 }
 
-function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView }: {
+function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
   color: 'indigo' | 'violet'; memberCount: number
   contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
+  miniMode?: boolean
 }) {
   const target = period ? period.contributionAmount * memberCount : 0
   const collected = period
-    ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+    ? miniMode
+      ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
     : 0
-  const pct = target > 0 ? Math.round((collected / target) * 100) : 0
+  const pct = target > 0 ? Math.round((collected / target) * 100) : (miniMode && collected > 0 ? 100 : 0)
   const barColor = color === 'indigo' ? 'bg-indigo-500' : 'bg-violet-500'
   const borderColor = color === 'indigo' ? 'border-indigo-100' : 'border-violet-100'
 
