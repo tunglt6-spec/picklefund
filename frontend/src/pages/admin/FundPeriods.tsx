@@ -316,13 +316,11 @@ export function FundPeriods() {
                     <div className="flex gap-2">
                       <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 active:bg-indigo-50 flex items-center justify-center gap-1"
                         onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                      {p.status !== 'finalized' && (
-                        <button className={`flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] flex items-center justify-center gap-1 border ${
-                          (p.status === 'closed') ? 'text-emerald-600 border-emerald-200 active:bg-emerald-50' : 'text-slate-600 border-slate-200 active:bg-slate-50'
-                        }`} onClick={() => handleToggleLock(p)}>
-                          {(p.status === 'closed') ? <><LockOpen size={13} />Mở lại</> : <><Lock size={13} />Đóng</>}
-                        </button>
-                      )}
+                      <button className={`flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] flex items-center justify-center gap-1 border ${
+                        (p.status === 'closed' || p.status === 'finalized') ? 'text-emerald-600 border-emerald-200 active:bg-emerald-50' : 'text-slate-600 border-slate-200 active:bg-slate-50'
+                      }`} onClick={() => handleToggleLock(p)}>
+                        {(p.status === 'closed' || p.status === 'finalized') ? <><LockOpen size={13} />Mở lại</> : <><Lock size={13} />Đóng</>}
+                      </button>
                       <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
                         onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
                     </div>
@@ -355,13 +353,11 @@ export function FundPeriods() {
                     <div className="flex gap-2">
                       <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 active:bg-indigo-50 flex items-center justify-center gap-1"
                         onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                      {p.status !== 'finalized' && (
-                        <button className={`flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] flex items-center justify-center gap-1 border ${
-                          (p.status === 'closed') ? 'text-emerald-600 border-emerald-200 active:bg-emerald-50' : 'text-slate-600 border-slate-200 active:bg-slate-50'
-                        }`} onClick={() => handleToggleLock(p)}>
-                          {(p.status === 'closed') ? <><LockOpen size={13} />Mở lại</> : <><Lock size={13} />Đóng</>}
-                        </button>
-                      )}
+                      <button className={`flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] flex items-center justify-center gap-1 border ${
+                        (p.status === 'closed' || p.status === 'finalized') ? 'text-emerald-600 border-emerald-200 active:bg-emerald-50' : 'text-slate-600 border-slate-200 active:bg-slate-50'
+                      }`} onClick={() => handleToggleLock(p)}>
+                        {(p.status === 'closed' || p.status === 'finalized') ? <><LockOpen size={13} />Mở lại</> : <><Lock size={13} />Đóng</>}
+                      </button>
                       <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
                         onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
                     </div>
@@ -584,15 +580,13 @@ export function FundPeriods() {
                                 <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
                                   <Pencil size={14} />
                                 </button>
-                                {p.status !== 'finalized' && (
-                                  <button
-                                    title={p.status === 'closed' ? 'Mở lại' : 'Đóng kỳ quỹ'}
-                                    onClick={() => handleToggleLock(p)}
-                                    className={`p-1.5 rounded hover:bg-slate-100 transition-colors ${p.status === 'closed' ? 'text-emerald-500 hover:text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
-                                  >
-                                    {p.status === 'closed' ? <LockOpen size={14} /> : <Lock size={14} />}
-                                  </button>
-                                )}
+                                <button
+                                  title={(p.status === 'closed' || p.status === 'finalized') ? 'Mở lại' : 'Đóng kỳ quỹ'}
+                                  onClick={() => handleToggleLock(p)}
+                                  className={`p-1.5 rounded hover:bg-slate-100 transition-colors ${(p.status === 'closed' || p.status === 'finalized') ? 'text-emerald-500 hover:text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                  {(p.status === 'closed' || p.status === 'finalized') ? <LockOpen size={14} /> : <Lock size={14} />}
+                                </button>
                                 <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
                                   <Trash2 size={14} />
                                 </button>
