@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2 } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
+import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -27,9 +28,22 @@ export function Attendance() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setSessions: saveSessions } = useClubDataStore()
   const data = getClubData(clubId)
-  const sessions = data.sessions
+  const allSessions = data.sessions
   const members = data.members
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+
+  const allPeriods = useMemo(() =>
+    [...data.fundPeriods].sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    [data.fundPeriods]
+  )
+  const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
+
+  const sessions = useMemo(() =>
+    selectedPeriodId
+      ? allSessions.filter(s => s.fundPeriodId === selectedPeriodId)
+      : allSessions,
+    [allSessions, selectedPeriodId]
+  )
 
   const setSessions = (fn: (prev: AttendanceSession[]) => AttendanceSession[]) =>
     saveSessions(clubId, fn(getClubData(clubId).sessions))
@@ -370,13 +384,19 @@ export function Attendance() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Điểm Danh"
-        subtitle="Quản lý điểm danh từng buổi chơi pickleball"
+        subtitle={activePeriod ? activePeriod.name : 'Quản lý điểm danh từng buổi chơi'}
         actions={
           <Button onClick={() => setShowCreate(true)}>
             <Plus size={15} />Tạo buổi chơi
           </Button>
         }
       />
+
+      {allPeriods.length > 1 && (
+        <div className="px-6 pt-4 pb-0">
+          <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
+        </div>
+      )}
 
       <div className="p-6 max-w-[1200px] mx-auto space-y-5">
         {sessions.length > 0 && (

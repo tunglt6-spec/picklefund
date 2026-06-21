@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -15,6 +15,7 @@ import { exportContribExcel, exportContribPDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
+import { PeriodSelector } from '../../components/ui/PeriodSelector'
 
 const BLANK_COMMON = {
   fundSource: 'COMMON' as FundSource,
@@ -33,7 +34,18 @@ export function Contributions() {
   const data = getClubData(clubId)
   const contributions = data.contributions
   const members = data.members
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+
+  const chungPeriods = useMemo(() =>
+    data.fundPeriods
+      .filter(p => (p.type ?? 'chung') === 'chung')
+      .sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    [data.fundPeriods]
+  )
+  const activePeriod = chungPeriods.find(p => p.status === 'active') ?? chungPeriods[0]
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() =>
+    activePeriod?.id ?? ''
+  )
+  const selectedPeriod = chungPeriods.find(p => p.id === selectedPeriodId) ?? chungPeriods[0]
 
   const setContributions = (fn: (prev: FundContribution[]) => FundContribution[]) =>
     saveContributions(clubId, fn(getClubData(clubId).contributions))
@@ -44,7 +56,10 @@ export function Contributions() {
   const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
 
-  const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const commonContribs = contributions.filter(c =>
+    (c.fundSource ?? 'COMMON') === 'COMMON' &&
+    (selectedPeriod ? c.fundPeriodId === selectedPeriod.id : true)
+  )
   const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
 
   const commonTotal = commonContribs.reduce((s, c) => s + c.amount, 0)
@@ -325,7 +340,7 @@ export function Contributions() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Thu Quỹ"
-        subtitle={activePeriod ? `${activePeriod.name} — Quỹ Chung: ${formatVND(commonTotal)} | Quỹ Mini: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào đang mở'}
+        subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chung: ${formatVND(commonTotal)} | Quỹ Mini: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => {
@@ -344,6 +359,12 @@ export function Contributions() {
           </div>
         }
       />
+
+      {chungPeriods.length > 1 && (
+        <div className="px-6 pt-4 pb-0">
+          <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
+        </div>
+      )}
 
       <div className="p-6 max-w-[1200px] mx-auto space-y-5">
         {/* Summary cards — split by fund source */}

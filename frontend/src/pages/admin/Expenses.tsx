@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
 import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
@@ -358,7 +359,13 @@ export function Expenses() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
-  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
+
+  const allPeriods = useMemo(() =>
+    [...clubData.fundPeriods].sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    [clubData.fundPeriods]
+  )
+  const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
 
   // Derive display view from store — no local copy
   const richExpenses = useMemo<RichExpense[]>(
@@ -381,6 +388,7 @@ export function Expenses() {
   const PAGE_SIZE = 10
 
   const filtered = useMemo(() => richExpenses.filter(e => {
+    const matchPeriod = !selectedPeriodId || (e.fundSource ?? 'COMMON') === 'MINI' || e.fundPeriodId === selectedPeriodId
     const matchTab = tab === 'all' || e.status === tab
     const q = search.toLowerCase()
     const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
@@ -388,13 +396,16 @@ export function Expenses() {
     const matchRule = filterValues.rule === 'all' || e.allocationRule === filterValues.rule
     const matchFrom = !filterValues.from || e.expenseDate >= filterValues.from
     const matchTo   = !filterValues.to   || e.expenseDate <= filterValues.to
-    return matchTab && matchQ && matchStatus && matchRule && matchFrom && matchTo
-  }), [richExpenses, tab, search, filterValues])
+    return matchPeriod && matchTab && matchQ && matchStatus && matchRule && matchFrom && matchTo
+  }), [richExpenses, selectedPeriodId, tab, search, filterValues])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const commonExpenses = richExpenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+  const commonExpenses = richExpenses.filter(e =>
+    (e.fundSource ?? 'COMMON') === 'COMMON' &&
+    (!selectedPeriodId || e.fundPeriodId === selectedPeriodId)
+  )
   const miniExpenses   = richExpenses.filter(e => e.fundSource === 'MINI')
   const commonAmt   = commonExpenses.reduce((s, e) => s + e.amount, 0)
   const miniAmt     = miniExpenses.reduce((s, e) => s + e.amount, 0)
@@ -549,9 +560,18 @@ export function Expenses() {
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-base font-bold text-slate-900">Chi Phí</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Quản lý và theo dõi các khoản chi của CLB</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {allPeriods.find(p => p.id === selectedPeriodId)?.name ?? 'Quản lý và theo dõi các khoản chi của CLB'}
+            </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {allPeriods.length > 1 && (
+              <PeriodSelector
+                periods={allPeriods}
+                selectedId={selectedPeriodId}
+                onChange={id => setSelectedPeriodId(id)}
+              />
+            )}
             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
               <Calendar size={13} className="text-slate-400" />
               <span>
