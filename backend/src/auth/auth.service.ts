@@ -54,20 +54,27 @@ export class AuthService {
     const accessToken = this.signAccess(user.id, user.clubId, user.role)
     const refreshToken = this.signRefresh(user.id, opts?.rememberMe)
 
-    await this.prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        token: this.hashToken(refreshToken),
-        expiresAt: this.getRefreshExpiry(opts?.rememberMe),
-        ipAddress: opts?.ip,
-        userAgent: opts?.userAgent,
-      },
-    })
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          token: this.hashToken(refreshToken),
+          expiresAt: this.getRefreshExpiry(opts?.rememberMe),
+          ipAddress: opts?.ip,
+          userAgent: opts?.userAgent,
+        },
+      }),
+      this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }),
+    ])
 
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, username: user.username, email: user.email, role: user.role, clubId: user.clubId, memberId: user.member?.id ?? null },
+      user: {
+        id: user.id, username: user.username, email: user.email,
+        role: user.role, clubId: user.clubId, memberId: user.member?.id ?? null,
+        mustChangePassword: user.mustChangePassword,
+      },
     }
   }
 
@@ -159,8 +166,10 @@ export class AuthService {
     if (!user) throw new BadRequestException('User không tồn tại')
     const valid = await argon2.verify(user.passwordHash, oldPassword)
     if (!valid) throw new BadRequestException('Mật khẩu cũ không đúng')
+    if (newPassword.length < 6) throw new BadRequestException('Mật khẩu mới tối thiểu 6 ký tự')
+    if (newPassword === '123456') throw new BadRequestException('Không được dùng mật khẩu mặc định 123456')
     const hash = await argon2.hash(newPassword)
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: hash } })
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: hash, mustChangePassword: false } })
     return { message: 'Đổi mật khẩu thành công' }
   }
 

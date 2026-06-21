@@ -35,6 +35,24 @@ export interface User {
   clubId: string | null
   role: Role
   memberId?: string
+  mustChangePassword?: boolean
+}
+
+export interface MemberUserAccount {
+  id: string
+  username: string
+  email: string
+  isActive: boolean
+  mustChangePassword: boolean
+  lastLoginAt: string | null
+  notificationEnabled: boolean
+  createdAt: string
+  member: {
+    id: string
+    fullName: string
+    phone?: string
+    email?: string
+  } | null
 }
 
 export interface AuthState {

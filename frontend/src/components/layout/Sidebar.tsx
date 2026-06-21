@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
   CheckSquare, BarChart3, Settings, LogOut, Building2,
   Bell, ScrollText, Receipt, ListOrdered, ChevronDown,
-  Zap, Star, Trophy,
+  Zap, Star, Trophy, KeyRound,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -36,8 +36,9 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Điểm Danh',  icon: <CheckSquare size={18} />,     to: '/attendance' },
   { label: 'Minigame',   icon: <Trophy size={18} />,           to: '/minigames' },
   { label: 'Báo Cáo',   icon: <BarChart3 size={18} />,        to: '/reports' },
-  { label: 'Thông báo',  icon: <Bell size={18} />,            to: '/notifications' },
-  { label: 'Cài đặt',   icon: <Settings size={18} />,         to: '/settings' },
+  { label: 'Thông báo',       icon: <Bell size={18} />,      to: '/notifications' },
+  { label: 'TK Thành viên', icon: <KeyRound size={18} />,    to: '/member-accounts' },
+  { label: 'Cài đặt',       icon: <Settings size={18} />,    to: '/settings' },
 ]
 
 const treasurerNav: NavItem[] = [

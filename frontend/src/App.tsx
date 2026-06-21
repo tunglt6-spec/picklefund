@@ -47,11 +47,16 @@ import { MemberContributions } from './pages/member/MemberContributions'
 import { MemberNotifications } from './pages/member/MemberNotifications'
 import { MemberReceipt } from './pages/member/MemberReceipt'
 
+// Member accounts + change password
+import { MemberAccounts } from './pages/admin/MemberAccounts'
+import { ChangePassword } from './pages/ChangePassword'
+
 const queryClient = new QueryClient()
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (user?.mustChangePassword) return <Navigate to="/change-password" replace />
   return <>{children}</>
 }
 
@@ -70,6 +75,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/" element={<RootRedirect />} />
 
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -98,6 +104,7 @@ export default function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/member-accounts" element={<MemberAccounts />} />
 
             {/* Treasurer */}
             <Route path="/treasurer/dashboard" element={<TreasurerDashboard />} />
