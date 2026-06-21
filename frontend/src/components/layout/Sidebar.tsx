@@ -79,15 +79,9 @@ const roleColors: Record<Role, string> = {
 interface SidebarProps { onClose?: () => void }
 
 function useUnreadCount(clubId: string) {
-  const { getClubData } = useClubDataStore()
+  const { getClubData, readNotifIds } = useClubDataStore()
   const data = getClubData(clubId)
-
-  const readIds = (() => {
-    try {
-      const raw = localStorage.getItem(`notif-read-${clubId}`)
-      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>()
-    } catch { return new Set<string>() }
-  })()
+  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
 
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
 

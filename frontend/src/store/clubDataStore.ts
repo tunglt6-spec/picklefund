@@ -36,6 +36,7 @@ export interface ClubData {
 
 interface ClubDataStore {
   dataByClub: Record<string, ClubData>
+  readNotifIds: Record<string, string[]>
   getClubData: (clubId: string) => ClubData
   setMembers: (clubId: string, members: Member[]) => void
   setFundPeriods: (clubId: string, periods: FundPeriod[]) => void
@@ -45,6 +46,7 @@ interface ClubDataStore {
   setClubSettings: (clubId: string, settings: ClubSettings) => void
   setMyAttendedSessionIds: (clubId: string, ids: string[]) => void
   setMemberAttendanceSummary: (clubId: string, summary: MemberAttendanceSummary[]) => void
+  markNotifRead: (clubId: string, ids: string[]) => void
 }
 
 const EMPTY_DATA: ClubData = {
@@ -59,6 +61,7 @@ export const useClubDataStore = create<ClubDataStore>()(
   persist(
     (set, get) => ({
       dataByClub: {},
+      readNotifIds: {},
 
       getClubData: (clubId: string) => {
         if (!clubId) return EMPTY_DATA
@@ -88,10 +91,17 @@ export const useClubDataStore = create<ClubDataStore>()(
 
       setMemberAttendanceSummary: (clubId, memberAttendanceSummary) =>
         set(s => ({ dataByClub: { ...s.dataByClub, [clubId]: { ...(s.dataByClub[clubId] ?? EMPTY_DATA), memberAttendanceSummary } } })),
+
+      markNotifRead: (clubId, ids) =>
+        set(s => {
+          const existing = s.readNotifIds[clubId] ?? []
+          const merged = Array.from(new Set([...existing, ...ids]))
+          return { readNotifIds: { ...s.readNotifIds, [clubId]: merged } }
+        }),
     }),
     {
       name: 'picklefund-club-data',
-      partialize: (state) => ({ dataByClub: state.dataByClub }),
+      partialize: (state) => ({ dataByClub: state.dataByClub, readNotifIds: state.readNotifIds }),
       merge: (persisted: unknown, current) => {
         const p = persisted as Partial<ClubDataStore> | null
         return {

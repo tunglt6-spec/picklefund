@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, DollarSign, Calendar, Users, AlertTriangle, Check } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -40,22 +39,12 @@ export function Notifications() {
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
 
+  const { markNotifRead, readNotifIds } = useClubDataStore()
+  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
+
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
   const unpaid = data.contributions.filter(c => !c.isConfirmed)
   const upcoming = data.sessions.filter(s => s.status === 'scheduled')
-
-  // Generate dynamic notifications from store state + static ones
-  const STORAGE_KEY = `notif-read-${clubId}`
-  const [readIds, setReadIds] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>()
-    } catch { return new Set<string>() }
-  })
-
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...readIds])) } catch {}
-  }, [readIds, STORAGE_KEY])
 
   const today = new Date()
   const daysUntilEnd = activePeriod
@@ -111,11 +100,11 @@ export function Notifications() {
   const unreadCount = dynamicNotifs.filter(n => !isRead(n.id, n.read)).length
 
   const markAll = () => {
-    setReadIds(new Set(dynamicNotifs.map(n => n.id)))
+    markNotifRead(clubId, dynamicNotifs.map(n => n.id))
     toast.success('Đã đánh dấu tất cả là đã đọc')
   }
 
-  const markOne = (id: string) => setReadIds(prev => new Set([...prev, id]))
+  const markOne = (id: string) => markNotifRead(clubId, [id])
 
   if (isMobile) {
     return (
