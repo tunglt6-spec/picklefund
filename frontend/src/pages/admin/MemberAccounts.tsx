@@ -477,19 +477,19 @@ export function MemberAccounts() {
           ))}
         </div>
 
-        {/* Search + table */}
-        <div className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-            <p className="text-sm font-semibold text-slate-700 shrink-0">Danh sách</p>
-            <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm thành viên, username..."
-                className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-indigo-400" />
-            </div>
-            <span className="text-xs text-slate-500 ml-auto">{filtered.length} tài khoản</span>
+        {/* Toolbar: search + count */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm thành viên, username..."
+              className="input-base pl-8 w-72 h-9" />
           </div>
+          <span className="text-sm text-slate-500">{filtered.length} tài khoản</span>
+        </div>
 
+        {/* Table */}
+        <div className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
           {loading ? (
             <div className="text-center py-16 text-slate-400 text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
