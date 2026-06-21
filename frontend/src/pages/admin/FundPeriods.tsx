@@ -106,9 +106,10 @@ export function FundPeriods() {
     }
 
     // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
+    // Not member-based: target = sum of period.contributionAmount (no × memberCount)
     const calcMini = () => {
       const fps = periods.filter(p => p.type === 'game')
-      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
+      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount, 0)
       const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
       const totalCollected = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = miniContribs.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
@@ -1087,7 +1088,7 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
   miniMode?: boolean
 }) {
-  const target = period ? period.contributionAmount * memberCount : 0
+  const target = period ? (miniMode ? period.contributionAmount : period.contributionAmount * memberCount) : 0
   const miniCollected = miniMode
     ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
     : 0
@@ -1121,7 +1122,10 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
           </div>
           <div className="flex justify-between text-xs text-slate-500 mt-2">
             <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
-            <span>Mục tiêu: <strong className="text-slate-800">{formatVND(target)}</strong></span>
+            {miniMode
+              ? <span>Giao dịch: <strong className="text-slate-800">{contributions.filter(c => c.fundSource === 'MINI').length}</strong></span>
+              : <span>Mục tiêu: <strong className="text-slate-800">{formatVND(target)}</strong></span>
+            }
           </div>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
