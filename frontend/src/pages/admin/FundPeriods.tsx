@@ -87,26 +87,37 @@ export function FundPeriods() {
 
   // KPI computations
   const stats = useMemo(() => {
-    const calc = (type: FundPeriodType) => {
-      const fps = periods.filter(p => (p.type ?? 'chung') === type)
+    // COMMON: contributions linked to 'chung' type periods
+    const calcChung = () => {
+      const fps = periods.filter(p => (p.type ?? 'chung') === 'chung')
       const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
-      const totalCollected = contributions
-        .filter(c => fps.some(p => p.id === c.fundPeriodId) && c.isConfirmed)
-        .reduce((a, c) => a + c.amount, 0)
-      const totalPending = contributions
-        .filter(c => fps.some(p => p.id === c.fundPeriodId) && !c.isConfirmed)
-        .reduce((a, c) => a + c.amount, 0)
+      const periodIds = new Set(fps.map(p => p.id))
+      const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' || periodIds.has(c.fundPeriodId ?? ''))
+      const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)
       const unpaidCount = fps.reduce((a, p) => {
         const paid = new Set(contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).map(c => c.memberId))
         return a + (memberCount - paid.size)
       }, 0)
-      const txCount = contributions.filter(c => fps.some(p => p.id === c.fundPeriodId)).length
+      const txCount = relevant.length
       const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
-      const remainPct = 100 - pct
-      return { balance: totalCollected, pct, remainPct, remaining, unpaidCount, txCount, totalTarget, totalPending }
+      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
     }
-    return { chung: calc('chung'), game: calc('game') }
+
+    // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
+    const calcMini = () => {
+      const fps = periods.filter(p => p.type === 'game')
+      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
+      const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
+      const totalCollected = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      const totalPending = miniContribs.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      const remaining = Math.max(0, totalTarget - totalCollected)
+      const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : (miniContribs.length > 0 ? 100 : 0)
+      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount: 0, txCount: miniContribs.length, totalTarget, totalPending }
+    }
+
+    return { chung: calcChung(), game: calcMini() }
   }, [periods, contributions, memberCount])
 
   // Active fund (latest active per type)
