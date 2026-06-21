@@ -87,9 +87,12 @@ function BulkCreateModal({
       })
       const results: { success: boolean; memberName: string; username: string; error?: string }[] = res.data.data
       const ok = results.filter(r => r.success).length
-      const fail = results.filter(r => !r.success).length
+      const failed = results.filter(r => !r.success)
       if (ok > 0) toast.success(`Đã tạo ${ok} tài khoản thành công`)
-      if (fail > 0) toast.error(`${fail} tài khoản tạo thất bại`)
+      if (failed.length > 0) {
+        const firstErr = failed[0].error ? `: ${failed[0].error}` : ''
+        toast.error(`${failed.length} tài khoản tạo thất bại${firstErr}`)
+      }
       onCreated()
       onClose()
     } catch (err: any) {

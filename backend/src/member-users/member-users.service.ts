@@ -17,10 +17,10 @@ function slugify(str: string): string {
 export class MemberUsersService {
   constructor(private prisma: PrismaService) {}
 
-  private async generateUsername(clubId: string, fullName: string): Promise<string> {
+  private async generateUsername(fullName: string): Promise<string> {
     const base = slugify(fullName) || 'user'
     const existing = await this.prisma.user.findMany({
-      where: { clubId, username: { startsWith: base } },
+      where: { username: { startsWith: base } },
       select: { username: true },
     })
     const usedSet = new Set(existing.map(u => u.username))
@@ -59,16 +59,16 @@ export class MemberUsersService {
       if (existing?.isActive) throw new BadRequestException('Thành viên này đã có tài khoản đang hoạt động')
     }
 
-    const username = dto.username ?? await this.generateUsername(clubId, member.fullName)
+    const username = dto.username ?? await this.generateUsername(member.fullName)
     const emailConflict = dto.email
       ? await this.prisma.user.findUnique({ where: { email: dto.email } })
       : null
     if (emailConflict) throw new BadRequestException('Email đã được sử dụng')
 
     const usernameConflict = await this.prisma.user.findFirst({
-      where: { clubId, username },
+      where: { username },
     })
-    if (usernameConflict) throw new BadRequestException('Username đã tồn tại trong CLB')
+    if (usernameConflict) throw new BadRequestException('Username đã tồn tại')
 
     const hash = await argon2.hash(DEFAULT_PASSWORD)
     const email = dto.email ?? `${username}@${clubId.slice(0, 8)}.picklefund.local`
@@ -166,7 +166,7 @@ export class MemberUsersService {
     })
     const result: { memberId: string; fullName: string; username: string; hasAccount: boolean }[] = []
     for (const m of members) {
-      const username = await this.generateUsername(clubId, m.fullName)
+      const username = await this.generateUsername(m.fullName)
       result.push({ memberId: m.id, fullName: m.fullName, username, hasAccount: !!m.userId })
     }
     return result
