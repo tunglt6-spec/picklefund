@@ -12,10 +12,17 @@ export class FundPeriodsService {
     today.setHours(0, 0, 0, 0)
     // Auto-transition: draft → active when startDate arrived; active → closed when endDate passed
     await this.prisma.$transaction([
+      // Future period that was incorrectly set to active → revert to draft
+      this.prisma.fundPeriod.updateMany({
+        where: { clubId, status: 'active', startDate: { gt: today } },
+        data: { status: 'draft' },
+      }),
+      // Draft period whose startDate has arrived → open
       this.prisma.fundPeriod.updateMany({
         where: { clubId, status: 'draft', startDate: { lte: today }, endDate: { gte: today } },
         data: { status: 'active' },
       }),
+      // Active/draft period whose endDate has passed → close
       this.prisma.fundPeriod.updateMany({
         where: { clubId, status: { in: ['draft', 'active'] }, endDate: { lt: today } },
         data: { status: 'closed' },
