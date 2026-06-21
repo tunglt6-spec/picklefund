@@ -270,10 +270,10 @@ export function Members() {
       <div className="p-6 max-w-[1400px] mx-auto">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="relative">
+          <div className="relative w-64">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm kiếm theo tên, SĐT..." className="input-base pl-8 w-64" />
+              placeholder="Tìm kiếm theo tên, SĐT..." className="input-base pl-8" />
           </div>
           <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-lg p-0.5">
             {([['all','Tất cả'],['active','Hoạt động'],['inactive','Tạm nghỉ']] as const).map(([v, l]) => (

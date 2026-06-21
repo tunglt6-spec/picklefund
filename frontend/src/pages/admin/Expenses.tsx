@@ -619,10 +619,10 @@ export function Expenses() {
                 </button>
               ))}
             </div>
-            <div className="relative pb-3">
+            <div className="relative w-56 pb-3">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-                placeholder="Tìm kiếm khoản chi..." className="input-base pl-8 w-56 h-8 text-xs" />
+                placeholder="Tìm kiếm khoản chi..." className="input-base pl-8 h-8 text-xs" />
             </div>
           </div>
 

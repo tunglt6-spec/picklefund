@@ -479,11 +479,11 @@ export function MemberAccounts() {
 
         {/* Toolbar: search + count */}
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative w-72">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Tìm thành viên, username..."
-              className="input-base pl-8 w-72 h-9" />
+              className="input-base pl-8 h-9" />
           </div>
           <span className="text-sm text-slate-500">{filtered.length} tài khoản</span>
         </div>
