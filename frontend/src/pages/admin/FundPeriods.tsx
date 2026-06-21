@@ -96,10 +96,10 @@ export function FundPeriods() {
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)
-      const unpaidCount = fps.filter(p => p.status === 'active').reduce((a, p) => {
-        const paid = new Set(contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).map(c => c.memberId))
-        return a + (memberCount - paid.size)
-      }, 0)
+      const primaryActive = fps.filter(p => p.status === 'active').sort((a, b) => b.startDate.localeCompare(a.startDate))[0]
+      const unpaidCount = primaryActive
+        ? memberCount - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
+        : 0
       const txCount = relevant.length
       const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
       return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
