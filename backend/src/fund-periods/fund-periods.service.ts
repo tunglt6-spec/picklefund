@@ -8,6 +8,19 @@ export class FundPeriodsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(clubId: string) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    // Auto-transition: draft → active when startDate arrived; active → closed when endDate passed
+    await this.prisma.$transaction([
+      this.prisma.fundPeriod.updateMany({
+        where: { clubId, status: 'draft', startDate: { lte: today }, endDate: { gte: today } },
+        data: { status: 'active' },
+      }),
+      this.prisma.fundPeriod.updateMany({
+        where: { clubId, status: { in: ['draft', 'active'] }, endDate: { lt: today } },
+        data: { status: 'closed' },
+      }),
+    ])
     return this.prisma.fundPeriod.findMany({
       where: { clubId },
       orderBy: { startDate: 'desc' },
@@ -37,7 +50,7 @@ export class FundPeriodsService {
         endDate: new Date(dto.endDate),
         contributionAmount: new Decimal(dto.contributionAmount),
         totalSessions: dto.totalSessions ?? 0,
-        status: 'active',
+        status: new Date(dto.startDate) > new Date() ? 'draft' : 'active',
       },
     })
   }

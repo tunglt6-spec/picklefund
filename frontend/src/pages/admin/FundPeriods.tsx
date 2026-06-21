@@ -19,10 +19,10 @@ import { formatDate, formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 const statusLabel: Record<FundPeriodStatus, string> = {
-  draft: 'Nháp', active: 'Đang mở', closed: 'Đã đóng', finalized: 'Đã chốt'
+  draft: 'Chuẩn bị', active: 'Đang mở', closed: 'Đóng', finalized: 'Đóng'
 }
 const statusVariant: Record<FundPeriodStatus, 'gray' | 'green' | 'yellow' | 'indigo'> = {
-  draft: 'gray', active: 'green', closed: 'yellow', finalized: 'indigo'
+  draft: 'yellow', active: 'green', closed: 'gray', finalized: 'gray'
 }
 
 const DONUT_COLORS = ['#6366f1', '#7c3aed']
@@ -52,7 +52,7 @@ export function FundPeriods() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setFundPeriods: savePeriods } = useClubDataStore()
   const clubData = getClubData(clubId)
-  const { fundPeriods: periods, contributions, members } = clubData
+  const { fundPeriods: periods, contributions, members, expenses } = clubData
 
   const setPeriods = (fn: (prev: FundPeriod[]) => FundPeriod[]) =>
     savePeriods(clubId, fn(getClubData(clubId).fundPeriods))
@@ -121,11 +121,29 @@ export function FundPeriods() {
     return { chung: calcChung(), game: calcMini() }
   }, [periods, contributions, memberCount])
 
-  // Active fund (latest active per type)
+  // Current fund: active or preparing (draft), sorted newest first
   const activePeriods = useMemo(() => ({
-    chung: periods.find(p => (p.type ?? 'chung') === 'chung' && p.status === 'active'),
-    game: periods.find(p => p.type === 'game' && p.status === 'active'),
+    chung: periods.filter(p => (p.type ?? 'chung') === 'chung' && (p.status === 'active' || p.status === 'draft'))
+                  .sort((a, b) => b.startDate.localeCompare(a.startDate))[0],
+    game:  periods.filter(p => p.type === 'game' && (p.status === 'active' || p.status === 'draft'))
+                  .sort((a, b) => b.startDate.localeCompare(a.startDate))[0],
   }), [periods])
+
+  // Previous closed period balance carryover for Quỹ Chung
+  // balance = collected - expenses of the most recent closed chung period before the current one
+  const prevChungBalance = useMemo(() => {
+    const activePeriod = activePeriods.chung
+    const closed = periods
+      .filter(p => (p.type ?? 'chung') === 'chung' && (p.status === 'closed' || p.status === 'finalized'))
+      .sort((a, b) => b.endDate.localeCompare(a.endDate))
+    const prev = activePeriod
+      ? closed.filter(p => p.endDate < activePeriod.startDate)[0]
+      : closed[0]
+    if (!prev) return 0
+    const collected = contributions.filter(c => c.fundPeriodId === prev.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+    const spent = expenses.filter(e => e.fundPeriodId === prev.id).reduce((a, e) => a + Number(e.amount), 0)
+    return Math.max(0, collected - spent)
+  }, [periods, activePeriods.chung, contributions, expenses])
 
   // Latest game period regardless of status (for showing buttons even when no active period)
   const latestGamePeriod = useMemo(() =>
@@ -433,6 +451,7 @@ export function FundPeriods() {
             color="indigo"
             memberCount={memberCount}
             contributions={contributions}
+            prevBalance={prevChungBalance}
             onEdit={() => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true))}
             onView={() => activePeriods.chung && setViewPeriod(activePeriods.chung)}
           />
@@ -1082,11 +1101,11 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
   )
 }
 
-function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode }: {
+function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode, prevBalance = 0 }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
   color: 'indigo' | 'violet'; memberCount: number
   contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
-  miniMode?: boolean
+  miniMode?: boolean; prevBalance?: number
 }) {
   const target = period ? (miniMode ? period.contributionAmount : period.contributionAmount * memberCount) : 0
   const miniCollected = miniMode
@@ -1097,7 +1116,8 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
     : period
       ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       : 0
-  const pct = target > 0 ? Math.round((collected / target) * 100) : (miniMode && collected > 0 ? 100 : 0)
+  const effectiveCollected = collected + prevBalance
+  const pct = target > 0 ? Math.min(100, Math.round((effectiveCollected / target) * 100)) : (miniMode && collected > 0 ? 100 : 0)
   const barColor = color === 'indigo' ? 'bg-indigo-500' : 'bg-violet-500'
   const borderColor = color === 'indigo' ? 'border-indigo-100' : 'border-violet-100'
 
@@ -1120,6 +1140,12 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
             </div>
             <span className="text-xs font-medium text-slate-600">{pct}%</span>
           </div>
+          {!miniMode && prevBalance > 0 && (
+            <div className="flex items-center justify-between text-xs mt-1 mb-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
+              <span className="text-emerald-700">↩ Kết dư kỳ trước</span>
+              <span className="font-semibold text-emerald-700">+{formatVND(prevBalance)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs text-slate-500 mt-2">
             <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
             {miniMode
