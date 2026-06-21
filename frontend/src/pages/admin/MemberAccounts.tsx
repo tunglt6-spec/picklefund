@@ -7,7 +7,6 @@ import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import type { MemberUserAccount } from '../../types'
 import toast from 'react-hot-toast'
@@ -274,7 +273,7 @@ function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
         <p className="text-sm text-slate-600">{body}</p>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button variant={danger ? 'destructive' : 'default'} onClick={onConfirm}>Xác nhận</Button>
+          <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm}>Xác nhận</Button>
         </div>
       </div>
     </div>
@@ -294,7 +293,7 @@ export function MemberAccounts() {
   const [search, setSearch] = useState('')
   const [showBulk, setShowBulk] = useState(false)
   const [showSingle, setShowSingle] = useState(false)
-  const [confirm, setConfirm] = useState<null | { title: string; body: string; danger?: boolean; action: () => void }>(null)
+  const [confirm, setConfirm] = useState<null | { title: string; body: string; danger?: boolean; onConfirm: () => void }>(null)
 
   const fetchAccounts = async () => {
     setLoading(true)
@@ -325,7 +324,7 @@ export function MemberAccounts() {
     setConfirm({
       title: 'Reset mật khẩu',
       body: `Bạn có chắc muốn reset mật khẩu tài khoản "${acc.username}" về 123456? Thành viên sẽ phải đổi mật khẩu khi đăng nhập lại.`,
-      action: async () => {
+      onConfirm: async () => {
         try {
           await api.post(`/member-users/${acc.id}/reset-password`)
           toast.success('Đã reset mật khẩu về 123456')
@@ -346,7 +345,7 @@ export function MemberAccounts() {
         ? `Khóa tài khoản "${acc.username}"? Thành viên sẽ không thể đăng nhập.`
         : `Mở khóa tài khoản "${acc.username}"?`,
       danger: toLock,
-      action: async () => {
+      onConfirm: async () => {
         try {
           await api.patch(`/member-users/${acc.id}/status`, { isActive: !toLock })
           toast.success(toLock ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản')
