@@ -464,12 +464,14 @@ export function Contributions() {
                     <th className="text-center">Ngày</th>
                     <th className="text-right">Số tiền</th>
                     <th className="text-center">Hình thức</th>
+                    <th className="text-center">Trạng thái</th>
+                    <th className="text-center w-16">Xác nhận</th>
                     <th className="text-center w-20">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {miniContribs.map(c => (
-                    <tr key={c.id}>
+                    <tr key={c.id} className={!c.isConfirmed ? 'bg-amber-50/30' : ''}>
                       <td className="font-medium text-slate-900">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
                       <td>
                         <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>
@@ -478,6 +480,17 @@ export function Contributions() {
                       <td className="text-right font-semibold text-violet-700">{formatVND(c.amount)}</td>
                       <td className="text-center">
                         <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
+                      </td>
+                      <td className="text-center">
+                        {c.isConfirmed
+                          ? <Badge variant="green" dot>Xác nhận</Badge>
+                          : <Badge variant="yellow" dot>Chờ</Badge>}
+                      </td>
+                      <td className="text-center">
+                        <button onClick={() => toggleConfirm(c.id)}
+                          className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
+                          {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                        </button>
                       </td>
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-1">
