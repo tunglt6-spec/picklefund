@@ -107,6 +107,7 @@ export const useClubDataStore = create<ClubDataStore>()(
         return {
           ...current,
           dataByClub: { ...(p?.dataByClub ?? {}) },
+          readNotifIds: { ...(p?.readNotifIds ?? {}) },
         }
       },
     }
