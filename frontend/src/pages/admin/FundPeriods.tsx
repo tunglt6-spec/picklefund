@@ -96,7 +96,7 @@ export function FundPeriods() {
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)
-      const unpaidCount = fps.reduce((a, p) => {
+      const unpaidCount = fps.filter(p => p.status === 'active').reduce((a, p) => {
         const paid = new Set(contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).map(c => c.memberId))
         return a + (memberCount - paid.size)
       }, 0)
@@ -1088,11 +1088,14 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   miniMode?: boolean
 }) {
   const target = period ? period.contributionAmount * memberCount : 0
-  const collected = period
-    ? miniMode
-      ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-      : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+  const miniCollected = miniMode
+    ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
     : 0
+  const collected = miniMode
+    ? miniCollected
+    : period
+      ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+      : 0
   const pct = target > 0 ? Math.round((collected / target) * 100) : (miniMode && collected > 0 ? 100 : 0)
   const barColor = color === 'indigo' ? 'bg-indigo-500' : 'bg-violet-500'
   const borderColor = color === 'indigo' ? 'border-indigo-100' : 'border-violet-100'
@@ -1128,6 +1131,20 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
               <Pencil size={13} />Sửa quỹ
             </Button>
           </div>
+        </>
+      ) : miniMode && collected > 0 ? (
+        <>
+          <p className="text-xs text-slate-400 mb-3">Chưa có kỳ quỹ đang mở</p>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+              <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: '100%' }} />
+            </div>
+            <span className="text-xs font-medium text-slate-600">—</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-500 mt-2 mb-4">
+            <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
+          </div>
+          <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>
         </>
       ) : (
         <div className="py-4 text-center">
