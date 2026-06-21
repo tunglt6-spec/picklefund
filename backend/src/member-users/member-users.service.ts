@@ -113,7 +113,8 @@ export class MemberUsersService {
         })
         results.push({ memberId, memberName: result.memberName, username: result.username, success: true })
       } catch (err: any) {
-        results.push({ memberId, memberName: '', username: '', success: false, error: err.message })
+        console.error(`[bulkCreate] memberId=${memberId} error:`, err?.message, err?.code)
+        results.push({ memberId, memberName: '', username: '', success: false, error: err.message ?? String(err) })
       }
     }
 
