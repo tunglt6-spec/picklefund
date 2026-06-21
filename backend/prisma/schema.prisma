@@ -68,8 +68,11 @@ model User {
   createdExpenses       LivingExpense[]     @relation("ExpenseCreatedBy")
   refreshTokens RefreshToken[]
   apiKeys       ApiKey[]
-  totpSecret    String?  @map("totp_secret")
-  totpEnabled   Boolean  @default(false) @map("totp_enabled")
+  totpSecret           String?   @map("totp_secret")
+  totpEnabled          Boolean   @default(false) @map("totp_enabled")
+  mustChangePassword   Boolean   @default(false) @map("must_change_password")
+  lastLoginAt          DateTime? @map("last_login_at")
+  notificationEnabled  Boolean   @default(true) @map("notification_enabled")
 
   @@map("users")
 }
