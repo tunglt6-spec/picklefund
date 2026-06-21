@@ -81,12 +81,27 @@ interface SidebarProps { onClose?: () => void }
 function useUnreadCount(clubId: string) {
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
-  const unconfirmed = data.contributions.filter(c => !c.isConfirmed).length
-  const upcoming = data.sessions.filter(s => s.status === 'scheduled').length
+
+  const readIds = (() => {
+    try {
+      const raw = localStorage.getItem(`notif-read-${clubId}`)
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>()
+    } catch { return new Set<string>() }
+  })()
+
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-  const periodWarning = activePeriod ? 1 : 0
-  // base: unconfirmed payments + upcoming sessions + period warning
-  return Math.min(unconfirmed + (upcoming > 0 ? 1 : 0) + periodWarning, 9)
+
+  const unconfirmedCount = data.contributions
+    .filter(c => !c.isConfirmed && !readIds.has(`pay-${c.id}`))
+    .length
+
+  const upcomingUnread = data.sessions
+    .filter(s => s.status === 'scheduled' && !readIds.has(`sess-${s.id}`))
+    .length
+
+  const periodWarning = activePeriod && !readIds.has(`warn-period-${activePeriod.id}`) ? 1 : 0
+
+  return Math.min(unconfirmedCount + (upcomingUnread > 0 ? 1 : 0) + periodWarning, 9)
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
