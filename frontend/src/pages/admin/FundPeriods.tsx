@@ -93,6 +93,9 @@ export function FundPeriods() {
       const totalCollected = contributions
         .filter(c => fps.some(p => p.id === c.fundPeriodId) && c.isConfirmed)
         .reduce((a, c) => a + c.amount, 0)
+      const totalPending = contributions
+        .filter(c => fps.some(p => p.id === c.fundPeriodId) && !c.isConfirmed)
+        .reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)
       const unpaidCount = fps.reduce((a, p) => {
         const paid = new Set(contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).map(c => c.memberId))
@@ -101,7 +104,7 @@ export function FundPeriods() {
       const txCount = contributions.filter(c => fps.some(p => p.id === c.fundPeriodId)).length
       const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
       const remainPct = 100 - pct
-      return { balance: totalCollected, pct, remainPct, remaining, unpaidCount, txCount, totalTarget }
+      return { balance: totalCollected, pct, remainPct, remaining, unpaidCount, txCount, totalTarget, totalPending }
     }
     return { chung: calc('chung'), game: calc('game') }
   }, [periods, contributions, memberCount])
@@ -1014,7 +1017,7 @@ function HighlightsTab({ contributions, periods, members }: {
 
 interface KpiStats {
   balance: number; pct: number; remainPct: number; remaining: number
-  unpaidCount: number; txCount: number; totalTarget: number
+  unpaidCount: number; txCount: number; totalTarget: number; totalPending: number
 }
 
 function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelValue }: {
@@ -1031,6 +1034,9 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
         <div>
           <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Số dư</p>
           <p className={`text-base font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
+          {stats.totalPending > 0 && (
+            <p className="text-[10px] text-amber-500 mt-0.5">+{formatVND(stats.totalPending)} chờ</p>
+          )}
         </div>
         <div>
           <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Đã thu</p>
@@ -1043,6 +1049,12 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
           <p className="text-[10px] text-red-400">{formatVND(stats.remaining)}</p>
         </div>
       </div>
+      {stats.totalPending > 0 && (
+        <div className="mt-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-between text-xs">
+          <span className="text-amber-700 font-medium">⏳ Chờ xác nhận</span>
+          <span className="font-bold text-amber-700">{formatVND(stats.totalPending)}</span>
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
         <span>{label}: <strong className="text-slate-700">{labelValue ?? stats.unpaidCount}</strong></span>
         <span>Giao dịch: <strong className="text-slate-700">{stats.txCount}</strong></span>
