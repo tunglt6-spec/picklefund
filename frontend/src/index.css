@@ -54,24 +54,21 @@ body {
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-/* Input base */
-.input-base {
-  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400
-    focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
-    disabled:bg-slate-50 disabled:text-slate-400 transition-colors;
-}
+@layer components {
+  /* Input base */
+  .input-base {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400
+      focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
+      disabled:bg-slate-50 disabled:text-slate-400 transition-colors;
+  }
 
-/* Table base */
-.table-base { @apply w-full text-sm border-collapse; }
-.table-base thead th {
-  @apply text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide bg-slate-50 border-b border-slate-100;
-}
-.table-base tbody tr { @apply border-b border-slate-50 hover:bg-slate-50/60 transition-colors; }
-.table-base tbody td { @apply px-4 py-3 text-slate-700; }
-
-#root {
-  width: 100%;
-  min-height: 100vh;
+  /* Table base */
+  .table-base { @apply w-full text-sm border-collapse; }
+  .table-base thead th {
+    @apply text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide bg-slate-50 border-b border-slate-100;
+  }
+  .table-base tbody tr { @apply border-b border-slate-50 hover:bg-slate-50/60 transition-colors; }
+  .table-base tbody td { @apply px-4 py-3 text-slate-700; }
 }
 
 #root {
