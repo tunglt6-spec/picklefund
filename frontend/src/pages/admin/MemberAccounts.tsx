@@ -477,19 +477,17 @@ export function MemberAccounts() {
           ))}
         </div>
 
-        {/* Toolbar: search + count */}
-        <div className="flex items-center gap-3">
-          <div className="relative w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm thành viên, username..."
-              className="input-base pl-8 h-9" />
-          </div>
-          <span className="text-sm text-slate-500">{filtered.length} tài khoản</span>
-        </div>
-
-        {/* Table */}
+        {/* Table card (search header + table) */}
         <div className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
+            <div className="relative w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm thành viên, username..."
+                className="input-base pl-8 h-8 text-xs" />
+            </div>
+            <span className="text-xs text-slate-500 ml-auto">{filtered.length} tài khoản</span>
+          </div>
           {loading ? (
             <div className="text-center py-16 text-slate-400 text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
