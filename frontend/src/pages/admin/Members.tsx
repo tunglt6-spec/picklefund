@@ -192,7 +192,7 @@ export function Members() {
         <MemberDrawer open={showDrawer} onClose={closeDrawer} editMember={editMember} onSave={handleSave} isSaving={isSaving} />
 
         {/* Sticky search bar */}
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />

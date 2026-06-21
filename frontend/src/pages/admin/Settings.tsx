@@ -377,7 +377,7 @@ export function Settings() {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3">
           <p className="text-[15px] font-bold text-slate-800">Cài đặt</p>
           <p className="text-[11px] text-slate-400">Quản lý thông tin CLB và tài khoản</p>
         </div>

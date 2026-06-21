@@ -480,6 +480,7 @@ export function MemberAccounts() {
         {/* Search + table */}
         <div className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+            <p className="text-sm font-semibold text-slate-700 shrink-0">Danh sách</p>
             <div className="relative flex-1 max-w-xs">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input value={search} onChange={e => setSearch(e.target.value)}

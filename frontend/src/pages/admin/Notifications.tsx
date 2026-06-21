@@ -97,7 +97,7 @@ export function Notifications() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] text-slate-900">Thông báo</div>
             {unreadCount > 0

@@ -246,7 +246,7 @@ export function FundPeriods() {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
           <span className="text-[17px] font-[800] text-slate-900">Kỳ Quỹ</span>
           <div className="flex gap-2">
             <button
@@ -499,7 +499,7 @@ export function FundPeriods() {
                   <input
                     value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
                     placeholder="Tìm kiếm kỳ quỹ..."
-                    className="input-base pl-8 py-2 text-sm" />
+                    className="input-base pl-8 py-2 text-sm [&:focus]:ring-0" />
                 </div>
                 <div className="relative">
                   <select value={filterType} onChange={e => { setFilterType(e.target.value as '' | FundPeriodType); setPage(1) }}

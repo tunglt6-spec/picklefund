@@ -254,7 +254,7 @@ export function Reports() {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3">
           <div className="flex items-center justify-between">
             <span className="text-[17px] font-[800] text-slate-900">Báo Cáo</span>
             <div className="flex gap-1 bg-slate-100 rounded-[10px] p-0.5">

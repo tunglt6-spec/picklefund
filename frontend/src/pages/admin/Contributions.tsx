@@ -185,7 +185,7 @@ export function Contributions() {
     const sorted = [...contributions].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
             <p className="text-[12px] text-slate-400">{activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
