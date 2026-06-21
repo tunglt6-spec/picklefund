@@ -361,7 +361,9 @@ export function Expenses() {
   const clubData = getClubData(clubId)
 
   const allPeriods = useMemo(() =>
-    [...clubData.fundPeriods].sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    [...clubData.fundPeriods]
+      .filter(p => (p.type ?? 'chung') === 'chung')
+      .sort((a, b) => b.startDate.localeCompare(a.startDate)),
     [clubData.fundPeriods]
   )
   const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]

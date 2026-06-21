@@ -92,7 +92,7 @@ export function FundPeriods() {
       const fps = periods.filter(p => (p.type ?? 'chung') === 'chung' && p.status === 'active')
       const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
       const periodIds = new Set(fps.map(p => p.id))
-      const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' || periodIds.has(c.fundPeriodId ?? ''))
+      const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && periodIds.has(c.fundPeriodId ?? ''))
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)

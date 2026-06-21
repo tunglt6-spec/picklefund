@@ -40,7 +40,7 @@ export function Attendance() {
 
   const sessions = useMemo(() =>
     selectedPeriodId
-      ? allSessions.filter(s => s.fundPeriodId === selectedPeriodId)
+      ? allSessions.filter(s => s.fundPeriodId === selectedPeriodId || !s.fundPeriodId)
       : allSessions,
     [allSessions, selectedPeriodId]
   )

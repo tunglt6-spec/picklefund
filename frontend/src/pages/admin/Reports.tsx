@@ -176,26 +176,26 @@ export function Reports() {
     }
   }).sort((a, b) => b.rate - a.rate)
 
-  const memberCosts = clubData.members.map(m => {
-    const s = attSummary.find(a => a.memberId === m.id)
-    const attended = s?.attendedSessions ?? 0
-    const total = totalSessionsForRate || 1
-    const share = attended / total / (memberCount || 1)
-    return {
-      name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
-      san: Math.round(share * totalExpenses * 0.84),
-      sh: Math.round(share * totalExpenses * 0.16),
-    }
-  })
-
   // CHI PHÍ SÂN: expenses "Đều nhau" (EQUAL) — tiền thuê sân, chia đều tất cả thành viên
   const courtExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
   // SINH HOẠT: expenses "Theo số người tham gia" (PRESENT_ONLY/ATTENDANCE) — nước, ăn uống
   const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY' || e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
 
+  const memberCosts = clubData.members.map(m => {
+    const s = attSummary.find(a => a.memberId === m.id)
+    const attended = s?.attendedSessions ?? 0
+    return {
+      name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
+      san: memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0,
+      sh: totalAttendances > 0 ? Math.round(livingExpTotal / totalAttendances * attended) : 0,
+    }
+  })
+
+  const periodContribs = filteredContribs.filter(c => c.fundPeriodId === activePeriod?.id)
+
   const memberBillRows = clubData.members.map(m => {
-    const contrib = filteredContribs.find(x => x.memberId === m.id)
+    const contrib = periodContribs.find(x => x.memberId === m.id)
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = summ?.attendedSessions ?? 0
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
