@@ -18,6 +18,7 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module'
 import { SystemSettingsModule } from './system-settings/system-settings.module'
 import { ApiKeysModule } from './api-keys/api-keys.module'
 import { AiModule } from './ai/ai.module'
+import { MemberUsersModule } from './member-users/member-users.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
@@ -51,6 +52,7 @@ import { RolesGuard } from './common/guards/roles.guard'
     SystemSettingsModule,
     ApiKeysModule,
     AiModule,
+    MemberUsersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
