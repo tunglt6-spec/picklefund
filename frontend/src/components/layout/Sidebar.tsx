@@ -57,6 +57,7 @@ const memberNav: NavItem[] = [
   { label: 'Phiếu Thu',     icon: <Receipt size={18} />,         to: '/member/receipt' },
   { label: 'Lịch sử Đóng',  icon: <DollarSign size={18} />,     to: '/member/contributions' },
   { label: 'Lịch Tham Gia', icon: <Calendar size={18} />,        to: '/member/attendance' },
+  { label: 'Lisa AI',        icon: <Sparkles size={18} />,        to: '/member/lisa' },
   { label: 'Thông báo',     icon: <Bell size={18} />,            to: '/member/notifications' },
 ]
 
@@ -115,8 +116,9 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
 
+  const notifPath = user.role === 'CLUB_MEMBER' ? '/member/notifications' : '/notifications'
   const navItems: NavItem[] = navByRole[user.role].map(item => {
-    if (item.to === '/notifications' && user.role === 'CLUB_ADMIN' && adminUnread > 0) {
+    if (item.to === notifPath && adminUnread > 0) {
       return { ...item, badge: adminUnread }
     }
     return item

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -9,12 +9,13 @@ import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
-type Tab = 'club' | 'account' | 'notifications'
+type Tab = 'club' | 'account' | 'notifications' | 'payment'
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
   { id: 'account',       label: 'Tài khoản',     icon: <User size={16} /> },
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
+  { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
 ]
 
 const emptySettings: ClubSettings = {
@@ -451,6 +452,135 @@ function NotificationsTab(_: { clubId: string }) {
   )
 }
 
+// ─── Tab: Thanh toán (Bank Info for VietQR) ──────────────────
+type BankInfo = { bank_code: string; bank_account_number: string; bank_account_name: string }
+
+const POPULAR_BANKS = [
+  { code: 'MB', name: 'MB Bank' },
+  { code: 'VCB', name: 'Vietcombank' },
+  { code: 'TCB', name: 'Techcombank' },
+  { code: 'ACB', name: 'ACB' },
+  { code: 'VPB', name: 'VPBank' },
+  { code: 'BIDV', name: 'BIDV' },
+  { code: 'CTG', name: 'VietinBank' },
+  { code: 'TPB', name: 'TPBank' },
+  { code: 'MSB', name: 'MSB' },
+  { code: 'OCB', name: 'OCB' },
+]
+
+function PaymentTab() {
+  const [info, setInfo] = useState<BankInfo>({ bank_code: 'MB', bank_account_number: '', bank_account_name: '' })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
+
+  const fetchInfo = useCallback(async () => {
+    try {
+      const res = await api.get('/system-settings')
+      const d: Record<string, string> = {}
+      ;(res.data?.data ?? res.data ?? []).forEach((s: any) => { d[s.key] = s.value })
+      setInfo({
+        bank_code: d['bank_code'] ?? 'MB',
+        bank_account_number: d['bank_account_number'] ?? '',
+        bank_account_name: d['bank_account_name'] ?? '',
+      })
+    } catch {} finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { fetchInfo() }, [fetchInfo])
+
+  const set = (patch: Partial<BankInfo>) => setInfo(i => ({ ...i, ...patch }))
+
+  const buildQrUrl = () => {
+    if (!info.bank_account_number || !info.bank_account_name) return null
+    const base = `https://img.vietqr.io/image/${info.bank_code}-${info.bank_account_number}-compact2.jpg`
+    return `${base}?accountName=${encodeURIComponent(info.bank_account_name)}&addInfo=Dong+quy+CLB`
+  }
+
+  const handleSave = async () => {
+    if (!info.bank_account_number || !info.bank_account_name) {
+      toast.error('Vui lòng nhập đầy đủ thông tin ngân hàng')
+      return
+    }
+    setSaving(true)
+    try {
+      await Promise.all([
+        api.post('/system-settings', { key: 'bank_code', value: info.bank_code }),
+        api.post('/system-settings', { key: 'bank_account_number', value: info.bank_account_number }),
+        api.post('/system-settings', { key: 'bank_account_name', value: info.bank_account_name }),
+      ])
+      toast.success('Đã lưu thông tin thanh toán')
+      setPreview(buildQrUrl())
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu thất bại')
+    } finally { setSaving(false) }
+  }
+
+  if (loading) return <div className="py-12 text-center text-sm text-gray-400">Đang tải...</div>
+
+  const qrUrl = preview ?? buildQrUrl()
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-1">Tài khoản ngân hàng nhận tiền quỹ</h3>
+        <p className="text-xs text-gray-500 mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngân hàng</label>
+            <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              value={info.bank_code}
+              onChange={e => set({ bank_code: e.target.value })}>
+              {POPULAR_BANKS.map(b => <option key={b.code} value={b.code}>{b.name} ({b.code})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
+            <input
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono"
+              placeholder="Ví dụ: 0123456789"
+              value={info.bank_account_number}
+              onChange={e => set({ bank_account_number: e.target.value })} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
+            <input
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none uppercase"
+              placeholder="VD: NGUYEN VAN A"
+              value={info.bank_account_name}
+              onChange={e => set({ bank_account_name: e.target.value.toUpperCase() })} />
+            <p className="text-xs text-gray-400 mt-1">Nhập chữ hoa, không dấu — đúng như tên trên tài khoản ngân hàng</p>
+          </div>
+        </div>
+      </div>
+
+      {qrUrl && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+          <h3 className="font-semibold text-gray-900 mb-3">Xem trước mã QR</h3>
+          <div className="flex items-start gap-6">
+            <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-gray-200 object-contain" />
+            <div className="text-sm text-gray-600 space-y-1">
+              <p><span className="font-medium">Ngân hàng:</span> {POPULAR_BANKS.find(b => b.code === info.bank_code)?.name}</p>
+              <p><span className="font-medium">Số TK:</span> <span className="font-mono">{info.bank_account_number}</span></p>
+              <p><span className="font-medium">Tên TK:</span> {info.bank_account_name}</p>
+              <p className="text-xs text-gray-400 mt-2">QR này sẽ được dùng khi tạo phiếu thu quỹ cho thành viên</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} variant="primary" size="md">
+          {saving
+            ? <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Đang lưu...</span>
+            : <span className="flex items-center gap-2"><Save size={16} />Lưu thông tin</span>}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ────────────────────────────────────────────────────
 export function Settings() {
   const { user } = useAuthStore()
@@ -488,6 +618,7 @@ export function Settings() {
           {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
           {activeTab === 'account'       && <AccountTab />}
           {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
+          {activeTab === 'payment'       && <PaymentTab />}
         </div>
       </div>
     )
@@ -517,6 +648,7 @@ export function Settings() {
         {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
         {activeTab === 'account'       && <AccountTab />}
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
+        {activeTab === 'payment'       && <PaymentTab />}
       </div>
     </div>
   )

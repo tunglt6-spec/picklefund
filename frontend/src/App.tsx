@@ -48,6 +48,7 @@ import { MemberAttendance } from './pages/member/MemberAttendance'
 import { MemberContributions } from './pages/member/MemberContributions'
 import { MemberNotifications } from './pages/member/MemberNotifications'
 import { MemberReceipt } from './pages/member/MemberReceipt'
+import { MemberLisaChat } from './pages/member/MemberLisaChat'
 
 // Member accounts + change password
 import { MemberAccounts } from './pages/admin/MemberAccounts'
@@ -122,6 +123,7 @@ export default function App() {
             <Route path="/member/receipt" element={<MemberReceipt />} />
             <Route path="/member/contributions" element={<MemberContributions />} />
             <Route path="/member/attendance" element={<MemberAttendance />} />
+            <Route path="/member/lisa" element={<MemberLisaChat />} />
             <Route path="/member/notifications" element={<MemberNotifications />} />
           </Route>
 
