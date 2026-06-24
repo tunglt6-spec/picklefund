@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ScheduleModule } from '@nestjs/schedule'
 import { APP_GUARD } from '@nestjs/core'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { CacheModule } from '@nestjs/cache-manager'
 import { redisStore } from 'cache-manager-ioredis-yet'
 import { PrismaModule } from './prisma/prisma.module'
@@ -33,6 +34,10 @@ import { RolesGuard } from './common/guards/roles.guard'
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 10 },    // 10 req/giây
+      { name: 'medium', ttl: 60000, limit: 200 },  // 200 req/phút
+    ]),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
@@ -69,6 +74,7 @@ import { RolesGuard } from './common/guards/roles.guard'
     BillingModule,
   ],
   providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

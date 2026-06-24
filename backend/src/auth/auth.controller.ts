@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Patch, Req } from '@nestjs/common'
 import { type Request } from 'express'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { CurrentUser, Public } from '../common/decorators'
 import { ok } from '../common/response'
@@ -11,6 +12,7 @@ export class AuthController {
   constructor(private auth: AuthService) {}
 
   @Public()
+  @Throttle({ short: { ttl: 60000, limit: 5 } })
   @Post('login')
   async login(@Body() body: { username: string; password: string; rememberMe?: boolean }, @Req() req: Request) {
     const result = await this.auth.login(body.username, body.password, {
@@ -22,6 +24,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ short: { ttl: 3600000, limit: 3 } })
   @Post('register')
   async register(@Body() body: { club: any; admin: any }) {
     return ok(await this.auth.register(body), 'Đăng ký CLB thành công')
