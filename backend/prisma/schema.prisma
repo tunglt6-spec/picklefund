@@ -400,7 +400,7 @@ model Notification {
 model NotificationPreference {
   id               String              @id @default(uuid())
   userId           String              @unique @map("user_id")
-  preferredChannel NotificationChannel @default(IN_APP)
+  preferredChannel NotificationChannel @default(IN_APP) @map("preferred_channel")
   telegramChatId   String?             @map("telegram_chat_id") @db.VarChar(50)
   quietHoursStart  Int                 @default(23) @map("quiet_hours_start")
   quietHoursEnd    Int                 @default(7) @map("quiet_hours_end")
