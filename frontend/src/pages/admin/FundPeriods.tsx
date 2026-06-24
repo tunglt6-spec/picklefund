@@ -4,7 +4,7 @@ import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play, TrendingUp,
-  FolderOpen, ChevronDown, QrCode,
+  FolderOpen, ChevronDown, QrCode, FileText,
   Trophy, Star, Filter
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
@@ -224,6 +224,15 @@ export function FundPeriods() {
   }
 
   const isMobile = useIsMobile()
+
+  const handleGenerateReceipts = async (periodId: string) => {
+    try {
+      await api.post(`/personal-receipts/generate/${periodId}`)
+      toast.success('Đã tạo phiếu thu cho tất cả thành viên')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Tạo phiếu thu thất bại')
+    }
+  }
 
   const handleSetStatus = async (p: FundPeriod, newStatus: FundPeriodStatus) => {
     if (finalizingId) return
@@ -607,6 +616,9 @@ export function FundPeriods() {
                                     <LockOpen size={14} />
                                   </button>
                                 )}
+                                <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-colors">
+                                  <FileText size={14} />
+                                </button>
                                 <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
                                   <Trash2 size={14} />
                                 </button>

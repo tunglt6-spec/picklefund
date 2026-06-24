@@ -112,9 +112,27 @@ export function MemberReceipt() {
     }
   })() : null
 
-  const displayReceipts: PersonalReceipt[] = isLocal
-    ? (localReceipt ? [localReceipt] : [])
-    : receipts
+  // Always use live local computation for the active period; API snapshots for closed periods
+  const displayReceipts: PersonalReceipt[] = (() => {
+    const closedReceipts = receipts.filter(r => r.fundPeriodId !== activePeriod?.id)
+    if (localReceipt) return [localReceipt, ...closedReceipts]
+    if (isLocal) return []
+    return receipts
+  })()
+
+  // Auto-expand the first receipt with debt, or the active period
+  const activeReceiptId = localReceipt?.id ?? displayReceipts[0]?.id ?? null
+  const debtReceipt = displayReceipts.find(r => n(r.needToPay) > 0)
+  if (!expanded && displayReceipts.length > 0) {
+    // will be set by effect below
+  }
+
+  useEffect(() => {
+    if (displayReceipts.length > 0 && !expanded) {
+      setExpanded(debtReceipt?.id ?? activeReceiptId)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayReceipts.length])
 
   const totalPaid = displayReceipts.reduce((s, r) => s + n(r.amountPaid), 0)
   const totalCost = displayReceipts.reduce((s, r) => s + n(r.totalCost), 0)
@@ -264,6 +282,37 @@ export function MemberReceipt() {
 
       <div ref={printRef} className="p-6 max-w-[800px] mx-auto space-y-5">
 
+        {/* QR Payment Banner — shown prominently when member has unpaid balance */}
+        {(() => {
+          const debt = debtReceipt ? n(debtReceipt.needToPay) : 0
+          if (debt <= 0 || !bankInfo) return null
+          const period = debtReceipt?.fundPeriod ?? data.fundPeriods.find(p => p.id === debtReceipt?.fundPeriodId)
+          const qr = buildQrUrl(bankInfo, debt, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`)
+          return (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+              <div className="shrink-0">
+                {qr
+                  ? <img src={qr} alt="QR thanh toán" className="w-32 h-32 rounded-xl border-2 border-amber-300 bg-white shadow-sm" />
+                  : <div className="w-32 h-32 rounded-xl border-2 border-amber-200 bg-white flex items-center justify-center"><QrCode size={40} className="text-amber-300" /></div>
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle size={16} className="text-amber-600 shrink-0" />
+                  <span className="text-sm font-bold text-amber-800">Còn nợ quỹ kỳ {period?.name}</span>
+                </div>
+                <p className="text-3xl font-extrabold text-amber-700 mb-2">{formatVND(debt)}</p>
+                <div className="text-xs text-slate-600 space-y-0.5">
+                  <p><span className="text-slate-400">Ngân hàng:</span> <strong>{bankInfo.bank_code}</strong></p>
+                  <p><span className="text-slate-400">Số TK:</span> <span className="font-mono font-semibold">{bankInfo.bank_account_number}</span></p>
+                  <p><span className="text-slate-400">Tên TK:</span> {bankInfo.bank_account_name}</p>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">Mở app ngân hàng → Quét mã QR → Kiểm tra số tiền → Chuyển khoản</p>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Summary KPIs */}
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
@@ -326,9 +375,16 @@ export function MemberReceipt() {
                         <Calendar size={16} className="text-indigo-600" />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-semibold text-slate-900">
-                          Kỳ {period?.name ?? r.fundPeriodId}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-900">
+                            Kỳ {period?.name ?? r.fundPeriodId}
+                          </p>
+                          {r.fundPeriodId === activePeriod?.id && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />LIVE
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400">
                           {period ? `${formatDate(period.startDate)} – ${formatDate(period.endDate)}` : 'N/A'}
                         </p>
