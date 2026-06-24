@@ -579,30 +579,30 @@ function PaymentTab() {
   const [info, setInfo] = useState<BankInfo>({ bank_code: 'MB', bank_account_number: '', bank_account_name: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [preview, setPreview] = useState<string | null>(null)
 
   const fetchInfo = useCallback(async () => {
     try {
       const res = await api.get('/system-settings')
+      const rows: any[] = res.data?.data ?? res.data ?? []
       const d: Record<string, string> = {}
-      ;(res.data?.data ?? res.data ?? []).forEach((s: any) => { d[s.key] = s.value })
+      rows.forEach((s: any) => { if (s?.key) d[s.key] = s.value ?? '' })
       setInfo({
-        bank_code: d['bank_code'] ?? 'MB',
+        bank_code: d['bank_code'] || 'MB',
         bank_account_number: d['bank_account_number'] ?? '',
         bank_account_name: d['bank_account_name'] ?? '',
       })
-    } catch {} finally { setLoading(false) }
+    } catch (err: any) {
+      console.error('[PaymentTab] fetchInfo error:', err?.message)
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { fetchInfo() }, [fetchInfo])
 
   const set = (patch: Partial<BankInfo>) => setInfo(i => ({ ...i, ...patch }))
 
-  const buildQrUrl = () => {
-    if (!info.bank_account_number || !info.bank_account_name) return null
-    const base = `https://img.vietqr.io/image/${info.bank_code}-${info.bank_account_number}-compact2.jpg`
-    return `${base}?accountName=${encodeURIComponent(info.bank_account_name)}&addInfo=Dong+quy+CLB`
-  }
+  const qrUrl = info.bank_account_number && info.bank_account_name
+    ? `https://img.vietqr.io/image/${info.bank_code}-${info.bank_account_number}-compact2.jpg?accountName=${encodeURIComponent(info.bank_account_name)}&addInfo=Dong+quy+CLB`
+    : null
 
   const handleSave = async () => {
     if (!info.bank_account_number || !info.bank_account_name) {
@@ -617,15 +617,12 @@ function PaymentTab() {
         bank_account_name: info.bank_account_name,
       })
       toast.success('Đã lưu thông tin thanh toán')
-      setPreview(buildQrUrl())
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Lưu thất bại')
     } finally { setSaving(false) }
   }
 
   if (loading) return <div className="py-12 text-center text-sm text-gray-400">Đang tải...</div>
-
-  const qrUrl = preview ?? buildQrUrl()
 
   return (
     <div className="space-y-6">
