@@ -190,8 +190,19 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       } catch { ctx.reply('❌ Không thể lấy lịch hoạt động.') }
     })
 
+    this.bot.command('myid', ctx => {
+      const chatId = ctx.chat?.id?.toString() ?? 'không xác định'
+      ctx.reply(
+        `🆔 *Chat ID của bạn:* \`${chatId}\`\n\n` +
+        `Dùng ID này để kết nối bot với CLB:\n` +
+        `1. Vào PickleFund → Cài đặt → Telegram\n` +
+        `2. Nhập ID \`${chatId}\` rồi bấm Lưu`,
+        { parse_mode: 'Markdown' },
+      )
+    })
+
     this.bot.on('text', ctx => {
-      ctx.reply('Gõ /help để xem các lệnh hỗ trợ.')
+      ctx.reply('Gõ /help để xem các lệnh hỗ trợ. Gõ /myid để lấy Chat ID kết nối CLB.')
     })
   }
 

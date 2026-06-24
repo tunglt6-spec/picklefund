@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard } from 'lucide-react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -9,13 +9,14 @@ import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
-type Tab = 'club' | 'account' | 'notifications' | 'payment'
+type Tab = 'club' | 'account' | 'notifications' | 'payment' | 'telegram'
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
   { id: 'account',       label: 'Tài khoản',     icon: <User size={16} /> },
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
   { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
+  { id: 'telegram',      label: 'Telegram',      icon: <Send size={16} /> },
 ]
 
 const emptySettings: ClubSettings = {
@@ -468,6 +469,88 @@ const POPULAR_BANKS = [
   { code: 'OCB', name: 'OCB' },
 ]
 
+// ─── Tab: Telegram ───────────────────────────────────────────
+function TelegramTab() {
+  const [chatId, setChatId] = useState('')
+  const [linked, setLinked] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const handleLink = async () => {
+    if (!chatId.trim()) { toast.error('Vui lòng nhập Chat ID'); return }
+    setSaving(true)
+    try {
+      await api.post('/telegram/link', { chatId: chatId.trim() })
+      setLinked(true)
+      toast.success('Đã kết nối Telegram Bot với CLB!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Kết nối thất bại')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-1">Kết nối Telegram Bot</h3>
+        <p className="text-sm text-gray-500 mb-5">
+          Liên kết bot <strong>@PickleFundBot</strong> với CLB để nhận thông báo và tra cứu quỹ qua Telegram.
+        </p>
+
+        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-5 space-y-1.5">
+          <p className="text-sm font-medium text-indigo-800">Hướng dẫn lấy Chat ID:</p>
+          <ol className="text-sm text-indigo-700 space-y-1 list-decimal list-inside">
+            <li>Mở Telegram, tìm bot <strong>@PickleFundBot</strong> (hoặc thêm vào nhóm CLB)</li>
+            <li>Gõ lệnh <code className="bg-indigo-100 px-1 rounded">/myid</code></li>
+            <li>Bot sẽ trả về Chat ID — copy và dán vào ô bên dưới</li>
+          </ol>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">Chat ID</label>
+          <input
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            placeholder="Ví dụ: -1001234567890 hoặc 123456789"
+            value={chatId}
+            onChange={e => { setChatId(e.target.value); setLinked(false) }}
+          />
+          {linked && (
+            <p className="text-sm text-emerald-600 flex items-center gap-1.5">
+              <CheckCircle size={14} /> Đã kết nối thành công!
+            </p>
+          )}
+          <Button onClick={handleLink} disabled={saving || !chatId.trim()} className="w-full sm:w-auto">
+            <Save size={14} className="mr-1.5" />
+            {saving ? 'Đang lưu...' : 'Kết nối Bot'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-3">Các lệnh Bot hỗ trợ</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+          {[
+            { cmd: '/status',    desc: 'Tổng quan CLB' },
+            { cmd: '/balance',   desc: 'Số dư quỹ hiện tại' },
+            { cmd: '/debt',      desc: 'Danh sách chưa đóng quỹ' },
+            { cmd: '/brief',     desc: 'Báo cáo nhanh hôm nay' },
+            { cmd: '/report',    desc: 'Báo cáo tuần' },
+            { cmd: '/health',    desc: 'Điểm sức khỏe CLB' },
+            { cmd: '/members',   desc: 'Thống kê thành viên' },
+            { cmd: '/reminders', desc: 'Nhắc nhở hôm nay' },
+            { cmd: '/myid',      desc: 'Lấy Chat ID của bạn' },
+          ].map(({ cmd, desc }) => (
+            <div key={cmd} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+              <code className="text-indigo-600 font-mono font-medium">{cmd}</code>
+              <span className="text-gray-500">— {desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PaymentTab() {
   const [info, setInfo] = useState<BankInfo>({ bank_code: 'MB', bank_account_number: '', bank_account_name: '' })
   const [loading, setLoading] = useState(true)
@@ -619,6 +702,7 @@ export function Settings() {
           {activeTab === 'account'       && <AccountTab />}
           {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
           {activeTab === 'payment'       && <PaymentTab />}
+          {activeTab === 'telegram'      && <TelegramTab />}
         </div>
       </div>
     )
