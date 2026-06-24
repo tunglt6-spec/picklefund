@@ -15,6 +15,7 @@ export interface MemberContext {
   clubFundBalance: number
   clubTotalExpenses: number
   clubTotalContributions: number
+  activeMemberCount: number
   activePeriodName: string | null
   recentPayments: { amount: number; date: Date }[]
 }

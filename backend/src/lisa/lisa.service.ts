@@ -120,7 +120,7 @@ export class LisaService {
       orderBy: { createdAt: 'desc' },
     })
 
-    const [contributions, allClubContributions, sessions, attendance] = await Promise.all([
+    const [contributions, allClubContributions, sessions, attendance, activeMembers] = await Promise.all([
       this.prisma.fundContribution.findMany({
         where: { memberId, isConfirmed: true },
         orderBy: { createdAt: 'desc' },
@@ -138,6 +138,9 @@ export class LisaService {
         where: { memberId },
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true },
+      }),
+      this.prisma.member.count({
+        where: { clubId: member.clubId, status: 'active', isDeleted: false },
       }),
     ])
 
@@ -175,6 +178,7 @@ export class LisaService {
       clubFundBalance: clubTotalContributions - clubTotalExpenses,
       clubTotalExpenses,
       clubTotalContributions,
+      activeMemberCount: activeMembers,
       activePeriodName: activePeriod?.name ?? null,
       recentPayments: contributions.slice(0, 3).map(c => ({ amount: Number(c.amount), date: c.createdAt })),
     }
@@ -191,7 +195,8 @@ Kỳ quỹ hiện tại: ${ctx.activePeriodName ?? 'Chưa có kỳ quỹ'}
 Tổng đã đóng (tất cả kỳ): ${fmt(ctx.totalPaid)}
 Buổi tham dự: ${ctx.sessionsAttended}/${ctx.totalSessions} buổi
 Lần chơi gần nhất: ${fmtDate(ctx.lastAttendedAt)}
---- Thông tin quỹ CLB ---
+--- Thông tin CLB ---
+Số thành viên đang hoạt động: ${ctx.activeMemberCount} người
 Tổng thu: ${fmt(ctx.clubTotalContributions)}
 Tổng chi: ${fmt(ctx.clubTotalExpenses)}
 Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}`
