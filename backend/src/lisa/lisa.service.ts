@@ -39,8 +39,9 @@ export class LisaService {
     const orKey = this.config.get<string>('OPENROUTER_API_KEY')
     if (orKey) {
       const orModels = [
-        'google/gemma-3-27b-it:free',
         'meta-llama/llama-3.3-70b-instruct:free',
+        'openai/gpt-oss-20b:free',
+        'nvidia/nemotron-3-nano-30b-a3b:free',
         'qwen/qwen3-next-80b-a3b-instruct:free',
       ]
       for (const model of orModels) {
