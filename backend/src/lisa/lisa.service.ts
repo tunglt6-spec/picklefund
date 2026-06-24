@@ -92,16 +92,34 @@ export class LisaService {
 
   private async webSearch(query: string): Promise<string | null> {
     try {
-      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`
-      const res = await fetch(url, { headers: { 'User-Agent': 'PickleFund-Lisa/1.0' } })
-      if (!res.ok) return null
-      const data: any = await res.json()
-      const abstract = data?.AbstractText?.trim()
-      if (abstract && abstract.length > 20) return abstract
-      const related = data?.RelatedTopics?.[0]?.Text?.trim()
-      if (related && related.length > 20) return related
+      const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=vn-vi`
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.5',
+        },
+      })
+      if (!res.ok) {
+        this.logger.warn(`[Lisa] DuckDuckGo search error ${res.status}`)
+        return null
+      }
+      const html = await res.text()
+      const snippets: string[] = []
+      // Extract result__snippet spans from DDG HTML
+      const re = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(html)) !== null && snippets.length < 4) {
+        const text = m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        if (text.length > 20) snippets.push(text)
+      }
+      if (snippets.length > 0) {
+        this.logger.log(`[Lisa] Web search "${query}" → ${snippets.length} snippets`)
+        return snippets.join('\n---\n')
+      }
       return null
-    } catch {
+    } catch (err: any) {
+      this.logger.warn(`[Lisa] webSearch error: ${err.message}`)
       return null
     }
   }
