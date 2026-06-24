@@ -23,16 +23,46 @@ export class LisaService {
     }
   }
 
-  private async askGemini(prompt: string, fallback: string): Promise<string> {
-    if (!this.genAI) return fallback
-    try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-      const result = await model.generateContent(prompt)
-      return result.response.text().trim()
-    } catch (err: any) {
-      this.logger.warn(`[Lisa] Gemini error: ${err.message}`)
-      return fallback
+  private async askAI(prompt: string, fallback: string): Promise<string> {
+    // 1) Gemini Free
+    if (this.genAI) {
+      try {
+        const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        const result = await model.generateContent(prompt)
+        return result.response.text().trim()
+      } catch (err: any) {
+        this.logger.warn(`[Lisa] Gemini error: ${err.message} — trying OpenRouter`)
+      }
     }
+
+    // 2) OpenRouter Free (DeepSeek)
+    const orKey = this.config.get<string>('OPENROUTER_API_KEY')
+    if (orKey) {
+      try {
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${orKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://picklefund.app',
+          },
+          body: JSON.stringify({
+            model: 'deepseek/deepseek-chat-v3-0324:free',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 512,
+          }),
+        })
+        if (res.ok) {
+          const data: any = await res.json()
+          const text = data?.choices?.[0]?.message?.content?.trim()
+          if (text) return text
+        }
+      } catch (err: any) {
+        this.logger.warn(`[Lisa] OpenRouter error: ${err.message} — using fallback`)
+      }
+    }
+
+    return fallback
   }
 
   // ─── Member context ───────────────────────────────────────────────────────
@@ -103,7 +133,7 @@ Thông tin thành viên ${ctx.memberName}:
 Viết lời chào ngắn (2 câu) bằng tiếng Việt, thân thiện, cá nhân hóa. Đề cập điểm nổi bật nhất.`
 
     const fallback = `${greeting}, ${ctx.memberName}! ${ctx.currentPeriodPaid ? 'Bạn đã đóng quỹ kỳ này rồi.' : 'Nhớ đóng quỹ kỳ này nhé!'}`
-    const greetingText = await this.askGemini(prompt, fallback)
+    const greetingText = await this.askAI(prompt, fallback)
 
     return {
       greeting: greetingText,
@@ -130,7 +160,7 @@ Câu hỏi: "${question}"
 Trả lời ngắn gọn (2-3 câu), thân thiện, chính xác dựa trên dữ liệu thực. Không bịa đặt.`
 
     const fallback = `Xin chào ${ctx.memberName}! Câu hỏi của bạn về "${question}" đã được ghi nhận. Vui lòng liên hệ quản trị viên CLB để biết thêm chi tiết.`
-    const answer = await this.askGemini(prompt, fallback)
+    const answer = await this.askAI(prompt, fallback)
 
     const actions: string[] = []
     if (!ctx.currentPeriodPaid) actions.push('Đóng quỹ kỳ hiện tại')

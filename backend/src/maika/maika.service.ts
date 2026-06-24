@@ -88,18 +88,49 @@ export class MaikaService {
     }
   }
 
-  // ─── Gemini call with fallback ────────────────────────────────────────────
+  // ─── AI call: Gemini primary → OpenRouter fallback → rule-based fallback ──
 
-  private async askGemini(prompt: string, fallback: string): Promise<string> {
-    if (!this.genAI) return fallback
-    try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-      const result = await model.generateContent(prompt)
-      return result.response.text().trim()
-    } catch (err: any) {
-      this.logger.warn(`[Maika] Gemini error: ${err.message} — using fallback`)
-      return fallback
+  private async askAI(prompt: string, fallback: string): Promise<string> {
+    // 1) Gemini Free (primary)
+    if (this.genAI) {
+      try {
+        const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        const result = await model.generateContent(prompt)
+        return result.response.text().trim()
+      } catch (err: any) {
+        this.logger.warn(`[Maika] Gemini error: ${err.message} — trying OpenRouter`)
+      }
     }
+
+    // 2) OpenRouter Free (DeepSeek / Qwen)
+    const orKey = this.config.get<string>('OPENROUTER_API_KEY')
+    if (orKey) {
+      try {
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${orKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://picklefund.app',
+          },
+          body: JSON.stringify({
+            model: 'deepseek/deepseek-chat-v3-0324:free',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 512,
+          }),
+        })
+        if (res.ok) {
+          const data: any = await res.json()
+          const text = data?.choices?.[0]?.message?.content?.trim()
+          if (text) return text
+        }
+      } catch (err: any) {
+        this.logger.warn(`[Maika] OpenRouter error: ${err.message} — using rule-based fallback`)
+      }
+    }
+
+    // 3) Rule-based fallback
+    return fallback
   }
 
   // ─── Daily Brief ──────────────────────────────────────────────────────────
@@ -124,7 +155,7 @@ Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.
 
     const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Tổng tài sản ${snap.totalAssets.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`
 
-    const summary = await this.askGemini(prompt, fallback)
+    const summary = await this.askAI(prompt, fallback)
 
     const brief: DailyBrief = {
       date: today,
@@ -168,7 +199,7 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`
 
     const fallback = `Báo cáo tuần CLB ${snap.clubName}: ${snap.activeMembers} thành viên hoạt động. Thu/Chi Quỹ Chung: ${snap.commonIncome.toLocaleString('vi-VN')}đ / ${snap.commonExpense.toLocaleString('vi-VN')}đ. Số dư: ${snap.commonBalance.toLocaleString('vi-VN')}đ.`
 
-    const summary = await this.askGemini(prompt, fallback)
+    const summary = await this.askAI(prompt, fallback)
 
     const report: WeeklyReport = {
       weekOf,
