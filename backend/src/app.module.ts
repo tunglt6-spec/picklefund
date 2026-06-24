@@ -25,6 +25,7 @@ import { PaymentModule } from './payment/payment.module'
 import { MaikaModule } from './maika/maika.module'
 import { LisaModule } from './lisa/lisa.module'
 import { TelegramModule } from './telegram/telegram.module'
+import { BillingModule } from './billing/billing.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
@@ -65,6 +66,7 @@ import { RolesGuard } from './common/guards/roles.guard'
     MaikaModule,
     LisaModule,
     TelegramModule,
+    BillingModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
