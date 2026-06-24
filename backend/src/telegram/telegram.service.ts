@@ -236,10 +236,22 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   // ─── Link a club's admin chat ─────────────────────────────────────────────
 
   async linkClubChat(clubId: string, chatId: string): Promise<void> {
+    // Remove any existing link for this club first (a club can only have one chat)
+    await this.prisma.systemSetting.deleteMany({
+      where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
+    })
     await this.prisma.systemSetting.upsert({
       where: { key: `telegram_chat_${chatId}` },
       create: { key: `telegram_chat_${chatId}`, value: clubId },
       update: { value: clubId },
     })
+    this.logger.log(`[Telegram] Club ${clubId} linked to chat ${chatId}`)
+  }
+
+  async getLinkedChatId(clubId: string): Promise<string | null> {
+    const setting = await this.prisma.systemSetting.findFirst({
+      where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
+    }).catch(() => null)
+    return setting ? setting.key.replace('telegram_chat_', '') : null
   }
 }

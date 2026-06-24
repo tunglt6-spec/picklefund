@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common'
+import { Controller, Post, Get, Body } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { TelegramService } from './telegram.service'
 import { CurrentUser, Roles } from '../common/decorators'
@@ -9,6 +9,13 @@ import { ok } from '../common/response'
 @Controller('telegram')
 export class TelegramController {
   constructor(private svc: TelegramService) {}
+
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Get('link')
+  async getLink(@CurrentUser() user: any) {
+    const chatId = await this.svc.getLinkedChatId(user.clubId)
+    return ok({ chatId })
+  }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Post('link')

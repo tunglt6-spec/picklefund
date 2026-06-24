@@ -471,15 +471,26 @@ const POPULAR_BANKS = [
 
 // ─── Tab: Telegram ───────────────────────────────────────────
 function TelegramTab() {
+  const { user } = useAuthStore()
   const [chatId, setChatId] = useState('')
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [linked, setLinked] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api.get('/telegram/link').then(res => {
+      const id = res.data?.data?.chatId ?? null
+      setCurrentChatId(id)
+      if (id) setChatId(id)
+    }).catch(() => {})
+  }, [])
 
   const handleLink = async () => {
     if (!chatId.trim()) { toast.error('Vui lòng nhập Chat ID'); return }
     setSaving(true)
     try {
       await api.post('/telegram/link', { chatId: chatId.trim() })
+      setCurrentChatId(chatId.trim())
       setLinked(true)
       toast.success('Đã kết nối Telegram Bot với CLB!')
     } catch (err: any) {
@@ -493,16 +504,29 @@ function TelegramTab() {
     <div className="space-y-5">
       <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-1">Kết nối Telegram Bot</h3>
-        <p className="text-sm text-gray-500 mb-5">
-          Liên kết bot <strong>@PickleFundBot</strong> với CLB để nhận thông báo và tra cứu quỹ qua Telegram.
+        <p className="text-sm text-gray-500 mb-4">
+          Liên kết bot <strong>MÍT ĐẶC BOT</strong> với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
         </p>
+
+        {currentChatId ? (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+            <CheckCircle size={15} className="text-emerald-600 shrink-0" />
+            <span className="text-sm text-emerald-700">
+              Đang kết nối với Chat ID: <code className="font-mono font-semibold">{currentChatId}</code>
+            </span>
+          </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
+            <span className="text-sm text-amber-700">⚠️ CLB này chưa được kết nối với Telegram Bot.</span>
+          </div>
+        )}
 
         <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-5 space-y-1.5">
           <p className="text-sm font-medium text-indigo-800">Hướng dẫn lấy Chat ID:</p>
           <ol className="text-sm text-indigo-700 space-y-1 list-decimal list-inside">
-            <li>Mở Telegram, tìm bot <strong>@PickleFundBot</strong> (hoặc thêm vào nhóm CLB)</li>
+            <li>Mở Telegram, nhắn tin cho bot hoặc thêm bot vào nhóm CLB</li>
             <li>Gõ lệnh <code className="bg-indigo-100 px-1 rounded">/myid</code></li>
-            <li>Bot sẽ trả về Chat ID — copy và dán vào ô bên dưới</li>
+            <li>Bot trả về Chat ID — copy và dán vào ô bên dưới</li>
           </ol>
         </div>
 
@@ -521,7 +545,7 @@ function TelegramTab() {
           )}
           <Button onClick={handleLink} disabled={saving || !chatId.trim()} className="w-full sm:w-auto">
             <Save size={14} className="mr-1.5" />
-            {saving ? 'Đang lưu...' : 'Kết nối Bot'}
+            {saving ? 'Đang lưu...' : currentChatId ? 'Cập nhật kết nối' : 'Kết nối Bot'}
           </Button>
         </div>
       </div>
