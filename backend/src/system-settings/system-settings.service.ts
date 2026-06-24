@@ -18,22 +18,33 @@ const DEFAULTS: Record<string, string> = {
 export class SystemSettingsService {
   constructor(private prisma: PrismaService) {}
 
-  async getAll(): Promise<Record<string, string>> {
+  async getAll(clubId?: string): Promise<Record<string, string>> {
+    if (clubId) {
+      const prefix = `${clubId}_`
+      const rows = await this.prisma.systemSetting.findMany({
+        where: { key: { startsWith: prefix } },
+      })
+      const map: Record<string, string> = {}
+      for (const row of rows) map[row.key.slice(prefix.length)] = row.value
+      return map
+    }
     const rows = await this.prisma.systemSetting.findMany()
     const map: Record<string, string> = { ...DEFAULTS }
     for (const row of rows) map[row.key] = row.value
     return map
   }
 
-  async upsertMany(data: Record<string, string>): Promise<void> {
+  async upsertMany(data: Record<string, string>, clubId?: string): Promise<void> {
+    const prefix = clubId ? `${clubId}_` : ''
     await this.prisma.$transaction(
-      Object.entries(data).map(([key, value]) =>
-        this.prisma.systemSetting.upsert({
-          where: { key },
+      Object.entries(data).map(([key, value]) => {
+        const k = `${prefix}${key}`
+        return this.prisma.systemSetting.upsert({
+          where: { key: k },
           update: { value },
-          create: { key, value },
-        }),
-      ),
+          create: { key: k, value },
+        })
+      }),
     )
   }
 }

@@ -583,9 +583,8 @@ function PaymentTab() {
   const fetchInfo = useCallback(async () => {
     try {
       const res = await api.get('/system-settings')
-      const rows: any[] = res.data?.data ?? res.data ?? []
-      const d: Record<string, string> = {}
-      rows.forEach((s: any) => { if (s?.key) d[s.key] = s.value ?? '' })
+      // API returns Record<string,string> (plain object), not array
+      const d: Record<string, string> = res.data?.data ?? {}
       setInfo({
         bank_code: d['bank_code'] || 'MB',
         bank_account_number: d['bank_account_number'] ?? '',
