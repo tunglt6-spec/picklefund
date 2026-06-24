@@ -120,7 +120,7 @@ export class LisaService {
       orderBy: { createdAt: 'desc' },
     })
 
-    const [contributions, allClubContributions, sessions, attendance, expenses] = await Promise.all([
+    const [contributions, allClubContributions, sessions, attendance] = await Promise.all([
       this.prisma.fundContribution.findMany({
         where: { memberId, isConfirmed: true },
         orderBy: { createdAt: 'desc' },
@@ -139,15 +139,19 @@ export class LisaService {
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true },
       }),
-      this.prisma.livingExpense.findMany({
+    ])
+
+    let clubTotalExpenses = 0
+    try {
+      const expenses = await this.prisma.livingExpense.findMany({
         where: { clubId: member.clubId },
         select: { amount: true },
-      }).catch(() => []),
-    ])
+      })
+      clubTotalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
+    } catch { /* ignore */ }
 
     const totalPaid = contributions.reduce((s, c) => s + Number(c.amount), 0)
     const clubTotalContributions = allClubContributions.reduce((s, c) => s + Number(c.amount), 0)
-    const clubTotalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
     const currentPeriodContribs = activePeriod
       ? contributions.filter(c => c.fundPeriodId === activePeriod.id)
       : []
