@@ -33,7 +33,6 @@ model Club {
   expenseCategories ExpenseCategory[]
   personalReceipts  PersonalReceipt[]
   auditLogs         AuditLog[]
-  notifications     Notification[]
   minigames         Minigame[]
 
   @@map("clubs")
@@ -73,6 +72,8 @@ model User {
   mustChangePassword   Boolean   @default(false) @map("must_change_password")
   lastLoginAt          DateTime? @map("last_login_at")
   notificationEnabled  Boolean   @default(true) @map("notification_enabled")
+  notifications        Notification[]
+  notificationPref     NotificationPreference?
 
   @@map("users")
 }
@@ -369,21 +370,66 @@ model AuditLog {
 }
 
 // ============================================================
-// NOTIFICATIONS
+// NOTIFICATIONS (Hermes — Communication Orchestrator)
 // ============================================================
 model Notification {
-  id        String   @id @default(uuid())
-  clubId    String   @map("club_id")
-  title     String   @db.VarChar(200)
+  id        String               @id @default(uuid())
+  userId    String               @map("user_id")
+  clubId    String               @map("club_id")
+  eventType String               @map("event_type") @db.VarChar(50)
+  priority  NotificationPriority @default(MEDIUM)
+  channel   NotificationChannel  @default(IN_APP)
+  title     String               @db.VarChar(200)
   body      String
-  type      String   @db.VarChar(50)
-  isRead    Boolean  @default(false) @map("is_read")
-  targetUserId String? @map("target_user_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  metadata  Json?
+  status    NotificationStatus   @default(PENDING)
+  sentAt    DateTime?            @map("sent_at")
+  readAt    DateTime?            @map("read_at")
+  createdAt DateTime             @default(now()) @map("created_at")
 
-  club Club @relation(fields: [clubId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, status])
+  @@index([clubId, eventType])
   @@map("notifications")
+}
+
+model NotificationPreference {
+  id               String              @id @default(uuid())
+  userId           String              @unique @map("user_id")
+  preferredChannel NotificationChannel @default(IN_APP)
+  telegramChatId   String?             @map("telegram_chat_id") @db.VarChar(50)
+  quietHoursStart  Int                 @default(23) @map("quiet_hours_start")
+  quietHoursEnd    Int                 @default(7) @map("quiet_hours_end")
+  maxDailyPush     Int                 @default(3) @map("max_daily_push")
+  maxDailyEmail    Int                 @default(1) @map("max_daily_email")
+  maxDailyTelegram Int                 @default(5) @map("max_daily_telegram")
+  enabled          Boolean             @default(true)
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+enum NotificationPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  TELEGRAM
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  READ
+  FAILED
 }
 
 // ============================================================
