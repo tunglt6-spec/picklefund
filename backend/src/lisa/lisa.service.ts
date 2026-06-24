@@ -35,30 +35,36 @@ export class LisaService {
       }
     }
 
-    // 2) OpenRouter Free (DeepSeek)
+    // 2) OpenRouter Free
     const orKey = this.config.get<string>('OPENROUTER_API_KEY')
     if (orKey) {
-      try {
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${orKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://picklefund.app',
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-3.3-70b-instruct:free',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 512,
-          }),
-        })
-        if (res.ok) {
-          const data: any = await res.json()
-          const text = data?.choices?.[0]?.message?.content?.trim()
-          if (text) return text
+      const orModels = [
+        'google/gemma-3-27b-it:free',
+        'meta-llama/llama-3.3-70b-instruct:free',
+        'qwen/qwen3-next-80b-a3b-instruct:free',
+      ]
+      for (const model of orModels) {
+        try {
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${orKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://picklefund.app',
+            },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 512 }),
+          })
+          if (res.ok) {
+            const data: any = await res.json()
+            const text = data?.choices?.[0]?.message?.content?.trim()
+            if (text) return text
+          } else {
+            const err = await res.json().catch(() => ({}))
+            this.logger.warn(`[Lisa] OpenRouter ${model} error ${res.status}: ${JSON.stringify(err?.error?.message ?? err)}`)
+          }
+        } catch (err: any) {
+          this.logger.warn(`[Lisa] OpenRouter ${model} fetch error: ${err.message}`)
         }
-      } catch (err: any) {
-        this.logger.warn(`[Lisa] OpenRouter error: ${err.message} — using fallback`)
       }
     }
 
