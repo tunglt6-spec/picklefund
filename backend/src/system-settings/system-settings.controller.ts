@@ -8,7 +8,7 @@ export class SystemSettingsController {
   constructor(private readonly svc: SystemSettingsService) {}
 
   @Get()
-  @Roles('SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER')
+  @Roles('SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER', 'CLUB_MEMBER')
   async getAll(@CurrentUser() user: any) {
     return ok(await this.svc.getAll(user.clubId ?? undefined))
   }
