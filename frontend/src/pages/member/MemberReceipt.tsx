@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -35,6 +35,14 @@ function BalanceBadge({ val }: { val: number }) {
   return <span className="text-xs font-semibold text-slate-500">0 ₫</span>
 }
 
+interface BankInfo { bank_code: string; bank_account_number: string; bank_account_name: string }
+
+function buildQrUrl(bank: BankInfo, amount: number, addInfo: string) {
+  if (!bank.bank_account_number || !bank.bank_account_name) return null
+  const base = `https://img.vietqr.io/image/${bank.bank_code}-${bank.bank_account_number}-compact2.jpg`
+  return `${base}?amount=${Math.round(amount)}&addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(bank.bank_account_name)}`
+}
+
 export function MemberReceipt() {
   const isMobile = useIsMobile()
   const { user, accessToken } = useAuthStore()
@@ -42,11 +50,13 @@ export function MemberReceipt() {
   const memberId = user?.memberId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
+  const printRef = useRef<HTMLDivElement>(null)
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
   const [loading, setLoading] = useState(!isLocal)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
 
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
   const myContribs = data.contributions.filter(c => c.memberId === memberId)
@@ -61,6 +71,15 @@ export function MemberReceipt() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [isLocal])
+
+  useEffect(() => {
+    api.get('/system-settings').then(res => {
+      const d: Record<string, string> = res.data?.data ?? {}
+      if (d.bank_account_number && d.bank_account_name) {
+        setBankInfo({ bank_code: d.bank_code || 'MB', bank_account_number: d.bank_account_number, bank_account_name: d.bank_account_name })
+      }
+    }).catch(() => {})
+  }, [])
 
   // Derive a local fallback receipt from store data for the active period
   const localReceipt: PersonalReceipt | null = activePeriod ? (() => {
@@ -103,7 +122,14 @@ export function MemberReceipt() {
   const netBalance = totalPaid - totalCost
 
   const handleExport = () => {
-    toast.success('Tính năng xuất PDF sẽ sớm ra mắt')
+    const style = document.createElement('style')
+    style.innerHTML = `@media print { body > *:not(#print-receipt) { display: none !important; } #print-receipt { display: block !important; } }`
+    document.head.appendChild(style)
+    const el = printRef.current
+    if (el) { el.id = 'print-receipt'; el.style.display = 'block' }
+    window.print()
+    document.head.removeChild(style)
+    if (el) el.removeAttribute('id')
   }
 
   if (isMobile && loading) return (
@@ -179,12 +205,27 @@ export function MemberReceipt() {
                             <span className="font-[600] text-slate-700">{formatVND(val as number)}</span>
                           </div>
                         ))}
-                        {needToPay > 0 && (
-                          <div className="flex items-center gap-2 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 text-[12px] mt-2">
-                            <AlertCircle size={12} className="shrink-0" />
-                            <span>Còn thiếu <strong>{formatVND(needToPay)}</strong></span>
-                          </div>
-                        )}
+                        {needToPay > 0 && (() => {
+                          const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`) : null
+                          return (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 mt-2 space-y-2">
+                              <div className="flex items-center gap-1.5 text-amber-700 text-[12px] font-semibold">
+                                <AlertCircle size={12} />Còn thiếu {formatVND(needToPay)}
+                              </div>
+                              {qr && (
+                                <div className="flex gap-3 items-center">
+                                  <img src={qr} alt="QR" className="w-24 h-24 rounded-lg bg-white border border-amber-200" />
+                                  <div className="text-[11px] text-slate-600 space-y-0.5">
+                                    <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
+                                    <p>{bankInfo!.bank_account_name}</p>
+                                    <p className="text-amber-700 font-bold">{formatVND(needToPay)}</p>
+                                    <p className="text-slate-400">Quét QR để thanh toán</p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()}
                         {bal > 0 && (
                           <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2 text-[12px] mt-2">
                             <Receipt size={12} className="shrink-0" />
@@ -222,7 +263,7 @@ export function MemberReceipt() {
         }
       />
 
-      <div className="p-6 max-w-[800px] mx-auto space-y-5">
+      <div ref={printRef} className="p-6 max-w-[800px] mx-auto space-y-5">
 
         {/* Summary KPIs */}
         <div className="grid grid-cols-3 gap-4">
@@ -332,12 +373,34 @@ export function MemberReceipt() {
                         </div>
                       </div>
 
-                      {needToPay > 0 && (
-                        <div className="flex items-center gap-2 bg-amber-50 text-amber-700 rounded-lg px-3 py-2.5 text-xs">
-                          <AlertCircle size={14} className="shrink-0" />
-                          <span>Còn thiếu <strong>{formatVND(needToPay)}</strong>. Vui lòng liên hệ thủ quỹ để thanh toán.</span>
-                        </div>
-                      )}
+                      {needToPay > 0 && (() => {
+                        const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`) : null
+                        return (
+                          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div className="flex items-center gap-2 text-amber-700 mb-3">
+                              <AlertCircle size={14} className="shrink-0" />
+                              <span className="text-xs font-semibold">Còn thiếu <strong>{formatVND(needToPay)}</strong> — quét QR để thanh toán</span>
+                            </div>
+                            {qr ? (
+                              <div className="flex gap-5 items-start">
+                                <img src={qr} alt="QR thanh toán" className="w-36 h-36 rounded-lg border border-amber-200 bg-white" />
+                                <div className="text-xs text-slate-600 space-y-1">
+                                  <p><span className="text-slate-400">Ngân hàng:</span> {bankInfo!.bank_code}</p>
+                                  <p><span className="text-slate-400">Số TK:</span> <span className="font-mono font-semibold">{bankInfo!.bank_account_number}</span></p>
+                                  <p><span className="text-slate-400">Tên TK:</span> {bankInfo!.bank_account_name}</p>
+                                  <p><span className="text-slate-400">Số tiền:</span> <span className="font-bold text-amber-700">{formatVND(needToPay)}</span></p>
+                                  <p className="text-slate-400 pt-1">Mở app ngân hàng → Quét QR → Kiểm tra số tiền → Chuyển</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 text-slate-500 text-xs">
+                                <QrCode size={14} />
+                                <span>Liên hệ thủ quỹ để lấy thông tin thanh toán.</span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })()}
                       {bal > 0 && (
                         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2.5 text-xs">
                           <Receipt size={14} className="shrink-0" />
