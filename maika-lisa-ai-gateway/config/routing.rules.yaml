@@ -1,0 +1,22 @@
+tasks:
+  report:
+    primary: report-primary
+    fallback: [gemini-report, qwen-vietnamese, openrouter-backup]
+  code_debug:
+    primary: code-primary
+    fallback: [deepseek-code, qwen-vietnamese, openrouter-backup]
+  vietnamese_chat:
+    primary: qwen-vietnamese
+    fallback: [claude-report, ollama-local, openrouter-backup]
+  offline_internal:
+    primary: offline-local
+    fallback: [qwen-vietnamese, openrouter-backup]
+  picklefund_business:
+    flow:
+      - agent
+      - litellm_intent
+      - picklefund_api
+      - litellm_explanation
+      - telegram
+    no_hallucinated_business_data: true
+

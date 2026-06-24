@@ -1,0 +1,23 @@
+providers:
+  anthropic:
+    env: ANTHROPIC_API_KEY
+    purpose: primary report reasoning
+  openai:
+    env: OPENAI_API_KEY
+    purpose: primary code/debug reasoning
+  gemini:
+    env: GEMINI_API_KEY
+    purpose: report fallback
+  qwen:
+    env: QWEN_API_KEY
+    purpose: Vietnamese chat and fallback
+  deepseek:
+    env: DEEPSEEK_API_KEY
+    purpose: code/debug fallback
+  openrouter:
+    env: OPENROUTER_API_KEY
+    purpose: backup only through LiteLLM
+  ollama:
+    env: OLLAMA_BASE_URL
+    purpose: local fallback
+

@@ -1,0 +1,111 @@
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: maika-lisa-litellm
+    env_file:
+      - path: .env
+        required: false
+    command: ["--config", "/app/config/litellm.config.yaml", "--host", "0.0.0.0", "--port", "4000"]
+    ports:
+      - "${LITELLM_PORT:-4000}:4000"
+    volumes:
+      - ./config/litellm.config.yaml:/app/config/litellm.config.yaml:ro
+      - ./logs:/app/logs
+    networks: [ai-gateway-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://localhost:4000/health/readiness', timeout=5)\nPY"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: maika-lisa-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks: [ai-gateway-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: maika-lisa-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks: [ai-gateway-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  maika-adapter:
+    build:
+      context: .
+      dockerfile: services/maika-adapter/Dockerfile
+    container_name: maika-adapter
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AGENT_NAME: maika
+      PORT: ${MAIKA_PORT:-4101}
+      LITELLM_BASE_URL: http://litellm:4000
+    ports:
+      - "${MAIKA_PORT:-4101}:${MAIKA_PORT:-4101}"
+    depends_on:
+      litellm:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [ai-gateway-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:' + (process.env.PORT || 4101) + '/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  lisa-adapter:
+    build:
+      context: .
+      dockerfile: services/lisa-adapter/Dockerfile
+    container_name: lisa-adapter
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      AGENT_NAME: lisa
+      PORT: ${LISA_PORT:-4102}
+      LITELLM_BASE_URL: http://litellm:4000
+    ports:
+      - "${LISA_PORT:-4102}:${LISA_PORT:-4102}"
+    depends_on:
+      litellm:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [ai-gateway-net]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:' + (process.env.PORT || 4102) + '/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+networks:
+  ai-gateway-net:
+    driver: bridge
+
+volumes:
+  ollama-data:
+  redis-data:

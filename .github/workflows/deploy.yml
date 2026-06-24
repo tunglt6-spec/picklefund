@@ -37,8 +37,9 @@ jobs:
             cd /opt/picklefund
             git pull origin main
             docker compose build --no-cache
-            docker compose up -d --remove-orphans
+            docker compose down --remove-orphans
+            docker compose up -d
             echo "Containers starting (migrations run automatically on startup)..."
-            sleep 20
+            sleep 25
             curl -f https://api.picklefund.uk/health || (docker compose logs backend --tail=50 && exit 1)
             echo "Deployment successful"

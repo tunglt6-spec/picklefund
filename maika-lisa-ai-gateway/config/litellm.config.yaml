@@ -1,0 +1,60 @@
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  store_model_in_db: false
+  disable_spend_logs: false
+
+litellm_settings:
+  request_timeout: 60
+  num_retries: 2
+  fallbacks:
+    - report-primary: ["gemini-report", "qwen-vietnamese", "openrouter-backup"]
+    - code-primary: ["deepseek-code", "qwen-vietnamese", "openrouter-backup"]
+    - vietnamese-chat: ["claude-report", "ollama-local", "openrouter-backup"]
+    - offline-local: ["qwen-vietnamese", "openrouter-backup"]
+model_list:
+  - model_name: report-primary
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-latest
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-report
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-latest
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: gemini-report
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: code-primary
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: deepseek-code
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+
+  - model_name: qwen-vietnamese
+    litellm_params:
+      model: openai/qwen-plus
+      api_key: os.environ/QWEN_API_KEY
+      api_base: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+
+  - model_name: offline-local
+    litellm_params:
+      model: ollama_chat/qwen2.5:7b
+      api_base: os.environ/OLLAMA_BASE_URL
+
+  - model_name: ollama-local
+    litellm_params:
+      model: ollama_chat/qwen2.5:7b
+      api_base: os.environ/OLLAMA_BASE_URL
+
+  - model_name: openrouter-backup
+    litellm_params:
+      model: openrouter/anthropic/claude-3.5-sonnet
+      api_key: os.environ/OPENROUTER_API_KEY
+      api_base: os.environ/OPENROUTER_BASE_URL
