@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { ScheduleModule } from '@nestjs/schedule'
 import { APP_GUARD } from '@nestjs/core'
 import { CacheModule } from '@nestjs/cache-manager'
 import { redisStore } from 'cache-manager-ioredis-yet'
@@ -20,12 +21,15 @@ import { ApiKeysModule } from './api-keys/api-keys.module'
 import { AiModule } from './ai/ai.module'
 import { MemberUsersModule } from './member-users/member-users.module'
 import { HermesModule } from './hermes/hermes.module'
+import { PaymentModule } from './payment/payment.module'
+import { MaikaModule } from './maika/maika.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
@@ -55,6 +59,8 @@ import { RolesGuard } from './common/guards/roles.guard'
     AiModule,
     MemberUsersModule,
     HermesModule,
+    PaymentModule,
+    MaikaModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
