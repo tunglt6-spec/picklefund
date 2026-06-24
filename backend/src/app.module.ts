@@ -23,6 +23,8 @@ import { MemberUsersModule } from './member-users/member-users.module'
 import { HermesModule } from './hermes/hermes.module'
 import { PaymentModule } from './payment/payment.module'
 import { MaikaModule } from './maika/maika.module'
+import { LisaModule } from './lisa/lisa.module'
+import { TelegramModule } from './telegram/telegram.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 
@@ -61,6 +63,8 @@ import { RolesGuard } from './common/guards/roles.guard'
     HermesModule,
     PaymentModule,
     MaikaModule,
+    LisaModule,
+    TelegramModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
