@@ -216,7 +216,6 @@ function HealthScoreGauge({ score }: { score: number }) {
   const circ = 2 * Math.PI * r
   const arc = circ * 0.75  // 270° sweep
   const filled = arc * (score / 100)
-  const dashOffset = arc - filled
   const rotation = -225  // start from bottom-left
   return (
     <div className="flex flex-col items-center gap-1">
@@ -405,8 +404,6 @@ export function ClubDashboard() {
   }, [unpaidCount, activeMembers, totalAssets, commonExpTotal, currentPeriodSessions, currentPeriod])
 
   /* ── Upcoming sessions (next 7 days from existing data) ── */
-  const upcomingCount = currentPeriodSessions.length
-
   /* ── Empty state ── */
   const isEmpty = clubData.fundPeriods.length === 0 && clubData.contributions.length === 0
 
