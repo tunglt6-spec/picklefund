@@ -8,6 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts'
+import { Brain, TrendingUp, TrendingDown, QrCode } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
@@ -207,6 +208,49 @@ function DashboardEmpty({ clubName }: { clubName: string }) {
   )
 }
 
+/* ─── Health Score gauge ─── */
+function HealthScoreGauge({ score }: { score: number }) {
+  const color = score >= 75 ? brand.accent : score >= 50 ? brand.warning : brand.danger
+  const label = score >= 75 ? 'Tốt' : score >= 50 ? 'Trung bình' : 'Cần cải thiện'
+  const r = 36, cx = 50, cy = 54
+  const circ = 2 * Math.PI * r
+  const arc = circ * 0.75  // 270° sweep
+  const filled = arc * (score / 100)
+  const dashOffset = arc - filled
+  const rotation = -225  // start from bottom-left
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width="100" height="72" viewBox="0 0 100 72">
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E2E8F0" strokeWidth="8"
+          strokeDasharray={`${arc} ${circ}`} strokeLinecap="round"
+          transform={`rotate(${rotation} ${cx} ${cy})`} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="8"
+          strokeDasharray={`${filled} ${circ}`} strokeDashoffset={0} strokeLinecap="round"
+          transform={`rotate(${rotation} ${cx} ${cy})`}
+          style={{ transition: 'stroke-dasharray 1s ease' }} />
+        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="18" fontWeight="700" fill="#0F172A">{score}</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="9" fill="#94A3B8">/ 100</text>
+      </svg>
+      <span className="text-xs font-semibold" style={{ color }}>{label}</span>
+    </div>
+  )
+}
+
+/* ─── AI Insight chip ─── */
+function AiChip({ text, level }: { text: string; level: 'ok' | 'warn' | 'danger' }) {
+  const styles = {
+    ok:     { bg: '#F0FDF4', color: '#16A34A', dot: brand.accent },
+    warn:   { bg: '#FFFBEB', color: '#D97706', dot: brand.warning },
+    danger: { bg: '#FFF1F2', color: '#E11D48', dot: brand.danger },
+  }[level]
+  return (
+    <div className="flex items-start gap-2 py-1.5">
+      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: styles.dot }} />
+      <span className="text-xs leading-snug" style={{ color: styles.color }}>{text}</span>
+    </div>
+  )
+}
+
 /* ─── Main ─── */
 export function ClubDashboard() {
   const { user } = useAuthStore()
@@ -317,6 +361,51 @@ export function ClubDashboard() {
   const attendedInPeriod = currentPeriod
     ? clubData.memberAttendanceSummary?.filter(s => s.attendedSessions > 0).length ?? 0
     : 0
+
+  /* ── AI Health Score (computed from existing data) ── */
+  const healthScore = useMemo(() => {
+    if (clubData.fundPeriods.length === 0) return 0
+    // Financial (25pts): positive balance ratio
+    const totalIncome = commonIncome + miniIncome
+    const finScore = totalIncome > 0
+      ? Math.round(Math.min(25, 25 * Math.max(0, totalAssets) / Math.max(totalIncome, 1)))
+      : 0
+    // Engagement (25pts): paid members ratio
+    const paidRatio = activeMembers > 0 ? (activeMembers - unpaidCount) / activeMembers : 1
+    const engScore = Math.round(25 * paidRatio)
+    // Activity (20pts): sessions held vs planned
+    const planned = currentPeriod?.totalSessions ?? 1
+    const held = currentPeriodSessions.length
+    const actScore = Math.round(Math.min(20, 20 * Math.min(held / Math.max(planned, 1), 1)))
+    // Goals (15pts): growing member base
+    const goalScore = activeMembers >= 5 ? 15 : Math.round(15 * activeMembers / 5)
+    // Issues (15pts): penalty for unpaid
+    const issueScore = Math.round(15 * (1 - Math.min(unpaidCount / Math.max(activeMembers, 1), 1)))
+    return finScore + engScore + actScore + goalScore + issueScore
+  }, [commonIncome, miniIncome, totalAssets, activeMembers, unpaidCount, currentPeriod, currentPeriodSessions])
+
+  /* ── AI Recommendations (computed locally, Maika will override in Sprint 02) ── */
+  const aiRecommendations = useMemo(() => {
+    const recs: { text: string; level: 'ok' | 'warn' | 'danger' }[] = []
+    if (unpaidCount === 0 && activeMembers > 0)
+      recs.push({ text: 'Tất cả thành viên đã đóng quỹ kỳ này', level: 'ok' })
+    else if (unpaidCount > 0)
+      recs.push({ text: `${unpaidCount} thành viên chưa đóng quỹ — cần nhắc nhở`, level: unpaidCount > activeMembers * 0.3 ? 'danger' : 'warn' })
+    if (totalAssets < 0)
+      recs.push({ text: 'Quỹ đang âm — cần thu thêm hoặc giảm chi', level: 'danger' })
+    else if (totalAssets < commonExpTotal * 0.2)
+      recs.push({ text: 'Quỹ sắp cạn — theo dõi chi tiêu chặt hơn', level: 'warn' })
+    else
+      recs.push({ text: `Quỹ ổn định — số dư ${Math.round(totalAssets / 1000)}k`, level: 'ok' })
+    if (currentPeriodSessions.length === 0 && currentPeriod)
+      recs.push({ text: 'Chưa có buổi tập nào trong kỳ này', level: 'warn' })
+    if (activeMembers < 5)
+      recs.push({ text: 'CLB còn ít thành viên — mời thêm để tăng quỹ', level: 'warn' })
+    return recs.slice(0, 4)
+  }, [unpaidCount, activeMembers, totalAssets, commonExpTotal, currentPeriodSessions, currentPeriod])
+
+  /* ── Upcoming sessions (next 7 days from existing data) ── */
+  const upcomingCount = currentPeriodSessions.length
 
   /* ── Empty state ── */
   const isEmpty = clubData.fundPeriods.length === 0 && clubData.contributions.length === 0
@@ -557,6 +646,123 @@ export function ClubDashboard() {
             color="#8B5CF6"
             bgColor="#F5F3FF"
           />
+        </div>
+
+        {/* ── AI Insights row (v2.0) ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          {/* Card 1: Club Health Score */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#EEF2FF' }}>
+                <Brain size={14} color={brand.primary} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Sức khoẻ CLB</p>
+                <p className="text-[10px] text-slate-400">Maika AI</p>
+              </div>
+            </div>
+            <HealthScoreGauge score={healthScore} />
+          </div>
+
+          {/* Card 2: Debt alert */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#FFF7ED' }}>
+                  <AlertCircle size={14} color={brand.warning} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-700">Công nợ</p>
+                  <p className="text-[10px] text-slate-400">Kỳ hiện tại</p>
+                </div>
+              </div>
+              <Link to="/contributions">
+                <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full cursor-pointer hover:bg-indigo-100 transition-colors">
+                  Thu nhanh
+                </span>
+              </Link>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-3xl font-bold tabular-nums" style={{ color: unpaidCount > 0 ? brand.warning : brand.accent, letterSpacing: '-0.03em' }}>
+                  {unpaidCount}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">thành viên chưa đóng</p>
+              </div>
+              {currentPeriod && (
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-slate-600 tabular-nums">
+                    {activeMembers - unpaidCount}/{activeMembers}
+                  </p>
+                  <p className="text-[10px] text-slate-400">đã đóng</p>
+                </div>
+              )}
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${activeMembers > 0 ? Math.round((activeMembers - unpaidCount) / activeMembers * 100) : 100}%`,
+                  background: unpaidCount === 0 ? brand.accent : brand.warning,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Card 3: AI Recommendations */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-2">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#F0FDF4' }}>
+                <TrendingUp size={14} color={brand.accent} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Khuyến nghị</p>
+                <p className="text-[10px] text-slate-400">Maika AI · Thực tế</p>
+              </div>
+            </div>
+            <div className="flex flex-col divide-y divide-slate-50">
+              {aiRecommendations.map((r, i) => (
+                <AiChip key={i} text={r.text} level={r.level} />
+              ))}
+            </div>
+          </div>
+
+          {/* Card 4: Fund trend + QR shortcut */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ background: totalAssets >= 0 ? '#F0FDF4' : '#FFF1F2' }}>
+                {totalAssets >= 0
+                  ? <TrendingUp size={14} color={brand.accent} />
+                  : <TrendingDown size={14} color={brand.danger} />}
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Tài chính</p>
+                <p className="text-[10px] text-slate-400">Tổng tài sản CLB</p>
+              </div>
+            </div>
+            <div>
+              <p
+                className="text-2xl font-bold tabular-nums leading-none"
+                style={{ color: totalAssets >= 0 ? brand.dark : brand.danger, letterSpacing: '-0.03em' }}
+              >
+                {totalAssets >= 0 ? '+' : ''}{Math.round(totalAssets / 1000)}k
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Thu {Math.round((commonIncome + miniIncome) / 1000)}k · Chi {Math.round((commonExpTotal + miniExpTotal) / 1000)}k
+              </p>
+            </div>
+            <Link to="/contributions" className="mt-auto">
+              <button
+                className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-xl transition-opacity hover:opacity-90"
+                style={{ background: `linear-gradient(135deg, ${brand.primary}, ${brand.secondary})`, color: '#fff' }}
+              >
+                <QrCode size={12} />
+                Tạo QR thu tiền
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* ── Charts row ── */}

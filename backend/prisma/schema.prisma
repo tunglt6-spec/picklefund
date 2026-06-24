@@ -34,6 +34,7 @@ model Club {
   personalReceipts  PersonalReceipt[]
   auditLogs         AuditLog[]
   minigames         Minigame[]
+  payments          Payment[]
 
   @@map("clubs")
 }
@@ -74,6 +75,7 @@ model User {
   notificationEnabled  Boolean   @default(true) @map("notification_enabled")
   notifications        Notification[]
   notificationPref     NotificationPreference?
+  confirmedPayments    Payment[]              @relation("PaymentConfirmedBy")
 
   @@map("users")
 }
@@ -111,6 +113,7 @@ model Member {
   minigames         MinigameParticipant[]
   teamsAsPlayer1    MinigameTeam[]     @relation("TeamPlayer1")
   teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
+  payments          Payment[]
 
   @@map("members")
 }
@@ -572,6 +575,50 @@ model ApiKey {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("api_keys")
+}
+
+// ============================================================
+// PAYMENTS (QR Payment — Sprint 01)
+// ============================================================
+model Payment {
+  id            String        @id @default(uuid())
+  clubId        String        @map("club_id")
+  memberId      String        @map("member_id")
+  amount        Decimal       @db.Decimal(15, 2)
+  description   String        @db.VarChar(500)
+  referenceType PaymentRefType @map("reference_type")
+  referenceId   String?       @map("reference_id")
+  bankCode      String        @default("MB") @map("bank_code") @db.VarChar(10)
+  accountNumber String        @map("account_number") @db.VarChar(30)
+  accountName   String        @map("account_name") @db.VarChar(100)
+  qrImageUrl    String?       @map("qr_image_url")
+  status        PaymentStatus @default(PENDING)
+  confirmedById String?       @map("confirmed_by")
+  confirmedAt   DateTime?     @map("confirmed_at")
+  expiredAt     DateTime?     @map("expired_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  club        Club    @relation(fields: [clubId], references: [id])
+  member      Member  @relation(fields: [memberId], references: [id])
+  confirmedBy User?   @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])
+
+  @@index([clubId, status])
+  @@index([memberId])
+  @@map("payments")
+}
+
+enum PaymentRefType {
+  CONTRIBUTION
+  EXPENSE
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
 }
 
 // ============================================================
