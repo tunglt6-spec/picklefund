@@ -157,8 +157,10 @@ export class LisaService {
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true },
       }),
-      this.prisma.member.count({
+      this.prisma.member.findMany({
         where: { clubId: member.clubId, status: 'active', isDeleted: false },
+        select: { fullName: true },
+        orderBy: { fullName: 'asc' },
       }),
     ])
 
@@ -196,7 +198,8 @@ export class LisaService {
       clubFundBalance: clubTotalContributions - clubTotalExpenses,
       clubTotalExpenses,
       clubTotalContributions,
-      activeMemberCount: activeMembers,
+      activeMemberCount: activeMembers.length,
+      memberNames: activeMembers.map(m => m.fullName),
       activePeriodName: activePeriod?.name ?? null,
       recentPayments: contributions.slice(0, 3).map(c => ({ amount: Number(c.amount), date: c.createdAt })),
     }
@@ -215,6 +218,7 @@ Buổi tham dự: ${ctx.sessionsAttended}/${ctx.totalSessions} buổi
 Lần chơi gần nhất: ${fmtDate(ctx.lastAttendedAt)}
 --- Thông tin CLB ---
 Số thành viên đang hoạt động: ${ctx.activeMemberCount} người
+Danh sách thành viên: ${ctx.memberNames.join(', ')}
 Tổng thu: ${fmt(ctx.clubTotalContributions)}
 Tổng chi: ${fmt(ctx.clubTotalExpenses)}
 Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}`
