@@ -17,9 +17,9 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex')
   }
 
-  private signAccess(userId: string, clubId: string | null, role: string) {
+  private signAccess(userId: string, clubId: string | null, role: string, memberId?: string | null) {
     return this.jwt.sign(
-      { sub: userId, clubId, role },
+      { sub: userId, clubId, role, memberId: memberId ?? null },
       { secret: this.config.get('JWT_SECRET'), expiresIn: this.config.get('JWT_EXPIRES_IN', '15m') },
     )
   }
@@ -51,7 +51,7 @@ export class AuthService {
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) throw new UnauthorizedException('Mật khẩu không đúng')
 
-    const accessToken = this.signAccess(user.id, user.clubId, user.role)
+    const accessToken = this.signAccess(user.id, user.clubId, user.role, user.member?.id)
     const refreshToken = this.signRefresh(user.id, opts?.rememberMe)
 
     await this.prisma.$transaction([
@@ -92,14 +92,17 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token đã bị thu hồi hoặc hết hạn')
     }
 
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } })
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      include: { member: { select: { id: true } } },
+    })
     if (!user || !user.isActive) throw new UnauthorizedException('Tài khoản không hợp lệ')
 
     // Rotate: revoke old, issue new
     await this.prisma.refreshToken.update({ where: { id: stored.id }, data: { revokedAt: new Date() } })
 
     const rememberMe = (stored.expiresAt.getTime() - stored.createdAt.getTime()) > 30 * 24 * 3600 * 1000
-    const newAccess = this.signAccess(user.id, user.clubId, user.role)
+    const newAccess = this.signAccess(user.id, user.clubId, user.role, user.member?.id)
     const newRefresh = this.signRefresh(user.id, rememberMe)
 
     await this.prisma.refreshToken.create({
