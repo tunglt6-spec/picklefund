@@ -7,10 +7,16 @@ export interface MemberContext {
   totalPaid: number
   totalUnpaid: number
   currentPeriodPaid: boolean
+  currentPeriodAmount: number
   sessionsAttended: number
   totalSessions: number
   lastAttendedAt: Date | null
   balance: number
+  clubFundBalance: number
+  clubTotalExpenses: number
+  clubTotalContributions: number
+  activePeriodName: string | null
+  recentPayments: { amount: number; date: Date }[]
 }
 
 export interface PersonalBrief {
