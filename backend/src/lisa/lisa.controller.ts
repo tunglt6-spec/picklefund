@@ -12,12 +12,24 @@ export class LisaController {
 
   @Get('brief')
   async brief(@CurrentUser() user: any) {
-    return ok(await this.svc.getPersonalBrief(user.memberId ?? user.id))
+    if (!user.memberId) {
+      return ok({
+        greeting: `Xin chào ${user.username}! Tôi là Lisa, trợ lý AI của bạn.`,
+        paymentStatus: 'N/A',
+        activitySummary: 'N/A',
+        reminder: null,
+        tips: ['Dùng tài khoản thành viên để xem thông tin cá nhân'],
+      })
+    }
+    return ok(await this.svc.getPersonalBrief(user.memberId))
   }
 
   @Post('ask')
   async ask(@CurrentUser() user: any, @Body() body: { question: string }) {
-    return ok(await this.svc.askLisa(user.memberId ?? user.id, body.question))
+    if (!user.memberId) {
+      return ok({ answer: 'Lisa chỉ hỗ trợ tài khoản thành viên. Vui lòng đăng nhập bằng tài khoản thành viên để sử dụng tính năng này.' })
+    }
+    return ok(await this.svc.askLisa(user.memberId, body.question))
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
