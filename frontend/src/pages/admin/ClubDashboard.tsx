@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   Users, AlertCircle, Calendar,
   Plus, Bell, ArrowUpRight, ArrowDownLeft, Activity,
@@ -17,6 +17,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileWelcomeCard } from '../../components/mobile/MobileWelcomeCard'
 import { MobileKpiCard } from '../../components/mobile/MobileKpiCard'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
+import api from '../../lib/api'
 
 /* ─── Brand tokens ─── */
 const brand = {
@@ -261,6 +262,22 @@ export function ClubDashboard() {
   const [txTab, setTxTab] = useState<'income' | 'expense'>('income')
   const [activePeriodId, setActivePeriodId] = useState<string>('all')
 
+  // Maika AI state
+  const [maikaScore, setMaikaScore] = useState<null | { score: number; recommendations: string[]; interpretation: string }>(null)
+
+  const fetchMaikaScore = useCallback(async () => {
+    if (!clubId) return
+    try {
+      const res = await api.get('/maika/health-score')
+      const data = res.data?.data ?? res.data
+      if (data?.score !== undefined) setMaikaScore(data)
+    } catch {
+      // silent — fallback to computed
+    }
+  }, [clubId])
+
+  useEffect(() => { fetchMaikaScore() }, [fetchMaikaScore])
+
   /* ── Derived data ── */
   const activePeriods = clubData.fundPeriods.filter(p => p.status === 'active')
   const currentPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
@@ -361,30 +378,26 @@ export function ClubDashboard() {
     ? clubData.memberAttendanceSummary?.filter(s => s.attendedSessions > 0).length ?? 0
     : 0
 
-  /* ── AI Health Score (computed from existing data) ── */
-  const healthScore = useMemo(() => {
+  /* ── AI Health Score (computed fallback, Maika API overrides) ── */
+  const computedHealthScore = useMemo(() => {
     if (clubData.fundPeriods.length === 0) return 0
-    // Financial (25pts): positive balance ratio
     const totalIncome = commonIncome + miniIncome
     const finScore = totalIncome > 0
       ? Math.round(Math.min(25, 25 * Math.max(0, totalAssets) / Math.max(totalIncome, 1)))
       : 0
-    // Engagement (25pts): paid members ratio
     const paidRatio = activeMembers > 0 ? (activeMembers - unpaidCount) / activeMembers : 1
     const engScore = Math.round(25 * paidRatio)
-    // Activity (20pts): sessions held vs planned
     const planned = currentPeriod?.totalSessions ?? 1
     const held = currentPeriodSessions.length
     const actScore = Math.round(Math.min(20, 20 * Math.min(held / Math.max(planned, 1), 1)))
-    // Goals (15pts): growing member base
     const goalScore = activeMembers >= 5 ? 15 : Math.round(15 * activeMembers / 5)
-    // Issues (15pts): penalty for unpaid
     const issueScore = Math.round(15 * (1 - Math.min(unpaidCount / Math.max(activeMembers, 1), 1)))
     return finScore + engScore + actScore + goalScore + issueScore
   }, [commonIncome, miniIncome, totalAssets, activeMembers, unpaidCount, currentPeriod, currentPeriodSessions])
+  const healthScore = maikaScore?.score ?? computedHealthScore
 
-  /* ── AI Recommendations (computed locally, Maika will override in Sprint 02) ── */
-  const aiRecommendations = useMemo(() => {
+  /* ── AI Recommendations (Maika API → fallback computed) ── */
+  const computedRecs = useMemo(() => {
     const recs: { text: string; level: 'ok' | 'warn' | 'danger' }[] = []
     if (unpaidCount === 0 && activeMembers > 0)
       recs.push({ text: 'Tất cả thành viên đã đóng quỹ kỳ này', level: 'ok' })
@@ -402,6 +415,13 @@ export function ClubDashboard() {
       recs.push({ text: 'CLB còn ít thành viên — mời thêm để tăng quỹ', level: 'warn' })
     return recs.slice(0, 4)
   }, [unpaidCount, activeMembers, totalAssets, commonExpTotal, currentPeriodSessions, currentPeriod])
+
+  const aiRecommendations = maikaScore?.recommendations
+    ? maikaScore.recommendations.slice(0, 4).map(t => ({
+        text: t,
+        level: (t.includes('âm') || t.includes('cạn') ? 'danger' : t.includes('tốt') || t.includes('ổn') ? 'ok' : 'warn') as 'ok' | 'warn' | 'danger',
+      }))
+    : computedRecs
 
   /* ── Upcoming sessions (next 7 days from existing data) ── */
   /* ── Empty state ── */
