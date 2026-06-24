@@ -504,11 +504,11 @@ function PaymentTab() {
     }
     setSaving(true)
     try {
-      await Promise.all([
-        api.post('/system-settings', { key: 'bank_code', value: info.bank_code }),
-        api.post('/system-settings', { key: 'bank_account_number', value: info.bank_account_number }),
-        api.post('/system-settings', { key: 'bank_account_name', value: info.bank_account_name }),
-      ])
+      await api.put('/system-settings', {
+        bank_code: info.bank_code,
+        bank_account_number: info.bank_account_number,
+        bank_account_name: info.bank_account_name,
+      })
       toast.success('Đã lưu thông tin thanh toán')
       setPreview(buildQrUrl())
     } catch (err: any) {
