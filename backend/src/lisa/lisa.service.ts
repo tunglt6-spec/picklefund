@@ -27,7 +27,7 @@ export class LisaService {
     // 1) Gemini Free
     if (this.genAI) {
       try {
-        const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
         const result = await model.generateContent(prompt)
         return result.response.text().trim()
       } catch (err: any) {
