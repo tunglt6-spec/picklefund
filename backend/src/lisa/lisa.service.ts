@@ -47,7 +47,7 @@ export class LisaService {
             'HTTP-Referer': 'https://picklefund.app',
           },
           body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-8b-instruct:free',
+            model: 'meta-llama/llama-3.3-70b-instruct:free',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 512,
           }),
