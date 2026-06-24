@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
+import { EmailService } from '../email/email.service'
 import {
   HermesEvent,
   HermesChannel,
@@ -11,7 +12,10 @@ import {
 export class HermesService {
   private readonly logger = new Logger(HermesService.name)
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private email: EmailService,
+  ) {}
 
   // ─── Main entry point ────────────────────────────────────────────────────────
 
@@ -41,6 +45,15 @@ export class HermesService {
           body: event.body,
           metadata: event.metadata,
         })
+
+        // Deliver via external channel
+        if (channel === 'EMAIL') {
+          const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true } })
+          if (user?.email) {
+            await this.email.send(user.email, event.title, this.email.buildNotifHtml(event.title, event.body))
+          }
+        }
+
         dispatched++
       } catch (err: any) {
         this.logger.error(`dispatch failed for user ${userId}: ${err.message}`)

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
@@ -8,9 +9,9 @@ import {
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { cn } from '../../lib/utils'
-import { buildNotifications } from '../../lib/notifications'
 import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
+import api from '../../lib/api'
 
 interface NavItem {
   label: string
@@ -39,6 +40,7 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Lisa AI',         icon: <Sparkles size={18} />,  to: '/lisa' },
   { label: 'Thông báo',       icon: <Bell size={18} />,      to: '/notifications' },
   { label: 'TK Thành viên', icon: <KeyRound size={18} />,    to: '/member-accounts' },
+  { label: 'Gói dịch vụ',    icon: <Star size={18} />,       to: '/billing' },
   { label: 'Cài đặt',       icon: <Settings size={18} />,    to: '/settings' },
 ]
 
@@ -81,12 +83,22 @@ const roleColors: Record<Role, string> = {
 
 interface SidebarProps { onClose?: () => void }
 
-function useUnreadCount(clubId: string) {
-  const { getClubData, readNotifIds } = useClubDataStore()
-  const data = getClubData(clubId)
-  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
-  const notifs = buildNotifications(data)
-  return Math.min(notifs.filter(n => !readIds.has(n.id)).length, 9)
+function useHermesUnreadCount(user: any) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!user) return
+    const fetchCount = async () => {
+      try {
+        const res = await api.get('/hermes/notifications?limit=1')
+        const data = res.data?.data ?? res.data
+        setCount(Math.min(data?.unreadCount ?? 0, 9))
+      } catch {}
+    }
+    fetchCount()
+    const id = setInterval(fetchCount, 60000)
+    return () => clearInterval(id)
+  }, [user])
+  return count
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
@@ -96,7 +108,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   // Must call all hooks before any conditional return
   const clubId = user?.clubId ?? DEMO_CLUB_ID
-  const adminUnread = useUnreadCount(clubId)
+  const adminUnread = useHermesUnreadCount(user)
   const clubData = getClubData(clubId)
 
   if (!user) return null

@@ -17,6 +17,7 @@ import { SuperSettings } from './pages/super/SuperSettings'
 // Club Admin pages
 import { ClubDashboard } from './pages/admin/ClubDashboard'
 import { LisaChat } from './pages/admin/LisaChat'
+import { Billing } from './pages/admin/Billing'
 import { Members } from './pages/admin/Members'
 import { FundPeriods } from './pages/admin/FundPeriods'
 import { Contributions } from './pages/admin/Contributions'
@@ -105,6 +106,7 @@ export default function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />
+            <Route path="/billing" element={<Billing />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/member-accounts" element={<MemberAccounts />} />
 

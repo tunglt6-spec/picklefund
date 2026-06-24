@@ -39,12 +39,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     this.bot.start(ctx => ctx.reply(
       '👋 Chào mừng đến với PickleFund Bot!\n\n' +
-      'Các lệnh hỗ trợ:\n' +
-      '/status — Xem trạng thái CLB\n' +
+      '📋 *Các lệnh hỗ trợ:*\n' +
+      '/status — Tổng quan CLB\n' +
+      '/balance — Số dư quỹ\n' +
+      '/debt — Danh sách chưa đóng quỹ\n' +
       '/brief — Báo cáo nhanh hôm nay\n' +
+      '/report — Báo cáo tuần\n' +
       '/health — Điểm sức khỏe CLB\n' +
-      '/reminders — Xem nhắc nhở hôm nay\n' +
+      '/members — Thống kê thành viên\n' +
+      '/upcoming — Lịch hoạt động\n' +
+      '/reminders — Nhắc nhở hôm nay\n' +
       '/help — Hướng dẫn sử dụng',
+      { parse_mode: 'Markdown' },
     ))
 
     this.bot.help(ctx => ctx.reply(
@@ -104,15 +110,84 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
       try {
         const reminders = await this.lisa.generateRemindersForClub(clubId)
-        if (reminders.length === 0) {
-          ctx.reply('✅ Không có nhắc nhở nào hôm nay.')
-          return
-        }
+        if (reminders.length === 0) { ctx.reply('✅ Không có nhắc nhở nào hôm nay.'); return }
         const text = reminders.slice(0, 10).map(r => `• [${r.priority}] ${r.title}`).join('\n')
         ctx.reply(`🔔 *${reminders.length} nhắc nhở*\n\n${text}`, { parse_mode: 'Markdown' })
-      } catch (err: any) {
-        ctx.reply('❌ Không thể lấy danh sách nhắc nhở.')
-      }
+      } catch { ctx.reply('❌ Không thể lấy danh sách nhắc nhở.') }
+    })
+
+    this.bot.command('balance', async ctx => {
+      const clubId = await this.getClubIdForChat(ctx)
+      if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
+      try {
+        const snap = await this.maika.getClubSnapshot(clubId)
+        ctx.reply(
+          `💰 *Số dư quỹ — ${snap.clubName}*\n\n` +
+          `Quỹ chung: *${snap.commonBalance.toLocaleString('vi-VN')}đ*\n` +
+          `Quỹ mini: *${snap.miniBalance.toLocaleString('vi-VN')}đ*\n` +
+          `Tổng tài sản: *${snap.totalAssets.toLocaleString('vi-VN')}đ*`,
+          { parse_mode: 'Markdown' },
+        )
+      } catch { ctx.reply('❌ Không thể lấy số dư quỹ.') }
+    })
+
+    this.bot.command('debt', async ctx => {
+      const clubId = await this.getClubIdForChat(ctx)
+      if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
+      try {
+        const snap = await this.maika.getClubSnapshot(clubId)
+        if (snap.unpaidCount === 0) {
+          ctx.reply('✅ Tất cả thành viên đã đóng quỹ kỳ này!'); return
+        }
+        ctx.reply(
+          `⚠️ *Chưa đóng quỹ: ${snap.unpaidCount} người*\n` +
+          `Kỳ: ${snap.currentPeriodName ?? 'Hiện tại'}\n` +
+          `Tổng thành viên hoạt động: ${snap.activeMembers}`,
+          { parse_mode: 'Markdown' },
+        )
+      } catch { ctx.reply('❌ Không thể lấy danh sách nợ.') }
+    })
+
+    this.bot.command('report', async ctx => {
+      const clubId = await this.getClubIdForChat(ctx)
+      if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
+      ctx.reply('⏳ Đang tạo báo cáo tuần...')
+      try {
+        const report = await this.maika.generateWeeklyReport(clubId)
+        ctx.reply(
+          `📊 *Báo cáo tuần*\n\n${report.summary}\n\n` +
+          `📌 *Highlights:*\n${report.highlights.map(h => `• ${h}`).join('\n')}`,
+          { parse_mode: 'Markdown' },
+        )
+      } catch { ctx.reply('❌ Không thể tạo báo cáo.') }
+    })
+
+    this.bot.command('members', async ctx => {
+      const clubId = await this.getClubIdForChat(ctx)
+      if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
+      try {
+        const snap = await this.maika.getClubSnapshot(clubId)
+        const inactive = snap.totalMembers - snap.activeMembers
+        ctx.reply(
+          `👥 *Thành viên — ${snap.clubName}*\n\n` +
+          `Đang hoạt động: *${snap.activeMembers}*\n` +
+          `Tạm nghỉ/Rời CLB: *${inactive}*\n` +
+          `Tổng: *${snap.totalMembers}*`,
+          { parse_mode: 'Markdown' },
+        )
+      } catch { ctx.reply('❌ Không thể lấy danh sách thành viên.') }
+    })
+
+    this.bot.command('upcoming', async ctx => {
+      const clubId = await this.getClubIdForChat(ctx)
+      if (!clubId) { ctx.reply('❌ Chat này chưa được liên kết với CLB nào.'); return }
+      try {
+        const snap = await this.maika.getClubSnapshot(clubId)
+        const text = snap.currentPeriodName
+          ? `📅 *Kỳ hiện tại: ${snap.currentPeriodName}*\nSố buổi đã tổ chức: ${snap.currentPeriodSessions}`
+          : '📅 Hiện chưa có kỳ quỹ đang hoạt động.'
+        ctx.reply(text, { parse_mode: 'Markdown' })
+      } catch { ctx.reply('❌ Không thể lấy lịch hoạt động.') }
     })
 
     this.bot.on('text', ctx => {

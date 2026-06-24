@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
-import { useClubDataStore } from '../../store/clubDataStore'
-import type { ClubSettings } from '../../store/clubDataStore'
+import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
@@ -268,88 +267,174 @@ function AccountTab() {
   )
 }
 
-// ─── Tab: Thông báo ──────────────────────────────────────────
-type NotifKey = 'unpaidReminder' | 'fundLow' | 'newSession' | 'periodClosed' | 'memberJoined'
+// ─── Tab: Thông báo (Hermes Preferences) ─────────────────────
+type HermesPref = {
+  preferredChannel: 'IN_APP' | 'EMAIL' | 'TELEGRAM'
+  telegramChatId: string | null
+  quietHoursStart: number
+  quietHoursEnd: number
+  maxDailyEmail: number
+  maxDailyTelegram: number
+  enabled: boolean
+}
 
-const notifSettings: { key: NotifKey; label: string; desc: string }[] = [
-  { key: 'unpaidReminder', label: 'Nhắc nhở đóng quỹ',  desc: 'Gửi nhắc nhở khi thành viên chưa đóng quỹ sau 3 ngày kỳ bắt đầu' },
-  { key: 'fundLow',        label: 'Cảnh báo quỹ thấp',  desc: 'Thông báo khi số dư quỹ dưới 20% tổng thu' },
-  { key: 'newSession',     label: 'Buổi tập mới',        desc: 'Thông báo khi có buổi tập mới được thêm vào kỳ' },
-  { key: 'periodClosed',   label: 'Chốt kỳ quỹ',        desc: 'Thông báo khi quản trị viên chốt kỳ quỹ' },
-  { key: 'memberJoined',   label: 'Thành viên mới',      desc: 'Thông báo khi có thành viên mới tham gia CLB' },
-]
+const defaultPref: HermesPref = {
+  preferredChannel: 'IN_APP',
+  telegramChatId: null,
+  quietHoursStart: 23,
+  quietHoursEnd: 7,
+  maxDailyEmail: 1,
+  maxDailyTelegram: 5,
+  enabled: true,
+}
 
-function NotificationsTab({ clubId }: { clubId: string }) {
-  const { getClubData, setClubSettings } = useClubDataStore()
-  const saved = getClubData(clubId).settings
-  const savedNotifs = (saved as any)?.notifSettings as Record<NotifKey, boolean> | undefined
-  const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>(savedNotifs ?? {
-    unpaidReminder: true,
-    fundLow: true,
-    newSession: false,
-    periodClosed: true,
-    memberJoined: false,
-  })
-  const savedDays = (saved as any)?.reminderDays as string | undefined
-  const [reminderDays, setReminderDays] = useState(savedDays ?? '3')
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button onClick={() => onChange(!value)}
+      className={cn('relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
+        value ? 'bg-indigo-600' : 'bg-gray-200')}>
+      <span className={cn('inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 mt-0.5',
+        value ? 'translate-x-5' : 'translate-x-0.5')} />
+    </button>
+  )
+}
+
+function NotificationsTab(_: { clubId: string }) {
+  const [pref, setPref] = useState<HermesPref>(defaultPref)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api.get('/hermes/preferences')
+      .then(res => {
+        const d = res.data?.data ?? res.data
+        setPref({ ...defaultPref, ...d })
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const set = (patch: Partial<HermesPref>) => setPref(p => ({ ...p, ...patch }))
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await api.put(`/clubs/${clubId}`, { notifSettings: notifs, reminderDays })
-      const current = getClubData(clubId).settings ?? emptySettings
-      setClubSettings(clubId, { ...current, notifSettings: notifs, reminderDays } as any)
+      await api.patch('/hermes/preferences', {
+        preferredChannel: pref.preferredChannel,
+        telegramChatId: pref.telegramChatId || null,
+        quietHoursStart: pref.quietHoursStart,
+        quietHoursEnd: pref.quietHoursEnd,
+        maxDailyEmail: pref.maxDailyEmail,
+        maxDailyTelegram: pref.maxDailyTelegram,
+        enabled: pref.enabled,
+      })
       toast.success('Đã lưu cài đặt thông báo')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Lưu cài đặt thông báo thất bại')
+      toast.error(err?.response?.data?.message ?? 'Lưu thất bại')
     } finally {
       setSaving(false)
     }
   }
 
+  if (loading) return <div className="py-12 text-center text-sm text-gray-400">Đang tải...</div>
+
   return (
     <div className="space-y-6">
+      {/* Bật/tắt thông báo */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Tùy chỉnh thông báo</h3>
-        <div className="space-y-4">
-          {notifSettings.map(n => (
-            <div key={n.key} className="flex items-start justify-between gap-4 py-3 border-b border-gray-100 last:border-0">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{n.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{n.desc}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900">Nhận thông báo</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Bật/tắt toàn bộ thông báo từ hệ thống</p>
+          </div>
+          <Toggle value={pref.enabled} onChange={v => set({ enabled: v })} />
+        </div>
+      </div>
+
+      {/* Kênh ưu tiên */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Kênh nhận thông báo ưu tiên</h3>
+        <div className="space-y-2">
+          {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
+            <label key={ch} className={cn(
+              'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-colors',
+              pref.preferredChannel === ch ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+            )}>
+              <input type="radio" name="channel" value={ch} checked={pref.preferredChannel === ch}
+                onChange={() => set({ preferredChannel: ch })} className="accent-indigo-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {ch === 'IN_APP' ? '📱 Trong ứng dụng' : ch === 'EMAIL' ? '📧 Email' : '✈️ Telegram'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {ch === 'IN_APP' ? 'Thông báo hiển thị trực tiếp trong app' :
+                   ch === 'EMAIL' ? `Tối đa ${pref.maxDailyEmail} email/ngày` :
+                   `Tối đa ${pref.maxDailyTelegram} tin/ngày`}
+                </p>
               </div>
-              <button
-                onClick={() => setNotifs(s => ({ ...s, [n.key]: !s[n.key] }))}
-                className={cn(
-                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
-                  notifs[n.key] ? 'bg-indigo-600' : 'bg-gray-200'
-                )}
-              >
-                <span className={cn(
-                  'inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 mt-0.5',
-                  notifs[n.key] ? 'translate-x-5' : 'translate-x-0.5'
-                )} />
-              </button>
-            </div>
+            </label>
           ))}
         </div>
       </div>
 
+      {/* Telegram Chat ID */}
+      {pref.preferredChannel === 'TELEGRAM' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+          <h3 className="font-semibold text-gray-900 mb-1">Liên kết Telegram</h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Nhắn tin cho <span className="font-mono text-indigo-600">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
+          </p>
+          <input
+            className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            placeholder="Ví dụ: 123456789"
+            value={pref.telegramChatId ?? ''}
+            onChange={e => set({ telegramChatId: e.target.value })}
+          />
+        </div>
+      )}
+
+      {/* Giờ yên tĩnh */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Cài đặt nhắc nhở</h3>
-        <div className="max-w-xs">
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Số ngày sau kỳ bắt đầu để gửi nhắc
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number" min={1} max={30}
-              className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
-              value={reminderDays}
-              onChange={e => setReminderDays(e.target.value)}
-            />
-            <span className="text-sm text-gray-500">ngày</span>
+        <h3 className="font-semibold text-gray-900 mb-1">Giờ yên tĩnh</h3>
+        <p className="text-xs text-gray-500 mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Từ</label>
+            <input type="number" min={0} max={23}
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              value={pref.quietHoursStart}
+              onChange={e => set({ quietHoursStart: +e.target.value })} />
+            <span className="text-xs text-gray-400 ml-1">h</span>
+          </div>
+          <span className="text-gray-400 mt-4">—</span>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Đến</label>
+            <input type="number" min={0} max={23}
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              value={pref.quietHoursEnd}
+              onChange={e => set({ quietHoursEnd: +e.target.value })} />
+            <span className="text-xs text-gray-400 ml-1">h</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Giới hạn/ngày */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Giới hạn thông báo mỗi ngày</h3>
+        <div className="grid grid-cols-2 gap-4 max-w-sm">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Email tối đa</label>
+            <input type="number" min={0} max={10}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              value={pref.maxDailyEmail}
+              onChange={e => set({ maxDailyEmail: +e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Telegram tối đa</label>
+            <input type="number" min={0} max={20}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              value={pref.maxDailyTelegram}
+              onChange={e => set({ maxDailyTelegram: +e.target.value })} />
           </div>
         </div>
       </div>
