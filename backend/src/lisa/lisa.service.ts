@@ -47,7 +47,7 @@ export class LisaService {
             'HTTP-Referer': 'https://picklefund.app',
           },
           body: JSON.stringify({
-            model: 'deepseek/deepseek-chat-v3-0324:free',
+            model: 'meta-llama/llama-3.1-8b-instruct:free',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 512,
           }),
