@@ -139,7 +139,7 @@ export class LisaService {
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true },
       }),
-      this.prisma.expense.findMany({
+      this.prisma.livingExpense.findMany({
         where: { clubId: member.clubId },
         select: { amount: true },
       }).catch(() => []),
