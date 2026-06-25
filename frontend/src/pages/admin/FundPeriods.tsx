@@ -1192,7 +1192,7 @@ export function FundPeriods() {
                               <td className="px-4 py-1.5 text-center">
                                 {found
                                   ? <CheckCircle2 size={14} className="text-green-500 mx-auto" />
-                                  : <AlertCircle size={14} className="text-red-400 mx-auto" title="Không tìm thấy thành viên" />}
+                                  : <AlertCircle size={14} className="text-red-400 mx-auto" />}
                               </td>
                             </tr>
                           )
