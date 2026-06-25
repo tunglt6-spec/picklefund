@@ -172,15 +172,24 @@ export function Attendance() {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-          <span className="text-[17px] font-[800] text-slate-900">Điểm Danh</span>
-          <button
-            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus size={14} />Tạo buổi
-          </button>
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[17px] font-[800] text-slate-900">Điểm Danh</span>
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+              onClick={() => setShowCreate(true)}
+            >
+              <Plus size={14} />Tạo buổi
+            </button>
+          </div>
+          {allPeriods.length > 1 && (
+            <PeriodSelector
+              periods={allPeriods}
+              selectedId={selectedPeriodId}
+              onChange={id => setSelectedPeriodId(id)}
+            />
+          )}
         </div>
 
         <div className="px-4 pt-4 pb-6 space-y-4">

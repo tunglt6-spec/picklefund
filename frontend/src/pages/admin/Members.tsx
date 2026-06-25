@@ -199,13 +199,21 @@ export function Members() {
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm thành viên..." className="input-base pl-8 w-full text-sm" />
             </div>
-            <button
-              onClick={openCreate}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
-            >
-              <Plus size={18} />
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => { exportMembersExcel('CLB', filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' }))); toast.success('Đã xuất Excel!') }}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200"
+              ><FileSpreadsheet size={15} /></button>
+              <button
+                onClick={() => { exportMembersPDF('CLB', filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' }))); toast.success('Đã xuất PDF!') }}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-200"
+              ><FileText size={15} /></button>
+              <button
+                onClick={openCreate}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+                style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+              ><Plus size={18} /></button>
+            </div>
           </div>
           <div className="flex gap-1.5">
             {([['all','Tất cả'],['active','Hoạt động'],['inactive','Tạm nghỉ']] as const).map(([v, l]) => (
