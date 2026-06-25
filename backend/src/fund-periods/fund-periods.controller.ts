@@ -1,10 +1,25 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param } from '@nestjs/common'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
-import { FundPeriodsService } from './fund-periods.service'
-import { CurrentUser, Roles } from '../common/decorators'
-import { ok } from '../common/response'
-import { CreateFundPeriodDto, UpdateFundPeriodDto, UpdateFundPeriodStatusDto } from './fund-periods.dto'
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
+import { FundPeriodsService } from './fund-periods.service';
+import { CurrentUser, Roles } from '../common/decorators';
+import { ok } from '../common/response';
+import {
+  CreateFundPeriodDto,
+  UpdateFundPeriodDto,
+  UpdateFundPeriodStatusDto,
+} from './fund-periods.dto';
 
+@SkipThrottle()
 @ApiTags('Fund Periods')
 @ApiBearerAuth()
 @Controller('fund-periods')
@@ -13,40 +28,51 @@ export class FundPeriodsController {
 
   @Get()
   async findAll(@CurrentUser() user: any) {
-    return ok(await this.service.findAll(user.clubId))
+    return ok(await this.service.findAll(user.clubId));
   }
 
   @Post()
   @Roles('CLUB_ADMIN')
   async create(@CurrentUser() user: any, @Body() body: CreateFundPeriodDto) {
-    return ok(await this.service.create(user.clubId, user.userId, body), 'Tạo kỳ quỹ thành công')
+    return ok(
+      await this.service.create(user.clubId, user.userId, body),
+      'Tạo kỳ quỹ thành công',
+    );
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return ok(await this.service.findOne(id, user.clubId))
+    return ok(await this.service.findOne(id, user.clubId));
   }
 
   @Put(':id')
   @Roles('CLUB_ADMIN')
-  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateFundPeriodDto) {
-    return ok(await this.service.update(id, user.clubId, body))
+  async update(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: UpdateFundPeriodDto,
+  ) {
+    return ok(await this.service.update(id, user.clubId, body));
   }
 
   @Patch(':id/status')
   @Roles('CLUB_ADMIN')
-  async updateStatus(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateFundPeriodStatusDto) {
-    return ok(await this.service.updateStatus(id, user.clubId, body.status))
+  async updateStatus(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: UpdateFundPeriodStatusDto,
+  ) {
+    return ok(await this.service.updateStatus(id, user.clubId, body.status));
   }
 
   @Delete(':id')
   @Roles('CLUB_ADMIN')
   async delete(@Param('id') id: string, @CurrentUser() user: any) {
-    return ok(await this.service.delete(id, user.clubId), 'Đã xóa kỳ quỹ')
+    return ok(await this.service.delete(id, user.clubId), 'Đã xóa kỳ quỹ');
   }
 
   @Get(':id/summary')
   async summary(@Param('id') id: string, @CurrentUser() user: any) {
-    return ok(await this.service.summary(id, user.clubId))
+    return ok(await this.service.summary(id, user.clubId));
   }
 }

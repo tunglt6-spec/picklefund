@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { BillingService } from './billing.service';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import { UpgradePlanDto } from './billing.dto';
 
+@SkipThrottle()
 @ApiTags('Billing')
 @ApiBearerAuth()
 @Controller('billing')
