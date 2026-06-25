@@ -115,6 +115,7 @@ model Member {
   teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
   payments          Payment[]
 
+  @@index([clubId, isDeleted])
   @@map("members")
 }
 
@@ -149,6 +150,7 @@ model FundPeriod {
   expenses           LivingExpense[]
   personalReceipts   PersonalReceipt[]
 
+  @@index([clubId])
   @@map("fund_periods")
 }
 
@@ -183,6 +185,7 @@ model AttendanceSession {
   attendanceRecords AttendanceRecord[]
   expenses          LivingExpense[]
 
+  @@index([clubId, fundPeriodId])
   @@map("attendance_sessions")
 }
 
@@ -208,6 +211,7 @@ model AttendanceRecord {
   member            Member            @relation(fields: [memberId], references: [id])
 
   @@unique([attendanceSessionId, memberId])
+  @@index([memberId, status])
   @@map("attendance_records")
 }
 
@@ -243,6 +247,7 @@ model FundContribution {
   relatedMinigame Minigame?   @relation("ContributionMinigame", fields: [relatedMinigameId], references: [id])
   createdBy       User        @relation("ContributionCreatedBy", fields: [createdById], references: [id])
 
+  @@index([clubId, fundPeriodId])
   @@map("fund_contributions")
 }
 
@@ -315,6 +320,7 @@ model LivingExpense {
   relatedMinigame   Minigame?          @relation("ExpenseMinigame", fields: [relatedMinigameId], references: [id])
   createdBy         User               @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
 
+  @@index([clubId, fundPeriodId])
   @@map("living_expenses")
 }
 
@@ -479,6 +485,7 @@ model Minigame {
   miniContributions FundContribution[]    @relation("ContributionMinigame")
   miniExpenses      LivingExpense[]       @relation("ExpenseMinigame")
 
+  @@index([clubId])
   @@map("minigames")
 }
 
