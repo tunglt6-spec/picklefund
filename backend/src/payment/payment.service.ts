@@ -92,7 +92,7 @@ export class PaymentService {
     if (payment.status !== 'PENDING')
       throw new ForbiddenException('Giao dịch đã được xử lý');
 
-    return this.prisma.payment.update({
+    const updated = await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: 'CONFIRMED',
@@ -100,6 +100,16 @@ export class PaymentService {
         confirmedAt: new Date(),
       },
     });
+
+    // Auto-confirm the linked contribution (if any)
+    if (payment.referenceId) {
+      await this.prisma.fundContribution.updateMany({
+        where: { id: payment.referenceId, clubId, isConfirmed: false },
+        data: { isConfirmed: true },
+      }).catch(() => { /* non-fatal */ });
+    }
+
+    return updated;
   }
 
   async cancel(paymentId: string, adminUserId: string, clubId: string) {
