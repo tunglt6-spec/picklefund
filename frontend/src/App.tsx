@@ -22,6 +22,7 @@ import { Members } from './pages/admin/Members'
 import { FundPeriods } from './pages/admin/FundPeriods'
 import { Contributions } from './pages/admin/Contributions'
 import { Expenses } from './pages/admin/Expenses'
+import { ThuChiHub } from './pages/admin/ThuChiHub'
 import { Attendance } from './pages/admin/Attendance'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/fund-periods" element={<FundPeriods />} />
             <Route path="/contributions" element={<Contributions />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/thu-chi" element={<ThuChiHub />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/minigames" element={<MinigameList />} />
             <Route path="/minigames/new" element={<MinigameForm />} />
