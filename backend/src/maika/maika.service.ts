@@ -103,7 +103,7 @@ export class MaikaService {
       ? sessions.filter((s) => s.fundPeriodId === activePeriod.id).length
       : 0;
 
-    return {
+    const snap: ClubSnapshot = {
       clubId,
       clubName: club?.name ?? 'CLB',
       activeMembers,
@@ -118,6 +118,8 @@ export class MaikaService {
       currentPeriodSessions,
       recentAnomalies: [],
     };
+    snap.recentAnomalies = this.computeAnomaliesFromSnap(snap);
+    return snap;
   }
 
   // ─── AI call: Gemini primary → OpenRouter fallback → rule-based fallback ──
@@ -279,11 +281,10 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
 
   // ─── Anomaly Detection ────────────────────────────────────────────────────
 
-  async detectAnomalies(clubId: string): Promise<AnomalyResult> {
-    const snap = await this.getClubSnapshot(clubId);
+  private computeAnomaliesFromSnap(
+    snap: Pick<ClubSnapshot, 'totalAssets' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
+  ): AnomalyResult['anomalies'] {
     const anomalies: AnomalyResult['anomalies'] = [];
-
-    // Rule-based detection (no AI needed for this)
     if (snap.totalAssets < 0) {
       anomalies.push({
         type: 'fund_negative',
@@ -312,6 +313,12 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
         severity: 'MEDIUM',
       });
     }
+    return anomalies;
+  }
+
+  async detectAnomalies(clubId: string): Promise<AnomalyResult> {
+    const snap = await this.getClubSnapshot(clubId);
+    const anomalies = snap.recentAnomalies;
 
     if (anomalies.length > 0) {
       const topAnomaly = anomalies[0];
