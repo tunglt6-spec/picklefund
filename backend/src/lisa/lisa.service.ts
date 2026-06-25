@@ -177,6 +177,8 @@ export class LisaService {
       sessions,
       attendance,
       activeMembers,
+      allPeriodContributions,
+      recentSessions,
     ] = await Promise.all([
       this.prisma.fundContribution.findMany({
         where: { memberId, isConfirmed: true },
@@ -194,12 +196,42 @@ export class LisaService {
       this.prisma.attendanceRecord.findMany({
         where: { memberId },
         orderBy: { createdAt: 'desc' },
-        select: { createdAt: true },
+        select: { createdAt: true, attendanceSessionId: true },
       }),
       this.prisma.member.findMany({
         where: { clubId: member.clubId, status: 'active', isDeleted: false },
-        select: { fullName: true },
+        select: { id: true, fullName: true, phone: true, joinDate: true },
         orderBy: { fullName: 'asc' },
+      }),
+      // All confirmed contributions for current period — to build per-member payment status
+      activePeriod
+        ? this.prisma.fundContribution.findMany({
+            where: {
+              clubId: member.clubId,
+              fundPeriodId: activePeriod.id,
+              isConfirmed: true,
+            },
+            select: { memberId: true, amount: true },
+          })
+        : Promise.resolve([]),
+      // 5 most recent sessions with their attendance records
+      this.prisma.attendanceSession.findMany({
+        where: { clubId: member.clubId },
+        orderBy: { sessionDate: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          sessionDate: true,
+          courtName: true,
+          courtFee: true,
+          attendanceRecords: {
+            select: {
+              memberId: true,
+              status: true,
+              member: { select: { fullName: true } },
+            },
+          },
+        },
       }),
     ]);
 
@@ -228,6 +260,44 @@ export class LisaService {
       0,
     );
 
+    // Build per-member payment status map
+    const paidMemberIds = new Set(
+      (allPeriodContributions as { memberId: string; amount: any }[]).map(
+        (c) => c.memberId,
+      ),
+    );
+    const memberPaymentStatus = activeMembers.map((m) => ({
+      name: m.fullName,
+      paid: paidMemberIds.has(m.id),
+      amount: (allPeriodContributions as { memberId: string; amount: any }[])
+        .filter((c) => c.memberId === m.id)
+        .reduce((s, c) => s + Number(c.amount), 0),
+    }));
+
+    // Build per-session attendance summary
+    const sessionSummaries = (
+      recentSessions as {
+        id: string;
+        sessionDate: Date;
+        courtName: string | null;
+        courtFee: any;
+        attendanceRecords: {
+          memberId: string;
+          status: string;
+          member: { fullName: string };
+        }[];
+      }[]
+    ).map((s) => ({
+      date: s.sessionDate.toLocaleDateString('vi-VN'),
+      court: s.courtName ?? '',
+      presentNames: s.attendanceRecords
+        .filter((r) => r.status === 'PRESENT')
+        .map((r) => r.member.fullName),
+      absentNames: s.attendanceRecords
+        .filter((r) => r.status === 'ABSENT')
+        .map((r) => r.member.fullName),
+    }));
+
     return {
       memberId,
       memberName: member.fullName,
@@ -251,13 +321,38 @@ export class LisaService {
       recentPayments: contributions
         .slice(0, 3)
         .map((c) => ({ amount: Number(c.amount), date: c.createdAt })),
-    };
+      // Extended club data
+      memberPaymentStatus,
+      sessionSummaries,
+    } as any;
   }
 
-  private buildContextString(ctx: MemberContext): string {
+  private buildContextString(ctx: MemberContext & {
+    memberPaymentStatus?: { name: string; paid: boolean; amount: number }[];
+    sessionSummaries?: { date: string; court: string; presentNames: string[]; absentNames: string[] }[];
+  }): string {
     const fmt = (n: number) => n.toLocaleString('vi-VN') + 'đ';
     const fmtDate = (d: Date | null) =>
       d ? d.toLocaleDateString('vi-VN') : 'chưa có';
+
+    let paymentTable = '';
+    if (ctx.memberPaymentStatus?.length) {
+      const paid = ctx.memberPaymentStatus.filter((m) => m.paid).map((m) => m.name);
+      const unpaid = ctx.memberPaymentStatus.filter((m) => !m.paid).map((m) => m.name);
+      paymentTable = `
+--- Trạng thái đóng quỹ kỳ này (${ctx.activePeriodName ?? 'hiện tại'}) ---
+Đã đóng (${paid.length} người): ${paid.join(', ') || 'không có'}
+Chưa đóng (${unpaid.length} người): ${unpaid.join(', ') || 'không có'}`;
+    }
+
+    let sessionTable = '';
+    if (ctx.sessionSummaries?.length) {
+      sessionTable = '\n--- Lịch sử điểm danh (5 buổi gần nhất) ---';
+      for (const s of ctx.sessionSummaries) {
+        sessionTable += `\nBuổi ${s.date}${s.court ? ' · ' + s.court : ''}: Có mặt: ${s.presentNames.join(', ') || 'không ai'} | Vắng: ${s.absentNames.join(', ') || 'không ai'}`;
+      }
+    }
+
     return `=== DỮ LIỆU CLB CỦA ${ctx.memberName.toUpperCase()} ===
 CLB: ${ctx.clubName}
 Trạng thái thành viên: ${ctx.status === 'active' ? 'Đang hoạt động' : ctx.status}
@@ -271,7 +366,7 @@ Số thành viên đang hoạt động: ${ctx.activeMemberCount} người
 Danh sách thành viên: ${ctx.memberNames.join(', ')}
 Tổng thu: ${fmt(ctx.clubTotalContributions)}
 Tổng chi: ${fmt(ctx.clubTotalExpenses)}
-Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}`;
+Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
   }
 
   // ─── Personal Brief ───────────────────────────────────────────────────────
