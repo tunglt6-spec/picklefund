@@ -111,6 +111,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories }:
       notes: (editExpense as any).notes ?? '',
       miniExpenseType: (editExpense as any).miniExpenseType ?? 'GAME_REWARD',
       receiverName: (editExpense as any).receiverName ?? '',
+      categoryId: (editExpense as any).categoryId ?? '',
     })
   }
   if (!open) return null
