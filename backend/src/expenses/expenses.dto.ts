@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsEnum,
   IsUrl,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type {
@@ -27,8 +28,12 @@ export class CreateExpenseDto {
   attendanceSessionId?: string;
 
   @IsOptional()
-  @IsEnum(['EQUAL', 'BY_ATTENDANCE', 'CUSTOM'])
+  @IsEnum(['ATTENDANCE', 'EQUAL', 'PRESENT_ONLY', 'FUND_ONLY'])
   allocationRule?: AllocationRule;
+
+  @IsOptional()
+  @IsBoolean()
+  allocationEnabled?: boolean;
 
   @IsOptional()
   @IsString()
@@ -85,4 +90,12 @@ export class UpdateExpenseDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEnum(['ATTENDANCE', 'EQUAL', 'PRESENT_ONLY', 'FUND_ONLY'])
+  allocationRule?: AllocationRule;
+
+  @IsOptional()
+  @IsBoolean()
+  allocationEnabled?: boolean;
 }
