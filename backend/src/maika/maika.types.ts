@@ -11,7 +11,7 @@ export interface ClubSnapshot {
   commonExpense: number;
   currentPeriodName: string | null;
   currentPeriodSessions: number;
-  recentAnomalies: string[];
+  recentAnomalies: AnomalyResult['anomalies'];
 }
 
 export interface DailyBrief {
