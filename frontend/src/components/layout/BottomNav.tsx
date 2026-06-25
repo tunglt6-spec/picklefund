@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
-  CheckSquare, Building2, ScrollText,
-  Receipt, ListOrdered, CreditCard, Sparkles,
+  CheckSquare, BarChart3, Building2, ScrollText,
+  Receipt, ListOrdered, CreditCard, Bell,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import type { Role } from '../../types'
@@ -14,7 +14,7 @@ const adminNav: NavItem[] = [
   { label: 'Thành viên', icon: <Users size={22} />,           to: '/members' },
   { label: 'Điểm danh',  icon: <CheckSquare size={22} />,     to: '/attendance' },
   { label: 'Thu chi',    icon: <DollarSign size={22} />,       to: '/thu-chi' },
-  { label: 'Lisa AI',    icon: <Sparkles size={22} />,         to: '/lisa' },
+  { label: 'Báo cáo',   icon: <BarChart3 size={22} />,        to: '/reports' },
 ]
 
 const treasurerNav: NavItem[] = [
@@ -29,7 +29,7 @@ const memberNav: NavItem[] = [
   { label: 'Phiếu thu',   icon: <Receipt size={22} />,         to: '/member/receipt' },
   { label: 'Đóng quỹ',   icon: <DollarSign size={22} />,      to: '/member/contributions' },
   { label: 'Lịch chơi',  icon: <Calendar size={22} />,         to: '/member/attendance' },
-  { label: 'Lisa AI',    icon: <Sparkles size={22} />,         to: '/member/lisa' },
+  { label: 'Thông báo',  icon: <Bell size={22} />,             to: '/member/notifications' },
 ]
 
 const superNav: NavItem[] = [

@@ -1,15 +1,29 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
+import { useAuthStore } from '../../store/authStore'
+
+const LISA_ROUTES: Record<string, string> = {
+  CLUB_ADMIN: '/lisa',
+  CLUB_TREASURER: '/lisa',
+  CLUB_MEMBER: '/member/lisa',
+}
 
 export function AppLayout() {
   useApiSync()
   useMinigameSync()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuthStore()
+
+  const lisaRoute = user ? LISA_ROUTES[user.role] : null
+  const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -41,6 +55,25 @@ export function AppLayout() {
             <Outlet />
           </div>
         </main>
+
+        {/* Lisa AI floating button — mobile only, hide when already on Lisa page */}
+        {lisaRoute && !isOnLisa && (
+          <button
+            onClick={() => navigate(lisaRoute)}
+            className="md:hidden fixed z-40 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            style={{
+              right: 16,
+              bottom: 'calc(72px + env(safe-area-inset-bottom))',
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              background: 'linear-gradient(135deg,#4F46E5,#06B6D4)',
+            }}
+            aria-label="Hỏi Lisa AI"
+          >
+            <Sparkles size={20} color="#fff" />
+          </button>
+        )}
 
         {/* Mobile bottom nav — 60px + safe area */}
         <div className="md:hidden">
