@@ -303,7 +303,11 @@ export function MemberDashboard() {
                 <h3 className="font-bold text-gray-900 text-base md:text-lg">Phiếu Thu Cá Nhân</h3>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleExportPDF}>📥 PDF</Button>
-                  <Button variant="outline" size="sm" onClick={() => toast.success('Đã chia sẻ qua Zalo!')}>📤 Zalo</Button>
+                  {typeof navigator !== 'undefined' && 'share' in navigator && (
+                    <Button variant="outline" size="sm" onClick={() => {
+                      navigator.share({ title: 'Phiếu thu quỹ CLB', text: `${memberName} - Đã đóng: ${formatVND(amountPaid)}` }).catch(() => {})
+                    }}>📤 Chia sẻ</Button>
+                  )}
                 </div>
               </div>
 
