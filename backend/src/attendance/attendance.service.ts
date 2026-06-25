@@ -97,22 +97,18 @@ export class AttendanceService {
       endTime?: string;
       notes?: string;
       status?: string;
-      [key: string]: unknown;
     },
   ) {
     await this.findOne(id, clubId);
-    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto as Record<string, unknown>;
+    const { sessionDate, courtFee, location, status, ...rest } = dto;
     return this.prisma.attendanceSession.update({
       where: { id, clubId },
       data: {
-        ...safeDto,
-        ...(safeDto.sessionDate
-          ? { sessionDate: new Date(safeDto.sessionDate) }
-          : {}),
-        ...(safeDto.courtFee !== undefined
-          ? { courtFee: new Decimal(safeDto.courtFee) }
-          : {}),
-        ...(safeDto.location ? { courtName: safeDto.location } : {}),
+        ...rest,
+        ...(sessionDate ? { sessionDate: new Date(sessionDate) } : {}),
+        ...(courtFee !== undefined ? { courtFee: new Decimal(courtFee) } : {}),
+        ...(location ? { courtName: location } : {}),
+        ...(status ? { status: status as import('@prisma/client').SessionStatus } : {}),
       },
     });
   }
