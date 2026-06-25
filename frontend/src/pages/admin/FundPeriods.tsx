@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play, TrendingUp,
   FolderOpen, ChevronDown, QrCode, FileText,
-  Trophy, Star, Filter
+  Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -50,7 +51,7 @@ type Tab = 'list' | 'history' | 'highlights'
 export function FundPeriods() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
-  const { getClubData, setFundPeriods: savePeriods } = useClubDataStore()
+  const { getClubData, setFundPeriods: savePeriods, setContributions: saveContributions } = useClubDataStore()
   const clubData = getClubData(clubId)
   const { fundPeriods: periods, contributions, members, expenses } = clubData
 
@@ -82,6 +83,84 @@ export function FundPeriods() {
   const [filterStatus, setFilterStatus] = useState<'' | FundPeriodStatus>('')
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
+
+  // Import Excel state
+  type ImportRow = { memberName: string; amount: number; paymentDate: string; notes: string }
+  type ImportError = { row: number; memberName: string; error: string }
+  const [showImport, setShowImport] = useState(false)
+  const [importPeriodId, setImportPeriodId] = useState('')
+  const [importRows, setImportRows] = useState<ImportRow[]>([])
+  const [importFileError, setImportFileError] = useState('')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<{ imported: number; total: number; errors: ImportError[] } | null>(null)
+  const importFileRef = useRef<HTMLInputElement>(null)
+
+  const commonPeriods = periods.filter(p => (p.type ?? 'chung') === 'chung')
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Ghi chú'],
+      ['Nguyễn Văn A', 300000, new Date().toISOString().slice(0, 10), ''],
+      ['Trần Thị B', 300000, new Date().toISOString().slice(0, 10), 'Đóng sớm'],
+    ])
+    ws['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 22 }, { wch: 20 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Đóng quỹ')
+    XLSX.writeFile(wb, 'mau_nhap_dong_quy.xlsx')
+  }
+
+  const handleImportFile = (file: File) => {
+    setImportFileError('')
+    setImportRows([])
+    setImportResult(null)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target?.result, { type: 'array', cellDates: true })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
+        const parsed: ImportRow[] = raw.map((row) => ({
+          memberName: String(row['Họ và tên'] ?? row['ho_va_ten'] ?? row['memberName'] ?? '').trim(),
+          amount: Number(row['Số tiền (VNĐ)'] ?? row['so_tien'] ?? row['amount'] ?? 0),
+          paymentDate: String(row['Ngày đóng (YYYY-MM-DD)'] ?? row['ngay_dong'] ?? row['paymentDate'] ?? '').slice(0, 10),
+          notes: String(row['Ghi chú'] ?? row['ghi_chu'] ?? row['notes'] ?? '').trim(),
+        })).filter(r => r.memberName)
+        if (parsed.length === 0) { setImportFileError('File không có dữ liệu hợp lệ. Kiểm tra lại tên cột.'); return }
+        setImportRows(parsed)
+      } catch {
+        setImportFileError('Không thể đọc file. Vui lòng dùng file .xlsx hoặc .xls.')
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  const handleConfirmImport = async () => {
+    if (!importPeriodId) { toast.error('Chọn kỳ quỹ để nhập'); return }
+    if (importRows.length === 0) { toast.error('Không có dữ liệu để nhập'); return }
+    setImportLoading(true)
+    try {
+      const res = await api.post('/contributions/import', { fundPeriodId: importPeriodId, rows: importRows })
+      const result = res.data?.data as { imported: number; total: number; errors: ImportError[] }
+      setImportResult(result)
+      if (result.imported > 0) {
+        const updated = await api.get('/contributions')
+        saveContributions(clubId, updated.data?.data ?? [])
+        toast.success(`Đã nhập ${result.imported}/${result.total} khoản đóng quỹ`)
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Nhập Excel thất bại')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  const resetImport = () => {
+    setImportRows([])
+    setImportResult(null)
+    setImportFileError('')
+    setImportPeriodId('')
+    if (importFileRef.current) importFileRef.current.value = ''
+  }
 
   const memberCount = members.length || 1
 
@@ -530,8 +609,8 @@ export function FundPeriods() {
                   </select>
                   <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
-                <Button variant="outline" size="sm" onClick={() => toast('Chức năng nhập Excel đang phát triển')}>
-                  <Download size={13} />Nhập Excel
+                <Button variant="outline" size="sm" onClick={() => { resetImport(); setShowImport(true) }}>
+                  <FileSpreadsheet size={13} />Nhập Excel
                 </Button>
               </div>
 
@@ -1266,6 +1345,174 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             rows={2} className="input-base resize-none" placeholder="Thông tin thêm về kỳ quỹ..." />
         </div>
       </form>
+    </Modal>
+
+    {/* Import Excel Modal */}
+    <Modal
+      isOpen={showImport}
+      onClose={() => setShowImport(false)}
+      title="Nhập đóng quỹ từ Excel"
+      size="lg"
+      footer={
+        importResult ? (
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => { resetImport() }}>Nhập thêm</Button>
+            <Button onClick={() => setShowImport(false)}>Đóng</Button>
+          </div>
+        ) : (
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowImport(false)}>Hủy</Button>
+            <Button
+              disabled={importRows.length === 0 || !importPeriodId || importLoading}
+              onClick={handleConfirmImport}
+            >
+              {importLoading ? 'Đang nhập...' : `Xác nhận nhập ${importRows.length > 0 ? `(${importRows.length} dòng)` : ''}`}
+            </Button>
+          </div>
+        )
+      }
+    >
+      <div className="space-y-4">
+        {/* Result view */}
+        {importResult ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-100">
+              <CheckCircle2 size={20} className="text-green-500 shrink-0" />
+              <div>
+                <p className="font-medium text-green-800">Nhập thành công {importResult.imported}/{importResult.total} khoản</p>
+                {importResult.errors.length > 0 && (
+                  <p className="text-sm text-green-700">{importResult.errors.length} dòng bị lỗi — xem bên dưới</p>
+                )}
+              </div>
+            </div>
+            {importResult.errors.length > 0 && (
+              <div className="rounded-lg border border-red-100 overflow-hidden">
+                <div className="bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 flex items-center gap-1.5">
+                  <AlertCircle size={13} />Dòng bị lỗi ({importResult.errors.length})
+                </div>
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-red-100 text-xs text-slate-500">
+                    <th className="text-left px-4 py-2">Dòng</th>
+                    <th className="text-left px-4 py-2">Họ và tên</th>
+                    <th className="text-left px-4 py-2">Lỗi</th>
+                  </tr></thead>
+                  <tbody>
+                    {importResult.errors.map((e, i) => (
+                      <tr key={i} className="border-b border-red-50">
+                        <td className="px-4 py-2 text-slate-500">{e.row}</td>
+                        <td className="px-4 py-2 font-medium">{e.memberName}</td>
+                        <td className="px-4 py-2 text-red-600">{e.error}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Step 1: Download template */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 border border-indigo-100">
+              <div>
+                <p className="text-sm font-medium text-indigo-800">Bước 1 — Tải file mẫu</p>
+                <p className="text-xs text-indigo-600 mt-0.5">Điền đúng cột: Họ và tên, Số tiền, Ngày đóng, Ghi chú</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                <Download size={13} />Tải mẫu
+              </Button>
+            </div>
+
+            {/* Step 2: Select period */}
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                Bước 2 — Chọn kỳ quỹ để nhập <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={importPeriodId}
+                onChange={e => setImportPeriodId(e.target.value)}
+                className="input-base text-sm"
+              >
+                <option value="">-- Chọn kỳ quỹ --</option>
+                {commonPeriods.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.status === 'active' ? 'Đang mở' : p.status === 'draft' ? 'Chuẩn bị' : 'Đã đóng'})</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Step 3: Upload file */}
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Bước 3 — Tải lên file Excel</label>
+              <label
+                className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors"
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
+              >
+                <Upload size={24} className="text-slate-400" />
+                <span className="text-sm text-slate-500">Kéo thả file vào đây hoặc <span className="text-indigo-600 font-medium">chọn file</span></span>
+                <span className="text-xs text-slate-400">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }}
+                />
+              </label>
+              {importFileError && (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} />{importFileError}</p>
+              )}
+            </div>
+
+            {/* Preview table */}
+            {importRows.length > 0 && (
+              <div className="rounded-lg border border-slate-100 overflow-hidden">
+                <div className="bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 flex items-center justify-between">
+                  <span>Xem trước dữ liệu ({importRows.length} dòng)</span>
+                  <button onClick={resetImport} className="text-slate-400 hover:text-red-500 text-xs">Xóa</button>
+                </div>
+                <div className="overflow-x-auto max-h-56 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-white">
+                      <tr className="border-b border-slate-100 text-xs text-slate-500">
+                        <th className="text-left px-4 py-2">#</th>
+                        <th className="text-left px-4 py-2">Họ và tên</th>
+                        <th className="text-right px-4 py-2">Số tiền</th>
+                        <th className="text-left px-4 py-2">Ngày đóng</th>
+                        <th className="text-left px-4 py-2">Ghi chú</th>
+                        <th className="text-center px-4 py-2">Tìm thấy?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importRows.map((r, i) => {
+                        const found = members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())
+                        return (
+                          <tr key={i} className="border-b border-slate-50">
+                            <td className="px-4 py-1.5 text-slate-400 text-xs">{i + 2}</td>
+                            <td className="px-4 py-1.5 font-medium">{r.memberName}</td>
+                            <td className="px-4 py-1.5 text-right text-indigo-700">{r.amount.toLocaleString('vi-VN')}đ</td>
+                            <td className="px-4 py-1.5 text-slate-500 text-xs">{r.paymentDate || '—'}</td>
+                            <td className="px-4 py-1.5 text-slate-500 text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
+                            <td className="px-4 py-1.5 text-center">
+                              {found
+                                ? <CheckCircle2 size={14} className="text-green-500 mx-auto" />
+                                : <AlertCircle size={14} className="text-red-400 mx-auto" title="Không tìm thấy thành viên" />}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {importRows.some(r => !members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())) && (
+                  <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 text-xs text-amber-700 flex items-center gap-1.5">
+                    <AlertCircle size={12} />Một số tên không khớp thành viên — các dòng này sẽ bị bỏ qua khi nhập
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </Modal>
   )
 }
