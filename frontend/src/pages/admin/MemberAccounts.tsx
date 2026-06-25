@@ -373,9 +373,31 @@ export function MemberAccounts() {
               <h1 className="text-base font-bold text-slate-900">Tài khoản thành viên</h1>
               <p className="text-xs text-slate-500 mt-0.5">{accounts.length} tài khoản</p>
             </div>
-            <Button size="sm" onClick={() => setShowSingle(true)}>
-              <UserPlus size={14} />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              {noAccountMembers.length > 0 && (
+                <button onClick={() => setShowBulk(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11px] font-[700] border border-indigo-200 text-indigo-600 bg-indigo-50 active:opacity-80">
+                  <Users size={11} />{noAccountMembers.length}
+                </button>
+              )}
+              <Button size="sm" onClick={() => setShowSingle(true)}>
+                <UserPlus size={14} />
+              </Button>
+            </div>
+          </div>
+          {/* KPI mini stats */}
+          <div className="grid grid-cols-4 gap-1.5 mb-3">
+            {[
+              { label: 'Tổng', value: accounts.length, color: 'text-indigo-600' },
+              { label: 'Hoạt động', value: accounts.filter(a => getStatus(a) === 'active').length, color: 'text-emerald-600' },
+              { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
+              { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
+            ].map(s => (
+              <div key={s.label} className="bg-slate-50 rounded-[10px] py-2 text-center">
+                <div className={`text-[14px] font-[800] ${s.color}`}>{s.value}</div>
+                <div className="text-[9px] text-slate-400 mt-0.5">{s.label}</div>
+              </div>
+            ))}
           </div>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -427,6 +449,10 @@ export function MemberAccounts() {
         {showSingle && (
           <CreateSingleModal members={members} existingMemberIds={existingMemberIds}
             onClose={() => setShowSingle(false)} onCreated={fetchAccounts} />
+        )}
+        {showBulk && (
+          <BulkCreateModal members={members} existingMemberIds={existingMemberIds}
+            onClose={() => setShowBulk(false)} onCreated={fetchAccounts} />
         )}
         {confirm && (
           <ConfirmModal {...confirm} onClose={() => setConfirm(null)} />

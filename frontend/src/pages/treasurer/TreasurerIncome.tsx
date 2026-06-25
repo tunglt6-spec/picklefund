@@ -220,12 +220,23 @@ export function TreasurerIncome() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-          <div className="text-[17px] font-[800] text-slate-900">Khoản Thu</div>
-          <button onClick={openCreate}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] bg-indigo-600 text-white active:opacity-80">
-            <Plus size={13} />Ghi nhận
-          </button>
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="text-[17px] font-[800] text-slate-900 shrink-0">Khoản Thu</div>
+          <div className="flex items-center gap-1.5 ml-auto">
+            {unconfirmedIds.length > 0 && (
+              <button
+                onClick={bulkConfirm}
+                disabled={isBulkConfirming}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11px] font-[700] bg-amber-500 text-white active:opacity-80 disabled:opacity-50"
+              >
+                <CheckCircle size={11} />{isBulkConfirming ? '…' : `XN tất cả (${unconfirmedIds.length})`}
+              </button>
+            )}
+            <button onClick={openCreate}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] bg-indigo-600 text-white active:opacity-80">
+              <Plus size={13} />Ghi nhận
+            </button>
+          </div>
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
