@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ClubsService } from './clubs.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok, paginated } from '../common/response';
 
 @ApiTags('Clubs')

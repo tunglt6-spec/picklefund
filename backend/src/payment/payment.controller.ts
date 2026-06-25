@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentService } from './payment.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
 @ApiTags('Payments')

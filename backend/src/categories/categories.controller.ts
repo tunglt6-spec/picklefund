@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { CategoriesService, CreateCategoryDto, UpdateCategoryDto } from './categories.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
 @Controller('categories')

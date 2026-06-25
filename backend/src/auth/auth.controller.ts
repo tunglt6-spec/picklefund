@@ -3,7 +3,7 @@ import { type Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { CurrentUser, Public } from '../common/decorators';
+import { CurrentUser, Public} from '../common/decorators';
 import { ok } from '../common/response';
 import {
   LoginDto,

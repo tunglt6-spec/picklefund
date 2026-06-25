@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
 @ApiTags('Users')

@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AttendanceService } from './attendance.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 import { CreateAttendanceSessionDto } from './attendance.dto';
 

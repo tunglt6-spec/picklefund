@@ -1,7 +1,7 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MaikaService } from './maika.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
 @ApiTags('Maika AI')

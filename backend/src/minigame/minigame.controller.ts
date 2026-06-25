@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MinigameService } from './minigame.service';
-import { CurrentUser } from '../common/decorators';
+import { CurrentUser} from '../common/decorators';
 import { ok } from '../common/response';
 import { MinigameFormat } from '@prisma/client';
 

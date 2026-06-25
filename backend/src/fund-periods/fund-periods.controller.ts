@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { FundPeriodsService } from './fund-periods.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 import {
   CreateFundPeriodDto,

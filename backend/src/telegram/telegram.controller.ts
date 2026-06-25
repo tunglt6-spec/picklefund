@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Body } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TelegramService } from './telegram.service';
-import { CurrentUser, Roles } from '../common/decorators';
+import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
 @ApiTags('Telegram Bot')
