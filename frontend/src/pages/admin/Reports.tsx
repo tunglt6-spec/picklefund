@@ -341,6 +341,37 @@ export function Reports() {
             </div>
           )}
 
+          {/* Period history table */}
+          {periodHistory.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-50">
+                <span className="text-[13px] font-[700] text-slate-800">Diễn biến số dư</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-left px-3 py-2 font-semibold text-slate-500">Kỳ</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Thu</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Chi</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Số dư</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {periodHistory.map((row, i) => (
+                      <tr key={i} className={`border-b border-slate-50 ${row.current ? 'bg-indigo-50' : ''}`}>
+                        <td className={`px-3 py-2.5 font-semibold truncate max-w-[90px] ${row.current ? 'text-indigo-700' : 'text-slate-700'}`}>{row.ky}</td>
+                        <td className="px-3 py-2.5 text-right text-slate-600 tabular-nums">{formatVND(row.thu)}</td>
+                        <td className="px-3 py-2.5 text-right text-slate-600 tabular-nums">{formatVND(row.chi)}</td>
+                        <td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${row.current ? 'text-indigo-700' : 'text-slate-800'}`}>{formatVND(row.sodu)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Export */}
           <div className="flex gap-2">
             <button className="flex-1 py-2.5 rounded-[12px] border border-slate-200 text-[13px] font-[600] text-slate-600 flex items-center justify-center gap-1 active:bg-slate-50"

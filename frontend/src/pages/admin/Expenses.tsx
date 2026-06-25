@@ -293,8 +293,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
   )
 }
 
-function DetailView({ exp, onClose, onDelete, onApprove, onEdit }: {
-  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onEdit: () => void
+function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit }: {
+  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void
 }) {
   const cfg = statusCfg[exp.status]
   const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
@@ -333,7 +333,10 @@ function DetailView({ exp, onClose, onDelete, onApprove, onEdit }: {
           </button>
           <div className="flex gap-2">
             {exp.status === 'pending' && (
-              <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
+              <>
+                <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
+                <Button size="sm" onClick={onReject} className="bg-red-500 hover:bg-red-600 text-white"><X size={13} />Từ chối</Button>
+              </>
             )}
             <Button size="sm" variant="outline" onClick={onEdit}><Pencil size={13} />Sửa</Button>
             <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
@@ -487,6 +490,17 @@ export function Expenses() {
       toast.success('Đã duyệt khoản chi!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Duyệt khoản chi thất bại')
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    try {
+      await api.patch(`/expenses/${id}/status`, { status: 'rejected' })
+      save(clubData.expenses.map(e => e.id === id ? { ...e, status: 'rejected' as ExpenseStatus } : e))
+      setDetailExp(null)
+      toast.success('Đã từ chối khoản chi!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Từ chối khoản chi thất bại')
     }
   }
 
@@ -695,10 +709,16 @@ export function Expenses() {
                         <td>
                           <div className="flex items-center justify-center gap-1">
                             {exp.status === 'pending' && (
-                              <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
-                                className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-                                <CheckCircle size={13} />
-                              </button>
+                              <>
+                                <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
+                                  className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                  <CheckCircle size={13} />
+                                </button>
+                                <button onClick={() => handleReject(exp.id)} title="Từ chối"
+                                  className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                                  <X size={13} />
+                                </button>
+                              </>
                             )}
                             <button onClick={() => setDetailExp(exp)} title="Xem"
                               className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
@@ -750,6 +770,7 @@ export function Expenses() {
           onClose={() => setDetailExp(null)}
           onDelete={() => setConfirmId(detailExp.id)}
           onApprove={() => handleApprove(detailExp.id)}
+          onReject={() => handleReject(detailExp.id)}
           onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
         />
       )}
