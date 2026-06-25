@@ -107,7 +107,7 @@ export class ContributionsService {
       throw new BadRequestException('Số tiền phải lớn hơn 0');
     }
     return this.prisma.fundContribution.update({
-      where: { id },
+      where: { id, clubId },
       data: {
         ...(dto.amount !== undefined
           ? { amount: new Decimal(dto.amount) }
@@ -132,13 +132,13 @@ export class ContributionsService {
 
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId);
-    return this.prisma.fundContribution.delete({ where: { id } });
+    return this.prisma.fundContribution.delete({ where: { id, clubId } });
   }
 
   async toggleConfirm(id: string, clubId: string) {
     const c = await this.findOne(id, clubId);
     return this.prisma.fundContribution.update({
-      where: { id },
+      where: { id, clubId },
       data: { isConfirmed: !c.isConfirmed },
     });
   }
