@@ -27,6 +27,7 @@ import { MaikaModule } from './maika/maika.module';
 import { LisaModule } from './lisa/lisa.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { BillingModule } from './billing/billing.module';
+import { CategoriesModule } from './categories/categories.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -73,6 +74,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
     LisaModule,
     TelegramModule,
     BillingModule,
+    CategoriesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

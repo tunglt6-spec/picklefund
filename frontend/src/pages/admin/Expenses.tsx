@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
-  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download,
+  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { Button } from '../../components/ui/Button'
@@ -89,11 +89,14 @@ const emptyForm = {
   allocationRule: 'ATTENDANCE' as AllocationRule, notes: '',
   miniExpenseType: 'GAME_REWARD' as MiniExpenseType,
   receiverName: '',
+  categoryId: '',
 }
 
-function AddDrawer({ open, onClose, onSave, editExpense, isSaving }: {
+type Category = { id: string; name: string; icon?: string | null; isDefault: boolean }
+
+function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories }: {
   open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
-  editExpense?: LivingExpense | null; isSaving?: boolean
+  editExpense?: LivingExpense | null; isSaving?: boolean; categories: Category[]
 }) {
   const isEdit = !!editExpense
   const [form, setForm] = useState(emptyForm)
@@ -205,6 +208,18 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving }: {
                   ))}
                 </select>
                 <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+              </div>
+            )}
+
+            {categories.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Danh mục <span className="text-slate-400 font-normal">(nếu có)</span></label>
+                <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="input-base">
+                  <option value="">— Không phân loại —</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -393,6 +408,31 @@ export function Expenses() {
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
 
+  const [categories, setCategories] = useState<Category[]>([])
+  const [showCatMgr, setShowCatMgr] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatIcon, setNewCatIcon] = useState('')
+
+  useEffect(() => {
+    api.get('/categories').then(r => setCategories(r.data?.data ?? [])).catch(() => {})
+  }, [clubId])
+
+  const addCategory = async () => {
+    if (!newCatName.trim()) return
+    try {
+      const r = await api.post('/categories', { name: newCatName.trim(), icon: newCatIcon.trim() || undefined })
+      setCategories(prev => [...prev, r.data?.data])
+      setNewCatName(''); setNewCatIcon('')
+    } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Thêm thất bại') }
+  }
+
+  const deleteCategory = async (id: string) => {
+    try {
+      await api.delete(`/categories/${id}`)
+      setCategories(prev => prev.filter(c => c.id !== id))
+    } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Xóa thất bại') }
+  }
+
   const filtered = useMemo(() => richExpenses.filter(e => {
     const matchPeriod = !selectedPeriodId || (e.fundSource ?? 'COMMON') === 'MINI' || e.fundPeriodId === selectedPeriodId
     const matchTab = tab === 'all' || e.status === tab
@@ -432,6 +472,7 @@ export function Expenses() {
       allocationEnabled: !isMini,
       miniExpenseType: isMini ? form.miniExpenseType : undefined,
       receiverName: isMini && form.receiverName ? form.receiverName : undefined,
+      categoryId: form.categoryId || undefined,
     }
     try {
       const res = await api.post('/expenses', payload)
@@ -469,6 +510,7 @@ export function Expenses() {
       notes: form.notes,
       miniExpenseType: form.fundSource === 'MINI' ? form.miniExpenseType : undefined,
       receiverName: form.fundSource === 'MINI' && form.receiverName ? form.receiverName : undefined,
+      categoryId: form.categoryId || undefined,
     }
     try {
       await api.put(`/expenses/${editTarget.id}`, payload)
@@ -586,8 +628,8 @@ export function Expenses() {
           ))}
         </div>
         <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" message="Hành động này không thể hoàn tác." onConfirm={() => { if (confirmId) handleDelete(confirmId) }} onCancel={() => setConfirmId(null)} />
-        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} />
-        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} />
+        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} />
+        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} />
       </div>
     )
   }
@@ -619,6 +661,7 @@ export function Expenses() {
                   : 'Chưa có kỳ quỹ'}
               </span>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
             <Button variant="outline" size="sm" onClick={exportExcel}><Download size={13} />Xuất Excel</Button>
             <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>
@@ -762,8 +805,36 @@ export function Expenses() {
       </div>
 
       {/* Drawers & modals */}
-      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} />
+      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} />
       <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
+
+      {/* Categories management modal */}
+      {showCatMgr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Danh mục chi phí</h3>
+              <button onClick={() => setShowCatMgr(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-100"><X size={16} /></button>
+            </div>
+            <div className="space-y-2 max-h-52 overflow-y-auto">
+              {categories.length === 0 && <p className="text-xs text-slate-400 text-center py-4">Chưa có danh mục nào</p>}
+              {categories.map(c => (
+                <div key={c.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                  <span className="text-sm text-slate-700">{c.icon ? `${c.icon} ` : ''}{c.name}</span>
+                  {!c.isDefault && (
+                    <button onClick={() => deleteCategory(c.id)} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={13} /></button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-1 border-t border-slate-100">
+              <input value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} placeholder="🏸" className="input-base w-14 text-center text-lg" maxLength={2} />
+              <input value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Tên danh mục" className="input-base flex-1" maxLength={100} onKeyDown={e => e.key === 'Enter' && addCategory()} />
+              <Button size="sm" onClick={addCategory} disabled={!newCatName.trim()}><Plus size={14} /></Button>
+            </div>
+          </div>
+        </div>
+      )}
       {detailExp && (
         <DetailView
           exp={detailExp}
