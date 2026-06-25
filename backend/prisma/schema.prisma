@@ -77,6 +77,7 @@ model User {
   notificationPref     NotificationPreference?
   confirmedPayments    Payment[]              @relation("PaymentConfirmedBy")
 
+  @@index([clubId])
   @@map("users")
 }
 
