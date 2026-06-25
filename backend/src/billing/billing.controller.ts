@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { BillingService } from './billing.service';
@@ -20,14 +20,22 @@ export class BillingController {
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Get('subscription')
-  async getSubscription(@CurrentUser() user: { clubId: string }) {
-    return ok(await this.svc.getSubscription(user.clubId));
+  async getSubscription(
+    @CurrentUser() user: { clubId: string; role: string },
+    @Query('clubId') queryClubId?: string,
+  ) {
+    const clubId = user.role === 'SUPER_ADMIN' && queryClubId ? queryClubId : user.clubId;
+    return ok(await this.svc.getSubscription(clubId));
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Get('ai-usage')
-  async getAiUsage(@CurrentUser() user: { clubId: string }) {
-    return ok(await this.svc.getAiUsage(user.clubId));
+  async getAiUsage(
+    @CurrentUser() user: { clubId: string; role: string },
+    @Query('clubId') queryClubId?: string,
+  ) {
+    const clubId = user.role === 'SUPER_ADMIN' && queryClubId ? queryClubId : user.clubId;
+    return ok(await this.svc.getAiUsage(clubId));
   }
 
   @Roles('SUPER_ADMIN')
