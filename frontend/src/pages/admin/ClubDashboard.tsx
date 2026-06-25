@@ -468,9 +468,13 @@ export function ClubDashboard() {
     const recentExpAll = [...clubData.expenses]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 5)
+
+    const scoreColor = healthScore >= 70 ? '#16A34A' : healthScore >= 40 ? '#D97706' : '#E11D48'
+    const scoreLabel = healthScore >= 70 ? 'Tốt' : healthScore >= 40 ? 'Trung bình' : 'Cần chú ý'
+
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="px-4 pt-4 pb-6 space-y-4">
+        <div className="px-4 pt-4 pb-8 space-y-4">
           <MobileWelcomeCard
             title={clubName}
             subtitle={`${greeting} 👋`}
@@ -489,11 +493,99 @@ export function ClubDashboard() {
             <MobileKpiCard label="Chưa đóng" value={String(unpaidCount)} icon={<AlertCircle size={18} />} accent={unpaidCount > 0 ? '#EF4444' : '#22C55E'} />
           </div>
 
+          {/* AI Health Score + Recommendations */}
+          <div className="bg-white rounded-[18px] border border-slate-100 shadow-sm p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Brain size={16} className="text-indigo-500" />
+              <span className="text-[14px] font-[700] text-slate-800">Sức khoẻ CLB</span>
+              <span className="ml-auto text-[11px] text-slate-400">AI Maika</span>
+            </div>
+            <div className="flex items-center gap-4 mb-3">
+              {/* Mini gauge */}
+              <div className="relative w-16 h-16 flex-shrink-0">
+                <svg viewBox="0 0 60 60" className="w-16 h-16 -rotate-90">
+                  <circle cx="30" cy="30" r="24" fill="none" stroke="#F1F5F9" strokeWidth="8" />
+                  <circle cx="30" cy="30" r="24" fill="none" stroke={scoreColor} strokeWidth="8"
+                    strokeDasharray={`${(healthScore / 100) * 150.8} 150.8`}
+                    style={{ transition: 'stroke-dasharray 1s ease' }} />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[15px] font-[800]" style={{ color: scoreColor }}>{healthScore}</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="text-[13px] font-[700]" style={{ color: scoreColor }}>{scoreLabel}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Điểm sức khoẻ tài chính</div>
+              </div>
+            </div>
+            <div className="space-y-0.5">
+              {aiRecommendations.map((r, i) => <AiChip key={i} text={r.text} level={r.level} />)}
+            </div>
+            <button onClick={() => navigate('/lisa')}
+              className="mt-3 w-full py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 bg-indigo-50 flex items-center justify-center gap-1.5">
+              <Zap size={13} />Hỏi Lisa AI
+            </button>
+          </div>
+
+          {/* Bar chart Thu/Chi */}
+          {barData.length > 0 && (
+            <div className="bg-white rounded-[18px] border border-slate-100 shadow-sm p-4">
+              <div className="text-[13px] font-[700] text-slate-800 mb-3">Thu / Chi theo kỳ</div>
+              <ResponsiveContainer width="100%" height={150}>
+                <BarChart data={barData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                  <YAxis tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} tick={{ fontSize: 9 }} width={28} />
+                  <Tooltip formatter={(v) => formatVND(v as number)} />
+                  <Bar dataKey="Thu" fill="#4F46E5" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Chi" fill="#EF4444" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Unpaid members */}
+          {unpaidMembers.length > 0 && (
+            <div className="bg-white rounded-[18px] border border-amber-100 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle size={15} className="text-amber-500" />
+                <span className="text-[13px] font-[700] text-slate-800">Chưa đóng quỹ ({unpaidCount})</span>
+                <Link to="/treasurer" className="ml-auto text-[12px] text-indigo-500 font-[600]">Nhắc nhở</Link>
+              </div>
+              <div className="space-y-2">
+                {unpaidMembers.map(m => (
+                  <div key={m.id} className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[11px] font-[700] text-amber-600">{m.fullName.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-[13px] text-slate-700 flex-1 truncate">{m.fullName}</span>
+                    <span className="text-[11px] text-amber-500 font-[600]">Chưa đóng</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Payment progress */}
+          {currentPeriod && activeMembers > 0 && (
+            <div className="bg-white rounded-[18px] border border-slate-100 shadow-sm p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[13px] font-[700] text-slate-800">Tiến độ đóng quỹ</span>
+                <span className="text-[12px] font-[600] text-indigo-600">{activeMembers - unpaidCount}/{activeMembers}</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2.5">
+                <div className="h-2.5 rounded-full transition-all"
+                  style={{ width: `${pct(activeMembers - unpaidCount, activeMembers)}%`, background: 'linear-gradient(90deg,#4F46E5,#06B6D4)' }} />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">{pct(activeMembers - unpaidCount, activeMembers)}% thành viên đã đóng kỳ này</p>
+            </div>
+          )}
+
           {/* Recent income */}
           {recentTxAll.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[16px] font-[700] text-slate-800">Thu gần đây</h3>
+                <h3 className="text-[15px] font-[700] text-slate-800">Thu gần đây</h3>
                 <Link to="/contributions" className="text-[13px] font-[600]" style={{ color: '#4F46E5' }}>Xem thêm</Link>
               </div>
               <div className="space-y-2">
@@ -516,7 +608,7 @@ export function ClubDashboard() {
           {recentExpAll.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[16px] font-[700] text-slate-800">Chi gần đây</h3>
+                <h3 className="text-[15px] font-[700] text-slate-800">Chi gần đây</h3>
                 <Link to="/expenses" className="text-[13px] font-[600]" style={{ color: '#4F46E5' }}>Xem thêm</Link>
               </div>
               <div className="space-y-2">

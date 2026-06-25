@@ -566,70 +566,154 @@ export function Expenses() {
 
   /* ── Mobile layout ── */
   if (isMobile) {
-    const sorted = [...clubData.expenses].sort((a, b) => (b.expenseDate ?? b.id).localeCompare(a.expenseDate ?? a.id))
-    const commonTotal = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON').reduce((s, e) => s + e.amount, 0)
-    const miniTotal = clubData.expenses.filter(e => e.fundSource === 'MINI').reduce((s, e) => s + e.amount, 0)
+    const mobileFiltered = richExpenses.filter(e => {
+      const matchPeriod = !selectedPeriodId || (e.fundSource ?? 'COMMON') === 'MINI' || e.fundPeriodId === selectedPeriodId
+      const matchTab = tab === 'all' || e.status === tab
+      const q = search.toLowerCase()
+      const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
+      return matchPeriod && matchTab && matchQ
+    })
+    const pendingCount = richExpenses.filter(e => e.status === 'pending').length
+
+    const statusTabs: { key: 'all' | ExpenseStatus; label: string }[] = [
+      { key: 'all', label: 'Tất cả' },
+      { key: 'pending', label: `Chờ${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
+      { key: 'approved', label: 'Đã duyệt' },
+      { key: 'rejected', label: 'Từ chối' },
+    ]
+
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
-            <p className="text-[12px] text-slate-400">Quản lý khoản chi của CLB</p>
+        {/* Sticky header */}
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pt-3 pb-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
+              {activePeriod && <p className="text-[11px] text-slate-400">{activePeriod.name}</p>}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={exportExcel}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                <Download size={14} />
+              </button>
+              <button onClick={() => setShowFilter(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
+                <Filter size={14} />
+              </button>
+              <button onClick={() => setShowAdd(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-white"
+                style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={exportExcel}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-              <Download size={16} />
-            </button>
-            <button onClick={() => setShowAdd(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
-              <Plus size={18} />
-            </button>
+
+          {/* Period selector */}
+          {allPeriods.length > 1 && (
+            <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={id => setSelectedPeriodId(id)} />
+          )}
+
+          {/* Search */}
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm khoản chi..." className="input-base pl-8 w-full text-[13px] py-1.5" />
+          </div>
+
+          {/* Status tabs */}
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
+            {statusTabs.map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-[600] transition-all ${
+                  tab === t.key ? 'text-white' : 'bg-slate-100 text-slate-500'
+                }`}
+                style={tab === t.key ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chung</p>
-            <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
-          </div>
-          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Mini</p>
-            <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
-          </div>
+
+        {/* KPI strip */}
+        <div className="px-4 pt-3 pb-1 grid grid-cols-3 gap-2">
+          {[
+            { label: 'Quỹ Chung', val: commonAmt, color: 'text-indigo-600' },
+            { label: 'Quỹ Mini', val: miniAmt, color: 'text-cyan-600' },
+            { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
+          ].map(k => (
+            <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 px-3 py-2.5 shadow-sm">
+              <p className="text-[10px] text-slate-400 truncate">{k.label}</p>
+              <p className={`text-[13px] font-[700] tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
+            </div>
+          ))}
         </div>
+
+        {/* Expense list */}
         <div className="px-4 pt-3 pb-6 space-y-2">
-          {sorted.length === 0 ? (
+          {mobileFiltered.length === 0 ? (
             <div className="text-center py-14 text-slate-400 text-sm">
               <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
-              Chưa có khoản chi nào
+              {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
-          ) : sorted.map(e => (
-            <div key={e.id} className="relative">
-              <MobileTransactionCard
-                name={e.description}
-                description={e.expenseDate ?? ''}
-                amount={e.amount}
-                type="expense"
-                fundSource={e.fundSource ?? 'COMMON'}
-                status={e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : undefined}
-              />
-              <div className="absolute right-2 top-2 flex gap-0.5">
+          ) : mobileFiltered.map(e => (
+            <div key={e.id} className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-[600] text-slate-900 truncate">{e.description}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung'}</div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[14px] font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
+                  <span className={`text-[10px] font-[600] px-1.5 py-0.5 rounded-full ${
+                    e.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
+                    e.status === 'pending' ? 'bg-amber-50 text-amber-600' :
+                    'bg-red-50 text-red-500'
+                  }`}>
+                    {e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-slate-50">
+                {e.status === 'pending' && (
+                  <>
+                    <button onClick={() => handleApprove(e.id)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-emerald-50 text-emerald-600 active:bg-emerald-100">
+                      <CheckCircle size={12} />Duyệt
+                    </button>
+                    <button onClick={() => handleReject(e.id)}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-red-50 text-red-500 active:bg-red-100">
+                      <X size={12} />Từ chối
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setDetailExp(e)}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-slate-50 text-slate-500 active:bg-slate-100 ml-auto">
+                  <Eye size={12} />Chi tiết
+                </button>
                 <button onClick={() => setEditTarget(e)}
-                  className="text-slate-300 active:text-indigo-500 p-1.5">
+                  className="p-1.5 text-slate-300 active:text-indigo-500">
                   <Pencil size={13} />
                 </button>
                 <button onClick={() => setConfirmId(e.id)}
-                  className="text-slate-300 active:text-red-500 p-1.5">
+                  className="p-1.5 text-slate-300 active:text-red-500">
                   <Trash2 size={13} />
                 </button>
               </div>
             </div>
           ))}
         </div>
+
         <ConfirmDialog open={!!confirmId} title="Xóa khoản chi?" message="Hành động này không thể hoàn tác." onConfirm={() => { if (confirmId) handleDelete(confirmId) }} onCancel={() => setConfirmId(null)} />
+        {detailExp && (
+          <DetailView exp={detailExp} onClose={() => setDetailExp(null)}
+            onDelete={() => setConfirmId(detailExp.id)}
+            onApprove={() => handleApprove(detailExp.id)}
+            onReject={() => handleReject(detailExp.id)}
+            onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }} />
+        )}
         <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} />
         <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} />
+        <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
       </div>
     )
   }
