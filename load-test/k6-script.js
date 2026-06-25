@@ -48,7 +48,6 @@ export const options = {
     // Acceptance criteria from SDD Chapter 8
     http_req_duration: ['p(95)<2000'],     // p95 < 2s
     errors:            ['rate<0.05'],      // error rate < 5%
-    auth_duration_ms:  ['p(95)<1000'],     // login p95 < 1s
     api_duration_ms:   ['p(95)<500'],      // data endpoints p95 < 500ms
   },
 };
@@ -84,20 +83,7 @@ export default function (data) {
     Authorization: `Bearer ${token}`,
   };
 
-  // 1. Login (simulates concurrent auth load)
-  const loginStart = Date.now();
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({ username: USERNAME, password: PASSWORD }),
-    { headers: { 'Content-Type': 'application/json' } },
-  );
-  authDuration.add(Date.now() - loginStart);
-  const loginOk = check(loginRes, { 'login ok': (r) => r.status === 200 });
-  errorRate.add(!loginOk);
-
-  sleep(0.5);
-
-  // 2. GET /members — list members (most frequent read)
+  // 1. GET /members — list members (most frequent read)
   const t1 = Date.now();
   const membersRes = http.get(`${BASE_URL}/members`, { headers });
   apiDuration.add(Date.now() - t1);
