@@ -248,6 +248,8 @@ model FundContribution {
   createdBy       User        @relation("ContributionCreatedBy", fields: [createdById], references: [id])
 
   @@index([clubId, fundPeriodId])
+  @@index([clubId, memberId])
+  @@index([clubId, isConfirmed])
   @@map("fund_contributions")
 }
 
@@ -286,6 +288,7 @@ model ExpenseCategory {
   club     Club           @relation(fields: [clubId], references: [id])
   expenses LivingExpense[]
 
+  @@index([clubId])
   @@map("expense_categories")
 }
 
@@ -355,6 +358,7 @@ model PersonalReceipt {
   member     Member     @relation(fields: [memberId], references: [id])
 
   @@unique([fundPeriodId, memberId])
+  @@index([clubId, fundPeriodId])
   @@map("personal_receipts")
 }
 
@@ -375,6 +379,8 @@ model AuditLog {
   club Club? @relation(fields: [clubId], references: [id])
   user User  @relation(fields: [userId], references: [id])
 
+  @@index([clubId, createdAt])
+  @@index([userId])
   @@map("audit_logs")
 }
 
