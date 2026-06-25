@@ -4,6 +4,7 @@ import { ExpensesService } from './expenses.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
 import type { FundSource } from '@prisma/client'
+import { CreateExpenseDto, UpdateExpenseDto } from './expenses.dto'
 
 @ApiTags('Expenses')
 @ApiBearerAuth()
@@ -22,7 +23,7 @@ export class ExpensesController {
 
   @Post()
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateExpenseDto) {
     return ok(await this.service.create(user.clubId, user.userId, body), 'Thêm chi phí thành công')
   }
 
@@ -38,7 +39,7 @@ export class ExpensesController {
 
   @Put(':id')
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
-  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
+  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateExpenseDto) {
     return ok(await this.service.update(id, user.clubId, body))
   }
 

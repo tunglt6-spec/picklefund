@@ -3,7 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { BillingService } from './billing.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
-import type { PlanTier } from './billing.types'
+import { UpgradePlanDto } from './billing.dto'
 
 @ApiTags('Billing')
 @ApiBearerAuth()
@@ -30,7 +30,7 @@ export class BillingController {
 
   @Roles('SUPER_ADMIN')
   @Post('upgrade')
-  async upgrade(@Body() body: { clubId: string; tier: PlanTier; months: number }) {
+  async upgrade(@Body() body: UpgradePlanDto) {
     return ok(await this.svc.upgradePlan(body.clubId, body.tier, body.months))
   }
 }

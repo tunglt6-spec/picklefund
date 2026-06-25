@@ -29,6 +29,7 @@ import { TelegramModule } from './telegram/telegram.module'
 import { BillingModule } from './billing/billing.module'
 import { JwtAuthGuard } from './common/guards/jwt.guard'
 import { RolesGuard } from './common/guards/roles.guard'
+import { TenantGuard } from './common/guards/tenant.guard'
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { RolesGuard } from './common/guards/roles.guard'
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: TenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })

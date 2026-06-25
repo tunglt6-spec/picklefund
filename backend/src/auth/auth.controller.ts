@@ -5,6 +5,7 @@ import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { CurrentUser, Public } from '../common/decorators'
 import { ok } from '../common/response'
+import { LoginDto, RegisterClubDto, RefreshTokenDto, LogoutDto, ChangePasswordDto } from './auth.dto'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -14,7 +15,7 @@ export class AuthController {
   @Public()
   @Throttle({ short: { ttl: 60000, limit: 5 } })
   @Post('login')
-  async login(@Body() body: { username: string; password: string; rememberMe?: boolean }, @Req() req: Request) {
+  async login(@Body() body: LoginDto, @Req() req: Request) {
     const result = await this.auth.login(body.username, body.password, {
       rememberMe: body.rememberMe,
       ip: req.ip,
@@ -26,13 +27,13 @@ export class AuthController {
   @Public()
   @Throttle({ short: { ttl: 3600000, limit: 3 } })
   @Post('register')
-  async register(@Body() body: { club: any; admin: any }) {
+  async register(@Body() body: RegisterClubDto) {
     return ok(await this.auth.register(body), 'Đăng ký CLB thành công')
   }
 
   @Public()
   @Post('refresh')
-  async refresh(@Body() body: { refreshToken: string }, @Req() req: Request) {
+  async refresh(@Body() body: RefreshTokenDto, @Req() req: Request) {
     const result = await this.auth.refresh(body.refreshToken, {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
@@ -42,7 +43,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Post('logout')
-  async logout(@Body() body: { refreshToken: string }) {
+  async logout(@Body() body: LogoutDto) {
     return ok(await this.auth.logout(body.refreshToken))
   }
 
@@ -54,7 +55,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Patch('change-password')
-  async changePassword(@CurrentUser() user: any, @Body() body: { oldPassword: string; newPassword: string }) {
+  async changePassword(@CurrentUser() user: any, @Body() body: ChangePasswordDto) {
     return ok(await this.auth.changePassword(user.userId, body.oldPassword, body.newPassword))
   }
 }

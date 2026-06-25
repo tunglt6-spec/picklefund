@@ -48,9 +48,17 @@ export class PersonalReceiptsService {
 
     const paidMap = Object.fromEntries(contributions.map((c) => [c.memberId, Number(c._sum.amount ?? 0)]))
 
+    // Batch: one groupBy instead of N individual count queries
+    const attendanceCounts = await this.prisma.attendanceRecord.groupBy({
+      by: ['memberId'],
+      where: { status: 'PRESENT', attendanceSession: { fundPeriodId } },
+      _count: { id: true },
+    })
+    const attendedMap = Object.fromEntries(attendanceCounts.map((r) => [r.memberId, r._count.id]))
+
     const receipts = await Promise.all(
       members.map(async (m) => {
-        const attended = await this.prisma.attendanceRecord.count({ where: { memberId: m.id, status: 'PRESENT', attendanceSession: { fundPeriodId } } })
+        const attended = attendedMap[m.id] ?? 0
         const amountPaid = paidMap[m.id] ?? 0
         const courtCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalCourt) : 0
         const livingCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalLiving) : 0

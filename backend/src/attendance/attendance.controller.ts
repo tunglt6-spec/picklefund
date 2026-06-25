@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { AttendanceService } from './attendance.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
+import { CreateAttendanceSessionDto } from './attendance.dto'
 
 @ApiTags('Attendance')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class AttendanceController {
 
   @Post()
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateAttendanceSessionDto) {
     return ok(await this.service.create(user.clubId, user.userId, body), 'Tạo buổi tập thành công')
   }
 
@@ -38,7 +39,7 @@ export class AttendanceController {
 
   @Put(':id')
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
-  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
+  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: CreateAttendanceSessionDto) {
     return ok(await this.service.update(id, user.clubId, body))
   }
 
@@ -55,7 +56,11 @@ export class AttendanceController {
 
   @Put(':id/attendance')
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
-  async updateAttendance(@Param('id') id: string, @CurrentUser() user: any, @Body() body: { attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[] }) {
+  async updateAttendance(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: { attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[] },
+  ) {
     return ok(await this.service.updateAttendance(id, user.clubId, body.attendance), 'Cập nhật điểm danh thành công')
   }
 }

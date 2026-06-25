@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { MembersService } from './members.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
+import { CreateMemberDto, UpdateMemberDto } from './members.dto'
 
 @ApiTags('Members')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class MembersController {
 
   @Post()
   @Roles('CLUB_ADMIN')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateMemberDto) {
     return ok(await this.members.create(user.clubId, body), 'Thêm thành viên thành công')
   }
 
@@ -28,7 +29,7 @@ export class MembersController {
 
   @Put(':id')
   @Roles('CLUB_ADMIN')
-  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
+  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateMemberDto) {
     return ok(await this.members.update(id, user.clubId, body))
   }
 

@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { FundPeriodsService } from './fund-periods.service'
 import { CurrentUser, Roles } from '../common/decorators'
 import { ok } from '../common/response'
+import { CreateFundPeriodDto, UpdateFundPeriodDto, UpdateFundPeriodStatusDto } from './fund-periods.dto'
 
 @ApiTags('Fund Periods')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class FundPeriodsController {
 
   @Post()
   @Roles('CLUB_ADMIN')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateFundPeriodDto) {
     return ok(await this.service.create(user.clubId, user.userId, body), 'Tạo kỳ quỹ thành công')
   }
 
@@ -28,13 +29,13 @@ export class FundPeriodsController {
 
   @Put(':id')
   @Roles('CLUB_ADMIN')
-  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: any) {
+  async update(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateFundPeriodDto) {
     return ok(await this.service.update(id, user.clubId, body))
   }
 
   @Patch(':id/status')
   @Roles('CLUB_ADMIN')
-  async updateStatus(@Param('id') id: string, @CurrentUser() user: any, @Body() body: { status: any }) {
+  async updateStatus(@Param('id') id: string, @CurrentUser() user: any, @Body() body: UpdateFundPeriodStatusDto) {
     return ok(await this.service.updateStatus(id, user.clubId, body.status))
   }
 

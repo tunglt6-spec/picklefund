@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send } from 'lucide-react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -9,14 +9,15 @@ import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
-type Tab = 'club' | 'account' | 'notifications' | 'payment' | 'telegram'
+type Tab = 'club' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
 
-const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
   { id: 'account',       label: 'Tài khoản',     icon: <User size={16} /> },
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
   { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
   { id: 'telegram',      label: 'Telegram',      icon: <Send size={16} /> },
+  { id: 'billing',       label: 'Billing',       icon: <Zap size={16} />, superAdminOnly: true },
 ]
 
 const emptySettings: ClubSettings = {
@@ -684,10 +685,129 @@ function PaymentTab() {
   )
 }
 
+// ─── Tab: Billing (SUPER_ADMIN only) ─────────────────────────
+type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE'
+interface SubscriptionStatus {
+  clubId: string
+  tier: PlanTier
+  plan: { name: string; maxMembers: number; priceMonthly: number; aiFeatures: boolean; telegramBot: boolean }
+  expiresAt: string | null
+  isActive: boolean
+  daysRemaining: number | null
+  usage: { members: number }
+}
+
+function BillingTab() {
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([])
+  const [selected, setSelected] = useState<string>('')
+  const [sub, setSub] = useState<SubscriptionStatus | null>(null)
+  const [upgradeForm, setUpgradeForm] = useState({ tier: 'STARTER' as PlanTier, months: 1 })
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api.get('/clubs').then(r => {
+      const list = r.data?.data ?? []
+      setClubs(list)
+      if (list.length > 0) setSelected(list[0].id)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!selected) return
+    setLoading(true)
+    api.get(`/billing/subscription?clubId=${selected}`)
+      .then(r => setSub(r.data?.data ?? null))
+      .catch(() => setSub(null))
+      .finally(() => setLoading(false))
+  }, [selected])
+
+  const handleUpgrade = async () => {
+    if (!selected) return
+    setSaving(true)
+    try {
+      await api.post('/billing/upgrade', { clubId: selected, tier: upgradeForm.tier, months: upgradeForm.months })
+      toast.success('Nâng cấp thành công')
+      const r = await api.get(`/billing/subscription?clubId=${selected}`)
+      setSub(r.data?.data ?? null)
+    } catch {
+      toast.error('Nâng cấp thất bại')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 className="text-sm font-semibold text-slate-800 mb-4">Chọn CLB</h3>
+        <select
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+          value={selected}
+          onChange={e => setSelected(e.target.value)}
+        >
+          {clubs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </div>
+
+      {loading && <div className="text-center text-sm text-slate-400">Đang tải...</div>}
+
+      {!loading && sub && (
+        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-slate-800">Subscription hiện tại</h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div><span className="text-slate-500">Gói:</span> <span className="font-medium">{sub.plan.name}</span></div>
+            <div><span className="text-slate-500">Trạng thái:</span> <span className={sub.isActive ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{sub.isActive ? 'Hoạt động' : 'Hết hạn'}</span></div>
+            <div><span className="text-slate-500">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers}</div>
+            <div><span className="text-slate-500">Còn lại:</span> {sub.daysRemaining != null ? `${sub.daysRemaining} ngày` : 'Không giới hạn'}</div>
+            <div><span className="text-slate-500">AI:</span> {sub.plan.aiFeatures ? '✓' : '✗'}</div>
+            <div><span className="text-slate-500">Telegram:</span> {sub.plan.telegramBot ? '✓' : '✗'}</div>
+            {sub.expiresAt && <div className="col-span-2"><span className="text-slate-500">Hết hạn:</span> {new Date(sub.expiresAt).toLocaleDateString('vi-VN')}</div>}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-slate-800">Nâng cấp gói</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Gói</label>
+            <select
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              value={upgradeForm.tier}
+              onChange={e => setUpgradeForm(p => ({ ...p, tier: e.target.value as PlanTier }))}
+            >
+              {(['FREE', 'STARTER', 'PRO', 'ENTERPRISE'] as PlanTier[]).map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Số tháng</label>
+            <input
+              type="number"
+              min={1}
+              max={24}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              value={upgradeForm.months}
+              onChange={e => setUpgradeForm(p => ({ ...p, months: parseInt(e.target.value) || 1 }))}
+            />
+          </div>
+        </div>
+        <Button onClick={handleUpgrade} disabled={saving || !selected} className="w-full">
+          {saving ? 'Đang lưu...' : 'Xác nhận nâng cấp'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ────────────────────────────────────────────────────
 export function Settings() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const tabs = ALL_TABS.filter(t => !t.superAdminOnly || isSuperAdmin)
   const [activeTab, setActiveTab] = useState<Tab>('club')
   const isMobile = useIsMobile()
 
@@ -723,6 +843,7 @@ export function Settings() {
           {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
           {activeTab === 'payment'       && <PaymentTab />}
           {activeTab === 'telegram'      && <TelegramTab />}
+          {activeTab === 'billing'       && <BillingTab />}
         </div>
       </div>
     )

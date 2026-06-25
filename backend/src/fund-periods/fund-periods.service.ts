@@ -114,13 +114,25 @@ export class FundPeriodsService {
     const totalAttendance = sessions.reduce((s, sess) => s + sess._count.attendanceRecords, 0)
     const costPerAttendance = totalAttendance > 0 ? Math.round(totalExpenses / totalAttendance) : 0
 
-    // Per-member calculation
-    const memberRows = await Promise.all(members.map(async (m) => {
-      const [attended, paid] = await Promise.all([
-        this.prisma.attendanceRecord.count({ where: { memberId: m.id, status: 'PRESENT', attendanceSession: { fundPeriodId: id } } }),
-        this.prisma.fundContribution.aggregate({ where: { memberId: m.id, fundPeriodId: id, fundSource: 'COMMON' }, _sum: { amount: true } }),
-      ])
-      const amountPaid = Number(paid._sum.amount ?? 0)
+    // Batch: two groupBy instead of 2N individual queries
+    const [attendanceCounts, paidAmounts] = await Promise.all([
+      this.prisma.attendanceRecord.groupBy({
+        by: ['memberId'],
+        where: { status: 'PRESENT', attendanceSession: { fundPeriodId: id } },
+        _count: { id: true },
+      }),
+      this.prisma.fundContribution.groupBy({
+        by: ['memberId'],
+        where: { fundPeriodId: id, clubId, fundSource: 'COMMON' },
+        _sum: { amount: true },
+      }),
+    ])
+    const attendedMap = Object.fromEntries(attendanceCounts.map((r) => [r.memberId, r._count.id]))
+    const paidMap = Object.fromEntries(paidAmounts.map((r) => [r.memberId, Number(r._sum.amount ?? 0)]))
+
+    const memberRows = members.map((m) => {
+      const attended = attendedMap[m.id] ?? 0
+      const amountPaid = paidMap[m.id] ?? 0
       const courtCost = memberCount > 0 ? Math.round(totalCourt / memberCount) : 0
       const livingCost = totalAttendance > 0 ? Math.round((attended / totalAttendance) * totalLiving) : 0
       const totalCost = courtCost + livingCost
@@ -130,7 +142,7 @@ export class FundPeriodsService {
         amountPaid, courtCost, livingCost, totalCost, balance,
         contributionPaid: amountPaid >= Number(fp.contributionAmount),
       }
-    }))
+    })
 
     return {
       totalIncome, totalExpenses, courtExpenses: totalCourt, livingExpenses: totalLiving,
