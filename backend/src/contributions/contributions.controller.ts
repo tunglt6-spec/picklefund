@@ -68,6 +68,15 @@ export class ContributionsController {
     return ok(await this.service.toggleConfirm(id, user.clubId));
   }
 
+  @Post('bulk-confirm')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async bulkConfirm(@CurrentUser() user: any, @Body() body: { ids: string[] }) {
+    return ok(
+      await this.service.bulkConfirm(body.ids ?? [], user.clubId),
+      'Xác nhận hàng loạt thành công',
+    );
+  }
+
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
   @Post('import')
   async importBulk(@CurrentUser() user: any, @Body() body: ImportContributionsDto) {

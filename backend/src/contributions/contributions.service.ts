@@ -143,6 +143,15 @@ export class ContributionsService {
     });
   }
 
+  async bulkConfirm(ids: string[], clubId: string) {
+    if (!ids.length) return { confirmed: 0 };
+    const result = await this.prisma.fundContribution.updateMany({
+      where: { id: { in: ids }, clubId, isConfirmed: false },
+      data: { isConfirmed: true },
+    });
+    return { confirmed: result.count };
+  }
+
   async importBulk(clubId: string, userId: string, dto: ImportContributionsDto) {
     const [period, members] = await Promise.all([
       this.prisma.fundPeriod.findFirst({ where: { id: dto.fundPeriodId, clubId } }),
