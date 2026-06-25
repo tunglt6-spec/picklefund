@@ -16,7 +16,6 @@ import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import toast from 'react-hot-toast'
 
 /* ── Constants ── */
