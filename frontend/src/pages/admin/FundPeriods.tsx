@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -6,7 +6,7 @@ import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play, TrendingUp,
   FolderOpen, ChevronDown, QrCode, FileText,
-  Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet
+  Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -152,6 +152,44 @@ export function FundPeriods() {
     } finally {
       setImportLoading(false)
     }
+  }
+
+  // QR payment state
+  type BankInfo = { bank_code: string; bank_account_number: string; bank_account_name: string }
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
+  const [qrPeriodId, setQrPeriodId] = useState('')
+  const [showQrModal, setShowQrModal] = useState(false)
+  const [copiedAcct, setCopiedAcct] = useState(false)
+
+  useEffect(() => {
+    api.get('/system-settings').then(res => {
+      const d = res.data?.data ?? {}
+      if (d.bank_account_number && d.bank_account_name) setBankInfo(d as BankInfo)
+    }).catch(() => {})
+  }, [clubId])
+
+  useEffect(() => {
+    if (!qrPeriodId && commonPeriods.length > 0) {
+      const active = commonPeriods.find(p => p.status === 'active') ?? commonPeriods[0]
+      setQrPeriodId(active.id)
+    }
+  }, [commonPeriods.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const buildQrUrl = useCallback((periodId: string) => {
+    if (!bankInfo?.bank_account_number || !bankInfo.bank_account_name) return null
+    const period = commonPeriods.find(p => p.id === periodId)
+    const amt = period?.contributionAmount ?? 0
+    const info = period ? `Dong quy ${period.name}` : 'Dong quy CLB'
+    const base = `https://img.vietqr.io/image/${bankInfo.bank_code || 'MB'}-${bankInfo.bank_account_number}-compact2.jpg`
+    return `${base}?amount=${Math.round(amt)}&addInfo=${encodeURIComponent(info)}&accountName=${encodeURIComponent(bankInfo.bank_account_name)}`
+  }, [bankInfo, commonPeriods])
+
+  const copyAcctNumber = () => {
+    if (!bankInfo?.bank_account_number) return
+    navigator.clipboard.writeText(bankInfo.bank_account_number).then(() => {
+      setCopiedAcct(true)
+      setTimeout(() => setCopiedAcct(false), 2000)
+    })
   }
 
   const resetImport = () => {
@@ -804,11 +842,89 @@ export function FundPeriods() {
               </div>
             </div>
 
-            {/* QR placeholder */}
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5 text-center">
-              <QrCode size={24} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-xs font-medium text-slate-600">QR thanh toán</p>
-              <p className="text-xs text-slate-400 mt-1">Sắp ra mắt</p>
+            {/* QR thanh toán */}
+            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <QrCode size={15} className="text-indigo-500" />QR thanh toán
+                </h3>
+                {bankInfo && buildQrUrl(qrPeriodId) && (
+                  <button onClick={() => setShowQrModal(true)}
+                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    title="Phóng to QR">
+                    <Maximize2 size={13} />
+                  </button>
+                )}
+              </div>
+
+              {!bankInfo ? (
+                <div className="text-center py-4">
+                  <QrCode size={28} className="mx-auto text-slate-200 mb-2" />
+                  <p className="text-xs text-slate-500 font-medium">Chưa cấu hình tài khoản</p>
+                  <p className="text-xs text-slate-400 mt-1">Vào Cài đặt → Thanh toán để thêm thông tin ngân hàng</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Period selector */}
+                  {commonPeriods.length > 1 && (
+                    <select value={qrPeriodId} onChange={e => setQrPeriodId(e.target.value)}
+                      className="input-base text-xs py-1.5 w-full">
+                      {commonPeriods.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* QR image */}
+                  {buildQrUrl(qrPeriodId) ? (
+                    <div className="flex justify-center">
+                      <img
+                        src={buildQrUrl(qrPeriodId)!}
+                        alt="QR thanh toán"
+                        className="w-40 h-40 rounded-lg border border-slate-100"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex justify-center py-3">
+                      <div className="w-40 h-40 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
+                        <QrCode size={32} className="text-slate-200" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bank info */}
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Ngân hàng</span>
+                      <span className="font-semibold text-slate-800">{bankInfo.bank_code}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Số tài khoản</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono font-semibold text-slate-800">{bankInfo.bank_account_number}</span>
+                        <button onClick={copyAcctNumber}
+                          className="p-0.5 rounded hover:bg-slate-100 text-slate-400 hover:text-indigo-500 transition-colors"
+                          title="Copy số tài khoản">
+                          {copiedAcct ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Chủ tài khoản</span>
+                      <span className="font-semibold text-slate-800 text-right max-w-[60%] truncate">{bankInfo.bank_account_name}</span>
+                    </div>
+                    {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
+                      <div className="flex justify-between pt-1 border-t border-slate-50">
+                        <span className="text-slate-500">Số tiền</span>
+                        <span className="font-bold text-indigo-700">
+                          {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1345,6 +1461,62 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             rows={2} className="input-base resize-none" placeholder="Thông tin thêm về kỳ quỹ..." />
         </div>
       </form>
+    </Modal>
+
+    {/* QR Fullscreen Modal */}
+    <Modal
+      isOpen={showQrModal}
+      onClose={() => setShowQrModal(false)}
+      title="QR thanh toán"
+      size="sm"
+    >
+      <div className="flex flex-col items-center gap-4 py-2">
+        {commonPeriods.length > 1 && (
+          <select value={qrPeriodId} onChange={e => setQrPeriodId(e.target.value)}
+            className="input-base text-sm py-2 w-full">
+            {commonPeriods.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        )}
+        {buildQrUrl(qrPeriodId) && (
+          <img
+            src={buildQrUrl(qrPeriodId)!}
+            alt="QR thanh toán"
+            className="w-64 h-64 rounded-xl border border-slate-100"
+          />
+        )}
+        {bankInfo && (
+          <div className="w-full rounded-lg bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Ngân hàng</span>
+              <span className="font-bold">{bankInfo.bank_code}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Số tài khoản</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
+                <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-indigo-500">
+                  {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Chủ tài khoản</span>
+              <span className="font-bold">{bankInfo.bank_account_name}</span>
+            </div>
+            {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
+              <div className="flex justify-between pt-2 border-t border-slate-200">
+                <span className="text-slate-500">Số tiền đóng quỹ</span>
+                <span className="font-bold text-indigo-700 text-base">
+                  {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        <p className="text-xs text-slate-400 text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
+      </div>
     </Modal>
 
     {/* Import Excel Modal */}
