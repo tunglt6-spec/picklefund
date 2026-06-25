@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet } from 'lucide-react'
+import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -44,6 +45,8 @@ export function TreasurerIncome() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK, fundPeriodId: defaultPeriodId })
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isBulkConfirming, setIsBulkConfirming] = useState(false)
 
   const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
   const miniContribs   = contributions.filter(c => c.fundSource === 'MINI')
@@ -73,6 +76,63 @@ export function TreasurerIncome() {
       notes: c.notes ?? '',
     })
     setShowModal(true)
+  }
+
+  const unconfirmedIds = contributions.filter(c => !c.isConfirmed).map(c => c.id)
+  const allUnconfirmedSelected = unconfirmedIds.length > 0 && unconfirmedIds.every(id => selectedIds.has(id))
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (allUnconfirmedSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(unconfirmedIds))
+    }
+  }
+
+  const bulkConfirm = async () => {
+    if (!selectedIds.size) return
+    setIsBulkConfirming(true)
+    try {
+      const ids = [...selectedIds]
+      const res = await api.post('/contributions/bulk-confirm', { ids })
+      const confirmed = res.data?.data?.confirmed ?? 0
+      save(contributions.map(c => selectedIds.has(c.id) ? { ...c, isConfirmed: true } : c))
+      setSelectedIds(new Set())
+      toast.success(`Đã xác nhận ${confirmed} khoản thu`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xác nhận hàng loạt thất bại')
+    } finally {
+      setIsBulkConfirming(false)
+    }
+  }
+
+  const exportExcel = () => {
+    const rows = contributions.map(c => {
+      const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
+      const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
+      return {
+        'Nguồn quỹ': isMiniRow ? 'Quỹ Mini' : 'Quỹ Chung',
+        'Thành viên / Người nộp': isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
+        'Kỳ quỹ / Loại': isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
+        'Ngày đóng': c.paymentDate ?? '',
+        'Số tiền (VNĐ)': c.amount,
+        'Hình thức': c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
+        'Trạng thái': c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+        'Ghi chú': c.notes ?? '',
+      }
+    })
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Khoản thu')
+    XLSX.writeFile(wb, `Khoan_thu_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
   const toggleConfirm = async (id: string) => {
@@ -341,9 +401,16 @@ export function TreasurerIncome() {
         title="Nhập Khoản Thu"
         subtitle="Ghi nhận thu quỹ cho Quỹ Chung và Quỹ Mini"
         actions={
-          <Button onClick={openCreate}>
-            <Plus size={14} />Ghi nhận thu
-          </Button>
+          <div className="flex items-center gap-2">
+            {contributions.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={exportExcel}>
+                <Download size={14} />Xuất Excel
+              </Button>
+            )}
+            <Button onClick={openCreate}>
+              <Plus size={14} />Ghi nhận thu
+            </Button>
+          </div>
         }
       />
 
@@ -388,6 +455,20 @@ export function TreasurerIncome() {
               </div>
             </div>
 
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                <span className="text-sm font-medium text-indigo-700">Đã chọn {selectedIds.size} khoản chưa xác nhận</span>
+                <button
+                  onClick={bulkConfirm}
+                  disabled={isBulkConfirming}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                >
+                  <CheckCircle size={13} />{isBulkConfirming ? 'Đang xử lý…' : `Xác nhận (${selectedIds.size})`}
+                </button>
+                <button onClick={() => setSelectedIds(new Set())} className="text-xs text-indigo-500 hover:text-indigo-700">Bỏ chọn</button>
+              </div>
+            )}
+
             {contributions.length === 0 ? (
               <div className="bg-white rounded-xl border border-dashed border-slate-200 py-10 text-center">
                 <p className="text-sm text-slate-400">Chưa có khoản thu nào. Bấm "Ghi nhận thu" để bắt đầu.</p>
@@ -397,6 +478,16 @@ export function TreasurerIncome() {
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50">
                     <tr>
+                      <th className="px-3 py-3 w-8">
+                        <input
+                          type="checkbox"
+                          checked={allUnconfirmedSelected}
+                          onChange={toggleSelectAll}
+                          disabled={unconfirmedIds.length === 0}
+                          className="rounded border-slate-300 text-indigo-600 cursor-pointer disabled:opacity-40"
+                          title="Chọn tất cả chưa xác nhận"
+                        />
+                      </th>
                       <th className="text-left px-4 py-3 font-semibold text-slate-600">Nguồn quỹ</th>
                       <th className="text-left px-4 py-3 font-semibold text-slate-600">Thành viên / Người nộp</th>
                       <th className="text-left px-4 py-3 font-semibold text-slate-600">Kỳ quỹ / Loại</th>
@@ -414,6 +505,16 @@ export function TreasurerIncome() {
                       const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
                       return (
                         <tr key={c.id} className={!c.isConfirmed ? 'bg-amber-50/40' : ''}>
+                          <td className="px-3 py-3">
+                            {!c.isConfirmed && (
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(c.id)}
+                                onChange={() => toggleSelect(c.id)}
+                                className="rounded border-slate-300 text-indigo-600 cursor-pointer"
+                              />
+                            )}
+                          </td>
                           <td className="px-4 py-3">
                             {isMiniRow
                               ? <Badge variant="indigo">Quỹ Mini</Badge>
