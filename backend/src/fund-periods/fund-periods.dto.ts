@@ -1,67 +1,75 @@
-import { IsString, IsNumber, IsOptional, IsPositive, IsDateString, IsInt, Min } from 'class-validator'
-import { Type } from 'class-transformer'
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsDateString,
+  IsInt,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateFundPeriodDto {
   @IsString()
-  name: string
+  name: string;
 
   @IsDateString()
-  startDate: string
+  startDate: string;
 
   @IsDateString()
-  endDate: string
+  endDate: string;
 
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  contributionAmount: number
+  contributionAmount: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  totalSessions?: number
+  totalSessions?: number;
 
   @IsOptional()
   @IsString()
-  notes?: string
+  notes?: string;
 
   @IsOptional()
   @IsString()
-  type?: string
+  type?: string;
 }
 
 export class UpdateFundPeriodStatusDto {
   @IsString()
-  status: 'draft' | 'active' | 'closed'
+  status: 'draft' | 'active' | 'closed';
 }
 
 export class UpdateFundPeriodDto {
   @IsOptional()
   @IsString()
-  name?: string
+  name?: string;
 
   @IsOptional()
   @IsDateString()
-  startDate?: string
+  startDate?: string;
 
   @IsOptional()
   @IsDateString()
-  endDate?: string
+  endDate?: string;
 
   @IsOptional()
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  contributionAmount?: number
+  contributionAmount?: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  totalSessions?: number
+  totalSessions?: number;
 
   @IsOptional()
   @IsString()
-  notes?: string
+  notes?: string;
 }

@@ -1,16 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import * as nodemailer from 'nodemailer'
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name)
-  private transporter: nodemailer.Transporter | null = null
+  private readonly logger = new Logger(EmailService.name);
+  private transporter: nodemailer.Transporter | null = null;
 
   constructor(private config: ConfigService) {
-    const host = this.config.get<string>('SMTP_HOST')
-    const user = this.config.get<string>('SMTP_USER')
-    const pass = this.config.get<string>('SMTP_PASS')
+    const host = this.config.get<string>('SMTP_HOST');
+    const user = this.config.get<string>('SMTP_USER');
+    const pass = this.config.get<string>('SMTP_PASS');
 
     if (host && user && pass) {
       this.transporter = nodemailer.createTransport({
@@ -18,27 +18,29 @@ export class EmailService {
         port: this.config.get<number>('SMTP_PORT') ?? 587,
         secure: false,
         auth: { user, pass },
-      })
-      this.logger.log('[Email] SMTP configured')
+      });
+      this.logger.log('[Email] SMTP configured');
     } else {
-      this.logger.warn('[Email] SMTP not configured — email channel disabled')
+      this.logger.warn('[Email] SMTP not configured — email channel disabled');
     }
   }
 
   get isEnabled(): boolean {
-    return this.transporter !== null
+    return this.transporter !== null;
   }
 
   async send(to: string, subject: string, html: string): Promise<boolean> {
-    if (!this.transporter) return false
+    if (!this.transporter) return false;
     try {
-      const from = this.config.get<string>('SMTP_FROM') ?? 'PickleFund <noreply@picklefund.app>'
-      await this.transporter.sendMail({ from, to, subject, html })
-      this.logger.log(`[Email] Sent to ${to}: ${subject}`)
-      return true
+      const from =
+        this.config.get<string>('SMTP_FROM') ??
+        'PickleFund <noreply@picklefund.app>';
+      await this.transporter.sendMail({ from, to, subject, html });
+      this.logger.log(`[Email] Sent to ${to}: ${subject}`);
+      return true;
     } catch (err: any) {
-      this.logger.warn(`[Email] Send failed to ${to}: ${err.message}`)
-      return false
+      this.logger.warn(`[Email] Send failed to ${to}: ${err.message}`);
+      return false;
     }
   }
 
@@ -62,6 +64,6 @@ export class EmailService {
     <div class="footer">Email này được gửi tự động từ PickleFund. Vui lòng không phản hồi.</div>
   </div>
 </body>
-</html>`
+</html>`;
   }
 }

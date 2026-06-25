@@ -1,76 +1,88 @@
-import { IsString, IsNumber, IsOptional, IsPositive, IsDateString, IsEnum, IsUrl } from 'class-validator'
-import { Type } from 'class-transformer'
-import type { FundSource, AllocationRule, MiniExpenseType } from '@prisma/client'
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsDateString,
+  IsEnum,
+  IsUrl,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import type {
+  FundSource,
+  AllocationRule,
+  MiniExpenseType,
+} from '@prisma/client';
 
 export class CreateExpenseDto {
   @IsEnum(['COMMON', 'MINI'])
-  fundSource: FundSource
+  fundSource: FundSource;
 
   @IsOptional()
   @IsString()
-  fundPeriodId?: string
+  fundPeriodId?: string;
 
   @IsOptional()
   @IsString()
-  attendanceSessionId?: string
+  attendanceSessionId?: string;
 
   @IsOptional()
   @IsEnum(['EQUAL', 'BY_ATTENDANCE', 'CUSTOM'])
-  allocationRule?: AllocationRule
+  allocationRule?: AllocationRule;
 
   @IsOptional()
   @IsString()
-  categoryId?: string
+  categoryId?: string;
 
   @IsOptional()
   @IsEnum(['PRIZE', 'EQUIPMENT', 'FOOD', 'VENUE', 'OTHER'])
-  miniExpenseType?: MiniExpenseType
+  miniExpenseType?: MiniExpenseType;
 
   @IsOptional()
   @IsString()
-  receiverName?: string
+  receiverName?: string;
 
   @IsOptional()
   @IsString()
-  relatedMinigameId?: string
+  relatedMinigameId?: string;
 
   @IsString()
-  description: string
+  description: string;
 
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  amount: number
+  amount: number;
 
   @IsOptional()
   @IsDateString()
-  expenseDate?: string
+  expenseDate?: string;
 
   @IsOptional()
   @IsUrl()
-  receiptUrl?: string
+  receiptUrl?: string;
 }
 
 export class UpdateExpenseDto {
   @IsOptional()
   @IsString()
-  description?: string
+  description?: string;
 
   @IsOptional()
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  amount?: number
+  amount?: number;
 
   @IsOptional()
   @IsDateString()
-  expenseDate?: string
+  expenseDate?: string;
 
   @IsOptional()
   @IsUrl()
-  receiptUrl?: string
+  receiptUrl?: string;
 
   @IsOptional()
   @IsString()
-  notes?: string
+  notes?: string;
 }

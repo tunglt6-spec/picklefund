@@ -1,7 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common'
-import { AuditLogsService } from './audit-logs.service'
-import { CurrentUser, Roles } from '../common/decorators'
-import { ok } from '../common/response'
+import { Controller, Get, Query } from '@nestjs/common';
+import { AuditLogsService } from './audit-logs.service';
+import { CurrentUser, Roles } from '../common/decorators';
+import { ok } from '../common/response';
 
 @Controller('audit-logs')
 export class AuditLogsController {
@@ -23,6 +23,6 @@ export class AuditLogsController {
         search: search || undefined,
         limit: limit ? parseInt(limit, 10) : 100,
       }),
-    )
+    );
   }
 }

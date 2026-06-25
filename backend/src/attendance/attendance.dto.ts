@@ -1,41 +1,48 @@
-import { IsString, IsNumber, IsOptional, IsPositive, IsDateString, IsNotEmpty } from 'class-validator'
-import { Type } from 'class-transformer'
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsDateString,
+  IsNotEmpty,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateAttendanceSessionDto {
   @IsString()
   @IsNotEmpty()
-  fundPeriodId: string
+  fundPeriodId: string;
 
   @IsDateString()
-  sessionDate: string
+  sessionDate: string;
 
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  courtFee: number
+  courtFee: number;
 
   @IsOptional()
   @IsString()
-  courtName?: string
+  courtName?: string;
 
   @IsOptional()
   @IsString()
-  startTime?: string
+  startTime?: string;
 
   @IsOptional()
   @IsString()
-  endTime?: string
+  endTime?: string;
 
   @IsOptional()
   @IsString()
-  notes?: string
+  notes?: string;
 }
 
 export class UpdateAttendanceRecordDto {
   @IsString()
   @IsNotEmpty()
-  memberId: string
+  memberId: string;
 
   @IsString()
-  status: 'PRESENT' | 'ABSENT'
+  status: 'PRESENT' | 'ABSENT';
 }

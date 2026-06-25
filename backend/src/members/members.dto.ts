@@ -1,27 +1,34 @@
-import { IsString, IsEmail, IsOptional, IsDateString, IsNotEmpty, MaxLength } from 'class-validator'
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsDateString,
+  IsNotEmpty,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  fullName: string
+  fullName: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  phone?: string
+  phone?: string;
 
   @IsOptional()
   @IsEmail()
-  email?: string
+  email?: string;
 
   @IsDateString()
-  joinDate: string
+  joinDate: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  notes?: string
+  notes?: string;
 }
 
 export class UpdateMemberDto {
@@ -29,27 +36,27 @@ export class UpdateMemberDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  fullName?: string
+  fullName?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  phone?: string
+  phone?: string;
 
   @IsOptional()
   @IsEmail()
-  email?: string
+  email?: string;
 
   @IsOptional()
   @IsDateString()
-  joinDate?: string
+  joinDate?: string;
 
   @IsOptional()
   @IsString()
-  status?: string
+  status?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  notes?: string
+  notes?: string;
 }

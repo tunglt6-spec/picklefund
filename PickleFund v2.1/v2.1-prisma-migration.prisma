@@ -1,0 +1,270 @@
+// ============================================
+// PICKLEFUND V2.1 - PRISMA SCHEMA UPDATE
+// ============================================
+// File: prisma/schema.prisma (Add these models)
+
+// Sau dòng cuối của schema.prisma hiện tại, thêm:
+
+// ============================================
+// AI ACTION CENTER (V2.1 - CRITICAL)
+// ============================================
+
+model AIAction {
+  id                String      @id @default(cuid())
+  clubId            String
+  
+  // AI Proposal
+  proposedBy        String      // 'MAIKA' | 'LISA' | 'HERMES'
+  actionType        String      // Enum: SEND_REMINDER, SEND_REPORT, TRANSFER_MONEY, etc.
+  targetId          String?     // Member ID, Fund ID, Event ID, etc.
+  
+  // Action Details
+  title             String
+  description       String      @db.LongText
+  payload           Json        // Custom data for the action
+  
+  // Risk Assessment
+  riskLevel         String      @default("LOW")     // 'LOW' | 'MEDIUM' | 'HIGH'
+  requiresApproval  Boolean     @default(false)
+  
+  // Confidence & Impact
+  confidenceScore   Float       @default(0.0)       // 0.0 to 1.0
+  estimatedImpact   String?     @db.LongText
+  successCriteria   String?     @db.LongText
+  
+  // Status & Tracking
+  status            String      @default("PENDING")  // 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXECUTING' | 'DONE' | 'FAILED'
+  
+  approvedBy        String?     // User ID if manually approved
+  approvedAt        DateTime?
+  approvalComment   String?
+  
+  executedAt        DateTime?
+  result            String?     // 'SUCCESS' | 'FAILED' | 'PARTIAL'
+  errorMessage      String?     @db.LongText
+  executionDetails  Json?
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Relations
+  approvalQueue     ActionApprovalQueue[]
+  auditLogs         AuditLog[]
+  
+  @@index([clubId, status])
+  @@index([proposedBy])
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+// ============================================
+// APPROVAL QUEUE (V2.1)
+// ============================================
+
+model ActionApprovalQueue {
+  id                String      @id @default(cuid())
+  actionId          String
+  action            AIAction    @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  
+  // Approver Info
+  approverId        String      // User ID of approver
+  approverRole      String      // 'MANAGER' | 'ADMIN' | 'TREASURER'
+  
+  // Approval Status
+  status            String      @default("PENDING")  // 'PENDING' | 'APPROVED' | 'REJECTED'
+  approvedAt        DateTime?
+  comment           String?     @db.LongText
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([actionId])
+  @@index([approverId, status])
+  @@index([createdAt])
+}
+
+// ============================================
+// ENHANCED AUDIT LOG (V2.1)
+// ============================================
+
+model AuditLog {
+  id                String      @id @default(cuid())
+  clubId            String
+  
+  // Action Reference
+  actionId          String?
+  action            AIAction?   @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  
+  // Event Details
+  eventType         String      // 'CREATED' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'FAILED'
+  actorType         String      // 'AI' | 'HUMAN'
+  actorId           String      // AI name or User ID
+  
+  // Status Change
+  resourceType      String      // 'AIAction' | 'Fund' | 'Member' | etc.
+  resourceId        String
+  oldStatus         String?
+  newStatus         String?
+  
+  // Details
+  details           Json?       // Custom data
+  changes           Json?       // Before/after snapshot
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  
+  @@index([clubId, eventType])
+  @@index([actionId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+// ============================================
+// AI FEEDBACK & LEARNING (V2.1)
+// ============================================
+
+model AIFeedback {
+  id                String      @id @default(cuid())
+  clubId            String
+  
+  // Action Reference
+  actionId          String
+  actionType        String
+  proposedBy        String      // AI name
+  
+  // Feedback
+  feedbackType      String      // 'POSITIVE' | 'NEGATIVE' | 'PARTIAL'
+  feedbackScore     Int         // 1-10 scale
+  feedbackText      String?     @db.LongText
+  
+  // Result Data
+  expectedOutcome   String?
+  actualOutcome     String?
+  resultMetrics     Json?       // e.g., { payment_rate: 0.85, engagement: 0.72 }
+  
+  // Metadata
+  createdAt         DateTime    @default(now())
+  
+  @@index([clubId, proposedBy])
+  @@index([feedbackType])
+  @@index([createdAt])
+}
+
+// ============================================
+// APPROVAL RULE (V2.1 - Configuration)
+// ============================================
+
+model ApprovalRule {
+  id                String      @id @default(cuid())
+  clubId            String
+  
+  // Rule Definition
+  actionType        String      // e.g., "SEND_REMINDER", "TRANSFER_MONEY"
+  riskLevel         String      // 'LOW' | 'MEDIUM' | 'HIGH'
+  
+  // Approval Config
+  requiresApproval  Boolean
+  autoApproveDelay  Int         @default(300)  // seconds (5 min for LOW risk)
+  approverRole      String      // 'AUTO' | 'MANAGER' | 'ADMIN' | 'TREASURER'
+  maxApprovalTime   Int         @default(3600) // seconds
+  
+  // Notification
+  notifyChannels    String      // JSON array: ["telegram", "email", "in_app"]
+  
+  // Active
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([clubId, actionType])
+  @@unique([clubId, actionType, riskLevel])
+}
+
+// ============================================
+// ACTION ANALYTICS (V2.1 - Reporting)
+// ============================================
+
+model ActionAnalytics {
+  id                String      @id @default(cuid())
+  clubId            String
+  
+  // Metrics
+  totalActions      Int         @default(0)
+  autoApprovedCount Int         @default(0)
+  manualApprovedCount Int        @default(0)
+  rejectedCount     Int         @default(0)
+  executedCount     Int         @default(0)
+  failedCount       Int         @default(0)
+  
+  // Performance
+  avgApprovalTime   Int?        // milliseconds
+  avgExecutionTime  Int?        // milliseconds
+  successRate       Float?      // 0.0 to 1.0
+  
+  // Distribution
+  actionTypeBreakdown Json?     // { "SEND_REMINDER": 45, "SEND_REPORT": 30 }
+  aiSourceBreakdown  Json?      // { "MAIKA": 60, "LISA": 25, "HERMES": 15 }
+  
+  // Time Period
+  period            String      @default("daily")  // 'hourly' | 'daily' | 'weekly' | 'monthly'
+  date              DateTime    @default(now())
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([clubId, date])
+  @@index([period])
+}
+
+// ============================================
+// MIGRATION SQL GENERATION
+// ============================================
+/*
+CREATE TABLE AIAction (
+  id TEXT PRIMARY KEY,
+  clubId TEXT NOT NULL,
+  proposedBy TEXT NOT NULL,
+  actionType TEXT NOT NULL,
+  targetId TEXT,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  payload JSONB,
+  riskLevel TEXT DEFAULT 'LOW',
+  requiresApproval BOOLEAN DEFAULT false,
+  confidenceScore REAL DEFAULT 0.0,
+  estimatedImpact TEXT,
+  successCriteria TEXT,
+  status TEXT DEFAULT 'PENDING',
+  approvedBy TEXT,
+  approvedAt TIMESTAMP,
+  approvalComment TEXT,
+  executedAt TIMESTAMP,
+  result TEXT,
+  errorMessage TEXT,
+  executionDetails JSONB,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_AIAction_clubId_status ON AIAction(clubId, status);
+CREATE INDEX idx_AIAction_proposedBy ON AIAction(proposedBy);
+CREATE INDEX idx_AIAction_riskLevel ON AIAction(riskLevel);
+CREATE INDEX idx_AIAction_createdAt ON AIAction(createdAt);
+
+... [similar for other tables]
+*/
+
+// ============================================
+// HOW TO APPLY
+// ============================================
+/*
+1. Add models to prisma/schema.prisma
+2. Run migration:
+   npx prisma migrate dev --name add_v2_1_ai_action_center
+3. Update Prisma client:
+   npx prisma generate
+4. Test database connections:
+   npx prisma db push
+*/

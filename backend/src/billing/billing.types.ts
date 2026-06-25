@@ -1,13 +1,13 @@
-export type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE'
+export type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
 
 export interface PlanConfig {
-  tier: PlanTier
-  name: string
-  maxMembers: number
-  maxClubs: number
-  aiFeatures: boolean
-  telegramBot: boolean
-  priceMonthly: number
+  tier: PlanTier;
+  name: string;
+  maxMembers: number;
+  maxClubs: number;
+  aiFeatures: boolean;
+  telegramBot: boolean;
+  priceMonthly: number;
 }
 
 export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
@@ -47,17 +47,17 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
     telegramBot: true,
     priceMonthly: 999000,
   },
-}
+};
 
 export interface SubscriptionStatus {
-  clubId: string
-  tier: PlanTier
-  plan: PlanConfig
-  expiresAt: string | null
-  isActive: boolean
-  daysRemaining: number | null
+  clubId: string;
+  tier: PlanTier;
+  plan: PlanConfig;
+  expiresAt: string | null;
+  isActive: boolean;
+  daysRemaining: number | null;
   usage: {
-    members: number
-    clubs: number
-  }
+    members: number;
+    clubs: number;
+  };
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Send, CheckCircle, Clock, Phone, MessageSquare } from 'lucide-react'
+import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import api from '../../lib/api'
 
 export function TreasurerReminders() {
   const isMobile = useIsMobile()
@@ -17,6 +18,8 @@ export function TreasurerReminders() {
 
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set())
+  const [sendingAll, setSendingAll] = useState(false)
 
   const commonContribs = data.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
 
@@ -40,15 +43,57 @@ export function TreasurerReminders() {
       return contrib && !contrib.isConfirmed
     })
 
-  const sendReminder = (memberId: string, name: string, channel: 'zalo' | 'sms') => {
-    setSentIds(prev => new Set([...prev, memberId]))
-    toast.success(`Đã gửi nhắc nhở qua ${channel === 'zalo' ? 'Zalo' : 'SMS'} tới ${name}`)
+  const dispatchReminder = async (member: typeof unpaidMembers[0]) => {
+    if (!member.userId) return false
+    const periodName = activePeriod?.name ?? 'kỳ quỹ hiện tại'
+    const amount = activePeriod?.contributionAmount ?? 0
+    await api.post('/hermes/dispatch', {
+      eventType: 'payment_reminder',
+      clubId,
+      targetUserId: member.userId,
+      title: 'Nhắc nhở đóng quỹ',
+      body: `Bạn chưa đóng quỹ ${periodName}${amount ? ` (${formatVND(amount)})` : ''}. Vui lòng thanh toán sớm.`,
+      priority: 'MEDIUM',
+    })
+    return true
   }
 
-  const sendAll = () => {
-    const ids = unpaidMembers.map(m => m.id)
-    setSentIds(prev => new Set([...prev, ...ids]))
-    toast.success(`Đã gửi nhắc nhở tới ${ids.length} thành viên chưa đóng quỹ`)
+  const sendReminder = async (member: typeof unpaidMembers[0]) => {
+    if (!member.userId) {
+      toast.error(`${member.fullName} chưa có tài khoản app — không thể gửi thông báo`)
+      return
+    }
+    setLoadingIds(prev => new Set([...prev, member.id]))
+    try {
+      await dispatchReminder(member)
+      setSentIds(prev => new Set([...prev, member.id]))
+      toast.success(`Đã gửi nhắc nhở tới ${member.fullName}`)
+    } catch {
+      toast.error(`Gửi thất bại cho ${member.fullName}`)
+    } finally {
+      setLoadingIds(prev => { const s = new Set(prev); s.delete(member.id); return s })
+    }
+  }
+
+  const sendAll = async () => {
+    const withAccount = unpaidMembers.filter(m => m.userId)
+    const noAccount = unpaidMembers.filter(m => !m.userId)
+    if (withAccount.length === 0) {
+      toast.error('Không có thành viên nào có tài khoản app để gửi thông báo')
+      return
+    }
+    setSendingAll(true)
+    try {
+      const results = await Promise.allSettled(withAccount.map(m => dispatchReminder(m)))
+      const ok = results.filter(r => r.status === 'fulfilled').length
+      setSentIds(prev => new Set([...prev, ...withAccount.map(m => m.id)]))
+      if (ok > 0) toast.success(`Đã gửi nhắc nhở tới ${ok} thành viên`)
+      if (noAccount.length > 0) toast(`${noAccount.length} thành viên chưa có tài khoản app bị bỏ qua`, { icon: 'ℹ️' })
+    } catch {
+      toast.error('Có lỗi khi gửi nhắc nhở')
+    } finally {
+      setSendingAll(false)
+    }
   }
 
   const amount = activePeriod?.contributionAmount ?? 1000000
@@ -63,8 +108,12 @@ export function TreasurerReminders() {
             {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} · {formatVND(amount)}/người</div>}
           </div>
           {unpaidMembers.length > 0 && (
-            <button onClick={sendAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
-              <Send size={13} />Nhắc tất cả
+            <button
+              onClick={sendAll}
+              disabled={sendingAll}
+              className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70 disabled:opacity-50"
+            >
+              <Send size={13} />{sendingAll ? 'Đang gửi…' : 'Nhắc tất cả'}
             </button>
           )}
         </div>
@@ -104,14 +153,19 @@ export function TreasurerReminders() {
                     </div>
                     {!sent ? (
                       <div className="flex gap-2 mt-3">
-                        <button onClick={() => sendReminder(m.id, m.fullName, 'zalo')}
-                          className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-blue-50 text-blue-600 active:bg-blue-100">
-                          <MessageSquare size={12} />Zalo
-                        </button>
-                        <button onClick={() => sendReminder(m.id, m.fullName, 'sms')}
-                          className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-slate-100 text-slate-600 active:bg-slate-200">
-                          <Phone size={12} />SMS
-                        </button>
+                        {m.userId ? (
+                          <button
+                            onClick={() => sendReminder(m)}
+                            disabled={loadingIds.has(m.id)}
+                            className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-blue-50 text-blue-600 active:bg-blue-100 disabled:opacity-50"
+                          >
+                            <Send size={12} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
+                          </button>
+                        ) : (
+                          <div className="flex-1 h-8 flex items-center justify-center rounded-[10px] text-[11px] text-slate-400 bg-slate-50 border border-dashed border-slate-200">
+                            Chưa có tài khoản app
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="mt-3 flex items-center gap-1 text-[12px] text-emerald-600 font-[600]">
@@ -165,9 +219,11 @@ export function TreasurerReminders() {
         subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
         actions={
           unpaidMembers.length > 0
-            ? <button onClick={sendAll}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors">
-                <Send size={14} />Nhắc tất cả ({unpaidMembers.length})
+            ? <button
+                onClick={sendAll}
+                disabled={sendingAll}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                <Send size={14} />{sendingAll ? 'Đang gửi…' : `Nhắc tất cả (${unpaidMembers.length})`}
               </button>
             : undefined
         }
@@ -242,22 +298,17 @@ export function TreasurerReminders() {
                           : <Badge variant="red" dot>Chưa đóng</Badge>}
                       </td>
                       <td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        {m.userId ? (
                           <button
-                            onClick={() => sendReminder(m.id, m.fullName, 'zalo')}
-                            disabled={sent}
-                            className="h-7 px-2 flex items-center gap-1 rounded-md text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            onClick={() => sendReminder(m)}
+                            disabled={sent || loadingIds.has(m.id)}
+                            className="h-7 px-3 flex items-center gap-1 mx-auto rounded-md text-xs font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
-                            <MessageSquare size={11} />Zalo
+                            <Send size={11} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>
-                          <button
-                            onClick={() => sendReminder(m.id, m.fullName, 'sms')}
-                            disabled={sent}
-                            className="h-7 px-2 flex items-center gap-1 rounded-md text-xs font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          >
-                            <Phone size={11} />SMS
-                          </button>
-                        </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Chưa có tài khoản</span>
+                        )}
                       </td>
                     </tr>
                   )

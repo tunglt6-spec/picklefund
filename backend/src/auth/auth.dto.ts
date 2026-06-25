@@ -1,88 +1,96 @@
-import { IsString, IsBoolean, IsOptional, IsEmail, MinLength, IsNotEmpty, ValidateNested } from 'class-validator'
-import { Type } from 'class-transformer'
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsEmail,
+  MinLength,
+  IsNotEmpty,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class LoginDto {
   @IsString()
   @IsNotEmpty()
-  username: string
+  username: string;
 
   @IsString()
   @IsNotEmpty()
-  password: string
+  password: string;
 
   @IsOptional()
   @IsBoolean()
-  rememberMe?: boolean
+  rememberMe?: boolean;
 }
 
 class RegisterClubInfoDto {
   @IsString()
   @IsNotEmpty()
-  name: string
+  name: string;
 
   @IsString()
   @IsNotEmpty()
-  code: string
+  code: string;
 
   @IsOptional()
   @IsString()
-  address?: string
+  address?: string;
 
   @IsOptional()
   @IsString()
-  contactPhone?: string
+  contactPhone?: string;
 
   @IsOptional()
   @IsEmail()
-  contactEmail?: string
+  contactEmail?: string;
 }
 
 class RegisterAdminDto {
   @IsString()
   @IsNotEmpty()
-  fullName: string
+  fullName: string;
 
   @IsString()
   @IsNotEmpty()
-  username: string
+  username: string;
 
   @IsOptional()
   @IsEmail()
-  email?: string
+  email?: string;
 
   @IsString()
   @MinLength(8)
-  password: string
+  password: string;
 }
 
 export class RegisterClubDto {
   @ValidateNested()
   @Type(() => RegisterClubInfoDto)
-  club: RegisterClubInfoDto
+  club: RegisterClubInfoDto;
 
   @ValidateNested()
   @Type(() => RegisterAdminDto)
-  admin: RegisterAdminDto
+  admin: RegisterAdminDto;
 }
 
 export class RefreshTokenDto {
   @IsString()
   @IsNotEmpty()
-  refreshToken: string
+  refreshToken: string;
 }
 
 export class LogoutDto {
   @IsString()
   @IsNotEmpty()
-  refreshToken: string
+  refreshToken: string;
 }
 
 export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty()
-  oldPassword: string
+  oldPassword: string;
 
   @IsString()
   @MinLength(8)
-  newPassword: string
+  newPassword: string;
 }
