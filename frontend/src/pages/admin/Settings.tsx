@@ -591,8 +591,8 @@ function PaymentTab() {
         bank_account_number: d['bank_account_number'] ?? '',
         bank_account_name: d['bank_account_name'] ?? '',
       })
-    } catch (err: any) {
-      console.error('[PaymentTab] fetchInfo error:', err?.message)
+    } catch {
+      // silently fail — UI keeps previous state
     } finally { setLoading(false) }
   }, [])
 
