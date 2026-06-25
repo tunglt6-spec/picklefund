@@ -999,6 +999,218 @@ export function FundPeriods() {
           </div>
         </Modal>
       )}
+
+      {/* QR Fullscreen Modal */}
+      <Modal
+        open={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        title="QR thanh toán"
+        size="sm"
+      >
+        <div className="flex flex-col items-center gap-4 py-2">
+          {commonPeriods.length > 1 && (
+            <select value={qrPeriodId} onChange={e => setQrPeriodId(e.target.value)}
+              className="input-base text-sm py-2 w-full">
+              {commonPeriods.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
+          {buildQrUrl(qrPeriodId) && (
+            <img
+              src={buildQrUrl(qrPeriodId)!}
+              alt="QR thanh toán"
+              className="w-64 h-64 rounded-xl border border-slate-100"
+            />
+          )}
+          {bankInfo && (
+            <div className="w-full rounded-lg bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Ngân hàng</span>
+                <span className="font-bold">{bankInfo.bank_code}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Số tài khoản</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
+                  <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-indigo-500">
+                    {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Chủ tài khoản</span>
+                <span className="font-bold">{bankInfo.bank_account_name}</span>
+              </div>
+              {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
+                <div className="flex justify-between pt-2 border-t border-slate-200">
+                  <span className="text-slate-500">Số tiền đóng quỹ</span>
+                  <span className="font-bold text-indigo-700 text-base">
+                    {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          <p className="text-xs text-slate-400 text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
+        </div>
+      </Modal>
+
+      {/* Import Excel Modal */}
+      <Modal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Nhập đóng quỹ từ Excel"
+        size="lg"
+        footer={
+          importResult ? (
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { resetImport() }}>Nhập thêm</Button>
+              <Button onClick={() => setShowImport(false)}>Đóng</Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowImport(false)}>Hủy</Button>
+              <Button
+                disabled={importRows.length === 0 || !importPeriodId || importLoading}
+                onClick={handleConfirmImport}
+              >
+                {importLoading ? 'Đang nhập...' : `Xác nhận nhập ${importRows.length > 0 ? `(${importRows.length} dòng)` : ''}`}
+              </Button>
+            </div>
+          )
+        }
+      >
+        <div className="space-y-4">
+          {importResult ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-100">
+                <CheckCircle2 size={20} className="text-green-500 shrink-0" />
+                <div>
+                  <p className="font-medium text-green-800">Nhập thành công {importResult.imported}/{importResult.total} khoản</p>
+                  {importResult.errors.length > 0 && (
+                    <p className="text-sm text-green-700">{importResult.errors.length} dòng bị lỗi — xem bên dưới</p>
+                  )}
+                </div>
+              </div>
+              {importResult.errors.length > 0 && (
+                <div className="rounded-lg border border-red-100 overflow-hidden">
+                  <div className="bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 flex items-center gap-1.5">
+                    <AlertCircle size={13} />Dòng bị lỗi ({importResult.errors.length})
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b border-red-100 text-xs text-slate-500">
+                      <th className="text-left px-4 py-2">Dòng</th>
+                      <th className="text-left px-4 py-2">Họ và tên</th>
+                      <th className="text-left px-4 py-2">Lỗi</th>
+                    </tr></thead>
+                    <tbody>
+                      {importResult.errors.map((e, i) => (
+                        <tr key={i} className="border-b border-red-50">
+                          <td className="px-4 py-2 text-slate-500">{e.row}</td>
+                          <td className="px-4 py-2 font-medium">{e.memberName}</td>
+                          <td className="px-4 py-2 text-red-600">{e.error}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 border border-indigo-100">
+                <div>
+                  <p className="text-sm font-medium text-indigo-800">Bước 1 — Tải file mẫu</p>
+                  <p className="text-xs text-indigo-600 mt-0.5">Điền đúng cột: Họ và tên, Số tiền, Ngày đóng, Ghi chú</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                  <Download size={13} />Tải mẫu
+                </Button>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                  Bước 2 — Chọn kỳ quỹ để nhập <span className="text-red-500">*</span>
+                </label>
+                <select value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base text-sm">
+                  <option value="">-- Chọn kỳ quỹ --</option>
+                  {commonPeriods.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.status === 'active' ? 'Đang mở' : p.status === 'draft' ? 'Chuẩn bị' : 'Đã đóng'})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Bước 3 — Tải lên file Excel</label>
+                <label
+                  className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors"
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
+                >
+                  <Upload size={24} className="text-slate-400" />
+                  <span className="text-sm text-slate-500">Kéo thả file vào đây hoặc <span className="text-indigo-600 font-medium">chọn file</span></span>
+                  <span className="text-xs text-slate-400">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
+                  <input
+                    ref={importFileRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }}
+                  />
+                </label>
+                {importFileError && (
+                  <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} />{importFileError}</p>
+                )}
+              </div>
+              {importRows.length > 0 && (
+                <div className="rounded-lg border border-slate-100 overflow-hidden">
+                  <div className="bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 flex items-center justify-between">
+                    <span>Xem trước dữ liệu ({importRows.length} dòng)</span>
+                    <button onClick={resetImport} className="text-slate-400 hover:text-red-500 text-xs">Xóa</button>
+                  </div>
+                  <div className="overflow-x-auto max-h-56 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="border-b border-slate-100 text-xs text-slate-500">
+                          <th className="text-left px-4 py-2">#</th>
+                          <th className="text-left px-4 py-2">Họ và tên</th>
+                          <th className="text-right px-4 py-2">Số tiền</th>
+                          <th className="text-left px-4 py-2">Ngày đóng</th>
+                          <th className="text-left px-4 py-2">Ghi chú</th>
+                          <th className="text-center px-4 py-2">Tìm thấy?</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importRows.map((r, i) => {
+                          const found = members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())
+                          return (
+                            <tr key={i} className="border-b border-slate-50">
+                              <td className="px-4 py-1.5 text-slate-400 text-xs">{i + 2}</td>
+                              <td className="px-4 py-1.5 font-medium">{r.memberName}</td>
+                              <td className="px-4 py-1.5 text-right text-indigo-700">{r.amount.toLocaleString('vi-VN')}đ</td>
+                              <td className="px-4 py-1.5 text-slate-500 text-xs">{r.paymentDate || '—'}</td>
+                              <td className="px-4 py-1.5 text-slate-500 text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
+                              <td className="px-4 py-1.5 text-center">
+                                {found
+                                  ? <CheckCircle2 size={14} className="text-green-500 mx-auto" />
+                                  : <AlertCircle size={14} className="text-red-400 mx-auto" title="Không tìm thấy thành viên" />}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {importRows.some(r => !members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())) && (
+                    <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 text-xs text-amber-700 flex items-center gap-1.5">
+                      <AlertCircle size={12} />Một số tên không khớp thành viên — các dòng này sẽ bị bỏ qua khi nhập
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -1461,230 +1673,6 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             rows={2} className="input-base resize-none" placeholder="Thông tin thêm về kỳ quỹ..." />
         </div>
       </form>
-    </Modal>
-
-    {/* QR Fullscreen Modal */}
-    <Modal
-      isOpen={showQrModal}
-      onClose={() => setShowQrModal(false)}
-      title="QR thanh toán"
-      size="sm"
-    >
-      <div className="flex flex-col items-center gap-4 py-2">
-        {commonPeriods.length > 1 && (
-          <select value={qrPeriodId} onChange={e => setQrPeriodId(e.target.value)}
-            className="input-base text-sm py-2 w-full">
-            {commonPeriods.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        )}
-        {buildQrUrl(qrPeriodId) && (
-          <img
-            src={buildQrUrl(qrPeriodId)!}
-            alt="QR thanh toán"
-            className="w-64 h-64 rounded-xl border border-slate-100"
-          />
-        )}
-        {bankInfo && (
-          <div className="w-full rounded-lg bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Ngân hàng</span>
-              <span className="font-bold">{bankInfo.bank_code}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500">Số tài khoản</span>
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
-                <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-indigo-500">
-                  {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Chủ tài khoản</span>
-              <span className="font-bold">{bankInfo.bank_account_name}</span>
-            </div>
-            {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
-              <div className="flex justify-between pt-2 border-t border-slate-200">
-                <span className="text-slate-500">Số tiền đóng quỹ</span>
-                <span className="font-bold text-indigo-700 text-base">
-                  {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        <p className="text-xs text-slate-400 text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
-      </div>
-    </Modal>
-
-    {/* Import Excel Modal */}
-    <Modal
-      isOpen={showImport}
-      onClose={() => setShowImport(false)}
-      title="Nhập đóng quỹ từ Excel"
-      size="lg"
-      footer={
-        importResult ? (
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => { resetImport() }}>Nhập thêm</Button>
-            <Button onClick={() => setShowImport(false)}>Đóng</Button>
-          </div>
-        ) : (
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setShowImport(false)}>Hủy</Button>
-            <Button
-              disabled={importRows.length === 0 || !importPeriodId || importLoading}
-              onClick={handleConfirmImport}
-            >
-              {importLoading ? 'Đang nhập...' : `Xác nhận nhập ${importRows.length > 0 ? `(${importRows.length} dòng)` : ''}`}
-            </Button>
-          </div>
-        )
-      }
-    >
-      <div className="space-y-4">
-        {/* Result view */}
-        {importResult ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-100">
-              <CheckCircle2 size={20} className="text-green-500 shrink-0" />
-              <div>
-                <p className="font-medium text-green-800">Nhập thành công {importResult.imported}/{importResult.total} khoản</p>
-                {importResult.errors.length > 0 && (
-                  <p className="text-sm text-green-700">{importResult.errors.length} dòng bị lỗi — xem bên dưới</p>
-                )}
-              </div>
-            </div>
-            {importResult.errors.length > 0 && (
-              <div className="rounded-lg border border-red-100 overflow-hidden">
-                <div className="bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 flex items-center gap-1.5">
-                  <AlertCircle size={13} />Dòng bị lỗi ({importResult.errors.length})
-                </div>
-                <table className="w-full text-sm">
-                  <thead><tr className="border-b border-red-100 text-xs text-slate-500">
-                    <th className="text-left px-4 py-2">Dòng</th>
-                    <th className="text-left px-4 py-2">Họ và tên</th>
-                    <th className="text-left px-4 py-2">Lỗi</th>
-                  </tr></thead>
-                  <tbody>
-                    {importResult.errors.map((e, i) => (
-                      <tr key={i} className="border-b border-red-50">
-                        <td className="px-4 py-2 text-slate-500">{e.row}</td>
-                        <td className="px-4 py-2 font-medium">{e.memberName}</td>
-                        <td className="px-4 py-2 text-red-600">{e.error}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Step 1: Download template */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 border border-indigo-100">
-              <div>
-                <p className="text-sm font-medium text-indigo-800">Bước 1 — Tải file mẫu</p>
-                <p className="text-xs text-indigo-600 mt-0.5">Điền đúng cột: Họ và tên, Số tiền, Ngày đóng, Ghi chú</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                <Download size={13} />Tải mẫu
-              </Button>
-            </div>
-
-            {/* Step 2: Select period */}
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                Bước 2 — Chọn kỳ quỹ để nhập <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={importPeriodId}
-                onChange={e => setImportPeriodId(e.target.value)}
-                className="input-base text-sm"
-              >
-                <option value="">-- Chọn kỳ quỹ --</option>
-                {commonPeriods.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.status === 'active' ? 'Đang mở' : p.status === 'draft' ? 'Chuẩn bị' : 'Đã đóng'})</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Step 3: Upload file */}
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Bước 3 — Tải lên file Excel</label>
-              <label
-                className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-colors"
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
-              >
-                <Upload size={24} className="text-slate-400" />
-                <span className="text-sm text-slate-500">Kéo thả file vào đây hoặc <span className="text-indigo-600 font-medium">chọn file</span></span>
-                <span className="text-xs text-slate-400">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
-                <input
-                  ref={importFileRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }}
-                />
-              </label>
-              {importFileError && (
-                <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} />{importFileError}</p>
-              )}
-            </div>
-
-            {/* Preview table */}
-            {importRows.length > 0 && (
-              <div className="rounded-lg border border-slate-100 overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 flex items-center justify-between">
-                  <span>Xem trước dữ liệu ({importRows.length} dòng)</span>
-                  <button onClick={resetImport} className="text-slate-400 hover:text-red-500 text-xs">Xóa</button>
-                </div>
-                <div className="overflow-x-auto max-h-56 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-white">
-                      <tr className="border-b border-slate-100 text-xs text-slate-500">
-                        <th className="text-left px-4 py-2">#</th>
-                        <th className="text-left px-4 py-2">Họ và tên</th>
-                        <th className="text-right px-4 py-2">Số tiền</th>
-                        <th className="text-left px-4 py-2">Ngày đóng</th>
-                        <th className="text-left px-4 py-2">Ghi chú</th>
-                        <th className="text-center px-4 py-2">Tìm thấy?</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {importRows.map((r, i) => {
-                        const found = members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())
-                        return (
-                          <tr key={i} className="border-b border-slate-50">
-                            <td className="px-4 py-1.5 text-slate-400 text-xs">{i + 2}</td>
-                            <td className="px-4 py-1.5 font-medium">{r.memberName}</td>
-                            <td className="px-4 py-1.5 text-right text-indigo-700">{r.amount.toLocaleString('vi-VN')}đ</td>
-                            <td className="px-4 py-1.5 text-slate-500 text-xs">{r.paymentDate || '—'}</td>
-                            <td className="px-4 py-1.5 text-slate-500 text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
-                            <td className="px-4 py-1.5 text-center">
-                              {found
-                                ? <CheckCircle2 size={14} className="text-green-500 mx-auto" />
-                                : <AlertCircle size={14} className="text-red-400 mx-auto" title="Không tìm thấy thành viên" />}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {importRows.some(r => !members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())) && (
-                  <div className="px-4 py-2 bg-amber-50 border-t border-amber-100 text-xs text-amber-700 flex items-center gap-1.5">
-                    <AlertCircle size={12} />Một số tên không khớp thành viên — các dòng này sẽ bị bỏ qua khi nhập
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </Modal>
   )
 }
