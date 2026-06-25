@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
-  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign,
+  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download,
 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
@@ -489,6 +490,22 @@ export function Expenses() {
     }
   }
 
+  const exportExcel = () => {
+    const rows = filtered.map(e => ({
+      'Mã chi': e.code,
+      'Nội dung': e.description,
+      'Nguồn quỹ': e.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung',
+      'Ngày chi': e.expenseDate ?? '',
+      'Số tiền (VNĐ)': e.amount,
+      'Phân bổ': e.allocationRule ?? '',
+      'Trạng thái': e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối',
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Chi phí')
+    XLSX.writeFile(wb, `chi-phi-${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }
+
   const isMobile = useIsMobile()
 
   /* ── Mobile layout ── */
@@ -503,11 +520,17 @@ export function Expenses() {
             <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
             <p className="text-[12px] text-slate-400">Quản lý khoản chi của CLB</p>
           </div>
-          <button onClick={() => setShowAdd(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
-            <Plus size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={exportExcel}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+              <Download size={16} />
+            </button>
+            <button onClick={() => setShowAdd(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              <Plus size={18} />
+            </button>
+          </div>
         </div>
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
@@ -583,6 +606,7 @@ export function Expenses() {
               </span>
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
+            <Button variant="outline" size="sm" onClick={exportExcel}><Download size={13} />Xuất Excel</Button>
             <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>
           </div>
         </div>
