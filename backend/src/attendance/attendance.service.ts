@@ -85,9 +85,23 @@ export class AttendanceService {
     return this.prisma.attendanceSession.delete({ where: { id, clubId } });
   }
 
-  async update(id: string, clubId: string, dto: any) {
+  async update(
+    id: string,
+    clubId: string,
+    dto: {
+      sessionDate?: string;
+      courtFee?: number;
+      courtName?: string;
+      location?: string;
+      startTime?: string;
+      endTime?: string;
+      notes?: string;
+      status?: string;
+      [key: string]: unknown;
+    },
+  ) {
     await this.findOne(id, clubId);
-    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto;
+    const { clubId: _c, createdById: _b, id: _id, ...safeDto } = dto as Record<string, unknown>;
     return this.prisma.attendanceSession.update({
       where: { id, clubId },
       data: {
