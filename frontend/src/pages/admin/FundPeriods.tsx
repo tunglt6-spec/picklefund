@@ -373,7 +373,22 @@ export function FundPeriods() {
     const labels: Record<string, string> = { active: 'Đang mở', draft: 'Chuẩn bị', closed: 'Đóng' }
     try {
       await api.patch(`/fund-periods/${p.id}/status`, { status: newStatus })
-      setPeriods(prev => prev.map(x => x.id === p.id ? { ...x, status: newStatus } : x))
+      // Re-fetch to ensure store is in sync with DB
+      const res = await api.get(`/fund-periods?clubId=${clubId}`)
+      const raw = res.data?.data ?? []
+      const updated: FundPeriod[] = raw.map((fp: any) => ({
+        id: fp.id, clubId: fp.clubId, name: fp.name,
+        startDate: fp.startDate?.slice(0, 10) ?? '',
+        endDate: fp.endDate?.slice(0, 10) ?? '',
+        contributionAmount: Number(fp.contributionAmount ?? 0),
+        totalSessions: fp.totalSessions ?? 0,
+        status: fp.status,
+        notes: fp.notes ?? undefined,
+        type: fp.type ?? 'chung',
+        finalizedAt: fp.finalizedAt ?? undefined,
+        createdBy: fp.createdById ?? '',
+      }))
+      savePeriods(clubId, updated)
       toast.success(`Kỳ "${p.name}" → ${labels[newStatus] ?? newStatus}`)
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Cập nhật trạng thái thất bại')
