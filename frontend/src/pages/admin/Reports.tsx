@@ -104,12 +104,22 @@ export function Reports() {
   const { getClubData, setMemberAttendanceSummary } = useClubDataStore()
   const isMobile = useIsMobile()
   const clubData = getClubData(user?.clubId ?? '')
-  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
+  const defaultPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
 
+  // Sync selectedPeriodId to default active period after data loads
   useEffect(() => {
-    if (!user?.clubId) return
-    const params = activePeriod?.id ? `?fundPeriodId=${activePeriod.id}` : ''
+    if (selectedPeriodId || !defaultPeriod?.id) return
+    setSelectedPeriodId(defaultPeriod.id)
+  }, [defaultPeriod?.id])
+
+  const activePeriod = clubData.fundPeriods.find(p => p.id === selectedPeriodId) ?? defaultPeriod
+
+  useEffect(() => {
+    if (!user?.clubId || !activePeriod?.id) return
+    setMemberAttendanceSummary(user.clubId!, []) // reset stale data
+    const params = `?fundPeriodId=${activePeriod.id}`
     api.get(`/attendance/member-summary${params}`).then(res => {
       const raw = res.data?.data ?? []
       setMemberAttendanceSummary(user.clubId!, raw.map((s: any) => ({
@@ -142,10 +152,11 @@ export function Reports() {
   const totalExpenses = filteredExpenses.reduce((a, e) => a + e.amount, 0)
   const balance = totalIncome - totalExpenses
 
-  // Carry-over: cộng dồn số dư từ tất cả kỳ quỹ trước kỳ hiện tại
-  const sortedPeriods = [...clubData.fundPeriods].sort((a, b) =>
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-  )
+  // Carry-over: cộng dồn số dư từ các kỳ quỹ cùng loại trước kỳ hiện tại
+  const activePeriodType = activePeriod?.type ?? 'chung'
+  const sortedPeriods = [...clubData.fundPeriods]
+    .filter(p => (p.type ?? 'chung') === activePeriodType)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
   const activePeriodIndex = sortedPeriods.findIndex(p => p.id === activePeriod?.id)
   const previousPeriods = activePeriodIndex > 0 ? sortedPeriods.slice(0, activePeriodIndex) : []
   const carryOverBalance = previousPeriods.reduce((total, p) => {
@@ -186,11 +197,11 @@ export function Reports() {
   }))
 
   const attSummary = clubData.memberAttendanceSummary ?? []
-  const totalSessionsForRate = attSummary[0]?.totalSessions ?? sessionCount
+  const totalSessionsForRate = sessionCount || attSummary[0]?.totalSessions || 0
 
   const memberAttendance = clubData.members.map(m => {
     const s = attSummary.find(a => a.memberId === m.id)
-    const attended = s?.attendedSessions ?? 0
+    const attended = Math.min(s?.attendedSessions ?? 0, totalSessionsForRate)
     const total = totalSessionsForRate
     return {
       name: m.fullName?.split(' ').slice(-2).join(' ') ?? m.id,
@@ -219,7 +230,7 @@ export function Reports() {
   const memberBillRows = clubData.members.map(m => {
     const contrib = periodContribs.find(x => x.memberId === m.id)
     const summ = attSummary.find(a => a.memberId === m.id)
-    const attended = summ?.attendedSessions ?? 0
+    const attended = Math.min(summ?.attendedSessions ?? 0, sessionCount)
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
     // CHI PHÍ SÂN: chia đều cho tất cả thành viên
     const courtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
@@ -239,9 +250,13 @@ export function Reports() {
     }
   })
 
-  const periodHistory = clubData.fundPeriods.map(p => {
-    const inc = filteredContribs.filter(c => c.isConfirmed && c.fundPeriodId === p.id).reduce((a, c) => a + c.amount, 0)
-    const exp = filteredExpenses.filter(e => e.fundPeriodId === p.id).reduce((a, e) => a + e.amount, 0)
+  const periodHistory = clubData.fundPeriods
+    .filter(p => (p.type ?? 'chung') === activePeriodType)
+    .map(p => {
+    const inc = clubData.contributions.filter(c => c.isConfirmed && c.fundPeriodId === p.id &&
+      (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter)).reduce((a, c) => a + c.amount, 0)
+    const exp = clubData.expenses.filter(e => e.fundPeriodId === p.id &&
+      (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter)).reduce((a, e) => a + e.amount, 0)
     const sodu = inc - exp
     return {
       ky: p.name,
@@ -288,7 +303,24 @@ export function Reports() {
               ))}
             </div>
           </div>
-          {periodName && <p className="text-[12px] text-slate-400 mt-0.5">{periodName}</p>}
+          {clubData.fundPeriods.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Calendar size={12} className="text-slate-400 shrink-0" />
+              <select
+                value={selectedPeriodId}
+                onChange={e => setSelectedPeriodId(e.target.value)}
+                className="text-[12px] font-[600] text-slate-600 bg-transparent outline-none cursor-pointer flex-1"
+              >
+                {[...clubData.fundPeriods]
+                  .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                  .map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="px-4 pt-4 pb-6 space-y-4">
@@ -483,11 +515,22 @@ export function Reports() {
                 </button>
               ))}
             </div>
-            {periodName && (
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
-                <Calendar size={13} className="text-slate-400" />
-                <span className="font-medium">{periodName}</span>
-                <span className="text-slate-400">{periodDate}</span>
+            {clubData.fundPeriods.length > 0 && (
+              <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+                <Calendar size={13} className="text-slate-400 shrink-0" />
+                <select
+                  value={selectedPeriodId}
+                  onChange={e => setSelectedPeriodId(e.target.value)}
+                  className="text-xs font-medium text-slate-700 bg-transparent outline-none cursor-pointer pr-1"
+                >
+                  {[...clubData.fundPeriods]
+                    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                    .map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}
+                      </option>
+                    ))}
+                </select>
               </div>
             )}
             <Button variant="outline" size="sm"
