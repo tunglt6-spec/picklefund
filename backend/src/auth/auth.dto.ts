@@ -7,7 +7,7 @@ import {
   IsNotEmpty,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class LoginDto {
   @IsString()
@@ -41,6 +41,7 @@ class RegisterClubInfoDto {
   contactPhone?: string;
 
   @IsOptional()
+  @Transform(({ value }) => value || undefined)
   @IsEmail()
   contactEmail?: string;
 }
@@ -55,11 +56,12 @@ class RegisterAdminDto {
   username: string;
 
   @IsOptional()
+  @Transform(({ value }) => value || undefined)
   @IsEmail()
   email?: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   password: string;
 }
 
