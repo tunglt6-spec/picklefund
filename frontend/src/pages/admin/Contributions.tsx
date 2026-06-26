@@ -342,7 +342,7 @@ export function Contributions() {
                     {members.filter(m => m.status === 'active' || m.id === editTarget?.memberId).map(m => <option key={m.id} value={m.id}>{m.fullName}{m.status !== 'active' ? ' (tạm nghỉ)' : ''}</option>)}
                   </select>
                 </div>
-                {chungPeriods.filter(p => p.status === 'active').length > 0 && (
+                {chungPeriods.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                     <select required value={formPeriodId} onChange={e => {
@@ -350,8 +350,9 @@ export function Contributions() {
                       setFormPeriodId(e.target.value)
                       if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
                     }} className="input-base">
-                      {chungPeriods.filter(p => p.status === 'active').map(p => (
-                        <option key={p.id} value={p.id}>{p.name} — {formatVND(p.contributionAmount)}</option>
+                      <option value="">-- Chọn kỳ quỹ --</option>
+                      {chungPeriods.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
                       ))}
                     </select>
                   </div>
@@ -655,7 +656,7 @@ export function Contributions() {
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
               </div>
-              {chungPeriods.filter(p => p.status === 'active').length > 0 && (
+              {chungPeriods.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                   <select required value={formPeriodId} onChange={e => {
@@ -663,8 +664,9 @@ export function Contributions() {
                     setFormPeriodId(e.target.value)
                     if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
                   }} className="input-base">
-                    {chungPeriods.filter(p => p.status === 'active').map(p => (
-                      <option key={p.id} value={p.id}>{p.name} — {formatVND(p.contributionAmount)}</option>
+                    <option value="">-- Chọn kỳ quỹ --</option>
+                    {chungPeriods.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
                     ))}
                   </select>
                 </div>
