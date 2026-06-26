@@ -141,7 +141,27 @@ export function Reports() {
   const totalIncome = filteredContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const totalExpenses = filteredExpenses.reduce((a, e) => a + e.amount, 0)
   const balance = totalIncome - totalExpenses
-  const balancePct = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0
+
+  // Carry-over: cộng dồn số dư từ tất cả kỳ quỹ trước kỳ hiện tại
+  const sortedPeriods = [...clubData.fundPeriods].sort((a, b) =>
+    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  )
+  const activePeriodIndex = sortedPeriods.findIndex(p => p.id === activePeriod?.id)
+  const previousPeriods = activePeriodIndex > 0 ? sortedPeriods.slice(0, activePeriodIndex) : []
+  const carryOverBalance = previousPeriods.reduce((total, p) => {
+    const prevIncome = clubData.contributions
+      .filter(c => c.isConfirmed && c.fundPeriodId === p.id &&
+        (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter))
+      .reduce((a, c) => a + c.amount, 0)
+    const prevExpenses = clubData.expenses
+      .filter(e => e.fundPeriodId === p.id &&
+        (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter))
+      .reduce((a, e) => a + e.amount, 0)
+    return total + (prevIncome - prevExpenses)
+  }, 0)
+  const displayBalance = balance + carryOverBalance
+
+  const balancePct = totalIncome > 0 ? Math.round((displayBalance / totalIncome) * 100) : 0
   const memberCount = clubData.members.filter(m => m.status === 'active').length
   const confirmedCount = filteredContribs.filter(c => c.isConfirmed).length
 
@@ -239,14 +259,14 @@ export function Reports() {
   const summaryItems = [
     { label: 'Tổng thu',        value: formatVND(totalIncome),   icon: <DollarSign size={14} />, color: 'text-emerald-600' },
     { label: 'Tổng chi',        value: formatVND(totalExpenses), icon: <CreditCard size={14} />, color: 'text-rose-500' },
-    { label: 'Số dư',           value: formatVND(balance),       icon: <Wallet size={14} />,     color: 'text-indigo-600' },
+    { label: 'Số dư',           value: formatVND(displayBalance),       icon: <Wallet size={14} />,     color: 'text-indigo-600' },
     { label: 'Tỷ lệ chi / thu', value: totalIncome > 0 ? `${Math.round((totalExpenses / totalIncome) * 100)}%` : '—', icon: <TrendingDown size={14} />, color: 'text-amber-600' },
   ]
 
   const kpiCards = [
     { label: 'Tổng thu kỳ',    value: totalIncome,   icon: <DollarSign size={18} />, color: 'text-emerald-600', bg: 'bg-emerald-50', isCount: false },
     { label: 'Tổng chi kỳ',    value: totalExpenses, icon: <CreditCard size={18} />,  color: 'text-rose-500',    bg: 'bg-rose-50',    isCount: false },
-    { label: 'Số dư quỹ',      value: balance,       icon: <Wallet size={18} />,      color: 'text-indigo-600', bg: 'bg-indigo-50',  isCount: false },
+    { label: 'Số dư quỹ',      value: displayBalance, icon: <Wallet size={18} />,      color: 'text-indigo-600', bg: 'bg-indigo-50',  isCount: false },
     { label: 'Tổng thành viên', value: memberCount,  icon: <Users size={18} />,       color: 'text-cyan-600',   bg: 'bg-cyan-50',    isCount: true, unit: 'người' },
     { label: 'Buổi chơi',      value: sessionCount,  icon: <Calendar size={18} />,   color: 'text-amber-600',  bg: 'bg-amber-50',   isCount: true, unit: 'buổi' },
     { label: 'Đã đóng quỹ',    value: confirmedCount, icon: <MapPin size={18} />,    color: 'text-purple-600', bg: 'bg-purple-50',  isCount: true, unit: 'người' },
@@ -412,7 +432,7 @@ export function Reports() {
             <button className="flex-1 py-2.5 rounded-[12px] border border-slate-200 text-[13px] font-[600] text-slate-600 flex items-center justify-center gap-1 active:bg-slate-50"
               onClick={() => {
                 exportReportsPDF(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows
                 )
                 toast.success('Đang tạo PDF...')
@@ -422,7 +442,7 @@ export function Reports() {
             <button className="flex-1 py-2.5 rounded-[12px] border border-emerald-200 text-[13px] font-[600] text-emerald-600 flex items-center justify-center gap-1 active:bg-emerald-50"
               onClick={() => {
                 exportReportsExcel(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows.map(r => ({
                     name: r.memberName,
                     attended: r.attendedSessions,
@@ -474,7 +494,7 @@ export function Reports() {
               className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
               onClick={() => {
                 exportReportsExcel(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows.map(r => ({
                     name: r.memberName,
                     attended: r.attendedSessions,
@@ -491,7 +511,7 @@ export function Reports() {
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={() => {
                 exportReportsPDF(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows
                 )
                 toast.success('Đã xuất PDF báo cáo!')
