@@ -212,14 +212,30 @@ export function FundPeriods() {
       const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && periodIds.has(c.fundPeriodId ?? ''))
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-      const remaining = Math.max(0, totalTarget - totalCollected)
       const primaryActive = fps.filter(p => p.status === 'active').sort((a, b) => b.startDate.localeCompare(a.startDate))[0]
       const unpaidCount = primaryActive
         ? memberCount - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
         : 0
       const txCount = relevant.length
-      const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
-      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
+
+      // Carryover from most recent closed period (kết dư kỳ trước)
+      const closedChung = periods
+        .filter(p => (p.type ?? 'chung') === 'chung' && (p.status === 'closed' || p.status === 'finalized'))
+        .sort((a, b) => b.endDate.localeCompare(a.endDate))
+      const prevPeriod = primaryActive
+        ? closedChung.filter(p => p.endDate < primaryActive.startDate)[0]
+        : closedChung[0]
+      const prevCarryover = prevPeriod
+        ? Math.max(0,
+            contributions.filter(c => c.fundPeriodId === prevPeriod.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+            - expenses.filter(e => e.fundPeriodId === prevPeriod.id).reduce((a, e) => a + Number(e.amount), 0)
+          )
+        : 0
+
+      const effectiveCollected = totalCollected + prevCarryover
+      const remaining = Math.max(0, totalTarget - effectiveCollected)
+      const pct = totalTarget > 0 ? Math.round((effectiveCollected / totalTarget) * 100) : 0
+      return { balance: effectiveCollected, prevCarryover, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
     }
 
     // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
@@ -236,7 +252,7 @@ export function FundPeriods() {
     }
 
     return { chung: calcChung(), game: calcMini() }
-  }, [periods, contributions, memberCount])
+  }, [periods, contributions, expenses, memberCount])
 
   // Current fund: active or preparing (draft), sorted newest first
   const activePeriods = useMemo(() => ({
@@ -1496,6 +1512,7 @@ function HighlightsTab({ contributions, periods, members }: {
 interface KpiStats {
   balance: number; pct: number; remainPct: number; remaining: number
   unpaidCount: number; txCount: number; totalTarget: number; totalPending: number
+  prevCarryover?: number
 }
 
 function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelValue }: {
@@ -1512,6 +1529,9 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
         <div>
           <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Số dư</p>
           <p className={`text-base font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
+          {stats.prevCarryover != null && stats.prevCarryover > 0 && (
+            <p className="text-[10px] text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
+          )}
           {stats.totalPending > 0 && (
             <p className="text-[10px] text-amber-500 mt-0.5">+{formatVND(stats.totalPending)} chờ</p>
           )}

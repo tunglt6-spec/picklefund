@@ -71,24 +71,6 @@ export function TreasurerDashboard() {
     }
   }, [])
 
-  const exportLedger = useCallback(() => {
-    if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }
-    const rows = ledger.map(r => ({
-      'Ngày': formatDate(r.date),
-      'Loại': r.type === 'income' ? 'Thu' : 'Chi',
-      'Mô tả': r.description,
-      'Số tiền': r.type === 'income' ? r.amount : -r.amount,
-      'Số dư': r.balance,
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows)
-    ws['!cols'] = [{ wch: 14 }, { wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 14 }]
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Sổ Quỹ')
-    const name = activePeriod ? `SoQuy_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy'
-    XLSX.writeFile(wb, `${name}.xlsx`)
-    toast.success('Đã xuất sổ quỹ Excel!')
-  }, [ledger, activePeriod])
-
   const ledger = useMemo<LedgerRow[]>(() => {
     const rows: Omit<LedgerRow, 'balance'>[] = [
       ...clubData.contributions
@@ -118,6 +100,24 @@ export function TreasurerDashboard() {
       return { ...r, balance: runningBalance }
     })
   }, [clubData.contributions, clubData.expenses])
+
+  const exportLedger = useCallback(() => {
+    if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }
+    const rows = ledger.map(r => ({
+      'Ngày': formatDate(r.date),
+      'Loại': r.type === 'income' ? 'Thu' : 'Chi',
+      'Mô tả': r.description,
+      'Số tiền': r.type === 'income' ? r.amount : -r.amount,
+      'Số dư': r.balance,
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    ws['!cols'] = [{ wch: 14 }, { wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 14 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Sổ Quỹ')
+    const name = activePeriod ? `SoQuy_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy'
+    XLSX.writeFile(wb, `${name}.xlsx`)
+    toast.success('Đã xuất sổ quỹ Excel!')
+  }, [ledger, activePeriod])
 
   const recent = ledger.slice(-20).reverse()
 

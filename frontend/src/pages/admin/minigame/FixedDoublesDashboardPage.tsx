@@ -659,7 +659,7 @@ export function FixedDoublesDashboardPage() {
   const {
     getMinigame, getTeams, getTeamStandings,
     getFixedDoublesDashboard, enterTeamMatchResult,
-    deleteTeamMatchResult, clearTeamSchedule,
+    deleteTeamMatchResult,
     setTeamsFromApi, setTeamMatchesFromApi, updateMinigame,
   } = useMinigameStore()
 
