@@ -496,9 +496,14 @@ export function Expenses() {
   const miniExpenses   = richExpenses.filter(e => e.fundSource === 'MINI')
   const commonAmt   = commonExpenses.reduce((s, e) => s + e.amount, 0)
   const miniAmt     = miniExpenses.reduce((s, e) => s + e.amount, 0)
-  const approvedAmt = richExpenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
-  const pendingAmt  = richExpenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
-  const pendingCount = richExpenses.filter(e => e.status === 'pending').length
+
+  // Period-scoped base for status KPIs: MINI always included, COMMON filtered by period
+  const periodFiltered = richExpenses.filter(e =>
+    !selectedPeriodId || e.fundSource === 'MINI' || e.fundPeriodId === selectedPeriodId
+  )
+  const approvedAmt  = periodFiltered.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
+  const pendingAmt   = periodFiltered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+  const pendingCount = periodFiltered.filter(e => e.status === 'pending').length
 
   const handleAdd = async (form: typeof emptyForm) => {
     setIsSaving(true)
@@ -801,7 +806,7 @@ export function Expenses() {
           <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Mini"   value={miniAmt} />
           <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
           <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
-          <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={richExpenses.length} isCount unit="khoản" />
+          <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={periodFiltered.length} isCount unit="khoản" />
         </div>
 
         {/* Table card */}
