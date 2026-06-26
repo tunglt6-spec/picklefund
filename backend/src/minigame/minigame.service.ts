@@ -87,10 +87,41 @@ export class MinigameService {
     return this.findOne(id, clubId);
   }
 
+  async createTeam(
+    id: string,
+    clubId: string,
+    dto: { name: string; player1Id: string; player2Id?: string },
+  ) {
+    await this.assertOwnership(id, clubId);
+    return this.prisma.minigameTeam.create({
+      data: { minigameId: id, name: dto.name, player1Id: dto.player1Id, player2Id: dto.player2Id },
+      include: {
+        player1: { select: { id: true, fullName: true } },
+        player2: { select: { id: true, fullName: true } },
+      },
+    });
+  }
+
+  async deleteTeam(id: string, teamId: string, clubId: string) {
+    await this.assertOwnership(id, clubId);
+    const team = await this.prisma.minigameTeam.findUnique({ where: { id: teamId } });
+    if (!team || team.minigameId !== id) throw new NotFoundException('Đội không tồn tại');
+    await this.prisma.minigameMatch.deleteMany({
+      where: { minigameId: id, OR: [{ teamAId: teamId }, { teamBId: teamId }] },
+    });
+    return this.prisma.minigameTeam.delete({ where: { id: teamId } });
+  }
+
+  async clearSchedule(id: string, clubId: string) {
+    await this.assertOwnership(id, clubId);
+    const { count } = await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
+    return { deleted: count };
+  }
+
   async generateTeams(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.format !== 'RANDOM_DOUBLES')
-      throw new BadRequestException('Chỉ hỗ trợ format RANDOM_DOUBLES');
+    if (mg.format !== 'RANDOM_DOUBLES' && mg.format !== 'FIXED_DOUBLES_ROUND_ROBIN')
+      throw new BadRequestException('Chỉ hỗ trợ format doubles');
 
     const participants = await this.prisma.minigameParticipant.findMany({
       where: { minigameId: id },

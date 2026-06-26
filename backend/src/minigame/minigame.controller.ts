@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsArray, IsInt, IsDateString, Min, MaxLength, ArrayMaxSize } from 'class-validator';
 import { MinigameService } from './minigame.service';
@@ -8,9 +8,15 @@ import { MinigameFormat } from '@prisma/client';
 
 class CreateMinigameDto {
   @IsString() @MaxLength(100) name!: string;
-  @IsEnum(['GROUP_STAGE', 'KNOCKOUT', 'ROUND_ROBIN', 'RANDOM_DOUBLES', 'FIXED_DOUBLES']) format!: MinigameFormat;
+  @IsEnum(['GROUP_STAGE', 'KNOCKOUT', 'SINGLES', 'RANDOM_DOUBLES', 'FIXED_DOUBLES_ROUND_ROBIN']) format!: MinigameFormat;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() settings?: Record<string, unknown>;
+}
+
+class CreateTeamDto {
+  @IsString() @MaxLength(60) name!: string;
+  @IsString() player1Id!: string;
+  @IsOptional() @IsString() player2Id?: string;
 }
 
 class AddParticipantsDto {
@@ -68,6 +74,29 @@ export class MinigameController {
   @Post(':id/generate-schedule')
   async generateSchedule(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.generateSchedule(id, user.clubId));
+  }
+
+  @Post(':id/teams')
+  async createTeam(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: CreateTeamDto,
+  ) {
+    return ok(await this.svc.createTeam(id, user.clubId, body), 'Đã tạo đội');
+  }
+
+  @Delete(':id/teams/:teamId')
+  async deleteTeam(
+    @Param('id') id: string,
+    @Param('teamId') teamId: string,
+    @CurrentUser() user: any,
+  ) {
+    return ok(await this.svc.deleteTeam(id, teamId, user.clubId), 'Đã xóa đội');
+  }
+
+  @Delete(':id/schedule')
+  async clearSchedule(@Param('id') id: string, @CurrentUser() user: any) {
+    return ok(await this.svc.clearSchedule(id, user.clubId), 'Đã xóa lịch thi đấu');
   }
 
   @Post(':id/start')

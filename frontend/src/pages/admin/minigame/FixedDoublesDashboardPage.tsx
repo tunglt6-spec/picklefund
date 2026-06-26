@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Edit2, Bell, MoreHorizontal, Calendar, Trophy,
@@ -11,6 +11,7 @@ import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
+import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 
 // ── design tokens ──────────────────────────────────────────────────────────────
@@ -546,7 +547,7 @@ function RecentActivityCard({ entries }: { entries: string[] }) {
 }
 
 // ── draft / paired panels (unchanged logic) ────────────────────────────────────
-function DraftPanel({ minigameId }: { minigameId: string }) {
+function DraftPanel({ minigameId, onAutoGenerate }: { minigameId: string; onAutoGenerate?: () => Promise<void> }) {
   const { participants, autoGenerateTeams } = useMinigameStore()
   const parts = participants.filter(p => p.minigameId === minigameId && p.status === 'ACTIVE')
   const [loading, setLoading] = useState(false)
@@ -554,7 +555,10 @@ function DraftPanel({ minigameId }: { minigameId: string }) {
     if (parts.length < 2) { toast.error('Cần ít nhất 2 người'); return }
     if (parts.length % 2 !== 0) { toast.error('Số người cần là số chẵn'); return }
     setLoading(true)
-    try { autoGenerateTeams(minigameId); toast.success('Đã ghép cặp đội!') }
+    try {
+      if (onAutoGenerate) { await onAutoGenerate() }
+      else { autoGenerateTeams(minigameId); toast.success('Đã ghép cặp đội!') }
+    }
     finally { setLoading(false) }
   }
   return (
@@ -585,10 +589,28 @@ function DraftPanel({ minigameId }: { minigameId: string }) {
   )
 }
 
-function PairedPanel({ minigameId, teams }: { minigameId: string; teams: MiniGameTeam[] }) {
+function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRegenerateTeams }: {
+  minigameId: string
+  teams: MiniGameTeam[]
+  onCreateSchedule?: () => Promise<void>
+  onDeleteTeam?: (teamId: string) => Promise<void>
+  onRegenerateTeams?: () => Promise<void>
+}) {
   const { generateTeamRoundRobinSchedule, updateTeam, removeTeam, autoGenerateTeams } = useMinigameStore()
   const [editId, setEditId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const handleCreateSchedule = async () => {
+    if (onCreateSchedule) { await onCreateSchedule() }
+    else { generateTeamRoundRobinSchedule(minigameId); toast.success('Đã tạo lịch!') }
+  }
+  const handleDeleteTeam = async (teamId: string) => {
+    if (onDeleteTeam) { await onDeleteTeam(teamId) }
+    else { removeTeam(teamId); toast.success('Đã xóa đội') }
+  }
+  const handleRegenerate = async () => {
+    if (onRegenerateTeams) { await onRegenerateTeams() }
+    else { autoGenerateTeams(minigameId); toast.success('Đã ghép lại!') }
+  }
   return (
     <div style={CARD} className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -597,10 +619,10 @@ function PairedPanel({ minigameId, teams }: { minigameId: string; teams: MiniGam
           <span className="font-bold text-slate-900">Danh Sách Đội ({teams.length})</span>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => { autoGenerateTeams(minigameId); toast.success('Đã ghép lại!') }}>
+          <Button variant="ghost" size="sm" onClick={handleRegenerate}>
             <RefreshCw size={13} /> Ghép Lại
           </Button>
-          <Button onClick={() => { generateTeamRoundRobinSchedule(minigameId); toast.success('Đã tạo lịch!') }}>
+          <Button onClick={handleCreateSchedule}>
             <Calendar size={13} /> Tạo Lịch
           </Button>
         </div>
@@ -622,7 +644,7 @@ function PairedPanel({ minigameId, teams }: { minigameId: string; teams: MiniGam
             )}
             <span className="text-xs text-slate-500">{team.player1.memberName} &amp; {team.player2.memberName}</span>
             <Button size="sm" variant="ghost" onClick={() => { setEditId(team.id); setEditName(team.name) }}><Edit2 size={12} /></Button>
-            <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-50" onClick={() => { removeTeam(team.id); toast.success('Đã xóa đội') }}><Trash2 size={12} /></Button>
+            <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-50" onClick={() => handleDeleteTeam(team.id)}><Trash2 size={12} /></Button>
           </div>
         ))}
       </div>
@@ -638,11 +660,86 @@ export function FixedDoublesDashboardPage() {
     getMinigame, getTeams, getTeamStandings,
     getFixedDoublesDashboard, enterTeamMatchResult,
     deleteTeamMatchResult, clearTeamSchedule,
+    setTeamsFromApi, setTeamMatchesFromApi, updateMinigame,
   } = useMinigameStore()
 
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const isMobile = useIsMobile()
+
+  const hydrateFromApi = useCallback(async () => {
+    if (!id) return
+    try {
+      const res = await api.get(`/minigames/${id}`)
+      const mg = res.data?.data ?? res.data
+      setTeamsFromApi(id, mg.teams ?? [])
+      setTeamMatchesFromApi(id, mg.matches ?? [])
+      if (mg.status) updateMinigame(id, { status: mg.status })
+    } catch { /* fallback to local store */ }
+  }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
+
+  useEffect(() => { hydrateFromApi() }, [hydrateFromApi])
+
+  const handleAutoGenerateTeams = useCallback(async () => {
+    if (!id) return
+    try {
+      const res = await api.post(`/minigames/${id}/generate-teams`)
+      const mg = res.data?.data ?? res.data
+      setTeamsFromApi(id, mg.teams ?? [])
+      setTeamMatchesFromApi(id, mg.matches ?? [])
+      if (mg.status) updateMinigame(id, { status: mg.status })
+      toast.success('Đã ghép cặp đôi!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi ghép cặp')
+    }
+  }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
+
+  const handleCreateSchedule = useCallback(async () => {
+    if (!id) return
+    try {
+      const res = await api.post(`/minigames/${id}/generate-schedule`)
+      const mg = res.data?.data ?? res.data
+      setTeamsFromApi(id, mg.teams ?? [])
+      setTeamMatchesFromApi(id, mg.matches ?? [])
+      if (mg.status) updateMinigame(id, { status: mg.status })
+      toast.success('Đã tạo lịch thi đấu!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi tạo lịch')
+    }
+  }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
+
+  const handleDeleteTeam = useCallback(async (teamId: string) => {
+    if (!id) return
+    try {
+      await api.delete(`/minigames/${id}/teams/${teamId}`)
+      await hydrateFromApi()
+      toast.success('Đã xóa đội')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi xóa đội')
+    }
+  }, [id, hydrateFromApi])
+
+  const handleClearSchedule = useCallback(async () => {
+    if (!id) return
+    try {
+      await api.delete(`/minigames/${id}/schedule`)
+      setTeamMatchesFromApi(id, [])
+      toast.success('Đã xóa lịch')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi xóa lịch')
+    }
+  }, [id, setTeamMatchesFromApi])
+
+  const handleSaveScoreApi = useCallback(async (matchId: string, s1: number, s2: number) => {
+    try {
+      await api.patch(`/minigames/matches/${matchId}/score`, { scoreA: s1, scoreB: s2 })
+      enterTeamMatchResult(matchId, s1, s2)
+      setScoreModal(null)
+      toast.success('Đã lưu kết quả!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi lưu điểm')
+    }
+  }, [enterTeamMatchResult])
 
   const mg = getMinigame(id!)
   if (!mg) {
@@ -677,9 +774,7 @@ export function FixedDoublesDashboardPage() {
     .reduce((s, m) => s + (m.team1Score ?? 0) + (m.team2Score ?? 0), 0)
 
   const handleSaveScore = (matchId: string, s1: number, s2: number) => {
-    enterTeamMatchResult(matchId, s1, s2)
-    setScoreModal(null)
-    toast.success('Đã lưu kết quả!')
+    handleSaveScoreApi(matchId, s1, s2)
   }
 
   return (
@@ -770,8 +865,8 @@ export function FixedDoublesDashboardPage() {
         )}
 
         {/* status-specific panels */}
-        {mg.status === 'DRAFT'  && <DraftPanel  minigameId={id!} />}
-        {mg.status === 'PAIRED' && <PairedPanel minigameId={id!} teams={teams} />}
+        {mg.status === 'DRAFT'  && <DraftPanel  minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
+        {mg.status === 'PAIRED' && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
 
         {/* main 12-col grid */}
         {showSched && (
@@ -790,7 +885,7 @@ export function FixedDoublesDashboardPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => { clearTeamSchedule(id!); toast.success('Đã xóa lịch') }}
+                    onClick={handleClearSchedule}
                     className="text-[11px] font-semibold text-red-400 hover:text-red-600 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                   >
                     <Trash2 size={12} /> Xóa lịch

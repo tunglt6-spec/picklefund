@@ -963,6 +963,8 @@ interface MinigameStore {
   getTournamentDashboard: (minigameId: string) => TournamentDashboardData | null
 
   // Fixed Doubles Round-Robin
+  setTeamsFromApi: (minigameId: string, apiTeams: any[]) => void
+  setTeamMatchesFromApi: (minigameId: string, apiMatches: any[]) => void
   getTeams: (minigameId: string) => MiniGameTeam[]
   addTeam: (team: MiniGameTeam) => void
   removeTeam: (teamId: string) => void
@@ -1750,6 +1752,39 @@ export const useMinigameStore = create<MinigameStore>()(
       },
 
       // ── Fixed Doubles Round-Robin actions ─────────────────────────────────
+
+      setTeamsFromApi: (minigameId, apiTeams) => {
+        const teams: MiniGameTeam[] = apiTeams.map(t => ({
+          id: t.id,
+          minigameId,
+          name: t.name,
+          player1: { memberId: t.player1.id, memberName: t.player1.fullName },
+          player2: t.player2 ? { memberId: t.player2.id, memberName: t.player2.fullName } : { memberId: '', memberName: '' },
+          seedLevel: 1,
+        }))
+        set(s => ({ teams: [...s.teams.filter(t => t.minigameId !== minigameId), ...teams] }))
+      },
+
+      setTeamMatchesFromApi: (minigameId, apiMatches) => {
+        const roundCounters = new Map<number, number>()
+        const matches: MiniGameTeamMatch[] = apiMatches.map(m => {
+          const n = (roundCounters.get(m.round) ?? 0) + 1
+          roundCounters.set(m.round, n)
+          return {
+            id: m.id,
+            minigameId,
+            round: m.round,
+            matchNumber: n,
+            team1Id: m.teamAId,
+            team2Id: m.teamBId,
+            team1Score: m.scoreA ?? undefined,
+            team2Score: m.scoreB ?? undefined,
+            winningTeamId: m.winnerId ?? undefined,
+            status: m.status === 'COMPLETED' ? 'COMPLETED' as const : 'PENDING' as const,
+          }
+        })
+        set(s => ({ teamMatches: [...s.teamMatches.filter(m => m.minigameId !== minigameId), ...matches] }))
+      },
 
       getTeams: (minigameId) => get().teams.filter(t => t.minigameId === minigameId),
 
