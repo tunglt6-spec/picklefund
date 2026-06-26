@@ -660,7 +660,7 @@ export function FundPeriods() {
                 <p className="font-semibold text-emerald-800">Đã nhập {importResult.imported}/{importResult.total} khoản</p>
                 {importResult.errors.length > 0 && (
                   <ul className="mt-2 space-y-1 text-red-600 text-xs">
-                    {importResult.errors.slice(0, 5).map((e, i) => <li key={i}>• {e.memberName}: {e.reason}</li>)}
+                    {importResult.errors.slice(0, 5).map((e, i) => <li key={i}>• {e.memberName}: {e.error}</li>)}
                   </ul>
                 )}
               </div>
