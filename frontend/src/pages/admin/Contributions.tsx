@@ -453,7 +453,7 @@ export function Contributions() {
             <p className="text-2xl font-bold text-slate-900">{formatVND(commonTotal)}</p>
             <div className="flex gap-4 mt-2 text-xs text-slate-500">
               <span className="text-emerald-600">✓ {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
-              <span className="text-amber-600">⏳ {unconfirmed.length} chờ</span>
+              <span className="text-amber-600">⏳ {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
             </div>
           </div>
           {/* Quỹ Mini */}
