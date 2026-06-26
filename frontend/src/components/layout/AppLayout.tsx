@@ -72,7 +72,7 @@ export function AppLayout() {
             }}
             aria-label="Hỏi Lisa AI"
           >
-            <img src="/lisa-avatar.jpg" alt="Lisa AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/lisa-avatar.jpg?v=2" alt="Lisa AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </button>
         )}
 
