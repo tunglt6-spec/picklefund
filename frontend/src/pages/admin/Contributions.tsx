@@ -190,13 +190,23 @@ export function Contributions() {
             <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
             <p className="text-[12px] text-slate-400">{activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
-          >
-            <Plus size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            {contributions.length > 0 && (
+              <button
+                onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+              >
+                <FileSpreadsheet size={16} />
+              </button>
+            )}
+            <button
+              onClick={openCreate}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Summary row */}
@@ -230,6 +240,9 @@ export function Contributions() {
                 status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                 actions={
                   <>
+                    <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
+                      {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                    </button>
                     <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
                     <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                   </>
