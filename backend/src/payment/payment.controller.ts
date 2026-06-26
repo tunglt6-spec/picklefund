@@ -68,8 +68,8 @@ export class PaymentController {
       await this.svc.findAll(user.clubId, {
         status,
         memberId,
-        page: +page,
-        limit: +limit,
+        page: Math.max(1, +page || 1),
+        limit: Math.min(100, Math.max(1, +limit || 20)),
       }),
     );
   }

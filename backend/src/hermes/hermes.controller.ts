@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { HermesService } from './hermes.service';
@@ -22,8 +23,11 @@ export class HermesController {
   // Internal: Maika / Lisa dispatch events
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Post('dispatch')
-  async dispatch(@Body() body: HermesEvent) {
-    return ok(await this.svc.dispatch(body), 'Đã gửi thông báo');
+  async dispatch(@Body() body: HermesEvent, @CurrentUser() user: any) {
+    // CLUB_ADMIN can only dispatch for their own club; SUPER_ADMIN may pass any clubId
+    const event: HermesEvent =
+      user.role === 'SUPER_ADMIN' ? body : { ...body, clubId: user.clubId };
+    return ok(await this.svc.dispatch(event), 'Đã gửi thông báo');
   }
 
   // User: get own notifications
@@ -33,7 +37,9 @@ export class HermesController {
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    return ok(await this.svc.getNotifications(user.userId, +page, +limit));
+    const p = Math.max(1, +page || 1);
+    const l = Math.min(100, Math.max(1, +limit || 20));
+    return ok(await this.svc.getNotifications(user.userId, p, l));
   }
 
   // User: mark one as read
@@ -86,6 +92,12 @@ export class HermesController {
       enabled?: boolean;
     },
   ) {
+    const { quietHoursStart: qs, quietHoursEnd: qe, maxDailyPush: mp, maxDailyEmail: me, maxDailyTelegram: mt } = body;
+    if (qs !== undefined && (qs < 0 || qs > 23)) throw new BadRequestException('quietHoursStart phải từ 0–23');
+    if (qe !== undefined && (qe < 0 || qe > 23)) throw new BadRequestException('quietHoursEnd phải từ 0–23');
+    if (mp !== undefined && (mp < 0 || mp > 100)) throw new BadRequestException('maxDailyPush phải từ 0–100');
+    if (me !== undefined && (me < 0 || me > 100)) throw new BadRequestException('maxDailyEmail phải từ 0–100');
+    if (mt !== undefined && (mt < 0 || mt > 100)) throw new BadRequestException('maxDailyTelegram phải từ 0–100');
     return ok(
       await this.svc.updatePreferences(user.userId, body),
       'Đã cập nhật cài đặt thông báo',

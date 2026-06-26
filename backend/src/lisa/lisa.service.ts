@@ -371,8 +371,11 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
 
   // ─── Personal Brief ───────────────────────────────────────────────────────
 
-  async getPersonalBrief(memberId: string): Promise<PersonalBrief> {
+  async getPersonalBrief(memberId: string, callerClubId?: string): Promise<PersonalBrief> {
     const ctx = await this.getMemberContext(memberId);
+    if (callerClubId && ctx.clubId !== callerClubId) {
+      throw new NotFoundException(`Member ${memberId} not found`);
+    }
     const hour = new Date().getHours();
     const greeting =
       hour < 12

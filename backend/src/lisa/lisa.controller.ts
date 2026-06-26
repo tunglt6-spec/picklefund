@@ -50,7 +50,10 @@ export class LisaController {
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Get('member/:memberId/brief')
-  async memberBrief(@Param('memberId') memberId: string) {
-    return ok(await this.svc.getPersonalBrief(memberId));
+  async memberBrief(
+    @Param('memberId') memberId: string,
+    @CurrentUser() user: any,
+  ) {
+    return ok(await this.svc.getPersonalBrief(memberId, user.clubId));
   }
 }
