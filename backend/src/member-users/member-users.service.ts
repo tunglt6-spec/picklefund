@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ForbiddenException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
@@ -20,6 +21,7 @@ function slugify(str: string): string {
 
 @Injectable()
 export class MemberUsersService {
+  private readonly logger = new Logger(MemberUsersService.name);
   constructor(private prisma: PrismaService) {}
 
   private async generateUsername(fullName: string): Promise<string> {
@@ -167,11 +169,7 @@ export class MemberUsersService {
           success: true,
         });
       } catch (err: any) {
-        console.error(
-          `[bulkCreate] memberId=${memberId} error:`,
-          err?.message,
-          err?.code,
-        );
+        this.logger.error(`[bulkCreate] memberId=${memberId}: ${err?.message} (code=${err?.code})`);
         results.push({
           memberId,
           memberName: '',

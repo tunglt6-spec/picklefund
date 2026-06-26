@@ -91,6 +91,7 @@ export class ClubsController {
     return ok(club, 'Tạo CLB thành công');
   }
 
+  @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   @Put(':id')
   async update(
     @CurrentUser() user: any,
