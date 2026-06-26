@@ -26,6 +26,22 @@ export function MemberLisaChat() {
   const [loading, setLoading] = useState(false)
   const [brief, setBrief] = useState<Brief | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const chatRef = useRef<HTMLDivElement>(null)
+
+  // iOS keyboard: resize container so input stays above keyboard
+  useEffect(() => {
+    if (!isMobile) return
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      if (!chatRef.current) return
+      const bottomInset = window.innerHeight - (vv.offsetTop + vv.height)
+      chatRef.current.style.bottom = bottomInset > 80 ? `${bottomInset}px` : ''
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [isMobile])
 
   const fetchBrief = useCallback(async () => {
     if (!user) return
@@ -132,8 +148,19 @@ export function MemberLisaChat() {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full overflow-hidden bg-[#F8FAFC]">
-        {/* Header — fixed height */}
+      <div
+        ref={chatRef}
+        className="flex flex-col overflow-hidden bg-[#F8FAFC]"
+        style={{
+          position: 'fixed',
+          top: 64,
+          left: 0,
+          right: 0,
+          bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+          zIndex: 20,
+        }}
+      >
+        {/* Header */}
         <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
@@ -151,7 +178,7 @@ export function MemberLisaChat() {
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
 
         {/* Input — always visible at bottom */}
-        <div className="shrink-0 bg-white border-t border-slate-100 px-4 py-3" style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="shrink-0 bg-white border-t border-slate-100 px-4 py-3">
           <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <input value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
