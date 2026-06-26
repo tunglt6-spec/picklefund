@@ -8,7 +8,30 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsEmail, IsBoolean, IsOptional, IsArray, ArrayMaxSize } from 'class-validator';
 import { MemberUsersService } from './member-users.service';
+
+class CreateMemberUserDto {
+  @IsString() memberId!: string;
+  @IsOptional() @IsString() username?: string;
+  @IsOptional() @IsEmail() email?: string;
+  @IsOptional() @IsBoolean() mustChangePassword?: boolean;
+  @IsOptional() @IsBoolean() notificationEnabled?: boolean;
+}
+
+class BulkCreateMemberUserDto {
+  @IsArray() @ArrayMaxSize(500) @IsString({ each: true }) memberIds!: string[];
+  @IsOptional() @IsBoolean() mustChangePassword?: boolean;
+  @IsOptional() @IsBoolean() notificationEnabled?: boolean;
+}
+
+class PreviewBulkDto {
+  @IsArray() @ArrayMaxSize(500) @IsString({ each: true }) memberIds!: string[];
+}
+
+class UpdateMemberUserStatusDto {
+  @IsBoolean() isActive!: boolean;
+}
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 
@@ -28,14 +51,7 @@ export class MemberUsersController {
   @Post()
   async create(
     @CurrentUser() user: any,
-    @Body()
-    body: {
-      memberId: string;
-      username?: string;
-      email?: string;
-      mustChangePassword?: boolean;
-      notificationEnabled?: boolean;
-    },
+    @Body() body: CreateMemberUserDto,
   ) {
     return ok(
       await this.svc.create(user.clubId, user.userId, body),
@@ -47,12 +63,7 @@ export class MemberUsersController {
   @Post('bulk-create')
   async bulkCreate(
     @CurrentUser() user: any,
-    @Body()
-    body: {
-      memberIds: string[];
-      mustChangePassword?: boolean;
-      notificationEnabled?: boolean;
-    },
+    @Body() body: BulkCreateMemberUserDto,
   ) {
     return ok(
       await this.svc.bulkCreate(user.clubId, user.userId, body),
@@ -64,7 +75,7 @@ export class MemberUsersController {
   @Post('preview-bulk')
   async previewBulk(
     @CurrentUser() user: any,
-    @Body() body: { memberIds: string[] },
+    @Body() body: PreviewBulkDto,
   ) {
     return ok(await this.svc.previewBulk(user.clubId, body.memberIds));
   }
@@ -79,7 +90,7 @@ export class MemberUsersController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body() body: { isActive: boolean },
+    @Body() body: UpdateMemberUserStatusDto,
     @CurrentUser() user: any,
   ) {
     return ok(

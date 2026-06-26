@@ -341,6 +341,39 @@ export function Reports() {
             </div>
           )}
 
+          {/* Member cost breakdown */}
+          {memberBillRows.length > 0 && (
+            <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-50">
+                <span className="text-[13px] font-[700] text-slate-800">Chi phí thành viên</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-left px-3 py-2 font-semibold text-slate-500">Thành viên</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Đã nộp</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Chi phí</th>
+                      <th className="text-right px-3 py-2 font-semibold text-slate-500">Số dư</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberBillRows.map((r, i) => (
+                      <tr key={i} className="border-b border-slate-50">
+                        <td className="px-3 py-2 text-slate-700 font-medium truncate max-w-[90px]">{r.memberName}</td>
+                        <td className="px-3 py-2 text-right text-slate-600 tabular-nums">{formatVND(r.amountPaid)}</td>
+                        <td className="px-3 py-2 text-right text-slate-600 tabular-nums">{formatVND(r.totalCost)}</td>
+                        <td className={`px-3 py-2 text-right font-semibold tabular-nums ${r.balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {r.balance >= 0 ? '+' : ''}{formatVND(r.balance)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Period history table */}
           {periodHistory.length > 0 && (
             <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
