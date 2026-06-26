@@ -26,17 +26,24 @@ export function MemberLisaChat() {
   const [loading, setLoading] = useState(false)
   const [brief, setBrief] = useState<Brief | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const chatRef = useRef<HTMLDivElement>(null)
+  const msgRef = useRef<HTMLDivElement>(null)
+  const inputBarRef = useRef<HTMLDivElement>(null)
 
-  // iOS keyboard: resize container so input stays above keyboard
+  // iOS keyboard: translate input bar up, add padding to messages — no container resize
   useEffect(() => {
     if (!isMobile) return
     const vv = window.visualViewport
     if (!vv) return
     const update = () => {
-      if (!chatRef.current) return
-      const bottomInset = window.innerHeight - (vv.offsetTop + vv.height)
-      chatRef.current.style.bottom = bottomInset > 80 ? `${bottomInset}px` : ''
+      const kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      const active = kbHeight > 60
+      if (inputBarRef.current) {
+        inputBarRef.current.style.transform = active ? `translateY(-${kbHeight}px)` : ''
+      }
+      if (msgRef.current) {
+        msgRef.current.style.paddingBottom = active ? `${kbHeight + 8}px` : ''
+        if (active) bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+      }
     }
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
@@ -149,7 +156,6 @@ export function MemberLisaChat() {
   if (isMobile) {
     return (
       <div
-        ref={chatRef}
         className="flex flex-col overflow-hidden bg-[#F8FAFC]"
         style={{
           position: 'fixed',
@@ -164,7 +170,7 @@ export function MemberLisaChat() {
         <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
-              <img src="/lisa-avatar.jpg" alt="Lisa" className="w-full h-full object-cover" />
+              <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-[15px] font-[800] text-slate-900">Lisa AI</p>
@@ -175,10 +181,10 @@ export function MemberLisaChat() {
         </div>
 
         {/* Messages — scrollable, fills remaining space */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
+        <div ref={msgRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
 
-        {/* Input — always visible at bottom */}
-        <div className="shrink-0 bg-white border-t border-slate-100 px-4 py-3">
+        {/* Input — stays at bottom, translates up with keyboard */}
+        <div ref={inputBarRef} className="shrink-0 bg-white border-t border-slate-100 px-4 py-3">
           <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <input value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
@@ -198,7 +204,7 @@ export function MemberLisaChat() {
       <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 shadow-sm">
-            <img src="/lisa-avatar.jpg" alt="Lisa" className="w-full h-full object-cover" />
+            <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="font-bold text-slate-900">Lisa AI</p>
