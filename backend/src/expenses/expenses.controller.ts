@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -24,7 +25,6 @@ import type { FundSource } from '@prisma/client';
 import { CreateExpenseDto, UpdateExpenseDto } from './expenses.dto';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads', 'receipts');
-if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const receiptStorage = diskStorage({
   destination: UPLOAD_DIR,
@@ -37,8 +37,12 @@ const receiptStorage = diskStorage({
 @ApiTags('Expenses')
 @ApiBearerAuth()
 @Controller('expenses')
-export class ExpensesController {
+export class ExpensesController implements OnModuleInit {
   constructor(private service: ExpensesService) {}
+
+  onModuleInit() {
+    if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
 
   @Get()
   async findAll(
