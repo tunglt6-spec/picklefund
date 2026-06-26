@@ -32,7 +32,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ short: { ttl: 3600000, limit: 3 } })
+  @Throttle({ short: { ttl: 3600000, limit: 10 } })
   @Post('register')
   async register(@Body() body: RegisterClubDto) {
     return ok(await this.auth.register(body), 'Đăng ký CLB thành công');
