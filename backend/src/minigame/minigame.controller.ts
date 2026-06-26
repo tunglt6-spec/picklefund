@@ -1,9 +1,26 @@
 import { Controller, Get, Post, Patch, Param, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEnum, IsArray, IsInt, IsDateString, Min, MaxLength, ArrayMaxSize } from 'class-validator';
 import { MinigameService } from './minigame.service';
 import { CurrentUser} from '../common/decorators';
 import { ok } from '../common/response';
 import { MinigameFormat } from '@prisma/client';
+
+class CreateMinigameDto {
+  @IsString() @MaxLength(100) name!: string;
+  @IsEnum(['GROUP_STAGE', 'KNOCKOUT', 'ROUND_ROBIN', 'RANDOM_DOUBLES', 'FIXED_DOUBLES']) format!: MinigameFormat;
+  @IsOptional() @IsDateString() scheduledAt?: string;
+  @IsOptional() settings?: Record<string, unknown>;
+}
+
+class AddParticipantsDto {
+  @IsArray() @ArrayMaxSize(200) @IsString({ each: true }) memberIds!: string[];
+}
+
+class UpdateMatchScoreDto {
+  @IsInt() @Min(0) scoreA!: number;
+  @IsInt() @Min(0) scoreB!: number;
+}
 
 @ApiTags('Minigame')
 @ApiBearerAuth()
@@ -24,13 +41,7 @@ export class MinigameController {
   @Post()
   async create(
     @CurrentUser() user: any,
-    @Body()
-    body: {
-      name: string;
-      format: MinigameFormat;
-      scheduledAt?: string;
-      settings?: any;
-    },
+    @Body() body: CreateMinigameDto,
   ) {
     return ok(
       await this.svc.create(user.clubId, user.userId, {
@@ -44,7 +55,7 @@ export class MinigameController {
   async addParticipants(
     @Param('id') id: string,
     @CurrentUser() user: any,
-    @Body() body: { memberIds: string[] },
+    @Body() body: AddParticipantsDto,
   ) {
     return ok(await this.svc.addParticipants(id, user.clubId, body.memberIds));
   }
@@ -68,7 +79,7 @@ export class MinigameController {
   async score(
     @Param('matchId') matchId: string,
     @CurrentUser() user: any,
-    @Body() body: { scoreA: number; scoreB: number },
+    @Body() body: UpdateMatchScoreDto,
   ) {
     return ok(
       await this.svc.updateMatchScore(

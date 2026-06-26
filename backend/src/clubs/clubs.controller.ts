@@ -11,7 +11,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { ClubsService } from './clubs.service';
+import { ClubStatus } from '@prisma/client';
+
+class UpdateClubStatusDto {
+  @IsEnum(['active', 'suspended', 'deleted']) status!: ClubStatus;
+  @IsOptional() @IsString() @MaxLength(500) reason?: string;
+}
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok, paginated } from '../common/response';
@@ -91,7 +98,7 @@ export class ClubsController {
   async updateStatus(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: { status: any; reason?: string },
+    @Body() body: UpdateClubStatusDto,
   ) {
     const club = await this.clubs.updateStatus(id, body.status, body.reason);
     this.audit.log({

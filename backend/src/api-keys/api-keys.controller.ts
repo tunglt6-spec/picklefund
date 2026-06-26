@@ -1,8 +1,14 @@
 import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsOptional, IsDateString, MinLength, MaxLength } from 'class-validator';
 import { ApiKeysService } from './api-keys.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
+
+class CreateApiKeyDto {
+  @IsString() @MinLength(1) @MaxLength(64) name!: string;
+  @IsOptional() @IsDateString() expiresAt?: string;
+}
 
 @ApiTags('API Keys')
 @ApiBearerAuth()
@@ -14,7 +20,7 @@ export class ApiKeysController {
   @Post()
   async create(
     @CurrentUser() user: any,
-    @Body() body: { name: string; expiresAt?: string },
+    @Body() body: CreateApiKeyDto,
   ) {
     const result = await this.service.create(
       user.userId,
