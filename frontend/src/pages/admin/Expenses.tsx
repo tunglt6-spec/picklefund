@@ -402,7 +402,32 @@ export function Expenses() {
     [clubData.fundPeriods]
   )
   const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
+
+  // Sync once data loads asynchronously (activePeriod may be undefined on first render)
+  useEffect(() => {
+    if (!activePeriod?.id) return
+    setSelectedPeriodId(prev => prev || activePeriod.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePeriod?.id])
+
+  // Refresh expenses on mount
+  useEffect(() => {
+    if (!clubId) return
+    api.get(`/expenses?clubId=${clubId}`).then(res => {
+      const raw = res.data?.data ?? []
+      setExpenses(clubId, raw.map((e: any) => ({
+        id: e.id, clubId: e.clubId, fundPeriodId: e.fundPeriodId ?? undefined,
+        fundSource: e.fundSource ?? 'COMMON', description: e.description ?? '',
+        amount: Number(e.amount), allocationRule: e.allocationRule ?? 'EQUAL',
+        expenseDate: e.expenseDate?.slice(0, 10) ?? '',
+        receiptUrl: e.receiptUrl ?? undefined, notes: e.notes ?? undefined,
+        status: e.status ?? 'pending',
+        createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
+      })))
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
 
   // Derive display view from store — no local copy
   const richExpenses = useMemo<RichExpense[]>(
