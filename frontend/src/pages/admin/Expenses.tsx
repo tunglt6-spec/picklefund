@@ -635,7 +635,7 @@ export function Expenses() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
-              {activePeriod && <p className="text-[11px] text-slate-400">{activePeriod.name}</p>}
+              {(selectedPeriodId || activePeriod) && <p className="text-[11px] text-slate-400">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex items-center gap-1.5">
               <button onClick={exportExcel}

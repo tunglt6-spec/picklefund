@@ -38,12 +38,11 @@ export function Attendance() {
   const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
 
-  const sessions = useMemo(() =>
-    selectedPeriodId
-      ? allSessions.filter(s => s.fundPeriodId === selectedPeriodId || !s.fundPeriodId)
-      : allSessions,
-    [allSessions, selectedPeriodId]
-  )
+  const sessions = useMemo(() => {
+    if (!selectedPeriodId) return allSessions
+    const exact = allSessions.filter(s => s.fundPeriodId === selectedPeriodId)
+    return exact.length > 0 ? exact : allSessions.filter(s => !s.fundPeriodId)
+  }, [allSessions, selectedPeriodId])
 
   const setSessions = (fn: (prev: AttendanceSession[]) => AttendanceSession[]) =>
     saveSessions(clubId, fn(getClubData(clubId).sessions))
