@@ -84,6 +84,7 @@ function KpiCard({ icon, iconBg, iconColor, label, value, isCount, unit }: {
 
 const emptyForm = {
   fundSource: 'COMMON' as FundSource,
+  fundPeriodId: '',
   description: '', amount: '', expenseDate: new Date().toISOString().slice(0, 10),
   allocationRule: 'ATTENDANCE' as AllocationRule, notes: '',
   miniExpenseType: 'GAME_REWARD' as MiniExpenseType,
@@ -93,16 +94,19 @@ const emptyForm = {
 
 type Category = { id: string; name: string; icon?: string | null; isDefault: boolean }
 
-function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories }: {
+function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, allPeriods, defaultPeriodId }: {
   open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
   editExpense?: LivingExpense | null; isSaving?: boolean; categories: Category[]
+  allPeriods: { id: string; name: string; status: string }[]
+  defaultPeriodId: string
 }) {
   const isEdit = !!editExpense
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState({ ...emptyForm, fundPeriodId: defaultPeriodId })
   // Sync form when editExpense changes
   if (open && isEdit && form.description !== (editExpense?.description ?? '') && form.description === emptyForm.description) {
     setForm({
       fundSource: editExpense!.fundSource ?? 'COMMON',
+      fundPeriodId: (editExpense as any).fundPeriodId ?? defaultPeriodId,
       description: editExpense!.description,
       amount: String(editExpense!.amount),
       expenseDate: editExpense!.expenseDate,
@@ -147,6 +151,18 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories }:
                 ))}
               </div>
             </div>
+
+            {!isMini && allPeriods.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                <select required value={form.fundPeriodId} onChange={e => setForm(f => ({ ...f, fundPeriodId: e.target.value }))} className="input-base">
+                  <option value="">-- Chọn kỳ quỹ --</option>
+                  {allPeriods.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
@@ -464,7 +480,7 @@ export function Expenses() {
     const isMini = form.fundSource === 'MINI'
     const payload = {
       fundSource: form.fundSource,
-      fundPeriodId: isMini ? undefined : (selectedPeriodId || activePeriod?.id || ''),
+      fundPeriodId: isMini ? undefined : ((form as any).fundPeriodId || selectedPeriodId || activePeriod?.id || ''),
       description: form.description,
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
@@ -711,8 +727,8 @@ export function Expenses() {
             onReject={() => handleReject(detailExp.id)}
             onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }} />
         )}
-        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} />
-        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} />
+        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
+        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
         <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
       </div>
     )
@@ -889,7 +905,7 @@ export function Expenses() {
       </div>
 
       {/* Drawers & modals */}
-      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} />
+      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
       <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
 
       {/* Categories management modal */}
