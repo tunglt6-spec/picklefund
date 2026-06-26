@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Body, Patch, Req, HttpCode } from '@nestjs/common';
 import { type Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CurrentUser, Public} from '../common/decorators';
 import { ok } from '../common/response';
@@ -32,7 +32,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ short: { ttl: 3600000, limit: 10 } })
+  @SkipThrottle()
   @Post('register')
   async register(@Body() body: RegisterClubDto) {
     return ok(await this.auth.register(body), 'Đăng ký CLB thành công');
