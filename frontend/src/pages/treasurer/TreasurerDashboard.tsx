@@ -49,14 +49,12 @@ export function TreasurerDashboard() {
 
   const [reminding, setReminding] = useState<string | null>(null)
   const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
-  const { setExpenses } = useClubDataStore()
+  const { patchExpense } = useClubDataStore()
 
   const handleReceiptSuccess = useCallback((expenseId: string, receiptUrl: string) => {
-    setExpenses(user?.clubId ?? '', clubData.expenses.map(e =>
-      e.id === expenseId ? { ...e, receiptUrl } : e
-    ))
+    patchExpense(user?.clubId ?? '', expenseId, { receiptUrl })
     setReceiptModal(null)
-  }, [user?.clubId, clubData.expenses, setExpenses])
+  }, [user?.clubId, patchExpense])
 
   const sendReminder = useCallback(async (contributionId: string, targetUserId: string | undefined, name: string) => {
     if (!targetUserId) { toast.error(`${name} chưa có tài khoản để nhắc`); return }

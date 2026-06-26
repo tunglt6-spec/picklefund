@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, Edit2, Trash2, Users, Filter, X, FileText, FileSpreadsheet } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Users, Filter, X, FileText, FileSpreadsheet, Power } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -182,6 +182,17 @@ export function Members() {
     }
   }
 
+  const handleToggleStatus = async (m: Member) => {
+    const next = m.status === 'active' ? 'inactive' : 'active'
+    try {
+      await api.put(`/members/${m.id}`, { status: next })
+      setMembers(prev => prev.map(x => x.id === m.id ? { ...x, status: next } : x))
+      toast.success(next === 'active' ? `${m.fullName} đã kích hoạt lại` : `${m.fullName} đã tạm nghỉ`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật trạng thái thất bại')
+    }
+  }
+
   const activeCount = members.filter(m => m.status === 'active').length
   const isMobile = useIsMobile()
 
@@ -244,6 +255,13 @@ export function Members() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Badge variant={statusVariant[m.status] ?? 'gray'}>{statusLabel[m.status] ?? m.status}</Badge>
+                {m.status !== 'left' && (
+                  <button
+                    onClick={() => handleToggleStatus(m)}
+                    className={`p-1.5 ${m.status === 'active' ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}
+                    title={m.status === 'active' ? 'Tạm nghỉ' : 'Kích hoạt'}
+                  ><Power size={14} /></button>
+                )}
                 <button onClick={() => openEdit(m)} className="text-slate-400 active:text-indigo-600"><Edit2 size={15} /></button>
                 <button onClick={() => handleDelete(m)} className="text-slate-300 active:text-red-500"><Trash2 size={15} /></button>
               </div>

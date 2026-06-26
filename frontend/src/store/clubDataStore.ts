@@ -43,6 +43,7 @@ interface ClubDataStore {
   setSessions: (clubId: string, sessions: AttendanceSession[]) => void
   setContributions: (clubId: string, contributions: FundContribution[]) => void
   setExpenses: (clubId: string, expenses: LivingExpense[]) => void
+  patchExpense: (clubId: string, expenseId: string, patch: Partial<LivingExpense>) => void
   setClubSettings: (clubId: string, settings: ClubSettings) => void
   setMyAttendedSessionIds: (clubId: string, ids: string[]) => void
   setMemberAttendanceSummary: (clubId: string, summary: MemberAttendanceSummary[]) => void
@@ -82,6 +83,12 @@ export const useClubDataStore = create<ClubDataStore>()(
 
       setExpenses: (clubId, expenses) =>
         set(s => ({ dataByClub: { ...s.dataByClub, [clubId]: { ...(s.dataByClub[clubId] ?? EMPTY_DATA), expenses } } })),
+
+      patchExpense: (clubId, expenseId, patch) =>
+        set(s => {
+          const data = s.dataByClub[clubId] ?? EMPTY_DATA
+          return { dataByClub: { ...s.dataByClub, [clubId]: { ...data, expenses: data.expenses.map(e => e.id === expenseId ? { ...e, ...patch } : e) } } }
+        }),
 
       setClubSettings: (clubId, settings) =>
         set(s => ({ dataByClub: { ...s.dataByClub, [clubId]: { ...(s.dataByClub[clubId] ?? EMPTY_DATA), settings } } })),
