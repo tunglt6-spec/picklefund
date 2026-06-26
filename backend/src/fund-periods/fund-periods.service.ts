@@ -31,11 +31,11 @@ export class FundPeriodsService {
         },
         data: { status: 'active' },
       }),
-      // Active/draft period whose endDate has passed → close
+      // Draft period whose endDate has passed → close (active periods are not auto-closed to respect manual reopen)
       this.prisma.fundPeriod.updateMany({
         where: {
           clubId,
-          status: { in: ['draft', 'active'] },
+          status: 'draft',
           endDate: { lt: today },
         },
         data: { status: 'closed' },
