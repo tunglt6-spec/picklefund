@@ -106,7 +106,7 @@ export function Notifications() {
     try {
       const res = await api.get('/hermes/notifications?limit=50')
       const data = res.data?.data ?? res.data
-      setNotifs(data?.notifications ?? [])
+      setNotifs(data?.items ?? data?.notifications ?? [])
       setUnreadCount(data?.unreadCount ?? 0)
     } catch {
       // silent
