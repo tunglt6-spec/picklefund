@@ -128,19 +128,21 @@ export function Reports() {
     ? `${formatDate(activePeriod.startDate)} – ${formatDate(activePeriod.endDate)}`
     : ''
 
-  // Apply fund source filter
+  // Apply fund source filter AND period filter
   const filteredContribs = clubData.contributions.filter(c =>
-    fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter
+    (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter) &&
+    c.fundPeriodId === activePeriod?.id
   )
   const filteredExpenses = clubData.expenses.filter(e =>
-    fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter
+    (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter) &&
+    e.fundPeriodId === activePeriod?.id
   )
 
   const totalIncome = filteredContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const totalExpenses = filteredExpenses.reduce((a, e) => a + e.amount, 0)
   const balance = totalIncome - totalExpenses
   const balancePct = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0
-  const memberCount = clubData.members.length
+  const memberCount = clubData.members.filter(m => m.status === 'active').length
   const confirmedCount = filteredContribs.filter(c => c.isConfirmed).length
 
   // Sessions for the active period; fall back to unlinked sessions (fundPeriodId='') for clubs
