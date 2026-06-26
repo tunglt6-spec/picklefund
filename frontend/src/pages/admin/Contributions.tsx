@@ -53,6 +53,7 @@ export function Contributions() {
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
 
@@ -68,6 +69,8 @@ export function Contributions() {
   const unconfirmed = commonContribs.filter(c => !c.isConfirmed)
 
   const openCreate = () => {
+    const pid = activePeriod?.id ?? ''
+    setFormPeriodId(pid)
     setForm({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
     setEditTarget(null)
     setShowCreate(true)
@@ -75,6 +78,7 @@ export function Contributions() {
 
   const openEdit = (c: FundContribution) => {
     setEditTarget(c)
+    setFormPeriodId(c.fundPeriodId ?? activePeriod?.id ?? '')
     setForm({
       fundSource: c.fundSource ?? 'COMMON',
       memberId: c.memberId ?? '',
@@ -105,7 +109,7 @@ export function Contributions() {
     const isCommon = form.fundSource === 'COMMON'
 
     if (isCommon) {
-      if (!activePeriod) {
+      if (!formPeriodId) {
         toast.error('Cần có kỳ quỹ đang hoạt động để ghi nhận Quỹ Chung')
         setIsSaving(false)
         return
@@ -115,7 +119,7 @@ export function Contributions() {
 
       const payload = {
         fundSource: 'COMMON', memberId: member.id,
-        fundPeriodId: activePeriod?.id,
+        fundPeriodId: formPeriodId,
         amount: Number(form.amount),
         paidAt: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
       }
@@ -295,9 +299,18 @@ export function Contributions() {
                     {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                   </select>
                 </div>
-                {activePeriod && (
-                  <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
-                    Kỳ quỹ: <span className="font-semibold">{activePeriod.name}</span> — Mức đóng: {formatVND(activePeriod.contributionAmount)}
+                {chungPeriods.filter(p => p.status === 'active').length > 0 && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                    <select required value={formPeriodId} onChange={e => {
+                      const p = chungPeriods.find(x => x.id === e.target.value)
+                      setFormPeriodId(e.target.value)
+                      if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
+                    }} className="input-base">
+                      {chungPeriods.filter(p => p.status === 'active').map(p => (
+                        <option key={p.id} value={p.id}>{p.name} — {formatVND(p.contributionAmount)}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </>
@@ -599,9 +612,18 @@ export function Contributions() {
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
               </div>
-              {activePeriod && (
-                <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
-                  Kỳ quỹ: <span className="font-semibold">{activePeriod.name}</span> — Mức đóng: {formatVND(activePeriod.contributionAmount)}
+              {chungPeriods.filter(p => p.status === 'active').length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <select required value={formPeriodId} onChange={e => {
+                    const p = chungPeriods.find(x => x.id === e.target.value)
+                    setFormPeriodId(e.target.value)
+                    if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
+                  }} className="input-base">
+                    {chungPeriods.filter(p => p.status === 'active').map(p => (
+                      <option key={p.id} value={p.id}>{p.name} — {formatVND(p.contributionAmount)}</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </>

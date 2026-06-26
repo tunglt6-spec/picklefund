@@ -72,4 +72,8 @@ export class UpdateFundPeriodDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
 }
