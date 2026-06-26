@@ -386,7 +386,7 @@ export function Expenses() {
     [clubData.fundPeriods]
   )
   const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
 
   // Derive display view from store — no local copy
   const richExpenses = useMemo<RichExpense[]>(
@@ -464,7 +464,7 @@ export function Expenses() {
     const isMini = form.fundSource === 'MINI'
     const payload = {
       fundSource: form.fundSource,
-      fundPeriodId: isMini ? undefined : (activePeriod?.id ?? ''),
+      fundPeriodId: isMini ? undefined : (selectedPeriodId || activePeriod?.id || ''),
       description: form.description,
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
