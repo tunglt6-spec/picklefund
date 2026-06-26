@@ -15,6 +15,24 @@ import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { ClubsService } from './clubs.service';
 import { ClubStatus } from '@prisma/client';
 
+class CreateClubDto {
+  @IsString() @MaxLength(200) name!: string;
+  @IsString() @MaxLength(20) code!: string;
+  @IsOptional() @IsString() logoUrl?: string;
+  @IsOptional() @IsString() address?: string;
+  @IsOptional() @IsString() @MaxLength(255) contactEmail?: string;
+  @IsOptional() @IsString() @MaxLength(20) contactPhone?: string;
+}
+
+class UpdateClubDto {
+  @IsOptional() @IsString() @MaxLength(200) name?: string;
+  @IsOptional() @IsString() logoUrl?: string;
+  @IsOptional() @IsString() address?: string;
+  @IsOptional() @IsString() @MaxLength(255) contactEmail?: string;
+  @IsOptional() @IsString() @MaxLength(20) contactPhone?: string;
+  [key: string]: unknown;
+}
+
 class UpdateClubStatusDto {
   @IsEnum(['active', 'suspended', 'deleted']) status!: ClubStatus;
   @IsOptional() @IsString() @MaxLength(500) reason?: string;
@@ -60,7 +78,7 @@ export class ClubsController {
 
   @Post()
   @Roles('SUPER_ADMIN')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateClubDto) {
     const club = await this.clubs.create(body);
     this.audit.log({
       userId: user.id,
@@ -77,7 +95,7 @@ export class ClubsController {
   async update(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateClubDto,
   ) {
     if (user.role !== 'SUPER_ADMIN' && user.clubId !== id)
       throw new ForbiddenException();

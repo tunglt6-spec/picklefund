@@ -9,10 +9,28 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean, MaxLength } from 'class-validator';
+import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
+
+class CreateUserDto {
+  @IsOptional() @IsString() clubId?: string;
+  @IsString() @MaxLength(100) username!: string;
+  @IsEmail() @MaxLength(255) email!: string;
+  @IsString() @MaxLength(100) password!: string;
+  @IsOptional() @IsEnum(Role) role?: Role;
+}
+
+class UpdateUserDto {
+  @IsOptional() @IsString() @MaxLength(100) username?: string;
+  @IsOptional() @IsEmail() @MaxLength(255) email?: string;
+  @IsOptional() @IsString() @MaxLength(100) password?: string;
+  @IsOptional() @IsEnum(Role) role?: Role;
+  @IsOptional() @IsBoolean() isActive?: boolean;
+}
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -32,7 +50,7 @@ export class UsersController {
 
   @Post()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
-  async create(@CurrentUser() user: any, @Body() body: any) {
+  async create(@CurrentUser() user: any, @Body() body: CreateUserDto) {
     if (user.role === 'CLUB_ADMIN') {
       if (body.role === 'SUPER_ADMIN')
         throw new ForbiddenException(
@@ -42,7 +60,7 @@ export class UsersController {
         throw new ForbiddenException();
       body = { ...body, clubId: user.clubId };
     }
-    const created = await this.service.create(body);
+    const created = await this.service.create({ ...body, role: body.role ?? Role.CLUB_MEMBER });
     this.audit.log({
       userId: user.id,
       clubId: created.clubId ?? body.clubId,
@@ -59,7 +77,7 @@ export class UsersController {
   async update(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateUserDto,
   ) {
     if (user.role !== 'SUPER_ADMIN') {
       const target = await this.service.findOne(id);

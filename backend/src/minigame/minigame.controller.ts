@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/commo
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsArray, IsInt, IsDateString, Min, MaxLength, ArrayMaxSize } from 'class-validator';
 import { MinigameService } from './minigame.service';
-import { CurrentUser} from '../common/decorators';
+import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import { MinigameFormat } from '@prisma/client';
 
@@ -45,6 +45,7 @@ export class MinigameController {
   }
 
   @Post()
+  @Roles('CLUB_ADMIN')
   async create(
     @CurrentUser() user: any,
     @Body() body: CreateMinigameDto,
@@ -58,6 +59,7 @@ export class MinigameController {
   }
 
   @Post(':id/participants')
+  @Roles('CLUB_ADMIN')
   async addParticipants(
     @Param('id') id: string,
     @CurrentUser() user: any,
@@ -67,16 +69,19 @@ export class MinigameController {
   }
 
   @Post(':id/generate-teams')
+  @Roles('CLUB_ADMIN')
   async generateTeams(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.generateTeams(id, user.clubId));
   }
 
   @Post(':id/generate-schedule')
+  @Roles('CLUB_ADMIN')
   async generateSchedule(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.generateSchedule(id, user.clubId));
   }
 
   @Post(':id/teams')
+  @Roles('CLUB_ADMIN')
   async createTeam(
     @Param('id') id: string,
     @CurrentUser() user: any,
@@ -86,6 +91,7 @@ export class MinigameController {
   }
 
   @Delete(':id/teams/:teamId')
+  @Roles('CLUB_ADMIN')
   async deleteTeam(
     @Param('id') id: string,
     @Param('teamId') teamId: string,
@@ -95,16 +101,19 @@ export class MinigameController {
   }
 
   @Delete(':id/schedule')
+  @Roles('CLUB_ADMIN')
   async clearSchedule(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.clearSchedule(id, user.clubId), 'Đã xóa lịch thi đấu');
   }
 
   @Post(':id/start')
+  @Roles('CLUB_ADMIN')
   async start(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.startMinigame(id, user.clubId));
   }
 
   @Patch('matches/:matchId/score')
+  @Roles('CLUB_ADMIN')
   async score(
     @Param('matchId') matchId: string,
     @CurrentUser() user: any,
@@ -121,11 +130,13 @@ export class MinigameController {
   }
 
   @Post(':id/end')
+  @Roles('CLUB_ADMIN')
   async end(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.endMinigame(id, user.clubId));
   }
 
   @Post(':id/cancel')
+  @Roles('CLUB_ADMIN')
   async cancel(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.cancel(id, user.clubId));
   }
