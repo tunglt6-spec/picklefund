@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
@@ -164,7 +164,7 @@ export class LisaService {
       where: { id: memberId },
       include: { club: { select: { id: true, name: true } } },
     });
-    if (!member) throw new Error(`Member ${memberId} not found`);
+    if (!member) throw new NotFoundException(`Member ${memberId} not found`);
 
     const activePeriod = await this.prisma.fundPeriod.findFirst({
       where: { clubId: member.clubId, status: 'active' },

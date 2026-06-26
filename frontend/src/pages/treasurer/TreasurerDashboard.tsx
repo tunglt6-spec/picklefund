@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { KpiCard } from '../../components/ui/KpiCard'
@@ -8,6 +8,8 @@ import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
+import api from '../../lib/api'
+import * as XLSX from 'xlsx'
 import toast from 'react-hot-toast'
 
 type LedgerRow = {
@@ -43,6 +45,39 @@ export function TreasurerDashboard() {
 
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
   const subtitle = activePeriod ? `Kỳ ${activePeriod.name}` : 'Chưa có kỳ quỹ nào đang mở'
+
+  const [reminding, setReminding] = useState<string | null>(null)
+
+  const sendReminder = useCallback(async (contributionId: string, targetUserId: string | undefined, name: string) => {
+    if (!targetUserId) { toast.error(`${name} chưa có tài khoản để nhắc`); return }
+    setReminding(contributionId)
+    try {
+      await api.post('/hermes/dispatch', { type: 'payment_reminder', targetUserId })
+      toast.success(`Đã gửi nhắc nhở cho ${name}`)
+    } catch {
+      toast.error('Không thể gửi nhắc nhở, thử lại sau')
+    } finally {
+      setReminding(null)
+    }
+  }, [])
+
+  const exportLedger = useCallback(() => {
+    if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }
+    const rows = ledger.map(r => ({
+      'Ngày': formatDate(r.date),
+      'Loại': r.type === 'income' ? 'Thu' : 'Chi',
+      'Mô tả': r.description,
+      'Số tiền': r.type === 'income' ? r.amount : -r.amount,
+      'Số dư': r.balance,
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    ws['!cols'] = [{ wch: 14 }, { wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 14 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Sổ Quỹ')
+    const name = activePeriod ? `SoQuy_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy'
+    XLSX.writeFile(wb, `${name}.xlsx`)
+    toast.success('Đã xuất sổ quỹ Excel!')
+  }, [ledger, activePeriod])
 
   const ledger = useMemo<LedgerRow[]>(() => {
     const rows: Omit<LedgerRow, 'balance'>[] = [
@@ -127,7 +162,9 @@ export function TreasurerDashboard() {
                 <div key={c.id} className="flex items-center gap-2 bg-red-50 rounded-[10px] px-3 py-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
                   <span className="text-[12px] text-red-700 flex-1 truncate"><strong>{c.member?.fullName}</strong> chưa xác nhận</span>
-                  <button onClick={() => toast.success(`Đã gửi nhắc ${c.member?.fullName}`)} className="text-[11px] text-indigo-600 font-[600] shrink-0">Nhắc</button>
+                  <button onClick={() => sendReminder(c.id, c.member?.userId, c.member?.fullName ?? '')} disabled={reminding === c.id} className="text-[11px] text-indigo-600 font-[600] shrink-0 disabled:opacity-40">
+                    {reminding === c.id ? '...' : 'Nhắc'}
+                  </button>
                 </div>
               ))}
               {noReceipt.slice(0, 2).map(e => (
@@ -142,7 +179,7 @@ export function TreasurerDashboard() {
           <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
               <span className="text-[14px] font-[700] text-slate-800">Sổ Quỹ Gần Đây</span>
-              <button onClick={() => toast.success('Xuất sổ quỹ Excel!')} className="text-[12px] font-[600] text-indigo-600 active:opacity-70">Xuất</button>
+              <button onClick={exportLedger} className="text-[12px] font-[600] text-indigo-600 active:opacity-70">Xuất</button>
             </div>
             {recent.length === 0 ? (
               <div className="text-center py-8 text-slate-400 text-[13px]">Chưa có giao dịch</div>
@@ -230,8 +267,8 @@ export function TreasurerDashboard() {
                 <div key={c.id} className="flex items-center gap-3 rounded-lg bg-red-50 border border-red-100 px-4 py-3">
                   <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
                   <span className="text-sm text-red-800 flex-1"><strong>{c.member?.fullName}</strong> chưa xác nhận đóng quỹ</span>
-                  <Button size="sm" variant="outline" onClick={() => toast.success(`Đã gửi nhắc ${c.member?.fullName}`)}>
-                    Gửi nhắc
+                  <Button size="sm" variant="outline" disabled={reminding === c.id} onClick={() => sendReminder(c.id, c.member?.userId, c.member?.fullName ?? '')}>
+                    {reminding === c.id ? 'Đang gửi...' : 'Gửi nhắc'}
                   </Button>
                 </div>
               ))}
@@ -249,7 +286,7 @@ export function TreasurerDashboard() {
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <h3 className="font-semibold text-slate-900">Sổ Quỹ Gần Đây</h3>
-            <Button variant="outline" size="sm" onClick={() => toast.success('Xuất sổ quỹ Excel!')}>Xuất Sổ</Button>
+            <Button variant="outline" size="sm" onClick={exportLedger}>Xuất Sổ</Button>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-slate-50">
