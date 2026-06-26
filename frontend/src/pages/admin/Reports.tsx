@@ -237,7 +237,6 @@ export function Reports() {
   const livingAttendTotal = filteredExpenses
     .filter(e => e.allocationRule === 'PRESENT_ONLY' || e.allocationRule === 'ATTENDANCE')
     .reduce((a, e) => a + e.amount, 0)
-  const livingExpTotal = livingEqualTotal + livingAttendTotal
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
 
   const memberCosts = clubData.members.map(m => {
