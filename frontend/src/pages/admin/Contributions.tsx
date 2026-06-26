@@ -296,7 +296,7 @@ export function Contributions() {
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                   <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                     <option value="">-- Chọn thành viên --</option>
-                    {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+                    {members.filter(m => m.status === 'active' || m.id === editTarget?.memberId).map(m => <option key={m.id} value={m.id}>{m.fullName}{m.status !== 'active' ? ' (tạm nghỉ)' : ''}</option>)}
                   </select>
                 </div>
                 {chungPeriods.filter(p => p.status === 'active').length > 0 && (

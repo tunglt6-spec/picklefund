@@ -61,7 +61,7 @@ export function Attendance() {
   const openAttendance = async (session: AttendanceSession) => {
     setSelectedSession(session)
     // Default all present, then load existing records from server
-    const defaultMap = Object.fromEntries(members.map(m => [m.id, true]))
+    const defaultMap = Object.fromEntries(members.filter(m => m.status === 'active').map(m => [m.id, true]))
     setAttendance(defaultMap)
     try {
       const res = await api.get(`/attendance/${session.id}/attendance`)
@@ -79,7 +79,7 @@ export function Attendance() {
 
   const handleSaveAttendance = async () => {
     if (!selectedSession) return
-    const records = members.map(m => ({ memberId: m.id, status: attendance[m.id] ? 'PRESENT' : 'ABSENT' as const }))
+    const records = members.filter(m => m.status === 'active').map(m => ({ memberId: m.id, status: attendance[m.id] ? 'PRESENT' : 'ABSENT' as const }))
     const count = records.filter(r => r.status === 'PRESENT').length
     try {
       await api.put(`/attendance/${selectedSession.id}/attendance`, { attendance: records })
@@ -285,7 +285,7 @@ export function Attendance() {
             }
           >
             <div className="space-y-1.5 max-h-80 overflow-y-auto">
-              {members.map(m => (
+              {members.filter(m => m.status === 'active').map(m => (
                 <label key={m.id} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${
                   attendance[m.id] ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white hover:bg-slate-50'
                 }`}>
