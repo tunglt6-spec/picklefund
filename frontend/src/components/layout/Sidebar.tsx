@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
@@ -12,6 +12,7 @@ import { cn } from '../../lib/utils'
 import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 import api from '../../lib/api'
+import { useNotifStore } from '../../store/notifStore'
 
 interface NavItem {
   label: string
@@ -85,21 +86,21 @@ const roleColors: Record<Role, string> = {
 interface SidebarProps { onClose?: () => void }
 
 function useHermesUnreadCount(user: any) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
+  const { unreadCount, setUnreadCount } = useNotifStore()
+  const sync = useCallback(async () => {
     if (!user) return
-    const fetchCount = async () => {
-      try {
-        const res = await api.get('/hermes/notifications?limit=1')
-        const data = res.data?.data ?? res.data
-        setCount(Math.min(data?.unreadCount ?? 0, 9))
-      } catch {}
-    }
-    fetchCount()
-    const id = setInterval(fetchCount, 60000)
+    try {
+      const res = await api.get('/hermes/notifications?limit=1')
+      const data = res.data?.data ?? res.data
+      setUnreadCount(Math.min(data?.unreadCount ?? 0, 9))
+    } catch {}
+  }, [user, setUnreadCount])
+  useEffect(() => {
+    sync()
+    const id = setInterval(sync, 30000)
     return () => clearInterval(id)
-  }, [user])
-  return count
+  }, [sync])
+  return unreadCount
 }
 
 export function Sidebar({ onClose }: SidebarProps) {

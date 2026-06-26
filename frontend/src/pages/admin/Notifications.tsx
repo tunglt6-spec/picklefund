@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
+import { useNotifStore } from '../../store/notifStore'
 
 type HermesNotif = {
   id: string
@@ -100,6 +101,7 @@ export function Notifications() {
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const { setUnreadCount: setGlobalUnread, reset: resetGlobal } = useNotifStore()
 
   const fetchNotifs = useCallback(async () => {
     if (!user) return
@@ -107,7 +109,9 @@ export function Notifications() {
       const res = await api.get('/hermes/notifications?limit=50')
       const data = res.data?.data ?? res.data
       setNotifs(data?.items ?? data?.notifications ?? [])
-      setUnreadCount(data?.unreadCount ?? 0)
+      const cnt = data?.unreadCount ?? 0
+      setUnreadCount(cnt)
+      setGlobalUnread(Math.min(cnt, 9))
     } catch {
       // silent
     } finally {
@@ -121,7 +125,11 @@ export function Notifications() {
     try {
       await api.patch(`/hermes/notifications/${id}/read`)
       setNotifs(prev => prev.map(n => n.id === id ? { ...n, status: 'READ' } : n))
-      setUnreadCount(prev => Math.max(0, prev - 1))
+      setUnreadCount(prev => {
+        const next = Math.max(0, prev - 1)
+        setGlobalUnread(Math.min(next, 9))
+        return next
+      })
     } catch { /* silent */ }
   }
 
@@ -130,6 +138,7 @@ export function Notifications() {
       await api.post('/hermes/notifications/read-all')
       setNotifs(prev => prev.map(n => ({ ...n, status: 'READ' as const })))
       setUnreadCount(0)
+      resetGlobal()
       toast.success('Đã đánh dấu tất cả là đã đọc')
     } catch { /* silent */ }
   }
