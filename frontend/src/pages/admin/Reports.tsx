@@ -220,10 +220,24 @@ export function Reports() {
     }
   }).sort((a, b) => b.rate - a.rate)
 
-  // CHI PHÍ SÂN: expenses "Đều nhau" (EQUAL) — tiền thuê sân, chia đều tất cả thành viên
-  const courtExpTotal = filteredExpenses.filter(e => e.allocationRule === 'EQUAL').reduce((a, e) => a + e.amount, 0)
-  // SINH HOẠT: expenses "Theo số người tham gia" (PRESENT_ONLY/ATTENDANCE) — nước, ăn uống
-  const livingExpTotal = filteredExpenses.filter(e => e.allocationRule === 'PRESENT_ONLY' || e.allocationRule === 'ATTENDANCE').reduce((a, e) => a + e.amount, 0)
+  // Detect court expenses by description keywords (admin may mark all as EQUAL)
+  const COURT_KEYWORDS = ['sân', 'court', 'thuê sân', 'phí sân', 'xẻ vé sân', 'vé sân']
+  const isCourtExp = (e: { description?: string; allocationRule: string }) =>
+    COURT_KEYWORDS.some(k => (e.description ?? '').toLowerCase().includes(k))
+
+  // CHI PHÍ SÂN: EQUAL expenses that are court-related → split equally / memberCount
+  const courtExpTotal = filteredExpenses
+    .filter(e => e.allocationRule === 'EQUAL' && isCourtExp(e))
+    .reduce((a, e) => a + e.amount, 0)
+
+  // SINH HOẠT: EQUAL non-court + PRESENT_ONLY + ATTENDANCE expenses
+  const livingEqualTotal = filteredExpenses
+    .filter(e => e.allocationRule === 'EQUAL' && !isCourtExp(e))
+    .reduce((a, e) => a + e.amount, 0)
+  const livingAttendTotal = filteredExpenses
+    .filter(e => e.allocationRule === 'PRESENT_ONLY' || e.allocationRule === 'ATTENDANCE')
+    .reduce((a, e) => a + e.amount, 0)
+  const livingExpTotal = livingEqualTotal + livingAttendTotal
   const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
 
   const memberCosts = clubData.members.map(m => {
@@ -232,7 +246,9 @@ export function Reports() {
     return {
       name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
       san: memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0,
-      sh: totalAttendances > 0 ? Math.round(livingExpTotal / totalAttendances * attended) : 0,
+      // SINH HOẠT: equal part split equally, attendance part split proportionally
+      sh: (memberCount > 0 ? Math.round(livingEqualTotal / memberCount) : 0) +
+          (totalAttendances > 0 ? Math.round(livingAttendTotal / totalAttendances * attended) : 0),
     }
   })
 
@@ -243,10 +259,11 @@ export function Reports() {
     const summ = attSummary.find(a => a.memberId === m.id)
     const attended = Math.min(summ?.attendedSessions ?? 0, sessionCount)
     const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    // CHI PHÍ SÂN: chia đều cho tất cả thành viên
+    // CHI PHÍ SÂN: split equally
     const courtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
-    // SINH HOẠT: tỉ lệ theo số buổi đã tham gia
-    const livingCost = totalAttendances > 0 ? Math.round(livingExpTotal / totalAttendances * attended) : 0
+    // SINH HOẠT: equal part split equally + attendance part split proportionally
+    const livingCost = (memberCount > 0 ? Math.round(livingEqualTotal / memberCount) : 0) +
+      (totalAttendances > 0 ? Math.round(livingAttendTotal / totalAttendances * attended) : 0)
     const totalCost = courtCost + livingCost
     return {
       memberName: m.fullName ?? m.id,
