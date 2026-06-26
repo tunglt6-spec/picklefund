@@ -74,12 +74,13 @@ export class FundPeriodsService {
     if (new Date(dto.endDate) <= new Date(dto.startDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
     }
-    const { type: _type, ...safeDto } = dto;
+    const { type, ...safeDto } = dto;
     return this.prisma.fundPeriod.create({
       data: {
         ...safeDto,
         clubId,
         createdById: userId,
+        type: type ?? 'chung',
         startDate: new Date(dto.startDate),
         endDate: new Date(dto.endDate),
         contributionAmount: new Decimal(dto.contributionAmount),
@@ -93,7 +94,7 @@ export class FundPeriodsService {
     const fp = await this.findOne(id, clubId);
     if (fp.status === 'finalized')
       throw new BadRequestException('Kỳ đã chốt không thể sửa');
-    const { clubId: _c, createdById: _b, id: _id, type: _t, ...safeDto } = dto;
+    const { clubId: _c, createdById: _b, id: _id, type, ...safeDto } = dto;
     const effectiveStart = safeDto.startDate
       ? new Date(safeDto.startDate)
       : fp.startDate;
@@ -106,6 +107,7 @@ export class FundPeriodsService {
       where: { id, clubId },
       data: {
         ...safeDto,
+        ...(type !== undefined ? { type } : {}),
         ...(safeDto.startDate
           ? { startDate: new Date(safeDto.startDate) }
           : {}),

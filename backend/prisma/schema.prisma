@@ -138,6 +138,7 @@ model FundPeriod {
   contributionAmount Decimal          @map("contribution_amount") @db.Decimal(15, 2)
   totalSessions      Int              @default(0) @map("total_sessions")
   status             FundPeriodStatus @default(draft)
+  type               String           @default("chung") @map("type")
   notes              String?
   finalizedAt        DateTime?        @map("finalized_at")
   createdById        String           @map("created_by")
