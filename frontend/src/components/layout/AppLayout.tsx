@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Sparkles } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
@@ -60,18 +59,20 @@ export function AppLayout() {
         {lisaRoute && !isOnLisa && (
           <button
             onClick={() => navigate(lisaRoute)}
-            className="md:hidden fixed z-40 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            className="md:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
             style={{
-              right: 16,
-              bottom: 'calc(72px + env(safe-area-inset-bottom))',
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              background: 'linear-gradient(135deg,#4F46E5,#06B6D4)',
+              right: 14,
+              bottom: 'calc(68px + env(safe-area-inset-bottom))',
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              overflow: 'hidden',
+              padding: 0,
+              border: '2.5px solid #fff',
             }}
             aria-label="Hỏi Lisa AI"
           >
-            <Sparkles size={20} color="#fff" />
+            <img src="/lisa-avatar.jpg" alt="Lisa AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </button>
         )}
 

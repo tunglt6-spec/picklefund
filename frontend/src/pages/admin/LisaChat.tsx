@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react'
+import { Send, Bot, User, RefreshCw } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -162,8 +162,8 @@ export function LisaChat() {
         {/* Header — fixed height */}
         <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-sm">
-              <Sparkles size={15} className="text-white" />
+            <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
+              <img src="/lisa-avatar.jpg" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-[15px] font-[800] text-slate-900">Lisa AI</p>

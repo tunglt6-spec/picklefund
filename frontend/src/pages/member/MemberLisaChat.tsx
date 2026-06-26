@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react'
+import { Send, Bot, User, RefreshCw } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -136,8 +136,8 @@ export function MemberLisaChat() {
         {/* Header — fixed height */}
         <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-sm">
-              <Sparkles size={15} className="text-white" />
+            <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
+              <img src="/lisa-avatar.jpg" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-[15px] font-[800] text-slate-900">Lisa AI</p>
@@ -170,8 +170,8 @@ export function MemberLisaChat() {
     <div className="flex flex-col h-full bg-slate-50">
       <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
-            <Sparkles size={16} className="text-indigo-600" />
+          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 shadow-sm">
+            <img src="/lisa-avatar.jpg" alt="Lisa" className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="font-bold text-slate-900">Lisa AI</p>
