@@ -158,11 +158,12 @@ export function LisaChat() {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+      <div className="flex flex-col h-full overflow-hidden bg-[#F8FAFC]">
+        {/* Header — fixed height */}
+        <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Sparkles size={15} className="text-indigo-600" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-sm">
+              <Sparkles size={15} className="text-white" />
             </div>
             <div>
               <p className="text-[15px] font-[800] text-slate-900">Lisa AI</p>
@@ -174,17 +175,19 @@ export function LisaChat() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
+        {/* Messages — scrollable, fills remaining space */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
 
-        <div className="bg-white border-t border-slate-100 px-4 py-3 pb-safe">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+        {/* Input — always visible at bottom */}
+        <div className="shrink-0 bg-white border-t border-slate-100 px-4 py-3" style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
+          <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <input
               value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
               className="flex-1 text-sm bg-slate-100 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300"
             />
             <button type="submit" disabled={!input.trim() || loading}
-              className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center disabled:opacity-40 active:opacity-70">
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
               <Send size={15} className="text-white" />
             </button>
           </form>
