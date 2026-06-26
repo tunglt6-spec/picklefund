@@ -150,13 +150,28 @@ export class AttendanceService {
       where: { clubId, ...(fundPeriodId ? { fundPeriodId } : {}) },
       select: { id: true },
     });
-    // Fallback: if no sessions found for this period, use sessions without any period link
-    // (fundPeriodId stored as '' for sessions created before fund period validation was added)
+    // Fallback 1: sessions stored with empty string fundPeriodId (created before validation)
     if (fundPeriodId && sessions.length === 0) {
       sessions = await this.prisma.attendanceSession.findMany({
         where: { clubId, fundPeriodId: '' },
         select: { id: true },
       });
+    }
+    // Fallback 2: match by date range of the fund period (sessions linked to wrong/other period)
+    if (fundPeriodId && sessions.length === 0) {
+      const period = await this.prisma.fundPeriod.findUnique({
+        where: { id: fundPeriodId },
+        select: { startDate: true, endDate: true },
+      });
+      if (period) {
+        sessions = await this.prisma.attendanceSession.findMany({
+          where: {
+            clubId,
+            sessionDate: { gte: period.startDate, lte: period.endDate },
+          },
+          select: { id: true },
+        });
+      }
     }
     const sessionIds = sessions.map((s) => s.id);
 

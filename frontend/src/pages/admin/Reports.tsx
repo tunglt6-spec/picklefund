@@ -176,11 +176,22 @@ export function Reports() {
   const memberCount = clubData.members.filter(m => m.status === 'active').length
   const confirmedCount = filteredContribs.filter(c => c.isConfirmed).length
 
-  // Sessions for the active period; fall back to unlinked sessions (fundPeriodId='') for clubs
-  // that created sessions before creating a fund period.
+  // Sessions for the active period with 3-level fallback:
+  // 1. Exact match by fundPeriodId
+  // 2. Sessions with no fundPeriodId (created before period validation)
+  // 3. Sessions whose sessionDate falls within the period's date range
   const exactPeriodSessions = clubData.sessions.filter(s => s.fundPeriodId === activePeriod?.id)
   const unlinkedSessions = clubData.sessions.filter(s => !s.fundPeriodId)
-  const periodSessions = exactPeriodSessions.length > 0 ? exactPeriodSessions : unlinkedSessions
+  const dateRangeSessions = activePeriod
+    ? clubData.sessions.filter(s =>
+        s.sessionDate >= activePeriod.startDate && s.sessionDate <= activePeriod.endDate
+      )
+    : []
+  const periodSessions = exactPeriodSessions.length > 0
+    ? exactPeriodSessions
+    : unlinkedSessions.length > 0
+      ? unlinkedSessions
+      : dateRangeSessions
   const sessionCount = periodSessions.length
 
   const expenseByCategory = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
