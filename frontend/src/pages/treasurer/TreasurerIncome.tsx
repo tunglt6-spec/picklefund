@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -41,6 +41,25 @@ export function TreasurerIncome() {
 
   const defaultPeriodId = activePeriods[0]?.id ?? ''
   const [showModal, setShowModal] = useState(false)
+
+  // Refresh on mount so data is always current
+  useEffect(() => {
+    if (!clubId) return
+    api.get(`/contributions?clubId=${clubId}`).then(res => {
+      const raw = res.data?.data ?? []
+      setContributions(clubId, raw.map((c: any) => ({
+        id: c.id, clubId: c.clubId, fundSource: c.fundSource ?? 'COMMON',
+        fundPeriodId: c.fundPeriodId ?? undefined, memberId: c.memberId ?? undefined,
+        member: c.member ? { id: c.memberId, fullName: c.member.fullName } : undefined,
+        amount: Number(c.amount), paymentDate: c.paymentDate?.slice(0, 10) ?? '',
+        paymentMethod: c.paymentMethod ?? 'bank_transfer',
+        isConfirmed: c.isConfirmed ?? false, notes: c.notes ?? undefined,
+        miniIncomeType: c.miniIncomeType ?? undefined, payerName: c.payerName ?? undefined,
+        createdAt: c.createdAt ?? '', createdBy: c.createdById ?? '',
+      })))
+    }).catch(() => {/* keep existing store data */})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)

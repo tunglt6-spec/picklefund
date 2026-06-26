@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Receipt } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -45,6 +45,23 @@ export function TreasurerExpense() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState({ ...BLANK, fundPeriodId: defaultPeriodId })
   const [isSaving, setIsSaving] = useState(false)
+
+  // Refresh on mount so data is always current
+  useEffect(() => {
+    if (!clubId) return
+    api.get(`/expenses?clubId=${clubId}`).then(res => {
+      const raw = res.data?.data ?? []
+      setExpenses(clubId, raw.map((e: any) => ({
+        id: e.id, clubId: e.clubId, fundPeriodId: e.fundPeriodId ?? undefined,
+        description: e.description ?? '', amount: Number(e.amount),
+        allocationRule: e.allocationRule ?? 'EQUAL',
+        expenseDate: e.expenseDate?.slice(0, 10) ?? '',
+        receiptUrl: e.receiptUrl ?? undefined, notes: e.notes ?? undefined,
+        createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
+      })))
+    }).catch(() => {/* keep existing store data */})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
 
   const totalExpenses = expenses.reduce((a, e) => a + e.amount, 0)
 

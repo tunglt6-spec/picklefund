@@ -27,7 +27,7 @@ export class CreateContributionDto {
   fundPeriodId?: string;
 
   @IsOptional()
-  @IsEnum(['REGISTRATION_FEE', 'TOURNAMENT_INCOME', 'SPONSORSHIP', 'OTHER'])
+  @IsEnum(['BETTING', 'SPONSORSHIP', 'PENALTY', 'DONATION', 'OTHER'])
   miniIncomeType?: MiniIncomeType;
 
   @IsOptional()
@@ -105,4 +105,23 @@ export class UpdateContributionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  memberId?: string;
+
+  @IsOptional()
+  @IsString()
+  fundPeriodId?: string;
+
+  @IsOptional()
+  @IsEnum(['BETTING', 'SPONSORSHIP', 'PENALTY', 'DONATION', 'OTHER'])
+  miniIncomeType?: MiniIncomeType;
+
+  @IsOptional()
+  @IsString()
+  payerName?: string;
+
+  @IsOptional()
+  isConfirmed?: boolean;
 }

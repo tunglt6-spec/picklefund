@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -30,7 +30,7 @@ const BLANK_COMMON = {
 export function Contributions() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
-  const { getClubData, setContributions: saveContributions } = useClubDataStore()
+  const { getClubData, setContributions: saveContributions, setFundPeriods } = useClubDataStore()
   const data = getClubData(clubId)
   const contributions = data.contributions
   const members = data.members
@@ -47,8 +47,9 @@ export function Contributions() {
   )
   const selectedPeriod = chungPeriods.find(p => p.id === selectedPeriodId) ?? chungPeriods[0]
 
-  const setContributions = (fn: (prev: FundContribution[]) => FundContribution[]) =>
-    saveContributions(clubId, fn(getClubData(clubId).contributions))
+  const setContributions = useCallback((fn: (prev: FundContribution[]) => FundContribution[]) =>
+    saveContributions(clubId, fn(getClubData(clubId).contributions)),
+  [clubId, saveContributions, getClubData])
 
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
@@ -56,6 +57,48 @@ export function Contributions() {
   const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
+
+  // Refresh contributions + periods when page mounts (in case data changed from another tab/session)
+  useEffect(() => {
+    if (!clubId) return
+    Promise.allSettled([
+      api.get(`/contributions?clubId=${clubId}`),
+      api.get(`/fund-periods?clubId=${clubId}`),
+    ]).then(([contribsRes, periodsRes]) => {
+      if (contribsRes.status === 'fulfilled') {
+        const raw = contribsRes.value.data?.data ?? []
+        saveContributions(clubId, raw.map((c: any) => ({
+          id: c.id, clubId: c.clubId, fundSource: c.fundSource ?? 'COMMON',
+          fundPeriodId: c.fundPeriodId ?? undefined,
+          memberId: c.memberId ?? undefined,
+          member: c.member ? { id: c.memberId, fullName: c.member.fullName } : undefined,
+          amount: Number(c.amount), paymentDate: c.paymentDate?.slice(0, 10) ?? '',
+          paymentMethod: c.paymentMethod ?? 'bank_transfer',
+          isConfirmed: c.isConfirmed ?? false, notes: c.notes ?? undefined,
+          miniIncomeType: c.miniIncomeType ?? undefined, payerName: c.payerName ?? undefined,
+          createdAt: c.createdAt ?? '', createdBy: c.createdById ?? '',
+        })))
+      }
+      if (periodsRes.status === 'fulfilled') {
+        const raw = periodsRes.value.data?.data ?? []
+        setFundPeriods(clubId, raw.map((p: any) => ({
+          id: p.id, clubId: p.clubId, name: p.name,
+          startDate: p.startDate?.slice(0, 10) ?? '', endDate: p.endDate?.slice(0, 10) ?? '',
+          contributionAmount: Number(p.contributionAmount), totalSessions: p.totalSessions ?? 0,
+          status: p.status, notes: p.notes ?? undefined, type: p.type ?? 'chung',
+          finalizedAt: p.finalizedAt ?? undefined, createdBy: p.createdById ?? '',
+        })))
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
+
+  // Sync selectedPeriodId and formPeriodId once activePeriod is known (handles async load)
+  useEffect(() => {
+    if (!activePeriod?.id) return
+    setSelectedPeriodId(prev => prev || activePeriod.id)
+    setFormPeriodId(prev => prev || activePeriod.id)
+  }, [activePeriod?.id])
 
   const commonContribs = contributions.filter(c =>
     (c.fundSource ?? 'COMMON') === 'COMMON' &&
