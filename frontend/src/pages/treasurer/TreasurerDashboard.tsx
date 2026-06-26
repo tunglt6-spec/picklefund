@@ -5,6 +5,7 @@ import { KpiCard } from '../../components/ui/KpiCard'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
@@ -47,6 +48,15 @@ export function TreasurerDashboard() {
   const subtitle = activePeriod ? `Kỳ ${activePeriod.name}` : 'Chưa có kỳ quỹ nào đang mở'
 
   const [reminding, setReminding] = useState<string | null>(null)
+  const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
+  const { setExpenses } = useClubDataStore()
+
+  const handleReceiptSuccess = useCallback((expenseId: string, receiptUrl: string) => {
+    setExpenses(user?.clubId ?? '', clubData.expenses.map(e =>
+      e.id === expenseId ? { ...e, receiptUrl } : e
+    ))
+    setReceiptModal(null)
+  }, [user?.clubId, clubData.expenses, setExpenses])
 
   const sendReminder = useCallback(async (contributionId: string, targetUserId: string | undefined, name: string) => {
     if (!targetUserId) { toast.error(`${name} chưa có tài khoản để nhắc`); return }
@@ -113,6 +123,7 @@ export function TreasurerDashboard() {
 
   if (isMobile) {
     return (
+      <>
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
           <div className="text-[17px] font-[800] text-slate-900">Thủ Quỹ</div>
@@ -171,6 +182,10 @@ export function TreasurerDashboard() {
                 <div key={e.id} className="flex items-center gap-2 bg-amber-50 rounded-[10px] px-3 py-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                   <span className="text-[12px] text-amber-700 flex-1 truncate"><strong>{e.description}</strong> thiếu HĐ</span>
+                  <button className="text-[11px] font-semibold text-amber-700 underline shrink-0"
+                    onClick={() => setReceiptModal({ id: e.id, label: `${e.description} (${formatVND(e.amount)})` })}>
+                    Đính kèm
+                  </button>
                 </div>
               ))}
             </div>
@@ -207,6 +222,15 @@ export function TreasurerDashboard() {
           </div>
         </div>
       </div>
+      {receiptModal && (
+        <ReceiptUploadModal
+          expenseId={receiptModal.id}
+          expenseLabel={receiptModal.label}
+          onSuccess={handleReceiptSuccess}
+          onClose={() => setReceiptModal(null)}
+        />
+      )}
+      </>
     )
   }
 
@@ -276,7 +300,7 @@ export function TreasurerDashboard() {
                 <div key={e.id} className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-100 px-4 py-3">
                   <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
                   <span className="text-sm text-amber-800 flex-1">Khoản chi <strong>{e.description}</strong> ({formatVND(e.amount)}) chưa có hóa đơn</span>
-                  <Button size="sm" variant="outline" onClick={() => toast.success('Đã đính kèm hóa đơn!')}>Đính kèm</Button>
+                  <Button size="sm" variant="outline" onClick={() => setReceiptModal({ id: e.id, label: `${e.description} (${formatVND(e.amount)})` })}>Đính kèm</Button>
                 </div>
               ))}
             </div>
@@ -325,6 +349,14 @@ export function TreasurerDashboard() {
           </table>
         </div>
       </div>
+      {receiptModal && (
+        <ReceiptUploadModal
+          expenseId={receiptModal.id}
+          expenseLabel={receiptModal.label}
+          onSuccess={handleReceiptSuccess}
+          onClose={() => setReceiptModal(null)}
+        />
+      )}
     </div>
   )
 }
