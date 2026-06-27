@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { X, Download, FileText, Share2, Loader2, Sparkles } from 'lucide-react'
 import { InfographicReport } from './InfographicReport'
 import type { InfographicReportData } from './infographic.types'
