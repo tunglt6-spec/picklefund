@@ -71,7 +71,7 @@ export function Billing() {
       setSub(subRes.data?.data ?? subRes.data)
       setPlans(planRes.data?.data ?? planRes.data)
       setUsage(usageRes.data?.data ?? usageRes.data)
-    } catch {}
+    } catch { /* noop */ }
     finally { setLoading(false) }
   }, [user])
 

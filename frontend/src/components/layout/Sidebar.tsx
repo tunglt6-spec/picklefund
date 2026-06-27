@@ -93,7 +93,7 @@ function useHermesUnreadCount(user: any) {
       const res = await api.get('/hermes/notifications?limit=1')
       const data = res.data?.data ?? res.data
       setUnreadCount(Math.min(data?.unreadCount ?? 0, 9))
-    } catch {}
+    } catch { /* noop */ }
   }, [user, setUnreadCount])
   useEffect(() => {
     sync()

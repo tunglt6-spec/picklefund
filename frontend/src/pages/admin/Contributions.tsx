@@ -225,11 +225,14 @@ export function Contributions() {
     }
   }
 
+  const [mobileTab, setMobileTab] = useState<'COMMON' | 'MINI'>('COMMON')
+
   const isMobile = useIsMobile()
 
   /* ── Mobile layout ── */
   if (isMobile) {
-    const sorted = [...commonContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
+    const sortedCommon = [...commonContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
+    const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
@@ -271,35 +274,82 @@ export function Contributions() {
           </div>
         </div>
 
+        {/* Mobile Fund Tabs */}
+        <div className="flex gap-1 bg-slate-100 rounded-[12px] p-1 mx-4 mt-2">
+          <button
+            onClick={() => setMobileTab('COMMON')}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+          >
+            Quỹ Chung
+          </button>
+          <button
+            onClick={() => setMobileTab('MINI')}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}
+          >
+            Quỹ Mini
+          </button>
+        </div>
+
         <div className="px-4 pt-3 pb-6 space-y-2">
-          {sorted.length === 0 ? (
-            <div className="text-center py-14 text-slate-400 text-sm">
-              <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
-              Chưa có khoản thu nào
-            </div>
-          ) : sorted.map(c => {
-            const memberName = members.find(m => m.id === c.memberId)?.fullName ?? c.payerName ?? 'N/A'
-            return (
-              <MobileTransactionCard
-                key={c.id}
-                name={memberName}
-                description={c.notes ?? c.paymentMethod}
-                amount={c.amount}
-                type="income"
-                fundSource={c.fundSource ?? 'COMMON'}
-                status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                actions={
-                  <>
-                    <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
-                      {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                    </button>
-                    <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
-                    <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
-                  </>
-                }
-              />
-            )
-          })}
+          {mobileTab === 'COMMON' ? (
+            sortedCommon.length === 0 ? (
+              <div className="text-center py-14 text-slate-400 text-sm">
+                <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+                Chưa có khoản thu nào
+              </div>
+            ) : sortedCommon.map(c => {
+              const memberName = members.find(m => m.id === c.memberId)?.fullName ?? c.payerName ?? 'N/A'
+              return (
+                <MobileTransactionCard
+                  key={c.id}
+                  name={memberName}
+                  description={c.notes ?? c.paymentMethod}
+                  amount={c.amount}
+                  type="income"
+                  fundSource={c.fundSource ?? 'COMMON'}
+                  status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                  actions={
+                    <>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
+                        {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                      </button>
+                      <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                    </>
+                  }
+                />
+              )
+            })
+          ) : (
+            sortedMini.length === 0 ? (
+              <div className="text-center py-14 text-slate-400 text-sm">
+                <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+                Chưa có khoản thu Quỹ Mini nào
+              </div>
+            ) : sortedMini.map(c => {
+              const memberName = c.payerName ?? members.find(m => m.id === c.memberId)?.fullName ?? 'N/A'
+              return (
+                <MobileTransactionCard
+                  key={c.id}
+                  name={memberName}
+                  description={MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}
+                  amount={c.amount}
+                  type="income"
+                  fundSource="MINI"
+                  status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                  actions={
+                    <>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
+                        {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                      </button>
+                      <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                    </>
+                  }
+                />
+              )
+            })
+          )}
         </div>
 
         {/* Create / Edit Modal — full form on mobile */}

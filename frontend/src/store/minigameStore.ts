@@ -1805,7 +1805,7 @@ export const useMinigameStore = create<MinigameStore>()(
         const parts = get().participants.filter(p => p.minigameId === minigameId && p.status === 'ACTIVE')
         if (parts.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
         const pairingMode = mg.pairingMode ?? 'RANDOM_PAIRING'
-        let sorted = [...parts]
+        const sorted = [...parts]
         if (pairingMode === 'BALANCED_SKILL_PAIRING') {
           sorted.sort((a, b) => (b.skillLevel ?? 50) - (a.skillLevel ?? 50))
           // Pair best with worst, 2nd best with 2nd worst (snake draft)
