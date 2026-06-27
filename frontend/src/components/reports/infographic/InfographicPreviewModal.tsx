@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from 'lucide-react'
-import { InfographicTemplateA } from './InfographicTemplateA'
-import { InfographicTemplateB } from './InfographicTemplateB'
+import { InfographicOverlayA } from './InfographicOverlayA'
+import { InfographicOverlayB } from './InfographicOverlayB'
 import type { InfographicReportData } from './infographic.types'
 import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName } from './infographic.utils'
 import toast from 'react-hot-toast'
@@ -104,38 +104,17 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
         {/* Scrollable preview */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-950 py-4 px-2">
-          {/* Template A — hidden when tab B (but still mounted so export works) */}
-          <div
-            style={{ display: tab === 'A' ? 'block' : 'none' }}
-          >
-            <div
-              style={{
-                width: 1080,
-                transformOrigin: 'top center',
-                transform: 'scale(0.46)',
-                marginBottom: 'calc((0.46 - 1) * 1920px)',
-              }}
-              className="mx-auto"
-            >
-              <InfographicTemplateA data={data} id={ID_A} />
+            {tab === 'A' && (
+            <div style={{ width: 1080, zoom: 0.46, transformOrigin: 'top left' }} className="mx-auto">
+              <InfographicOverlayA data={data} id={ID_A} />
             </div>
-          </div>
+          )}
 
-          {/* Template B */}
-          <div
-            style={{ display: tab === 'B' ? 'block' : 'none' }}
-          >
-            <div
-              style={{
-                width: 1080,
-                transformOrigin: 'top center',
-                transform: 'scale(0.46)',
-              }}
-              className="mx-auto"
-            >
-              <InfographicTemplateB data={data} id={ID_B} />
+          {tab === 'B' && (
+            <div style={{ width: 1080, zoom: 0.46, transformOrigin: 'top left' }} className="mx-auto">
+              <InfographicOverlayB data={data} id={ID_B} />
             </div>
-          </div>
+          )}
         </div>
 
         {/* Bottom action bar */}
