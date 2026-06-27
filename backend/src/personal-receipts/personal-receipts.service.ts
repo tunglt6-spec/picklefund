@@ -36,7 +36,6 @@ export class PersonalReceiptsService {
   // Compute and snapshot all member receipts for a fund period
   async generateForPeriod(fundPeriodId: string, clubId: string) {
     const summary = await this.calculator.calculate(fundPeriodId, clubId);
-    const { Decimal } = await import('@prisma/client/runtime/library');
 
     const receipts = await Promise.all(
       summary.members.map(async (m) => {
