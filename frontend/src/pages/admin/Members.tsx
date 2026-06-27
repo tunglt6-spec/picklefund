@@ -121,7 +121,9 @@ export function Members() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getClubData, setMembers: saveMembers } = useClubDataStore()
-  const members = getClubData(clubId).members
+  const clubData = getClubData(clubId)
+  const members = clubData.members
+  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
 
   const setMembers = (fn: (prev: Member[]) => Member[]) =>
     saveMembers(clubId, fn(getClubData(clubId).members))
@@ -216,7 +218,7 @@ export function Members() {
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200"
               ><FileSpreadsheet size={15} /></button>
               <button
-                onClick={() => { exportMembersPDF('CLB', filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' }))); toast.success('Đã xuất PDF!') }}
+                onClick={() => { exportMembersPDF(clubName, filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' }))); toast.success('Đã xuất PDF!') }}
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-200"
               ><FileText size={15} /></button>
               <button
@@ -286,7 +288,7 @@ export function Members() {
             toast.success('Đã xuất Excel danh sách thành viên!')
           }}><FileSpreadsheet size={14} />Excel</Button>
           <Button variant="outline" onClick={() => {
-            exportMembersPDF('CLB', filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' })))
+            exportMembersPDF(clubName, filtered.map(m => ({ name: m.fullName, phone: m.phone ?? '', email: m.email ?? '', joinDate: formatDate(m.joinDate), status: m.status === 'active' ? 'Hoạt động' : m.status === 'inactive' ? 'Tạm nghỉ' : 'Đã rời' })))
             toast.success('Đã xuất PDF danh sách thành viên!')
           }}><FileText size={14} />PDF</Button>
           <Button onClick={openCreate}><Plus size={15} />Thêm thành viên</Button>

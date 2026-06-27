@@ -494,7 +494,7 @@ export function Reports() {
             <button className="flex-1 py-2.5 rounded-[12px] border border-slate-200 text-[13px] font-[600] text-slate-600 flex items-center justify-center gap-1 active:bg-slate-50"
               onClick={() => {
                 exportReportsPDF(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows
                 )
                 toast.success('Đang tạo PDF...')
@@ -504,7 +504,7 @@ export function Reports() {
             <button className="flex-1 py-2.5 rounded-[12px] border border-emerald-200 text-[13px] font-[600] text-emerald-600 flex items-center justify-center gap-1 active:bg-emerald-50"
               onClick={() => {
                 exportReportsExcel(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows.map(r => ({
                     name: r.memberName,
                     attended: r.attendedSessions,
@@ -594,7 +594,7 @@ export function Reports() {
               className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
               onClick={() => {
                 exportReportsExcel(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows.map(r => ({
                     name: r.memberName,
                     attended: r.attendedSessions,
@@ -611,7 +611,7 @@ export function Reports() {
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={() => {
                 exportReportsPDF(
-                  { periodName, clubName: '', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
+                  { periodName, clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball', totalIncome, totalExpense: totalExpenses, balance: displayBalance, memberCount, sessionCount, confirmedCount },
                   memberBillRows
                 )
                 toast.success('Đã xuất PDF báo cáo!')

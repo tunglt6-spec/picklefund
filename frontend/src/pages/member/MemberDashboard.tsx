@@ -30,20 +30,27 @@ export function MemberDashboard() {
   const attendanceRate = totalSessions > 0 ? Math.round((myAttendance / totalSessions) * 100) : 0
 
   const amountPaid = myContribution?.isConfirmed ? (myContribution.amount ?? 0) : 0
-  const totalExpenses = clubData.expenses
-    .filter(e => !activePeriod || e.fundPeriodId === activePeriod.id)
+  const periodExpenses = clubData.expenses.filter(e => !activePeriod || e.fundPeriodId === activePeriod.id)
+  const COURT_KW = ['sân', 'court']
+  const courtExpTotal = periodExpenses
+    .filter(e => e.allocationRule === 'EQUAL' && COURT_KW.some(k => (e.description ?? '').toLowerCase().includes(k)))
     .reduce((a, e) => a + e.amount, 0)
-  const memberCount = clubData.members.length || 1
-  const myCost =
-    totalSessions > 0 && memberCount > 0
-      ? Math.round((myAttendance / totalSessions) * (totalExpenses / memberCount))
-      : 0
+  const livingExpTotal = periodExpenses
+    .filter(e => !(e.allocationRule === 'EQUAL' && COURT_KW.some(k => (e.description ?? '').toLowerCase().includes(k))))
+    .reduce((a, e) => a + e.amount, 0)
+  const memberCount = clubData.members.filter(m => m.status === 'active').length || 1
+  const roughCourtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
+  const roughLivingCost = totalSessions > 0 && memberCount > 0
+    ? Math.round((myAttendance / totalSessions) * (livingExpTotal / memberCount))
+    : memberCount > 0 ? Math.round(livingExpTotal / memberCount) : 0
+  const myCost = roughCourtCost + roughLivingCost
   const balance = amountPaid - myCost
 
   const memberName = clubData.members.find(m => m.id === user?.memberId)?.fullName ?? user?.username ?? 'Thành viên'
   const initials = memberName.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase()
   const hasData = clubData.fundPeriods.length > 0
   const isPaid = !!myContribution?.isConfirmed
+  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
 
   function handleExportPDF() {
     exportReceiptPDF({
@@ -54,17 +61,17 @@ export function MemberDashboard() {
       periodStartDate: activePeriod?.startDate ?? clubData.fundPeriods[0]?.startDate ?? '',
       periodEndDate: activePeriod?.endDate ?? clubData.fundPeriods[0]?.endDate ?? '',
       contributionAmount: activePeriod?.contributionAmount ?? 0,
-      clubName: '',
-      clubLocation: '',
+      clubName,
+      clubLocation: (clubData.settings?.address as string | undefined) ?? '',
       amountPaid,
       paymentDate: myContribution?.paymentDate ?? '',
       attendedSessions: myAttendance,
       totalSessions,
-      totalCourtFee: 0,
+      totalCourtFee: courtExpTotal,
       memberCountForSplit: memberCount,
-      courtCost: 0,
-      totalOtherFee: totalExpenses,
-      livingCost: myCost,
+      courtCost: roughCourtCost,
+      totalOtherFee: livingExpTotal,
+      livingCost: roughLivingCost,
       totalCost: myCost,
       balance,
       isConfirmed: myContribution?.isConfirmed ?? false,
