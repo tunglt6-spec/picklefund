@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { X, Download, FileText, Share2, Loader2, Sparkles } from 'lucide-react'
-import { PickleFundInfographicTemplate } from './PickleFundInfographicTemplate'
+import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from 'lucide-react'
+import { InfographicTemplateA } from './InfographicTemplateA'
+import { InfographicTemplateB } from './InfographicTemplateB'
 import type { InfographicReportData } from './infographic.types'
 import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName } from './infographic.utils'
 import toast from 'react-hot-toast'
 
-const INFOGRAPHIC_ID = 'infographic-export-canvas'
+const ID_A = 'infographic-canvas-a'
+const ID_B = 'infographic-canvas-b'
 
 interface InfographicPreviewModalProps {
   data: InfographicReportData
@@ -13,13 +15,17 @@ interface InfographicPreviewModalProps {
 }
 
 export function InfographicPreviewModal({ data, onClose }: InfographicPreviewModalProps) {
+  const [tab, setTab] = useState<'A' | 'B'>('A')
   const [exporting, setExporting] = useState<'png' | 'pdf' | 'share' | null>(null)
+
+  const activeId = tab === 'A' ? ID_A : ID_B
+  const tabLabel = tab === 'A' ? 'TổngQuan' : 'BillTV'
 
   const handleExportPng = async () => {
     setExporting('png')
     try {
-      const fileName = buildFileName(data.clubName, data.periodLabel, 'png')
-      await exportInfographicAsPng(INFOGRAPHIC_ID, fileName)
+      const fileName = buildFileName(data.clubName, `${data.periodLabel}_${tabLabel}`, 'png')
+      await exportInfographicAsPng(activeId, fileName)
       toast.success('Đã tải infographic thành công!')
     } catch {
       toast.error('Chưa thể xuất ảnh. Vui lòng thử lại.')
@@ -31,8 +37,8 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
   const handleExportPdf = async () => {
     setExporting('pdf')
     try {
-      const fileName = buildFileName(data.clubName, data.periodLabel, 'pdf')
-      await exportInfographicAsPdf(INFOGRAPHIC_ID, fileName)
+      const fileName = buildFileName(data.clubName, `${data.periodLabel}_${tabLabel}`, 'pdf')
+      await exportInfographicAsPdf(activeId, fileName)
       toast.success('Đã xuất PDF thành công!')
     } catch {
       toast.error('Chưa thể xuất PDF. Vui lòng thử lại.')
@@ -44,8 +50,8 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
   const handleShare = async () => {
     setExporting('share')
     try {
-      const title = `PickleFund_${data.clubName}_${data.periodLabel}`
-      await shareInfographic(INFOGRAPHIC_ID, title)
+      const title = `PickleFund_${data.clubName}_${data.periodLabel}_${tabLabel}`
+      await shareInfographic(activeId, title)
     } catch {
       toast.error('Chưa thể chia sẻ. Vui lòng thử lại.')
     } finally {
@@ -63,33 +69,72 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
       <div className="relative flex flex-col w-full h-full max-w-5xl max-h-screen md:max-h-[96vh] md:rounded-2xl bg-slate-900 shadow-2xl overflow-hidden">
 
         {/* Top bar */}
-        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700">
+        <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-800 border-b border-slate-700">
           <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-400" />
-            <span className="text-white font-[700] text-[15px]">Infographic</span>
-            <span className="text-slate-400 text-[12px]">· {data.periodLabel}</span>
+            <span className="text-white font-[700] text-[14px]">Infographic</span>
+            <span className="text-slate-400 text-[12px] hidden sm:block">· {data.periodLabel}</span>
           </div>
+
+          {/* Tab switcher */}
+          <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1">
+            <button
+              onClick={() => setTab('A')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              <BarChart3 size={13} />
+              Tổng quan
+            </button>
+            <button
+              onClick={() => setTab('B')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              <Users size={13} />
+              Bill thành viên
+            </button>
+          </div>
+
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
             aria-label="Đóng"
           >
-            <X size={18} />
+            <X size={17} />
           </button>
         </div>
 
-        {/* Scrollable preview — scale down 1080px infographic to fit */}
+        {/* Scrollable preview */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-950 py-4 px-2">
+          {/* Template A — hidden when tab B (but still mounted so export works) */}
           <div
-            style={{
-              width: 1080,
-              transformOrigin: 'top center',
-              transform: 'scale(var(--pf-preview-scale, 0.5))',
-              marginBottom: 'calc((var(--pf-preview-scale, 0.5) - 1) * 100%)',
-            }}
-            className="[--pf-preview-scale:0.42] sm:[--pf-preview-scale:0.5] md:[--pf-preview-scale:0.56] mx-auto"
+            style={{ display: tab === 'A' ? 'block' : 'none' }}
           >
-            <PickleFundInfographicTemplate data={data} id={INFOGRAPHIC_ID} />
+            <div
+              style={{
+                width: 1080,
+                transformOrigin: 'top center',
+                transform: 'scale(0.46)',
+                marginBottom: 'calc((0.46 - 1) * 1920px)',
+              }}
+              className="mx-auto"
+            >
+              <InfographicTemplateA data={data} id={ID_A} />
+            </div>
+          </div>
+
+          {/* Template B */}
+          <div
+            style={{ display: tab === 'B' ? 'block' : 'none' }}
+          >
+            <div
+              style={{
+                width: 1080,
+                transformOrigin: 'top center',
+                transform: 'scale(0.46)',
+              }}
+              className="mx-auto"
+            >
+              <InfographicTemplateB data={data} id={ID_B} />
+            </div>
           </div>
         </div>
 
