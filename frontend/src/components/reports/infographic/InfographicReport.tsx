@@ -423,10 +423,10 @@ export function InfographicReport({
                 border: '1px solid rgba(255,255,255,0.2)',
               }}
             >
-              {data.periodName ?? 'Kỳ quỹ hiện tại'}
+              {data.periodLabel ?? 'Kỳ quỹ hiện tại'}
             </span>
             <span style={{ color: '#A7F3D0', fontSize: 10, fontWeight: 500 }}>
-              {data.reportDate ?? new Date().toLocaleDateString('vi-VN')}
+              {data.exportDate ?? new Date().toLocaleDateString('vi-VN')}
             </span>
           </div>
 
