@@ -619,7 +619,7 @@ export function Expenses() {
       const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
       return matchPeriod && matchTab && matchQ
     })
-    const pendingCount = richExpenses.filter(e => e.status === 'pending').length
+    const pendingCount = periodFiltered.filter(e => e.status === 'pending').length
 
     const statusTabs: { key: 'all' | ExpenseStatus; label: string }[] = [
       { key: 'all', label: 'Tất cả' },
@@ -681,11 +681,12 @@ export function Expenses() {
         </div>
 
         {/* KPI strip */}
-        <div className="px-4 pt-3 pb-1 grid grid-cols-3 gap-2">
+        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
           {[
             { label: 'Quỹ Chung', val: commonAmt, color: 'text-indigo-600' },
             { label: 'Quỹ Mini', val: miniAmt, color: 'text-cyan-600' },
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
+            { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
             <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 px-3 py-2.5 shadow-sm">
               <p className="text-[10px] text-slate-400 truncate">{k.label}</p>
