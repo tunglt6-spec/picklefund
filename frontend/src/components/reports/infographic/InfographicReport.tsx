@@ -323,9 +323,9 @@ export function InfographicReport({ data, id = 'infographic-export-canvas' }: { 
           {/* Table header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '22px 100px 46px 62px 58px 58px 62px 66px',
+            gridTemplateColumns: '20px 96px 46px 60px 56px 56px 62px 70px',
             background: 'linear-gradient(90deg,#0F3460,#0C1B33)',
-            padding: '8px 10px',
+            padding: '8px 8px',
             gap: 3,
           }}>
             {['#','THÀNH VIÊN','BUỔI TG','TRẠNG THÁI','CHI PHÍ SÂN','SINH HOẠT','TỔNG CHI','SỐ DƯ'].map((h, i) => (
@@ -342,12 +342,12 @@ export function InfographicReport({ data, id = 'infographic-export-canvas' }: { 
           {/* Rows */}
           {data.members.map((m, i) => {
             const attPct = m.totalSessions > 0 ? (m.attendedSessions / m.totalSessions) * 100 : 0
-            const balPos = m.balance >= 0
+            const mBalPos = m.balance >= 0
             return (
               <div key={m.id} style={{
                 display: 'grid',
-                gridTemplateColumns: '22px 100px 46px 62px 58px 58px 62px 66px',
-                padding: '7px 10px',
+                gridTemplateColumns: '20px 96px 46px 60px 56px 56px 62px 70px',
+                padding: '7px 8px',
                 gap: 3,
                 background: i % 2 === 0 ? '#1E293B' : '#172033',
                 borderBottom: i < data.members.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
@@ -389,8 +389,8 @@ export function InfographicReport({ data, id = 'infographic-export-canvas' }: { 
                 {/* Tổng chi */}
                 <div style={{ fontSize: 8.5, fontWeight: 600, color: '#E2E8F0', textAlign: 'right' }}>{VN(m.totalCost)}</div>
                 {/* Số dư */}
-                <div style={{ fontSize: 8.5, fontWeight: 800, textAlign: 'right', color: balPos ? '#4ADE80' : '#F87171' }}>
-                  {balPos ? '+' : ''}{VN(m.balance)}
+                <div style={{ fontSize: 8.5, fontWeight: 800, textAlign: 'right', color: mBalPos ? '#4ADE80' : '#F87171' }}>
+                  {mBalPos ? '+' : ''}{VN(m.balance)}
                 </div>
               </div>
             )
@@ -399,8 +399,8 @@ export function InfographicReport({ data, id = 'infographic-export-canvas' }: { 
           {/* Summary */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '22px 100px 46px 62px 58px 58px 62px 66px',
-            padding: '8px 10px',
+            gridTemplateColumns: '20px 96px 46px 60px 56px 56px 62px 70px',
+            padding: '8px 8px',
             gap: 3,
             background: 'linear-gradient(90deg, rgba(5,150,105,0.2), rgba(5,150,105,0.08))',
             borderTop: '1px solid rgba(34,197,94,0.3)',
