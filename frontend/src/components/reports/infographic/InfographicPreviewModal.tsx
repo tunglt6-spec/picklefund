@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Download, FileText, Share2, Loader2, Sparkles } from 'lucide-react'
 import { InfographicReport } from './InfographicReport'
+import { InfographicReportA } from './InfographicReportA'
 import type { InfographicReportData } from './infographic.types'
 import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName } from './infographic.utils'
 import toast from 'react-hot-toast'
@@ -14,6 +15,7 @@ interface InfographicPreviewModalProps {
 
 export function InfographicPreviewModal({ data, onClose }: InfographicPreviewModalProps) {
   const [exporting, setExporting] = useState<'png' | 'pdf' | 'share' | null>(null)
+  const [version, setVersion] = useState<'A' | 'B'>('A')
 
   const handleExportPng = async () => {
     setExporting('png')
@@ -71,6 +73,21 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
             <span className="text-white font-[700] text-[15px]">Infographic</span>
             <span className="text-slate-400 text-[12px]">· {data.periodLabel}</span>
           </div>
+          {/* Version toggle */}
+          <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1 mx-auto">
+            <button
+              onClick={() => setVersion('A')}
+              className={`px-3 py-1 rounded-md text-[12px] font-[700] transition-all ${version === 'A' ? 'bg-amber-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+            >
+              ⚡ Sport
+            </button>
+            <button
+              onClick={() => setVersion('B')}
+              className={`px-3 py-1 rounded-md text-[12px] font-[700] transition-all ${version === 'B' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              ✦ Premium
+            </button>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
@@ -87,7 +104,10 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
             style={{ transformOrigin: 'top center' }}
             className="w-[540px] shrink-0"
           >
-            <InfographicReport data={data} id={INFOGRAPHIC_ID} />
+            {version === 'A'
+              ? <InfographicReportA data={data} id={INFOGRAPHIC_ID} />
+              : <InfographicReport data={data} id={INFOGRAPHIC_ID} />
+            }
           </div>
         </div>
 
