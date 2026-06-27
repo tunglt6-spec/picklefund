@@ -4,12 +4,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import type { FundPeriodStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class FundPeriodsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calculator: FinancialCalculatorService,
+  ) {}
 
   async findAll(clubId: string) {
     const today = new Date();
@@ -134,116 +138,36 @@ export class FundPeriodsService {
   }
 
   async summary(id: string, clubId: string) {
-    const fp = await this.findOne(id, clubId);
+    await this.findOne(id, clubId); // validate exists
+    const result = await this.calculator.calculate(id, clubId);
 
-    const [contributions, courtExpAgg, livingExpAgg, sessions, members] =
-      await Promise.all([
-        this.prisma.fundContribution.aggregate({
-          where: { fundPeriodId: id, clubId, fundSource: 'COMMON' },
-          _sum: { amount: true },
-        }),
-        // CHI PHÍ SÂN: expenses phân bổ EQUAL ("Đều nhau") — chia đều tất cả thành viên
-        this.prisma.livingExpense.aggregate({
-          where: {
-            fundPeriodId: id,
-            clubId,
-            fundSource: 'COMMON',
-            allocationRule: 'EQUAL',
-          },
-          _sum: { amount: true },
-        }),
-        // SINH HOẠT: expenses phân bổ PRESENT_ONLY/ATTENDANCE ("Theo số người tham gia")
-        this.prisma.livingExpense.aggregate({
-          where: {
-            fundPeriodId: id,
-            clubId,
-            fundSource: 'COMMON',
-            allocationRule: { in: ['PRESENT_ONLY', 'ATTENDANCE'] },
-          },
-          _sum: { amount: true },
-        }),
-        this.prisma.attendanceSession.findMany({
-          where: { fundPeriodId: id, clubId },
-          include: {
-            _count: {
-              select: { attendanceRecords: { where: { status: 'PRESENT' } } },
-            },
-          },
-        }),
-        this.prisma.member.findMany({ where: { clubId, isDeleted: false } }),
-      ]);
-
-    const totalIncome = Number(contributions._sum.amount ?? 0);
-    const totalCourt = Number(courtExpAgg._sum.amount ?? 0);
-    const totalLiving = Number(livingExpAgg._sum.amount ?? 0);
-    const totalExpenses = totalCourt + totalLiving;
-    const memberCount = members.length;
-    const totalAttendance = sessions.reduce(
-      (s, sess) => s + sess._count.attendanceRecords,
-      0,
-    );
-    const costPerAttendance =
-      totalAttendance > 0 ? Math.round(totalExpenses / totalAttendance) : 0;
-
-    // Batch: two groupBy instead of 2N individual queries
-    const [attendanceCounts, paidAmounts] = await Promise.all([
-      this.prisma.attendanceRecord.groupBy({
-        by: ['memberId'],
-        where: { status: 'PRESENT', attendanceSession: { fundPeriodId: id } },
-        _count: { id: true },
-      }),
-      this.prisma.fundContribution.groupBy({
-        by: ['memberId'],
-        where: { fundPeriodId: id, clubId, fundSource: 'COMMON' },
-        _sum: { amount: true },
-      }),
-    ]);
-    const attendedMap = Object.fromEntries(
-      attendanceCounts.map((r) => [r.memberId, r._count.id]),
-    );
-    const paidMap = Object.fromEntries(
-      paidAmounts.map((r) => [r.memberId, Number(r._sum.amount ?? 0)]),
-    );
-
-    const memberRows = members.map((m) => {
-      const attended = attendedMap[m.id] ?? 0;
-      const amountPaid = paidMap[m.id] ?? 0;
-      const courtCost =
-        memberCount > 0 ? Math.round(totalCourt / memberCount) : 0;
-      const livingCost =
-        totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * totalLiving)
-          : 0;
-      const totalCost = courtCost + livingCost;
-      const balance = amountPaid - totalCost;
-      return {
-        memberId: m.id,
-        memberName: m.fullName,
-        attendedSessions: attended,
-        amountPaid,
-        courtCost,
-        livingCost,
-        totalCost,
-        balance,
-        contributionPaid: amountPaid >= Number(fp.contributionAmount),
-      };
-    });
+    // Count sessions for denominator
+    const sessionCount = result.totalSessions;
 
     return {
-      totalIncome,
-      totalExpenses,
-      courtExpenses: totalCourt,
-      livingExpenses: totalLiving,
-      balance: totalIncome - totalExpenses,
-      totalAttendance,
-      costPerAttendance,
-      unpaidCount: memberRows.filter((m) => !m.contributionPaid).length,
-      negativeBalanceCount: memberRows.filter((m) => m.balance < 0).length,
-      lowAttendanceCount: memberRows.filter(
-        (m) =>
-          sessions.length > 0 && m.attendedSessions / sessions.length < 0.5,
+      totalIncome: result.commonFund.totalIncome,
+      totalExpenses: result.commonFund.totalExpense,
+      courtExpenses: result.commonFund.totalCourt,
+      livingExpenses: result.commonFund.totalLiving,
+      balance: result.commonFund.balance,
+      totalAttendance: result.totalAttendance,
+      costPerAttendance: result.costPerAttendance,
+      unpaidCount: result.members.filter((m) => m.status === 'UNPAID').length,
+      negativeBalanceCount: result.members.filter((m) => m.balance < 0).length,
+      lowAttendanceCount: result.members.filter(
+        (m) => sessionCount > 0 && m.attendedSessions / sessionCount < 0.5,
       ).length,
-      members: memberRows,
+      members: result.members.map((m) => ({
+        memberId: m.memberId,
+        memberName: m.memberName,
+        attendedSessions: m.attendedSessions,
+        amountPaid: m.paidAmount,
+        courtCost: m.courtFee,
+        livingCost: m.livingFee,
+        totalCost: m.totalCost,
+        balance: m.balance,
+        contributionPaid: m.paidAmount > 0 && m.balance >= 0,
+      })),
     };
   }
 }

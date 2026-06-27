@@ -22,6 +22,7 @@ export interface CreateContributionDto {
   paidAt: string;
   paymentMethod?: string;
   notes?: string;
+  isConfirmed?: boolean;
 }
 
 @Injectable()
@@ -79,7 +80,7 @@ export class ContributionsService {
         amount: new Decimal(dto.amount),
         paymentDate: new Date(dto.paidAt),
         paymentMethod: dto.paymentMethod ?? 'bank_transfer',
-        isConfirmed: false,
+        isConfirmed: dto.isConfirmed ?? false,
         notes: dto.notes,
         // COMMON
         ...(dto.memberId ? { memberId: dto.memberId } : {}),
