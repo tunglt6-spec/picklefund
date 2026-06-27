@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -39,6 +40,18 @@ export class AttendanceController {
     return ok(
       await this.service.create(user.clubId, user.userId, body),
       'Tạo buổi tập thành công',
+    );
+  }
+
+  @Patch('bulk-move-period')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async bulkMovePeriod(
+    @CurrentUser() user: any,
+    @Body() body: { sessionIds: string[]; targetPeriodId: string },
+  ) {
+    return ok(
+      await this.service.bulkMovePeriod(user.clubId, body.sessionIds, body.targetPeriodId),
+      'Đã chuyển buổi chơi sang kỳ mới',
     );
   }
 

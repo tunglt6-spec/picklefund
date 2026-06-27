@@ -56,6 +56,9 @@ export function Attendance() {
   const [editForm, setEditForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showMovePeriod, setShowMovePeriod] = useState(false)
+  const [moveToPeriodId, setMoveToPeriodId] = useState('')
+  const [isMoving, setIsMoving] = useState(false)
 
   const openAttendance = async (session: AttendanceSession) => {
     setSelectedSession(session)
@@ -139,15 +142,38 @@ export function Attendance() {
     }
   }
 
+  const handleMovePeriod = async () => {
+    if (!moveToPeriodId || isMoving || sessions.length === 0) return
+    setIsMoving(true)
+    try {
+      await api.patch('/attendance/bulk-move-period', {
+        sessionIds: sessions.map(s => s.id),
+        targetPeriodId: moveToPeriodId,
+      })
+      setSessions(prev => prev.map(s =>
+        sessions.some(fs => fs.id === s.id) ? { ...s, fundPeriodId: moveToPeriodId } : s
+      ))
+      setSelectedPeriodId(moveToPeriodId)
+      setShowMovePeriod(false)
+      setMoveToPeriodId('')
+      toast.success(`Đã chuyển ${sessions.length} buổi sang kỳ mới!`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Chuyển kỳ thất bại')
+    } finally {
+      setIsMoving(false)
+    }
+  }
+
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isSaving) return
-    if (!activePeriod?.id) {
+    const targetPeriodId = selectedPeriodId || activePeriod?.id
+    if (!targetPeriodId) {
       toast.error('Cần tạo kỳ quỹ trước khi tạo buổi chơi')
       return
     }
     setIsSaving(true)
-    const payload = { fundPeriodId: activePeriod.id, ...form, courtFee: Number(form.courtFee) }
+    const payload = { fundPeriodId: targetPeriodId, ...form, courtFee: Number(form.courtFee) }
     try {
       const res = await api.post('/attendance', payload)
       const d = res.data?.data
@@ -183,11 +209,23 @@ export function Attendance() {
             </button>
           </div>
           {allPeriods.length > 1 && (
-            <PeriodSelector
-              periods={allPeriods}
-              selectedId={selectedPeriodId}
-              onChange={id => setSelectedPeriodId(id)}
-            />
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <PeriodSelector
+                  periods={allPeriods}
+                  selectedId={selectedPeriodId}
+                  onChange={id => setSelectedPeriodId(id)}
+                />
+              </div>
+              {sessions.length > 0 && (
+                <button
+                  onClick={() => setShowMovePeriod(true)}
+                  className="shrink-0 px-2.5 py-1.5 rounded-[8px] text-[12px] font-[600] text-violet-600 border border-violet-200 active:bg-violet-50"
+                >
+                  Chuyển kỳ
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -346,6 +384,28 @@ export function Attendance() {
           <p className="text-sm text-slate-600">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
         </Modal>
 
+        {/* Mobile move-period modal */}
+        <Modal open={showMovePeriod} onClose={() => setShowMovePeriod(false)} title="Chuyển sang kỳ quỹ khác" subtitle={`Sẽ chuyển ${sessions.length} buổi chơi`}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowMovePeriod(false)} disabled={isMoving}>Hủy</Button>
+              <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="bg-violet-600 hover:bg-violet-700 text-white border-violet-600">
+                {isMoving ? 'Đang chuyển...' : 'Xác nhận chuyển'}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">Chọn kỳ quỹ đích để chuyển toàn bộ <strong>{sessions.length}</strong> buổi đang hiển thị:</p>
+            <select value={moveToPeriodId} onChange={e => setMoveToPeriodId(e.target.value)} className="input-base">
+              <option value="">— Chọn kỳ quỹ —</option>
+              {allPeriods.filter(p => p.id !== selectedPeriodId).map(p => (
+                <option key={p.id} value={p.id}>{p.name} {p.status === 'active' ? '(Đang mở)' : ''}</option>
+              ))}
+            </select>
+          </div>
+        </Modal>
+
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo Buổi Chơi Mới" subtitle="Lên lịch buổi chơi"
           footer={
             <div className="flex gap-3 justify-end">
@@ -401,8 +461,18 @@ export function Attendance() {
       />
 
       {allPeriods.length > 1 && (
-        <div className="px-6 pt-4 pb-0">
-          <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
+        <div className="px-6 pt-4 pb-0 flex items-end gap-3">
+          <div className="flex-1">
+            <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
+          </div>
+          {sessions.length > 0 && (
+            <button
+              onClick={() => setShowMovePeriod(true)}
+              className="mb-[2px] px-3 py-1.5 rounded-lg text-[13px] font-[600] text-violet-600 border border-violet-200 hover:bg-violet-50 transition-colors"
+            >
+              Chuyển kỳ ({sessions.length} buổi)
+            </button>
+          )}
         </div>
       )}
 
@@ -575,6 +645,28 @@ export function Attendance() {
         }
       >
         <p className="text-sm text-slate-600">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
+      </Modal>
+
+      {/* Move period modal — desktop */}
+      <Modal open={showMovePeriod} onClose={() => setShowMovePeriod(false)} title="Chuyển sang kỳ quỹ khác" subtitle={`Sẽ chuyển ${sessions.length} buổi chơi đang hiển thị`}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setShowMovePeriod(false)} disabled={isMoving}>Hủy</Button>
+            <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="bg-violet-600 hover:bg-violet-700 text-white border-violet-600">
+              {isMoving ? 'Đang chuyển...' : 'Xác nhận chuyển'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-slate-600">Chọn kỳ quỹ đích để chuyển toàn bộ <strong>{sessions.length}</strong> buổi đang hiển thị:</p>
+          <select value={moveToPeriodId} onChange={e => setMoveToPeriodId(e.target.value)} className="input-base">
+            <option value="">— Chọn kỳ quỹ —</option>
+            {allPeriods.filter(p => p.id !== selectedPeriodId).map(p => (
+              <option key={p.id} value={p.id}>{p.name} {p.status === 'active' ? '(Đang mở)' : ''}</option>
+            ))}
+          </select>
+        </div>
       </Modal>
 
       {/* Create session modal */}

@@ -77,6 +77,18 @@ export class AttendanceService {
     });
   }
 
+  async bulkMovePeriod(clubId: string, sessionIds: string[], targetPeriodId: string) {
+    const period = await this.prisma.fundPeriod.findFirst({
+      where: { id: targetPeriodId, clubId },
+    });
+    if (!period) throw new BadRequestException('Kỳ quỹ không tồn tại');
+    const result = await this.prisma.attendanceSession.updateMany({
+      where: { id: { in: sessionIds }, clubId },
+      data: { fundPeriodId: targetPeriodId },
+    });
+    return { moved: result.count };
+  }
+
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId);
     await this.prisma.attendanceRecord.deleteMany({
