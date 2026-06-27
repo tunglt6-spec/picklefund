@@ -1,4 +1,4 @@
-import type { InfographicReportData, InfographicMemberData } from './infographic.types'
+import type { InfographicReportData } from './infographic.types'
 
 const V = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.round(n)) + ' đ'
 const K = (n: number) => {
@@ -65,7 +65,6 @@ export function InfographicReport({ data, id = 'infographic-export-canvas' }: { 
   const ratioDisplay = data.totalIncome > 0 ? Math.round((data.totalExpense / data.totalIncome) * 100) : 0
   const paidCount = data.members.filter(m => m.isPaid).length
   const unpaidCount = data.totalMembers - paidCount
-  const paidPct = data.totalMembers > 0 ? Math.round((paidCount / data.totalMembers) * 100) : 0
   const balancePositive = balance >= 0
 
   const indicatorLeft = Math.min(ratio / 2, 96)
