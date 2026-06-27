@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FundPeriodsService } from './fund-periods.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const mockPrisma = {
@@ -22,12 +23,16 @@ const mockPrisma = {
   },
   attendanceSession: {
     findMany: jest.fn(),
+    aggregate: jest.fn(),
   },
   attendanceRecord: {
     groupBy: jest.fn(),
   },
   member: {
     findMany: jest.fn(),
+  },
+  personalReceipt: {
+    upsert: jest.fn(),
   },
   $transaction: jest.fn().mockResolvedValue([]),
 };
@@ -57,6 +62,7 @@ describe('FundPeriodsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FundPeriodsService,
+        FinancialCalculatorService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
@@ -131,9 +137,15 @@ describe('FundPeriodsService', () => {
   describe('summary', () => {
     it('should compute member rows using batch groupBy (no N+1)', async () => {
       mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
-      mockPrisma.fundContribution.aggregate.mockResolvedValue({
-        _sum: { amount: new Decimal(1000000) },
+      // income: COMMON confirmed, MINI confirmed
+      mockPrisma.fundContribution.aggregate
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(1000000) } })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) } });
+      // court fee from sessions
+      mockPrisma.attendanceSession.aggregate.mockResolvedValue({
+        _sum: { courtFee: new Decimal(450000) },
       });
+      // living: COMMON, MINI
       mockPrisma.livingExpense.aggregate
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(200000) } })
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(100000) } });
