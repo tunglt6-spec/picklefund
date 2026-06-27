@@ -6,7 +6,7 @@ import {
 } from 'recharts'
 import { TrendingDown, RefreshCw,
   FileSpreadsheet, FileText, DollarSign, CreditCard, Wallet,
-  MapPin, Users, Calendar, AlertTriangle } from 'lucide-react'
+  MapPin, Users, Calendar, AlertTriangle, Sparkles } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { formatVND, formatDate } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel } from '../../lib/export'
@@ -15,6 +15,8 @@ import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
 import toast from 'react-hot-toast'
+import { InfographicPreviewModal } from '../../components/reports/infographic/InfographicPreviewModal'
+import { mapToInfographicData } from '../../components/reports/infographic/infographic.utils'
 
 const WARNING_THRESHOLD = 20
 
@@ -107,6 +109,7 @@ export function Reports() {
   const defaultPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
+  const [showInfographic, setShowInfographic] = useState(false)
 
   // Sync selectedPeriodId to default active period after data loads
   useEffect(() => {
@@ -515,7 +518,34 @@ export function Reports() {
               <FileSpreadsheet size={14} />Excel
             </button>
           </div>
+
+          {/* Infographic button — mobile */}
+          <button
+            onClick={() => setShowInfographic(true)}
+            className="w-full py-3 rounded-[14px] text-[14px] font-[700] text-white flex items-center justify-center gap-2 shadow-sm active:opacity-80"
+            style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
+          >
+            <Sparkles size={15} />✨ Tạo Infographic
+          </button>
         </div>
+
+        {/* Infographic modal — mobile */}
+        {showInfographic && (
+          <InfographicPreviewModal
+            data={mapToInfographicData({
+              clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
+              periodLabel: periodName,
+              totalIncome,
+              totalExpenses,
+              displayBalance,
+              memberCount,
+              sessionCount,
+              confirmedCount,
+              memberBillRows,
+            })}
+            onClose={() => setShowInfographic(false)}
+          />
+        )}
       </div>
     )
   }
@@ -588,6 +618,13 @@ export function Reports() {
               }}>
               <FileText size={13} />Xuất PDF
             </Button>
+            <button
+              onClick={() => setShowInfographic(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-[700] text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
+            >
+              <Sparkles size={14} />✨ Tạo Infographic
+            </button>
           </div>
         </div>
       </div>
@@ -827,6 +864,24 @@ export function Reports() {
           <span>Dữ liệu tính từ store cục bộ</span>
         </div>
       </div>
+
+      {/* Infographic modal — desktop */}
+      {showInfographic && (
+        <InfographicPreviewModal
+          data={mapToInfographicData({
+            clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
+            periodLabel: periodName,
+            totalIncome,
+            totalExpenses,
+            displayBalance,
+            memberCount,
+            sessionCount,
+            confirmedCount,
+            memberBillRows,
+          })}
+          onClose={() => setShowInfographic(false)}
+        />
+      )}
     </div>
   )
 }
