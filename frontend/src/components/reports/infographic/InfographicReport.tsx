@@ -1,352 +1,333 @@
-import type { InfographicReportData } from './infographic.types'
-import { fmtVNDFull } from './infographic.utils'
+import type { InfographicReportData, InfographicMemberData } from './infographic.types'
 
-/* ── SVG Pickleball Ball ── */
-function PickleballBall({ size = 32, className = '' }: { size?: number; className?: string }) {
+const V = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.round(n)) + ' đ'
+
+/* ── Mascot SVG ── */
+function MascotSvg() {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" className={className} aria-hidden="true">
-      <circle cx="20" cy="20" r="19" fill="#F0A500" />
-      <circle cx="20" cy="20" r="19" fill="none" stroke="#fff" strokeWidth="0.8" opacity="0.4" />
-      <path d="M4 20 Q12 6 20 20 Q28 34 36 20" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M4 20 Q12 34 20 20 Q28 6 36 20" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+    <svg width="80" height="96" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Racquet head */}
+      <ellipse cx="68" cy="16" rx="10" ry="13" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="1.5" />
+      <line x1="68" y1="8" x2="68" y2="24" stroke="white" strokeWidth="1" opacity="0.6" />
+      <line x1="62" y1="16" x2="74" y2="16" stroke="white" strokeWidth="1" opacity="0.6" />
+      {/* Racquet handle */}
+      <line x1="61" y1="27" x2="54" y2="44" stroke="#92400E" strokeWidth="3.5" strokeLinecap="round" />
+      {/* Right arm */}
+      <path d="M48 54 Q58 42 57 30" stroke="#16A34A" strokeWidth="7" strokeLinecap="round" fill="none" />
+      {/* Body */}
+      <ellipse cx="34" cy="68" rx="23" ry="26" fill="#22C55E" />
+      <ellipse cx="27" cy="60" rx="8" ry="11" fill="#86EFAC" opacity="0.55" />
+      <circle cx="40" cy="74" r="2.5" fill="#15803D" opacity="0.45" />
+      <circle cx="32" cy="80" r="1.8" fill="#15803D" opacity="0.35" />
+      <circle cx="44" cy="64" r="1.8" fill="#15803D" opacity="0.35" />
+      {/* Neck */}
+      <rect x="28" y="40" width="12" height="10" rx="4" fill="#22C55E" />
+      {/* Head */}
+      <circle cx="34" cy="30" r="20" fill="#4ADE80" />
+      <ellipse cx="28" cy="22" rx="7" ry="9" fill="#BBF7D0" opacity="0.45" />
+      {/* Headband */}
+      <rect x="14" y="24" width="40" height="8" rx="4" fill="white" />
+      <rect x="14" y="24" width="40" height="3.5" rx="1.5" fill="#FCD34D" />
+      {/* Eyes */}
+      <circle cx="27" cy="32" r="5" fill="white" />
+      <circle cx="41" cy="32" r="5" fill="white" />
+      <circle cx="28.5" cy="33" r="2.8" fill="#0F172A" />
+      <circle cx="42.5" cy="33" r="2.8" fill="#0F172A" />
+      <circle cx="29.5" cy="32" r="1.1" fill="white" />
+      <circle cx="43.5" cy="32" r="1.1" fill="white" />
+      {/* Smile */}
+      <path d="M25 40 Q34 47 43 40" stroke="#15803D" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      {/* Cheeks */}
+      <circle cx="21" cy="38" r="3.5" fill="#FCA5A5" opacity="0.5" />
+      <circle cx="47" cy="38" r="3.5" fill="#FCA5A5" opacity="0.5" />
+      {/* Left arm */}
+      <path d="M13 58 Q8 68 14 76" stroke="#16A34A" strokeWidth="7" strokeLinecap="round" fill="none" />
+      {/* Feet */}
+      <ellipse cx="26" cy="92" rx="9" ry="4.5" fill="#15803D" />
+      <ellipse cx="42" cy="92" rx="9" ry="4.5" fill="#15803D" />
+      {/* Ball */}
+      <circle cx="6" cy="82" r="7" fill="#FCD34D" />
+      <path d="M2 82 Q6 77 10 82" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M2 82 Q6 87 10 82" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </svg>
   )
 }
 
-/* ── SVG Racquet ── */
-function PickleballRacquet({ size = 28, className = '' }: { size?: number; className?: string }) {
-  return (
-    <svg width={size} height={size * 1.4} viewBox="0 0 28 40" className={className} aria-hidden="true">
-      <ellipse cx="14" cy="14" rx="12" ry="12" fill="none" stroke="currentColor" strokeWidth="2.5" />
-      <line x1="14" y1="26" x2="14" y2="40" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="8" y1="10" x2="20" y2="18" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-      <line x1="8" y1="14" x2="20" y2="14" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-      <line x1="8" y1="18" x2="20" y2="10" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-    </svg>
-  )
-}
-
-/* ── Shared style tokens ── */
-const S = {
-  /* colours */
-  green900: '#064E3B',
-  green800: '#065F46',
-  green600: '#059669',
-  green500: '#10B981',
-  amber:    '#F59E0B',
-  red:      '#EF4444',
-  blue:     '#3B82F6',
-  indigo:   '#4F46E5',
-  white:    '#FFFFFF',
-  slate50:  '#F8FAFC',
-  slate100: '#F1F5F9',
-  slate400: '#94A3B8',
-  slate700: '#334155',
-  slate900: '#0F172A',
-  /* fonts */
-  fontMono: "'SF Mono', 'Fira Mono', monospace",
-}
-
-/* ── Member balance badge ── */
-function BalanceBadge({ balance }: { balance: number }) {
-  if (balance > 0) {
-    return (
-      <span style={{ background: '#DCFCE7', color: '#15803D', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-        Còn dư
-      </span>
-    )
-  }
-  if (balance < 0) {
-    return (
-      <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-        Cần nộp thêm
-      </span>
-    )
-  }
-  return (
-    <span style={{ background: '#F1F5F9', color: '#475569', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-      Đã cân đối
-    </span>
-  )
-}
-
-function PaidBadge({ isPaid }: { isPaid: boolean }) {
-  return isPaid
-    ? <span style={{ background: '#DCFCE7', color: '#15803D', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>Đã đóng</span>
-    : <span style={{ background: '#FEF3C7', color: '#D97706', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>Chưa đóng</span>
-}
-
-/* ── Avatar initials ── */
-function Avatar({ name, idx }: { name: string; idx: number }) {
-  const colors = ['#4F46E5', '#059669', '#D97706', '#DB2777', '#7C3AED', '#0891B2']
-  const bg = colors[idx % colors.length]
-  const initials = name.split(' ').slice(-2).map(w => w[0] ?? '').join('').toUpperCase().slice(0, 2)
+/* ── Member card (right panel) ── */
+function MemberCard({ m }: { m: InfographicMemberData }) {
+  const pct = m.totalSessions > 0 ? Math.round((m.attendedSessions / m.totalSessions) * 100) : 0
+  const balanceColor = m.balance >= 0 ? '#15803D' : '#DC2626'
   return (
     <div style={{
-      width: 36, height: 36, borderRadius: '50%', background: bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0,
+      background: 'white',
+      borderRadius: 8,
+      border: '1px solid #E5E7EB',
+      padding: '8px 10px',
+      fontSize: 10,
     }}>
-      {initials}
+      {/* Name row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+        <span style={{ fontWeight: 700, color: '#111827', fontSize: 11 }}>{m.name}</span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10,
+          background: m.isPaid ? '#DCFCE7' : '#FEF3C7',
+          color: m.isPaid ? '#15803D' : '#B45309',
+        }}>
+          {m.isPaid ? 'Đã đóng' : 'Chưa đóng'}
+        </span>
+      </div>
+      {/* Attendance bar */}
+      <div style={{ color: '#6B7280', marginBottom: 4 }}>
+        {m.attendedSessions}/{m.totalSessions} buổi
+      </div>
+      <div style={{ height: 5, background: '#E5E7EB', borderRadius: 99, overflow: 'hidden', marginBottom: 3 }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: pct >= 70 ? '#22C55E' : pct >= 40 ? '#F59E0B' : '#EF4444', borderRadius: 99 }} />
+      </div>
+      <div style={{ color: '#9CA3AF', fontSize: 9, marginBottom: 6 }}>{pct}%</div>
+      {/* Financial */}
+      <div style={{ color: '#6B7280', display: 'flex', justifyContent: 'space-between' }}>
+        <span>Đã nộp quỹ</span>
+        <span style={{ fontWeight: 600, color: '#374151' }}>{V(m.paidAmount)}</span>
+      </div>
+      <div style={{ borderTop: '1px dashed #E5E7EB', marginTop: 4, paddingTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ color: '#6B7280' }}>Cần nộp thêm</span>
+        <span style={{ fontWeight: 700, color: balanceColor }}>{V(m.balance)}</span>
+      </div>
     </div>
   )
 }
 
-/* ── Main component ── */
-interface InfographicReportProps {
-  data: InfographicReportData
-  id?: string
-}
+/* ── Main export ── */
+export function InfographicReport({ data, id = 'infographic-export-canvas' }: { data: InfographicReportData; id?: string }) {
+  const confirmedTotal = data.totalIncome
+  const expenseTotal = data.totalExpense
+  const balance = data.fundBalance
+  const ratio = confirmedTotal > 0 ? Math.min((expenseTotal / confirmedTotal) * 100, 200) : 0
+  const ratioDisplay = confirmedTotal > 0 ? Math.round((expenseTotal / confirmedTotal) * 100) : 0
+  const balanceColor = balance >= 0 ? '#15803D' : '#DC2626'
+  const balanceLabel = balance > 0 ? 'Quỹ còn dư' : balance < 0 ? 'Quỹ âm — cần bổ sung' : 'Đã cân đối'
+  const paidMemberCount = data.members.filter(m => m.isPaid).length
+  const unpaidMemberCount = data.totalMembers - paidMemberCount
 
-export function InfographicReport({ data, id = 'infographic-canvas' }: InfographicReportProps) {
-  const expRatio = data.expenseIncomeRatio
-  const ratioColor = expRatio <= 70 ? S.green600 : expRatio <= 100 ? S.amber : S.red
-  const ratioLabel = expRatio <= 70 ? 'Quỹ hoạt động tốt' : expRatio <= 100 ? 'Cần theo dõi' : 'Chi vượt thu'
-
-  const balanceColor = data.fundBalance >= 0 ? S.green600 : S.red
+  const barColor = ratio <= 70 ? '#22C55E' : ratio <= 100 ? '#F59E0B' : '#EF4444'
 
   return (
     <div
       id={id}
       style={{
         width: 540,
-        background: S.white,
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        background: '#F9FAF8',
+        color: '#111827',
         overflow: 'hidden',
       }}
     >
-      {/* ── HEADER ── */}
-      <div style={{
-        background: `linear-gradient(145deg, ${S.green900} 0%, ${S.green800} 50%, #047857 100%)`,
-        padding: '28px 28px 24px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Background decorative balls */}
-        <div style={{ position: 'absolute', top: -20, right: -20, opacity: 0.08 }}>
-          <PickleballBall size={120} />
-        </div>
-        <div style={{ position: 'absolute', bottom: -10, right: 60, opacity: 0.06 }}>
-          <PickleballBall size={80} />
-        </div>
-
-        {/* Brand row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '6px 10px',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <PickleballBall size={22} />
-            <span style={{ color: S.white, fontWeight: 900, fontSize: 15, letterSpacing: 1 }}>PICKLEFUND</span>
+      {/* ══ HEADER ══ */}
+      <div style={{ background: 'white', padding: '14px 18px 10px', borderBottom: '1px solid #E5E7EB' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Mascot */}
+          <div style={{ flexShrink: 0 }}>
+            <MascotSvg />
           </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <PickleballRacquet size={22} className="" />
-          </div>
-        </div>
 
-        {/* Title */}
-        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
-          {data.reportTitle}
-        </div>
-
-        {/* Club name */}
-        <div style={{ color: S.white, fontWeight: 900, fontSize: 22, lineHeight: 1.2, marginBottom: 8 }}>
-          {data.clubName}
-        </div>
-
-        {/* Period */}
-        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-          {data.periodLabel}
-        </div>
-
-        {/* Export date */}
-        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-          Xuất ngày {data.exportDate} lúc {data.generatedAt}
-        </div>
-
-        {/* Decorative line */}
-        <div style={{ height: 3, background: 'linear-gradient(90deg, #F59E0B, #10B981, transparent)', borderRadius: 2, marginTop: 20 }} />
-      </div>
-
-      {/* ── QUICK SUMMARY BAR ── */}
-      <div style={{ background: S.slate900, padding: '14px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-around', gap: 8 }}>
-          {[
-            { icon: '👥', value: data.totalMembers, label: 'Thành viên' },
-            { icon: '📅', value: data.totalSessions, label: 'Buổi tập' },
-            { icon: '✅', value: data.paidMembers, label: 'Đã đóng' },
-            { icon: '⏳', value: data.unpaidMembers, label: 'Chưa đóng' },
-          ].map(item => (
-            <div key={item.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 14 }}>{item.icon}</div>
-              <div style={{ color: S.white, fontWeight: 800, fontSize: 16, lineHeight: 1.1 }}>{item.value}</div>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, marginTop: 2 }}>{item.label}</div>
+          {/* Branding */}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+              <span style={{ fontSize: 26, fontWeight: 900, color: '#166534', letterSpacing: -0.5 }}>Pickle</span>
+              <span style={{ fontSize: 26, fontWeight: 900, color: '#15803D', letterSpacing: -0.5 }}>Fund</span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── KPI CARDS ── */}
-      <div style={{ padding: '20px 20px 0', background: S.slate50 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-          {/* Tổng thu */}
-          <div style={{ background: S.white, borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 16 }}>💰</span>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 2.5, color: '#374151', marginTop: -2, marginBottom: 6 }}>
+              BÁO CÁO TÀI CHÍNH
             </div>
-            <div style={{ color: S.slate400, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Tổng thu</div>
-            <div style={{ color: S.green600, fontWeight: 900, fontSize: 15, lineHeight: 1.2 }}>{fmtVNDFull(data.totalIncome)}</div>
-          </div>
-
-          {/* Tổng chi */}
-          <div style={{ background: S.white, borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 16 }}>💸</span>
-            </div>
-            <div style={{ color: S.slate400, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Tổng chi</div>
-            <div style={{ color: S.red, fontWeight: 900, fontSize: 15, lineHeight: 1.2 }}>{fmtVNDFull(data.totalExpense)}</div>
-          </div>
-
-          {/* Số dư */}
-          <div style={{ background: S.white, borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: data.fundBalance >= 0 ? '#DBEAFE' : '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 16 }}>{data.fundBalance >= 0 ? '🏦' : '⚠️'}</span>
-            </div>
-            <div style={{ color: S.slate400, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Số dư quỹ</div>
-            <div style={{ color: balanceColor, fontWeight: 900, fontSize: 15, lineHeight: 1.2 }}>{fmtVNDFull(data.fundBalance)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── RATIO BAR ── */}
-      <div style={{ padding: '16px 20px 0', background: S.slate50 }}>
-        <div style={{ background: S.white, borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ color: S.slate700, fontWeight: 700, fontSize: 12 }}>Tỷ lệ chi / thu</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: ratioColor, fontWeight: 800, fontSize: 15 }}>{expRatio}%</span>
-              <span style={{ background: expRatio <= 70 ? '#DCFCE7' : expRatio <= 100 ? '#FEF3C7' : '#FEE2E2', color: ratioColor, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-                {ratioLabel}
-              </span>
-            </div>
-          </div>
-          {/* Progress bar */}
-          <div style={{ height: 8, borderRadius: 4, background: '#F1F5F9', overflow: 'hidden' }}>
             <div style={{
+              display: 'inline-block',
+              background: '#0E7490',
+              color: 'white',
+              borderRadius: 20,
+              padding: '3px 12px',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+            }}>
+              {data.periodLabel}
+            </div>
+          </div>
+
+          {/* Export date */}
+          <div style={{ flexShrink: 0, textAlign: 'right', fontSize: 10, color: '#6B7280' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+              <span>📅</span>
+              <span>Xuất ngày {data.exportDate}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: '#374151', fontWeight: 500 }}>
+          <span>👥 <strong>{data.totalMembers}</strong> thành viên</span>
+          <span style={{ color: '#D1D5DB' }}>•</span>
+          <span>📅 <strong>{data.totalSessions}</strong> buổi tập</span>
+          <span style={{ color: '#D1D5DB' }}>•</span>
+          <span>✓ <strong>{paidMemberCount}</strong> đã đóng quỹ ({data.totalMembers > 0 ? Math.round((paidMemberCount / data.totalMembers) * 100) : 0}%)</span>
+        </div>
+      </div>
+
+      {/* ══ KPI CARDS ══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, padding: '12px 14px' }}>
+        {/* Tổng thu */}
+        <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>💰</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#6B7280', letterSpacing: 1, textTransform: 'uppercase' }}>Tổng thu</span>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#15803D' }}>{V(confirmedTotal)}</div>
+          <div style={{ fontSize: 9, color: '#6B7280', marginTop: 3 }}>{paidMemberCount}/{data.totalMembers} thành viên đóng</div>
+        </div>
+        {/* Tổng chi */}
+        <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>👛</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#6B7280', letterSpacing: 1, textTransform: 'uppercase' }}>Tổng chi</span>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#DC2626' }}>{V(expenseTotal)}</div>
+          <div style={{ fontSize: 9, color: '#6B7280', marginTop: 3 }}>Tỷ lệ chi / thu: {ratioDisplay}%</div>
+        </div>
+        {/* Số dư */}
+        <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>🐷</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#6B7280', letterSpacing: 1, textTransform: 'uppercase' }}>Số dư quỹ</span>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: balanceColor }}>{V(balance)}</div>
+          <div style={{ fontSize: 9, color: balanceColor, marginTop: 3 }}>{balanceLabel}</div>
+        </div>
+      </div>
+
+      {/* ══ RATIO BAR + STAT BOXES ══ */}
+      <div style={{ display: 'flex', gap: 10, padding: '0 14px 12px' }}>
+        {/* Ratio bar */}
+        <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px', flex: '0 0 200px' }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: '#374151', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+            Tỷ lệ chi / thu
+          </div>
+          {/* Gradient bar */}
+          <div style={{ height: 12, borderRadius: 99, background: 'linear-gradient(to right, #22C55E, #F59E0B, #EF4444)', overflow: 'hidden', position: 'relative', marginBottom: 6 }}>
+            {/* Indicator */}
+            <div style={{
+              position: 'absolute',
+              left: `${Math.min(ratio / 2, 96)}%`,
+              top: 0,
+              width: 3,
               height: '100%',
-              width: `${Math.min(expRatio, 100)}%`,
-              background: expRatio <= 70
-                ? 'linear-gradient(90deg, #10B981, #34D399)'
-                : expRatio <= 100
-                  ? 'linear-gradient(90deg, #F59E0B, #FCD34D)'
-                  : 'linear-gradient(90deg, #EF4444, #F87171)',
-              borderRadius: 4,
-              transition: 'width 0.5s',
+              background: 'white',
+              borderRadius: 99,
+              boxShadow: '0 0 4px rgba(0,0,0,0.3)',
             }} />
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#6B7280' }}>
+            <span>Thu: {V(confirmedTotal)}</span>
+            <span style={{ color: barColor, fontWeight: 700 }}>Chi: {V(expenseTotal)} ({ratioDisplay}%)</span>
+          </div>
         </div>
-      </div>
 
-      {/* ── SECTION TITLE: THÀNH VIÊN ── */}
-      <div style={{ padding: '20px 20px 10px', background: S.slate50 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 4, height: 18, background: `linear-gradient(180deg, ${S.green600}, ${S.green500})`, borderRadius: 2 }} />
-          <span style={{ color: S.slate900, fontWeight: 800, fontSize: 14 }}>Chi Tiết Thành Viên</span>
-          <span style={{ marginLeft: 'auto', background: S.green900, color: S.white, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
-            {data.members.length} thành viên
-          </span>
-        </div>
-      </div>
-
-      {/* ── MEMBER CARDS ── */}
-      <div style={{ padding: '0 20px 0', background: S.slate50 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {data.members.map((m, idx) => (
-            <div key={m.id} style={{
-              background: S.white,
-              borderRadius: 16,
-              padding: '12px 14px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              border: `1px solid ${m.balance < 0 ? '#FEE2E2' : m.balance > 0 ? '#DCFCE7' : '#E2E8F0'}`,
-            }}>
-              {/* Row 1: avatar + name + badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ color: S.slate400, fontSize: 11, fontWeight: 700, minWidth: 18, textAlign: 'center' }}>
-                  {idx + 1}
-                </div>
-                <Avatar name={m.name} idx={idx} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: S.slate900, fontWeight: 800, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {m.name}
-                  </div>
-                  <div style={{ color: S.slate400, fontSize: 11, marginTop: 1 }}>
-                    {m.attendedSessions}/{m.totalSessions} buổi · {m.attendanceRate}% tham gia
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
-                  <PaidBadge isPaid={m.isPaid} />
-                  <BalanceBadge balance={m.balance} />
-                </div>
-              </div>
-
-              {/* Row 2: financial stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
-                {[
-                  { label: 'Đã đóng', value: fmtVNDFull(m.paidAmount), color: S.green600 },
-                  { label: 'Chi phí sân', value: fmtVNDFull(m.courtFee), color: S.slate700 },
-                  { label: 'Sinh hoạt', value: fmtVNDFull(m.livingFee), color: S.slate700 },
-                  { label: 'Số dư', value: fmtVNDFull(m.balance), color: m.balance >= 0 ? S.green600 : S.red },
-                ].map(stat => (
-                  <div key={stat.label} style={{ textAlign: 'center' }}>
-                    <div style={{ color: stat.color, fontWeight: 800, fontSize: 11 }}>{stat.value}</div>
-                    <div style={{ color: S.slate400, fontSize: 9, marginTop: 1 }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
+        {/* Stat boxes */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, flex: 1 }}>
+          {[
+            { label: 'Tổng số thành viên', value: `${data.totalMembers} người`, icon: '👥', color: '#374151' },
+            { label: 'Số buổi tập', value: `${data.totalSessions} buổi`, icon: '📅', color: '#374151' },
+            { label: 'Đã đóng quỹ', value: `${paidMemberCount} / ${data.totalMembers}`, icon: '✅', color: '#15803D' },
+            { label: 'Chưa đóng quỹ', value: `${unpaidMemberCount} người`, icon: '⚠️', color: '#DC2626' },
+          ].map((s, i) => (
+            <div key={i} style={{ background: 'white', borderRadius: 8, border: '1px solid #E5E7EB', padding: '7px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: 8.5, color: '#9CA3AF', marginBottom: 2 }}>{s.icon} {s.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: s.color }}>{s.value}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── FOOTER ── */}
+      {/* ══ BOTTOM: TABLE (left) + CARDS (right) ══ */}
+      <div style={{ display: 'flex', gap: 10, padding: '0 14px 14px', alignItems: 'flex-start' }}>
+
+        {/* Left: Member table */}
+        <div style={{ flex: '0 0 238px' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#166534', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 7, paddingLeft: 2 }}>
+            Chi tiết từng thành viên
+          </div>
+          <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+            {/* Table header */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '16px 60px 30px 34px 34px 34px 34px',
+              background: '#F3F4F6',
+              padding: '5px 8px',
+              gap: 2,
+              borderBottom: '1px solid #E5E7EB',
+            }}>
+              {['#', 'Thành viên', 'Buổi', 'Phí sân', 'S. hoạt', 'Tổng chi', 'Số dư'].map((h, i) => (
+                <div key={i} style={{ fontSize: 7.5, fontWeight: 700, color: '#6B7280', textAlign: i === 0 ? 'center' : i >= 3 ? 'right' : 'left', letterSpacing: 0.3 }}>{h}</div>
+              ))}
+            </div>
+            {/* Rows */}
+            {data.members.map((m, i) => (
+              <div key={m.id} style={{
+                display: 'grid',
+                gridTemplateColumns: '16px 60px 30px 34px 34px 34px 34px',
+                padding: '5px 8px',
+                gap: 2,
+                background: i % 2 === 0 ? 'white' : '#F9FAFB',
+                borderBottom: i < data.members.length - 1 ? '1px solid #F3F4F6' : 'none',
+                alignItems: 'center',
+              }}>
+                <div style={{ fontSize: 8, color: '#9CA3AF', textAlign: 'center', fontWeight: 600 }}>{i + 1}</div>
+                <div style={{ fontSize: 8.5, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
+                <div style={{ fontSize: 8, color: '#374151', fontWeight: 500 }}>
+                  <span style={{ color: m.isPaid ? '#15803D' : '#D97706', fontWeight: 700 }}>
+                    {m.isPaid ? '✓' : '✗'}
+                  </span>
+                  {' '}{m.attendedSessions}/{m.totalSessions}
+                </div>
+                <div style={{ fontSize: 7.5, color: '#374151', textAlign: 'right' }}>{(m.courtFee / 1000).toFixed(0)}K</div>
+                <div style={{ fontSize: 7.5, color: '#374151', textAlign: 'right' }}>{(m.livingFee / 1000).toFixed(0)}K</div>
+                <div style={{ fontSize: 7.5, color: '#374151', textAlign: 'right' }}>{(m.totalCost / 1000).toFixed(0)}K</div>
+                <div style={{ fontSize: 7.5, fontWeight: 700, textAlign: 'right', color: m.balance >= 0 ? '#15803D' : '#DC2626' }}>
+                  {m.balance >= 0 ? '+' : ''}{(m.balance / 1000).toFixed(0)}K
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Member cards */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#166534', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 7, paddingLeft: 2 }}>
+            Chi tiết thành viên
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
+            {data.members.map(m => <MemberCard key={m.id} m={m} />)}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ FOOTER ══ */}
       <div style={{
-        margin: '20px 0 0',
-        background: `linear-gradient(145deg, ${S.green900} 0%, ${S.green800} 100%)`,
-        padding: '24px 28px 28px',
-        position: 'relative',
-        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #14532D, #166534)',
+        padding: '10px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        {/* Decorative balls */}
-        <div style={{ position: 'absolute', bottom: -20, left: -20, opacity: 0.08 }}>
-          <PickleballBall size={100} />
-        </div>
-        <div style={{ position: 'absolute', top: -10, right: 20, opacity: 0.07 }}>
-          <PickleballBall size={70} />
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, #F59E0B, transparent)', borderRadius: 1, marginBottom: 18 }} />
-
-        {/* Slogan */}
-        <div style={{ textAlign: 'center', marginBottom: 14 }}>
-          <div style={{ color: S.amber, fontWeight: 900, fontSize: 15, letterSpacing: 0.5, marginBottom: 4 }}>
-            🏆 Chơi hết mình — Đóng quỹ hết ý
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, lineHeight: 1.5 }}>
-            Cùng nhau xây dựng CLB ngày càng vững mạnh!
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>🥒</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'white' }}>PickleFund</div>
+            <div style={{ fontSize: 9, color: '#86EFAC' }}>Quản lý tài chính CLB Pickleball</div>
           </div>
         </div>
-
-        {/* Brand footer */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <PickleballBall size={16} />
-            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: 700 }}>PICKLEFUND</span>
-          </div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, textAlign: 'right' }}>
-            Dữ liệu tổng hợp tự động<br />từ hệ thống PickleFund
-          </div>
+        <div style={{ fontSize: 9, color: '#A7F3D0', textAlign: 'right' }}>
+          📅 Xuất lúc {data.generatedAt} {data.exportDate}
         </div>
+        <span style={{ fontSize: 16 }}>🏓</span>
       </div>
     </div>
   )
