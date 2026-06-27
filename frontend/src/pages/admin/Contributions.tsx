@@ -106,10 +106,10 @@ export function Contributions() {
   )
   const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
 
-  const commonTotal = commonContribs.reduce((s, c) => s + c.amount, 0)
-  const miniTotal = miniContribs.reduce((s, c) => s + c.amount, 0)
   const confirmed = commonContribs.filter(c => c.isConfirmed)
   const unconfirmed = commonContribs.filter(c => !c.isConfirmed)
+  const commonTotal = confirmed.reduce((s, c) => s + c.amount, 0)
+  const miniTotal = miniContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
 
   const openCreate = () => {
     const pid = activePeriod?.id ?? ''
