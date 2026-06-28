@@ -93,7 +93,12 @@ export class FinancialCalculatorService {
 
     const totalCourt = Number(courtAgg._sum.courtFee ?? 0);
     const totalLiving = Number(commonLivingAgg._sum.amount ?? 0);
-    const totalCommonExpense = totalCourt + totalLiving;
+    // LivingExpense is the expense ledger (source of truth for amounts).
+    // AttendanceSession.courtFee is used for proportional allocation only.
+    // When court fees are recorded as LivingExpense entries (totalLiving > 0),
+    // using totalCourt + totalLiving would double-count them.
+    // Fallback to totalCourt only when no LivingExpense exists for the period.
+    const totalCommonExpense = totalLiving > 0 ? totalLiving : totalCourt;
     const totalCommonIncome = Number(commonIncomeAgg._sum.amount ?? 0);
     const totalMiniIncome = Number(miniIncomeAgg._sum.amount ?? 0);
     const totalMiniExpense = Number(miniExpenseAgg._sum.amount ?? 0);
@@ -129,15 +134,20 @@ export class FinancialCalculatorService {
     const memberSummaries: MemberFinancialSummary[] = members.map((m) => {
       const attended = attendedMap[m.id] ?? 0;
       const paidAmount = paidMap[m.id] ?? 0;
+      // Allocation base matches totalCommonExpense: LivingExpense when present, sessions otherwise.
+      const allocationBase = totalLiving > 0 ? totalLiving : totalCourt;
+      // Court display portion is capped to allocationBase to prevent negative livingFee.
+      const courtBase = Math.min(totalCourt, allocationBase);
+      const memberTotalCost =
+        totalAttendance > 0
+          ? Math.round((attended / totalAttendance) * allocationBase)
+          : 0;
       const courtFee =
         totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * totalCourt)
+          ? Math.round((attended / totalAttendance) * courtBase)
           : 0;
-      const livingFee =
-        totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * totalLiving)
-          : 0;
-      const totalCost = courtFee + livingFee;
+      const livingFee = memberTotalCost - courtFee;
+      const totalCost = memberTotalCost;
       const balance = paidAmount - totalCost;
 
       let status: MemberFinancialSummary['status'];
