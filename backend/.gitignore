@@ -1,5 +1,9 @@
 node_modules
+dist
 # Keep environment variables out of version control
 .env
 
 /generated/prisma
+
+# TypeScript incremental build cache — never commit, causes silent build failures
+*.tsbuildinfo
