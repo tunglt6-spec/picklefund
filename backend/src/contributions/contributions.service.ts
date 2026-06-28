@@ -228,7 +228,7 @@ export class ContributionsService {
         _count: true,
       }),
       this.prisma.fundContribution.aggregate({
-        where: { clubId, fundSource: 'MINI' },
+        where: { clubId, fundSource: 'MINI', isConfirmed: true },
         _sum: { amount: true },
         _count: true,
       }),
@@ -236,7 +236,7 @@ export class ContributionsService {
 
     const miniByType = await this.prisma.fundContribution.groupBy({
       by: ['miniIncomeType'],
-      where: { clubId, fundSource: 'MINI' },
+      where: { clubId, fundSource: 'MINI', isConfirmed: true },
       _sum: { amount: true },
     });
 

@@ -1,0 +1,43 @@
+{
+  "name": "picklefund-desktop",
+  "version": "2.0.0",
+  "description": "PickleFund Desktop — Quản lý quỹ CLB Pickleball",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.picklefund.app",
+    "productName": "PickleFund",
+    "copyright": "Copyright © 2026 PickleFund",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowDirChange": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PickleFund"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

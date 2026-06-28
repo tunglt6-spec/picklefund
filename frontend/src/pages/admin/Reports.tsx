@@ -20,6 +20,28 @@ import { mapToInfographicData } from '../../components/reports/infographic/infog
 
 const WARNING_THRESHOLD = 20
 
+interface ReportSummaryMember {
+  memberId: string
+  memberName: string
+  attendedSessions: number
+  amountPaid: number
+  contributionPaid: boolean
+  courtCost: number
+  livingCost: number
+  totalCost: number
+  balance: number
+}
+
+interface ReportFundSummary {
+  totalIncome: number
+  totalExpenses: number
+  courtExpenses: number
+  livingExpenses: number
+  balance: number
+  totalAttendance: number
+  members: ReportSummaryMember[]
+}
+
 /* ── Gauge SVG ── */
 function FundGauge({ pct }: { pct: number }) {
   const r = 56
@@ -110,6 +132,7 @@ export function Reports() {
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
   const [showInfographic, setShowInfographic] = useState(false)
+  const [fundSummary, setFundSummary] = useState<ReportFundSummary | null>(null)
 
   // Sync selectedPeriodId to default active period after data loads
   useEffect(() => {
@@ -134,6 +157,20 @@ export function Reports() {
     }).catch(() => {})
   }, [user?.clubId, activePeriod?.id])
 
+  useEffect(() => {
+    if (!activePeriod?.id) {
+      setFundSummary(null)
+      return
+    }
+    let cancelled = false
+    api.get(`/fund-periods/${activePeriod.id}/summary`).then(res => {
+      if (!cancelled) setFundSummary(res.data?.data ?? null)
+    }).catch(() => {
+      if (!cancelled) setFundSummary(null)
+    })
+    return () => { cancelled = true }
+  }, [activePeriod?.id])
+
   const hasData = clubData.fundPeriods.length > 0
 
   const periodName = activePeriod?.name ?? ''
@@ -146,13 +183,27 @@ export function Reports() {
     (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter) &&
     c.fundPeriodId === activePeriod?.id
   )
+  const countsInFinancialSummary = (e: typeof clubData.expenses[number]) =>
+    (e.fundSource ?? 'COMMON') !== 'MINI' || e.status === 'approved' || e.status === 'paid'
+
   const filteredExpenses = clubData.expenses.filter(e =>
     (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter) &&
-    e.fundPeriodId === activePeriod?.id
+    e.fundPeriodId === activePeriod?.id &&
+    countsInFinancialSummary(e)
   )
 
-  const totalIncome = filteredContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-  const totalExpenses = filteredExpenses.reduce((a, e) => a + e.amount, 0)
+  const miniIncome = filteredContribs
+    .filter(c => c.fundSource === 'MINI' && c.isConfirmed)
+    .reduce((a, c) => a + c.amount, 0)
+  const miniExpenses = filteredExpenses
+    .filter(e => e.fundSource === 'MINI')
+    .reduce((a, e) => a + e.amount, 0)
+  const totalIncome = fundFilter === 'MINI'
+    ? miniIncome
+    : (fundSummary?.totalIncome ?? 0) + (fundFilter === 'ALL' ? miniIncome : 0)
+  const totalExpenses = fundFilter === 'MINI'
+    ? miniExpenses
+    : (fundSummary?.totalExpenses ?? 0) + (fundFilter === 'ALL' ? miniExpenses : 0)
   const balance = totalIncome - totalExpenses
 
   // Carry-over: cộng dồn số dư từ các kỳ quỹ cùng loại trước kỳ hiện tại
@@ -169,7 +220,8 @@ export function Reports() {
       .reduce((a, c) => a + c.amount, 0)
     const prevExpenses = clubData.expenses
       .filter(e => e.fundPeriodId === p.id &&
-        (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter))
+        (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter) &&
+        countsInFinancialSummary(e))
       .reduce((a, e) => a + e.amount, 0)
     return total + (prevIncome - prevExpenses)
   }, 0)
@@ -223,44 +275,23 @@ export function Reports() {
     }
   }).sort((a, b) => b.rate - a.rate)
 
-  // Court fee = sum of session court fees (canonical source, matches backend PersonalReceipts)
-  const courtExpTotal = periodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
-  // Living = all living expenses in period
-  const livingExpTotal = filteredExpenses.reduce((a, e) => a + e.amount, 0)
-  const totalAttendances = attSummary.reduce((a, s) => a + s.attendedSessions, 0)
+  const memberCosts = (fundSummary?.members ?? []).map(m => ({
+    name: m.memberName?.split(' ').slice(-1)[0] ?? m.memberId,
+    san: m.courtCost,
+    sh: m.livingCost,
+  }))
 
-  const memberCosts = clubData.members.map(m => {
-    const s = attSummary.find(a => a.memberId === m.id)
-    const attended = s?.attendedSessions ?? 0
-    return {
-      name: m.fullName?.split(' ').slice(-1)[0] ?? m.id,
-      san: totalAttendances > 0 ? Math.round((attended / totalAttendances) * courtExpTotal) : 0,
-      sh: totalAttendances > 0 ? Math.round((attended / totalAttendances) * livingExpTotal) : 0,
-    }
-  })
-
-  const periodContribs = filteredContribs.filter(c => c.fundPeriodId === activePeriod?.id)
-
-  const memberBillRows = clubData.members.map(m => {
-    const contrib = periodContribs.find(x => x.memberId === m.id)
-    const summ = attSummary.find(a => a.memberId === m.id)
-    const attended = Math.min(summ?.attendedSessions ?? 0, sessionCount)
-    const amountPaid = contrib?.isConfirmed ? (contrib.amount ?? 0) : 0
-    const courtCost = totalAttendances > 0 ? Math.round((attended / totalAttendances) * courtExpTotal) : 0
-    const livingCost = totalAttendances > 0 ? Math.round((attended / totalAttendances) * livingExpTotal) : 0
-    const totalCost = courtCost + livingCost
-    return {
-      memberName: m.fullName ?? m.id,
-      attendedSessions: attended,
-      totalSessions: sessionCount,
-      amountPaid,
-      contributionPaid: contrib?.isConfirmed ?? false,
-      courtCost,
-      livingCost,
-      totalCost,
-      balance: amountPaid - totalCost,
-    }
-  })
+  const memberBillRows = (fundSummary?.members ?? []).map(m => ({
+    memberName: m.memberName,
+    attendedSessions: m.attendedSessions,
+    totalSessions: sessionCount,
+    amountPaid: m.amountPaid,
+    contributionPaid: m.contributionPaid,
+    courtCost: m.courtCost,
+    livingCost: m.livingCost,
+    totalCost: m.totalCost,
+    balance: m.balance,
+  }))
 
   const periodHistory = clubData.fundPeriods
     .filter(p => (p.type ?? 'chung') === activePeriodType)
@@ -268,7 +299,8 @@ export function Reports() {
     const inc = clubData.contributions.filter(c => c.isConfirmed && c.fundPeriodId === p.id &&
       (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter)).reduce((a, c) => a + c.amount, 0)
     const exp = clubData.expenses.filter(e => e.fundPeriodId === p.id &&
-      (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter)).reduce((a, e) => a + e.amount, 0)
+      (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter) &&
+      countsInFinancialSummary(e)).reduce((a, e) => a + e.amount, 0)
     const sodu = inc - exp
     return {
       ky: p.name,

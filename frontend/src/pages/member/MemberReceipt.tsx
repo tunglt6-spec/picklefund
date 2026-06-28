@@ -58,9 +58,7 @@ export function MemberReceipt() {
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
 
   const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-  const myContribs = data.contributions.filter(c => c.memberId === memberId)
   const myMember = data.members.find(m => m.id === memberId)
-  const attended = new Set(data.myAttendedSessionIds ?? [])
 
   useEffect(() => {
     if (isLocal) return
@@ -80,48 +78,10 @@ export function MemberReceipt() {
     }).catch(() => {})
   }, [])
 
-  // Derive a local fallback receipt from store data for the active period
-  const localReceipt: PersonalReceipt | null = activePeriod ? (() => {
-    const periodSessions = data.sessions.filter(s => s.fundPeriodId === activePeriod.id)
-    const completedSessions = periodSessions.filter(s => s.status === 'completed')
-    const attendedCount = completedSessions.filter(s => attended.has(s.id)).length
-    const total = completedSessions.length || 1
-    const paid = myContribs
-      .filter(c => c.fundPeriodId === activePeriod.id && c.isConfirmed)
-      .reduce((s, c) => s + c.amount, 0)
-    const courtCost = completedSessions.reduce((s, sess) => {
-      const attendees = (sess as any)._count?.attendanceRecords ?? 6
-      return s + (attended.has(sess.id) ? sess.courtFee / attendees : 0)
-    }, 0)
-    const allExpenses = data.expenses.filter(e => e.fundPeriodId === activePeriod.id)
-    const livingCost = allExpenses.reduce((s, e) => s + e.amount, 0) / (data.members.filter(m => m.status === 'active').length || 1)
-    const totalCost = courtCost + livingCost
-    return {
-      id: `local-${activePeriod.id}`,
-      fundPeriodId: activePeriod.id,
-      fundPeriod: { name: activePeriod.name, startDate: activePeriod.startDate, endDate: activePeriod.endDate },
-      attendedSessions: attendedCount,
-      totalSessions: total,
-      amountPaid: paid,
-      courtCost,
-      livingCost,
-      totalCost,
-      balance: paid - totalCost,
-      needToPay: Math.max(0, totalCost - paid),
-      snapshotAt: new Date().toISOString(),
-    }
-  })() : null
-
-  // Always use live local computation for the active period; API snapshots for closed periods
-  const displayReceipts: PersonalReceipt[] = (() => {
-    const closedReceipts = receipts.filter(r => r.fundPeriodId !== activePeriod?.id)
-    if (localReceipt) return [localReceipt, ...closedReceipts]
-    if (isLocal) return []
-    return receipts
-  })()
+  const displayReceipts: PersonalReceipt[] = isLocal ? [] : receipts
 
   // Auto-expand the first receipt with debt, or the active period
-  const activeReceiptId = localReceipt?.id ?? displayReceipts[0]?.id ?? null
+  const activeReceiptId = displayReceipts.find(r => r.fundPeriodId === activePeriod?.id)?.id ?? displayReceipts[0]?.id ?? null
   const debtReceipt = displayReceipts.find(r => n(r.needToPay) > 0)
   if (!expanded && displayReceipts.length > 0) {
     // will be set by effect below

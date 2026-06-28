@@ -76,7 +76,7 @@ export class FinancialCalculatorService {
         _sum: { amount: true },
       }),
       this.prisma.livingExpense.aggregate({
-        where: { fundPeriodId, clubId, fundSource: 'MINI' },
+        where: { fundPeriodId, clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
         _sum: { amount: true },
       }),
       this.prisma.attendanceSession.findMany({

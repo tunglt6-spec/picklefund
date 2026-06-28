@@ -136,6 +136,34 @@ describe('ContributionsService', () => {
     });
   });
 
+  describe('summary', () => {
+    it('should count only confirmed MINI contributions in mini totals', async () => {
+      mockPrisma.fundContribution.aggregate
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(1_000_000) }, _count: 2 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(999_000) }, _count: 1 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(300_000) }, _count: 1 });
+      mockPrisma.fundContribution.groupBy.mockResolvedValue([
+        { miniIncomeType: 'TOURNAMENT_FEE', _sum: { amount: new Decimal(300_000) } },
+      ]);
+
+      const result = await service.summary('club-1');
+
+      expect(result.mini.total).toBe(300_000);
+      expect(result.mini.count).toBe(1);
+      expect(mockPrisma.fundContribution.aggregate).toHaveBeenNthCalledWith(
+        3,
+        expect.objectContaining({
+          where: { clubId: 'club-1', fundSource: 'MINI', isConfirmed: true },
+        }),
+      );
+      expect(mockPrisma.fundContribution.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clubId: 'club-1', fundSource: 'MINI', isConfirmed: true },
+        }),
+      );
+    });
+  });
+
   describe('importBulk', () => {
     const members = [
       { id: 'mem-1', fullName: 'Nguyễn Văn A' },

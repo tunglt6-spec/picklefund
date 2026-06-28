@@ -68,6 +68,28 @@ function DonutTooltip({ active, payload }: any) {
 const DONUT_COLORS = ['#4F46E5', '#06B6D4', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6']
 
 /* ─── FundCard ─── */
+interface FundPeriodApiSummary {
+  totalIncome: number
+  totalExpenses: number
+  courtExpenses: number
+  balance: number
+  costPerAttendance: number
+  unpaidCount: number
+}
+
+interface DashboardFinanceSummary {
+  commonIncome: number
+  commonExpense: number
+  commonBalance: number
+  miniIncome: number
+  miniExpense: number
+  miniBalance: number
+  totalAssets: number
+  courtExpense: number
+  costPerAttendance: number
+  unpaidCount: number
+}
+
 interface FundCardProps {
   title: string
   balance: number
@@ -253,7 +275,7 @@ function AiChip({ text, level }: { text: string; level: 'ok' | 'warn' | 'danger'
 
 /* ─── Main ─── */
 export function ClubDashboard() {
-  const { user } = useAuthStore()
+  const { user, accessToken } = useAuthStore()
   const navigate = useNavigate()
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
@@ -261,6 +283,7 @@ export function ClubDashboard() {
   const isMobile = useIsMobile()
   const [txTab, setTxTab] = useState<'income' | 'expense'>('income')
   const [activePeriodId, setActivePeriodId] = useState<string>('all')
+  const [financeSummary, setFinanceSummary] = useState<DashboardFinanceSummary | null>(null)
 
   // Maika AI state
   const [maikaScore, setMaikaScore] = useState<null | { score: number; recommendations: string[]; interpretation: string }>(null)
@@ -281,47 +304,77 @@ export function ClubDashboard() {
   /* ── Derived data ── */
   const activePeriods = clubData.fundPeriods.filter(p => p.status === 'active')
   const currentPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
+  const isLocalSession = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
+
+  useEffect(() => {
+    if (!currentPeriod?.id || isLocalSession) {
+      setFinanceSummary(null)
+      return
+    }
+
+    let cancelled = false
+
+    Promise.allSettled([
+      api.get(`/fund-periods/${currentPeriod.id}/summary`),
+      api.get('/contributions/summary'),
+      api.get('/expenses/summary'),
+    ]).then(([fundRes, contribRes, expenseRes]) => {
+      if (cancelled || fundRes.status !== 'fulfilled') return
+
+      const fund = fundRes.value.data?.data as FundPeriodApiSummary
+      const contrib = contribRes.status === 'fulfilled' ? contribRes.value.data?.data : null
+      const expense = expenseRes.status === 'fulfilled' ? expenseRes.value.data?.data : null
+      const miniIncome = Number(contrib?.mini?.total ?? 0)
+      const miniExpense = Number(expense?.mini?.total ?? 0)
+
+      setFinanceSummary({
+        commonIncome: Number(fund.totalIncome ?? 0),
+        commonExpense: Number(fund.totalExpenses ?? 0),
+        commonBalance: Number(fund.balance ?? 0),
+        miniIncome,
+        miniExpense,
+        miniBalance: miniIncome - miniExpense,
+        totalAssets: Number(fund.balance ?? 0) + miniIncome - miniExpense,
+        courtExpense: Number(fund.courtExpenses ?? 0),
+        costPerAttendance: Number(fund.costPerAttendance ?? 0),
+        unpaidCount: Number(fund.unpaidCount ?? 0),
+      })
+    }).catch(() => {
+      if (!cancelled) setFinanceSummary(null)
+    })
+
+    return () => { cancelled = true }
+  }, [currentPeriod?.id, isLocalSession])
 
   const commonContribs = useMemo(
     () => clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && c.isConfirmed),
-    [clubData.contributions]
-  )
-  const miniContribs = useMemo(
-    () => clubData.contributions.filter(c => c.fundSource === 'MINI'),
     [clubData.contributions]
   )
   const commonExpenses = useMemo(
     () => clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON'),
     [clubData.expenses]
   )
-  const miniExpenses = useMemo(
-    () => clubData.expenses.filter(e => e.fundSource === 'MINI'),
-    [clubData.expenses]
-  )
 
-  const commonIncome = commonContribs.reduce((s, c) => s + c.amount, 0)
-  const commonExpTotal = commonExpenses.reduce((s, e) => s + e.amount, 0)
-  const miniIncome = miniContribs.reduce((s, c) => s + c.amount, 0)
-  const miniExpTotal = miniExpenses.reduce((s, e) => s + e.amount, 0)
-
-  const commonBalance = commonIncome - commonExpTotal
-  const miniBalance = miniIncome - miniExpTotal
-  const totalAssets = commonBalance + miniBalance
+  const commonIncome = financeSummary?.commonIncome ?? 0
+  const commonExpTotal = financeSummary?.commonExpense ?? 0
+  const miniIncome = financeSummary?.miniIncome ?? 0
+  const miniExpTotal = financeSummary?.miniExpense ?? 0
+  const commonBalance = financeSummary?.commonBalance ?? 0
+  const miniBalance = financeSummary?.miniBalance ?? 0
+  const totalAssets = financeSummary?.totalAssets ?? 0
 
   /* ── KPI values ── */
   const totalTurns = clubData.sessions.reduce((a, s) => a + (s._count?.attendanceRecords ?? 0), 0)
-  const avgCostPerTurn = totalTurns > 0 ? Math.round(commonExpTotal / totalTurns) : 0
+  const avgCostPerTurn = financeSummary?.costPerAttendance ?? 0
   const activeMembers = clubData.members.filter(m => m.status === 'active').length
   const totalMembers = clubData.members.length
 
-  const unpaidCount = !currentPeriod ? 0 : clubData.members.filter(
-    m => !commonContribs.some(c => c.memberId === m.id && c.fundPeriodId === currentPeriod.id)
-  ).length
+  const unpaidCount = financeSummary?.unpaidCount ?? 0
 
   const currentPeriodSessions = currentPeriod
     ? clubData.sessions.filter(s => s.fundPeriodId === currentPeriod.id)
     : []
-  const courtExpense = currentPeriodSessions.reduce((a, s) => a + (s.courtFee ?? 0), 0)
+  const courtExpense = financeSummary?.courtExpense ?? 0
 
   /* ── Bar chart: Thu/Chi theo kỳ ── */
   const barData = useMemo(() => {

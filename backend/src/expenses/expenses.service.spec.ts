@@ -202,4 +202,42 @@ describe('ExpensesService', () => {
       expect(call.where).not.toHaveProperty('fundPeriodId');
     });
   });
+
+  describe('summary', () => {
+    it('should count only approved or paid MINI expenses in mini totals', async () => {
+      mockPrisma.livingExpense.aggregate
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal(200_000) }, _count: 1 });
+      mockPrisma.livingExpense.groupBy.mockResolvedValue([
+        { miniExpenseType: 'PRIZE', _sum: { amount: new Decimal(200_000) } },
+      ]);
+
+      const result = await service.summary('club-1');
+
+      expect(result.mini.total).toBe(200_000);
+      expect(result.mini.count).toBe(1);
+      expect(mockPrisma.livingExpense.aggregate).toHaveBeenNthCalledWith(
+        5,
+        expect.objectContaining({
+          where: {
+            clubId: 'club-1',
+            fundSource: 'MINI',
+            status: { in: ['approved', 'paid'] },
+          },
+        }),
+      );
+      expect(mockPrisma.livingExpense.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            clubId: 'club-1',
+            fundSource: 'MINI',
+            status: { in: ['approved', 'paid'] },
+          },
+        }),
+      );
+    });
+  });
 });

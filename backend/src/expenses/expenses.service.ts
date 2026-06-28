@@ -194,13 +194,13 @@ export class ExpensesService {
         ),
       ),
       this.prisma.livingExpense.aggregate({
-        where: { clubId, fundSource: 'MINI' },
+        where: { clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
         _sum: { amount: true },
         _count: true,
       }),
       this.prisma.livingExpense.groupBy({
         by: ['miniExpenseType'],
-        where: { clubId, fundSource: 'MINI' },
+        where: { clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
         _sum: { amount: true },
       }),
     ]);

@@ -116,7 +116,7 @@ describe('FinancialCalculatorService', () => {
       if (aggregateCallCount === 1)
         return Promise.resolve({ _sum: { amount: 3_200_000 } });
       // Call 2 = mini income
-      return Promise.resolve({ _sum: { amount: 0 } });
+      return Promise.resolve({ _sum: { amount: 300_000 } });
     });
 
     let sessionAggCallCount = 0;
@@ -135,7 +135,7 @@ describe('FinancialCalculatorService', () => {
       if (livingAggCallCount === 1)
         return Promise.resolve({ _sum: { amount: 500_000 } });
       // Call 2 = MINI living expenses
-      return Promise.resolve({ _sum: { amount: 0 } });
+      return Promise.resolve({ _sum: { amount: 200_000 } });
     });
 
     (prisma.attendanceSession.findMany as jest.Mock).mockResolvedValue(SESSIONS);
@@ -160,6 +160,36 @@ describe('FinancialCalculatorService', () => {
     expect(result.totalSessions).toBe(4);
     expect(result.totalAttendance).toBe(15); // 5+3+3+4
     expect(result.costPerAttendance).toBe(Math.round(2_300_000 / 15)); // 153,333
+  });
+
+  it('should calculate mini fund from confirmed income and approved or paid expenses only', async () => {
+    const result = await service.calculate(FUND_PERIOD_ID, CLUB_ID);
+
+    expect(result.miniFund.totalIncome).toBe(300_000);
+    expect(result.miniFund.totalExpense).toBe(200_000);
+    expect(result.miniFund.balance).toBe(100_000);
+    expect(prisma.fundContribution.aggregate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          fundPeriodId: FUND_PERIOD_ID,
+          clubId: CLUB_ID,
+          fundSource: 'MINI',
+          isConfirmed: true,
+        }),
+      }),
+    );
+    expect(prisma.livingExpense.aggregate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          fundPeriodId: FUND_PERIOD_ID,
+          clubId: CLUB_ID,
+          fundSource: 'MINI',
+          status: { in: ['approved', 'paid'] },
+        }),
+      }),
+    );
   });
 
   it('should calculate correct per-member costs (all attended 3/15 sessions)', async () => {

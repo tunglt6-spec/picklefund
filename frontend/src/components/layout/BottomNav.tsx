@@ -131,7 +131,7 @@ export function BottomNav() {
                 { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },
                 { label: 'Cài đặt', icon: <Settings size={20} />, to: '/settings' },
                 { label: 'Thông báo', icon: <Bell size={20} />, to: '/notifications' },
-                { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigame' },
+                { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
               ].map(item => (
                 <button
                   key={item.to}
