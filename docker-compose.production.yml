@@ -1,3 +1,20 @@
+# PickleFund V2.0 — Production Docker Compose
+#
+# USAGE (required — loads .env.production for variable interpolation):
+#   docker compose --env-file .env.production -f docker-compose.production.yml build
+#   docker compose --env-file .env.production -f docker-compose.production.yml up -d
+#   docker compose --env-file .env.production -f docker-compose.production.yml ps
+#   docker compose --env-file .env.production -f docker-compose.production.yml logs -f
+#
+# The --env-file flag is required so that ${POSTGRES_PASSWORD}, ${REDIS_PASSWORD},
+# ${VITE_API_URL} etc. are interpolated correctly from .env.production.
+# Without it, Docker Compose would look for a .env file (not .env.production).
+#
+# SETUP:
+#   cp .env.production.example .env.production
+#   # Edit .env.production with real values
+#   docker compose --env-file .env.production -f docker-compose.production.yml up -d
+
 services:
   postgres:
     image: postgres:16-alpine

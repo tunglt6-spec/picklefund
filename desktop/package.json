@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win",
+    "package:win": "electron-packager . PickleFund --platform=win32 --arch=x64 --icon=assets/icon.ico --app-version=2.0.0 --app-copyright=\"Copyright 2026 PickleFund\" --out=dist-packager --overwrite --ignore=dist-packager --ignore=dist-electron --ignore=node_modules/.cache",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },

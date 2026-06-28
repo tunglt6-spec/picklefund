@@ -28,6 +28,15 @@ npm run build:win
 
 Output: `dist-electron/PickleFund Setup 2.0.0.exe`
 
+> **Nếu `build:win` bị Windows Defender block** (NSIS bị quarantine), dùng `package:win` thay thế:
+>
+> ```bash
+> npm run package:win
+> ```
+>
+> Output: `dist-packager/PickleFund-win32-x64/` — nén thư mục này thành ZIP để phát hành.  
+> Đây là cách tạo ra `PickleFund-v2.0.0-win32-x64.zip` trong RC1.
+
 ## Cấu hình URL
 
 Mặc định trỏ đến `https://app.picklefund.uk`.

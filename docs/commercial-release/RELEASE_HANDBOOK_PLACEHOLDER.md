@@ -1,22 +1,8 @@
-# PickleFund V2 Commercial Release Handbook
+# Sổ Tay Phát Hành — Đã Chuyển Vị Trí
 
-## Vị trí file
+File này đã được thay thế bởi nội dung đầy đủ tại:
 
-Đặt file Release Handbook vào thư mục này:
-- `docs/commercial-release/PickleFund_V2_Commercial_Release_Handbook.pdf`
-- `docs/commercial-release/PickleFund_V2_Commercial_Release_Handbook.docx`
+👉 [`RELEASE_HANDBOOK.md`](./RELEASE_HANDBOOK.md)
 
-## Nội dung Handbook (tóm tắt)
-
-Handbook bao gồm:
-- Giới thiệu sản phẩm và thị trường mục tiêu
-- Chiến lược ra mắt và pricing
-- Onboarding process cho CLB mới
-- SLA và support policy
-- Roadmap V2.1+
-- Liên hệ và escalation path
-
-## Tạo file
-
-Nếu chưa có file, tạo bằng Google Docs hoặc Word rồi export PDF,
-sau đó copy vào thư mục này.
+Không còn là placeholder. Toàn bộ nội dung Sổ Tay Phát Hành Thương Mại PickleFund V2.0
+hiện có tại file trên.

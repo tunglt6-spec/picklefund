@@ -10,7 +10,7 @@
 | `docker-compose.production.yml` | → Xem file gốc ở root project |
 | `.env.production.example` | → Xem file gốc ở root project |
 | `docs/` | → Xem `docs/commercial-release/` ở root project |
-| `PickleFund-Setup-2.0.0.exe` | Windows installer (build từ `desktop/`) |
+| `PickleFund-v2.0.0-win32-x64.zip` | Windows Desktop Portable Package (110.8 MB) |
 
 ## Cài đặt nhanh (Docker)
 
@@ -24,8 +24,8 @@ cp .env.production.example .env.production
 # Chỉnh sửa .env.production với giá trị thực
 
 # 3. Build & start
-docker compose -f docker-compose.production.yml build
-docker compose -f docker-compose.production.yml up -d
+docker compose --env-file .env.production -f docker-compose.production.yml build
+docker compose --env-file .env.production -f docker-compose.production.yml up -d
 
 # 4. Kiểm tra
 curl https://your-domain.com/api/health
@@ -37,13 +37,12 @@ Kiểm tra integrity sau khi download:
 
 ```bash
 # Windows
-certutil -hashfile PickleFund-Setup-2.0.0.exe SHA256
+certutil -hashfile PickleFund-v2.0.0-win32-x64.zip SHA256
+# Expected: D72E84FAB0A8108E07EE45BAA62A957753FECAA73454652AEA7B592847A62A50
 
 # Linux/Mac
-sha256sum PickleFund-Setup-2.0.0.exe
+sha256sum PickleFund-v2.0.0-win32-x64.zip
 ```
-
-*(Checksums sẽ được đăng trên GitHub Release page)*
 
 ## Tài liệu
 

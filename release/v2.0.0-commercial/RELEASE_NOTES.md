@@ -85,8 +85,8 @@
 ### Từ V1.x
 1. Backup database: `docker exec picklefund-db pg_dump -U picklefund picklefund > backup_v1.sql`
 2. Pull code mới: `git pull origin main`
-3. Rebuild: `docker compose -f docker-compose.production.yml build --no-cache`
-4. Restart: `docker compose -f docker-compose.production.yml up -d`
+3. Rebuild: `docker compose --env-file .env.production -f docker-compose.production.yml build --no-cache`
+4. Restart: `docker compose --env-file .env.production -f docker-compose.production.yml up -d`
 5. Migration chạy tự động khi container start
 
 ### Fresh Install
@@ -99,8 +99,16 @@ Xem `docs/commercial-release/INSTALLATION_GUIDE.md`
 | Issue | Workaround |
 |-------|------------|
 | Infographic export trên Safari mobile có thể bị vỡ layout | Dùng Chrome mobile |
-| Windows Desktop Installer cần icon file thủ công | Xem `desktop/assets/README.txt` |
+| Windows Desktop: ZIP Portable thay vì NSIS Installer | electron-builder bị Defender block trên build machine; ZIP portable hoạt động bình thường |
 | Telegram bot webhook cần domain HTTPS | Cấu hình `TELEGRAM_WEBHOOK_URL` trong `.env.production` |
+
+## Ghi chú phát hành
+
+- **Windows Desktop**: Phiên bản này phát hành dạng **ZIP Portable** (`PickleFund-v2.0.0-win32-x64.zip`).  
+  NSIS Installer (.exe) sẽ được build trên CI/CD Windows runner sạch trong phiên bản tiếp theo.
+- **Docker Image**: Ready for deployment — chưa push lên container registry.  
+  Deploy bằng `docker compose --env-file .env.production -f docker-compose.production.yml up -d`.
+- **Cloud SaaS**: Cấu hình production ready — chưa deploy lên VPS mới.
 
 ---
 

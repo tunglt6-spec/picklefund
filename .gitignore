@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.production
+!.env.production.example
 
 # SSL certs
 nginx/ssl/
