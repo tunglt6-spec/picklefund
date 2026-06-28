@@ -13,19 +13,36 @@
     "appId": "com.picklefund.app",
     "productName": "PickleFund",
     "copyright": "Copyright © 2026 PickleFund",
+    "asar": false,
     "directories": {
       "output": "dist-electron"
     },
     "win": {
-      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowDirChange": true,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "PickleFund"
+    },
+    "portable": {
+      "artifactName": "PickleFund-Portable-${version}.exe"
     },
     "mac": {
       "target": "dmg",
@@ -37,6 +54,7 @@
     }
   },
   "devDependencies": {
+    "@electron/packager": "^20.0.1",
     "electron": "^34.0.0",
     "electron-builder": "^25.0.0"
   }

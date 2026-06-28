@@ -1,0 +1,5 @@
+# Large binary files — upload to GitHub Releases, not git
+*.zip
+*.exe
+*.dmg
+*.AppImage
