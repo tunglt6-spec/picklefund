@@ -97,8 +97,10 @@ interface FundCardProps {
   expense: number
   variant?: 'indigo' | 'cyan' | 'gradient'
   tag?: string
+  note?: string
+  subtitle?: string
 }
-function FundCard({ title, balance, income, expense, variant = 'indigo', tag }: FundCardProps) {
+function FundCard({ title, balance, income, expense, variant = 'indigo', tag, note, subtitle }: FundCardProps) {
   const isGradient = variant === 'gradient'
   return (
     <div
@@ -124,6 +126,10 @@ function FundCard({ title, balance, income, expense, variant = 'indigo', tag }: 
           </span>
         )}
       </div>
+
+      {subtitle && (
+        <p className={`text-[10px] -mt-1 ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>{subtitle}</p>
+      )}
 
       <div>
         <p
@@ -153,6 +159,9 @@ function FundCard({ title, balance, income, expense, variant = 'indigo', tag }: 
           <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(expense)}</p>
         </div>
       </div>
+      {note && (
+        <p className={`text-[10px] leading-snug ${isGradient ? 'text-white/50' : 'text-slate-400'}`}>{note}</p>
+      )}
     </div>
   )
 }
@@ -334,7 +343,7 @@ export function ClubDashboard() {
         miniIncome,
         miniExpense,
         miniBalance: miniIncome - miniExpense,
-        totalAssets: Number(fund.balance ?? 0) + miniIncome - miniExpense,
+        totalAssets: Number(fund.balance ?? 0), // Tổng tài sản CLB = Quỹ Chung only
         courtExpense: Number(fund.courtExpenses ?? 0),
         costPerAttendance: Number(fund.costPerAttendance ?? 0),
         unpaidCount: Number(fund.unpaidCount ?? 0),
@@ -361,7 +370,7 @@ export function ClubDashboard() {
   const miniExpTotal = financeSummary?.miniExpense ?? 0
   const commonBalance = financeSummary?.commonBalance ?? 0
   const miniBalance = financeSummary?.miniBalance ?? 0
-  const totalAssets = financeSummary?.totalAssets ?? 0
+
 
   /* ── KPI values ── */
   const totalTurns = clubData.sessions.reduce((a, s) => a + (s._count?.attendanceRecords ?? 0), 0)
@@ -384,10 +393,10 @@ export function ClubDashboard() {
     return sortedPeriods.map(p => ({
       name: p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name,
       Thu: clubData.contributions
-        .filter(c => c.fundPeriodId === p.id && c.isConfirmed)
+        .filter(c => c.fundPeriodId === p.id && c.isConfirmed && (c.fundSource ?? 'COMMON') === 'COMMON')
         .reduce((s, c) => s + c.amount, 0),
       Chi: clubData.expenses
-        .filter(e => e.fundPeriodId === p.id)
+        .filter(e => e.fundPeriodId === p.id && (e.fundSource ?? 'COMMON') === 'COMMON')
         .reduce((s, e) => s + e.amount, 0),
     }))
   }, [clubData.fundPeriods, clubData.contributions, clubData.expenses])
@@ -434,9 +443,8 @@ export function ClubDashboard() {
   /* ── AI Health Score (computed fallback, Maika API overrides) ── */
   const computedHealthScore = useMemo(() => {
     if (clubData.fundPeriods.length === 0) return 0
-    const totalIncome = commonIncome + miniIncome
-    const finScore = totalIncome > 0
-      ? Math.round(Math.min(25, 25 * Math.max(0, totalAssets) / Math.max(totalIncome, 1)))
+    const finScore = commonIncome > 0
+      ? Math.round(Math.min(25, 25 * Math.max(0, commonBalance) / Math.max(commonIncome, 1)))
       : 0
     const paidRatio = activeMembers > 0 ? (activeMembers - unpaidCount) / activeMembers : 1
     const engScore = Math.round(25 * paidRatio)
@@ -446,7 +454,7 @@ export function ClubDashboard() {
     const goalScore = activeMembers >= 5 ? 15 : Math.round(15 * activeMembers / 5)
     const issueScore = Math.round(15 * (1 - Math.min(unpaidCount / Math.max(activeMembers, 1), 1)))
     return finScore + engScore + actScore + goalScore + issueScore
-  }, [commonIncome, miniIncome, totalAssets, activeMembers, unpaidCount, currentPeriod, currentPeriodSessions])
+  }, [commonIncome, commonBalance, activeMembers, unpaidCount, currentPeriod, currentPeriodSessions])
   const healthScore = maikaScore?.score ?? computedHealthScore
 
   /* ── AI Recommendations (Maika API → fallback computed) ── */
@@ -456,18 +464,18 @@ export function ClubDashboard() {
       recs.push({ text: 'Tất cả thành viên đã đóng quỹ kỳ này', level: 'ok' })
     else if (unpaidCount > 0)
       recs.push({ text: `${unpaidCount} thành viên chưa đóng quỹ — cần nhắc nhở`, level: unpaidCount > activeMembers * 0.3 ? 'danger' : 'warn' })
-    if (totalAssets < 0)
-      recs.push({ text: 'Quỹ đang âm — cần thu thêm hoặc giảm chi', level: 'danger' })
-    else if (totalAssets < commonExpTotal * 0.2)
-      recs.push({ text: 'Quỹ sắp cạn — theo dõi chi tiêu chặt hơn', level: 'warn' })
+    if (commonBalance < 0)
+      recs.push({ text: 'Cân đối thu chi — Quỹ Chung đang âm', level: 'danger' })
+    else if (commonBalance < commonExpTotal * 0.2)
+      recs.push({ text: 'Quỹ Chung sắp cạn — theo dõi chi tiêu chặt hơn', level: 'warn' })
     else
-      recs.push({ text: `Quỹ ổn định — số dư ${Math.round(totalAssets / 1000)}k`, level: 'ok' })
+      recs.push({ text: `Quỹ Chung ổn định — số dư ${Math.round(commonBalance / 1000)}k`, level: 'ok' })
     if (currentPeriodSessions.length === 0 && currentPeriod)
       recs.push({ text: 'Chưa có buổi tập nào trong kỳ này', level: 'warn' })
     if (activeMembers < 5)
       recs.push({ text: 'CLB còn ít thành viên — mời thêm để tăng quỹ', level: 'warn' })
     return recs.slice(0, 4)
-  }, [unpaidCount, activeMembers, totalAssets, commonExpTotal, currentPeriodSessions, currentPeriod])
+  }, [unpaidCount, activeMembers, commonBalance, commonExpTotal, currentPeriodSessions, currentPeriod])
 
   const aiRecommendations = maikaScore?.recommendations
     ? maikaScore.recommendations.slice(0, 4).map(t => ({
@@ -533,16 +541,16 @@ export function ClubDashboard() {
             subtitle={`${greeting} 👋`}
             stats={[
               { label: 'Thành viên', value: activeMembers },
-              { label: 'Tổng tài sản', value: formatVND(totalAssets) },
+              { label: 'Tổng tài sản', value: formatVND(commonBalance) },
               { label: 'Chưa đóng', value: unpaidCount },
             ]}
           />
 
           {/* KPI row */}
           <div className="grid grid-cols-2 gap-3">
-            <MobileKpiCard label="Quỹ Chung" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
-            <MobileKpiCard label="Quỹ Mini" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#06B6D4" />
-            <MobileKpiCard label="Thành viên" value={String(activeMembers)} icon={<Users size={18} />} accent="#8B5CF6" />
+            <MobileKpiCard label="Quỹ Chung (Quỹ chính)" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
+            <MobileKpiCard label="Quỹ Mini (Quỹ phụ)" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#06B6D4" />
+            <MobileKpiCard label="Tổng tài sản CLB" value={formatVND(commonBalance)} icon={<ShieldCheck size={18} />} accent="#22C55E" />
             <MobileKpiCard label="Chưa đóng" value={String(unpaidCount)} icon={<AlertCircle size={18} />} accent={unpaidCount > 0 ? '#EF4444' : '#22C55E'} />
           </div>
 
@@ -741,7 +749,7 @@ export function ClubDashboard() {
         {/* ── 3 Fund Cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FundCard
-            title="Quỹ Chung"
+            title="QUỸ CHUNG"
             balance={commonBalance}
             income={commonIncome}
             expense={commonExpTotal}
@@ -749,20 +757,22 @@ export function ClubDashboard() {
             tag="Quỹ chính"
           />
           <FundCard
-            title="Quỹ Mini"
+            title="QUỸ MINI"
             balance={miniBalance}
             income={miniIncome}
             expense={miniExpTotal}
             variant="cyan"
-            tag="Phụ trợ"
+            tag="Quỹ phụ"
+            note="Quỹ Mini hoạt động độc lập, không cộng vào Tổng tài sản CLB."
           />
           <FundCard
-            title="Tổng tài sản CLB"
-            balance={totalAssets}
-            income={commonIncome + miniIncome}
-            expense={commonExpTotal + miniExpTotal}
+            title="TỔNG TÀI SẢN CLB"
+            subtitle="Chỉ tính Quỹ Chung"
+            balance={commonBalance}
+            income={commonIncome}
+            expense={commonExpTotal}
             variant="gradient"
-            tag="Tổng cộng"
+            tag="Quỹ Chung"
           />
         </div>
 
@@ -894,25 +904,25 @@ export function ClubDashboard() {
           <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: totalAssets >= 0 ? '#F0FDF4' : '#FFF1F2' }}>
-                {totalAssets >= 0
+                style={{ background: commonBalance >= 0 ? '#F0FDF4' : '#FFF1F2' }}>
+                {commonBalance >= 0
                   ? <TrendingUp size={14} color={brand.accent} />
                   : <TrendingDown size={14} color={brand.danger} />}
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-700">Tài chính</p>
-                <p className="text-[10px] text-slate-400">Tổng tài sản CLB</p>
+                <p className="text-[10px] text-slate-400">Quỹ Chung · Tổng tài sản CLB</p>
               </div>
             </div>
             <div>
               <p
                 className="text-2xl font-bold tabular-nums leading-none"
-                style={{ color: totalAssets >= 0 ? brand.dark : brand.danger, letterSpacing: '-0.03em' }}
+                style={{ color: commonBalance >= 0 ? brand.dark : brand.danger, letterSpacing: '-0.03em' }}
               >
-                {totalAssets >= 0 ? '+' : ''}{Math.round(totalAssets / 1000)}k
+                {commonBalance >= 0 ? '+' : ''}{Math.round(commonBalance / 1000)}k
               </p>
               <p className="text-[10px] text-slate-400 mt-1">
-                Thu {Math.round((commonIncome + miniIncome) / 1000)}k · Chi {Math.round((commonExpTotal + miniExpTotal) / 1000)}k
+                Thu {Math.round(commonIncome / 1000)}k · Chi {Math.round(commonExpTotal / 1000)}k
               </p>
             </div>
             <Link to="/contributions" className="mt-auto">
@@ -1201,8 +1211,8 @@ export function ClubDashboard() {
                 {[
                   { label: 'Số dư QC', value: formatVND(commonBalance) },
                   { label: 'Số dư QM', value: formatVND(miniBalance) },
-                  { label: 'Tổng Thu', value: formatVND(commonIncome + miniIncome) },
-                  { label: 'Tổng Chi', value: formatVND(commonExpTotal + miniExpTotal) },
+                  { label: 'Thu QC', value: formatVND(commonIncome) },
+                  { label: 'Chi QC', value: formatVND(commonExpTotal) },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</p>

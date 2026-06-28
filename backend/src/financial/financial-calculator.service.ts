@@ -22,6 +22,12 @@ export interface FinancialSummary {
     totalLiving: number;
     balance: number;
   };
+  // clubAssets = commonFund only; Quỹ Mini không cộng vào tài sản CLB
+  clubAssets: {
+    balance: number;
+    totalIncome: number;
+    totalExpense: number;
+  };
   miniFund: {
     totalIncome: number;
     totalExpense: number;
@@ -177,6 +183,11 @@ export class FinancialCalculatorService {
         totalCourt,
         totalLiving,
         balance: totalCommonIncome - totalCommonExpense,
+      },
+      clubAssets: {
+        balance: totalCommonIncome - totalCommonExpense,
+        totalIncome: totalCommonIncome,
+        totalExpense: totalCommonExpense,
       },
       miniFund: {
         totalIncome: totalMiniIncome,

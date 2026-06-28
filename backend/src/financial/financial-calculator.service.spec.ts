@@ -422,3 +422,92 @@ describe('FinancialCalculatorService — zero LivingExpense fallback', () => {
     expect(result.commonFund.totalLiving).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Fund Separation — Quỹ Mini KHÔNG được cộng vào Tổng tài sản CLB.
+//
+// Dataset Q3:
+//   Quỹ Chung: Thu=0, Chi=560,000 → balance=-560,000
+//   Quỹ Mini:  Thu=700,000, Chi=0 → balance=+700,000
+//
+// Expected:
+//   commonFund.balance   = -560,000
+//   miniFund.balance     = +700,000
+//   clubAssets.balance   = -560,000  (KHÔNG phải 140,000)
+// ---------------------------------------------------------------------------
+describe('FinancialCalculatorService — fund separation (Q3)', () => {
+  let service: FinancialCalculatorService;
+  let prisma: ReturnType<typeof buildPrismaMock>;
+
+  beforeEach(async () => {
+    prisma = buildPrismaMock();
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        FinancialCalculatorService,
+        { provide: PrismaService, useValue: prisma },
+      ],
+    }).compile();
+
+    service = module.get<FinancialCalculatorService>(FinancialCalculatorService);
+
+    let fcAgg = 0;
+    (prisma.fundContribution.aggregate as jest.Mock).mockImplementation(() => {
+      fcAgg++;
+      if (fcAgg === 1) return Promise.resolve({ _sum: { amount: 0 } });        // common income = 0
+      return Promise.resolve({ _sum: { amount: 700_000 } });                   // mini income = 700,000
+    });
+
+    (prisma.attendanceSession.aggregate as jest.Mock).mockResolvedValue({
+      _sum: { courtFee: 0 },
+    });
+
+    let leAgg = 0;
+    (prisma.livingExpense.aggregate as jest.Mock).mockImplementation(() => {
+      leAgg++;
+      if (leAgg === 1) return Promise.resolve({ _sum: { amount: 560_000 } }); // common expense = 560,000
+      return Promise.resolve({ _sum: { amount: 0 } });                         // mini expense = 0
+    });
+
+    (prisma.attendanceSession.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.member.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.attendanceRecord.groupBy as jest.Mock).mockResolvedValue([]);
+    (prisma.fundContribution.groupBy as jest.Mock).mockResolvedValue([]);
+  });
+
+  it('Q3: commonFund.balance = -560,000 (thu=0 chi=560k)', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    expect(result.commonFund.totalIncome).toBe(0);
+    expect(result.commonFund.totalExpense).toBe(560_000);
+    expect(result.commonFund.balance).toBe(-560_000);
+  });
+
+  it('Q3: miniFund.balance = +700,000 (thu=700k chi=0)', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    expect(result.miniFund.totalIncome).toBe(700_000);
+    expect(result.miniFund.totalExpense).toBe(0);
+    expect(result.miniFund.balance).toBe(700_000);
+  });
+
+  it('Q3: clubAssets.balance = -560,000 (chỉ Quỹ Chung, KHÔNG cộng Quỹ Mini)', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    // Must equal commonFund.balance, never commonFund.balance + miniFund.balance (140,000)
+    expect(result.clubAssets.balance).toBe(-560_000);
+    expect(result.clubAssets.balance).not.toBe(140_000);
+    expect(result.clubAssets.balance).toBe(result.commonFund.balance);
+  });
+
+  it('Q3: clubAssets income/expense must match commonFund only', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    expect(result.clubAssets.totalIncome).toBe(result.commonFund.totalIncome);
+    expect(result.clubAssets.totalExpense).toBe(result.commonFund.totalExpense);
+  });
+
+  it('Q3: Quỹ Mini không ảnh hưởng member cost (no members, cost=0)', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    // Members are empty — verify no mini data leaks into member summaries
+    expect(result.members).toHaveLength(0);
+    // costPerAttendance is based on commonFund only
+    expect(result.costPerAttendance).toBe(0);
+  });
+});
