@@ -153,7 +153,7 @@ export function Contributions() {
 
     if (isCommon) {
       if (!formPeriodId) {
-        toast.error('Cần có kỳ quỹ đang hoạt động để ghi nhận Quỹ Chung')
+        toast.error('Cần có kỳ quỹ đang hoạt động để ghi nhận Quỹ Chính')
         setIsSaving(false)
         return
       }
@@ -177,7 +177,7 @@ export function Contributions() {
           const res = await api.post('/contributions', payload)
           const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), member, fundSource: 'COMMON' as const }])
-          toast.success(`Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chung`)
+          toast.success(`Đã ghi nhận ${member.fullName} đóng ${formatVND(Number(form.amount))} vào Quỹ Chính`)
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
@@ -196,12 +196,12 @@ export function Contributions() {
         if (editTarget) {
           await api.put(`/contributions/${editTarget.id}`, payload)
           setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...payload, id: c.id } : c))
-          toast.success('Đã cập nhật khoản thu Quỹ Mini')
+          toast.success('Đã cập nhật khoản thu Quỹ Phụ')
         } else {
           const res = await api.post('/contributions', payload)
           const created = res.data?.data
           setContributions(prev => [...prev, { ...created, amount: Number(created.amount), fundSource: 'MINI' as const }])
-          toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Mini — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
+          toast.success(`Đã ghi nhận ${formatVND(Number(form.amount))} vào Quỹ Phụ — ${MINI_INCOME_TYPE_LABELS[form.miniIncomeType]}`)
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
@@ -265,11 +265,11 @@ export function Contributions() {
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chung</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chính</p>
             <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
           </div>
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Mini</p>
+            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Phụ</p>
             <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>
@@ -280,13 +280,13 @@ export function Contributions() {
             onClick={() => setMobileTab('COMMON')}
             className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
           >
-            Quỹ Chung
+            Quỹ Chính
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
             className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}
           >
-            Quỹ Mini
+            Quỹ Phụ
           </button>
         </div>
 
@@ -324,7 +324,7 @@ export function Contributions() {
             sortedMini.length === 0 ? (
               <div className="text-center py-14 text-slate-400 text-sm">
                 <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
-                Chưa có khoản thu Quỹ Mini nào
+                Chưa có khoản thu Quỹ Phụ nào
               </div>
             ) : sortedMini.map(c => {
               const memberName = c.payerName ?? members.find(m => m.id === c.memberId)?.fullName ?? 'N/A'
@@ -376,7 +376,7 @@ export function Contributions() {
                         : 'border-slate-200 text-slate-500'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
                   </button>
                 ))}
               </div>
@@ -385,7 +385,7 @@ export function Contributions() {
               <>
                 {!activePeriod && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-                    Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chung.
+                    Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chính.
                   </div>
                 )}
                 <div>
@@ -414,7 +414,7 @@ export function Contributions() {
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Mini <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
                   <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                     {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -463,7 +463,7 @@ export function Contributions() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Thu Quỹ"
-        subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chung: ${formatVND(commonTotal)} | Quỹ Mini: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
+        subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => {
@@ -492,13 +492,13 @@ export function Contributions() {
       <div className="p-6 max-w-[1200px] mx-auto space-y-5">
         {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Quỹ Chung */}
+          {/* Quỹ Chính */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <DollarSign size={14} className="text-indigo-600" />
               </div>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(commonTotal)}</p>
             <div className="flex gap-4 mt-2 text-xs text-slate-500">
@@ -506,13 +506,13 @@ export function Contributions() {
               <span className="text-amber-600">⏳ {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
             </div>
           </div>
-          {/* Quỹ Mini */}
+          {/* Quỹ Phụ */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center">
                 <Wallet size={14} className="text-violet-600" />
               </div>
-              <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
+              <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(miniTotal)}</p>
             <div className="flex gap-3 mt-2 flex-wrap">
@@ -530,11 +530,11 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded bg-indigo-100 flex items-center justify-center"><DollarSign size={11} className="text-indigo-600" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quỹ Chung</h3>
+            <h3 className="text-sm font-semibold text-slate-700">Quỹ Chính</h3>
           </div>
           {commonContribs.length === 0 ? (
             <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Chung nào.</p>
+              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
@@ -592,11 +592,11 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded bg-violet-100 flex items-center justify-center"><Wallet size={11} className="text-violet-600" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quỹ Mini</h3>
+            <h3 className="text-sm font-semibold text-slate-700">Quỹ Phụ</h3>
           </div>
           {miniContribs.length === 0 ? (
             <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Mini nào.</p>
+              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
@@ -688,7 +688,7 @@ export function Contributions() {
                     }`}
                   >
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
                   </button>
                 ))}
               </div>
@@ -699,7 +699,7 @@ export function Contributions() {
             <>
               {!activePeriod && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-                  Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chung.
+                  Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chính.
                 </div>
               )}
               <div>
@@ -728,7 +728,7 @@ export function Contributions() {
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Mini <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
                 <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>

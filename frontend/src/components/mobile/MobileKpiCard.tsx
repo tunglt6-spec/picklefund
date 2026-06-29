@@ -15,8 +15,8 @@ export function MobileKpiCard({ label, value, icon, accent = '#4F46E5' }: Mobile
           <span style={{ color: accent }}>{icon}</span>
         </div>
       </div>
-      <div>
-        <div className="text-[26px] font-[800] leading-none text-slate-900 tabular-nums">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[20px] sm:text-[24px] font-[800] leading-tight text-slate-900 tabular-nums break-words whitespace-normal max-w-full">{value}</div>
         <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 leading-tight">{label}</div>
       </div>
     </div>

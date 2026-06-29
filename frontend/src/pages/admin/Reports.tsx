@@ -575,7 +575,7 @@ export function Reports() {
           <div className="flex items-center gap-2 flex-wrap">
             {/* Fund source filter */}
             <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-200">
-              {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chung'], ['MINI', 'Quỹ Mini']] as const).map(([val, label]) => (
+              {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as const).map(([val, label]) => (
                 <button key={val} onClick={() => setFundFilter(val)}
                   className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
                     fundFilter === val

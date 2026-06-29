@@ -84,7 +84,9 @@ interface DashboardFinanceSummary {
   miniIncome: number
   miniExpense: number
   miniBalance: number
-  totalAssets: number
+  carryForwardBalance: number
+  carryForwardPeriodName: string | null
+  clubAssetsBalance: number
   courtExpense: number
   costPerAttendance: number
   unpaidCount: number
@@ -93,22 +95,44 @@ interface DashboardFinanceSummary {
 interface FundCardProps {
   title: string
   balance: number
-  income: number
-  expense: number
-  variant?: 'indigo' | 'cyan' | 'gradient'
+  income?: number
+  expense?: number
+  variant?: 'indigo' | 'emerald' | 'amber' | 'gradient'
   tag?: string
   note?: string
   subtitle?: string
+  formulaLines?: { label: string; value: number | string; isTotal?: boolean }[]
+  showSign?: boolean
+  statusLabel?: string
+  infoLines?: string[]
+  animDelay?: number
 }
-function FundCard({ title, balance, income, expense, variant = 'indigo', tag, note, subtitle }: FundCardProps) {
+function FundCard({ title, balance, income, expense, variant = 'indigo', tag, note, subtitle, formulaLines, showSign, statusLabel, infoLines, animDelay = 0 }: FundCardProps) {
   const isGradient = variant === 'gradient'
+  const variantStyles = {
+    indigo:  { tagBg: '#EEF2FF', tagColor: brand.primary },
+    emerald: { tagBg: '#ECFDF5', tagColor: '#059669' },
+    amber:   { tagBg: '#FEF3C7', tagColor: '#D97706' },
+    gradient:{ tagBg: 'rgba(255,255,255,0.2)', tagColor: '#fff' },
+  }[variant]
+
+  const balanceColor = isGradient
+    ? '#fff'
+    : balance < 0 ? brand.danger : balance > 0 ? '#16A34A' : brand.dark
+
+  const statusBg = balance > 0 ? '#F0FDF4' : balance < 0 ? '#FFF1F2' : '#F8FAFC'
+  const statusTextColor = balance > 0 ? '#16A34A' : balance < 0 ? '#E11D48' : '#64748B'
+
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3 shadow-md"
-      style={isGradient
-        ? { background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)`, color: '#fff' }
-        : { background: '#fff', border: '1px solid #E2E8F0' }
-      }
+      style={{
+        ...(isGradient
+          ? { background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)`, color: '#fff' }
+          : { background: '#fff', border: '1px solid #E2E8F0' }),
+        animation: 'fundCardFadeIn 0.4s ease both',
+        animationDelay: `${animDelay}ms`,
+      }}
     >
       <div className="flex items-center justify-between">
         <span className={`text-xs font-semibold tracking-wider uppercase ${isGradient ? 'text-white/70' : 'text-slate-400'}`}>
@@ -117,10 +141,7 @@ function FundCard({ title, balance, income, expense, variant = 'indigo', tag, no
         {tag && (
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={isGradient
-              ? { background: 'rgba(255,255,255,0.2)', color: '#fff' }
-              : { background: variant === 'indigo' ? '#EEF2FF' : '#ECFEFF', color: variant === 'indigo' ? brand.primary : brand.secondary }
-            }
+            style={{ background: variantStyles.tagBg, color: variantStyles.tagColor }}
           >
             {tag}
           </span>
@@ -134,31 +155,83 @@ function FundCard({ title, balance, income, expense, variant = 'indigo', tag, no
       <div>
         <p
           className="text-2xl font-bold tabular-nums leading-none"
-          style={{ letterSpacing: '-0.02em', color: isGradient ? '#fff' : brand.dark }}
+          style={{ letterSpacing: '-0.02em', color: balanceColor }}
         >
-          {formatVND(balance)}
+          {showSign && balance > 0 ? '+' : ''}{formatVND(balance)}
         </p>
-        <p className={`text-xs mt-1 ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Số dư hiện tại</p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className={`text-xs ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Số dư hiện tại</p>
+          {statusLabel && (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+              style={{
+                background: isGradient ? 'rgba(255,255,255,0.2)' : statusBg,
+                color: isGradient ? '#fff' : statusTextColor,
+              }}
+            >
+              {statusLabel}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className={`h-px ${isGradient ? 'bg-white/20' : 'bg-slate-100'}`} />
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <div className="flex items-center gap-1 mb-0.5">
-            <ArrowUpRight size={11} className={isGradient ? 'text-green-300' : 'text-emerald-500'} />
-            <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Thu</span>
-          </div>
-          <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(income)}</p>
+      {formulaLines ? (
+        <div className="flex flex-col gap-1">
+          {formulaLines.map((line, i) => (
+            <div key={i}>
+              {line.isTotal && <div className={`h-px my-1 ${isGradient ? 'bg-white/30' : 'bg-slate-200'}`} />}
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] ${line.isTotal ? (isGradient ? 'text-white font-semibold' : 'text-slate-700 font-semibold') : (isGradient ? 'text-white/60' : 'text-slate-400')}`}>
+                  {line.label}
+                </span>
+                <span className={`text-[11px] font-semibold tabular-nums ${
+                  line.isTotal
+                    ? (isGradient ? 'text-white' : (typeof line.value === 'number' && line.value < 0 ? 'text-red-500' : '#16A34A'))
+                    : (isGradient ? 'text-white/80' : 'text-slate-600')
+                }`}
+                  style={line.isTotal && typeof line.value === 'number' && line.value >= 0 ? { color: '#16A34A' } : {}}>
+                  {typeof line.value === 'number' ? formatVND(line.value) : line.value}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
-        <div>
-          <div className="flex items-center gap-1 mb-0.5">
-            <ArrowDownLeft size={11} className={isGradient ? 'text-red-300' : 'text-red-400'} />
-            <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Chi</span>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div className="flex items-center gap-1 mb-0.5">
+              <ArrowUpRight size={11} className={isGradient ? 'text-green-300' : 'text-emerald-500'} />
+              <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Thu</span>
+            </div>
+            <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(income ?? 0)}</p>
           </div>
-          <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(expense)}</p>
+          <div>
+            <div className="flex items-center gap-1 mb-0.5">
+              <ArrowDownLeft size={11} className={isGradient ? 'text-red-300' : 'text-red-400'} />
+              <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Chi</span>
+            </div>
+            <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(expense ?? 0)}</p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {infoLines && infoLines.length > 0 && (
+        <div className={`text-[10px] leading-snug ${isGradient ? 'text-white/50' : 'text-slate-400'}`}>
+          {infoLines.length === 1 ? (
+            <p>{infoLines[0]}</p>
+          ) : (
+            <>
+              <p className="mb-0.5">Bao gồm:</p>
+              <ul className="list-disc list-inside space-y-0 ml-1">
+                {infoLines.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+
       {note && (
         <p className={`text-[10px] leading-snug ${isGradient ? 'text-white/50' : 'text-slate-400'}`}>{note}</p>
       )}
@@ -330,20 +403,30 @@ export function ClubDashboard() {
     ]).then(([fundRes, contribRes, expenseRes]) => {
       if (cancelled || fundRes.status !== 'fulfilled') return
 
-      const fund = fundRes.value.data?.data as FundPeriodApiSummary
+      const fund = fundRes.value.data?.data as FundPeriodApiSummary & {
+        miniIncome?: number; miniExpense?: number; miniBalance?: number;
+        carryForward?: { balance: number; previousPeriodName: string | null };
+        clubAssets?: { balance: number };
+      }
       const contrib = contribRes.status === 'fulfilled' ? contribRes.value.data?.data : null
       const expense = expenseRes.status === 'fulfilled' ? expenseRes.value.data?.data : null
-      const miniIncome = Number(contrib?.mini?.total ?? 0)
-      const miniExpense = Number(expense?.mini?.total ?? 0)
+      // Prefer backend-computed mini values (from summary); fallback to separate endpoints
+      const miniIncome = Number(fund.miniIncome ?? contrib?.mini?.total ?? 0)
+      const miniExpense = Number(fund.miniExpense ?? expense?.mini?.total ?? 0)
+      const carryForwardBalance = Number(fund.carryForward?.balance ?? 0)
+      const commonBalance = Number(fund.balance ?? 0)
 
       setFinanceSummary({
         commonIncome: Number(fund.totalIncome ?? 0),
         commonExpense: Number(fund.totalExpenses ?? 0),
-        commonBalance: Number(fund.balance ?? 0),
+        commonBalance,
         miniIncome,
         miniExpense,
         miniBalance: miniIncome - miniExpense,
-        totalAssets: Number(fund.balance ?? 0), // Tổng tài sản CLB = Quỹ Chung only
+        carryForwardBalance,
+        carryForwardPeriodName: fund.carryForward?.previousPeriodName ?? null,
+        // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ
+        clubAssetsBalance: Number(fund.clubAssets?.balance ?? commonBalance + carryForwardBalance),
         courtExpense: Number(fund.courtExpenses ?? 0),
         costPerAttendance: Number(fund.costPerAttendance ?? 0),
         unpaidCount: Number(fund.unpaidCount ?? 0),
@@ -370,6 +453,10 @@ export function ClubDashboard() {
   const miniExpTotal = financeSummary?.miniExpense ?? 0
   const commonBalance = financeSummary?.commonBalance ?? 0
   const miniBalance = financeSummary?.miniBalance ?? 0
+  const carryForwardBalance = financeSummary?.carryForwardBalance ?? 0
+  const carryForwardPeriodName = financeSummary?.carryForwardPeriodName ?? null
+  // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ (KHÔNG cộng Quỹ Phụ)
+  const clubAssetsBalance = financeSummary?.clubAssetsBalance ?? (commonBalance + carryForwardBalance)
 
 
   /* ── KPI values ── */
@@ -401,7 +488,7 @@ export function ClubDashboard() {
     }))
   }, [clubData.fundPeriods, clubData.contributions, clubData.expenses])
 
-  /* ── Donut: cơ cấu chi phí Quỹ Chung ── */
+  /* ── Donut: cơ cấu chi phí Quỹ Chính ── */
   const donutData = useMemo(() => {
     const groups: Record<string, number> = {}
     for (const e of commonExpenses) {
@@ -457,6 +544,26 @@ export function ClubDashboard() {
   }, [commonIncome, commonBalance, activeMembers, unpaidCount, currentPeriod, currentPeriodSessions])
   const healthScore = maikaScore?.score ?? computedHealthScore
 
+  /* ── Health causes (plain language reasons for health score) ── */
+  const computedHealthCauses = useMemo(() => {
+    const causes: { text: string; level: 'ok' | 'warn' | 'danger' }[] = []
+    if (commonBalance < 0)
+      causes.push({ text: 'Quỹ Chính đang âm', level: 'danger' })
+    else if (commonBalance < commonExpTotal * 0.2)
+      causes.push({ text: 'Quỹ Chính thấp', level: 'warn' })
+    else
+      causes.push({ text: 'Quỹ Chính dương', level: 'ok' })
+    if (clubAssetsBalance < 0)
+      causes.push({ text: 'Tổng tài sản CLB đang âm', level: 'danger' })
+    else
+      causes.push({ text: 'Tổng tài sản CLB dương', level: 'ok' })
+    if (commonBalance < 0 && commonIncome > 0)
+      causes.push({ text: 'Thu chưa đủ bù chi', level: 'danger' })
+    else if (commonBalance >= 0 && commonExpTotal > 0)
+      causes.push({ text: 'Thu/chi cân đối', level: 'ok' })
+    return causes.slice(0, 3)
+  }, [commonBalance, clubAssetsBalance, commonExpTotal, commonIncome])
+
   /* ── AI Recommendations (Maika API → fallback computed) ── */
   const computedRecs = useMemo(() => {
     const recs: { text: string; level: 'ok' | 'warn' | 'danger' }[] = []
@@ -465,17 +572,23 @@ export function ClubDashboard() {
     else if (unpaidCount > 0)
       recs.push({ text: `${unpaidCount} thành viên chưa đóng quỹ — cần nhắc nhở`, level: unpaidCount > activeMembers * 0.3 ? 'danger' : 'warn' })
     if (commonBalance < 0)
-      recs.push({ text: 'Cân đối thu chi — Quỹ Chung đang âm', level: 'danger' })
+      recs.push({ text: `Cân đối thu chi — Quỹ Chính đang âm. Cần thu thêm khoảng ${formatVND(Math.abs(commonBalance))}`, level: 'danger' })
     else if (commonBalance < commonExpTotal * 0.2)
-      recs.push({ text: 'Quỹ Chung sắp cạn — theo dõi chi tiêu chặt hơn', level: 'warn' })
+      recs.push({ text: 'Quỹ Chính sắp cạn — theo dõi chi tiêu chặt hơn', level: 'warn' })
     else
-      recs.push({ text: `Quỹ Chung ổn định — số dư ${Math.round(commonBalance / 1000)}k`, level: 'ok' })
+      recs.push({ text: `Quỹ Chính ổn định — số dư ${Math.round(commonBalance / 1000)}k`, level: 'ok' })
+    if (clubAssetsBalance < 0)
+      recs.push({ text: `Tổng tài sản CLB đang âm. Cần bổ sung khoảng ${formatVND(Math.abs(clubAssetsBalance))}`, level: 'warn' })
+    if (carryForwardBalance < 0)
+      recs.push({ text: 'Kỳ trước chuyển sang số dư âm — cần xử lý trước khi mở rộng chi phí', level: 'warn' })
+    if (miniBalance > 0)
+      recs.push({ text: `Quỹ Phụ đang dương (${formatVND(miniBalance)}) nhưng không dùng để bù Quỹ Chính`, level: 'ok' })
     if (currentPeriodSessions.length === 0 && currentPeriod)
       recs.push({ text: 'Chưa có buổi tập nào trong kỳ này', level: 'warn' })
     if (activeMembers < 5)
       recs.push({ text: 'CLB còn ít thành viên — mời thêm để tăng quỹ', level: 'warn' })
     return recs.slice(0, 4)
-  }, [unpaidCount, activeMembers, commonBalance, commonExpTotal, currentPeriodSessions, currentPeriod])
+  }, [unpaidCount, activeMembers, commonBalance, commonExpTotal, clubAssetsBalance, carryForwardBalance, miniBalance, currentPeriodSessions, currentPeriod])
 
   const aiRecommendations = maikaScore?.recommendations
     ? maikaScore.recommendations.slice(0, 4).map(t => ({
@@ -541,17 +654,22 @@ export function ClubDashboard() {
             subtitle={`${greeting} 👋`}
             stats={[
               { label: 'Thành viên', value: activeMembers },
-              { label: 'Tổng tài sản', value: formatVND(commonBalance) },
+              { label: 'Tổng tài sản', value: formatVND(clubAssetsBalance) },
               { label: 'Chưa đóng', value: unpaidCount },
             ]}
           />
 
-          {/* KPI row */}
+          {/* KPI row — 4 cards: Quỹ Chính / Quỹ Phụ / Số dư chuyển kỳ / Tổng tài sản */}
           <div className="grid grid-cols-2 gap-3">
-            <MobileKpiCard label="Quỹ Chung (Quỹ chính)" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
-            <MobileKpiCard label="Quỹ Mini (Quỹ phụ)" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#06B6D4" />
-            <MobileKpiCard label="Tổng tài sản CLB" value={formatVND(commonBalance)} icon={<ShieldCheck size={18} />} accent="#22C55E" />
-            <MobileKpiCard label="Chưa đóng" value={String(unpaidCount)} icon={<AlertCircle size={18} />} accent={unpaidCount > 0 ? '#EF4444' : '#22C55E'} />
+            <MobileKpiCard label="Quỹ Chính" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
+            <MobileKpiCard label="Quỹ Phụ" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#059669" />
+            <MobileKpiCard
+              label="Số dư chuyển kỳ"
+              value={(carryForwardBalance > 0 ? '+' : '') + formatVND(carryForwardBalance)}
+              icon={<Activity size={18} />}
+              accent="#D97706"
+            />
+            <MobileKpiCard label="Tổng tài sản CLB" value={formatVND(clubAssetsBalance)} icon={<ShieldCheck size={18} />} accent="#4F46E5" />
           </div>
 
           {/* AI Health Score + Recommendations */}
@@ -579,6 +697,19 @@ export function ClubDashboard() {
                 <div className="text-[11px] text-slate-400 mt-0.5">Điểm sức khoẻ tài chính</div>
               </div>
             </div>
+            {computedHealthCauses.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {computedHealthCauses.map((c, i) => {
+                  const dotColor = c.level === 'ok' ? '#16A34A' : c.level === 'warn' ? '#D97706' : '#E11D48'
+                  return (
+                    <span key={i} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-slate-50" style={{ color: dotColor }}>
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotColor }} />
+                      {c.text}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
             <div className="space-y-0.5">
               {aiRecommendations.map((r, i) => <AiChip key={i} text={r.text} level={r.level} />)}
             </div>
@@ -693,6 +824,12 @@ export function ClubDashboard() {
 
   return (
     <div className="min-h-full" style={{ background: brand.bg, padding: '24px 28px' }}>
+      <style>{`
+        @keyframes fundCardFadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <div className="flex flex-col gap-5 max-w-[1400px] mx-auto">
 
         {/* ── Header ── */}
@@ -746,33 +883,56 @@ export function ClubDashboard() {
           </div>
         </div>
 
-        {/* ── 3 Fund Cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* ── 4 Fund Cards ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <FundCard
-            title="QUỸ CHUNG"
+            title="QUỸ CHÍNH"
             balance={commonBalance}
             income={commonIncome}
             expense={commonExpTotal}
             variant="indigo"
-            tag="Quỹ chính"
+            tag="Quỹ vận hành"
+            infoLines={['Thu quỹ thành viên', 'Chi phí sân', 'Chi phí sinh hoạt', 'Chi phí hoạt động CLB']}
+            animDelay={0}
           />
           <FundCard
-            title="QUỸ MINI"
+            title="QUỸ PHỤ"
             balance={miniBalance}
             income={miniIncome}
             expense={miniExpTotal}
-            variant="cyan"
-            tag="Quỹ phụ"
-            note="Quỹ Mini hoạt động độc lập, không cộng vào Tổng tài sản CLB."
+            variant="emerald"
+            tag="Quỹ phụ trợ"
+            note="Hoạt động độc lập"
+            infoLines={['Minigame', 'Cá cược vui', 'Thưởng', 'Tài trợ', 'Giao lưu']}
+            animDelay={80}
+          />
+          <FundCard
+            title="SỐ DƯ CHUYỂN KỲ"
+            subtitle={carryForwardPeriodName ? `Chuyển từ: ${carryForwardPeriodName}` : 'Chưa có kỳ trước'}
+            balance={carryForwardBalance}
+            variant="amber"
+            tag="Carry Forward"
+            showSign
+            statusLabel={
+              carryForwardBalance > 0 ? 'Còn dư' :
+              carryForwardBalance < 0 ? 'Thiếu hụt' : 'Không có chuyển kỳ'
+            }
+            infoLines={['Số dư Quỹ Chính kỳ gần nhất đã đóng, chuyển sang kỳ hiện tại.']}
+            animDelay={160}
           />
           <FundCard
             title="TỔNG TÀI SẢN CLB"
-            subtitle="Chỉ tính Quỹ Chung"
-            balance={commonBalance}
-            income={commonIncome}
-            expense={commonExpTotal}
+            subtitle="Quỹ Chính + Số dư chuyển kỳ"
+            balance={clubAssetsBalance}
             variant="gradient"
-            tag="Quỹ Chung"
+            tag="Net Asset"
+            formulaLines={[
+              { label: 'Quỹ Chính', value: commonBalance },
+              { label: '+ Số dư chuyển kỳ', value: carryForwardBalance },
+              { label: '= Tổng tài sản CLB', value: clubAssetsBalance, isTotal: true },
+            ]}
+            note="Không bao gồm Quỹ Phụ."
+            animDelay={240}
           />
         </div>
 
@@ -790,7 +950,7 @@ export function ClubDashboard() {
             icon={<Zap size={15} />}
             label="Chi phí TB/lượt"
             value={avgCostPerTurn > 0 ? `${Math.round(avgCostPerTurn / 1000)}k` : '—'}
-            sub="Quỹ Chung"
+            sub="Quỹ Chính"
             color={brand.secondary}
             bgColor="#ECFEFF"
           />
@@ -835,6 +995,11 @@ export function ClubDashboard() {
               </div>
             </div>
             <HealthScoreGauge score={healthScore} />
+            {computedHealthCauses.length > 0 && (
+              <div className="flex flex-col gap-0 mt-1">
+                {computedHealthCauses.map((c, i) => <AiChip key={i} text={c.text} level={c.level} />)}
+              </div>
+            )}
           </div>
 
           {/* Card 2: Debt alert */}
@@ -904,25 +1069,25 @@ export function ClubDashboard() {
           <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: commonBalance >= 0 ? '#F0FDF4' : '#FFF1F2' }}>
-                {commonBalance >= 0
+                style={{ background: clubAssetsBalance >= 0 ? '#F0FDF4' : '#FFF1F2' }}>
+                {clubAssetsBalance >= 0
                   ? <TrendingUp size={14} color={brand.accent} />
                   : <TrendingDown size={14} color={brand.danger} />}
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-700">Tài chính</p>
-                <p className="text-[10px] text-slate-400">Quỹ Chung · Tổng tài sản CLB</p>
+                <p className="text-xs font-semibold text-slate-700">Tài chính Quỹ Chính</p>
+                <p className="text-[10px] text-slate-400">Quỹ Chính · Tổng tài sản CLB</p>
               </div>
             </div>
             <div>
               <p
                 className="text-2xl font-bold tabular-nums leading-none"
-                style={{ color: commonBalance >= 0 ? brand.dark : brand.danger, letterSpacing: '-0.03em' }}
+                style={{ color: clubAssetsBalance >= 0 ? brand.dark : brand.danger, letterSpacing: '-0.03em' }}
               >
-                {commonBalance >= 0 ? '+' : ''}{Math.round(commonBalance / 1000)}k
+                {clubAssetsBalance >= 0 ? '+' : ''}{Math.round(clubAssetsBalance / 1000)}k
               </p>
               <p className="text-[10px] text-slate-400 mt-1">
-                Thu {Math.round(commonIncome / 1000)}k · Chi {Math.round(commonExpTotal / 1000)}k
+                QC {Math.round(commonBalance / 1000)}k · Chuyển kỳ {Math.round(carryForwardBalance / 1000)}k
               </p>
             </div>
             <Link to="/contributions" className="mt-auto">
@@ -981,7 +1146,7 @@ export function ClubDashboard() {
               <h3 className="text-sm font-semibold text-slate-800" style={{ letterSpacing: '-0.01em' }}>
                 Cơ cấu chi phí
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Quỹ Chung · Tất cả kỳ</p>
+              <p className="text-xs text-slate-400 mt-0.5">Quỹ Chính · Tất cả kỳ</p>
             </div>
             {donutData.length === 0 ? (
               <div className="h-40 flex items-center justify-center text-slate-300 text-sm">Chưa có chi phí</div>
@@ -1080,10 +1245,7 @@ export function ClubDashboard() {
                                 }
                               </p>
                               <p className="text-slate-400 text-[10px]">
-                                {txTab === 'income'
-                                  ? (tx.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung')
-                                  : (tx.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung')
-                                }
+                                {tx.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
                               </p>
                             </div>
                           </div>
@@ -1209,10 +1371,10 @@ export function ClubDashboard() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Số dư QC', value: formatVND(commonBalance) },
-                  { label: 'Số dư QM', value: formatVND(miniBalance) },
-                  { label: 'Thu QC', value: formatVND(commonIncome) },
-                  { label: 'Chi QC', value: formatVND(commonExpTotal) },
+                  { label: 'Quỹ Chính', value: formatVND(commonBalance) },
+                  { label: 'Quỹ Phụ', value: formatVND(miniBalance) },
+                  { label: 'Chuyển kỳ', value: formatVND(carryForwardBalance) },
+                  { label: 'Tổng tài sản', value: formatVND(clubAssetsBalance) },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</p>

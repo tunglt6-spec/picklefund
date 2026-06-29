@@ -78,6 +78,9 @@ function buildPrismaMock() {
       aggregate: jest.fn(),
       findMany: jest.fn(),
     },
+    fundPeriod: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
     livingExpense: {
       aggregate: jest.fn(),
     },
@@ -424,16 +427,17 @@ describe('FinancialCalculatorService — zero LivingExpense fallback', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Fund Separation — Quỹ Mini KHÔNG được cộng vào Tổng tài sản CLB.
+// Fund Separation — Quỹ Phụ KHÔNG được cộng vào Tổng tài sản CLB.
 //
-// Dataset Q3:
-//   Quỹ Chung: Thu=0, Chi=560,000 → balance=-560,000
-//   Quỹ Mini:  Thu=700,000, Chi=0 → balance=+700,000
+// Dataset Q3 (no carryForward):
+//   Quỹ Chính: Thu=0, Chi=560,000 → balance=-560,000
+//   Quỹ Phụ:   Thu=700,000, Chi=0 → balance=+700,000
+//   Số dư chuyển kỳ: 0 (không có kỳ trước)
 //
 // Expected:
 //   commonFund.balance   = -560,000
 //   miniFund.balance     = +700,000
-//   clubAssets.balance   = -560,000  (KHÔNG phải 140,000)
+//   clubAssets.balance   = -560,000 + 0 = -560,000  (KHÔNG phải 140,000)
 // ---------------------------------------------------------------------------
 describe('FinancialCalculatorService — fund separation (Q3)', () => {
   let service: FinancialCalculatorService;
@@ -503,11 +507,109 @@ describe('FinancialCalculatorService — fund separation (Q3)', () => {
     expect(result.clubAssets.totalExpense).toBe(result.commonFund.totalExpense);
   });
 
-  it('Q3: Quỹ Mini không ảnh hưởng member cost (no members, cost=0)', async () => {
+  it('Q3: Quỹ Phụ không ảnh hưởng member cost (no members, cost=0)', async () => {
     const result = await service.calculate('fp-q3', 'club-q3');
     // Members are empty — verify no mini data leaks into member summaries
     expect(result.members).toHaveLength(0);
     // costPerAttendance is based on commonFund only
     expect(result.costPerAttendance).toBe(0);
+  });
+
+  it('Q3: carryForward.balance = 0 khi không có kỳ trước', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3');
+    expect(result.carryForward.balance).toBe(0);
+    expect(result.carryForward.previousPeriodId).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Số dư chuyển kỳ (CarryForward) — clubAssets = Quỹ Chính + carryForward
+//
+// Dataset Q3 + carryForward:
+//   Quỹ Chính: Thu=0, Chi=560,000 → balance=-560,000
+//   Quỹ Phụ:  Thu=700,000, Chi=0 → balance=+700,000
+//   Số dư chuyển kỳ (từ kỳ trước): +140,000
+//
+// Expected:
+//   clubAssets.balance = -560,000 + 140,000 = -420,000
+//   KHÔNG phải: 140,000 | -560,000 | 840,000 | 280,000
+// ---------------------------------------------------------------------------
+describe('FinancialCalculatorService — carryForward (Q3 with previous period)', () => {
+  let service: FinancialCalculatorService;
+  let prisma: ReturnType<typeof buildPrismaMock>;
+
+  beforeEach(async () => {
+    prisma = buildPrismaMock();
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        FinancialCalculatorService,
+        { provide: PrismaService, useValue: prisma },
+      ],
+    }).compile();
+
+    service = module.get<FinancialCalculatorService>(FinancialCalculatorService);
+
+    let fcAgg = 0;
+    (prisma.fundContribution.aggregate as jest.Mock).mockImplementation(() => {
+      fcAgg++;
+      if (fcAgg === 1) return Promise.resolve({ _sum: { amount: 0 } });       // common income = 0
+      return Promise.resolve({ _sum: { amount: 700_000 } });                  // mini income = 700,000
+    });
+
+    (prisma.attendanceSession.aggregate as jest.Mock).mockResolvedValue({ _sum: { courtFee: 0 } });
+
+    let leAgg = 0;
+    (prisma.livingExpense.aggregate as jest.Mock).mockImplementation(() => {
+      leAgg++;
+      if (leAgg === 1) return Promise.resolve({ _sum: { amount: 560_000 } }); // common expense = 560,000
+      return Promise.resolve({ _sum: { amount: 0 } });                        // mini expense = 0
+    });
+
+    (prisma.attendanceSession.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.member.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.attendanceRecord.groupBy as jest.Mock).mockResolvedValue([]);
+    (prisma.fundContribution.groupBy as jest.Mock).mockResolvedValue([]);
+  });
+
+  it('Q3+CF: clubAssets.balance = -420,000 (= Quỹ Chính -560k + chuyển kỳ +140k)', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3', {
+      carryForwardBalance: 140_000,
+      previousPeriodId: 'fp-q2',
+      previousPeriodName: 'Q2',
+    });
+    expect(result.carryForward.balance).toBe(140_000);
+    expect(result.commonFund.balance).toBe(-560_000);
+    expect(result.clubAssets.balance).toBe(-420_000);
+    // Ensure wrong formulas are rejected
+    expect(result.clubAssets.balance).not.toBe(140_000);   // chỉ carry
+    expect(result.clubAssets.balance).not.toBe(-560_000);  // chỉ common
+    expect(result.clubAssets.balance).not.toBe(840_000);   // mini bị cộng vào
+    expect(result.clubAssets.balance).not.toBe(280_000);   // common + mini + carry
+  });
+
+  it('Q3+CF: Quỹ Phụ không cộng vào clubAssets dù carryForward dương', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3', { carryForwardBalance: 140_000 });
+    // miniFund.balance = 700,000
+    // Nếu Quỹ Phụ bị cộng: -560,000 + 700,000 + 140,000 = 280,000 → SAI
+    expect(result.clubAssets.balance).toBe(-420_000);
+    expect(result.miniFund.balance).toBe(700_000);
+  });
+
+  it('Q3+CF: carryForward metadata được lưu đúng', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3', {
+      carryForwardBalance: 140_000,
+      previousPeriodId: 'fp-q2',
+      previousPeriodName: 'Quý 2/2026',
+    });
+    expect(result.carryForward.balance).toBe(140_000);
+    expect(result.carryForward.previousPeriodId).toBe('fp-q2');
+    expect(result.carryForward.previousPeriodName).toBe('Quý 2/2026');
+    expect(result.carryForward.source).toBe('previous_period');
+  });
+
+  it('Q3+CF: clubAssets.formula = "commonFund.balance + carryForward.balance"', async () => {
+    const result = await service.calculate('fp-q3', 'club-q3', { carryForwardBalance: 140_000 });
+    expect(result.clubAssets.formula).toBe('commonFund.balance + carryForward.balance');
   });
 });

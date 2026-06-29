@@ -3,7 +3,9 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: picklefund-db
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -36,7 +38,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: picklefund-api
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     depends_on:
       postgres:
         condition: service_healthy

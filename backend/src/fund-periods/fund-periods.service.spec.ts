@@ -136,7 +136,10 @@ describe('FundPeriodsService', () => {
 
   describe('summary', () => {
     it('should compute member rows using batch groupBy (no N+1)', async () => {
-      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      // findOne() → basePeriod; carryForward previous period lookup → null (no previous)
+      mockPrisma.fundPeriod.findFirst
+        .mockResolvedValueOnce(basePeriod)
+        .mockResolvedValueOnce(null);
       // income: COMMON confirmed, MINI confirmed
       mockPrisma.fundContribution.aggregate
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(1000000) } })

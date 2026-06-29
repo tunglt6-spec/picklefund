@@ -22,16 +22,24 @@ export interface FinancialSummary {
     totalLiving: number;
     balance: number;
   };
-  // clubAssets = commonFund only; Quỹ Mini không cộng vào tài sản CLB
-  clubAssets: {
-    balance: number;
-    totalIncome: number;
-    totalExpense: number;
-  };
   miniFund: {
     totalIncome: number;
     totalExpense: number;
     balance: number;
+  };
+  // carryForward = số dư từ kỳ trước (Quỹ Chính); injected by caller
+  carryForward: {
+    balance: number;
+    previousPeriodId: string | null;
+    previousPeriodName: string | null;
+    source: string;
+  };
+  // clubAssets = Quỹ Chính + Số dư chuyển kỳ; KHÔNG cộng Quỹ Phụ
+  clubAssets: {
+    balance: number;
+    totalIncome: number;
+    totalExpense: number;
+    formula: string;
   };
   overall: {
     totalIncome: number;
@@ -44,6 +52,12 @@ export interface FinancialSummary {
   members: MemberFinancialSummary[];
 }
 
+export interface CalculateOptions {
+  carryForwardBalance?: number;
+  previousPeriodId?: string | null;
+  previousPeriodName?: string | null;
+}
+
 @Injectable()
 export class FinancialCalculatorService {
   constructor(private readonly prisma: PrismaService) {}
@@ -54,8 +68,18 @@ export class FinancialCalculatorService {
    * - Living fee = SUM(LivingExpense.amount WHERE fundSource='COMMON') — all living expenses
    * - Both allocated proportionally to attendance: (attended / totalAttendance) * total
    * - Income = confirmed contributions only
+   * - carryForward is injected by the caller (fund-periods.service looks up previous period)
+   * - clubAssets.balance = commonFund.balance + carryForward.balance (KHÔNG cộng Quỹ Phụ)
    */
-  async calculate(fundPeriodId: string, clubId: string): Promise<FinancialSummary> {
+  async calculate(
+    fundPeriodId: string,
+    clubId: string,
+    opts?: CalculateOptions,
+  ): Promise<FinancialSummary> {
+    const carryForwardBalance = opts?.carryForwardBalance ?? 0;
+    const previousPeriodId = opts?.previousPeriodId ?? null;
+    const previousPeriodName = opts?.previousPeriodName ?? null;
+
     const [
       commonIncomeAgg,
       miniIncomeAgg,
@@ -176,23 +200,33 @@ export class FinancialCalculatorService {
       };
     });
 
+    const commonBalance = totalCommonIncome - totalCommonExpense;
+
     return {
       commonFund: {
         totalIncome: totalCommonIncome,
         totalExpense: totalCommonExpense,
         totalCourt,
         totalLiving,
-        balance: totalCommonIncome - totalCommonExpense,
-      },
-      clubAssets: {
-        balance: totalCommonIncome - totalCommonExpense,
-        totalIncome: totalCommonIncome,
-        totalExpense: totalCommonExpense,
+        balance: commonBalance,
       },
       miniFund: {
         totalIncome: totalMiniIncome,
         totalExpense: totalMiniExpense,
         balance: totalMiniIncome - totalMiniExpense,
+      },
+      carryForward: {
+        balance: carryForwardBalance,
+        previousPeriodId,
+        previousPeriodName,
+        source: previousPeriodId ? 'previous_period' : 'none',
+      },
+      // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ; KHÔNG cộng Quỹ Phụ
+      clubAssets: {
+        balance: commonBalance + carryForwardBalance,
+        totalIncome: totalCommonIncome,
+        totalExpense: totalCommonExpense,
+        formula: 'commonFund.balance + carryForward.balance',
       },
       overall: {
         totalIncome: totalCommonIncome + totalMiniIncome,

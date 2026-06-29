@@ -146,7 +146,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                         : 'border-slate-200 text-slate-500 hover:border-slate-300'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
                   </button>
                 ))}
               </div>
@@ -193,7 +193,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               <div className="space-y-3.5">
                 <div>
                   <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Wallet size={11} />Chi tiết Quỹ Mini
+                    <Wallet size={11} />Chi tiết Quỹ Phụ
                   </p>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại chi <span className="text-red-500">*</span></label>
                   <select required value={form.miniExpenseType}
@@ -336,8 +336,8 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit }: {
   const fields: FieldRow[] = [
     { label: 'Mã chi',     value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
     { label: 'Nguồn quỹ', value: isMini
-      ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Mini</Badge>
-      : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chung</Badge> },
+      ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Phụ</Badge>
+      : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chính</Badge> },
     { label: 'Nội dung',   value: <span className="font-medium">{exp.description}</span>, span: true },
     { label: 'Số tiền',    value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
     { label: 'Ngày chi',   value: exp.expenseDate },
@@ -525,7 +525,7 @@ export function Expenses() {
       const newE: LivingExpense = { ...res.data?.data, amount: Number(res.data?.data?.amount ?? payload.amount), fundSource: form.fundSource, createdAt: new Date().toISOString(), createdBy: user?.username ?? 'Admin' }
       save([newE, ...clubData.expenses])
       setShowAdd(false)
-      toast.success(isMini ? 'Đã thêm khoản chi Quỹ Mini!' : 'Đã thêm khoản chi Quỹ Chung!')
+      toast.success(isMini ? 'Đã thêm khoản chi Quỹ Phụ!' : 'Đã thêm khoản chi Quỹ Chính!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Thêm khoản chi thất bại')
     } finally {
@@ -596,7 +596,7 @@ export function Expenses() {
     const rows = filtered.map(e => ({
       'Mã chi': e.code,
       'Nội dung': e.description,
-      'Nguồn quỹ': e.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung',
+      'Nguồn quỹ': e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính',
       'Ngày chi': e.expenseDate ?? '',
       'Số tiền (VNĐ)': e.amount,
       'Phân bổ': e.allocationRule ?? '',
@@ -683,8 +683,8 @@ export function Expenses() {
         {/* KPI strip */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
           {[
-            { label: 'Quỹ Chung', val: commonAmt, color: 'text-indigo-600' },
-            { label: 'Quỹ Mini', val: miniAmt, color: 'text-cyan-600' },
+            { label: 'Quỹ Chính', val: commonAmt, color: 'text-indigo-600' },
+            { label: 'Quỹ Phụ', val: miniAmt, color: 'text-cyan-600' },
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
@@ -707,7 +707,7 @@ export function Expenses() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-[600] text-slate-900 truncate">{e.description}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung'}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-[14px] font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
@@ -803,8 +803,8 @@ export function Expenses() {
       <div className="p-6 max-w-[1400px] mx-auto space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <KpiCard icon={<DollarSign size={18} />}  iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Chi Quỹ Chung"  value={commonAmt} />
-          <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Mini"   value={miniAmt} />
+          <KpiCard icon={<DollarSign size={18} />}  iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Chi Quỹ Chính"  value={commonAmt} />
+          <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Phụ"   value={miniAmt} />
           <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
           <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
           <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={periodFiltered.length} isCount unit="khoản" />
@@ -869,13 +869,13 @@ export function Expenses() {
                         <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
                         <td className="text-center">
                           {isMini
-                            ? <Badge variant="indigo">Quỹ Mini</Badge>
-                            : <Badge variant="gray">Quỹ Chung</Badge>}
+                            ? <Badge variant="indigo">Quỹ Phụ</Badge>
+                            : <Badge variant="gray">Quỹ Chính</Badge>}
                         </td>
                         <td className="text-center text-slate-500 text-xs">{exp.expenseDate}</td>
                         <td className="text-right font-semibold text-slate-900">{formatVND(exp.amount)}</td>
                         <td className="text-slate-600 text-xs">{isMini
-                          ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Mini')
+                          ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Phụ')
                           : ruleLabels[exp.allocationRule]}</td>
                         <td className="text-center">
                           <Badge variant={cfg.variant} dot>{cfg.label}</Badge>

@@ -138,10 +138,48 @@ export class FundPeriodsService {
   }
 
   async summary(id: string, clubId: string) {
-    await this.findOne(id, clubId); // validate exists
-    const result = await this.calculator.calculate(id, clubId);
+    const fp = await this.findOne(id, clubId);
 
-    // Count sessions for denominator
+    // Derive carryForward from most recent closed/finalized period before this one
+    const previousPeriod = await this.prisma.fundPeriod.findFirst({
+      where: {
+        clubId,
+        startDate: { lt: fp.startDate },
+        status: { in: ['closed', 'finalized'] },
+      },
+      orderBy: { startDate: 'desc' },
+      select: { id: true, name: true },
+    });
+
+    let carryForwardBalance = 0;
+    if (previousPeriod) {
+      const [prevIncome, prevLiving, prevCourt] = await Promise.all([
+        this.prisma.fundContribution.aggregate({
+          where: { fundPeriodId: previousPeriod.id, clubId, fundSource: 'COMMON', isConfirmed: true },
+          _sum: { amount: true },
+        }),
+        this.prisma.livingExpense.aggregate({
+          where: { fundPeriodId: previousPeriod.id, clubId, fundSource: 'COMMON' },
+          _sum: { amount: true },
+        }),
+        this.prisma.attendanceSession.aggregate({
+          where: { fundPeriodId: previousPeriod.id, clubId },
+          _sum: { courtFee: true },
+        }),
+      ]);
+      const prevTotalIncome = Number(prevIncome._sum.amount ?? 0);
+      const prevTotalLiving = Number(prevLiving._sum.amount ?? 0);
+      const prevTotalCourt = Number(prevCourt._sum.courtFee ?? 0);
+      const prevTotalExpense = prevTotalLiving > 0 ? prevTotalLiving : prevTotalCourt;
+      carryForwardBalance = prevTotalIncome - prevTotalExpense;
+    }
+
+    const result = await this.calculator.calculate(id, clubId, {
+      carryForwardBalance,
+      previousPeriodId: previousPeriod?.id ?? null,
+      previousPeriodName: previousPeriod?.name ?? null,
+    });
+
     const sessionCount = result.totalSessions;
 
     return {
@@ -157,6 +195,14 @@ export class FundPeriodsService {
       lowAttendanceCount: result.members.filter(
         (m) => sessionCount > 0 && m.attendedSessions / sessionCount < 0.5,
       ).length,
+      // Quỹ Phụ
+      miniIncome: result.miniFund.totalIncome,
+      miniExpense: result.miniFund.totalExpense,
+      miniBalance: result.miniFund.balance,
+      // Số dư chuyển kỳ
+      carryForward: result.carryForward,
+      // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ
+      clubAssets: result.clubAssets,
       members: result.members.map((m) => ({
         memberId: m.memberId,
         memberName: m.memberName,
