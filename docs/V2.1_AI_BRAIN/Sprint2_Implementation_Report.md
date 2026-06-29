@@ -141,3 +141,51 @@ KHÔNG commit/push/tag/release (theo yêu cầu).
 | ESLint source (non-test) | 0 lỗi |
 
 *PickleFund V2.1 — Sprint 2 Epic 2.2 Implementation Report v1.0.0*
+
+---
+
+# Epic 2.3 — Club Memory + Retrieval (Implementation)
+
+**Trạng thái:** COMPLETE ✅ (post-hotfix; chờ Codex Final Re-Audit) · Tuân thủ AI Brain Baseline v1.0 + Epic 2.3 Gate.
+
+> **Hotfix (Codex blocker):** Metadata Retrieval nay **đã triển khai** — `RetrievalQuery.metadata` + `IndexEntry.metadata` (derived từ Club Memory), filter **exact match + AND logic** (không fuzzy/semantic/embedding). Tie-break 100% deterministic: **score → updatedAt → memoryId**.
+
+## E2.3 — Files created
+| Module | Files |
+|---|---|
+| `backend/src/ai/club-memory/` | `club-memory.{module,service,controller,types,dto,interfaces,repository}.ts` + 3 spec |
+| `backend/src/ai/retrieval/` | `retrieval.{module,service,controller,types}.ts`, `index-manager.ts`, `semantic-search.interface.ts`, `noop-semantic-search.provider.ts` + 4 spec |
+
+## E2.3 — Files modified
+| File | Lý do |
+|---|---|
+| `backend/src/app.module.ts` | Wire `ClubMemoryModule` + `RetrievalModule` |
+| `conversation/conversation.module.ts` | Import `RetrievalModule` cho Context Builder |
+| `conversation/conversation.context-builder.ts` | **Additive**: thêm Club Memory Retrieval source (`@Optional` RetrievalEngine) — không đổi Conversation/User Memory logic |
+
+## E2.3 — Architecture summary
+- **Club Memory:** scope `clubId`, immutable (deep clone + deep freeze), audit metadata (createdBy/updatedBy), tenant isolation (no cross-club, clubId từ JWT, thiếu clubId → reject). 6 type: FACT/RULE/PREFERENCE/POLICY/KNOWLEDGE/OPERATIONAL_NOTE.
+- **Retrieval Engine:** deterministic keyword/tag/**metadata (exact match, AND)**; KHÔNG semantic/embedding/vector/rerank/LLM ranking. Score = keyword*2 + tag*3; tie-break **score → updatedAt → memoryId** (100% deterministic).
+- **Index Manager:** index là **derived view**, rebuild từ Club Memory (Source of Truth) mỗi retrieve → delete/update-safe; có upsert/remove incremental + rebuild.
+- **Semantic Search interface:** `ISemanticSearchProvider` + `NoopSemanticSearchProvider` (trả []). Epic 2.4 chỉ thay Provider, không refactor.
+- **Context Builder integration:** Conversation → User Memory → **Club Memory Retrieval** → Prompt Context (additive, optional).
+
+## E2.3 — API (shared Desktop/Mobile/Maika/Lisa/Hermes)
+`/club-memory` (POST/GET/:id/PUT/:id/DELETE/:id) · `/retrieval/club-memory` (GET). clubId từ JWT, no body override.
+
+## E2.3 — Security & Finance Isolation
+JWT + RBAC + clubId isolation; no cross-club; no body override; no direct DB. KHÔNG cache balance/contribution/expense/carryForward/receipt — Finance Engine RC1 ONLY (retrieval không gọi Finance).
+
+## E2.3 — Build / Test / Coverage
+| Gate | Kết quả |
+|---|---|
+| `nest build` | PASS |
+| Backend tests | PASS — 42 suites / 386 tests |
+| Epic 2.3 tests (club-memory + retrieval) | PASS — 6 suites / 37 tests |
+| Coverage (club-memory + retrieval) | Statements **100%** · Functions **100%** · Lines **100%** · Branches 89.28% (excl DI) / **93%** (excl DI+DTO decorators) |
+| ESLint source (non-test) | 0 lỗi |
+
+## E2.3 — Git
+KHÔNG commit/push/tag/release; KHÔNG update Knowledge Base. KHÔNG Vector Store/Embedding/RAG/Persistent/Optimization/Agent.
+
+*PickleFund V2.1 — Sprint 2 Epic 2.3 Implementation Report v1.0.0*

@@ -121,3 +121,41 @@ Epic 2.2 Architecture Validation = PASS
 ```
 
 *PickleFund V2.1 — Sprint 2 Epic 2.2 Architecture Validation*
+
+---
+
+# Epic 2.3 — Architecture Validation (Club Memory + Retrieval)
+
+## Tuân thủ Epic 2.3 Gate + Baseline v1.0 Invariants
+
+| Yêu cầu | Triển khai | Đạt |
+|---|---|---|
+| Club Memory scope clubId (no PII/finance) | `club-memory.service.ts` (requireClub, no finance field) | ✅ (INV-07) |
+| Club Memory immutable | deep clone + deep freeze | ✅ (INV-04) |
+| Audit metadata | createdBy/updatedBy | ✅ |
+| Retrieval deterministic (no LLM/semantic/embedding) | keyword/tag/**metadata (exact match, AND)**; tie-break score→updatedAt→memoryId; semantic = No-op | ✅ (INV-06) |
+| Index là derived view, rebuildable | `index-manager.ts` rebuild từ source | ✅ (INV-05) |
+| Vector Store chỉ interface | `ISemanticSearchProvider` + Noop; no provider thật | ✅ |
+| Context Builder additive | `@Optional` RetrievalEngine; Conversation/User Memory không đổi | ✅ |
+| Shared API Desktop/Mobile | `/club-memory`, `/retrieval` | ✅ (INV-03) |
+| Tenant isolation (clubId từ JWT, no body override, no direct DB) | controllers + service | ✅ (INV-07/09/10) |
+| Finance Isolation | no cache; Finance Engine RC1 ONLY | ✅ (INV-01/02) |
+
+## Deviations
+- **D-E2.3-01:** In-memory repository (volatile) cho Club Memory + index không persistent → Epic 2.4. Risk LOW.
+- **D-E2.3-02:** Branch tổng 89.28% (logic 93%); DTO decorators kéo xuống. Stmts/Lines/Funcs 100%. Risk LOW.
+
+## Isolation Verification
+```
+✅ Club Memory/Retrieval KHÔNG import finance/harness/provider
+✅ KHÔNG embedding/vector/similarity/RAG/LLM ranking (semantic = Noop interface)
+✅ Index derived; Source of Truth = ClubMemoryObject
+✅ KHÔNG sửa Memory Core / Conversation core / User Memory logic (builder chỉ thêm source)
+✅ Chỉ thêm wiring 2 module + 1 import vào conversation module
+```
+
+```
+Epic 2.3 Architecture Validation = PASS
+```
+
+*PickleFund V2.1 — Sprint 2 Epic 2.3 Architecture Validation*

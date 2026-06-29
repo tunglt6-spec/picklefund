@@ -12,9 +12,11 @@ import { ConversationContextBuilder } from './conversation.context-builder';
 import { InMemoryConversationRepository } from './conversation.repository';
 import { CONVERSATION_REPOSITORY } from './conversation.interfaces';
 import { UserMemoryModule } from '../user-memory/user-memory.module';
+import { RetrievalModule } from '../retrieval/retrieval.module';
 
 @Module({
-  imports: [ConfigModule, UserMemoryModule],
+  // RetrievalModule (Epic 2.3) cung cấp RetrievalEngine cho Context Builder (additive).
+  imports: [ConfigModule, UserMemoryModule, RetrievalModule],
   providers: [
     ConversationService,
     ContextWindowManager,

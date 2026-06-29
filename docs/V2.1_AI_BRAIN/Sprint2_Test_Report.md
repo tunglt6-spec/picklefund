@@ -112,3 +112,37 @@ Memory Core Foundation: build sạch, 43 test PASS, coverage logic ≥ 90% (stat
 - Branches dưới 90% do **DTO decorator metadata** (class-validator, không phải code thực thi) + vài nhánh `??` default phòng thủ. Không có nhánh logic quan trọng bị bỏ test. Không làm tròn.
 
 *PickleFund V2.1 — Sprint 2 Epic 2.2 Test Report v1.0.0*
+
+---
+
+# Epic 2.3 — Test Report (Club Memory + Retrieval)
+
+| Metric | Giá trị |
+|---|---|
+| Epic 2.3 Test Suites | 6 (club-memory: 3 · retrieval: 3) + context-builder integration |
+| Epic 2.3 Tests | 37 |
+| Backend Test Suites (toàn bộ) | 42 |
+| Backend Tests (toàn bộ) | 386 |
+| Failed | 0 |
+| `nest build` | PASS |
+
+## Suites
+- `club-memory.service.spec.ts` — save/load/update/delete/list · scope clubId · immutable (deep freeze nested) · audit metadata · **tenant isolation (cross-club null)** · reject no-club · NotFound.
+- `club-memory.repository.spec.ts` — CRUD + listByClub + clear.
+- `club-memory.controller.spec.ts` — clubId+userId từ JWT; NotFound khi xoá không có.
+- `index-manager.spec.ts` — tokenize · rebuild (derived) · upsert/remove (update/delete-safe) · search keyword/tag/type/topK/ordering · **metadata (positive/negative/multi-key AND/number+boolean)** · **tie-break deterministic (score→updatedAt→memoryId)**.
+- `retrieval.service.spec.ts` — deterministic retrieve · club-scoped · reflect deletes (rebuild) · semantic noop · **metadata retrieval (exact + club isolation + update/delete rebuild)**.
+- `retrieval.controller.spec.ts` — clubId từ JWT, parse query, no-club → [].
+- `conversation.context-builder.spec.ts` (+) — Club Memory là additive source; [] khi không có retrieval.
+
+## Coverage (club-memory + retrieval, reality filter — không làm tròn)
+
+| Phạm vi | Stmts | Branch | Funcs | Lines |
+|---|---|---|---|---|
+| Excl DI modules | 100 | 89.28 | 100 | 100 |
+| Excl DI + DTO (logic) | 100 | **93** | 100 | 100 |
+
+- Statements/Lines/Functions = **100%**. Logic-only branch **93%** (≥90% cả 4 metric).
+- Branch tổng (incl DTO) 89.28% do **class-validator DTO decorator metadata** (58%) — không phải code thực thi.
+
+*PickleFund V2.1 — Sprint 2 Epic 2.3 Test Report v1.0.0*
