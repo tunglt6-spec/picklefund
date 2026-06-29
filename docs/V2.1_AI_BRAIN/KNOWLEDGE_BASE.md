@@ -171,3 +171,42 @@
 - Governance Close: 2026-06-29 · `docs/V2.1_AI_BRAIN/BASELINE_V1/` (10 docs + BASELINE_CLOSE_REPORT).
 - 12 Architecture Invariants (INV-01…INV-12) khóa; thay đổi vùng baseline phải qua Change Control Policy.
 - Official baseline cho mọi Sprint tiếp theo. Ready for Sprint 2 Epic 2.3 implementation.
+
+---
+
+## Sprint 2 — Epic 2.3 Club Memory + Deterministic Retrieval
+
+Status: APPROVED / CLOSED
+
+Codex Final Delta Audit: PASS
+
+Completed:
+- Club Memory
+- Club Memory API
+- Retrieval Engine
+- Keyword Retrieval
+- Tag Retrieval
+- Metadata Retrieval
+- Derived Index Manager
+- Deterministic Ordering
+- Semantic Search Interface
+- Noop Semantic Provider
+- Context Builder Integration
+
+Verified:
+- Finance Engine RC1 remains Source of Truth
+- No Vector Store
+- No Embedding
+- No RAG
+- No LLM ranking
+- No cross-club leakage
+
+Release Metadata:
+- Epic 2.3 Commit: `00b68e7cd5fecd3dc03354e2d3acdfedfb750dd9`
+- Date: 2026-06-29 · Branch: `main`
+- Tests: backend 42 suites / 392 · coverage retrieval stmts/funcs/lines 100% · branch logic ≥90%
+
+Known Notes:
+- Vector Store deferred to Epic 2.4
+- Embedding deferred to Epic 2.4
+- Persistent Repository deferred
