@@ -152,3 +152,22 @@
 - Club Memory chưa triển khai.
 - Semantic Search chưa triển khai.
 - Vector Store deferred.
+
+---
+
+## AI Brain Baseline v1.0
+
+**Status:** LOCKED
+**Certification:** APPROVED
+
+**Reference:**
+- Enterprise Handbook (v1.0, LOCKED)
+- M2 AI Brain Certification
+- Sprint 1 (AI Harness Foundation)
+- Sprint 2 (Memory Core + Conversation/User Memory)
+- Architecture Gate Epic 2.3 (Semantic Search Boundary)
+
+**Notes:**
+- Governance Close: 2026-06-29 · `docs/V2.1_AI_BRAIN/BASELINE_V1/` (10 docs + BASELINE_CLOSE_REPORT).
+- 12 Architecture Invariants (INV-01…INV-12) khóa; thay đổi vùng baseline phải qua Change Control Policy.
+- Official baseline cho mọi Sprint tiếp theo. Ready for Sprint 2 Epic 2.3 implementation.
