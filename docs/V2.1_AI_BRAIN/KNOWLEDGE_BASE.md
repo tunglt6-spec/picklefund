@@ -123,3 +123,32 @@
 - In-memory repository is volatile default.
 - Persistent Vector Store remains deferred to Epic 2.4.
 - Conversation/User/Club Memory are not implemented yet.
+
+---
+
+## Sprint 2 — Epic 2.2 Conversation Memory + User Memory
+
+**Status:** APPROVED
+**Codex Delta Audit:** PASS
+
+**Completed:**
+- Conversation Memory
+- User Memory
+- Context Builder
+- Context Window Manager
+- JWT Tenant Isolation
+- Composite Tenant Key (`${clubId}:${userId}`)
+- Deep Immutability
+- Documentation
+- Tests
+
+**Release Metadata:**
+- Epic 2.2 Commit: `f7990dae8d59c7b0996b46221b15992e49f3900e` (`feat(memory): complete Sprint 2 Epic 2.2 conversation and user memory`)
+- Date: 2026-06-29 · Branch: `main`
+- Tests: backend 36 suites / 348 · Epic 2.2 8 suites / 51 · coverage stmts/lines/funcs 100% (branch capped bởi DTO decorators)
+
+**Known Notes:**
+- Behavior Memory chưa đưa vào Context Builder.
+- Club Memory chưa triển khai.
+- Semantic Search chưa triển khai.
+- Vector Store deferred.
