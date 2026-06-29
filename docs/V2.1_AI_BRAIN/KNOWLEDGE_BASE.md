@@ -74,4 +74,23 @@
 
 ---
 
+## Enterprise Governance v1.0 (Milestone Close)
+
+| Mục | Giá trị |
+|---|---|
+| Enterprise Governance | **v1.0** |
+| Status | **LOCKED** |
+| Codex Governance Audit | **PASS** |
+| Enterprise Development Handbook | **APPROVED** |
+| Governance Milestone | **CLOSED** |
+| Date | 2026-06-29 |
+| HEAD SHA | `f2bbae107b088417bae4f8f0eab876e44c4f2a1d` |
+
+- Handbook: `ENTERPRISE_DEVELOPMENT_HANDBOOK.md` (v1.0.0) + review package `HANDBOOK_REVIEW/01..09` + report.
+- Lock Certificate `HANDBOOK_REVIEW/09_HANDBOOK_LOCK_CERTIFICATE.md` → `LOCKED` sau Codex PASS.
+- Close report: `GOVERNANCE_CLOSE_REPORT.md`.
+- Sprint 2 Implementation: **NOT STARTED** (Memory Architecture đã LOCKED, chờ mở triển khai).
+
+---
+
 *Append block cho Sprint 2 trở đi bên dưới dòng này khi sprint đó đóng.*

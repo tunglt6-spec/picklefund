@@ -5,7 +5,8 @@
 **Phiên bản:** 1.0.0
 **Ngày:** 2026-06-29
 **Phạm vi:** Chuẩn governance & lifecycle cho chương trình AI Brain (V2.1).
-**Trạng thái review:** PENDING CODEX ENTERPRISE GOVERNANCE AUDIT
+**Governance Version:** 1.0
+**Trạng thái review:** CODEX ENTERPRISE GOVERNANCE AUDIT = PASS · **Handbook = LOCKED / APPROVED** (2026-06-29)
 
 > Tài liệu này tổng hợp các quy tắc đã áp dụng thực tế qua Phase 0 → M1 → Sprint 1 → Sprint 1.1 → Sprint 1 Release → Sprint 2 Architecture Package. Nó KHÔNG thay thế các tài liệu kỹ thuật chi tiết (`01`–`06`, Sprint1*, Sprint2/*) mà liên kết tới chúng.
 
