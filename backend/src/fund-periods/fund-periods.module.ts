@@ -7,5 +7,6 @@ import { FinancialModule } from '../financial/financial.module';
   imports: [FinancialModule],
   providers: [FundPeriodsService],
   controllers: [FundPeriodsController],
+  exports: [FundPeriodsService],
 })
 export class FundPeriodsModule {}

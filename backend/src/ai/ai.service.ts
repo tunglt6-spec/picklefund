@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
+import { FinanceSummaryDTO } from './dto/finance-summary.dto';
 
 @Injectable()
 export class AiService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    // Finance Engine RC1 — single source of truth. AI READS, never computes.
+    private readonly fundPeriods: FundPeriodsService,
+  ) {}
 
   async listClubs() {
     return this.prisma.club.findMany({
@@ -46,25 +52,14 @@ export class AiService {
       }),
       this.prisma.fundPeriod.findFirst({
         where: { clubId, status: 'active' },
-        include: {
-          contributions: {
-            select: {
-              memberId: true,
-              amount: true,
-              isConfirmed: true,
-              fundSource: true,
-            },
-          },
-          expenses: {
-            where: { status: 'approved' },
-            select: {
-              description: true,
-              amount: true,
-              allocationRule: true,
-              expenseDate: true,
-            },
-          },
-          _count: { select: { attendanceSessions: true } },
+        select: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          contributionAmount: true,
+          totalSessions: true,
+          status: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -78,13 +73,11 @@ export class AiService {
       }),
     ]);
 
-    const totalContributed =
-      activePeriod?.contributions
-        .filter((c) => c.isConfirmed && c.fundSource === 'COMMON')
-        .reduce((s, c) => s + Number(c.amount), 0) ?? 0;
-
-    const totalExpenses =
-      activePeriod?.expenses.reduce((s, e) => s + Number(e.amount), 0) ?? 0;
+    // Finance Isolation: all financial figures come from the Finance Engine RC1.
+    // The AI layer does NOT sum contributions/expenses or compute balance.
+    const financeSummary = activePeriod
+      ? await this.getFinanceSummary(activePeriod.id, clubId)
+      : null;
 
     return {
       club,
@@ -98,11 +91,8 @@ export class AiService {
             contributionAmount: activePeriod.contributionAmount,
             totalSessions: activePeriod.totalSessions,
             status: activePeriod.status,
-            totalContributed,
-            totalExpenses,
-            balance: totalContributed - totalExpenses,
-            contributions: activePeriod.contributions,
-            expenses: activePeriod.expenses,
+            // Read-only figures sourced from Finance Engine RC1:
+            finance: financeSummary,
           }
         : null,
       recentSessions: recentSessions.map((s) => ({
@@ -114,6 +104,37 @@ export class AiService {
         attendeeCount: s.attendanceRecords.filter((r) => r.status === 'PRESENT')
           .length,
       })),
+    };
+  }
+
+  /**
+   * Read the canonical financial summary for a fund period from the Finance
+   * Engine RC1. This is the ONLY way the AI layer obtains financial figures —
+   * it never recomputes income/expense/balance itself.
+   */
+  async getFinanceSummary(
+    fundPeriodId: string,
+    clubId: string,
+  ): Promise<FinanceSummaryDTO> {
+    const s = await this.fundPeriods.summary(fundPeriodId, clubId);
+    return {
+      fundPeriodId,
+      totalIncome: s.totalIncome,
+      totalExpenses: s.totalExpenses,
+      balance: s.balance,
+      courtExpenses: s.courtExpenses,
+      livingExpenses: s.livingExpenses,
+      totalAttendance: s.totalAttendance,
+      costPerAttendance: s.costPerAttendance,
+      miniIncome: s.miniIncome,
+      miniExpense: s.miniExpense,
+      miniBalance: s.miniBalance,
+      carryForward: s.carryForward,
+      clubAssets: s.clubAssets,
+      unpaidCount: s.unpaidCount,
+      negativeBalanceCount: s.negativeBalanceCount,
+      lowAttendanceCount: s.lowAttendanceCount,
+      members: s.members,
     };
   }
 
