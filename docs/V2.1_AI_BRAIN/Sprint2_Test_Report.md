@@ -73,3 +73,42 @@ Memory Core Foundation: build sạch, 43 test PASS, coverage logic ≥ 90% (stat
 ---
 
 *PickleFund V2.1 — Sprint 2 Epic 2.1 Test Report v1.0.0*
+
+---
+
+# Epic 2.2 — Test Report
+
+| Metric | Giá trị |
+|---|---|
+| Epic 2.2 Test Suites | 8 |
+| Epic 2.2 Tests | 46 |
+| Backend Test Suites (toàn bộ) | 36 |
+| Backend Tests (toàn bộ) | 343 |
+| Failed | 0 |
+| `nest build` | PASS |
+
+## Suites
+- `conversation.service.spec.ts` — create/append/load/summarize/archive/list · immutability (append không mutate cũ, messages frozen) · NotFound/BadRequest.
+- `conversation.context-window.spec.ts` — config defaults/overrides · countTokens · trim (keep SYSTEM, maxHistory, token budget, break-on-over-budget).
+- `conversation.context-builder.spec.ts` — merge trimmed history + user profile/preference · null user memory.
+- `conversation.controller.spec.ts` — create/list/load/append/summarize/archive/context · **owner isolation**: cross-user & cross-club Forbidden, SUPER_ADMIN bypass, NotFound.
+- `conversation.repository.spec.ts` — CRUD + listByOwner + clear.
+- `user-memory.service.spec.ts` — Profile/Preference/Behavior tách biệt · merge · clone/immutability · **tenant isolation** (same userId/diff club; same club/diff user) · reject khi thiếu clubId.
+- `user-memory.controller.spec.ts` — get/put 3 loại pass **clubId+userId từ JWT**; client KHÔNG override clubId.
+- `user-memory.repository.spec.ts` — composite key `clubId:userId`: isolate same-user-diff-club & same-club-diff-user; 3 store độc lập + clear.
+
+**Hotfix tenant isolation tests (Codex blocker):** same userId khác clubId không đọc của nhau (Profile/Preference/Behavior); same clubId khác userId không đọc của nhau; controller luôn dùng clubId từ JWT (không body override); positive owner đọc/update được; reject khi thiếu clubId.
+
+## Coverage (conversation + user-memory, reality filter — số liệu thật)
+
+| Phạm vi | Stmts | Branch | Funcs | Lines |
+|---|---|---|---|---|
+| Excl DI modules | 100 | 85.47 | 100 | 100 |
+| Excl DI + DTO (logic only) | 100 | 88.57 | 100 | 100 |
+
+> Post-hotfix: Epic 2.2 = 8 suites / 51 tests; toàn backend = 36 suites / 348 tests.
+
+- **Statements/Lines/Functions = 100%** trên mọi file.
+- Branches dưới 90% do **DTO decorator metadata** (class-validator, không phải code thực thi) + vài nhánh `??` default phòng thủ. Không có nhánh logic quan trọng bị bỏ test. Không làm tròn.
+
+*PickleFund V2.1 — Sprint 2 Epic 2.2 Test Report v1.0.0*

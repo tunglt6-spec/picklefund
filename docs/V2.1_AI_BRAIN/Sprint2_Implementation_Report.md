@@ -94,3 +94,50 @@ KHÔNG commit/push/tag/release (theo yêu cầu).
 ---
 
 *PickleFund V2.1 — Sprint 2 Epic 2.1 Implementation Report v1.0.0*
+
+---
+
+# Epic 2.2 — Conversation Memory + User Memory
+
+**Trạng thái:** COMPLETE ✅ (post-hotfix; chờ Codex Epic 2.2 Re-Audit) · **Phạm vi:** chỉ Epic 2.2 (không 2.3/2.4).
+
+> **Hotfix (sau Codex FAIL):** User Memory nay isolate theo **tenant `${clubId}:${userId}`** (không còn chỉ `userId`). Repository dùng composite key; service/controller bắt buộc clubId từ JWT; thiếu clubId → reject (BadRequest). **KHÔNG có Global User Memory** trong Epic 2.2.
+
+## E2.2 — Files created
+
+| Module | Files |
+|---|---|
+| `backend/src/ai/conversation/` | `conversation.{module,service,controller,types,dto,interfaces,repository,context-window,context-builder}.ts` + 4 spec |
+| `backend/src/ai/user-memory/` | `user-memory.{module,service,controller,types,dto,interfaces,repository}.ts` + 3 spec |
+
+## E2.2 — Files modified
+
+| File | Lý do |
+|---|---|
+| `backend/src/app.module.ts` | Wire `ConversationModule` + `UserMemoryModule` |
+| `.env.example` | `CONTEXT_TOKEN_BUDGET`, `CONTEXT_MAX_HISTORY_MESSAGES` |
+
+> KHÔNG sửa Finance Engine / Memory Core (Epic 2.1) / AI Harness / LiteLLM/OpenRouter/Ollama / Desktop UI / Mobile UI / Pipeline / Knowledge Base. `deepFreeze` của Memory Core chỉ **import** (không sửa).
+
+## E2.2 — Architecture summary
+
+- **Conversation Memory:** Conversation → Messages (Message Object: messageId/conversationId/role/content/timestamp/metadata/tokenCount). Role enum SYSTEM/USER/ASSISTANT/TOOL. **Immutable** (deep clone + deep freeze); `appendMessage/summarize/archive` tạo object mới. Lifecycle: create/append/load/summarize/archive — **archive chỉ đổi trạng thái, không xoá**. Summarize **deterministic, KHÔNG LLM** (LLM summarization deferred).
+- **User Memory:** 3 loại **TÁCH BIỆT** — Profile (nickname/displayName/language/timezone) · Preference (favoriteModel/uiPreference/responseStyle/notificationPreference) · Behavior (interactionCount/recentTopics/preferredPromptStyle/usageStatistics). Không trộn vào một object. **Scope = tenant `${clubId}:${userId}`** (mỗi object có `clubId`, `userId`, `ownerKey`). Cùng userId khác club → tách biệt hoàn toàn; cùng club khác user → tách biệt. KHÔNG global, KHÔNG fallback.
+- **ConversationContextBuilder:** Load History → Load User Memory (**Profile + Preference**; Behavior CHƯA đưa vào context ở Epic 2.2) → Merge → Trim → Return Context. KHÔNG Semantic/Embedding/Vector. Conversation không gắn club → bỏ qua User Memory.
+- **ContextWindowManager:** token budget + max history + trimming + rolling window (giữ SYSTEM, lấy recent contiguous trong budget). Không ranking/similarity/embedding.
+- **API (shared Desktop/Mobile/Maika/Lisa/Hermes):** `/conversations` (POST/GET/:id/:id/messages/:id/summarize/:id/archive/:id/context) + `/user-memory/{profile,preference,behavior}` (GET/PUT).
+- **Security:** JWT; Conversation owner = (clubId,userId) — KHÔNG cross-club/cross-user (SUPER_ADMIN bypass, có test); **User Memory scope theo tenant `${clubId}:${userId}` từ JWT** — client KHÔNG override được clubId (DTO không có clubId); thiếu clubId → reject. User Memory KHÔNG có SUPER_ADMIN bypass (luôn cần club context).
+- **Config:** `CONTEXT_TOKEN_BUDGET`, `CONTEXT_MAX_HISTORY_MESSAGES` từ ConfigService.
+- **Finance Isolation:** KHÔNG cache finance/contribution/balance/expense/carry-forward — Finance Engine RC1 ONLY.
+
+## E2.2 — Build / Test
+
+| Gate | Kết quả |
+|---|---|
+| `nest build` | PASS (0 lỗi) |
+| Backend tests | PASS — 36 suites / 343 tests |
+| Epic 2.2 tests | PASS — 8 suites / 46 tests |
+| Coverage (conversation + user-memory) | Statements/Lines/Functions **100%**; Branches 85.84% (excl DI) / 89.1% (excl DI+DTO) — phần dưới 90% là DTO decorator metadata + `??` default, không phải logic chưa test |
+| ESLint source (non-test) | 0 lỗi |
+
+*PickleFund V2.1 — Sprint 2 Epic 2.2 Implementation Report v1.0.0*

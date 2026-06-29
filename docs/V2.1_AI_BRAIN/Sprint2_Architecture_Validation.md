@@ -78,3 +78,46 @@ Sẵn sàng cho Codex Epic 2.1 Audit.
 ---
 
 *PickleFund V2.1 — Sprint 2 Epic 2.1 Architecture Validation*
+
+---
+
+# Epic 2.2 — Architecture Validation
+
+## Tuân thủ Sprint 2 Architecture + Handbook v1.0
+
+| Yêu cầu | Triển khai | Đạt |
+|---|---|---|
+| Conversation → Messages (không blob) | Conversation chứa `messages: ConversationMessage[]` | ✅ |
+| Message immutable | deep clone + deep freeze; update tạo object mới | ✅ |
+| Conversation lifecycle | create/append/load/summarize/archive (archive chỉ đổi status) | ✅ |
+| User Memory 3 loại tách biệt | Profile/Preference/Behavior riêng (không trộn) | ✅ |
+| Context Builder (no semantic) | Load history + user memory + merge + trim; KHÔNG embedding/vector | ✅ |
+| Context Window Manager | token budget + max history + trimming + rolling window | ✅ |
+| API dùng chung Desktop/Mobile | `/conversations`, `/user-memory` — không API riêng | ✅ |
+| Security JWT + isolation | Conversation owner (clubId,userId); **User Memory tenant `${clubId}:${userId}`** (post-hotfix); no cross-club/user | ✅ |
+| User Memory club isolation (Codex blocker) | composite key clubId:userId; no global; thiếu clubId → reject; client không override clubId | ✅ |
+| Context Builder user memory | load **Profile + Preference** (Behavior chưa vào context); dùng conversation.clubId | ✅ |
+| Config từ `.env` | `CONTEXT_TOKEN_BUDGET`, `CONTEXT_MAX_HISTORY_MESSAGES` | ✅ |
+| Finance Isolation | KHÔNG cache tài chính; Finance Engine RC1 ONLY | ✅ |
+
+## Deviations
+
+- **D-E2.2-01:** In-memory repository (volatile) cho Conversation + User Memory — persistence deferred (nhất quán Epic 2.1/2.4). Risk LOW.
+- **D-E2.2-02:** `summarizeConversation` deterministic (không LLM) — LLM summarization deferred. Risk LOW.
+- **D-E2.2-03:** Branch coverage logic 89.1% (DTO decorators + `??` defaults); Stmts/Lines/Funcs 100%. Risk LOW.
+
+## Isolation Verification
+
+```
+✅ Conversation/User Memory KHÔNG import finance/harness/provider
+✅ KHÔNG embedding/vector/semantic/RAG/ranking/compression
+✅ KHÔNG Club Memory / Prompt Engine / Maika/Lisa/Hermes
+✅ KHÔNG sửa Memory Core (Epic 2.1) — chỉ import deepFreeze
+✅ Chỉ thêm wiring 2 module vào app.module.ts + 2 biến .env.example
+```
+
+```
+Epic 2.2 Architecture Validation = PASS
+```
+
+*PickleFund V2.1 — Sprint 2 Epic 2.2 Architecture Validation*

@@ -21,6 +21,8 @@ import { SystemSettingsModule } from './system-settings/system-settings.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AiModule } from './ai/ai.module';
 import { MemoryModule } from './ai/memory/memory.module';
+import { ConversationModule } from './ai/conversation/conversation.module';
+import { UserMemoryModule } from './ai/user-memory/user-memory.module';
 import { MemberUsersModule } from './member-users/member-users.module';
 import { HermesModule } from './hermes/hermes.module';
 import { PaymentModule } from './payment/payment.module';
@@ -69,6 +71,8 @@ import { TenantGuard } from './common/guards/tenant.guard';
     ApiKeysModule,
     AiModule,
     MemoryModule,
+    ConversationModule,
+    UserMemoryModule,
     MemberUsersModule,
     HermesModule,
     PaymentModule,
