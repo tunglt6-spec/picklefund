@@ -20,6 +20,7 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { SystemSettingsModule } from './system-settings/system-settings.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AiModule } from './ai/ai.module';
+import { MemoryModule } from './ai/memory/memory.module';
 import { MemberUsersModule } from './member-users/member-users.module';
 import { HermesModule } from './hermes/hermes.module';
 import { PaymentModule } from './payment/payment.module';
@@ -67,6 +68,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
     SystemSettingsModule,
     ApiKeysModule,
     AiModule,
+    MemoryModule,
     MemberUsersModule,
     HermesModule,
     PaymentModule,
