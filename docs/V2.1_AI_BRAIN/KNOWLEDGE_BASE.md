@@ -94,3 +94,32 @@
 ---
 
 *Append block cho Sprint 2 trở đi bên dưới dòng này khi sprint đó đóng.*
+
+---
+
+## Sprint 2 — Epic 2.1 Memory Core Foundation
+
+**Status:** APPROVED
+**Codex Re-Audit:** PASS
+
+**Scope Completed:**
+- Memory Core
+- Memory API
+- Memory Manager
+- Repository Abstraction
+- In-memory Repository
+- Deep Immutability
+- SESSION Ownership
+- Config Consistency
+- Tests
+- Documentation
+
+**Release Metadata:**
+- Epic 2.1 Commit: `ca7285f73a1ea33d4c4983b6f49cba48dada0e28` (`feat(memory): complete Sprint 2 Epic 2.1 memory core foundation`)
+- Date: 2026-06-29 · Branch: `main`
+- Tests: backend 28 suites / 297 · memory 3 suites / 57 · coverage memory ≥90% cả 4 metric
+
+**Known Notes:**
+- In-memory repository is volatile default.
+- Persistent Vector Store remains deferred to Epic 2.4.
+- Conversation/User/Club Memory are not implemented yet.
