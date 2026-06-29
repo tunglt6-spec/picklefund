@@ -1,0 +1,77 @@
+# PickleFund V2.1 — Enterprise Knowledge Base
+## AI Brain Program
+
+> Append-only. KHÔNG xoá lịch sử. Mỗi sprint append một block bên dưới.
+
+---
+
+## Program Overview
+
+| Mục | Giá trị |
+|---|---|
+| Program | PickleFund V2.1 — AI Brain |
+| Nền tảng | Backend NestJS + Prisma · Frontend React · Mobile (shared API) |
+| Nguồn sự thật tài chính | **Finance Engine RC1** (duy nhất) |
+| Nguyên tắc AI | AI chỉ ĐỌC Finance Summary RC1; không tính lại tài chính |
+
+---
+
+## Sprint 1 — AI Harness Foundation
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Sprint 1 Status | **COMPLETED** |
+| AI Harness | **COMPLETED** |
+| LiteLLM Integration | **DONE** |
+| OpenRouter Integration | **DONE** |
+| Ollama Integration | **DONE** |
+| Retry Policy | **DONE** (classify 4xx no-retry / 429+5xx+network retry · backoff + jitter) |
+| Circuit Breaker | **DONE** (CLOSED/OPEN/HALF_OPEN, per-provider) |
+| Telemetry | **DONE** (no PII, no prompt/response) |
+| Token Accounting | **DONE** (Club · User · Session · Provider · Model) |
+| AI Gateway | **DONE** (shared Desktop + Mobile, single entry `POST /ai/chat`) |
+| Finance Isolation | **VERIFIED** (AI đọc `FundPeriodsService.summary` RC1) |
+| Desktop/Mobile Shared Gateway | **VERIFIED** (`useAIGateway` dùng chung) |
+
+### Release Metadata
+
+| Mục | Giá trị |
+|---|---|
+| Sprint 1 Release Tag | `v2.1-sprint1` |
+| Sprint 1 Audited Commit SHA | `9ca071bf30b80eddbe635c7d4fff6b37734f670f` (Codex Final Audit PASS) |
+| Sprint 1 Release Commit | `release(v2.1): Sprint 1 AI Harness Foundation completed` |
+| Sprint 1 Release Date | 2026-06-29 |
+| Branch | `main` |
+
+### Test / Build Snapshot tại release
+
+| Gate | Kết quả |
+|---|---|
+| Backend `nest build` | PASS (0 lỗi) |
+| Backend tests | PASS — 25 suites / 240 tests |
+| AI tests | PASS — 8 suites / 65 tests |
+| Frontend `tsc -b` + `vite build` | PASS |
+| ESLint AI source (non-test) | 0 lỗi |
+| `docker compose config` | hợp lệ |
+
+### Architecture Decisions (Sprint 1)
+
+| ID | Quyết định | Lý do |
+|---|---|---|
+| AD-S1-01 | Circuit Breaker + Token Accounting in-memory | Single-instance Sprint 1; Redis/persistence là Sprint 3+ |
+| AD-S1-02 | AI không tính tài chính, chỉ GET Finance Summary RC1 | Một nguồn sự thật duy nhất; tránh lệch số liệu |
+| AD-S1-03 | Một AI Gateway + một hook dùng chung Desktop/Mobile | Đảm bảo parity, không feature-gap |
+| AD-S1-04 | Provider qua native `fetch` + `AbortController` | Không thêm dependency; timeout per-request |
+| AD-S1-05 | Lỗi provider → `AIProviderError` đã sanitize | Không lộ prompt/response/key vào log hay API |
+| AD-S1-06 | Config 100% từ `.env` + fail-fast (production) | Không hardcode; sai cấu hình fail sớm khi boot |
+
+### Lessons Learned (Sprint 1)
+
+1. **`npm run lint` có cờ `--fix`** → reformat toàn repo, lan sang Finance Engine RC1. Phải lint phạm vi hẹp (`eslint src/ai`). Sự cố reformat 47 file đã được revert trong Sprint 1.1.
+2. **Tài liệu vượt trước code** (POST /ai/chat, api-client alias) gây blocker audit → tài liệu phải khớp code thực tế; đã đồng bộ trong Sprint 1.1.
+3. **ESLint `recommendedTypeChecked`** áp cả file test → repo có nợ lint pre-existing; cần một đợt dọn lint riêng (ngoài phạm vi AI).
+4. **Token Accounting** ban đầu lưu `model` nhưng chưa expose → bổ sung `getByModel` + `GET /ai/tokens/model/:model` (Sprint 1.1 last blocker).
+
+---
+
+*Append block cho Sprint 2 trở đi bên dưới dòng này khi sprint đó đóng.*
