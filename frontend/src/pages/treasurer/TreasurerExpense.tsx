@@ -17,7 +17,7 @@ const RULES: { value: AllocationRule; label: string; desc: string }[] = [
   { value: 'ATTENDANCE', label: 'Theo lượt tham gia', desc: 'Phân bổ theo số buổi tham gia thực tế' },
   { value: 'EQUAL', label: 'Chia đều', desc: 'Chia đều cho tất cả thành viên' },
   { value: 'PRESENT_ONLY', label: 'Người có mặt', desc: 'Chỉ tính người có mặt buổi đó' },
-  { value: 'FUND_ONLY', label: 'Quỹ chung', desc: 'Chi quỹ chung, không phân bổ cá nhân' },
+  { value: 'FUND_ONLY', label: 'Quỹ Chính', desc: 'Chi Quỹ Chính, không phân bổ cá nhân' },
 ]
 
 const BLANK = {

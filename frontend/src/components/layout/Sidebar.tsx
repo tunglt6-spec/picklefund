@@ -76,12 +76,6 @@ const roleLabels: Record<Role, string> = {
   CLUB_MEMBER: 'Thành Viên',
 }
 
-const roleColors: Record<Role, string> = {
-  SUPER_ADMIN: 'bg-purple-100 text-purple-700',
-  CLUB_ADMIN:  'bg-indigo-100 text-indigo-700',
-  CLUB_TREASURER: 'bg-emerald-100 text-emerald-700',
-  CLUB_MEMBER: 'bg-slate-100 text-slate-600',
-}
 
 interface SidebarProps { onClose?: () => void }
 
@@ -134,33 +128,33 @@ export function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-white border-r border-slate-100">
+    <aside className="flex h-screen w-60 flex-col" style={{ background: '#0F1629', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
 
       {/* ── Logo ── */}
-      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100">
+      <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <PickleFundLogoMark size={30} />
         <div className="leading-tight">
-          <p className="text-sm font-bold text-slate-900">PickleFund</p>
-          <p className="text-[10px] text-slate-400 font-medium">Sports Community Platform</p>
+          <p className="text-sm font-bold text-white">PickleFund</p>
+          <p className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>Sports Community Platform</p>
         </div>
       </div>
 
       {/* ── CLB card ── */}
-      <div className="px-3 py-3 border-b border-slate-100">
-        <div className="rounded-xl px-3 py-2.5" style={{ background: 'linear-gradient(135deg, #4F46E510, #06B6D415)', border: '1px solid #4F46E520' }}>
+      <div className="px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white text-xs font-bold"
               style={{ background: 'linear-gradient(135deg, #4F46E5, #06B6D4)' }}>
               {(clubData.settings?.name ?? user.username ?? 'C').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+              <p className="text-xs font-semibold text-white truncate leading-tight">
                 {clubData.settings?.name || user.username || 'CLB của tôi'}
               </p>
               {clubData.settings?.code ? (
-                <p className="text-[10px] text-slate-400 mt-0.5">Mã CLB: {clubData.settings.code}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Mã CLB: {clubData.settings.code}</p>
               ) : (
-                <span className={cn('inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5', roleColors[user.role])}>
+                <span className="inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5 bg-white/10 text-white/60">
                   {roleLabels[user.role]}
                 </span>
               )}
@@ -168,8 +162,8 @@ export function Sidebar({ onClose }: SidebarProps) {
           </div>
           {activePeriod && (
             <div className="mt-2 flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] text-slate-500 truncate">Kỳ Quỹ {activePeriod.name}</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.45)' }}>Kỳ Quỹ {activePeriod.name}</span>
             </div>
           )}
         </div>
@@ -185,17 +179,17 @@ export function Sidebar({ onClose }: SidebarProps) {
             className={({ isActive }) => cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
               isActive
-                ? 'text-white shadow-sm shadow-indigo-200'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'text-white'
+                : 'text-white/50 hover:text-white/90 hover:bg-white/[0.07]'
             )}
-            style={({ isActive }: { isActive: boolean }) => isActive ? {
-              background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-              borderLeft: '3px solid #06B6D4',
-            } : {}}
+            style={({ isActive }: { isActive: boolean }) => isActive
+              ? { background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)' }
+              : {}
+            }
           >
             {({ isActive }) => (
               <>
-                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400')}>
+                <span className={cn('shrink-0', isActive ? 'text-white' : 'text-white/50')}>
                   {item.icon}
                 </span>
                 <span className="flex-1 leading-none">{item.label}</span>
@@ -212,31 +206,38 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* ── Plan info ── */}
       <div className="mx-3 mb-3 rounded-xl p-3.5 text-white" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)' }}>
-        <div className="flex items-center gap-1.5 mb-2">
+        <div className="flex items-center gap-1.5 mb-1.5">
           <Star size={13} className="text-yellow-300" />
           <span className="text-xs font-semibold">Gói Professional</span>
         </div>
-        <p className="text-[10px] text-indigo-200 mb-2.5">Còn 245 ngày sử dụng</p>
+        <p className="text-[10px] mb-2.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Còn 245 ngày sử dụng</p>
         <button className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors py-1.5 text-xs font-semibold">
           <Zap size={12} />Nâng cấp gói
         </button>
       </div>
 
       {/* ── User profile + Logout ── */}
-      <div className="border-t border-slate-100 p-3 space-y-1">
-        <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer group">
+      <div className="p-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer transition-colors group"
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 text-white text-xs font-bold select-none">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-800 truncate leading-tight">{user.username}</p>
-            <p className="text-[10px] text-slate-400 truncate">{user.email ?? `admin@pbh.vn`}</p>
+            <p className="text-xs font-semibold text-white truncate leading-tight">{user.username}</p>
+            <p className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{user.email ?? 'admin@pbh.vn'}</p>
           </div>
-          <ChevronDown size={13} className="text-slate-300 shrink-0 group-hover:text-slate-500" />
+          <ChevronDown size={13} className="shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }} />
         </div>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+          style={{ color: 'rgba(255,255,255,0.4)' }}
+          onMouseEnter={e => { const el = e.currentTarget; el.style.background = 'rgba(239,68,68,0.12)'; el.style.color = '#FCA5A5' }}
+          onMouseLeave={e => { const el = e.currentTarget; el.style.background = ''; el.style.color = 'rgba(255,255,255,0.4)' }}
         >
           <LogOut size={15} />
           <span className="text-xs">Đăng xuất</span>

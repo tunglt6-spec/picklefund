@@ -3,6 +3,8 @@ import {
   Users, AlertCircle, Calendar,
   Plus, Bell, ArrowUpRight, ArrowDownLeft, Activity,
   ChevronRight, Trophy, Zap, ShieldCheck,
+  Wallet, ArrowLeftRight, BarChart3, Gamepad2,
+  CheckSquare, BarChart2, Sparkles,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -97,101 +99,79 @@ interface FundCardProps {
   balance: number
   income?: number
   expense?: number
-  variant?: 'indigo' | 'emerald' | 'amber' | 'gradient'
+  gradFrom: string
+  gradTo: string
+  icon: React.ReactNode
   tag?: string
   note?: string
   subtitle?: string
   formulaLines?: { label: string; value: number | string; isTotal?: boolean }[]
   showSign?: boolean
   statusLabel?: string
-  infoLines?: string[]
   animDelay?: number
 }
-function FundCard({ title, balance, income, expense, variant = 'indigo', tag, note, subtitle, formulaLines, showSign, statusLabel, infoLines, animDelay = 0 }: FundCardProps) {
-  const isGradient = variant === 'gradient'
-  const variantStyles = {
-    indigo:  { tagBg: '#EEF2FF', tagColor: brand.primary },
-    emerald: { tagBg: '#ECFDF5', tagColor: '#059669' },
-    amber:   { tagBg: '#FEF3C7', tagColor: '#D97706' },
-    gradient:{ tagBg: 'rgba(255,255,255,0.2)', tagColor: '#fff' },
-  }[variant]
-
-  const balanceColor = isGradient
-    ? '#fff'
-    : balance < 0 ? brand.danger : balance > 0 ? '#16A34A' : brand.dark
-
-  const statusBg = balance > 0 ? '#F0FDF4' : balance < 0 ? '#FFF1F2' : '#F8FAFC'
-  const statusTextColor = balance > 0 ? '#16A34A' : balance < 0 ? '#E11D48' : '#64748B'
-
+function FundCard({ title, balance, income, expense, gradFrom, gradTo, icon, tag, note, subtitle, formulaLines, showSign, statusLabel, animDelay = 0 }: FundCardProps) {
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-3 shadow-md"
+      className="rounded-2xl p-5 flex flex-col gap-3 shadow-lg text-white"
       style={{
-        ...(isGradient
-          ? { background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.secondary} 100%)`, color: '#fff' }
-          : { background: '#fff', border: '1px solid #E2E8F0' }),
+        background: `linear-gradient(135deg, ${gradFrom} 0%, ${gradTo} 100%)`,
         animation: 'fundCardFadeIn 0.4s ease both',
         animationDelay: `${animDelay}ms`,
       }}
     >
-      <div className="flex items-center justify-between">
-        <span className={`text-xs font-semibold tracking-wider uppercase ${isGradient ? 'text-white/70' : 'text-slate-400'}`}>
-          {title}
-        </span>
+      {/* Header: icon + title + badge */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+            {icon}
+          </div>
+          <span className="text-[11px] font-semibold tracking-wider uppercase text-white/70 leading-tight">
+            {title}
+          </span>
+        </div>
         {tag && (
-          <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ background: variantStyles.tagBg, color: variantStyles.tagColor }}
-          >
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white flex-shrink-0">
             {tag}
           </span>
         )}
       </div>
 
-      {subtitle && (
-        <p className={`text-[10px] -mt-1 ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>{subtitle}</p>
-      )}
-
-      <div>
-        <p
-          className="text-2xl font-bold tabular-nums leading-none"
-          style={{ letterSpacing: '-0.02em', color: balanceColor }}
-        >
+      {/* Balance */}
+      <div className="min-w-0">
+        <p className="text-xl sm:text-2xl font-bold tabular-nums leading-tight break-words whitespace-normal max-w-full" style={{ letterSpacing: '-0.02em' }}>
           {showSign && balance > 0 ? '+' : ''}{formatVND(balance)}
         </p>
-        <div className="flex items-center gap-2 mt-1">
-          <p className={`text-xs ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Số dư hiện tại</p>
-          {statusLabel && (
-            <span
-              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-              style={{
-                background: isGradient ? 'rgba(255,255,255,0.2)' : statusBg,
-                color: isGradient ? '#fff' : statusTextColor,
-              }}
-            >
-              {statusLabel}
-            </span>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <p className="text-xs text-white/60">Số dư hiện tại</p>
+          {balance < 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200">⚠ Âm</span>
+          )}
+          {statusLabel && balance >= 0 && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{statusLabel}</span>
           )}
         </div>
       </div>
 
-      <div className={`h-px ${isGradient ? 'bg-white/20' : 'bg-slate-100'}`} />
+      {subtitle && <p className="text-[10px] -mt-1 text-white/60 truncate">{subtitle}</p>}
 
+      <div className="h-px bg-white/20" />
+
+      {/* Content: formula or Thu/Chi */}
       {formulaLines ? (
         <div className="flex flex-col gap-1">
           {formulaLines.map((line, i) => (
             <div key={i}>
-              {line.isTotal && <div className={`h-px my-1 ${isGradient ? 'bg-white/30' : 'bg-slate-200'}`} />}
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] ${line.isTotal ? (isGradient ? 'text-white font-semibold' : 'text-slate-700 font-semibold') : (isGradient ? 'text-white/60' : 'text-slate-400')}`}>
+              {line.isTotal && <div className="h-px bg-white/30 my-1" />}
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className={`text-[10px] min-w-0 shrink ${line.isTotal ? 'text-white font-semibold' : 'text-white/60'}`}>
                   {line.label}
                 </span>
-                <span className={`text-[11px] font-semibold tabular-nums ${
+                <span className={`text-[11px] font-semibold tabular-nums text-right break-words min-w-0 max-w-[55%] ${
                   line.isTotal
-                    ? (isGradient ? 'text-white' : (typeof line.value === 'number' && line.value < 0 ? 'text-red-500' : '#16A34A'))
-                    : (isGradient ? 'text-white/80' : 'text-slate-600')
-                }`}
-                  style={line.isTotal && typeof line.value === 'number' && line.value >= 0 ? { color: '#16A34A' } : {}}>
+                    ? (typeof line.value === 'number' && line.value < 0 ? 'text-red-300' : 'text-white')
+                    : 'text-white/80'
+                }`}>
                   {typeof line.value === 'number' ? formatVND(line.value) : line.value}
                 </span>
               </div>
@@ -202,39 +182,22 @@ function FundCard({ title, balance, income, expense, variant = 'indigo', tag, no
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="flex items-center gap-1 mb-0.5">
-              <ArrowUpRight size={11} className={isGradient ? 'text-green-300' : 'text-emerald-500'} />
-              <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Thu</span>
+              <ArrowUpRight size={11} className="text-green-300" />
+              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Thu</span>
             </div>
-            <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(income ?? 0)}</p>
+            <p className="text-sm font-semibold tabular-nums text-white">{formatVND(income ?? 0)}</p>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-0.5">
-              <ArrowDownLeft size={11} className={isGradient ? 'text-red-300' : 'text-red-400'} />
-              <span className={`text-[10px] font-medium uppercase tracking-wide ${isGradient ? 'text-white/60' : 'text-slate-400'}`}>Chi</span>
+              <ArrowDownLeft size={11} className="text-red-300" />
+              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Chi</span>
             </div>
-            <p className={`text-sm font-semibold tabular-nums ${isGradient ? 'text-white' : 'text-slate-800'}`}>{formatVND(expense ?? 0)}</p>
+            <p className="text-sm font-semibold tabular-nums text-white">{formatVND(expense ?? 0)}</p>
           </div>
         </div>
       )}
 
-      {infoLines && infoLines.length > 0 && (
-        <div className={`text-[10px] leading-snug ${isGradient ? 'text-white/50' : 'text-slate-400'}`}>
-          {infoLines.length === 1 ? (
-            <p>{infoLines[0]}</p>
-          ) : (
-            <>
-              <p className="mb-0.5">Bao gồm:</p>
-              <ul className="list-disc list-inside space-y-0 ml-1">
-                {infoLines.map((line, i) => <li key={i}>{line}</li>)}
-              </ul>
-            </>
-          )}
-        </div>
-      )}
-
-      {note && (
-        <p className={`text-[10px] leading-snug ${isGradient ? 'text-white/50' : 'text-slate-400'}`}>{note}</p>
-      )}
+      {note && <p className="text-[10px] text-white/50 leading-snug">{note}</p>}
     </div>
   )
 }
@@ -890,9 +853,11 @@ export function ClubDashboard() {
             balance={commonBalance}
             income={commonIncome}
             expense={commonExpTotal}
-            variant="indigo"
+            gradFrom="#059669"
+            gradTo="#0D9488"
+            icon={<Wallet size={16} className="text-white" />}
             tag="Quỹ vận hành"
-            infoLines={['Thu quỹ thành viên', 'Chi phí sân', 'Chi phí sinh hoạt', 'Chi phí hoạt động CLB']}
+            note="Thu quỹ • Chi sân • Sinh hoạt • Hoạt động CLB"
             animDelay={0}
           />
           <FundCard
@@ -900,31 +865,36 @@ export function ClubDashboard() {
             balance={miniBalance}
             income={miniIncome}
             expense={miniExpTotal}
-            variant="emerald"
+            gradFrom="#7C3AED"
+            gradTo="#4F46E5"
+            icon={<Gamepad2 size={16} className="text-white" />}
             tag="Quỹ phụ trợ"
-            note="Hoạt động độc lập"
-            infoLines={['Minigame', 'Cá cược vui', 'Thưởng', 'Tài trợ', 'Giao lưu']}
+            note="Minigame • Cá cược vui • Thưởng • Tài trợ · Độc lập"
             animDelay={80}
           />
           <FundCard
             title="SỐ DƯ CHUYỂN KỲ"
             subtitle={carryForwardPeriodName ? `Chuyển từ: ${carryForwardPeriodName}` : 'Chưa có kỳ trước'}
             balance={carryForwardBalance}
-            variant="amber"
+            gradFrom="#D97706"
+            gradTo="#EA580C"
+            icon={<ArrowLeftRight size={16} className="text-white" />}
             tag="Carry Forward"
             showSign
             statusLabel={
               carryForwardBalance > 0 ? 'Còn dư' :
               carryForwardBalance < 0 ? 'Thiếu hụt' : 'Không có chuyển kỳ'
             }
-            infoLines={['Số dư Quỹ Chính kỳ gần nhất đã đóng, chuyển sang kỳ hiện tại.']}
+            note="Số dư Quỹ Chính kỳ gần nhất đã đóng"
             animDelay={160}
           />
           <FundCard
             title="TỔNG TÀI SẢN CLB"
             subtitle="Quỹ Chính + Số dư chuyển kỳ"
             balance={clubAssetsBalance}
-            variant="gradient"
+            gradFrom="#2563EB"
+            gradTo="#06B6D4"
+            icon={<BarChart3 size={16} className="text-white" />}
             tag="Net Asset"
             formulaLines={[
               { label: 'Quỹ Chính', value: commonBalance },
@@ -1184,6 +1154,27 @@ export function ClubDashboard() {
               </>
             )}
           </div>
+        </div>
+
+        {/* ── Quick actions ── */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'Điểm danh', icon: <CheckSquare size={14} />, to: '/attendance', color: '#4F46E5' },
+            { label: 'Thu quỹ',   icon: <ArrowUpRight size={14} />, to: '/contributions', color: '#059669' },
+            { label: 'Chi phí',   icon: <ArrowDownLeft size={14} />, to: '/expenses',   color: '#EA580C' },
+            { label: 'Minigame',  icon: <Trophy size={14} />,        to: '/minigames',  color: '#7C3AED' },
+            { label: 'Báo cáo',  icon: <BarChart2 size={14} />,     to: '/reports',    color: '#0D9488' },
+            { label: 'Lisa AI',  icon: <Sparkles size={14} />,       to: '/lisa',       color: '#F59E0B' },
+          ].map(({ label, icon, to, color }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              style={{ background: '#fff', border: `1.5px solid ${color}20`, color }}
+            >
+              {icon}{label}
+            </button>
+          ))}
         </div>
 
         {/* ── Bottom row ── */}

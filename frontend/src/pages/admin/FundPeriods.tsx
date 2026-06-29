@@ -202,6 +202,37 @@ export function FundPeriods() {
 
   const memberCount = members.length || 1
 
+  // Finance summary from backend — source of truth for carryForward & club assets
+  const [periodsFinanceSummary, setPeriodsFinanceSummary] = useState<{
+    carryForwardBalance: number
+    commonBalance: number
+    clubAssetsBalance: number
+  } | null>(null)
+
+  const activeChungId = useMemo(
+    () => periods.find(p => (p.type ?? 'chung') === 'chung' && p.status === 'active')?.id,
+    [periods]
+  )
+
+  useEffect(() => {
+    if (!activeChungId) { setPeriodsFinanceSummary(null); return }
+    let cancelled = false
+    api.get(`/fund-periods/${activeChungId}/summary`)
+      .then(res => {
+        if (cancelled) return
+        const fund = res.data?.data
+        const carryForwardBalance = Number(fund?.carryForward?.balance ?? 0)
+        const commonBalance = Number(fund?.balance ?? 0)
+        setPeriodsFinanceSummary({
+          carryForwardBalance,
+          commonBalance,
+          clubAssetsBalance: Number(fund?.clubAssets?.balance ?? (commonBalance + carryForwardBalance)),
+        })
+      })
+      .catch(() => { if (!cancelled) setPeriodsFinanceSummary(null) })
+    return () => { cancelled = true }
+  }, [activeChungId])
+
   // KPI computations
   const stats = useMemo(() => {
     // COMMON: only active (Đang mở) periods — exclude draft and closed
@@ -218,24 +249,9 @@ export function FundPeriods() {
         : 0
       const txCount = relevant.length
 
-      // Carryover from most recent closed period (kết dư kỳ trước)
-      const closedChung = periods
-        .filter(p => (p.type ?? 'chung') === 'chung' && (p.status === 'closed' || p.status === 'finalized'))
-        .sort((a, b) => b.endDate.localeCompare(a.endDate))
-      const prevPeriod = primaryActive
-        ? closedChung.filter(p => p.endDate < primaryActive.startDate)[0]
-        : closedChung[0]
-      const prevCarryover = prevPeriod
-        ? Math.max(0,
-            contributions.filter(c => c.fundPeriodId === prevPeriod.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-            - expenses.filter(e => e.fundPeriodId === prevPeriod.id).reduce((a, e) => a + Number(e.amount), 0)
-          )
-        : 0
-
-      const effectiveCollected = totalCollected + prevCarryover
-      const remaining = Math.max(0, totalTarget - effectiveCollected)
-      const pct = totalTarget > 0 ? Math.round((effectiveCollected / totalTarget) * 100) : 0
-      return { balance: effectiveCollected, prevCarryover, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
+      const remaining = Math.max(0, totalTarget - totalCollected)
+      const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
+      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
     }
 
     // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
@@ -262,21 +278,9 @@ export function FundPeriods() {
                   .sort((a, b) => b.startDate.localeCompare(a.startDate))[0],
   }), [periods])
 
-  // Previous closed period balance carryover for Quỹ Chung
-  // balance = collected - expenses of the most recent closed chung period before the current one
-  const prevChungBalance = useMemo(() => {
-    const activePeriod = activePeriods.chung
-    const closed = periods
-      .filter(p => (p.type ?? 'chung') === 'chung' && (p.status === 'closed' || p.status === 'finalized'))
-      .sort((a, b) => b.endDate.localeCompare(a.endDate))
-    const prev = activePeriod
-      ? closed.filter(p => p.endDate < activePeriod.startDate)[0]
-      : closed[0]
-    if (!prev) return 0
-    const collected = contributions.filter(c => c.fundPeriodId === prev.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-    const spent = expenses.filter(e => e.fundPeriodId === prev.id).reduce((a, e) => a + Number(e.amount), 0)
-    return Math.max(0, collected - spent)
-  }, [periods, activePeriods.chung, contributions, expenses])
+  // Số dư chuyển kỳ — lấy trực tiếp từ backend, không tự tính
+  // Giá trị có thể âm, KHÔNG được clamp về 0
+  const prevChungBalance = periodsFinanceSummary?.carryForwardBalance ?? 0
 
   // Latest game period regardless of status (for showing buttons even when no active period)
   const latestGamePeriod = useMemo(() =>
@@ -305,8 +309,8 @@ export function FundPeriods() {
   }, [contributions])
 
   const donutData = [
-    { name: 'Quỹ Chung', value: stats.chung.balance },
-    { name: 'Quỹ Mini', value: stats.game.balance },
+    { name: 'Quỹ Chính', value: stats.chung.balance },
+    { name: 'Quỹ Phụ', value: stats.game.balance },
   ]
 
   const handleSave = (
@@ -438,12 +442,12 @@ export function FundPeriods() {
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
-              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Chung</div>
+              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Chính</div>
               <div className="text-[20px] font-[800] text-indigo-600">{formatVND(stats.chung.balance)}</div>
               <div className="text-[12px] text-slate-500 mt-0.5">{stats.chung.pct}% đã thu</div>
             </div>
             <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
-              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Mini</div>
+              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Phụ</div>
               <div className="text-[20px] font-[800] text-violet-600">{formatVND(stats.game.balance)}</div>
               <div className="text-[12px] text-slate-500 mt-0.5">{stats.game.pct}% đã thu</div>
             </div>
@@ -496,12 +500,12 @@ export function FundPeriods() {
             />
           </div>
 
-          {/* Quỹ Chung periods */}
+          {/* Quỹ Chính periods */}
           {chungPeriods.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Building2 size={14} className="text-indigo-500" />
-                <span className="text-[13px] font-[700] text-slate-700">Quỹ Chung ({chungPeriods.length})</span>
+                <span className="text-[13px] font-[700] text-slate-700">Quỹ Chính ({chungPeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {chungPeriods.map(p => (
@@ -540,12 +544,12 @@ export function FundPeriods() {
             </div>
           )}
 
-          {/* Quỹ Mini periods */}
+          {/* Quỹ Phụ periods */}
           {gamePeriods.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Trophy size={14} className="text-violet-500" />
-                <span className="text-[13px] font-[700] text-slate-700">Quỹ Mini ({gamePeriods.length})</span>
+                <span className="text-[13px] font-[700] text-slate-700">Quỹ Phụ ({gamePeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {gamePeriods.map(p => (
@@ -687,8 +691,8 @@ export function FundPeriods() {
         <FundModal
           open={showCreateChung}
           onClose={() => { setShowCreateChung(false); setEditingChung(null) }}
-          title={editingChung ? 'Sửa Kỳ Quỹ Chung' : 'Tạo Kỳ Quỹ Chung'}
-          subtitle="Quỹ Chung CLB"
+          title={editingChung ? 'Sửa Kỳ Quỹ Chính' : 'Tạo Kỳ Quỹ Chính'}
+          subtitle="Quỹ Chính CLB"
           formId="form-chung-m"
           form={formChung}
           setForm={setFormChung}
@@ -699,8 +703,8 @@ export function FundPeriods() {
         <FundModal
           open={showCreateGame}
           onClose={() => { setShowCreateGame(false); setEditingGame(null) }}
-          title={editingGame ? 'Sửa Kỳ Quỹ Mini' : 'Tạo Kỳ Quỹ Mini'}
-          subtitle="Quỹ Mini CLB"
+          title={editingGame ? 'Sửa Kỳ Quỹ Phụ' : 'Tạo Kỳ Quỹ Phụ'}
+          subtitle="Quỹ Phụ CLB"
           formId="form-game-m"
           form={formGame}
           setForm={setFormGame}
@@ -716,14 +720,14 @@ export function FundPeriods() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Kỳ Quỹ"
-        subtitle="Quản lý Quỹ Chung và Quỹ Mini CLB"
+        subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
-              <Building2 size={14} />+ Tạo quỹ chung
+              <Building2 size={14} />+ Tạo Quỹ Chính
             </Button>
             <Button onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
-              <Wallet size={14} />+ Tạo quỹ mini
+              <Wallet size={14} />+ Tạo Quỹ Phụ
             </Button>
           </div>
         }
@@ -734,7 +738,7 @@ export function FundPeriods() {
         {/* KPI cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <KpiSummaryCard
-            title="TỔNG QUỸ CHUNG"
+            title="TỔNG QUỸ CHÍNH"
             icon={<Building2 size={16} className="text-indigo-600" />}
             iconBg="bg-indigo-50"
             accentColor="text-indigo-600"
@@ -742,7 +746,7 @@ export function FundPeriods() {
             label="Chưa đóng"
           />
           <KpiSummaryCard
-            title="TỔNG QUỸ MINI"
+            title="TỔNG QUỸ PHỤ"
             icon={<Wallet size={16} className="text-violet-600" />}
             iconBg="bg-violet-50"
             accentColor="text-violet-600"
@@ -755,7 +759,7 @@ export function FundPeriods() {
         {/* Fund detail cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FundDetailCard
-            title="Quỹ chung CLB"
+            title="Quỹ Chính CLB"
             icon={<Building2 size={16} className="text-indigo-500" />}
             period={activePeriods.chung}
             color="indigo"
@@ -766,7 +770,7 @@ export function FundPeriods() {
             onView={() => activePeriods.chung && setViewPeriod(activePeriods.chung)}
           />
           <FundDetailCard
-            title="Quỹ Mini"
+            title="Quỹ Phụ"
             icon={<Wallet size={16} className="text-violet-500" />}
             period={activePeriods.game ?? latestGamePeriod}
             color="violet"
@@ -804,8 +808,8 @@ export function FundPeriods() {
                   <select value={filterType} onChange={e => { setFilterType(e.target.value as '' | FundPeriodType); setPage(1) }}
                     className="input-base py-2 pr-8 text-sm appearance-none">
                     <option value="">Loại quỹ</option>
-                    <option value="chung">Quỹ chung</option>
-                    <option value="game">Quỹ Mini</option>
+                    <option value="chung">Quỹ Chính</option>
+                    <option value="game">Quỹ Phụ</option>
                   </select>
                   <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
@@ -1103,12 +1107,12 @@ export function FundPeriods() {
         </div>
       </div>
 
-      {/* Quỹ chung modal (create or edit) */}
+      {/* Quỹ Chính modal (create or edit) */}
       <FundModal
         open={showCreateChung}
         onClose={() => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) }}
-        title={editingChung ? 'Chỉnh sửa Quỹ Chung' : 'Tạo Quỹ Chung'}
-        subtitle={editingChung ? `Đang sửa: ${editingChung.name}` : 'Kỳ thu quỹ chung cho CLB'}
+        title={editingChung ? 'Chỉnh sửa Quỹ Chính' : 'Tạo Quỹ Chính'}
+        subtitle={editingChung ? `Đang sửa: ${editingChung.name}` : 'Kỳ thu Quỹ Chính cho CLB'}
         formId="form-chung"
         form={formChung}
         setForm={setFormChung}
@@ -1117,12 +1121,12 @@ export function FundPeriods() {
         onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) })}
       />
 
-      {/* Quỹ Mini modal (create or edit) */}
+      {/* Quỹ Phụ modal (create or edit) */}
       <FundModal
         open={showCreateGame}
         onClose={() => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) }}
-        title={editingGame ? 'Chỉnh sửa Quỹ Mini' : 'Tạo Quỹ Mini'}
-        subtitle={editingGame ? `Đang sửa: ${editingGame.name}` : 'Kỳ thu Quỹ Mini / giải đấu'}
+        title={editingGame ? 'Chỉnh sửa Quỹ Phụ' : 'Tạo Quỹ Phụ'}
+        subtitle={editingGame ? `Đang sửa: ${editingGame.name}` : 'Kỳ thu Quỹ Phụ / giải đấu'}
         formId="form-game"
         form={formGame}
         setForm={setFormGame}
@@ -1137,7 +1141,7 @@ export function FundPeriods() {
           <div className="p-4 space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-500">Loại quỹ</span>
-              <span className="font-medium">{(viewPeriod.type ?? 'chung') === 'chung' ? 'Quỹ Chung' : 'Quỹ Mini'}</span>
+              <span className="font-medium">{(viewPeriod.type ?? 'chung') === 'chung' ? 'Quỹ Chính' : 'Quỹ Phụ'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Trạng thái</span>
@@ -1493,7 +1497,7 @@ function HistoryTab({ contributions, periods, members }: {
                     <td className="px-4 py-2.5 text-xs text-slate-500">{period?.name ?? '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? 'bg-violet-100 text-violet-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                        {c.fundSource === 'MINI' ? 'Quỹ Mini' : 'Quỹ Chung'}
+                        {c.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">

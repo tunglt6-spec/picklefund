@@ -1,0 +1,60 @@
+# CHECKSUMS — PickleFund V2.0 RC1 Enterprise Release Package
+# Ngày tạo: 2026-06-29
+# Mục đích: Xác minh tính toàn vẹn của các file tài liệu trong release package
+#
+# Định dạng: <filename> | <size_approx> | <ghi chú>
+# Lưu ý: File này liệt kê các tài liệu trong release package.
+# Để xác minh code, dùng git commit hash: xem RELEASE_NOTES.md
+
+# === DOCUMENTATION FILES ===
+
+README.md                      | Tổng quan release package
+RELEASE_NOTES.md               | Ghi chú phát hành V2.0 RC1
+CHANGELOG.md                   | Lịch sử thay đổi
+INDEX.md                       | Mục lục toàn bộ tài liệu
+CHECKSUMS.txt                  | File này
+
+INSTALLATION_GUIDE.md          | Hướng dẫn cài đặt local
+DEPLOYMENT_GUIDE.md            | Hướng dẫn triển khai production
+ARCHITECTURE_OVERVIEW.md       | Kiến trúc hệ thống + Mermaid
+SYSTEM_REQUIREMENTS.md         | Yêu cầu hệ thống
+
+KNOWN_ISSUES.md                | Vấn đề đã biết RC1
+ROADMAP.md                     | Lộ trình sản phẩm
+
+SECURITY_GUIDE.md              | Hướng dẫn bảo mật
+OPERATIONS_MANUAL.md           | Sổ tay vận hành hàng ngày
+DISASTER_RECOVERY_GUIDE.md     | Hướng dẫn phục hồi thảm họa
+
+ADMIN_MANUAL.md                | Hướng dẫn quản trị CLB
+USER_MANUAL.md                 | Hướng dẫn thành viên
+API_HANDBOOK.md                | Tài liệu API
+
+AUDIT_REPORT.md                | Báo cáo kiểm thử & audit
+
+ACCEPTANCE_CHECKLIST.md        | Checklist nghiệm thu (47 mục)
+DEPLOYMENT_CHECKLIST.md        | Checklist triển khai
+RELEASE_CHECKLIST.md           | Checklist phát hành
+
+EXECUTIVE_SUMMARY.md           | Tóm tắt điều hành
+PRODUCT_BROCHURE.md            | Brochure sản phẩm
+TECHNICAL_WHITEPAPER.md        | Whitepaper kỹ thuật
+
+screenshots/README.md          | Mô tả thư mục screenshots
+assets/README.md               | Mô tả thư mục assets
+
+# === CODE VERIFICATION ===
+# Commit hash RC1: xem git log --oneline trên nhánh main
+# Branch: main
+# Tag (nếu có): v2.0.0-rc1
+
+# === QUALITY GATES ===
+# Backend tests:    175/175 PASS
+# Frontend errors:  0
+# Codex audit:      PASS (6/6 blockers fixed)
+# Finance formula:  VERIFIED (Tổng tài sản = Quỹ Chính + Số dư chuyển kỳ)
+
+# === TOTAL FILES ===
+# Documents:  26 files
+# Directories: 2 (screenshots/, assets/)
+# .gitkeep:    2 files

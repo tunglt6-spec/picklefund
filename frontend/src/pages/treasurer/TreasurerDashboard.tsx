@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { KpiCard } from '../../components/ui/KpiCard'
@@ -47,6 +47,36 @@ export function TreasurerDashboard() {
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
   const subtitle = activePeriod ? `Kỳ ${activePeriod.name}` : 'Chưa có kỳ quỹ nào đang mở'
 
+  // Finance summary từ backend — source of truth cho Tổng tài sản CLB
+  const [financeSummary, setFinanceSummary] = useState<{
+    carryForwardBalance: number
+    commonBalance: number
+    clubAssetsBalance: number
+  } | null>(null)
+
+  useEffect(() => {
+    if (!activePeriod?.id) { setFinanceSummary(null); return }
+    let cancelled = false
+    api.get(`/fund-periods/${activePeriod.id}/summary`)
+      .then(res => {
+        if (cancelled) return
+        const fund = res.data?.data
+        const carryForwardBalance = Number(fund?.carryForward?.balance ?? 0)
+        const commonBalance = Number(fund?.balance ?? 0)
+        setFinanceSummary({
+          carryForwardBalance,
+          commonBalance,
+          // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ — KHÔNG cộng Quỹ Phụ
+          clubAssetsBalance: Number(fund?.clubAssets?.balance ?? (commonBalance + carryForwardBalance)),
+        })
+      })
+      .catch(() => { if (!cancelled) setFinanceSummary(null) })
+    return () => { cancelled = true }
+  }, [activePeriod?.id])
+
+  // Tổng tài sản CLB từ backend; fallback: Quỹ Chính + Số dư chuyển kỳ (không cộng Quỹ Phụ)
+  const clubAssetsBalance = financeSummary?.clubAssetsBalance ?? (balance + (financeSummary?.carryForwardBalance ?? 0))
+
   const [reminding, setReminding] = useState<string | null>(null)
   const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
   const { patchExpense } = useClubDataStore()
@@ -78,8 +108,8 @@ export function TreasurerDashboard() {
           date: c.paymentDate,
           type: 'income' as const,
           description: c.fundSource === 'MINI'
-            ? `Thu Quỹ Mini — ${c.payerName ?? c.member?.fullName ?? ''}`
-            : `Thu Quỹ Chung — ${c.member?.fullName ?? c.memberId ?? ''}`,
+            ? `Thu Quỹ Phụ — ${c.payerName ?? c.member?.fullName ?? ''}`
+            : `Thu Quỹ Chính — ${c.member?.fullName ?? c.memberId ?? ''}`,
           amount: c.amount,
         })),
       ...clubData.expenses.map(e => ({
@@ -131,8 +161,8 @@ export function TreasurerDashboard() {
           {/* Fund cards */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Quỹ Chung', income: commonIncome, expense: commonExpTotal, balance, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { label: 'Quỹ Mini', income: miniIncome, expense: miniExpTotal, balance: miniBalance, color: 'text-violet-600', bg: 'bg-violet-50' },
+              { label: 'Quỹ Chính', income: commonIncome, expense: commonExpTotal, balance, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Quỹ Phụ', income: miniIncome, expense: miniExpTotal, balance: miniBalance, color: 'text-violet-600', bg: 'bg-violet-50' },
             ].map(f => (
               <div key={f.label} className="bg-white rounded-[16px] border border-slate-100 p-3 shadow-sm">
                 <div className={`text-[11px] font-[700] ${f.color} mb-2`}>{f.label}</div>
@@ -147,8 +177,8 @@ export function TreasurerDashboard() {
           {/* Total asset */}
           <div className="rounded-[16px] p-4 text-white" style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
             <div className="text-[11px] font-[700] text-indigo-200 uppercase mb-1">Tổng Tài Sản CLB</div>
-            <div className="text-[22px] font-[800]">{formatVND(balance + miniBalance)}</div>
-            <div className="text-[11px] text-indigo-200 mt-0.5">Quỹ Chung + Quỹ Mini</div>
+            <div className="text-[22px] font-[800]">{formatVND(clubAssetsBalance)}</div>
+            <div className="text-[11px] text-indigo-200 mt-0.5">Quỹ Chính + Số dư chuyển kỳ</div>
           </div>
           {/* Alert KPIs */}
           <div className="grid grid-cols-3 gap-2">
@@ -242,7 +272,7 @@ export function TreasurerDashboard() {
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center"><DollarSign size={14} className="text-indigo-600" /></div>
-              <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chung</p>
+              <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(commonIncome)}</p></div>
@@ -253,7 +283,7 @@ export function TreasurerDashboard() {
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center"><Wallet size={14} className="text-violet-600" /></div>
-              <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Mini</p>
+              <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(miniIncome)}</p></div>
@@ -263,15 +293,15 @@ export function TreasurerDashboard() {
           </div>
           <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-4 text-white">
             <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-200 mb-2">Tổng Tài Sản CLB</p>
-            <p className="text-xl font-bold">{formatVND(balance + miniBalance)}</p>
-            <p className="text-xs text-indigo-200 mt-1">Quỹ Chung + Quỹ Mini</p>
+            <p className="text-xl font-bold">{formatVND(clubAssetsBalance)}</p>
+            <p className="text-xs text-indigo-200 mt-1">Quỹ Chính + Số dư chuyển kỳ</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard title="Thu Quỹ Chung" value={commonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
-          <KpiCard title="Chi Quỹ Chung" value={commonExpTotal} isCurrency icon={<CreditCard size={18} />} color="orange" />
-          <KpiCard title="Số Dư Q.Chung" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
+          <KpiCard title="Thu Quỹ Chính" value={commonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
+          <KpiCard title="Chi Quỹ Chính" value={commonExpTotal} isCurrency icon={<CreditCard size={18} />} color="orange" />
+          <KpiCard title="Số Dư Q.Chính" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
           <KpiCard title="Khoản Chi" value={`${clubData.expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
         </div>
 

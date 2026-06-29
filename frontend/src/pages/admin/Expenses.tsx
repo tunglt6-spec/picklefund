@@ -23,13 +23,13 @@ const ruleLabels: Record<AllocationRule, string> = {
   ATTENDANCE:   'Theo số buổi tham gia',
   EQUAL:        'Đều nhau',
   PRESENT_ONLY: 'Theo số người tham gia',
-  FUND_ONLY:    'Quỹ chung',
+  FUND_ONLY:    'Quỹ Chính',
 }
 const ruleHint: Record<AllocationRule, string> = {
   ATTENDANCE:   'Phân bổ chi phí theo số buổi tham gia thực tế của từng thành viên',
   EQUAL:        'Chia đều cho tất cả thành viên CLB',
   PRESENT_ONLY: 'Chỉ tính cho người có mặt buổi đó',
-  FUND_ONLY:    'Chi quỹ chung, không phân bổ cá nhân',
+  FUND_ONLY:    'Chi Quỹ Chính, không phân bổ cá nhân',
 }
 
 const statusCfg: Record<ExpenseStatus, { label: string; variant: 'green' | 'yellow' | 'indigo' | 'red' }> = {

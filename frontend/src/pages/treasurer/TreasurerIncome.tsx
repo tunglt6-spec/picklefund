@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -138,7 +138,7 @@ export function TreasurerIncome() {
       const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
       const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
       return {
-        'Nguồn quỹ': isMiniRow ? 'Quỹ Mini' : 'Quỹ Chung',
+        'Nguồn quỹ': isMiniRow ? 'Quỹ Phụ' : 'Quỹ Chính',
         'Thành viên / Người nộp': isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
         'Kỳ quỹ / Loại': isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
         'Ngày đóng': c.paymentDate ?? '',
@@ -185,12 +185,12 @@ export function TreasurerIncome() {
           const d = res.data?.data
           save(contributions.map(c => c.id === editTarget.id
             ? { ...c, ...d, fundSource: 'MINI' as const, amount: Number(d?.amount ?? form.amount), miniIncomeType: form.miniIncomeType, payerName: form.payerName } : c))
-          toast.success('Đã cập nhật khoản thu Quỹ Mini')
+          toast.success('Đã cập nhật khoản thu Quỹ Phụ')
         } else {
           const res = await api.post('/contributions', payload)
           const d = res.data?.data
           save([...contributions, { ...d, fundSource: 'MINI' as const, amount: Number(d?.amount ?? form.amount), miniIncomeType: form.miniIncomeType, payerName: form.payerName, isConfirmed: false, createdAt: new Date().toISOString(), clubId }])
-          toast.success(`Ghi nhận thu Quỹ Mini: ${formatVND(Number(form.amount))}`)
+          toast.success(`Ghi nhận thu Quỹ Phụ: ${formatVND(Number(form.amount))}`)
         }
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Lưu khoản thu thất bại')
@@ -263,7 +263,7 @@ export function TreasurerIncome() {
             {[
               { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: 'text-emerald-600' },
               { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600' },
-              { label: 'Quỹ Mini', value: formatVND(miniTotal), color: 'text-violet-600' },
+              { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: 'text-violet-600' },
             ].map(k => (
               <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
                 <div className={`text-[12px] font-[800] ${k.color} truncate`}>{k.value}</div>
@@ -287,11 +287,11 @@ export function TreasurerIncome() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="text-[14px] font-[700] text-slate-900 truncate">
-                          {isMiniRow ? (c.payerName || 'Quỹ Mini') : (c.member?.fullName ?? c.memberId)}
+                          {isMiniRow ? (c.payerName || 'Quỹ Phụ') : (c.member?.fullName ?? c.memberId)}
                         </div>
                         <div className="text-[11px] text-slate-400 mt-0.5">
                           {isMiniRow
-                            ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Mini')
+                            ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Phụ')
                             : (period?.name ?? '—')} · {formatDate(c.paymentDate)}
                         </div>
                       </div>
@@ -330,7 +330,7 @@ export function TreasurerIncome() {
 
         <Modal open={showModal} onClose={() => setShowModal(false)}
           title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
-          subtitle={editTarget ? 'Cập nhật thông tin' : 'Quỹ Chung hoặc Quỹ Mini'}
+          subtitle={editTarget ? 'Cập nhật thông tin' : 'Quỹ Chính hoặc Quỹ Phụ'}
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
@@ -350,7 +350,7 @@ export function TreasurerIncome() {
                         : 'border-slate-200 text-slate-500'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                    {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
                   </button>
                 ))}
               </div>
@@ -429,7 +429,7 @@ export function TreasurerIncome() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Nhập Khoản Thu"
-        subtitle="Ghi nhận thu quỹ cho Quỹ Chung và Quỹ Mini"
+        subtitle="Ghi nhận thu quỹ cho Quỹ Chính và Quỹ Phụ"
         actions={
           <div className="flex items-center gap-2">
             {contributions.length > 0 && (
@@ -478,7 +478,7 @@ export function TreasurerIncome() {
                   <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center">
                     <Wallet size={14} className="text-violet-600" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Thu Quỹ Mini</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Thu Quỹ Phụ</p>
                 </div>
                 <p className="text-xl font-bold text-violet-600">{formatVND(miniTotal)}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{miniContribs.length} khoản</p>
@@ -547,8 +547,8 @@ export function TreasurerIncome() {
                           </td>
                           <td className="px-4 py-3">
                             {isMiniRow
-                              ? <Badge variant="indigo">Quỹ Mini</Badge>
-                              : <Badge variant="gray">Quỹ Chung</Badge>}
+                              ? <Badge variant="indigo">Quỹ Phụ</Badge>
+                              : <Badge variant="gray">Quỹ Chính</Badge>}
                           </td>
                           <td className="px-4 py-3 font-medium text-slate-900">
                             {isMiniRow
@@ -603,7 +603,7 @@ export function TreasurerIncome() {
         open={showModal}
         onClose={() => setShowModal(false)}
         title={editTarget ? 'Sửa Khoản Thu' : 'Ghi Nhận Khoản Thu'}
-        subtitle={editTarget ? 'Cập nhật thông tin thu quỹ' : 'Ghi nhận khoản thu cho Quỹ Chung hoặc Quỹ Mini'}
+        subtitle={editTarget ? 'Cập nhật thông tin thu quỹ' : 'Ghi nhận khoản thu cho Quỹ Chính hoặc Quỹ Phụ'}
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" type="button" onClick={() => setShowModal(false)}>Hủy</Button>
@@ -627,7 +627,7 @@ export function TreasurerIncome() {
                       : 'border-slate-200 text-slate-500 hover:border-slate-300'
                   }`}>
                   {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                  {fs === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}
+                  {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
                 </button>
               ))}
             </div>

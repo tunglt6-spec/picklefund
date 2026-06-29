@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx'
+﻿import * as XLSX from 'xlsx'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 
@@ -719,7 +719,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
 }
 
 /* ════════════════════════════════════════
-   EXPORT: Phiếu Thu Quỹ Mini
+   EXPORT: Phiếu Thu Quỹ Phụ
 ════════════════════════════════════════ */
 export interface MiniIncomeReceiptData {
   receiptNo?: number
@@ -761,7 +761,7 @@ export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
     <div class="mi-wrap">
       <div class="mi-head">
         <div>
-          <div class="mi-title">🎮 PHIẾU THU QUỸ MINI</div>
+          <div class="mi-title">🎮 Phiếu Thu Quỹ Phụ</div>
           <div class="mi-sub">${data.clubName}</div>
         </div>
         <div>
@@ -775,7 +775,7 @@ export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
         <div class="mi-field"><span class="mi-fk">Ngày nộp</span><span class="mi-fv">${data.paymentDate}</span></div>
         ${data.notes ? `<div class="mi-field"><span class="mi-fk">Ghi chú</span><span class="mi-fv">${data.notes}</span></div>` : ''}
         <div class="mi-amount">
-          <div class="mi-al">Số Tiền Thu Quỹ Mini</div>
+          <div class="mi-al">Số Tiền Thu Quỹ Phụ</div>
           <div class="mi-av">${formatVND(data.amount)}</div>
         </div>
       </div>
@@ -792,7 +792,7 @@ export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
         </div>
       </div>
       <div class="mi-foot">
-        <span>Phiếu thu Quỹ Mini – không tính vào công nợ thành viên Quỹ Chung</span>
+        <span>Phiếu Thu Quỹ Phụ – không tính vào công nợ thành viên Quỹ Chính</span>
         <span>${data.clubLocation ?? 'Hà Nội'}, ngày ${today()}</span>
       </div>
     </div>
@@ -800,7 +800,7 @@ export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
 }
 
 /* ════════════════════════════════════════
-   EXPORT: Phiếu Chi Quỹ Mini
+   EXPORT: Phiếu Chi Quỹ Phụ
 ════════════════════════════════════════ */
 export interface MiniExpenseReceiptData {
   receiptNo?: number
@@ -843,7 +843,7 @@ export function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
     <div class="me-wrap">
       <div class="me-head">
         <div>
-          <div class="me-title">🎮 PHIẾU CHI QUỸ MINI</div>
+          <div class="me-title">🎮 Phiếu Chi Quỹ Phụ</div>
           <div class="me-sub">${data.clubName}</div>
         </div>
         <div>
@@ -858,7 +858,7 @@ export function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
         <div class="me-field"><span class="me-fk">Ngày chi</span><span class="me-fv">${data.expenseDate}</span></div>
         ${data.notes ? `<div class="me-field"><span class="me-fk">Ghi chú</span><span class="me-fv">${data.notes}</span></div>` : ''}
         <div class="me-amount">
-          <div class="me-al">Số Tiền Chi Quỹ Mini</div>
+          <div class="me-al">Số Tiền Chi Quỹ Phụ</div>
           <div class="me-av">${formatVND(data.amount)}</div>
         </div>
       </div>
@@ -875,7 +875,7 @@ export function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
         </div>
       </div>
       <div class="me-foot">
-        <span>Phiếu chi Quỹ Mini – không phân bổ cá nhân, không ảnh hưởng Quỹ Chung</span>
+        <span>Phiếu Chi Quỹ Phụ – không phân bổ cá nhân, không ảnh hưởng Quỹ Chính</span>
         <span>${data.clubLocation ?? 'Hà Nội'}, ngày ${today()}</span>
       </div>
     </div>

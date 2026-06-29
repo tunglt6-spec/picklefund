@@ -180,7 +180,7 @@ export function ThuChiHub() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-[600] text-slate-800 truncate">{memberName}</p>
-                  <p className="text-[12px] text-slate-400">{formatDate(c.paymentDate)} · {c.fundSource === 'COMMON' ? 'Quỹ Chung' : 'Quỹ Mini'}</p>
+                  <p className="text-[12px] text-slate-400">{formatDate(c.paymentDate)} · {c.fundSource === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[15px] font-[700] text-indigo-600 tabular-nums">+{formatVND(c.amount)}</p>

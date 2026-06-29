@@ -40,7 +40,7 @@ export function TreasurerLedger() {
         date: c.paymentDate,
         type: 'Thu' as const,
         desc: c.fundSource === 'MINI'
-          ? `[Quỹ Mini] ${c.payerName ?? c.member?.fullName ?? 'Thành viên'}`
+          ? `[Quỹ Phụ] ${c.payerName ?? c.member?.fullName ?? 'Thành viên'}`
           : `${c.member?.fullName ?? 'Thành viên'} đóng quỹ${activePeriod ? ` ${activePeriod.name}` : ''}`,
         amount: c.amount,
       }))
@@ -51,7 +51,7 @@ export function TreasurerLedger() {
         date: e.expenseDate,
         type: 'Chi' as const,
         desc: e.fundSource === 'MINI'
-          ? `[Quỹ Mini] ${e.description}`
+          ? `[Quỹ Phụ] ${e.description}`
           : e.description,
         amount: -e.amount,
       }))
