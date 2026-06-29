@@ -243,7 +243,13 @@ graph TB
 ### 5.5 Token Accounting
 
 - Per-request: promptTokens, completionTokens, totalTokens, estimatedCostUsd
-- Aggregate by: userId, clubId, sessionId, provider
+- **Token Accounting now supports aggregation by: Club, User, Session, Provider, Model**
+  - Club → `getByClub(clubId)`
+  - User → `getByUser(userId)`
+  - Session → `getBySession(sessionId)`
+  - Provider → `getByProvider()`
+  - **Model → `getByModel(model)`** — gồm promptTokens, completionTokens, totalTokens, requestCount, averageLatency, và per-provider breakdown (Sprint 1.1 — last blocker resolved)
+- API đọc theo model: `GET /ai/tokens/model/:model` → `{ model, totalRequests, promptTokens, completionTokens, totalTokens, averageLatency, providers:[] }`
 - In-memory (max 50,000 entries, tự prune)
 
 ### 5.6 AI Configuration Center

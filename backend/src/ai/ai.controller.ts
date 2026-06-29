@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { AiService } from './ai.service';
 import { AIGatewayService } from './harness/ai-gateway.service';
+import { TokenAccountingService } from './harness/token-accounting.service';
 import { AIProviderError } from './harness/errors/ai-provider.error';
 import { ChatRequestDto } from './dto/chat-request.dto';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
@@ -30,6 +31,7 @@ export class AiController {
   constructor(
     private readonly service: AiService,
     private readonly gateway: AIGatewayService,
+    private readonly tokenAccounting: TokenAccountingService,
   ) {}
 
   @Post('chat')
@@ -97,6 +99,21 @@ export class AiController {
   @ApiOperation({ summary: 'Token usage for a specific user' })
   tokensByUser(@Param('userId') userId: string) {
     return ok(this.gateway.getTokenUsageByUser(userId));
+  }
+
+  @Get('tokens/model/:model')
+  @ApiOperation({ summary: 'Token usage for a specific AI model' })
+  tokensByModel(@Param('model') model: string) {
+    const s = this.tokenAccounting.getByModel(model);
+    return ok({
+      model: s.model,
+      totalRequests: s.requestCount,
+      promptTokens: s.promptTokens,
+      completionTokens: s.completionTokens,
+      totalTokens: s.totalTokens,
+      averageLatency: s.averageLatency,
+      providers: s.providers,
+    });
   }
 
   // ── Legacy finance READ endpoints (Finance Engine RC1 — READ ONLY) ──────
