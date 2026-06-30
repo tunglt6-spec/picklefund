@@ -62,6 +62,12 @@ export interface OrganizationContext {
    * true nếu có title/content/tag bị redact PII. Dù true, raw PII KHÔNG vào context.
    */
   readonly containsPii: boolean;
+  /** Số item/tag bị BLOCK vì finance/money (policy thực tế). */
+  readonly blockedCount: number;
+  /** Số item/tag bị REDACT vì PII (policy thực tế). */
+  readonly redactedCount: number;
+  /** Phiên bản policy đã áp dụng. */
+  readonly policyVersion: string;
 }
 
 /** Tham chiếu endpoint PickleFund API (chỉ mô tả — KHÔNG chứa số liệu). */

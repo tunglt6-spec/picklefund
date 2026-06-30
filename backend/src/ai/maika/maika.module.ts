@@ -12,6 +12,7 @@ import { MaikaCore } from './maika.service';
 import { MaikaController } from './maika.controller';
 import { IntentRouter } from './intent-router.service';
 import { OrganizationContextManager } from './organization-context.service';
+import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
 import {
@@ -26,6 +27,7 @@ import {
   providers: [
     // Defense-in-depth sanitizer (deterministic, KHÔNG embed/vector search).
     VectorContentPolicyService,
+    OrganizationIntelligenceService,
     MaikaCore,
     { provide: INTENT_ROUTER, useClass: IntentRouter },
     {

@@ -21,6 +21,9 @@ function ctx(total = 3): OrganizationContext {
     knowledgeHighlights: [],
     containsFinanceData: false,
     containsPii: false,
+    blockedCount: 0,
+    redactedCount: 0,
+    policyVersion: 'policy-v1',
   };
 }
 function cls(

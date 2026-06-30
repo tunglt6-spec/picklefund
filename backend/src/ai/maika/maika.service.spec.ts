@@ -3,6 +3,7 @@ import { IntentRouter } from './intent-router.service';
 import { OrganizationContextManager } from './organization-context.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
+import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -16,14 +17,16 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
   beforeEach(async () => {
     clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
     const port = new PickleFundApiReferencePort();
+    const orgCtx = new OrganizationContextManager(
+      clubMemory,
+      new VectorContentPolicyService(),
+    );
     maika = new MaikaCore(
       new IntentRouter(),
-      new OrganizationContextManager(
-        clubMemory,
-        new VectorContentPolicyService(),
-      ),
+      orgCtx,
       new MaikaPlanningLayer(port),
       port,
+      new OrganizationIntelligenceService(orgCtx),
     );
     await clubMemory.save('club-1', 'u1', {
       type: ClubMemoryType.RULE,
@@ -95,6 +98,16 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
     // cờ cảnh báo được bật từ policy thực tế
     expect(res.context.containsPii).toBe(true);
     expect(res.context.containsFinanceData).toBe(true);
+  });
+
+  it('analyzeOrganization returns read-only intelligence (Epic 3.2)', async () => {
+    const intel = await maika.analyzeOrganization('club-1');
+    expect(intel.readOnly).toBe(true);
+    expect(intel.mutates).toBe(false);
+    expect(intel.suggestedReadActions.every((a) => a.mutates === false)).toBe(
+      true,
+    );
+    expect(intel.safety.policyVersion).toBe('policy-v1');
   });
 
   it('getContext returns read-only org picture', async () => {

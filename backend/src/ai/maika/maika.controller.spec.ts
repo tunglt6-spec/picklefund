@@ -4,6 +4,7 @@ import { IntentRouter } from './intent-router.service';
 import { OrganizationContextManager } from './organization-context.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
+import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -22,14 +23,16 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
       new InMemoryClubMemoryRepository(),
     );
     const port = new PickleFundApiReferencePort();
+    const orgCtx = new OrganizationContextManager(
+      clubMemory,
+      new VectorContentPolicyService(),
+    );
     const core = new MaikaCore(
       new IntentRouter(),
-      new OrganizationContextManager(
-        clubMemory,
-        new VectorContentPolicyService(),
-      ),
+      orgCtx,
       new MaikaPlanningLayer(port),
       port,
+      new OrganizationIntelligenceService(orgCtx),
     );
     controller = new MaikaController(core);
     await clubMemory.save('club-1', 'u1', {
@@ -55,6 +58,17 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
     expect(res.data.containsFinanceData).toBe(false);
     expect(res.data.containsPii).toBe(false);
     expect(res.data.totalMemories).toBe(1);
+  });
+
+  it('GET organization-intelligence → read-only intelligence (clubId từ JWT)', async () => {
+    const res = await controller.organizationIntelligence(jwt('club-1'));
+    expect(res.data.clubId).toBe('club-1');
+    expect(res.data.readOnly).toBe(true);
+    expect(res.data.mutates).toBe(false);
+    expect(
+      res.data.suggestedReadActions.every((a) => a.mutates === false),
+    ).toBe(true);
+    expect(res.data.safety.policyVersion).toBe('policy-v1');
   });
 
   it('rejects when clubId missing in JWT', async () => {

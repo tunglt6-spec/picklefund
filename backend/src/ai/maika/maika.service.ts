@@ -30,6 +30,8 @@ import {
   MaikaSuggestion,
   OrganizationContext,
 } from './maika.types';
+import { OrganizationIntelligenceService } from './organization-intelligence.service';
+import { OrganizationIntelligence } from './organization-intelligence.types';
 
 @Injectable()
 export class MaikaCore {
@@ -39,7 +41,18 @@ export class MaikaCore {
     private readonly orgContext: IOrganizationContextProvider,
     @Inject(MAIKA_PLANNER) private readonly planner: IMaikaPlanner,
     @Inject(API_REFERENCE_PORT) private readonly apiRefs: IApiReferencePort,
+    private readonly orgIntel: OrganizationIntelligenceService,
   ) {}
+
+  /**
+   * Organization Intelligence (Epic 3.2) — bức tranh vận hành tổ chức READ-ONLY.
+   * Composition trên OrganizationIntelligenceService; không action/write/finance-calc.
+   */
+  async analyzeOrganization(
+    clubId: string | null,
+  ): Promise<OrganizationIntelligence> {
+    return this.orgIntel.analyze(clubId);
+  }
 
   /** Hiểu → Lập kế hoạch → Đề xuất (read-only). */
   async understand(

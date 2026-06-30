@@ -32,4 +32,13 @@ export class MaikaController {
   async context(@CurrentUser() user: JwtUser) {
     return ok(await this.maika.getContext(user.clubId));
   }
+
+  @Get('organization-intelligence')
+  @ApiOperation({
+    summary:
+      'Organization Intelligence (Epic 3.2) — tín hiệu vận hành/quan hệ/đề xuất đọc READ-ONLY. clubId từ JWT, không cross-club, không action/write.',
+  })
+  async organizationIntelligence(@CurrentUser() user: JwtUser) {
+    return ok(await this.maika.analyzeOrganization(user.clubId));
+  }
 }

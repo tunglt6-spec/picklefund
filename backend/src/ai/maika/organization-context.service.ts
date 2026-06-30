@@ -52,8 +52,8 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
     }
     const memories = await this.clubMemory.listByClub(clubId);
 
-    let containsFinanceData = false;
-    let containsPii = false;
+    let blockedCount = 0;
+    let redactedCount = 0;
     const safeItems: SafeItem[] = [];
 
     for (const m of memories) {
@@ -66,10 +66,10 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
 
       // Finance/money → bỏ item (cả title/snippet/tags). Chỉ ghi cờ cảnh báo.
       if (!res.allowed) {
-        containsFinanceData = true;
+        blockedCount += 1;
         continue;
       }
-      if (res.redactedReasons.length > 0) containsPii = true;
+      if (res.redactedReasons.length > 0) redactedCount += 1;
 
       safeItems.push({
         memoryId: m.memoryId,
@@ -85,8 +85,8 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
 
     // Tags: chỉ từ item an toàn; loại tag nhạy cảm (PII/finance) khỏi topTags.
     const tagResult = this.collectTags(memories, clubId);
-    if (tagResult.financeBlocked) containsFinanceData = true;
-    if (tagResult.piiRedacted) containsPii = true;
+    blockedCount += tagResult.blockedCount;
+    redactedCount += tagResult.redactedCount;
 
     return {
       clubId,
@@ -95,8 +95,11 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
       byType: this.countByType(memories),
       topTags: tagResult.tags,
       knowledgeHighlights: this.highlights(safeItems),
-      containsFinanceData,
-      containsPii,
+      containsFinanceData: blockedCount > 0,
+      containsPii: redactedCount > 0,
+      blockedCount,
+      redactedCount,
+      policyVersion: this.policy.policyVersion,
     };
   }
 
@@ -113,40 +116,38 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
 
   /**
    * Gom tags an toàn. Mỗi tag chạy qua policy:
-   *  - !allowed (finance/money) → loại + financeBlocked.
-   *  - redacted (PII) → loại + piiRedacted.
+   *  - !allowed (finance/money) → loại + blockedCount.
+   *  - redacted (PII) → loại + redactedCount.
    *  - an toàn → giữ.
-   * Item bị finance-block (toàn bộ) cũng bỏ tag (không xét tag của nó).
+   * Item bị finance-block (toàn bộ) cũng bỏ tag (không xét tag của nó, không đếm lại
+   * vì item đã được đếm ở vòng chính).
    */
   private collectTags(
     memories: ClubMemoryObject[],
     clubId: string,
-  ): { tags: OrgTagCount[]; financeBlocked: boolean; piiRedacted: boolean } {
+  ): { tags: OrgTagCount[]; blockedCount: number; redactedCount: number } {
     const counts = new Map<string, number>();
-    let financeBlocked = false;
-    let piiRedacted = false;
+    let blockedCount = 0;
+    let redactedCount = 0;
 
     for (const m of memories) {
-      // Bỏ qua tags của item bị finance-block.
+      // Bỏ qua tags của item bị finance-block (đã đếm ở vòng chính).
       const itemRes = this.policy.sanitizeForEmbedding({
         title: m.title ?? undefined,
         content: m.content,
         memoryId: m.memoryId,
         clubId,
       });
-      if (!itemRes.allowed) {
-        financeBlocked = true;
-        continue;
-      }
+      if (!itemRes.allowed) continue;
 
       for (const tag of m.tags) {
         const t = this.policy.sanitizeForEmbedding({ content: tag, clubId });
         if (!t.allowed) {
-          financeBlocked = true; // tag chứa finance/money → loại
+          blockedCount += 1; // tag chứa finance/money → loại
           continue;
         }
         if (t.redactedReasons.length > 0) {
-          piiRedacted = true; // tag chứa PII → loại
+          redactedCount += 1; // tag chứa PII → loại
           continue;
         }
         counts.set(tag, (counts.get(tag) ?? 0) + 1);
@@ -158,7 +159,7 @@ export class OrganizationContextManager implements IOrganizationContextProvider 
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
       .slice(0, MAX_TAGS);
 
-    return { tags, financeBlocked, piiRedacted };
+    return { tags, blockedCount, redactedCount };
   }
 
   private highlights(items: SafeItem[]): OrgKnowledgeHighlight[] {

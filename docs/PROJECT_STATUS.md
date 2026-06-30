@@ -33,14 +33,21 @@
 | Commit / Tag / Push GitHub | ✅ Hoàn thành |
 | └ Epic 2.5 — Dashboard 3.0 (Light Theme & Commercial UI) | ✅ PASS |
 | Sprint 3 — Maika AI | 🔄 Đang triển khai |
-| └ Epic 3.1 — Maika Core (Club Intelligence Manager) | ✅ PASS |
-| └ Epic 3.2 — Maika AI | ⬜ Ready / Chưa bắt đầu |
+| └ Epic 3.1 — Maika Core (Club Intelligence Manager) | ✅ PASS / CLOSED |
+| └ Epic 3.2 — Organization Intelligence | ✅ PASS |
+| └ Epic 3.3 — Maika AI | ⬜ Ready / Chưa bắt đầu |
 
 **Sprint hiện tại:** 🔄 Sprint 3 — Maika AI (đang triển khai)
 
-> 🤖 **Maika Core (Epic 3.1) hiện tại là READ-ONLY** — chỉ: **Hiểu → Lập kế hoạch → Đề xuất**.
-> Maika **CHƯA được phép**: ghi dữ liệu · gọi API Write · gửi Email/Telegram · chạy Workflow/Automation.
-> Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth).
+> 🤖 **Maika Core (Epic 3.1) + Organization Intelligence (Epic 3.2) hiện tại đều READ-ONLY.**
+>
+> **Organization Intelligence (Epic 3.2)** sản sinh read-only:
+> - `summary` · `entities` · `healthSignals` · `attentionSignals` · `dataQualitySignals`
+> - `suggestedReadActions` — **chỉ GET, `mutates=false`**
+> - `safety` — `containsPii` · `containsFinanceData` · `redactedCount` · `blockedCount` · `policyVersion` (tính từ policy thực tế, không gán cứng)
+>
+> Maika **VẪN CHƯA được phép**: ghi dữ liệu · gọi API Write · gửi Email/Telegram · chạy Workflow/Automation.
+> Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth); Maika KHÔNG tính/kết luận tài chính.
 
 ---
 
@@ -139,14 +146,15 @@ Codex Re-Audit ✅ PASS
 Sprint 2 UI Stable ✅
    ↓
 Sprint 3 — Maika AI  🔄 Đang triển khai
-   ├─ Epic 3.1 — Maika Core (read-only) ✅ PASS
-   └─ Epic 3.2 — Maika AI  ⬜ Ready / Chưa bắt đầu
+   ├─ Epic 3.1 — Maika Core (read-only) ✅ PASS / CLOSED
+   ├─ Epic 3.2 — Organization Intelligence (read-only) ✅ PASS
+   └─ Epic 3.3 — Maika AI  ⬜ Ready / Chưa bắt đầu
    ↓
 AI Commerce Platform  🔭 Planned
 ```
 
 > 🔭 Các mốc sau **Sprint 2 UI Stable**:
-> - **Sprint 3 – Maika AI (Đang triển khai)** — Epic 3.1 Maika Core ✅ PASS (read-only); Epic 3.2 Ready / chưa bắt đầu.
+> - **Sprint 3 – Maika AI (Đang triển khai)** — Epic 3.1 Maika Core ✅ PASS; Epic 3.2 Organization Intelligence ✅ PASS (read-only); Epic 3.3 Ready / chưa bắt đầu.
 > - **AI Commerce Platform (Planned)**
 
 ---
@@ -171,12 +179,13 @@ AI Commerce Platform  🔭 Planned
 
 - ✅ **Epic 2.5 — PASS** · Dashboard 3.0 (Light Theme) · thuộc **Sprint 2 UI Stable**.
 - ✅ **Dashboard 3.0 (Light Theme) — Hoàn thành** · đã được **Codex Re-Audit PASS** · thuộc **Sprint 2 UI Stable**.
-- ✅ **Epic 3.1 — Maika Core — PASS** · Club Intelligence Manager **READ-ONLY** (Hiểu → Lập kế hoạch → Đề xuất).
+- ✅ **Epic 3.1 — Maika Core — PASS / CLOSED** · Club Intelligence Manager **READ-ONLY** (Hiểu → Lập kế hoạch → Đề xuất).
+- ✅ **Epic 3.2 — Organization Intelligence — PASS** · READ-ONLY (summary/entities/signals/suggestedReadActions GET mutates=false/safety model).
 
 Trạng thái **CHƯA triển khai / CHƯA được phép** tính đến thời điểm này — không được mô tả như đã hoàn thành:
 
-- 🔄 Sprint 3 — Maika AI: **đang triển khai** (Epic 3.1 xong; Epic 3.2 chưa bắt đầu).
-- ⬜ Epic 3.2 — Maika AI: **Ready**, chưa bắt đầu.
+- 🔄 Sprint 3 — Maika AI: **đang triển khai** (Epic 3.1 + 3.2 xong; Epic 3.3 chưa bắt đầu).
+- ⬜ Epic 3.3 — Maika AI: **Ready**, chưa bắt đầu.
 - ⛔ Maika **CHƯA được phép**: ghi dữ liệu · gọi API Write · gửi Email/Telegram · chạy Workflow/Automation.
 - ⬜ AI Commerce Platform: **Planned**, chưa bắt đầu.
 - ⬜ PGVector **chưa** triển khai.
