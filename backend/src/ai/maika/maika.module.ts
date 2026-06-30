@@ -19,6 +19,9 @@ import { ActionPermissionService } from './action-permission.service';
 import { ActionSafetyService } from './action-safety.service';
 import { ActionDryRunService } from './action-dry-run.service';
 import { ActionLayerService } from './action-layer.service';
+import { ApprovalPolicyService } from './approval-policy.service';
+import { ApprovalDecisionService } from './approval-decision.service';
+import { ApprovalEngineService } from './approval-engine.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
 import {
@@ -40,6 +43,9 @@ import {
     ActionSafetyService,
     ActionDryRunService,
     ActionLayerService,
+    ApprovalPolicyService,
+    ApprovalDecisionService,
+    ApprovalEngineService,
     MaikaCore,
     { provide: INTENT_ROUTER, useClass: IntentRouter },
     {

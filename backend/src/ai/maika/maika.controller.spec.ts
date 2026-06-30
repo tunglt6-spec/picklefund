@@ -11,6 +11,9 @@ import { ActionPermissionService } from './action-permission.service';
 import { ActionSafetyService } from './action-safety.service';
 import { ActionDryRunService } from './action-dry-run.service';
 import { ActionLayerService } from './action-layer.service';
+import { ApprovalPolicyService } from './approval-policy.service';
+import { ApprovalDecisionService } from './approval-decision.service';
+import { ApprovalEngineService } from './approval-engine.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -38,10 +41,18 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
       orgIntel,
       templates,
     );
+    const actionSafety = new ActionSafetyService(policy);
     const actionLayer = new ActionLayerService(
       new ActionPermissionService(),
-      new ActionSafetyService(policy),
+      actionSafety,
       new ActionDryRunService(),
+    );
+    const approvalPolicies = new ApprovalPolicyService();
+    const approvalEngine = new ApprovalEngineService(
+      approvalPolicies,
+      new ApprovalDecisionService(approvalPolicies),
+      policy,
+      actionSafety,
     );
     const core = new MaikaCore(
       new IntentRouter(),
@@ -52,6 +63,7 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
       workflowPlanning,
       templates,
       actionLayer,
+      approvalEngine,
     );
     controller = new MaikaController(core);
     await clubMemory.save('club-1', 'u1', {
@@ -127,6 +139,22 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
     );
     expect(res.data.permissionDecision.allowed).toBe(false);
     expect(res.data.safetyDecision.allowed).toBe(false);
+  });
+
+  it('GET approval/policies → 4 risk policies', () => {
+    const res = controller.approvalPolicies();
+    expect(res.data.length).toBe(4);
+  });
+
+  it('POST approval/preview → pending, executionAllowed=false (clubId/role từ JWT)', () => {
+    const res = controller.previewApproval(
+      { actionType: 'FUND_REVIEW_PROPOSAL' },
+      jwt('club-1'),
+    );
+    expect(res.data.request.status).toBe('pending');
+    expect(res.data.request.executionAllowed).toBe(false);
+    expect(res.data.preview.executionAllowed).toBe(false);
+    expect(res.data.request.riskLevel).toBe('high');
   });
 
   it('rejects when clubId missing in JWT', async () => {

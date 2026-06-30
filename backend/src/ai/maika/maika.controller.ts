@@ -12,6 +12,7 @@ import { UnderstandDto } from './maika.dto';
 import { PreviewWorkflowDto } from './workflow-planning.dto';
 import { ActionRequestDto } from './action-layer.dto';
 import type { ActionActorContext } from './action-layer.types';
+import { ApprovalRequestDto } from './approval-request.dto';
 
 @ApiTags('AI Maika Core')
 @ApiBearerAuth()
@@ -82,6 +83,39 @@ export class MaikaController {
   })
   dryRunAction(@Body() dto: ActionRequestDto, @CurrentUser() user: JwtUser) {
     return ok(this.maika.dryRunAction(this.actor(user), dto));
+  }
+
+  @Get('approval/policies')
+  @ApiOperation({
+    summary:
+      'Human Approval Engine (Epic 3.5) — policy duyệt theo risk (preview, read-only).',
+  })
+  approvalPolicies() {
+    return ok(this.maika.listApprovalPolicies());
+  }
+
+  @Post('approval/evaluate')
+  @ApiOperation({
+    summary:
+      'Đánh giá điều kiện duyệt (KHÔNG duyệt/execute thật). role/clubId từ JWT.',
+  })
+  evaluateApproval(
+    @Body() dto: ApprovalRequestDto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return ok(this.maika.evaluateApproval(this.actor(user), dto));
+  }
+
+  @Post('approval/preview')
+  @ApiOperation({
+    summary:
+      'Mô phỏng duyệt (executionAllowed=false, requiresHumanApproval, KHÔNG persist). role/clubId từ JWT.',
+  })
+  previewApproval(
+    @Body() dto: ApprovalRequestDto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return ok(this.maika.previewApproval(this.actor(user), dto));
   }
 
   /** Ngữ cảnh xác thực LẤY TỪ JWT — client KHÔNG override clubId/role/userId. */

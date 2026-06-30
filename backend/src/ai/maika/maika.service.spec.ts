@@ -10,6 +10,9 @@ import { ActionPermissionService } from './action-permission.service';
 import { ActionSafetyService } from './action-safety.service';
 import { ActionDryRunService } from './action-dry-run.service';
 import { ActionLayerService } from './action-layer.service';
+import { ApprovalPolicyService } from './approval-policy.service';
+import { ApprovalDecisionService } from './approval-decision.service';
+import { ApprovalEngineService } from './approval-engine.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -32,10 +35,18 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
       orgIntel,
       templates,
     );
+    const actionSafety = new ActionSafetyService(policy);
     const actionLayer = new ActionLayerService(
       new ActionPermissionService(),
-      new ActionSafetyService(policy),
+      actionSafety,
       new ActionDryRunService(),
+    );
+    const approvalPolicies = new ApprovalPolicyService();
+    const approvalEngine = new ApprovalEngineService(
+      approvalPolicies,
+      new ApprovalDecisionService(approvalPolicies),
+      policy,
+      actionSafety,
     );
     maika = new MaikaCore(
       new IntentRouter(),
@@ -46,6 +57,7 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
       workflowPlanning,
       templates,
       actionLayer,
+      approvalEngine,
     );
     await clubMemory.save('club-1', 'u1', {
       type: ClubMemoryType.RULE,
@@ -171,6 +183,28 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
     );
     expect(res.permissionDecision.allowed).toBe(false);
     expect(res.safetyDecision.allowed).toBe(false);
+  });
+
+  it('approval preview: pending, not executable, requires human approval (Epic 3.5)', () => {
+    const r = maika.previewApproval(
+      { clubId: 'club-1', userId: 'u1', role: 'CLUB_ADMIN' },
+      { actionType: 'MEMBER_REVIEW_PROPOSAL' },
+    );
+    expect(r.request.status).toBe('pending');
+    expect(r.request.requiresHumanApproval).toBe(true);
+    expect(r.request.approved).toBe(false);
+    expect(r.request.executionAllowed).toBe(false);
+    expect(r.preview.executionAllowed).toBe(false);
+    expect(r.preview.wouldApprove).toBe(false);
+  });
+
+  it('listApprovalPolicies returns deterministic risk policies', () => {
+    const policies = maika.listApprovalPolicies();
+    expect(policies.length).toBe(4);
+    expect(
+      policies.find((p) => p.riskLevel === 'critical')
+        ?.requiresManualConfirmation,
+    ).toBe(true);
   });
 
   it('getContext returns read-only org picture', async () => {

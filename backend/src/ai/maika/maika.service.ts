@@ -48,6 +48,14 @@ import {
   ActionRequestInput,
 } from './action-layer.types';
 import { PermissionDecision, SafetyDecision } from './action-audit.types';
+import { ApprovalEngineService } from './approval-engine.service';
+import {
+  ApprovalEvaluation,
+  ApprovalPolicy,
+  ApprovalPreview,
+  ApprovalRequest,
+  ApprovalRequestInput,
+} from './approval-engine.types';
 
 @Injectable()
 export class MaikaCore {
@@ -61,7 +69,34 @@ export class MaikaCore {
     private readonly workflowPlanning: WorkflowPlanningService,
     private readonly workflowTemplates: WorkflowTemplateService,
     private readonly actionLayer: ActionLayerService,
+    private readonly approvalEngine: ApprovalEngineService,
   ) {}
+
+  /**
+   * Human Approval Engine (Epic 3.5) — Governance cuối cùng. CHỈ evaluate/preview;
+   * KHÔNG approve/reject thật, KHÔNG execute/persist. Execution Readiness vẫn NOT READY.
+   */
+  listApprovalPolicies(): ApprovalPolicy[] {
+    return this.approvalEngine.listPolicies();
+  }
+
+  evaluateApproval(
+    ctx: ActionActorContext,
+    input: ApprovalRequestInput,
+  ): ApprovalEvaluation {
+    return this.approvalEngine.evaluate(ctx, input);
+  }
+
+  previewApproval(
+    ctx: ActionActorContext,
+    input: ApprovalRequestInput,
+  ): {
+    request: ApprovalRequest;
+    evaluation: ApprovalEvaluation;
+    preview: ApprovalPreview;
+  } {
+    return this.approvalEngine.preview(ctx, input);
+  }
 
   /**
    * AI Action Layer (Epic 3.4) — CHỈ validate / dry-run. KHÔNG execute/persist/write.
