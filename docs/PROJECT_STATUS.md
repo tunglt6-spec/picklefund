@@ -23,6 +23,7 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
+| ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | Sprint 1 | ✅ Hoàn thành |
 | Sprint 2 | ✅ Core Stable · ✅ UI Stable |
 | └ Epic 2.1 — Memory Core | ✅ PASS |
@@ -32,17 +33,22 @@
 | Technical Baseline v2.0 | ✅ PASS |
 | Commit / Tag / Push GitHub | ✅ Hoàn thành |
 | └ Epic 2.5 — Dashboard 3.0 (Light Theme & Commercial UI) | ✅ PASS |
-| Sprint 3 — Maika AI | 🔄 Đang triển khai |
+| Sprint 3 — Maika AI (Governance Layer) | ✅ PASS / CLOSED |
 | └ Epic 3.1 — Maika Core (Club Intelligence Manager) | ✅ PASS / CLOSED |
 | └ Epic 3.2 — Organization Intelligence | ✅ PASS / CLOSED |
 | └ Epic 3.3 — Workflow Planning | ✅ PASS / CLOSED |
 | └ Epic 3.4 — AI Action Layer | ✅ PASS / CLOSED |
 | └ Epic 3.5 — Human Approval Engine | ✅ PASS / CLOSED |
-| Sprint 3 — Final Governance Audit | ⬜ Bước tiếp theo (chưa thực hiện) |
-| Sprint 4 — ADR-01 Execution Engine Architecture | 📝 Proposed / Pending Codex Audit (tài liệu thiết kế) |
-| Sprint 4 — Execution Engine (implementation) | ⛔ BLOCKED / Chưa được phép bắt đầu |
+| └ Sprint 3 — Final Governance Audit | ✅ PASS |
+| Sprint 4 — ADR-01 Execution Engine Architecture | ✅ Codex PASS (tài liệu thiết kế) |
+| Sprint 4 — ADR-02 Execution Governance Model | ✅ Codex PASS (tài liệu quản trị) |
+| Sprint 4 — ADP-01 Decision to Proceed | ✅ APPROVED FOR LIMITED IMPLEMENTATION |
+| └ Epic 4.1 — Execution Ticket Framework | ✅ PASS / CLOSED (framework-only, không execute) |
+| Sprint 4 — Execution Engine (implementation) | 🟡 PARTIALLY APPROVED (Epic 4.1 CLOSED) · Epic 4.2+ ⛔ BLOCKED |
 
-**Sprint hiện tại:** 🔄 Sprint 3 — Maika AI (đang triển khai)
+**Sprint hiện tại:** Sprint 4 — Execution Foundation · **ADR-01 PASS · ADR-02 PASS · ADP-01 APPROVED · Epic 4.1 PASS/CLOSED** · Sprint 4 **PARTIALLY APPROVED** (Epic 4.2+ **BLOCKED**) · **Execution Readiness: NOT READY** (chưa có execution thật)
+
+> ⚖️ **GOV-01 — Project Governance Baseline v2.1: Accepted / Official** ([Single Source of Truth](governance/GOV-01-project-governance-baseline-v2.1.md)). **Rule #17 (Governance Source of Truth) đã có hiệu lực** — tài liệu khác chỉ tham chiếu GOV-01, không định nghĩa lại rule. **Governance Pre-Audit Checklist (GOV-01 §9) là BẮT BUỘC** trước mỗi "READY FOR CODEX AUDIT". GOV-01 **không** thay đổi Execution Readiness (vẫn NOT READY) và **không** mở Epic 4.1.
 
 > 🤖 **Maika (Epic 3.1 → 3.5) hiện tại đều READ-ONLY / không thực thi.**
 >
@@ -56,9 +62,13 @@
 >
 > Maika (toàn bộ) KHÔNG hỗ trợ: Action Execution · API Write · DB Write · Email · Telegram · Notification · Workflow Execution · Job Queue · Background Worker.
 >
-> **Execution Readiness: CHƯA ĐẠT / NOT READY** — cần **Sprint 3 Final Governance Audit PASS** trước khi xem xét Sprint 4. **Sprint 4 Execution Engine: BLOCKED / chưa được phép bắt đầu.**
+> ✅ **Sprint 3 CLOSED** — Governance Layer (Epic 3.1 → 3.5) + **Sprint 3 Final Governance Audit PASS**.
 >
-> 📝 **Sprint 4 ADR-01 (Execution Engine Architecture)** — trạng thái **Proposed / Pending Codex Audit** (chỉ tài liệu thiết kế, [link](sprint4-execution-engine/ADR-01-execution-engine-architecture.md)). ADR-01 **không** thay đổi Execution Readiness; Sprint 4 implementation vẫn BLOCKED cho tới khi ADR-01 PASS và có quyết định mở Epic 4.1. **Sprint 4 chưa triển khai execution.**
+> **Execution Readiness: CHƯA ĐẠT / NOT READY** — dù Sprint 3 đã đóng, Execution Readiness vẫn cần đủ điều kiện ADR-02 §9 (ADR-01+ADR-02 PASS, Epic 4.1–4.6 PASS, Sprint 4 Governance Audit PASS, không Critical/High finding). **Sprint 4 implementation: 🟡 PARTIALLY APPROVED** · Epic 4.1 ✅ PASS / CLOSED (framework-only) · Epic 4.2+ ⛔ BLOCKED.
+>
+> 📝 **Sprint 4 (chỉ tài liệu):** [ADR-01](sprint4-execution-engine/ADR-01-execution-engine-architecture.md) ✅ Codex PASS · [ADR-02](sprint4-execution-engine/ADR-02-execution-governance-model.md) ✅ Codex PASS · [ADP-01 Decision to Proceed](sprint4-execution-engine/ADP-01-decision-to-proceed.md) ✅ **APPROVED FOR LIMITED IMPLEMENTATION**. Maika hiện ở **Maturity Level 2 (Dry Run)**; Level 4 (Autonomous) bị cấm.
+>
+> ✅ **Epic 4.1 (Execution Ticket Framework): PASS / CLOSED** — framework-only (Execution Ticket/State/Validation/Guard/Metadata + repository in-memory volatile), **KHÔNG execute/write/connector/finance**. **Epic 4.2+ vẫn BLOCKED.** Sprint 4 implementation = **PARTIALLY APPROVED**. Execution Engine chưa tồn tại; Execution Readiness **NOT READY**. **Maika chưa được phép execute.**
 >
 > Maika **VẪN CHƯA được phép**: execute action · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
 > Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth); Maika KHÔNG tính/kết luận tài chính.
@@ -91,60 +101,25 @@ flowchart TD
 
 ---
 
-## 4. 📐 Các nguyên tắc kỹ thuật
+## 4. 📐 Nguyên tắc kỹ thuật & quản trị
 
-- 🧩 **Zero Refactor** — mỗi Epic bổ sung thành phần mới, không refactor phần đã đóng.
-- 💰 **Finance Isolation** — AI/vector không tính toán tài chính.
-- 🏸 **Club Isolation** — mọi truy hồi scope theo `clubId`, không rò rỉ chéo club.
-- 📦 **Vector Store = Derived View** — dựng lại được từ Club Memory.
-- 🏦 **Finance Engine = Source of Truth** cho mọi con số tài chính.
-- 🔒 **PII phải redact** trước khi embed (email/điện thoại/CCCD/số tài khoản).
-- 🚫 **Finance content phải block** khỏi embedding/semantic/cache/DLQ.
-- 🥇 **Deterministic Retrieval ưu tiên**.
-- ➕ **Semantic chỉ supplement** — không override dữ liệu nghiệp vụ.
+Technical Governance và Project Governance tuân thủ **GOV-01** (Single Source of Truth). Tài liệu này **không** định nghĩa lại rule.
+
+Chi tiết xem:
+- [docs/governance/GOV-01-project-governance-baseline-v2.1.md](governance/GOV-01-project-governance-baseline-v2.1.md)
+- và Technical Baseline tương ứng: [docs/technical-baseline-v2.0/README.md](technical-baseline-v2.0/README.md).
 
 ---
 
-## 5. 🔄 Quy trình phát triển chuẩn
+## 5. 🔄 Quy trình phát triển
 
-```
-Thiết kế
-   ↓
-Claude Code triển khai
-   ↓
-Build + Test
-   ↓
-Codex Audit
-   ↓
-(Nếu FAIL) → Claude sửa → Codex Re-Audit
-   ↓
-PASS
-   ↓
-Technical Baseline (nếu là mốc lớn) → Codex Audit tài liệu
-   ↓
-Commit
-   ↓
-Tag
-   ↓
-Push GitHub
-   ↓
-Epic tiếp theo
-```
-
-> ⛔ **Không được bỏ qua bất kỳ bước nào.** Không tự duyệt (self-approve) thay Codex.
+Quy trình Delivery Pipeline và Governance Workflow được định nghĩa trong **GOV-01** (Rule 12 và §6). Xem [GOV-01](governance/GOV-01-project-governance-baseline-v2.1.md).
 
 ---
 
 ## 6. 📱 Quy định triển khai UI
 
-Mọi Epic liên quan giao diện **bắt buộc triển khai đồng bộ** trên 4 nền tảng:
-
-- 🖥️ **Desktop**
-- 🌐 **Mobile Web**
-- 🍎 **iOS**
-- 🤖 **Android**
-
-> ⚠️ Không được để **Desktop có / Mobile không có** (hoặc ngược lại). Tính năng giao diện phải đồng nhất trên mọi nền tảng.
+Quy định đồng bộ UI đa nền tảng (Desktop / Mobile Web / iOS / Android) được định nghĩa trong **GOV-01 Rule 11 (Feature Parity Rule)**. Xem [GOV-01](governance/GOV-01-project-governance-baseline-v2.1.md).
 
 ---
 
@@ -159,23 +134,31 @@ Codex Re-Audit ✅ PASS
    ↓
 Sprint 2 UI Stable ✅
    ↓
-Sprint 3 — Maika AI  🔄 Đang triển khai
+Sprint 3 — Maika AI (Governance Layer)  ✅ PASS / CLOSED
    ├─ Epic 3.1 — Maika Core (read-only) ✅ PASS / CLOSED
    ├─ Epic 3.2 — Organization Intelligence (read-only) ✅ PASS / CLOSED
    ├─ Epic 3.3 — Workflow Planning (preview/read-only) ✅ PASS / CLOSED
    ├─ Epic 3.4 — AI Action Layer (proposal/dry-run) ✅ PASS / CLOSED
-   └─ Epic 3.5 — Human Approval Engine (evaluate/preview) ✅ PASS / CLOSED
+   ├─ Epic 3.5 — Human Approval Engine (evaluate/preview) ✅ PASS / CLOSED
+   └─ Sprint 3 — Final Governance Audit ✅ PASS
    ↓
-Sprint 3 — Final Governance Audit  ⬜ Bước tiếp theo (chưa thực hiện)
+Sprint 4 — ADR-01 Execution Engine Architecture ✅ Codex PASS
    ↓
-Sprint 4 — Execution Engine  ⛔ BLOCKED (Execution Readiness CHƯA ĐẠT; chờ Final Governance Audit PASS)
+Sprint 4 — ADR-02 Execution Governance Model ✅ Codex PASS
+   ↓
+Sprint 4 — ADP-01 Decision to Proceed ✅ APPROVED FOR LIMITED IMPLEMENTATION
+   ↓
+Sprint 4 — Epic 4.1 Execution Ticket Framework  ✅ PASS / CLOSED (framework-only; không execute)
+   ↓
+Sprint 4 — Epic 4.2+ / Execution Engine  ⛔ BLOCKED (Execution Readiness vẫn NOT READY)
    ↓
 AI Commerce Platform  🔭 Planned
 ```
 
 > 🔭 Các mốc sau **Sprint 2 UI Stable**:
-> - **Sprint 3 – Maika AI (Đang triển khai)** — Epic 3.1/3.2/3.3/3.4 ✅ PASS; Epic 3.5 Human Approval Engine ✅ PASS (evaluate/preview, không execute). Bước tiếp theo: **Sprint 3 Final Governance Audit**.
-> - **Sprint 4 – Execution Engine** — ⛔ BLOCKED, chưa được phép bắt đầu (chờ Final Governance Audit PASS).
+> - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
+> - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ Codex PASS; ADR-02 ✅ Codex PASS; **ADP-01 ✅ APPROVED FOR LIMITED IMPLEMENTATION** (chỉ tài liệu/quyết định).
+> - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (Execution Ticket Framework, framework-only, không execute/write); **Epic 4.2+ ⛔ BLOCKED**; Execution Readiness vẫn NOT READY.
 > - **AI Commerce Platform (Planned)**
 
 ---
@@ -205,13 +188,16 @@ AI Commerce Platform  🔭 Planned
 - ✅ **Epic 3.3 — Workflow Planning — PASS / CLOSED** · chỉ **preview/read-only** (status:preview · readOnly · mutates=false · requiresHumanApproval · actionExecutionAllowed=false · writeOperationsAllowed=false).
 - ✅ **Epic 3.4 — AI Action Layer — PASS / CLOSED** · chỉ **Action Proposal · Permission Check · Safety Check · Dry-run · AuditLogPreview** (executionStatus=not_executed · không execute/write/persist).
 - ✅ **Epic 3.5 — Human Approval Engine — PASS / CLOSED** · chỉ **policies · evaluate · preview · deterministic approval policy** (executionAllowed=false · approved=false · approvedBy=null · approvedAt=null · status=pending).
+- ✅ **Sprint 3 — Final Governance Audit — PASS** · **Sprint 3 CLOSED** (Governance Layer hoàn thành).
+- ✅ **Sprint 4 ADR-01 — Codex PASS** (tài liệu kiến trúc Execution Engine).
+- ✅ **Sprint 4 ADR-02 — Codex PASS** (tài liệu quản trị Execution).
+- ✅ **Sprint 4 ADP-01 — APPROVED FOR LIMITED IMPLEMENTATION** — cho phép mở **duy nhất Epic 4.1**.
+- ✅ **Sprint 4 Epic 4.1 — Execution Ticket Framework — PASS / CLOSED** · framework-only (ticket/state/validation/guard/metadata + repository in-memory volatile) · **KHÔNG execute/write/persist DB/connector/finance**.
 
 Trạng thái **CHƯA triển khai / CHƯA được phép** tính đến thời điểm này — không được mô tả như đã hoàn thành:
 
-- 🔄 Sprint 3 — Maika AI: **đang triển khai** (Epic 3.1 → 3.5 xong; bước tiếp theo: Final Governance Audit).
-- ⬜ Sprint 3 — Final Governance Audit: **bước tiếp theo**, chưa thực hiện.
-- ⛔ **Execution Readiness: CHƯA ĐẠT / NOT READY** — cần Sprint 3 Final Governance Audit PASS trước khi xem xét Sprint 4.
-- ⛔ Sprint 4 — Execution Engine: **BLOCKED**, chưa được phép bắt đầu.
+- ⛔ Sprint 4 — Epic 4.2+ / Execution Engine: **BLOCKED**, chưa được phép bắt đầu (Execution Engine chưa tồn tại).
+- ⛔ **Execution Readiness: CHƯA ĐẠT / NOT READY** — ADP-01 không thay đổi; cần đủ điều kiện ADR-02 §9 (ADR-01+ADR-02 PASS, Epic 4.1–4.6 PASS, Sprint 4 Governance Audit PASS).
 - ⛔ Maika **CHƯA được phép**: execute action · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
 - ⬜ AI Commerce Platform: **Planned**, chưa bắt đầu.
 - ⬜ PGVector **chưa** triển khai.

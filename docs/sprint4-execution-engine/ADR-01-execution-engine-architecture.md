@@ -2,16 +2,22 @@
 
 > **Sprint 4 — Architecture Decision Record.** Tài liệu thiết kế kiến trúc Execution Engine **TRƯỚC** khi viết bất kỳ code Sprint 4 nào. Đây **chỉ là thiết kế** — chưa mở execution thật.
 
-**Phiên bản:** 1.0 (draft) · **Ngày:** 2026-06-30 · **Nhánh:** `main`
+**Phiên bản:** 1.0 (accepted) · **Ngày:** 2026-06-30 · **Nhánh:** `main` · **Liên quan:** [ADR-02 — Execution Governance Model](ADR-02-execution-governance-model.md)
 
 ---
 
 ## 2. Trạng thái
 
-**Proposed / Pending Codex Audit.**
+**Status: Accepted · Codex Audit: PASS · Architecture Decision: Approved.**
 
-- Execution Readiness = **NOT READY**.
-- Sprint 4 (Execution Engine) = **BLOCKED** cho tới khi ADR-01 được Codex Audit **PASS** và có quyết định mở Epic 4.1.
+Trạng thái hiện tại (sau ADP-01):
+
+- **ADR-01:** Accepted · Codex PASS.
+- **ADP-01:** APPROVED FOR LIMITED IMPLEMENTATION.
+- **Sprint 4 implementation:** PARTIALLY APPROVED.
+- **Epic 4.1 (Execution Ticket Framework):** READY TO START.
+- **Epic 4.2+:** BLOCKED.
+- **Execution Readiness:** NOT READY.
 - ADR này **không** thay đổi trạng thái thực thi; **không** triển khai execution.
 
 ## 3. Bối cảnh
@@ -228,13 +234,13 @@ Metrics đề xuất:
 | **Epic 4.6** | Rollback & Observability |
 | **Sprint 4 Final Governance Audit** | Gate cuối |
 
-> Đây **chỉ là đề xuất thứ tự** — chưa Epic nào được mở. Epic 4.1 chỉ mở sau khi ADR-01 PASS + có quyết định.
+> Sau ADP-01: **Epic 4.1 đã được cho phép bắt đầu (READY TO START)**; **Epic 4.2+ vẫn BLOCKED** (mở sau khi Epic 4.1 PASS + quyết định triển khai tiếp).
 
 ## 22. Quyết định
 
-- ADR-01 **đề xuất kiến trúc**, **chưa approve execution**.
+- ADR-01 **đề xuất kiến trúc** — đã **Accepted / Codex PASS**; vẫn **chưa approve execution**.
 - **Execution Readiness vẫn NOT READY.**
-- **Sprint 4 implementation vẫn BLOCKED** cho tới khi Codex Audit ADR-01 **PASS** và có quyết định mở Epic 4.1.
+- Sau **ADP-01 (APPROVED FOR LIMITED IMPLEMENTATION)**: Sprint 4 implementation = **PARTIALLY APPROVED**; **Epic 4.1 READY TO START**; **Epic 4.2+ BLOCKED**.
 - Tuân thủ quy trình: Claude Code thiết kế → **Codex Audit** → PASS → mới mở Epic tiếp theo. Không tự duyệt.
 
 ---

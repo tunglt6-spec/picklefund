@@ -19,6 +19,7 @@
   - Epic 3.5 Human Approval Engine ✅ PASS — tag `v2.1-sprint3-epic3.5`.
   - **Governance Layer hoàn thành** — toàn bộ Maika READ-ONLY (Hiểu → Phân tích → Lập kế hoạch → Đề xuất → Yêu cầu Human Approval); **KHÔNG execute**.
 - **Technical Baseline v2.0** — bộ tài liệu này.
+- **GOV-01 — Project Governance Baseline v2.1** ✅ **Accepted / Official** — Single Source of Truth cho toàn bộ Project Governance (không thay đổi trạng thái kỹ thuật; mọi tài liệu chỉ tham chiếu GOV-01).
 
 ## 2. Việc deferred (để Sprint/Epic sau)
 
@@ -31,41 +32,34 @@
 **Trạng thái:**
 
 - Sprint 2 ✅ Hoàn thành (Core Stable + UI Stable).
-- Sprint 3 ✅ Hoàn thành Governance Layer (Epic 3.1 → 3.5 PASS).
+- Sprint 3 ✅ **Hoàn thành Governance Layer** (Epic 3.1 → 3.5 PASS) + **Sprint 3 Final Governance Audit ✅ PASS** → **Sprint 3 CLOSED**.
 
-**Execution Readiness = NOT READY.** **Sprint 4 (Execution Engine) = BLOCKED.**
+**Execution Readiness = NOT READY.**
 
-Bước tiếp theo (thứ tự bắt buộc):
+Sau khi Sprint 3 Governance PASS:
 
-1. **Sprint 3 — Final Governance Audit** (chưa thực hiện) — phải PASS trước.
-2. **Quyết định kiến trúc mới** cho Execution (sau khi Final Governance Audit PASS).
-3. **Sprint 4 — Execution Engine** — **chỉ được xem xét sau** khi (1) + (2) hoàn tất; hiện **BLOCKED**.
+- **ADR-01** (Execution Engine Architecture) — ✅ **Codex PASS**.
+- **ADR-02** (Execution Governance Model) — ✅ **Codex PASS**.
+- **ADP-01** (Decision to Proceed) — ✅ **APPROVED FOR LIMITED IMPLEMENTATION**.
+- **Epic 4.1** (Execution Ticket Framework) — ✅ **PASS / CLOSED** (framework-only: ticket/state/validation/guard/metadata + repository in-memory volatile; **KHÔNG execute/write**).
+- **Sprint 4 implementation** — 🟡 **PARTIALLY APPROVED** (chỉ Epic 4.1).
+- **Epic 4.2+ / Execution Engine** — ⛔ **BLOCKED**.
+- **Execution Readiness** — vẫn **NOT READY** (ADP-01 không thay đổi).
 
-> ⛔ KHÔNG được kết luận: "Sprint 4 Ready", "Execution Ready", "Maika Execute", "Automation Ready". Maika vẫn read-only; chưa execute/API-write/DB-write/email/telegram/notification/workflow/job-queue.
-> Các lệnh commit/tag chỉ là **đề xuất**; không tự thực hiện nếu chưa được yêu cầu.
+**Muốn mở Epic 4.2+ phải có:** Epic 4.1 PASS · Codex PASS · Commit · Tag · Push · PROJECT_STATUS cập nhật · quyết định triển khai tiếp (nếu cần).
+
+> **Trạng thái:** Maika vẫn read-only; chưa execute/API-write/DB-write/email/telegram/notification/workflow/job-queue. Execution Gate & điều kiện mở Epic được định nghĩa trong [GOV-01](../governance/GOV-01-project-governance-baseline-v2.1.md) (Rule 15, §11).
 
 ## 3b. AI Commerce Platform
 
 - **Planned** — **CHƯA triển khai**.
 
-## 4. Epic 2.5 phải triển khai đồng bộ trên mọi nền tảng
+## 4. Đồng bộ UI đa nền tảng
 
-Theo nguyên tắc "Mobile song song với Desktop", Dashboard Light Theme phải được nâng cấp song song:
+Quy định đồng bộ UI (Desktop / Mobile Web / iOS / Android) được định nghĩa trong **GOV-01 Rule 11 (Feature Parity Rule)** — xem [GOV-01](../governance/GOV-01-project-governance-baseline-v2.1.md). Áp dụng cho mọi Epic có giao diện (gồm Epic 2.5 Dashboard 3.0).
 
-- **Desktop**
-- **Mobile Web**
-- **iOS**
-- **Android**
+## 5. Tham chiếu quản trị
 
-> Không để desktop có light theme còn mobile/iOS/Android lệch giao diện.
+Nguyên tắc phát triển, Delivery Pipeline, Workflow Gate, Execution Gate và Architecture Freeze được định nghĩa trong **GOV-01** (Rule 12, Rule 15, §6, §9). Tài liệu này không định nghĩa lại — xem [GOV-01](../governance/GOV-01-project-governance-baseline-v2.1.md).
 
-## 5. Nguyên tắc phát triển bắt buộc (nhắc lại)
-
-```
-Claude Code triển khai → Codex Audit → Claude sửa → Codex Re-Audit PASS → mới chuyển bước tiếp theo
-```
-
-- Không tự duyệt (self-approve) thay Codex.
-- Không bỏ qua gate audit.
-- Mỗi Epic đóng (close) chỉ sau khi Codex Re-Audit PASS.
-- **Sprint 4 (Execution Engine) chỉ được xem xét sau khi Sprint 3 Final Governance Audit PASS** + quyết định kiến trúc mới. Execution Readiness hiện = NOT READY.
+**Trạng thái mốc hiện tại:** Sprint 3 Final Governance Audit ✅ PASS / Sprint 3 CLOSED · ADP-01 cho phép mở DUY NHẤT Epic 4.1 · Epic 4.2+ ⛔ BLOCKED · Execution Readiness = NOT READY.

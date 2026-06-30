@@ -27,6 +27,7 @@ import { ClubMemoryModule } from './ai/club-memory/club-memory.module';
 import { RetrievalModule } from './ai/retrieval/retrieval.module';
 import { VectorModule } from './ai/vector/vector.module';
 import { MaikaModule as MaikaCoreModule } from './ai/maika/maika.module';
+import { ExecutionModule } from './ai/execution/execution.module';
 import { MemberUsersModule } from './member-users/member-users.module';
 import { HermesModule } from './hermes/hermes.module';
 import { PaymentModule } from './payment/payment.module';
@@ -81,6 +82,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
     RetrievalModule,
     VectorModule,
     MaikaCoreModule,
+    ExecutionModule,
     MemberUsersModule,
     HermesModule,
     PaymentModule,
