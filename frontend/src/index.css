@@ -11,6 +11,23 @@
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
   --color-info: #0688DA;
+  /* Surfaces */
+  --color-bg:       #F8FAFC;
+  --color-surface:  #FFFFFF;
+  --color-border:   #E2E8F0;
+  --color-border-soft: #EEF2F6;
+  /* KPI identity (Dashboard 3.0) — màu nhận diện 4 quỹ */
+  --kpi-primary: #059669; /* 🟢 Quỹ Chính       */
+  --kpi-mini:    #7C3AED; /* 🟣 Quỹ Phụ         */
+  --kpi-carry:   #D97706; /* 🟠 Số dư chuyển kỳ */
+  --kpi-asset:   #2563EB; /* 🔵 Tổng tài sản    */
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
   /* Neutral scale */
   --color-neutral-900: #0F172A;
   --color-neutral-700: #334155;

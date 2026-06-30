@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, LogOut, User } from 'lucide-react'
+import { Bell, LogOut, User, Menu } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -15,7 +15,7 @@ const ROLE_LABEL: Record<string, string> = {
   CLUB_TREASURER: 'Thủ quỹ', CLUB_MEMBER: 'Thành viên',
 }
 
-export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
+export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   const { user, logout } = useAuthStore()
   const { getClubData, readNotifIds } = useClubDataStore()
   const navigate = useNavigate()
@@ -57,8 +57,15 @@ export function MobileHeader({ onMenuClick: _onMenuClick }: MobileHeaderProps) {
       className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 flex items-center justify-between"
       style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Left: Logo + Name */}
+      {/* Left: Hamburger + Logo + Name */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={onMenuClick}
+          aria-label="Mở menu"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600 active:bg-slate-100"
+        >
+          <Menu size={20} />
+        </button>
         <PickleFundLogoMark size={26} />
         <span className="text-[18px] font-[800] text-slate-900 tracking-tight">PickleFund</span>
       </div>

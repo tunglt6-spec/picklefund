@@ -99,8 +99,7 @@ interface FundCardProps {
   balance: number
   income?: number
   expense?: number
-  gradFrom: string
-  gradTo: string
+  accent: string
   icon: React.ReactNode
   tag?: string
   note?: string
@@ -110,28 +109,31 @@ interface FundCardProps {
   statusLabel?: string
   animDelay?: number
 }
-function FundCard({ title, balance, income, expense, gradFrom, gradTo, icon, tag, note, subtitle, formulaLines, showSign, statusLabel, animDelay = 0 }: FundCardProps) {
+function FundCard({ title, balance, income, expense, accent, icon, tag, note, subtitle, formulaLines, showSign, statusLabel, animDelay = 0 }: FundCardProps) {
+  const isNeg = balance < 0
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-3 shadow-lg text-white"
+      className="relative overflow-hidden rounded-2xl bg-white p-5 flex flex-col gap-3 border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
       style={{
-        background: `linear-gradient(135deg, ${gradFrom} 0%, ${gradTo} 100%)`,
         animation: 'fundCardFadeIn 0.4s ease both',
         animationDelay: `${animDelay}ms`,
       }}
     >
+      {/* Top accent strip — màu nhận diện quỹ */}
+      <span className="absolute inset-x-0 top-0 h-1" style={{ background: accent }} />
+
       {/* Header: icon + title + badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}14`, color: accent }}>
             {icon}
           </div>
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-white/70 leading-tight">
+          <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-400 leading-tight">
             {title}
           </span>
         </div>
         {tag && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white flex-shrink-0">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: `${accent}14`, color: accent }}>
             {tag}
           </span>
         )}
@@ -139,38 +141,39 @@ function FundCard({ title, balance, income, expense, gradFrom, gradTo, icon, tag
 
       {/* Balance */}
       <div className="min-w-0">
-        <p className="text-xl sm:text-2xl font-bold tabular-nums leading-tight break-words whitespace-normal max-w-full" style={{ letterSpacing: '-0.02em' }}>
+        <p className="text-xl sm:text-2xl font-bold tabular-nums leading-tight break-words whitespace-normal max-w-full"
+          style={{ letterSpacing: '-0.02em', color: isNeg ? 'var(--color-danger)' : 'var(--color-neutral-900)' }}>
           {showSign && balance > 0 ? '+' : ''}{formatVND(balance)}
         </p>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <p className="text-xs text-white/60">Số dư hiện tại</p>
-          {balance < 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200">⚠ Âm</span>
+          <p className="text-xs text-slate-400">Số dư hiện tại</p>
+          {isNeg && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">⚠ Âm</span>
           )}
           {statusLabel && balance >= 0 && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{statusLabel}</span>
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: `${accent}14`, color: accent }}>{statusLabel}</span>
           )}
         </div>
       </div>
 
-      {subtitle && <p className="text-[10px] -mt-1 text-white/60 truncate">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] -mt-1 text-slate-400 truncate">{subtitle}</p>}
 
-      <div className="h-px bg-white/20" />
+      <div className="h-px bg-slate-100" />
 
       {/* Content: formula or Thu/Chi */}
       {formulaLines ? (
         <div className="flex flex-col gap-1">
           {formulaLines.map((line, i) => (
             <div key={i}>
-              {line.isTotal && <div className="h-px bg-white/30 my-1" />}
+              {line.isTotal && <div className="h-px bg-slate-200 my-1" />}
               <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className={`text-[10px] min-w-0 shrink ${line.isTotal ? 'text-white font-semibold' : 'text-white/60'}`}>
+                <span className={`text-[10px] min-w-0 shrink ${line.isTotal ? 'text-slate-700 font-semibold' : 'text-slate-400'}`}>
                   {line.label}
                 </span>
                 <span className={`text-[11px] font-semibold tabular-nums text-right break-words min-w-0 max-w-[55%] ${
                   line.isTotal
-                    ? (typeof line.value === 'number' && line.value < 0 ? 'text-red-300' : 'text-white')
-                    : 'text-white/80'
+                    ? (typeof line.value === 'number' && line.value < 0 ? 'text-red-500' : 'text-slate-900')
+                    : 'text-slate-600'
                 }`}>
                   {typeof line.value === 'number' ? formatVND(line.value) : line.value}
                 </span>
@@ -182,22 +185,22 @@ function FundCard({ title, balance, income, expense, gradFrom, gradTo, icon, tag
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="flex items-center gap-1 mb-0.5">
-              <ArrowUpRight size={11} className="text-green-300" />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Thu</span>
+              <ArrowUpRight size={11} className="text-emerald-500" />
+              <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Thu</span>
             </div>
-            <p className="text-sm font-semibold tabular-nums text-white">{formatVND(income ?? 0)}</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-800">{formatVND(income ?? 0)}</p>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-0.5">
-              <ArrowDownLeft size={11} className="text-red-300" />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Chi</span>
+              <ArrowDownLeft size={11} className="text-red-500" />
+              <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Chi</span>
             </div>
-            <p className="text-sm font-semibold tabular-nums text-white">{formatVND(expense ?? 0)}</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-800">{formatVND(expense ?? 0)}</p>
           </div>
         </div>
       )}
 
-      {note && <p className="text-[10px] text-white/50 leading-snug">{note}</p>}
+      {note && <p className="text-[10px] text-slate-400 leading-snug">{note}</p>}
     </div>
   )
 }
@@ -624,15 +627,15 @@ export function ClubDashboard() {
 
           {/* KPI row — 4 cards: Quỹ Chính / Quỹ Phụ / Số dư chuyển kỳ / Tổng tài sản */}
           <div className="grid grid-cols-2 gap-3">
-            <MobileKpiCard label="Quỹ Chính" value={formatVND(commonBalance)} icon={<ArrowUpRight size={18} />} accent="#4F46E5" />
-            <MobileKpiCard label="Quỹ Phụ" value={formatVND(miniBalance)} icon={<Trophy size={18} />} accent="#059669" />
+            <MobileKpiCard label="Quỹ Chính" value={formatVND(commonBalance)} icon={<Wallet size={18} />} accent="#059669" />
+            <MobileKpiCard label="Quỹ Phụ" value={formatVND(miniBalance)} icon={<Gamepad2 size={18} />} accent="#7C3AED" />
             <MobileKpiCard
               label="Số dư chuyển kỳ"
               value={(carryForwardBalance > 0 ? '+' : '') + formatVND(carryForwardBalance)}
-              icon={<Activity size={18} />}
+              icon={<ArrowLeftRight size={18} />}
               accent="#D97706"
             />
-            <MobileKpiCard label="Tổng tài sản CLB" value={formatVND(clubAssetsBalance)} icon={<ShieldCheck size={18} />} accent="#4F46E5" />
+            <MobileKpiCard label="Tổng tài sản CLB" value={formatVND(clubAssetsBalance)} icon={<ShieldCheck size={18} />} accent="#2563EB" />
           </div>
 
           {/* AI Health Score + Recommendations */}
@@ -853,9 +856,8 @@ export function ClubDashboard() {
             balance={commonBalance}
             income={commonIncome}
             expense={commonExpTotal}
-            gradFrom="#059669"
-            gradTo="#0D9488"
-            icon={<Wallet size={16} className="text-white" />}
+            accent="#059669"
+            icon={<Wallet size={16} />}
             tag="Quỹ vận hành"
             note="Thu quỹ • Chi sân • Sinh hoạt • Hoạt động CLB"
             animDelay={0}
@@ -865,9 +867,8 @@ export function ClubDashboard() {
             balance={miniBalance}
             income={miniIncome}
             expense={miniExpTotal}
-            gradFrom="#7C3AED"
-            gradTo="#4F46E5"
-            icon={<Gamepad2 size={16} className="text-white" />}
+            accent="#7C3AED"
+            icon={<Gamepad2 size={16} />}
             tag="Quỹ phụ trợ"
             note="Minigame • Cá cược vui • Thưởng • Tài trợ · Độc lập"
             animDelay={80}
@@ -876,9 +877,8 @@ export function ClubDashboard() {
             title="SỐ DƯ CHUYỂN KỲ"
             subtitle={carryForwardPeriodName ? `Chuyển từ: ${carryForwardPeriodName}` : 'Chưa có kỳ trước'}
             balance={carryForwardBalance}
-            gradFrom="#D97706"
-            gradTo="#EA580C"
-            icon={<ArrowLeftRight size={16} className="text-white" />}
+            accent="#D97706"
+            icon={<ArrowLeftRight size={16} />}
             tag="Carry Forward"
             showSign
             statusLabel={
@@ -892,9 +892,8 @@ export function ClubDashboard() {
             title="TỔNG TÀI SẢN CLB"
             subtitle="Quỹ Chính + Số dư chuyển kỳ"
             balance={clubAssetsBalance}
-            gradFrom="#2563EB"
-            gradTo="#06B6D4"
-            icon={<BarChart3 size={16} className="text-white" />}
+            accent="#2563EB"
+            icon={<BarChart3 size={16} />}
             tag="Net Asset"
             formulaLines={[
               { label: 'Quỹ Chính', value: commonBalance },
