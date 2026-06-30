@@ -42,11 +42,13 @@ Sau khi Sprint 3 Governance PASS:
 - **ADR-02** (Execution Governance Model) — ✅ **Codex PASS**.
 - **ADP-01** (Decision to Proceed) — ✅ **APPROVED FOR LIMITED IMPLEMENTATION**.
 - **Epic 4.1** (Execution Ticket Framework) — ✅ **PASS / CLOSED** (framework-only: ticket/state/validation/guard/metadata + repository in-memory volatile; **KHÔNG execute/write**).
-- **Sprint 4 implementation** — 🟡 **PARTIALLY APPROVED** (chỉ Epic 4.1).
-- **Epic 4.2+ / Execution Engine** — ⛔ **BLOCKED**.
-- **Execution Readiness** — vẫn **NOT READY** (ADP-01 không thay đổi).
+- **ADR-03** (Execution State Strategy) — ✅ **Codex PASS / Accepted** (chuẩn bị Epic 4.2 — chọn **Pure State Machine**, không event-driven/queue/worker/persistence/execution).
+- **Epic 4.2** (Execution State Machine) — ⛔ **BLOCKED** (chưa mở; chờ quyết định triển khai riêng).
+- **Sprint 4 implementation** — 🟡 **PARTIALLY APPROVED** (Epic 4.1 CLOSED).
+- **Epic 4.3+ / Execution Engine** — ⛔ **BLOCKED**.
+- **Execution Readiness** — vẫn **NOT READY**.
 
-**Muốn mở Epic 4.2+ phải có:** Epic 4.1 PASS · Codex PASS · Commit · Tag · Push · PROJECT_STATUS cập nhật · quyết định triển khai tiếp (nếu cần).
+**Muốn mở Epic 4.2 phải có:** ADR-03 Codex PASS · Commit · Tag · Push · PROJECT_STATUS cập nhật · quyết định triển khai riêng (nếu cần).
 
 > **Trạng thái:** Maika vẫn read-only; chưa execute/API-write/DB-write/email/telegram/notification/workflow/job-queue. Execution Gate & điều kiện mở Epic được định nghĩa trong [GOV-01](../governance/GOV-01-project-governance-baseline-v2.1.md) (Rule 15, §11).
 

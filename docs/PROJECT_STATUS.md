@@ -44,6 +44,8 @@
 | Sprint 4 — ADR-02 Execution Governance Model | ✅ Codex PASS (tài liệu quản trị) |
 | Sprint 4 — ADP-01 Decision to Proceed | ✅ APPROVED FOR LIMITED IMPLEMENTATION |
 | └ Epic 4.1 — Execution Ticket Framework | ✅ PASS / CLOSED (framework-only, không execute) |
+| Sprint 4 — ADR-03 Execution State Strategy | ✅ Codex PASS / Accepted (chuẩn bị Epic 4.2) |
+| └ Epic 4.2 — Execution State Machine | ⛔ BLOCKED (chưa mở; chờ ADR-03 PASS) |
 | Sprint 4 — Execution Engine (implementation) | 🟡 PARTIALLY APPROVED (Epic 4.1 CLOSED) · Epic 4.2+ ⛔ BLOCKED |
 
 **Sprint hiện tại:** Sprint 4 — Execution Foundation · **ADR-01 PASS · ADR-02 PASS · ADP-01 APPROVED · Epic 4.1 PASS/CLOSED** · Sprint 4 **PARTIALLY APPROVED** (Epic 4.2+ **BLOCKED**) · **Execution Readiness: NOT READY** (chưa có execution thật)
@@ -69,6 +71,8 @@
 > 📝 **Sprint 4 (chỉ tài liệu):** [ADR-01](sprint4-execution-engine/ADR-01-execution-engine-architecture.md) ✅ Codex PASS · [ADR-02](sprint4-execution-engine/ADR-02-execution-governance-model.md) ✅ Codex PASS · [ADP-01 Decision to Proceed](sprint4-execution-engine/ADP-01-decision-to-proceed.md) ✅ **APPROVED FOR LIMITED IMPLEMENTATION**. Maika hiện ở **Maturity Level 2 (Dry Run)**; Level 4 (Autonomous) bị cấm.
 >
 > ✅ **Epic 4.1 (Execution Ticket Framework): PASS / CLOSED** — framework-only (Execution Ticket/State/Validation/Guard/Metadata + repository in-memory volatile), **KHÔNG execute/write/connector/finance**. **Epic 4.2+ vẫn BLOCKED.** Sprint 4 implementation = **PARTIALLY APPROVED**. Execution Engine chưa tồn tại; Execution Readiness **NOT READY**. **Maika chưa được phép execute.**
+>
+> ✅ **ADR-03 (Execution State Strategy): Codex PASS / Accepted** ([link](sprint4-execution-engine/ADR-03-execution-state-strategy.md)) — chuẩn bị cho Epic 4.2 (chọn **Pure State Machine**, không event-driven/queue/worker/persistence). ADR-03 **không** thay đổi Execution Readiness; **Epic 4.2 chưa mở** (chờ quyết định triển khai riêng).
 >
 > Maika **VẪN CHƯA được phép**: execute action · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
 > Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth); Maika KHÔNG tính/kết luận tài chính.
@@ -150,15 +154,19 @@ Sprint 4 — ADP-01 Decision to Proceed ✅ APPROVED FOR LIMITED IMPLEMENTATION
    ↓
 Sprint 4 — Epic 4.1 Execution Ticket Framework  ✅ PASS / CLOSED (framework-only; không execute)
    ↓
-Sprint 4 — Epic 4.2+ / Execution Engine  ⛔ BLOCKED (Execution Readiness vẫn NOT READY)
+Sprint 4 — ADR-03 Execution State Strategy ✅ Codex PASS / Accepted
+   ↓
+Sprint 4 — Epic 4.2 Execution State Machine  ⛔ BLOCKED (chưa mở; chờ ADR-03 PASS)
+   ↓
+Sprint 4 — Epic 4.3+ / Execution Engine  ⛔ BLOCKED (Execution Readiness vẫn NOT READY)
    ↓
 AI Commerce Platform  🔭 Planned
 ```
 
 > 🔭 Các mốc sau **Sprint 2 UI Stable**:
 > - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
-> - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ Codex PASS; ADR-02 ✅ Codex PASS; **ADP-01 ✅ APPROVED FOR LIMITED IMPLEMENTATION** (chỉ tài liệu/quyết định).
-> - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (Execution Ticket Framework, framework-only, không execute/write); **Epic 4.2+ ⛔ BLOCKED**; Execution Readiness vẫn NOT READY.
+> - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ PASS; ADR-02 ✅ PASS; **ADP-01 ✅ APPROVED**; **ADR-03 ✅ Codex PASS / Accepted** (chuẩn bị Epic 4.2 — Pure State Machine).
+> - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ ADR-03 PASS); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
 > - **AI Commerce Platform (Planned)**
 
 ---
@@ -193,10 +201,12 @@ AI Commerce Platform  🔭 Planned
 - ✅ **Sprint 4 ADR-02 — Codex PASS** (tài liệu quản trị Execution).
 - ✅ **Sprint 4 ADP-01 — APPROVED FOR LIMITED IMPLEMENTATION** — cho phép mở **duy nhất Epic 4.1**.
 - ✅ **Sprint 4 Epic 4.1 — Execution Ticket Framework — PASS / CLOSED** · framework-only (ticket/state/validation/guard/metadata + repository in-memory volatile) · **KHÔNG execute/write/persist DB/connector/finance**.
+- ✅ **Sprint 4 ADR-03 — Execution State Strategy — Codex PASS / Accepted** (tài liệu chiến lược state machine; Pure State Machine cho Epic 4.2).
 
 Trạng thái **CHƯA triển khai / CHƯA được phép** tính đến thời điểm này — không được mô tả như đã hoàn thành:
 
-- ⛔ Sprint 4 — Epic 4.2+ / Execution Engine: **BLOCKED**, chưa được phép bắt đầu (Execution Engine chưa tồn tại).
+- ⛔ Sprint 4 — Epic 4.2 Execution State Machine: **BLOCKED**, chưa mở (chờ quyết định triển khai riêng).
+- ⛔ Sprint 4 — Epic 4.3+ / Execution Engine: **BLOCKED** (Execution Engine chưa tồn tại).
 - ⛔ **Execution Readiness: CHƯA ĐẠT / NOT READY** — ADP-01 không thay đổi; cần đủ điều kiện ADR-02 §9 (ADR-01+ADR-02 PASS, Epic 4.1–4.6 PASS, Sprint 4 Governance Audit PASS).
 - ⛔ Maika **CHƯA được phép**: execute action · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
 - ⬜ AI Commerce Platform: **Planned**, chưa bắt đầu.
