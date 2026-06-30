@@ -41,6 +41,13 @@ import {
   WorkflowPlan,
   WorkflowTemplateSummary,
 } from './workflow-planning.types';
+import { ActionLayerService } from './action-layer.service';
+import {
+  ActionActorContext,
+  ActionProposal,
+  ActionRequestInput,
+} from './action-layer.types';
+import { PermissionDecision, SafetyDecision } from './action-audit.types';
 
 @Injectable()
 export class MaikaCore {
@@ -53,7 +60,29 @@ export class MaikaCore {
     private readonly orgIntel: OrganizationIntelligenceService,
     private readonly workflowPlanning: WorkflowPlanningService,
     private readonly workflowTemplates: WorkflowTemplateService,
+    private readonly actionLayer: ActionLayerService,
   ) {}
+
+  /**
+   * AI Action Layer (Epic 3.4) — CHỈ validate / dry-run. KHÔNG execute/persist/write.
+   * Mọi proposal requiresHumanApproval=true, executionStatus='not_executed'.
+   */
+  validateAction(
+    ctx: ActionActorContext,
+    input: ActionRequestInput,
+  ): {
+    permissionDecision: PermissionDecision;
+    safetyDecision: SafetyDecision;
+  } {
+    return this.actionLayer.validate(ctx, input);
+  }
+
+  dryRunAction(
+    ctx: ActionActorContext,
+    input: ActionRequestInput,
+  ): ActionProposal {
+    return this.actionLayer.dryRun(ctx, input);
+  }
 
   /**
    * Organization Intelligence (Epic 3.2) — bức tranh vận hành tổ chức READ-ONLY.

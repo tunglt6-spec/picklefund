@@ -35,21 +35,24 @@
 | Sprint 3 — Maika AI | 🔄 Đang triển khai |
 | └ Epic 3.1 — Maika Core (Club Intelligence Manager) | ✅ PASS / CLOSED |
 | └ Epic 3.2 — Organization Intelligence | ✅ PASS / CLOSED |
-| └ Epic 3.3 — Workflow Planning | ✅ PASS |
-| └ Epic 3.4 — Maika AI | ⬜ Ready / Chưa bắt đầu |
+| └ Epic 3.3 — Workflow Planning | ✅ PASS / CLOSED |
+| └ Epic 3.4 — AI Action Layer | ✅ PASS / CLOSED |
+| └ Epic 3.5 — Human Approval | ⬜ Ready / Chưa bắt đầu |
 
 **Sprint hiện tại:** 🔄 Sprint 3 — Maika AI (đang triển khai)
 
-> 🤖 **Maika Core (3.1) + Organization Intelligence (3.2) + Workflow Planning (3.3) hiện tại đều READ-ONLY.**
+> 🤖 **Maika (Epic 3.1 → 3.4) hiện tại đều READ-ONLY / không thực thi.**
 >
-> **Organization Intelligence (Epic 3.2)** sản sinh read-only: `summary` · `entities` · `healthSignals` · `attentionSignals` · `dataQualitySignals` · `suggestedReadActions` (chỉ GET, `mutates=false`) · `safety` (containsPii/containsFinanceData/redactedCount/blockedCount/policyVersion — tính từ policy thực tế).
+> **Organization Intelligence (3.2)** read-only: `summary`/`entities`/`healthSignals`/`attentionSignals`/`dataQualitySignals`/`suggestedReadActions` (GET, mutates=false)/`safety`.
 >
-> **Workflow Planning (Epic 3.3)** chỉ là **preview / read-only**:
-> - `status: preview` · `readOnly: true` · `mutates: false` · `requiresHumanApproval: true`
-> - `suggestedReadActions` — **chỉ GET / read-only**
-> - `safety.actionExecutionAllowed = false` · `safety.writeOperationsAllowed = false`
+> **Workflow Planning (3.3)** preview/read-only: `status:preview` · `readOnly` · `mutates=false` · `requiresHumanApproval` · `suggestedReadActions` chỉ GET · `actionExecutionAllowed=false`/`writeOperationsAllowed=false`.
 >
-> Maika **VẪN CHƯA được phép**: ghi dữ liệu · gọi API Write · gửi Email/Telegram · gửi Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
+> **AI Action Layer (3.4)** chỉ hỗ trợ: **Action Proposal · Permission Check · Safety Check · Dry-run · AuditLogPreview**.
+> KHÔNG hỗ trợ: Action Execution · API Write · DB Write · Email · Telegram · Notification · Workflow Execution · Job Queue · Background Worker.
+>
+> **Execution Readiness: CHƯA ĐẠT** — Epic 3.5 Human Approval chưa hoàn thành; Sprint 4 Execution Engine **chưa được phép bắt đầu**.
+>
+> Maika **VẪN CHƯA được phép**: ghi dữ liệu · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker · tự execute action.
 > Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth); Maika KHÔNG tính/kết luận tài chính.
 
 ---
@@ -151,14 +154,18 @@ Sprint 2 UI Stable ✅
 Sprint 3 — Maika AI  🔄 Đang triển khai
    ├─ Epic 3.1 — Maika Core (read-only) ✅ PASS / CLOSED
    ├─ Epic 3.2 — Organization Intelligence (read-only) ✅ PASS / CLOSED
-   ├─ Epic 3.3 — Workflow Planning (preview/read-only) ✅ PASS
-   └─ Epic 3.4 — Maika AI  ⬜ Ready / Chưa bắt đầu
+   ├─ Epic 3.3 — Workflow Planning (preview/read-only) ✅ PASS / CLOSED
+   ├─ Epic 3.4 — AI Action Layer (proposal/dry-run) ✅ PASS / CLOSED
+   └─ Epic 3.5 — Human Approval  ⬜ Ready / Chưa bắt đầu
+   ↓
+Sprint 4 — Execution Engine  ⛔ Chưa được phép bắt đầu (Execution Readiness CHƯA ĐẠT)
    ↓
 AI Commerce Platform  🔭 Planned
 ```
 
 > 🔭 Các mốc sau **Sprint 2 UI Stable**:
-> - **Sprint 3 – Maika AI (Đang triển khai)** — Epic 3.1 ✅ PASS; Epic 3.2 ✅ PASS; Epic 3.3 Workflow Planning ✅ PASS (preview/read-only); Epic 3.4 Ready / chưa bắt đầu.
+> - **Sprint 3 – Maika AI (Đang triển khai)** — Epic 3.1/3.2/3.3 ✅ PASS; Epic 3.4 AI Action Layer ✅ PASS (proposal/dry-run, không execute); Epic 3.5 Human Approval Ready / chưa bắt đầu.
+> - **Sprint 4 – Execution Engine** — ⛔ chưa được phép bắt đầu (chờ Epic 3.5).
 > - **AI Commerce Platform (Planned)**
 
 ---
@@ -185,13 +192,15 @@ AI Commerce Platform  🔭 Planned
 - ✅ **Dashboard 3.0 (Light Theme) — Hoàn thành** · đã được **Codex Re-Audit PASS** · thuộc **Sprint 2 UI Stable**.
 - ✅ **Epic 3.1 — Maika Core — PASS / CLOSED** · Club Intelligence Manager **READ-ONLY** (Hiểu → Lập kế hoạch → Đề xuất).
 - ✅ **Epic 3.2 — Organization Intelligence — PASS / CLOSED** · READ-ONLY (summary/entities/signals/suggestedReadActions GET mutates=false/safety model).
-- ✅ **Epic 3.3 — Workflow Planning — PASS** · chỉ **preview/read-only** (status:preview · readOnly · mutates=false · requiresHumanApproval · actionExecutionAllowed=false · writeOperationsAllowed=false).
+- ✅ **Epic 3.3 — Workflow Planning — PASS / CLOSED** · chỉ **preview/read-only** (status:preview · readOnly · mutates=false · requiresHumanApproval · actionExecutionAllowed=false · writeOperationsAllowed=false).
+- ✅ **Epic 3.4 — AI Action Layer — PASS / CLOSED** · chỉ **Action Proposal · Permission Check · Safety Check · Dry-run · AuditLogPreview** (executionStatus=not_executed · không execute/write/persist).
 
 Trạng thái **CHƯA triển khai / CHƯA được phép** tính đến thời điểm này — không được mô tả như đã hoàn thành:
 
-- 🔄 Sprint 3 — Maika AI: **đang triển khai** (Epic 3.1 + 3.2 + 3.3 xong; Epic 3.4 chưa bắt đầu).
-- ⬜ Epic 3.4 — Maika AI: **Ready**, chưa bắt đầu.
-- ⛔ Maika **CHƯA được phép**: ghi dữ liệu · gọi API Write · gửi Email/Telegram · gửi Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker · thực thi workflow.
+- 🔄 Sprint 3 — Maika AI: **đang triển khai** (Epic 3.1 + 3.2 + 3.3 + 3.4 xong; Epic 3.5 chưa bắt đầu).
+- ⬜ Epic 3.5 — Human Approval: **Ready**, chưa bắt đầu.
+- ⛔ **Execution Readiness: CHƯA ĐẠT** — Sprint 4 Execution Engine chưa được phép bắt đầu.
+- ⛔ Maika **CHƯA được phép**: ghi dữ liệu · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker · tự execute action.
 - ⬜ AI Commerce Platform: **Planned**, chưa bắt đầu.
 - ⬜ PGVector **chưa** triển khai.
 - ⬜ Qdrant **chưa** triển khai.

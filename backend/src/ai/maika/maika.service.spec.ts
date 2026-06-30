@@ -6,6 +6,10 @@ import { PickleFundApiReferencePort } from './api-reference.port';
 import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { WorkflowTemplateService } from './workflow-template.service';
 import { WorkflowPlanningService } from './workflow-planning.service';
+import { ActionPermissionService } from './action-permission.service';
+import { ActionSafetyService } from './action-safety.service';
+import { ActionDryRunService } from './action-dry-run.service';
+import { ActionLayerService } from './action-layer.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -28,6 +32,11 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
       orgIntel,
       templates,
     );
+    const actionLayer = new ActionLayerService(
+      new ActionPermissionService(),
+      new ActionSafetyService(policy),
+      new ActionDryRunService(),
+    );
     maika = new MaikaCore(
       new IntentRouter(),
       orgCtx,
@@ -36,6 +45,7 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
       orgIntel,
       workflowPlanning,
       templates,
+      actionLayer,
     );
     await clubMemory.save('club-1', 'u1', {
       type: ClubMemoryType.RULE,
@@ -136,6 +146,31 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
     const tpls = maika.listWorkflowTemplates();
     expect(tpls.length).toBeGreaterThan(0);
     expect(tpls.every((t) => t.readOnly === true)).toBe(true);
+  });
+
+  it('dryRunAction returns proposal: not executed, requires approval (Epic 3.4)', () => {
+    const proposal = maika.dryRunAction(
+      { clubId: 'club-1', userId: 'u1', role: 'CLUB_ADMIN' },
+      { actionType: 'MEMBER_REVIEW_PROPOSAL' },
+    );
+    expect(proposal.status).toBe('proposed');
+    expect(proposal.mutates).toBe(false);
+    expect(proposal.requiresHumanApproval).toBe(true);
+    expect(proposal.approvalStatus).toBe('required');
+    expect(proposal.approvedBy).toBeNull();
+    expect(proposal.executionStatus).toBe('not_executed');
+    expect(proposal.safetyDecision.actionExecutionAllowed).toBe(false);
+    expect(proposal.dryRun.executed).toBe(false);
+    expect(proposal.auditLogPreview.dryRunOnly).toBe(true);
+  });
+
+  it('validateAction blocks write/execute action types', () => {
+    const res = maika.validateAction(
+      { clubId: 'club-1', userId: 'u1', role: 'CLUB_ADMIN' },
+      { actionType: 'CREATE_RECEIPT' },
+    );
+    expect(res.permissionDecision.allowed).toBe(false);
+    expect(res.safetyDecision.allowed).toBe(false);
   });
 
   it('getContext returns read-only org picture', async () => {

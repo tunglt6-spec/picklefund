@@ -15,6 +15,10 @@ import { OrganizationContextManager } from './organization-context.service';
 import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { WorkflowTemplateService } from './workflow-template.service';
 import { WorkflowPlanningService } from './workflow-planning.service';
+import { ActionPermissionService } from './action-permission.service';
+import { ActionSafetyService } from './action-safety.service';
+import { ActionDryRunService } from './action-dry-run.service';
+import { ActionLayerService } from './action-layer.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
 import {
@@ -32,6 +36,10 @@ import {
     OrganizationIntelligenceService,
     WorkflowTemplateService,
     WorkflowPlanningService,
+    ActionPermissionService,
+    ActionSafetyService,
+    ActionDryRunService,
+    ActionLayerService,
     MaikaCore,
     { provide: INTENT_ROUTER, useClass: IntentRouter },
     {

@@ -10,6 +10,8 @@ import { CurrentUser, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 import { UnderstandDto } from './maika.dto';
 import { PreviewWorkflowDto } from './workflow-planning.dto';
+import { ActionRequestDto } from './action-layer.dto';
+import type { ActionActorContext } from './action-layer.types';
 
 @ApiTags('AI Maika Core')
 @ApiBearerAuth()
@@ -62,5 +64,28 @@ export class MaikaController {
     @CurrentUser() user: JwtUser,
   ) {
     return ok(await this.maika.previewWorkflow(user.clubId, dto));
+  }
+
+  @Post('actions/validate')
+  @ApiOperation({
+    summary:
+      'AI Action Layer (Epic 3.4) — validate permission + safety. KHÔNG execute/persist. role/clubId từ JWT.',
+  })
+  validateAction(@Body() dto: ActionRequestDto, @CurrentUser() user: JwtUser) {
+    return ok(this.maika.validateAction(this.actor(user), dto));
+  }
+
+  @Post('actions/dry-run')
+  @ApiOperation({
+    summary:
+      'AI Action Layer (Epic 3.4) — dry-run proposal (read-only, requiresHumanApproval, KHÔNG execute/write). role/clubId từ JWT.',
+  })
+  dryRunAction(@Body() dto: ActionRequestDto, @CurrentUser() user: JwtUser) {
+    return ok(this.maika.dryRunAction(this.actor(user), dto));
+  }
+
+  /** Ngữ cảnh xác thực LẤY TỪ JWT — client KHÔNG override clubId/role/userId. */
+  private actor(user: JwtUser): ActionActorContext {
+    return { clubId: user.clubId, userId: user.userId, role: user.role };
   }
 }
