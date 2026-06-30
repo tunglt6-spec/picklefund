@@ -39,7 +39,8 @@
 | └ Epic 3.4 — AI Action Layer | ✅ PASS / CLOSED |
 | └ Epic 3.5 — Human Approval Engine | ✅ PASS / CLOSED |
 | Sprint 3 — Final Governance Audit | ⬜ Bước tiếp theo (chưa thực hiện) |
-| Sprint 4 — Execution Engine | ⛔ BLOCKED / Chưa được phép bắt đầu |
+| Sprint 4 — ADR-01 Execution Engine Architecture | 📝 Proposed / Pending Codex Audit (tài liệu thiết kế) |
+| Sprint 4 — Execution Engine (implementation) | ⛔ BLOCKED / Chưa được phép bắt đầu |
 
 **Sprint hiện tại:** 🔄 Sprint 3 — Maika AI (đang triển khai)
 
@@ -56,6 +57,8 @@
 > Maika (toàn bộ) KHÔNG hỗ trợ: Action Execution · API Write · DB Write · Email · Telegram · Notification · Workflow Execution · Job Queue · Background Worker.
 >
 > **Execution Readiness: CHƯA ĐẠT / NOT READY** — cần **Sprint 3 Final Governance Audit PASS** trước khi xem xét Sprint 4. **Sprint 4 Execution Engine: BLOCKED / chưa được phép bắt đầu.**
+>
+> 📝 **Sprint 4 ADR-01 (Execution Engine Architecture)** — trạng thái **Proposed / Pending Codex Audit** (chỉ tài liệu thiết kế, [link](sprint4-execution-engine/ADR-01-execution-engine-architecture.md)). ADR-01 **không** thay đổi Execution Readiness; Sprint 4 implementation vẫn BLOCKED cho tới khi ADR-01 PASS và có quyết định mở Epic 4.1. **Sprint 4 chưa triển khai execution.**
 >
 > Maika **VẪN CHƯA được phép**: execute action · gọi API Write · ghi DB · gửi Email/Telegram/Notification · chạy Workflow/Automation · tạo Job Queue/Background Worker.
 > Mọi số liệu tài chính lấy trực tiếp từ PickleFund API (Finance Engine = Source of Truth); Maika KHÔNG tính/kết luận tài chính.
