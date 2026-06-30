@@ -25,6 +25,7 @@ import { ConversationModule } from './ai/conversation/conversation.module';
 import { UserMemoryModule } from './ai/user-memory/user-memory.module';
 import { ClubMemoryModule } from './ai/club-memory/club-memory.module';
 import { RetrievalModule } from './ai/retrieval/retrieval.module';
+import { VectorModule } from './ai/vector/vector.module';
 import { MemberUsersModule } from './member-users/member-users.module';
 import { HermesModule } from './hermes/hermes.module';
 import { PaymentModule } from './payment/payment.module';
@@ -77,6 +78,7 @@ import { TenantGuard } from './common/guards/tenant.guard';
     UserMemoryModule,
     ClubMemoryModule,
     RetrievalModule,
+    VectorModule,
     MemberUsersModule,
     HermesModule,
     PaymentModule,

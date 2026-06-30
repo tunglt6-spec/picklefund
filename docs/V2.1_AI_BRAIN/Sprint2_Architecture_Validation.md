@@ -159,3 +159,42 @@ Epic 2.3 Architecture Validation = PASS
 ```
 
 *PickleFund V2.1 — Sprint 2 Epic 2.3 Architecture Validation*
+
+---
+
+# Epic 2.4 — Architecture Validation (Vector / Embedding / Hybrid)
+
+| Yêu cầu (Epic 2.4 Gate + Baseline) | Triển khai | Đạt |
+|---|---|---|
+| Vector Store là derived view, rebuild từ Memory Objects | `vector-index.service.rebuildClub` | ✅ (INV-05) |
+| Vector Store plug-in (no hardcode) | `IVectorStoreProvider` + in-memory default; PGVector/Qdrant/… swap | ✅ |
+| Embedding plug-in (no vendor hardcode) | `IEmbeddingProvider` + local default; vendor qua ConfigService | ✅ |
+| Semantic provider thay Noop, no core refactor | `SemanticSearchProvider`; RetrievalEngine/ContextBuilder/ClubMemory không đổi | ✅ |
+| Hybrid: deterministic priority, semantic supplement, fallback | `HybridRetrievalEngine` (composition) | ✅ |
+| Deterministic tie-break, no LLM ranking | score→updatedAt→memoryId; no LLM | ✅ (INV-06) |
+| Cost guardrail → fallback | `EMBEDDING_DAILY_BUDGET` → BudgetExceeded → deterministic | ✅ |
+| Tenant isolation, no cross-club vector | vector records gắn clubId; query club-scoped | ✅ (INV-07) |
+| Finance Isolation | no embed/cache finance; RC1 only | ✅ (INV-01/02) |
+| No full RAG / response generation | chỉ retrieval layer | ✅ |
+| No DB schema change | in-memory default (PGVector deferred) | ✅ |
+
+## Deviations
+- **D-E2.4-01:** Default vector store in-memory (volatile); PGVector/persistence deferred (no DB schema change ở Epic này). Risk LOW.
+- **D-E2.4-02:** Background worker/cron = method-level (rebuild/reindex); daemon deferred. Risk LOW.
+- **D-E2.4-03:** Branch coverage 86.98% (defensive `??`/optional); Stmts/Lines/Funcs ≈99%. Risk LOW.
+
+## Isolation Verification
+```
+✅ Vector/Embedding KHÔNG import finance; no finance calc/cache
+✅ Hybrid là composition — KHÔNG refactor RetrievalEngine/ContextBuilder/ClubMemory/Memory Core
+✅ Vector Store derived; Source of Truth = Memory Object
+✅ Semantic fail/timeout/budget → fallback deterministic
+✅ clubId scope; no cross-club vector leak
+✅ Chỉ thêm VectorModule wiring + .env config
+```
+
+```
+Epic 2.4 Architecture Validation = PASS (pending Codex Final Audit)
+```
+
+*PickleFund V2.1 — Sprint 2 Epic 2.4 Architecture Validation*

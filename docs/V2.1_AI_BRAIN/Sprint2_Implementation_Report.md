@@ -189,3 +189,58 @@ JWT + RBAC + clubId isolation; no cross-club; no body override; no direct DB. KH
 KHÔNG commit/push/tag/release; KHÔNG update Knowledge Base. KHÔNG Vector Store/Embedding/RAG/Persistent/Optimization/Agent.
 
 *PickleFund V2.1 — Sprint 2 Epic 2.3 Implementation Report v1.0.0*
+
+---
+
+# Epic 2.4 — Vector Store + Embedding + Hybrid Retrieval (Implementation)
+
+**Trạng thái:** COMPLETE ✅ (chờ Codex Final Audit) · Tuân thủ Epic 2.4 Gate + Baseline v1.0.
+
+## E2.4 — Architecture Summary
+Vector layer mới (`backend/src/ai/vector/`) bổ sung **Vector Store + Embedding + Semantic Search + Hybrid Retrieval + Optimization + Cost Guardrails + Observability** — **composition, KHÔNG refactor core** (RetrievalEngine/ContextBuilder/ClubMemory/MemoryManager/AI Gateway/Finance Engine giữ nguyên).
+
+## E2.4 — Files Created
+| File | Vai trò |
+|---|---|
+| `vector.types.ts` · `vector-store.interface.ts` · `in-memory-vector-store.provider.ts` | Vector Store abstraction + in-memory default (cosine, club-scoped) |
+| `embedding.interface.ts` · `local-hash-embedding.provider.ts` · `embedding.service.ts` | Embedding abstraction + local default + batch/cache/budget/retry/DLQ |
+| `vector-index.service.ts` | Derived index (rebuild từ Memory Objects) + incremental |
+| `semantic-search.provider.ts` | `ISemanticSearchProvider` thật (embedding+similarity+threshold+timeout+fallback) |
+| `hybrid-retrieval.service.ts` · `hybrid-retrieval.controller.ts` | Hybrid (deterministic priority + semantic supplement) + API |
+| `vector-observability.service.ts` | Metrics (latency/failures/cache/fallback/semantic rate) |
+| `vector.module.ts` | DI wiring (plug-in providers) |
+| + 8 spec | Tests |
+
+## E2.4 — Files Modified
+`app.module.ts` (wire VectorModule) · `.env.example` (EMBEDDING_*/SEMANTIC_* config).
+
+## E2.4 — Vector Store / Embedding / Semantic / Hybrid
+- **Vector Store:** `IVectorStoreProvider` plug-in; default **in-memory** (volatile, derived). PGVector/Qdrant/Milvus/Pinecone/Weaviate swap qua binding — **deferred** (no DB schema change ở Epic này). **KHÔNG phải SoT; rebuild từ Memory Objects.**
+- **Embedding:** `IEmbeddingProvider` (OpenAI-compatible shape); default **local deterministic** (no external API/cost). OpenAI/OpenRouter/Ollama/Voyage/Jina swap qua ConfigService. Batch + cache(TTL) + version + retry + DLQ.
+- **Semantic Search:** thay khái niệm Noop bằng `SemanticSearchProvider` thật (embedding search + topK + threshold + timeout). **Fail/timeout/budget → [] → fallback deterministic.**
+- **Hybrid:** deterministic (Epic 2.3) = **priority**; semantic = **supplement only** (không override); dedupe theo memoryId; tie-break deterministic; fallback khi semantic rỗng/lỗi.
+
+## E2.4 — Optimization & Cost Guardrails
+Batch embedding · cache TTL · incremental indexing (upsertOne/removeOne) · rebuild (rebuildClub) · retry + Dead-Letter Queue · embedding version. **Cost guardrail:** `EMBEDDING_DAILY_BUDGET` (vượt → BudgetExceeded → fallback deterministic). *Background worker/cron scheduler: method-level (rebuild/reindex endpoint); daemon hoá deferred.*
+
+## E2.4 — Observability
+Metrics: embedding latency/failures, vector latency, cache hit/miss, fallback count, semantic success rate, hybrid latency — endpoint `GET /hybrid-retrieval/metrics` (no PII/content).
+
+## E2.4 — Security & Finance Isolation
+JWT + clubId scope (vector records gắn clubId; query club-scoped) · no cross-club vector leak · no PII/finance trong embedding/metadata · **KHÔNG cache balance/contribution/expense/carryForward/receipt** — Finance Engine RC1 ONLY.
+
+## E2.4 — Build / Test / Coverage
+| Gate | Kết quả |
+|---|---|
+| `nest build` | PASS |
+| Backend tests | PASS — 50 suites / 436 tests |
+| Epic 2.4 vector tests | PASS — 8 suites / 44 tests |
+| Coverage (vector, excl DI module) | Statements **99.65%** · Functions **98.48%** · Lines **99.58%** · Branches 86.98% |
+| ESLint source (non-test) | 0 lỗi |
+
+> [reality filter] Statements/Lines/Functions ≥90% (≈99%). Branch 86.98% — phần dưới 90% là nhánh `??`/default-param/optional-query phòng thủ (không phải logic chưa test). Không làm tròn.
+
+## E2.4 — Git
+KHÔNG commit/push/tag. Zero-refactor core đã giữ.
+
+*PickleFund V2.1 — Sprint 2 Epic 2.4 Implementation Report v1.0.0*

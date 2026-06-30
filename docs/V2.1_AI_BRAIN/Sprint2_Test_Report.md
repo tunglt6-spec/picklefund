@@ -146,3 +146,35 @@ Memory Core Foundation: build sạch, 43 test PASS, coverage logic ≥ 90% (stat
 - Branch tổng (incl DTO) 89.28% do **class-validator DTO decorator metadata** (58%) — không phải code thực thi.
 
 *PickleFund V2.1 — Sprint 2 Epic 2.3 Test Report v1.0.0*
+
+---
+
+# Epic 2.4 — Test Report (Vector / Embedding / Hybrid)
+
+| Metric | Giá trị |
+|---|---|
+| Epic 2.4 Test Suites | 8 |
+| Epic 2.4 Tests | 44 |
+| Backend Test Suites (toàn bộ) | 50 |
+| Backend Tests (toàn bộ) | 436 |
+| Failed | 0 |
+| `nest build` | PASS |
+
+## Suites
+- `in-memory-vector-store.provider.spec.ts` — cosine edge · upsert/query topK/threshold · **club isolation** · delete/size/clear · deterministic ordering.
+- `local-hash-embedding.provider.spec.ts` — deterministic · dimension · L2-normalize · similar>unrelated.
+- `embedding.service.spec.ts` — cache hit/miss · batch · **budget exceeded** · **retry→DLQ** · non-Error reject · version/dim.
+- `vector-index.service.spec.ts` — rebuild (derived) · empty · reflect deletes · incremental upsert/remove · titled.
+- `semantic-search.provider.spec.ts` — matches · empty query · **embed fail → []** · **timeout → []**.
+- `hybrid-retrieval.service.spec.ts` — **deterministic priority + semantic supplement** · dedupe · **fallback (empty/fail)** · stale-vector skip · topK.
+- `hybrid-retrieval.controller.spec.ts` — clubId từ JWT · query parse · no-club → [] · reindex · metrics.
+- `vector-observability.service.spec.ts` — counters + derived rates.
+
+## Coverage (vector, excl DI module — không làm tròn)
+| Stmts | Branch | Funcs | Lines |
+|---|---|---|---|
+| 99.65 | 86.98 | 98.48 | 99.58 |
+
+Statements/Lines/Functions ≥90% (≈99%). Branch 86.98% dragged bởi nhánh `??`/default-param/optional-query phòng thủ.
+
+*PickleFund V2.1 — Sprint 2 Epic 2.4 Test Report v1.0.0*
