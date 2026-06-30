@@ -5,6 +5,8 @@ import { OrganizationContextManager } from './organization-context.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
 import { OrganizationIntelligenceService } from './organization-intelligence.service';
+import { WorkflowTemplateService } from './workflow-template.service';
+import { WorkflowPlanningService } from './workflow-planning.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -23,16 +25,23 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
       new InMemoryClubMemoryRepository(),
     );
     const port = new PickleFundApiReferencePort();
-    const orgCtx = new OrganizationContextManager(
-      clubMemory,
-      new VectorContentPolicyService(),
+    const policy = new VectorContentPolicyService();
+    const orgCtx = new OrganizationContextManager(clubMemory, policy);
+    const orgIntel = new OrganizationIntelligenceService(orgCtx);
+    const templates = new WorkflowTemplateService();
+    const workflowPlanning = new WorkflowPlanningService(
+      policy,
+      orgIntel,
+      templates,
     );
     const core = new MaikaCore(
       new IntentRouter(),
       orgCtx,
       new MaikaPlanningLayer(port),
       port,
-      new OrganizationIntelligenceService(orgCtx),
+      orgIntel,
+      workflowPlanning,
+      templates,
     );
     controller = new MaikaController(core);
     await clubMemory.save('club-1', 'u1', {
@@ -69,6 +78,24 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
       res.data.suggestedReadActions.every((a) => a.mutates === false),
     ).toBe(true);
     expect(res.data.safety.policyVersion).toBe('policy-v1');
+  });
+
+  it('GET workflow-plans/templates → read-only templates', () => {
+    const res = controller.workflowTemplates();
+    expect(res.data.length).toBeGreaterThan(0);
+    expect(res.data.every((t) => t.readOnly === true)).toBe(true);
+  });
+
+  it('POST workflow-plans/preview → read-only preview plan (clubId từ JWT)', async () => {
+    const res = await controller.previewWorkflow(
+      { objective: 'rà soát thành viên' },
+      jwt('club-1'),
+    );
+    expect(res.data.status).toBe('preview');
+    expect(res.data.mutates).toBe(false);
+    expect(res.data.requiresHumanApproval).toBe(true);
+    expect(res.data.safety.actionExecutionAllowed).toBe(false);
+    expect(res.data.safety.writeOperationsAllowed).toBe(false);
   });
 
   it('rejects when clubId missing in JWT', async () => {

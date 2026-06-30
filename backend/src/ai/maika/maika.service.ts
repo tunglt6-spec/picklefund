@@ -32,6 +32,15 @@ import {
 } from './maika.types';
 import { OrganizationIntelligenceService } from './organization-intelligence.service';
 import { OrganizationIntelligence } from './organization-intelligence.types';
+import {
+  PreviewWorkflowInput,
+  WorkflowPlanningService,
+} from './workflow-planning.service';
+import { WorkflowTemplateService } from './workflow-template.service';
+import {
+  WorkflowPlan,
+  WorkflowTemplateSummary,
+} from './workflow-planning.types';
 
 @Injectable()
 export class MaikaCore {
@@ -42,6 +51,8 @@ export class MaikaCore {
     @Inject(MAIKA_PLANNER) private readonly planner: IMaikaPlanner,
     @Inject(API_REFERENCE_PORT) private readonly apiRefs: IApiReferencePort,
     private readonly orgIntel: OrganizationIntelligenceService,
+    private readonly workflowPlanning: WorkflowPlanningService,
+    private readonly workflowTemplates: WorkflowTemplateService,
   ) {}
 
   /**
@@ -52,6 +63,21 @@ export class MaikaCore {
     clubId: string | null,
   ): Promise<OrganizationIntelligence> {
     return this.orgIntel.analyze(clubId);
+  }
+
+  /**
+   * Workflow Planning (Epic 3.3) — chỉ PREVIEW / read-only. Maika lập kế hoạch
+   * workflow để con người duyệt; KHÔNG thực thi/persist/action/write.
+   */
+  listWorkflowTemplates(): WorkflowTemplateSummary[] {
+    return this.workflowTemplates.list();
+  }
+
+  async previewWorkflow(
+    clubId: string | null,
+    input: PreviewWorkflowInput,
+  ): Promise<WorkflowPlan> {
+    return this.workflowPlanning.preview(clubId, input);
   }
 
   /** Hiểu → Lập kế hoạch → Đề xuất (read-only). */

@@ -9,6 +9,7 @@ import { MaikaCore } from './maika.service';
 import { CurrentUser, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 import { UnderstandDto } from './maika.dto';
+import { PreviewWorkflowDto } from './workflow-planning.dto';
 
 @ApiTags('AI Maika Core')
 @ApiBearerAuth()
@@ -40,5 +41,26 @@ export class MaikaController {
   })
   async organizationIntelligence(@CurrentUser() user: JwtUser) {
     return ok(await this.maika.analyzeOrganization(user.clubId));
+  }
+
+  @Get('workflow-plans/templates')
+  @ApiOperation({
+    summary:
+      'Workflow Planning (Epic 3.3) — liệt kê template read-only. Không thực thi/persist.',
+  })
+  workflowTemplates() {
+    return ok(this.maika.listWorkflowTemplates());
+  }
+
+  @Post('workflow-plans/preview')
+  @ApiOperation({
+    summary:
+      'Preview WorkflowPlan (read-only, KHÔNG persist/thực thi/action/write). clubId từ JWT.',
+  })
+  async previewWorkflow(
+    @Body() dto: PreviewWorkflowDto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return ok(await this.maika.previewWorkflow(user.clubId, dto));
   }
 }

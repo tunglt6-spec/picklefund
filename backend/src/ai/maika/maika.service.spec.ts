@@ -4,6 +4,8 @@ import { OrganizationContextManager } from './organization-context.service';
 import { MaikaPlanningLayer } from './maika-planner.service';
 import { PickleFundApiReferencePort } from './api-reference.port';
 import { OrganizationIntelligenceService } from './organization-intelligence.service';
+import { WorkflowTemplateService } from './workflow-template.service';
+import { WorkflowPlanningService } from './workflow-planning.service';
 import { ClubMemoryService } from '../club-memory/club-memory.service';
 import { InMemoryClubMemoryRepository } from '../club-memory/club-memory.repository';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
@@ -17,16 +19,23 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
   beforeEach(async () => {
     clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
     const port = new PickleFundApiReferencePort();
-    const orgCtx = new OrganizationContextManager(
-      clubMemory,
-      new VectorContentPolicyService(),
+    const policy = new VectorContentPolicyService();
+    const orgCtx = new OrganizationContextManager(clubMemory, policy);
+    const orgIntel = new OrganizationIntelligenceService(orgCtx);
+    const templates = new WorkflowTemplateService();
+    const workflowPlanning = new WorkflowPlanningService(
+      policy,
+      orgIntel,
+      templates,
     );
     maika = new MaikaCore(
       new IntentRouter(),
       orgCtx,
       new MaikaPlanningLayer(port),
       port,
-      new OrganizationIntelligenceService(orgCtx),
+      orgIntel,
+      workflowPlanning,
+      templates,
     );
     await clubMemory.save('club-1', 'u1', {
       type: ClubMemoryType.RULE,
@@ -108,6 +117,25 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
       true,
     );
     expect(intel.safety.policyVersion).toBe('policy-v1');
+  });
+
+  it('previewWorkflow returns read-only preview plan (Epic 3.3)', async () => {
+    const plan = await maika.previewWorkflow('club-1', {
+      objective: 'rà soát thành viên',
+    });
+    expect(plan.status).toBe('preview');
+    expect(plan.readOnly).toBe(true);
+    expect(plan.mutates).toBe(false);
+    expect(plan.requiresHumanApproval).toBe(true);
+    expect(plan.steps.every((s) => s.mutates === false)).toBe(true);
+    expect(plan.safety.actionExecutionAllowed).toBe(false);
+    expect(plan.safety.writeOperationsAllowed).toBe(false);
+  });
+
+  it('listWorkflowTemplates returns read-only templates', () => {
+    const tpls = maika.listWorkflowTemplates();
+    expect(tpls.length).toBeGreaterThan(0);
+    expect(tpls.every((t) => t.readOnly === true)).toBe(true);
   });
 
   it('getContext returns read-only org picture', async () => {
