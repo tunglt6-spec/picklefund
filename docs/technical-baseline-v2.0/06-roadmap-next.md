@@ -20,7 +20,7 @@
   - **Governance Layer hoàn thành** — toàn bộ Maika READ-ONLY (Hiểu → Phân tích → Lập kế hoạch → Đề xuất → Yêu cầu Human Approval); **KHÔNG execute**.
 - **Technical Baseline v2.0** — bộ tài liệu này.
 - **GOV-01 — Project Governance Baseline v2.1** ✅ **Accepted / Official** — Single Source of Truth cho toàn bộ Project Governance (không thay đổi trạng thái kỹ thuật; mọi tài liệu chỉ tham chiếu GOV-01).
-- **Design Program:** UDP-01 Foundation (Design Source of Truth) ✅ **Codex PASS / CLOSED** → DESIGN-01 🧊 **Design Foundation Freeze** → UI-02 Dashboard 4.0 🟢 **READY TO START** (chưa triển khai). Chi tiết design chỉ tham chiếu UDP-01/DESIGN-01.
+- **Design Program:** UDP-01 Foundation (Design Source of Truth) ✅ **Codex PASS / CLOSED** → DESIGN-01 🧊 **Design Foundation Freeze** → DASH-01 ✅ **Enterprise Dashboard Pattern (Codex PASS / Accepted)** → UI-02 Dashboard 4.0 🟢 **READY TO START** (chưa triển khai). Chi tiết design chỉ tham chiếu UDP-01/DESIGN-01/DASH-01.
 
 ## 2. Việc deferred (để Sprint/Epic sau)
 

@@ -26,7 +26,8 @@
 | ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | 🎨 UDP-01 — Design Foundation (Design Source of Truth) | ✅ Codex PASS / CLOSED |
 | 🧊 DESIGN-01 — Design Foundation Freeze | ✅ Freeze Declaration (tokens + shared components đóng băng) |
-| 🎨 UI-02 — Dashboard 4.0 | 🟢 READY TO START (chưa triển khai) |
+| 📐 DASH-01 — Enterprise Dashboard Pattern | ✅ Codex PASS / Accepted |
+| 🎨 UI-02 — Dashboard 4.0 | 🟢 READY TO START (chưa triển khai; theo DASH-01) |
 | Sprint 1 | ✅ Hoàn thành |
 | Sprint 2 | ✅ Core Stable · ✅ UI Stable |
 | └ Epic 2.1 — Memory Core | ✅ PASS |
@@ -170,7 +171,7 @@ AI Commerce Platform  🔭 Planned
 > - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
 > - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ PASS; ADR-02 ✅ PASS; **ADP-01 ✅ APPROVED**; **ADR-03 ✅ Codex PASS / Accepted** (chuẩn bị Epic 4.2 — Pure State Machine).
 > - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ ADR-03 PASS); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
-> - **Design Program:** UDP-01 Foundation ✅ **Codex PASS / CLOSED** → DESIGN-01 🧊 **Freeze** → **UI-02 Dashboard 4.0 🟢 READY TO START** (chưa triển khai).
+> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 🟢 READY TO START** (chưa triển khai).
 > - **AI Commerce Platform (Planned)**
 
 ---

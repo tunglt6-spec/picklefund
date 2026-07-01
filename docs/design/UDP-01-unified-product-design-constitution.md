@@ -103,7 +103,8 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 | Increment | Nội dung | Trạng thái |
 |---|---|---|
 | **Foundation** | UDP-01 + design tokens + shared components | ✅ **Codex PASS / CLOSED** (freeze: [DESIGN-01](DESIGN-01-design-foundation-freeze-declaration.md)) |
-| **UI-02 — Dashboard 4.0** | Áp dụng UDP-01 cho màn Tổng quan | 🟢 READY TO START (chưa triển khai) |
+| **DASH-01 — Dashboard Pattern** | [Dashboard Constitution](DASH-01-enterprise-dashboard-pattern.md) (pattern dashboard tái sử dụng) | ✅ Codex PASS / Accepted |
+| **UI-02 — Dashboard 4.0** | Áp dụng DASH-01 + UDP-01 cho màn Tổng quan | 🟢 READY TO START (chưa triển khai) |
 | Screens nhóm sau… | 14 màn hình áp dụng UDP-01 | ⬜ increment sau |
 
 ---
