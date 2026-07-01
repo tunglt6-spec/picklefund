@@ -96,7 +96,13 @@ Tương phản đủ (text trên nền sáng) · target chạm ≥ 36px · `aria
 
 UI **không** đổi công thức tài chính (vd Tổng tài sản CLB = Quỹ Chính + chuyển kỳ, **không** cộng Quỹ Phụ) · không hard-code số liệu làm sai nghiệp vụ · không hiển thị AI "đã execute" khi backend chỉ read/propose.
 
-## 16. Rollout (gated, theo GOV-01)
+## 16. Amendments
+
+- **[UDP-01 Amendment #01 — Workspace State Definition of DoD](UDP-01-AMENDMENT-01-workspace-state-dod.md)** — ✅ Accepted / Codex PASS. Amendment #01 bổ sung Workspace State DoD: `LoadingState` / `EmptyState` / `Error State` là bắt buộc từ UI-03 trở đi.
+
+> UDP-01 chỉ tham chiếu Amendment #01; nội dung chi tiết nằm trong file amendment riêng. Amendment #01 không định nghĩa lại Design Tokens, Semantic Tokens hay Component Library.
+
+## 17. Rollout (gated, theo GOV-01)
 
 UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước gated → Codex Audit → commit/tag):
 
@@ -104,8 +110,11 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 |---|---|---|
 | **Foundation** | UDP-01 + design tokens + shared components | ✅ **Codex PASS / CLOSED** (freeze: [DESIGN-01](DESIGN-01-design-foundation-freeze-declaration.md)) |
 | **DASH-01 — Dashboard Pattern** | [Dashboard Constitution](DASH-01-enterprise-dashboard-pattern.md) (pattern dashboard tái sử dụng) | ✅ Codex PASS / Accepted |
-| **UI-02 — Dashboard 4.0** | Áp dụng DASH-01 + UDP-01 cho màn Tổng quan | 🟢 READY TO START (chưa triển khai) |
-| Screens nhóm sau… | 14 màn hình áp dụng UDP-01 | ⬜ increment sau |
+| **UI-02 — Dashboard 4.0** | Áp dụng DASH-01 + UDP-01 cho màn Tổng quan | ✅ Codex PASS / CLOSED (Golden Reference) |
+| **UIP-03 / UI-03** | Member Workspace Pattern + màn Thành viên | ✅ Codex PASS / CLOSED |
+| **UDP-01 Amendment #01** | Workspace State DoD: Loading / Empty / Error bắt buộc | ✅ Accepted / Codex PASS |
+| **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01 cho Finance Workspace | 🟢 READY TO START (chưa mở implementation) |
+| Screens nhóm sau… | Các màn hình áp dụng UDP-01 + Amendment #01 | ⬜ increment sau |
 
 ---
 
