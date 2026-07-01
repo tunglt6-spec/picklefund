@@ -103,6 +103,8 @@ UI **không** đổi công thức tài chính (vd Tổng tài sản CLB = Quỹ 
 
 > UDP-01 chỉ tham chiếu các Amendment chính thức. Nội dung chi tiết được quản lý trong từng tài liệu Amendment riêng. Các Amendment không định nghĩa lại Design Tokens, Semantic Tokens hay Component Library.
 
+**Visual Constitution bổ trợ:** [VDS-01 — Visual Design System v2.1](VDS-01-visual-design-system-v2.1.md) — bổ sung lớp **Visual Quality** (visual quality bar, principles, checklist, score gate) cho UDP-01/DASH-01/UIP-x/UI-x. VDS-01 **không thay thế** UDP-01, không định nghĩa lại tokens/components — chỉ nâng chuẩn cảm quan; áp dụng từ UIP-05/UI-05 trở đi.
+
 ## 17. Rollout (gated, theo GOV-01)
 
 UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước gated → Codex Audit → commit/tag):
@@ -115,8 +117,11 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 | **UIP-03 / UI-03** | Member Workspace Pattern + màn Thành viên | ✅ Codex PASS / CLOSED |
 | **UDP-01 Amendment #01** | Workspace State DoD: Loading / Empty / Error bắt buộc | ✅ Accepted / Codex PASS |
 | **UDP-01 Amendment #02** | Design Pattern First Rule: UIP-x Official trước UI-x | ✅ Accepted / Codex PASS |
-| **UIP-04 — Finance Workspace Pattern** | Design Pattern Document cho Finance Workspace | 🟢 READY TO START (chưa mở) |
-| **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01/#02 + UIP-04 | ⬜ sau UIP-04 PASS (chưa mở implementation) |
+| **UIP-04 — Finance Workspace Pattern** | Design Pattern Document cho Finance Workspace | ✅ Accepted / Codex PASS / CLOSED |
+| **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01/#02 + UIP-04 | ✅ Codex PASS / CLOSED |
+| **VDS-01 — Visual Design System** | Visual Constitution (visual quality bar) | ✅ Accepted / Codex PASS |
+| **UIP-05 — Reports Center Pattern** | Design Pattern Document cho Reports Center | 🟢 READY TO START (chưa mở) |
+| **UI-05 — Reports Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-05 | ⛔ BLOCKED (until UIP-05 Official) |
 | Screens nhóm sau… | Các màn hình áp dụng UDP-01 + Amendment #01 | ⬜ increment sau |
 
 ---

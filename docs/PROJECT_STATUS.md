@@ -27,6 +27,7 @@
 | 🎨 UDP-01 — Design Foundation (Design Source of Truth) | ✅ Codex PASS / CLOSED |
 | 🧩 UDP-01 Amendment #01 — Workspace State DoD | ✅ Accepted / Codex PASS |
 | 🧩 UDP-01 Amendment #02 — Design Pattern First Rule | ✅ Accepted / Codex PASS |
+| ✨ VDS-01 — Visual Design System v2.1 (Visual Constitution) | ✅ Accepted / Codex PASS |
 | 🧊 DESIGN-01 — Design Foundation Freeze | ✅ Freeze Declaration (tokens + shared components đóng băng) |
 | 📐 DASH-01 — Enterprise Dashboard Pattern | ✅ Codex PASS / Accepted |
 | 🎨 UI-02 — Dashboard 4.0 | ✅ Codex PASS / CLOSED (màn Tổng quan theo DASH-01 + UDP-01 — Golden Reference) |
@@ -179,7 +180,7 @@ AI Commerce Platform  🔭 Planned
 > - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
 > - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ PASS; ADR-02 ✅ PASS; **ADP-01 ✅ APPROVED**; **ADR-03 ✅ Codex PASS / Accepted** (chuẩn bị Epic 4.2 — Pure State Machine).
 > - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ quyết định triển khai riêng theo Execution Gate); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
-> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 ✅ Accepted / Codex PASS** → **UDP-01 Amendment #02 ✅ Accepted / Codex PASS** → **UIP-04 Finance Workspace Pattern ✅ Accepted / Codex PASS** → **UI-04 Finance Workspace ✅ Codex PASS / CLOSED** → **UIP-05 Reports Center Pattern 🟢 READY TO START** → **UI-05 Reports Center ⛔ BLOCKED** (until UIP-05 Official; chưa mở implementation).
+> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 ✅ Accepted / Codex PASS** → **UDP-01 Amendment #02 ✅ Accepted / Codex PASS** → **UIP-04 Finance Workspace Pattern ✅ Accepted / Codex PASS** → **UI-04 Finance Workspace ✅ Codex PASS / CLOSED** → **VDS-01 Visual Design System ✅ Accepted / Codex PASS** → **UIP-05 Reports Center Pattern 🟢 READY TO START** → **UI-05 Reports Center ⛔ BLOCKED** (until UIP-05 Official; chưa mở implementation).
 > - **AI Commerce Platform (Planned)**
 
 ---
