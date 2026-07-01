@@ -202,4 +202,4 @@ UI-07 **chỉ** được mở sau: UIP-07 Codex PASS · Commit · Tag · Push.
 
 ---
 
-> 🧾 UIP-07 v1.0 — AI Workspace Pattern (✅ Accepted / Codex PASS). Thay đổi pattern phải qua Design Increment mới + Codex Audit. UI-07 triển khai ở increment riêng (🟢 READY TO START, theo Amendment #02), sau khi UIP-07 PASS. Tokens/components theo UDP-01/DESIGN-01, Workspace State theo Amendment #01, Visual Quality theo VDS-01, governance theo GOV-01. **AI read-only/governance — UI không execute/approve/write tự động; Execution thuộc Epic 4.2 (BLOCKED); Execution Readiness NOT READY.**
+> 🧾 UIP-07 v1.0 — AI Workspace Pattern (✅ Accepted / Codex PASS). Thay đổi pattern phải qua Design Increment mới + Codex Audit. UI-07 (🟢 READY TO START) triển khai ở increment riêng (theo Amendment #02), sau khi UIP-07 PASS. Tokens/components theo UDP-01/DESIGN-01, Workspace State theo Amendment #01, Visual Quality theo VDS-01, governance theo GOV-01. **AI read-only/governance — UI không execute/approve/write tự động; Execution thuộc Epic 4.2 (BLOCKED); Execution Readiness NOT READY.**

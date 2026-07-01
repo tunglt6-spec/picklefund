@@ -122,8 +122,11 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 | **VDS-01 — Visual Design System** | Visual Constitution (visual quality bar) | ✅ Accepted / Codex PASS |
 | **UIP-05 — Reports Center Pattern** | Design Pattern Document cho Reports Center | ✅ Accepted / Codex PASS / CLOSED |
 | **UI-05 — Reports Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-05 | ✅ Codex PASS / CLOSED |
-| **UIP-06 — Tournament Center Pattern** | Design Pattern Document cho Tournament/Minigame Center | 📝 Proposed / Pending Codex Audit |
-| **UI-06 — Tournament Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-06 | ⛔ BLOCKED (until UIP-06 Official) |
+| **UIP-06 — Tournament Center Pattern** | Design Pattern Document cho Tournament/Minigame Center | ✅ Accepted / Codex PASS / CLOSED |
+| **UI-06 — Tournament Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-06 | ✅ Codex PASS / CLOSED |
+| **UIP-07 — AI Workspace Pattern** | Design Pattern Document cho AI Workspace (Maika/Lisa/Hermes) | ✅ Accepted / Codex PASS / CLOSED |
+| **UI-07 — AI Workspace** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-07 | 🟢 READY TO START (chưa mở) |
+| **DESIGN-02 — Product Design Baseline Freeze** | Đóng băng baseline design sản phẩm (dự kiến) | ⬜ Not Opened |
 | Screens nhóm sau… | Các màn hình áp dụng UDP-01 + Amendment #01 | ⬜ increment sau |
 
 ---
