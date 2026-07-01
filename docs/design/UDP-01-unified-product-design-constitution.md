@@ -120,8 +120,10 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 | **UIP-04 — Finance Workspace Pattern** | Design Pattern Document cho Finance Workspace | ✅ Accepted / Codex PASS / CLOSED |
 | **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01/#02 + UIP-04 | ✅ Codex PASS / CLOSED |
 | **VDS-01 — Visual Design System** | Visual Constitution (visual quality bar) | ✅ Accepted / Codex PASS |
-| **UIP-05 — Reports Center Pattern** | Design Pattern Document cho Reports Center | 🟢 READY TO START (chưa mở) |
-| **UI-05 — Reports Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-05 | ⛔ BLOCKED (until UIP-05 Official) |
+| **UIP-05 — Reports Center Pattern** | Design Pattern Document cho Reports Center | ✅ Accepted / Codex PASS / CLOSED |
+| **UI-05 — Reports Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-05 | ✅ Codex PASS / CLOSED |
+| **UIP-06 — Tournament Center Pattern** | Design Pattern Document cho Tournament/Minigame Center | 📝 Proposed / Pending Codex Audit |
+| **UI-06 — Tournament Center** | Áp dụng UDP-01 + Amendment #01/#02 + VDS-01 + UIP-06 | ⛔ BLOCKED (until UIP-06 Official) |
 | Screens nhóm sau… | Các màn hình áp dụng UDP-01 + Amendment #01 | ⬜ increment sau |
 
 ---
