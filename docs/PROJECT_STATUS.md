@@ -26,12 +26,14 @@
 | ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | 🎨 UDP-01 — Design Foundation (Design Source of Truth) | ✅ Codex PASS / CLOSED |
 | 🧩 UDP-01 Amendment #01 — Workspace State DoD | ✅ Accepted / Codex PASS |
+| 🧩 UDP-01 Amendment #02 — Design Pattern First Rule | ✅ Accepted / Codex PASS |
 | 🧊 DESIGN-01 — Design Foundation Freeze | ✅ Freeze Declaration (tokens + shared components đóng băng) |
 | 📐 DASH-01 — Enterprise Dashboard Pattern | ✅ Codex PASS / Accepted |
 | 🎨 UI-02 — Dashboard 4.0 | ✅ Codex PASS / CLOSED (màn Tổng quan theo DASH-01 + UDP-01 — Golden Reference) |
 | 👥 UIP-03 — Member Workspace Pattern | ✅ Accepted / Codex PASS (Design Pattern Document, docs-only) |
 | 🎨 UI-03 — Member Management Workspace | ✅ Codex PASS / CLOSED (màn Thành viên theo UIP-03 + UDP-01) |
-| 🎨 UI-04 — Finance Workspace | 🟢 READY TO START (chưa mở implementation) |
+| 👥 UIP-04 — Finance Workspace Pattern | 🟢 READY TO START (chưa mở; Design Pattern trước UI-04 theo Amendment #02) |
+| 🎨 UI-04 — Finance Workspace | ⬜ cần UIP-04 Official trước implementation (chưa mở) |
 | Sprint 1 | ✅ Hoàn thành |
 | Sprint 2 | ✅ Core Stable · ✅ UI Stable |
 | └ Epic 2.1 — Memory Core | ✅ PASS |
@@ -53,7 +55,7 @@
 | Sprint 4 — ADP-01 Decision to Proceed | ✅ APPROVED FOR LIMITED IMPLEMENTATION |
 | └ Epic 4.1 — Execution Ticket Framework | ✅ PASS / CLOSED (framework-only, không execute) |
 | Sprint 4 — ADR-03 Execution State Strategy | ✅ Codex PASS / Accepted (chuẩn bị Epic 4.2) |
-| └ Epic 4.2 — Execution State Machine | ⛔ BLOCKED (chưa mở; chờ ADR-03 PASS) |
+| └ Epic 4.2 — Execution State Machine | ⛔ BLOCKED (chưa mở; chờ quyết định triển khai riêng theo Execution Gate; Execution Readiness vẫn NOT READY) |
 | Sprint 4 — Execution Engine (implementation) | 🟡 PARTIALLY APPROVED (Epic 4.1 CLOSED) · Epic 4.2+ ⛔ BLOCKED |
 
 **Sprint hiện tại:** Sprint 4 — Execution Foundation · **ADR-01 PASS · ADR-02 PASS · ADP-01 APPROVED · Epic 4.1 PASS/CLOSED** · Sprint 4 **PARTIALLY APPROVED** (Epic 4.2+ **BLOCKED**) · **Execution Readiness: NOT READY** (chưa có execution thật)
@@ -164,7 +166,7 @@ Sprint 4 — Epic 4.1 Execution Ticket Framework  ✅ PASS / CLOSED (framework-o
    ↓
 Sprint 4 — ADR-03 Execution State Strategy ✅ Codex PASS / Accepted
    ↓
-Sprint 4 — Epic 4.2 Execution State Machine  ⛔ BLOCKED (chưa mở; chờ ADR-03 PASS)
+Sprint 4 — Epic 4.2 Execution State Machine  ⛔ BLOCKED (chưa mở; chờ quyết định triển khai riêng theo Execution Gate; Execution Readiness vẫn NOT READY)
    ↓
 Sprint 4 — Epic 4.3+ / Execution Engine  ⛔ BLOCKED (Execution Readiness vẫn NOT READY)
    ↓
@@ -174,8 +176,8 @@ AI Commerce Platform  🔭 Planned
 > 🔭 Các mốc sau **Sprint 2 UI Stable**:
 > - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
 > - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ PASS; ADR-02 ✅ PASS; **ADP-01 ✅ APPROVED**; **ADR-03 ✅ Codex PASS / Accepted** (chuẩn bị Epic 4.2 — Pure State Machine).
-> - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ ADR-03 PASS); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
-> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 📝 Proposed / Pending Codex Audit** → **UI-04 Finance Workspace 🟡 READY TO START sau Amendment #01 PASS** (chưa mở implementation).
+> - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ quyết định triển khai riêng theo Execution Gate); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
+> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 ✅ Accepted / Codex PASS** → **UDP-01 Amendment #02 ✅ Accepted / Codex PASS** → **UIP-04 Finance Workspace Pattern 🟢 READY TO START** (chưa mở) → **UI-04 Finance Workspace** (sau UIP-04 PASS; chưa mở implementation).
 > - **AI Commerce Platform (Planned)**
 
 ---

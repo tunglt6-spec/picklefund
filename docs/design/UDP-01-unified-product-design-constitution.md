@@ -99,8 +99,9 @@ UI **không** đổi công thức tài chính (vd Tổng tài sản CLB = Quỹ 
 ## 16. Amendments
 
 - **[UDP-01 Amendment #01 — Workspace State Definition of DoD](UDP-01-AMENDMENT-01-workspace-state-dod.md)** — ✅ Accepted / Codex PASS. Amendment #01 bổ sung Workspace State DoD: `LoadingState` / `EmptyState` / `Error State` là bắt buộc từ UI-03 trở đi.
+- **[UDP-01 Amendment #02 — Design Pattern First Rule](UDP-01-AMENDMENT-02-design-pattern-first-rule.md)** — ✅ Accepted / Codex PASS. Amendment #02 bổ sung Design Pattern First Rule: **UIP-x phải Official (Codex PASS + commit/tag/push) trước UI-x implementation** — từ UI-04 trở đi.
 
-> UDP-01 chỉ tham chiếu Amendment #01; nội dung chi tiết nằm trong file amendment riêng. Amendment #01 không định nghĩa lại Design Tokens, Semantic Tokens hay Component Library.
+> UDP-01 chỉ tham chiếu các Amendment chính thức. Nội dung chi tiết được quản lý trong từng tài liệu Amendment riêng. Các Amendment không định nghĩa lại Design Tokens, Semantic Tokens hay Component Library.
 
 ## 17. Rollout (gated, theo GOV-01)
 
@@ -113,7 +114,9 @@ UI Refresh Program triển khai **theo increment** (mỗi increment = 1 bước 
 | **UI-02 — Dashboard 4.0** | Áp dụng DASH-01 + UDP-01 cho màn Tổng quan | ✅ Codex PASS / CLOSED (Golden Reference) |
 | **UIP-03 / UI-03** | Member Workspace Pattern + màn Thành viên | ✅ Codex PASS / CLOSED |
 | **UDP-01 Amendment #01** | Workspace State DoD: Loading / Empty / Error bắt buộc | ✅ Accepted / Codex PASS |
-| **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01 cho Finance Workspace | 🟢 READY TO START (chưa mở implementation) |
+| **UDP-01 Amendment #02** | Design Pattern First Rule: UIP-x Official trước UI-x | ✅ Accepted / Codex PASS |
+| **UIP-04 — Finance Workspace Pattern** | Design Pattern Document cho Finance Workspace | 🟢 READY TO START (chưa mở) |
+| **UI-04 — Finance Workspace** | Áp dụng UDP-01 + Amendment #01/#02 + UIP-04 | ⬜ sau UIP-04 PASS (chưa mở implementation) |
 | Screens nhóm sau… | Các màn hình áp dụng UDP-01 + Amendment #01 | ⬜ increment sau |
 
 ---
