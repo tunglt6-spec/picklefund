@@ -12,12 +12,14 @@
 
 - **Type:** Product Design Baseline Freeze (không phải Constitution/Amendment)
 - **Version:** v2.1
-- **State:** ✅ **Accepted / Codex PASS / CLOSED** — Product Design Baseline v2.1 **FROZEN** (Design Program v2.1 COMPLETE · Maintenance Mode **có hiệu lực**)
+- **Status:** ✅ **Final Codex Audit PASS / CLOSED**
+- **State:** ✅ **EFFECTIVE** — Product Design Baseline v2.1 **FROZEN** · Design Program v2.1 **COMPLETE** · **Maintenance Mode ACTIVE**
 
 > DESIGN-02 freeze baseline hiện có; không định nghĩa lại rule/tokens/components/visual.
-> - **DESIGN-02 ĐÃ có hiệu lực** (Codex Final Audit PASS + Commit/Tag/Push).
+> - **DESIGN-02 ĐÃ có hiệu lực** (Final Codex Audit PASS + Commit/Tag/Push — Option B, không rewrite lịch sử).
 > - Product Design Baseline v2.1 chính thức **FROZEN**; Design Program v2.1 **COMPLETE**.
-> - Từ đây **Maintenance Mode có hiệu lực**: mọi thay đổi UI phải qua RFC → UIP → Codex Audit → PASS → Implementation → Audit → Release.
+> - **Maintenance Mode ACTIVE:** mọi thay đổi UI phải qua RFC → UIP → Codex Audit → PASS → Implementation → Audit → Release.
+> - Mốc premature trước (commit `3eb6b59b` + tag `v2.1-design02-product-design-baseline-freeze`) giữ nguyên như **historical milestone**; Final Closing dùng tag mới `v2.1-design02-product-design-baseline-freeze-final`.
 
 ## 2. Freeze Scope — Constitution & Amendments
 
@@ -109,4 +111,4 @@ DESIGN-02 **KHÔNG**: tạo Constitution mới · tạo Amendment mới · mở 
 
 ---
 
-> 🧊 DESIGN-02 v2.1 — Product Design Baseline Freeze (✅ Accepted / Codex PASS / CLOSED · Design Program v2.1 COMPLETE / FROZEN / Maintenance Mode). Đóng băng UDP-01/Amendment #01/#02/VDS-01 + UIP-03..07 + UI-02..07 + shared design + visual quality + governance + working rules. Không định nghĩa lại rule. Sau Codex PASS + Commit/Tag/Push: Design Program chính thức Maintenance Mode; thay đổi UI phải qua RFC → UIP → Codex Audit → PASS → Implementation → Audit → Release. Tuân thủ GOV-01.
+> 🧊 DESIGN-02 v2.1 — Product Design Baseline Freeze (✅ Final Codex Audit PASS / CLOSED · **EFFECTIVE** · Design Program v2.1 COMPLETE / FROZEN / Maintenance Mode ACTIVE). Đóng băng UDP-01/Amendment #01/#02/VDS-01 + UIP-03..07 + UI-02..07 + shared design + visual quality + governance + working rules. Không định nghĩa lại rule. Từ đây mọi thay đổi UI phải qua RFC → UIP → Codex Audit → PASS → Implementation → Audit → Release. Tuân thủ GOV-01. (Option B — historical tag `v2.1-design02-product-design-baseline-freeze` giữ nguyên; Final tag `v2.1-design02-product-design-baseline-freeze-final`.)
