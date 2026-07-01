@@ -28,6 +28,18 @@
 > - Ảnh golden thật thêm khi có công cụ persist (thủ công / CI capture).
 > - README này giữ chỗ + đặc tả baseline để đối chiếu.
 
+## Increment 2 — Human Approval Integration (✅ Codex PASS / CLOSED)
+
+> Source of Truth: UI chỉ đọc `GET /maika/health-score` (đã gỡ mọi call approval endpoint theo hotfix). Approve/Reject disabled + helper. UI-07 overall **CLOSED**.
+
+
+- Thêm tab **Duyệt** (Approval): hàng chờ duyệt (read-only) + chính sách duyệt (từ `GET /maika/approval/policies`, read-only).
+- **Review Drawer / Bottom Sheet**: action type/target/reason/confidence/risk/permission/source/backend-flow/status.
+- **Backend flow detection:** `/maika/approval/{policies|evaluate|preview}` đều READ-ONLY (không persist) → nút **Approve/Reject DISABLED + helper** "Backend approval flow (persist) chưa sẵn sàng". Không gọi API giả, không mutate.
+- **AI Safety:** 0 nút Execute/Run/Dispatch/Thực thi; không wording "Đã thực thi/Executed". Execution — Epic 4.2 BLOCKED.
+- Conversation: input **disabled** + helper "Chat write flow ở increment riêng" (không fake send).
+- Baseline bổ sung (pending real capture): `desktop-1440-approval.png`, `mobile-390-approval.png`.
+
 ## Ghi chú routing
 
 Increment 1 tạo `AIWorkspace.tsx` (read-only). Wiring route để lộ diện trong app là việc của increment sau (Increment 1 giữ routing bất biến theo yêu cầu). Preview verify được thực hiện qua route tạm rồi revert (App.tsx net-zero).
