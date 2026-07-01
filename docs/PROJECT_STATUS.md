@@ -36,8 +36,9 @@
 | 👥 UIP-04 — Finance Workspace Pattern | ✅ Accepted / Codex PASS (Design Pattern Document, docs-only) |
 | 🎨 UI-04 — Finance Workspace | ✅ Codex PASS / CLOSED (màn Tài chính theo UIP-04; Backend Summary = Source of Truth) |
 | 📊 UIP-05 — Reports Center Pattern | ✅ Accepted / Codex PASS (Design Pattern Document, docs-only) |
-| 🎨 UI-05 — Reports Center | 🟢 READY TO START (chưa mở implementation) |
-| 🏆 UIP-06 — Tournament Center Pattern | ⬜ chưa mở |
+| 🎨 UI-05 — Reports Center | ✅ Codex PASS / CLOSED (màn Báo cáo theo UIP-05 + VDS-01; Backend Summary = Source of Truth) |
+| 🏆 UIP-06 — Tournament Center Pattern | 🟢 READY TO START (Design Pattern trước UI-06 theo Amendment #02; chưa mở) |
+| 🎨 UI-06 — Tournament Center | ⛔ BLOCKED — until UIP-06 Official |
 | Sprint 1 | ✅ Hoàn thành |
 | Sprint 2 | ✅ Core Stable · ✅ UI Stable |
 | └ Epic 2.1 — Memory Core | ✅ PASS |
@@ -181,7 +182,7 @@ AI Commerce Platform  🔭 Planned
 > - **Sprint 3 – Maika AI (Governance Layer)** ✅ **PASS / CLOSED** — Epic 3.1 → 3.5 ✅ PASS; **Sprint 3 Final Governance Audit ✅ PASS** (read-only, không execute).
 > - **Sprint 4 – ADRs/ADP:** ADR-01 ✅ PASS; ADR-02 ✅ PASS; **ADP-01 ✅ APPROVED**; **ADR-03 ✅ Codex PASS / Accepted** (chuẩn bị Epic 4.2 — Pure State Machine).
 > - **Sprint 4 – Epic 4.1** ✅ PASS / CLOSED (framework-only); **Epic 4.2 ⛔ BLOCKED** (chờ quyết định triển khai riêng theo Execution Gate); Epic 4.3+ BLOCKED; Execution Readiness vẫn NOT READY.
-> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 ✅ Accepted / Codex PASS** → **UDP-01 Amendment #02 ✅ Accepted / Codex PASS** → **UIP-04 Finance Workspace Pattern ✅ Accepted / Codex PASS** → **UI-04 Finance Workspace ✅ Codex PASS / CLOSED** → **VDS-01 Visual Design System ✅ Accepted / Codex PASS** → **UIP-05 Reports Center Pattern ✅ Accepted / Codex PASS** → **UI-05 Reports Center 🟢 READY TO START** (chưa mở implementation) → **UIP-06 Tournament Center Pattern ⬜ chưa mở**.
+> - **Design Program:** UDP-01 Foundation ✅ **CLOSED** → DESIGN-01 🧊 **Freeze** → DASH-01 ✅ **Codex PASS / Accepted** (Dashboard Pattern) → **UI-02 Dashboard 4.0 ✅ Codex PASS / CLOSED** (Golden Reference) → **UIP-03 Member Workspace Pattern ✅ Accepted / Codex PASS** → **UI-03 Member Management Workspace ✅ Codex PASS / CLOSED** → **UDP-01 Amendment #01 ✅ Accepted / Codex PASS** → **UDP-01 Amendment #02 ✅ Accepted / Codex PASS** → **UIP-04 Finance Workspace Pattern ✅ Accepted / Codex PASS** → **UI-04 Finance Workspace ✅ Codex PASS / CLOSED** → **VDS-01 Visual Design System ✅ Accepted / Codex PASS** → **UIP-05 Reports Center Pattern ✅ Accepted / Codex PASS** → **UI-05 Reports Center ✅ Codex PASS / CLOSED** → **UIP-06 Tournament Center Pattern 🟢 READY TO START** → **UI-06 Tournament Center ⛔ BLOCKED** (until UIP-06 Official; chưa mở implementation).
 > - **AI Commerce Platform (Planned)**
 
 ---
