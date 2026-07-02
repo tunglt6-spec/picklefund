@@ -188,6 +188,10 @@ export class FundPeriodsService {
       courtExpenses: result.commonFund.totalCourt,
       livingExpenses: result.commonFund.totalLiving,
       balance: result.commonFund.balance,
+      // Số buổi tập của kỳ (đã tính ở financial-calculator) — frontend Reports dùng làm
+      // 1 trong các field bắt buộc của Export Gate (officialReady). Trước đây không expose
+      // → kSessions luôn undefined → gate luôn disabled. Expose giá trị thật (không fake).
+      totalSessions: sessionCount,
       totalAttendance: result.totalAttendance,
       costPerAttendance: result.costPerAttendance,
       unpaidCount: result.members.filter((m) => m.status === 'UNPAID').length,
