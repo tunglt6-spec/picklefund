@@ -25,6 +25,7 @@
 |---|---|
 | ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | 📏 Working Rules v2.1 — Increment/Freeze Governance (7 rule + checklists) | ✅ Accepted / Codex PASS / CLOSED (bổ trợ GOV-01, operational) |
+| 🏛️ APFG-01 — AI Platform Framework Governance Constitution (Framework, cao nhất) | ✅ Accepted / Codex PASS / CLOSED — **Framework Governance ACTIVE**; Constitution tối cao product-agnostic; precedence APFG-01 → Release → Execution → Data → Security → AI → Product; docs-only |
 | 🚀 RELEASE-01 — Product Release Constitution (Framework Release Governance) | ✅ Accepted / Codex PASS / CLOSED — **Framework Release Governance ACTIVE**; chain APFG-01 → RELEASE-01 → EGOV-01 → EWR-01 → Execution Runtime → Products; docs-only |
 | 🔐 AUTH-01 — Enterprise Read-Only Member Role (MEMBER_FULL_VIEW) | ✅ Accepted / Codex PASS / CLOSED — spec (docs-only); MEMBER_FULL_VIEW Official · MEMBER Deprecated; implementation = AUTH-IMPL-01 sau PASS |
 | 🐞 BUG-LOCAL-001 — Local Login 502 Fix | ✅ Fixed / Codex PASS / CLOSED — backend `dist` emit (tắt `incremental` + gỡ stale `.tsbuildinfo`) + Vite proxy giữ prefix `/api`; login end-to-end 200. Không đổi auth logic/DB/seed |
