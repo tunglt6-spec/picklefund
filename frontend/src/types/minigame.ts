@@ -27,14 +27,26 @@ export interface MiniGame {
   pairingMode?: PairingMode
 }
 
+/** Player key của khách mời dùng prefix `guest-`. Dùng chung để nhận diện + hiển thị badge "Khách". */
+export function isGuestId(memberId?: string | null): boolean {
+  return !!memberId && memberId.startsWith('guest-')
+}
+
 export interface MiniGameParticipant {
   id: string
   minigameId: string
+  /**
+   * Player key thống nhất cho toàn bộ draw/team/match/score/standings (store dùng memberId
+   * làm khóa người chơi). Member thật: id thật của member. Khách mời: `guest-<uuid>` (prefix
+   * `guest-`), KHÔNG phải member trong DB → không validate CLB, không ghi bảng members.
+   */
   memberId: string
   memberName: string
   seedLevel?: number
   skillLevel?: number
   status: 'ACTIVE' | 'WITHDRAWN'
+  /** true = khách mời (không thuộc CLB). Hiển thị badge "Khách". */
+  isGuest?: boolean
 }
 
 export interface MiniGameGroup {

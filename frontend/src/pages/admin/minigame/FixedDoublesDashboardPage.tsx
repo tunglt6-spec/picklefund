@@ -11,6 +11,7 @@ import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
+import { isGuestId } from '../../../types/minigame'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 
@@ -578,6 +579,7 @@ function DraftPanel({ minigameId, onAutoGenerate }: { minigameId: string; onAuto
             <div key={p.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
               <span className="w-5 h-5 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-bold text-slate-500">{i + 1}</span>
               <span className="text-sm text-slate-800 truncate">{p.memberName}</span>
+              {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}
             </div>
           ))}
         </div>

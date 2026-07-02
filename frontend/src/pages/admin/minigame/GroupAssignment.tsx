@@ -5,6 +5,7 @@ import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { isGuestId } from '../../../types/minigame'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
@@ -195,7 +196,7 @@ export function GroupAssignment() {
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm text-slate-800">{part.memberName}</span>
+                          <span className="text-sm text-slate-800 flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}</span>
                           {grp.status !== 'LOCKED' && (
                             <div className="relative">
                               <button

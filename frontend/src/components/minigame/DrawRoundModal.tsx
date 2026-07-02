@@ -3,6 +3,7 @@ import { X, ChevronRight, RefreshCw, Check, AlertCircle, Users, Zap, Pencil } fr
 import { cn } from '../../lib/utils'
 import { useMinigameStore } from '../../store/minigameStore'
 import type { DrawMode, DrawRoundPreview, GenderBalanceMode, DoublesPlayer } from '../../types/minigame'
+import { isGuestId } from '../../types/minigame'
 
 const MODES: { mode: DrawMode; label: string; sublabel: string; icon: string }[] = [
   { mode: 'SMART_DRAW',       label: 'Thông Minh',    sublabel: 'Cân bằng tổng hợp',     icon: '🎯' },
@@ -385,6 +386,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         className="w-3.5 h-3.5 accent-indigo-600 shrink-0"
                       />
                       <span className="truncate font-medium text-xs">{p.memberName}</span>
+                      {isGuestId(p.memberId) && <span className="shrink-0 text-[9px] font-medium px-1 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}
                     </label>
                   ))}
                 </div>

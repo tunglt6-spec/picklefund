@@ -44,7 +44,8 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         drawMode: m.settings?.drawMode ?? 'RANDOM',
       }
 
-      const participants: MiniGameParticipant[] = (m.participants ?? []).map((p: any) => ({
+      // Member CLB thật (từ bảng minigame_participants)
+      const memberParticipants: MiniGameParticipant[] = (m.participants ?? []).map((p: any) => ({
         id: p.id ?? p.memberId,
         minigameId: m.id,
         memberId: p.memberId ?? p.member?.id,
@@ -52,9 +53,22 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         status: p.status ?? 'ACTIVE',
         skillLevel: p.skillLevel ?? undefined,
         gender: p.gender ?? undefined,
+        isGuest: false,
       }))
 
-      syncMinigameDetail(mg, participants)
+      // Khách mời (từ Minigame.settings.guests) → participant đầy đủ trong store, dùng
+      // `guest-<uuid>` làm player key. Nhờ vậy guest chảy qua draw/team/match/score/standings
+      // (đều operate trên participants[memberId]) và KHÔNG bị mất khi reload (fix persistence).
+      const guestParticipants: MiniGameParticipant[] = (m.settings?.guests ?? []).map((g: any) => ({
+        id: g.id,
+        minigameId: m.id,
+        memberId: g.id,
+        memberName: g.name ?? 'Khách',
+        status: 'ACTIVE',
+        isGuest: true,
+      }))
+
+      syncMinigameDetail(mg, [...memberParticipants, ...guestParticipants])
     }).catch(() => { /* keep local store */ })
   }, [minigameId, accessToken, syncMinigameDetail])
 }

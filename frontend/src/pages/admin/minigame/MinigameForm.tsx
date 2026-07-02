@@ -138,6 +138,13 @@ export function MinigameForm() {
       return { memberId: mid, memberName: m?.fullName ?? guest?.name ?? mid }
     })
 
+    // Tách participant gửi lên API: member CLB thật (validate clubId ở backend) vs khách mời.
+    // Khách KHÔNG gửi qua memberIds (không phải member) → gửi qua `guests` (name/phone),
+    // backend lưu ở Minigame.settings.guests, không tạo member.
+    const guestIdSet = new Set(form.guestMembers.map(g => g.id))
+    const realMemberIds = form.selectedMemberIds.filter(mid => !guestIdSet.has(mid) && !mid.startsWith('guest-'))
+    const guestPayload = form.guestMembers.map(g => ({ name: g.name }))
+
     if (isEdit && id) {
       try {
         await api.put(`/minigames/${id}`, {
@@ -145,7 +152,7 @@ export function MinigameForm() {
           format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
           notes: form.notes || undefined,
         })
-        await api.post(`/minigames/${id}/participants`, { memberIds: form.selectedMemberIds })
+        await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload })
         updateMinigame(id, {
           name: form.name, description: form.description, startDate: form.startDate,
           endDate: form.endDate || undefined, notes: form.notes, groupSize: form.groupSize,
@@ -168,7 +175,7 @@ export function MinigameForm() {
           format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
         const mgId: string = res.data?.data?.id
-        await api.post(`/minigames/${mgId}/participants`, { memberIds: form.selectedMemberIds })
+        await api.post(`/minigames/${mgId}/participants`, { memberIds: realMemberIds, guests: guestPayload })
         const mg = createMinigame({
           clubId, name: form.name, description: form.description || undefined,
           startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT',

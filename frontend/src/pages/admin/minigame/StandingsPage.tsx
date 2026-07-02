@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { isGuestId } from '../../../types/minigame'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
@@ -115,7 +116,7 @@ export function StandingsPage() {
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 text-[14px]">{s.memberName}</p>
+                  <p className="font-bold text-slate-900 text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}</p>
                   <p className="text-[11px] text-slate-400">{s.groupName}</p>
                 </div>
                 <div className="text-right">
