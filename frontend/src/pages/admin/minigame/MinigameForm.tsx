@@ -160,8 +160,11 @@ export function MinigameForm() {
       }
     } else {
       try {
+        // Minigame entity không có field `description` (backend CreateMinigameDto +
+        // Prisma model không hỗ trợ); ValidationPipe forbidNonWhitelisted sẽ 400 nếu gửi.
+        // description chỉ là field UI cục bộ → không gửi lên API create.
         const res = await api.post('/minigames', {
-          name: form.name, description: form.description || undefined,
+          name: form.name,
           format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
         const mgId: string = res.data?.data?.id
