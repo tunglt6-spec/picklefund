@@ -9,10 +9,11 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      // Backend dùng global prefix `/api` (setGlobalPrefix('api')), nên KHÔNG strip
+      // `/api` khi proxy — giữ nguyên path để `/api/auth/login` -> backend `/api/auth/login`.
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

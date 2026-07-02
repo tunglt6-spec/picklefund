@@ -26,6 +26,9 @@
 | ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | 📏 Working Rules v2.1 — Increment/Freeze Governance (7 rule + checklists) | ✅ Accepted / Codex PASS / CLOSED (bổ trợ GOV-01, operational) |
 | 🔐 AUTH-01 — Enterprise Read-Only Member Role (MEMBER_FULL_VIEW) | ✅ Accepted / Codex PASS / CLOSED — spec (docs-only); MEMBER_FULL_VIEW Official · MEMBER Deprecated; implementation = AUTH-IMPL-01 sau PASS |
+| 🐞 BUG-LOCAL-001 — Local Login 502 Fix | ✅ Fixed / Codex PASS / CLOSED — backend `dist` emit (tắt `incremental` + gỡ stale `.tsbuildinfo`) + Vite proxy giữ prefix `/api`; login end-to-end 200. Không đổi auth logic/DB/seed |
+| 🎨 BRAND-01A — Brand Assets Standardization | ✅ Brand Assets Standardized / Codex PASS / CLOSED — logo chính thức (P/gradient) chuẩn hoá cho web favicon/PWA/apple-touch + electron `icon.ico`/`icon.png`; asset-only, không đổi thiết kế |
+| 🖥️ BRAND-01B — Desktop Deployment Validation | ⏳ Deferred / Pending Desktop Deployment Validation — chưa xác nhận trực quan Windows Shell / NSIS installer / Start Menu / Taskbar / Window icon (giới hạn môi trường) |
 | 🎨 UDP-01 — Design Foundation (Design Source of Truth) | ✅ Codex PASS / CLOSED |
 | 🧩 UDP-01 Amendment #01 — Workspace State DoD | ✅ Accepted / Codex PASS |
 | 🧩 UDP-01 Amendment #02 — Design Pattern First Rule | ✅ Accepted / Codex PASS |

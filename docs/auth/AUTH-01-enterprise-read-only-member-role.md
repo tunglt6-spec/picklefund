@@ -102,4 +102,4 @@ AUTH-01 (docs-only) **không** sửa: frontend · backend · API · DB · Execut
 
 ---
 
-> 🧾 AUTH-01 — Enterprise Read-Only Member Role (🟡 Proposed / Pending Codex Audit). Authorization spec (docs-only). MEMBER_FULL_VIEW = full-view read-only; write bị chặn ở UX (disabled + tooltip) và enforce ở backend (403). MEMBER cũ deprecated → map ở AUTH-IMPL-01. Không mở Execution/Epic 4.2. Sau Codex PASS + Commit/Tag/Push mới mở implementation.
+> 🧾 AUTH-01 — Enterprise Read-Only Member Role (✅ Accepted / Codex PASS / CLOSED — tag `v2.1-auth01-member-full-view`). Authorization spec (docs-only). MEMBER_FULL_VIEW = full-view read-only; write bị chặn ở UX (disabled + tooltip) và enforce ở backend (403). MEMBER cũ deprecated → map ở AUTH-IMPL-01. Không mở Execution/Epic 4.2. Implementation mở ở AUTH-IMPL-01 (transaction riêng).

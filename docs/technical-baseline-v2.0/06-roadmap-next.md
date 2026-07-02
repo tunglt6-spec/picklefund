@@ -57,6 +57,12 @@ Sau khi Sprint 3 Governance PASS:
 
 - **[AUTH-01 — Enterprise Read-Only Member Role](../auth/AUTH-01-enterprise-read-only-member-role.md)** ✅ **Codex PASS / CLOSED** (tag `v2.1-auth01-member-full-view`) — đặc tả role `MEMBER_FULL_VIEW` (xem full sản phẩm read-only; write chặn ở UX + backend 403). MEMBER_FULL_VIEW Official · MEMBER Deprecated. **Docs-only**; implementation = AUTH-IMPL-01 (chưa mở). Không mở Epic 4.2 / Execution.
 
+### Pre-Execution Gate — Maintenance Fixes (tag `v2.1-pre-execution-gate-auth-bug-brand`)
+
+- **BUG-LOCAL-001 — Local Login 502 Fix** ✅ **Fixed / Codex PASS / CLOSED** — backend `:3000` không emit `dist/main` do xung đột `deleteOutDir` × `incremental` + stale `.tsbuildinfo` (đã tắt `incremental`, gỡ cache) và Vite proxy strip nhầm `/api` (đã giữ nguyên prefix). Login end-to-end 200 → dashboard. Không đổi auth logic / DB / seed / migration.
+- **BRAND-01A — Brand Assets Standardization** ✅ **Codex PASS / CLOSED** — chuẩn hoá asset logo chính thức (P/gradient indigo→cyan) cho web favicon (svg + png 16/32), apple-touch, PWA manifest (png) và electron `icon.ico`/`icon.png`. Asset-only, **không** đổi thiết kế logo.
+- **BRAND-01B — Desktop Deployment Validation** ⏳ **Deferred** — chưa xác nhận trực quan Windows Shell / NSIS installer / Start Menu / Taskbar / Window icon (giới hạn môi trường: quyền symlink cho code-sign tool + không quan sát được OS shell). Verify ở cấp artifact (exe packager nhúng icon mới).
+
 ## 3b. AI Commerce Platform
 
 - **Planned** — **CHƯA triển khai**.
