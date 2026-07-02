@@ -63,6 +63,10 @@ Sau khi Sprint 3 Governance PASS:
 - **BRAND-01A — Brand Assets Standardization** ✅ **Codex PASS / CLOSED** — chuẩn hoá asset logo chính thức (P/gradient indigo→cyan) cho web favicon (svg + png 16/32), apple-touch, PWA manifest (png) và electron `icon.ico`/`icon.png`. Asset-only, **không** đổi thiết kế logo.
 - **BRAND-01B — Desktop Deployment Validation** ⏳ **Deferred** — chưa xác nhận trực quan Windows Shell / NSIS installer / Start Menu / Taskbar / Window icon (giới hạn môi trường: quyền symlink cho code-sign tool + không quan sát được OS shell). Verify ở cấp artifact (exe packager nhúng icon mới).
 
+## 3d. Framework Release Governance
+
+- **[RELEASE-01 — Product Release Constitution](../release/RELEASE-01-product-release-constitution.md)** ✅ **Accepted / Codex PASS / CLOSED** (tag `v2.1-release01-product-release-constitution`) — **Framework Release Governance ACTIVE**. Chuẩn phát hành dùng chung: lifecycle Alpha→Beta→RC→GA + Hotfix/Patch/LTS · SemVer · tagging convention · release gate · rollback · deployment validation (Web/Desktop/Mobile/Cloud) · artifact rules · no force push / no history rewrite. Chain: AI Platform Framework → APFG-01 → RELEASE-01 → EGOV-01 → EWR-01 → Execution Runtime → Products (EGOV kế thừa Release; Release **không** cấp quyền Runtime). **Docs-only**; EGOV-01/EWR-01/ER là forward reference (chưa tồn tại). Không mở Execution / Epic 4.2.
+
 ## 3b. AI Commerce Platform
 
 - **Planned** — **CHƯA triển khai**.
