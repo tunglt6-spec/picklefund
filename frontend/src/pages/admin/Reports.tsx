@@ -234,16 +234,30 @@ export function Reports() {
   })
   // Rows đầy đủ cho export/infographic — chỉ dùng khi officialReady (kSessions là số thật, không phải 0 giả).
   const billRowsForExport = () => memberBillRows.map(r => ({ ...r, totalSessions: r.totalSessions ?? (kSessions as number) }))
-  const doExportPDF = () => {
+  const EXPORT_FAILED = 'Không thể xuất báo cáo. Vui lòng thử lại.'
+  const doExportPDF = async () => {
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
-    exportReportsPDF(buildExportSummary(), billRowsForExport()); toast.success('Đã xuất PDF báo cáo!')
+    try {
+      // exportReportsPDF trả Promise (downloadPDF là async) → phải await để bắt lỗi
+      // render/tải file; không báo success trước khi hoàn tất.
+      await exportReportsPDF(buildExportSummary(), billRowsForExport())
+      toast.success('Đã xuất PDF báo cáo!')
+    } catch (e) {
+      if (import.meta.env?.DEV) console.error('[Reports] exportPDF failed:', e)
+      toast.error(EXPORT_FAILED)
+    }
   }
   const doExportExcel = () => {
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
-    exportReportsExcel(buildExportSummary(), memberBillRows.map(r => ({
-      name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
-    })))
-    toast.success('Đã xuất Excel báo cáo!')
+    try {
+      exportReportsExcel(buildExportSummary(), memberBillRows.map(r => ({
+        name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
+      })))
+      toast.success('Đã xuất Excel báo cáo!')
+    } catch (e) {
+      if (import.meta.env?.DEV) console.error('[Reports] exportExcel failed:', e)
+      toast.error(EXPORT_FAILED)
+    }
   }
   const openInfographic = () => {
     if (!officialReady) { toast.error(INFO_NOT_READY); return }

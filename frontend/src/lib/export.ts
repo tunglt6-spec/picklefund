@@ -16,27 +16,30 @@ function todayFull() {
 /* ════════════════════════════════════════
    PDF via html2canvas → jsPDF (auto download, hỗ trợ tiếng Việt)
 ════════════════════════════════════════ */
+// Prefix `PDF_ROOT` cho MỌI selector để CSS chỉ áp trong container render off-screen
+// (light DOM) — không leak ra trang khi html2canvas chụp. Xem downloadPDF().
+const PDF_ROOT = 'pf-pdf-render-root'
 const BASE_CSS = `
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1e293b; background: #fff; }
-  .page { width: 754px; padding: 28px 32px; background: #fff; }
-  .header { background: #6366f1; color: #fff; border-radius: 10px 10px 0 0; padding: 16px 22px 12px; }
-  .header h1 { font-size: 17px; font-weight: 700; }
-  .header p { font-size: 12px; opacity: .85; margin-top: 3px; }
-  .header-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; opacity: .75; }
-  table { width: 100%; border-collapse: collapse; }
-  th { background: #6366f1; color: #fff; padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-  th.right, td.right { text-align: right; }
-  th.center, td.center { text-align: center; }
-  td { padding: 7px 11px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
-  tr:nth-child(even) td { background: #f8fafc; }
-  .badge-green { color: #16a34a; font-weight: 600; }
-  .badge-red { color: #ef4444; font-weight: 600; }
-  .badge-yellow { color: #d97706; font-weight: 600; }
-  .summary { background: #eef2ff; border-radius: 8px; padding: 12px 16px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .summary .label { font-size: 12px; color: #6366f1; font-weight: 600; }
-  .summary .value { font-size: 15px; font-weight: 700; color: #4338ca; }
-  .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+  .${PDF_ROOT} * { box-sizing: border-box; margin: 0; padding: 0; }
+  .${PDF_ROOT} { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1e293b; background: #fff; }
+  .${PDF_ROOT} .page { width: 754px; padding: 28px 32px; background: #fff; }
+  .${PDF_ROOT} .header { background: #6366f1; color: #fff; border-radius: 10px 10px 0 0; padding: 16px 22px 12px; }
+  .${PDF_ROOT} .header h1 { font-size: 17px; font-weight: 700; }
+  .${PDF_ROOT} .header p { font-size: 12px; opacity: .85; margin-top: 3px; }
+  .${PDF_ROOT} .header-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; opacity: .75; }
+  .${PDF_ROOT} table { width: 100%; border-collapse: collapse; }
+  .${PDF_ROOT} th { background: #6366f1; color: #fff; padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .${PDF_ROOT} th.right, .${PDF_ROOT} td.right { text-align: right; }
+  .${PDF_ROOT} th.center, .${PDF_ROOT} td.center { text-align: center; }
+  .${PDF_ROOT} td { padding: 7px 11px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+  .${PDF_ROOT} tr:nth-child(even) td { background: #f8fafc; }
+  .${PDF_ROOT} .badge-green { color: #16a34a; font-weight: 600; }
+  .${PDF_ROOT} .badge-red { color: #ef4444; font-weight: 600; }
+  .${PDF_ROOT} .badge-yellow { color: #d97706; font-weight: 600; }
+  .${PDF_ROOT} .summary { background: #eef2ff; border-radius: 8px; padding: 12px 16px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .${PDF_ROOT} .summary .label { font-size: 12px; color: #6366f1; font-weight: 600; }
+  .${PDF_ROOT} .summary .value { font-size: 15px; font-weight: 700; color: #4338ca; }
+  .${PDF_ROOT} .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; }
 `
 
 async function downloadPDF(sections: string[], filename: string) {
@@ -45,18 +48,19 @@ async function downloadPDF(sections: string[], filename: string) {
   const pageH = 297
 
   for (let i = 0; i < sections.length; i++) {
+    // Light DOM (KHÔNG dùng attachShadow): html2canvas clone node đích sang document
+    // riêng để chụp — style trong shadow-encapsulated <style> sẽ KHÔNG áp cho clone
+    // → PDF vỡ/blank (đã xác nhận). BASE_CSS đã scope theo .${PDF_ROOT} nên đặt ở
+    // light DOM off-screen vẫn không leak style ra trang.
     const container = document.createElement('div')
-    container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;'
-
-    const shadow = container.attachShadow({ mode: 'open' })
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = `<style>${BASE_CSS}</style><div class="page">${sections[i]}</div>`
-    shadow.appendChild(wrapper)
+    container.className = PDF_ROOT
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;'
+    container.innerHTML = `<style>${BASE_CSS}</style><div class="page">${sections[i]}</div>`
     document.body.appendChild(container)
 
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    const pageEl = shadow.querySelector('.page') as HTMLElement
+    const pageEl = container.querySelector('.page') as HTMLElement
     const canvas = await html2canvas(pageEl, {
       scale: 2,
       useCORS: true,
@@ -715,7 +719,9 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
   }
 
   const sections = [summarySection, ...billSections]
-  downloadPDF(sections, `Bao_Cao_${data.periodName.replace(/\s/g, '_')}`)
+  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '')
+  // Tên file rõ ràng: BaoCao_Quy_<club>_<period> (downloadPDF thêm _<ngày>.pdf)
+  return downloadPDF(sections, `BaoCao_Quy_${slug(data.clubName)}_${slug(data.periodName)}`)
 }
 
 /* ════════════════════════════════════════
