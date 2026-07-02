@@ -53,6 +53,10 @@ Sau khi Sprint 3 Governance PASS:
 
 > **Trạng thái:** Maika vẫn read-only; chưa execute/API-write/DB-write/email/telegram/notification/workflow/job-queue. Execution Gate & điều kiện mở Epic được định nghĩa trong [GOV-01](../governance/GOV-01-project-governance-baseline-v2.1.md) (Rule 15, §11).
 
+## 3c. Authorization
+
+- **[AUTH-01 — Enterprise Read-Only Member Role](../auth/AUTH-01-enterprise-read-only-member-role.md)** ✅ **Codex PASS / CLOSED** (tag `v2.1-auth01-member-full-view`) — đặc tả role `MEMBER_FULL_VIEW` (xem full sản phẩm read-only; write chặn ở UX + backend 403). MEMBER_FULL_VIEW Official · MEMBER Deprecated. **Docs-only**; implementation = AUTH-IMPL-01 (chưa mở). Không mở Epic 4.2 / Execution.
+
 ## 3b. AI Commerce Platform
 
 - **Planned** — **CHƯA triển khai**.

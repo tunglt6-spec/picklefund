@@ -25,6 +25,7 @@
 |---|---|
 | ⚖️ GOV-01 — Project Governance Baseline v2.1 | ✅ Accepted / Official — Single Source of Truth |
 | 📏 Working Rules v2.1 — Increment/Freeze Governance (7 rule + checklists) | ✅ Accepted / Codex PASS / CLOSED (bổ trợ GOV-01, operational) |
+| 🔐 AUTH-01 — Enterprise Read-Only Member Role (MEMBER_FULL_VIEW) | ✅ Accepted / Codex PASS / CLOSED — spec (docs-only); MEMBER_FULL_VIEW Official · MEMBER Deprecated; implementation = AUTH-IMPL-01 sau PASS |
 | 🎨 UDP-01 — Design Foundation (Design Source of Truth) | ✅ Codex PASS / CLOSED |
 | 🧩 UDP-01 Amendment #01 — Workspace State DoD | ✅ Accepted / Codex PASS |
 | 🧩 UDP-01 Amendment #02 — Design Pattern First Rule | ✅ Accepted / Codex PASS |
