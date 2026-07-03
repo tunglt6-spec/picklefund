@@ -13,13 +13,13 @@ interface RequestUser {
 }
 
 /**
- * Member self-view (AUTH-IMPL-01) — READ-ONLY, chỉ CLUB_MEMBER.
+ * Member self-view (AUTH-IMPL-01) — READ-ONLY, chỉ MEMBER_VIEW.
  * Phạm vi dữ liệu lấy từ JWT (memberId/clubId/userId), KHÔNG nhận memberId/clubId từ body/query.
  */
 @ApiTags('Member Portal')
 @ApiBearerAuth()
 @Controller('member')
-@Roles('CLUB_MEMBER')
+@Roles('MEMBER_VIEW')
 export class MemberPortalController {
   constructor(private svc: MemberPortalService) {}
 
@@ -36,6 +36,11 @@ export class MemberPortalController {
   @Get('me/finance')
   async finance(@CurrentUser() user: RequestUser) {
     return ok(await this.svc.getFinance(user.memberId, user.clubId));
+  }
+
+  @Get('me/contributions')
+  async contributions(@CurrentUser() user: RequestUser) {
+    return ok(await this.svc.getContributions(user.memberId, user.clubId));
   }
 
   @Get('me/personal-receipt')

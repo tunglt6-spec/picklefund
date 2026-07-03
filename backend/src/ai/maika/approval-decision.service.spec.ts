@@ -28,7 +28,7 @@ describe('ApprovalDecisionService (evaluate + preview, no execution)', () => {
 
   it('member not an approver → not allowed', () => {
     const e = svc.evaluate(
-      { clubId: 'club-1', userId: 'u2', role: 'CLUB_MEMBER' },
+      { clubId: 'club-1', userId: 'u2', role: 'MEMBER_VIEW' },
       'low',
       clean,
     );
@@ -66,7 +66,7 @@ describe('ApprovalDecisionService (evaluate + preview, no execution)', () => {
 
   it('preview when not allowed → wouldReject=true', () => {
     const e = svc.evaluate(
-      { clubId: 'club-1', userId: 'u2', role: 'CLUB_MEMBER' },
+      { clubId: 'club-1', userId: 'u2', role: 'MEMBER_VIEW' },
       'low',
       clean,
     );

@@ -3,8 +3,8 @@ import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Down
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
+import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -45,20 +45,21 @@ function buildQrUrl(bank: BankInfo, amount: number, addInfo: string) {
 export function MemberReceipt() {
   const isMobile = useIsMobile()
   const { user, accessToken } = useAuthStore()
-  const clubId = user?.clubId ?? ''
-  const memberId = user?.memberId ?? ''
-  const { getClubData } = useClubDataStore()
-  const data = getClubData(clubId)
+  // Chỉ dùng dữ liệu self-scope từ JWT (/member/me/*) — không đọc store club-wide.
+  const { finance, attendance } = useMemberPortal()
   const printRef = useRef<HTMLDivElement>(null)
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
   const [loading, setLoading] = useState(!isLocal)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
+  // Thông tin bank/QR đến từ /system-settings vốn KHÔNG mở cho MEMBER_VIEW.
+  // Fix này không tự mở quyền → luôn null, UI hiển thị trạng thái thiếu dữ liệu an toàn.
+  const [bankInfo] = useState<BankInfo | null>(null)
 
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-  const myMember = data.members.find(m => m.id === memberId)
+  const activePeriod = finance?.period ?? null
+  const memberName =
+    finance?.member?.memberName ?? attendance?.memberName ?? user?.username ?? 'Thành viên'
 
   useEffect(() => {
     if (isLocal) return
@@ -68,15 +69,6 @@ export function MemberReceipt() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [isLocal])
-
-  useEffect(() => {
-    api.get('/system-settings').then(res => {
-      const d: Record<string, string> = res.data?.data ?? {}
-      if (d.bank_account_number && d.bank_account_name) {
-        setBankInfo({ bank_code: d.bank_code || 'MB', bank_account_number: d.bank_account_number, bank_account_name: d.bank_account_name })
-      }
-    }).catch(() => {})
-  }, [])
 
   const displayReceipts: PersonalReceipt[] = isLocal ? [] : receipts
 
@@ -121,7 +113,7 @@ export function MemberReceipt() {
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] text-slate-900">Phiếu Thu Cá Nhân</div>
-            {myMember && <div className="text-[12px] text-slate-400">{myMember.fullName}</div>}
+            <div className="text-[12px] text-slate-400">{memberName}</div>
           </div>
           <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
             <Download size={13} />Xuất PDF
@@ -148,7 +140,7 @@ export function MemberReceipt() {
             <div className="space-y-2">
               {displayReceipts.map(r => {
                 const isExp = expanded === r.id
-                const period = r.fundPeriod ?? data.fundPeriods.find(p => p.id === r.fundPeriodId)
+                const period = r.fundPeriod
                 const bal = n(r.balance)
                 const needToPay = n(r.needToPay)
                 const amountPaid = n(r.amountPaid)
@@ -183,7 +175,7 @@ export function MemberReceipt() {
                           </div>
                         ))}
                         {needToPay > 0 && (() => {
-                          const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`) : null
+                          const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${memberName}`) : null
                           return (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 mt-2 space-y-2">
                               <div className="flex items-center gap-1.5 text-amber-700 text-[12px] font-semibold">
@@ -232,7 +224,7 @@ export function MemberReceipt() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Phiếu Thu Cá Nhân"
-        subtitle={myMember?.fullName ?? user?.username ?? 'Thành viên'}
+        subtitle={memberName}
         actions={
           <Button variant="secondary" onClick={handleExport}>
             <Download size={14} />Xuất PDF
@@ -246,8 +238,8 @@ export function MemberReceipt() {
         {(() => {
           const debt = debtReceipt ? n(debtReceipt.needToPay) : 0
           if (debt <= 0 || !bankInfo) return null
-          const period = debtReceipt?.fundPeriod ?? data.fundPeriods.find(p => p.id === debtReceipt?.fundPeriodId)
-          const qr = buildQrUrl(bankInfo, debt, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`)
+          const period = debtReceipt?.fundPeriod
+          const qr = buildQrUrl(bankInfo, debt, `Dong quy ${period?.name ?? ''} - ${memberName}`)
           return (
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
               <div className="shrink-0">
@@ -317,7 +309,7 @@ export function MemberReceipt() {
           <div className="space-y-3">
             {displayReceipts.map(r => {
               const isExpanded = expanded === r.id
-              const period = r.fundPeriod ?? data.fundPeriods.find(p => p.id === r.fundPeriodId)
+              const period = r.fundPeriod
               const bal = n(r.balance)
               const needToPay = n(r.needToPay)
               const amountPaid = n(r.amountPaid)
@@ -389,7 +381,7 @@ export function MemberReceipt() {
                       </div>
 
                       {needToPay > 0 && (() => {
-                        const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${myMember?.fullName ?? ''}`) : null
+                        const qr = bankInfo ? buildQrUrl(bankInfo, needToPay, `Dong quy ${period?.name ?? ''} - ${memberName}`) : null
                         return (
                           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                             <div className="flex items-center gap-2 text-amber-700 mb-3">

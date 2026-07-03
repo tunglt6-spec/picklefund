@@ -3,8 +3,8 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, TrendingUp, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
-import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
+import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 
@@ -29,14 +29,12 @@ function toNum(v: string | number | null | undefined): number {
 
 export function MemberContributions() {
   const { user, accessToken } = useAuthStore()
-  const clubId = user?.clubId ?? ''
-  const memberId = user?.memberId ?? 'mem-1'
-  const { getClubData } = useClubDataStore()
-  const data = getClubData(clubId)
+  // Chỉ dùng dữ liệu self-scope từ JWT (/member/me/*) — không đọc store club-wide.
+  const { finance, attendance, contributions } = useMemberPortal()
 
-  const myContribs = data.contributions.filter(c => c.memberId === memberId)
-  const myMember = data.members.find(m => m.id === memberId)
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+  const memberName =
+    finance?.member?.memberName ?? attendance?.memberName ?? user?.username ?? 'Thành viên'
+  const activePeriod = finance?.period ?? null
 
   const [search, setSearch] = useState('')
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
@@ -51,14 +49,13 @@ export function MemberContributions() {
     }).catch(() => {})
   }, [accessToken, isLocal])
 
-  const filtered = myContribs.filter(c => {
-    const period = data.fundPeriods.find(fp => fp.id === c.fundPeriodId)
-    return !search || period?.name.toLowerCase().includes(search.toLowerCase())
-  })
+  const filtered = contributions.filter(c =>
+    !search || (c.periodName ?? '').toLowerCase().includes(search.toLowerCase())
+  )
 
-  const totalPaid = myContribs.reduce((s, c) => s + c.amount, 0)
-  const confirmedCount = myContribs.filter(c => c.isConfirmed).length
-  const pendingCount = myContribs.filter(c => !c.isConfirmed).length
+  const totalPaid = contributions.reduce((s, c) => s + c.amount, 0)
+  const confirmedCount = contributions.filter(c => c.isConfirmed).length
+  const pendingCount = contributions.filter(c => !c.isConfirmed).length
 
   const isMobile = useIsMobile()
 
@@ -67,7 +64,7 @@ export function MemberContributions() {
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
           <div className="text-[17px] font-[800] text-slate-900">Lịch Sử Đóng Quỹ</div>
-          {myMember && <div className="text-[12px] text-slate-400">{myMember.fullName}</div>}
+          <div className="text-[12px] text-slate-400">{memberName}</div>
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           <div className="grid grid-cols-3 gap-2">
@@ -92,11 +89,10 @@ export function MemberContributions() {
           ) : (
             <div className="space-y-2">
               {filtered.map(c => {
-                const period = data.fundPeriods.find(fp => fp.id === c.fundPeriodId)
                 return (
                   <div key={c.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[15px] font-[700] text-slate-900">{period?.name ?? 'Kỳ quỹ'}</span>
+                      <span className="text-[15px] font-[700] text-slate-900">{c.periodName ?? 'Kỳ quỹ'}</span>
                       {c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>}
                     </div>
                     <div className="text-[12px] text-slate-500 mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
@@ -153,7 +149,7 @@ export function MemberContributions() {
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Lịch Sử Đóng Quỹ"
-        subtitle={myMember ? myMember.fullName : 'Tài khoản thành viên'}
+        subtitle={memberName}
       />
 
       <div className="p-6 max-w-[900px] mx-auto space-y-5">
@@ -167,7 +163,7 @@ export function MemberContributions() {
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tổng đã đóng</p>
             </div>
             <p className="text-xl font-bold text-indigo-600">{formatVND(totalPaid)}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{myContribs.length} khoản</p>
+            <p className="text-xs text-slate-500 mt-0.5">{contributions.length} khoản</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -177,7 +173,7 @@ export function MemberContributions() {
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đã xác nhận</p>
             </div>
             <p className="text-xl font-bold text-emerald-600">{confirmedCount} khoản</p>
-            <p className="text-xs text-slate-500 mt-0.5">{formatVND(myContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -222,10 +218,9 @@ export function MemberContributions() {
               </thead>
               <tbody>
                 {filtered.map(c => {
-                  const period = data.fundPeriods.find(fp => fp.id === c.fundPeriodId)
                   return (
                     <tr key={c.id}>
-                      <td className="font-medium text-slate-900">{period?.name ?? 'Kỳ quỹ'}</td>
+                      <td className="font-medium text-slate-900">{c.periodName ?? 'Kỳ quỹ'}</td>
                       <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
                       <td className="text-right font-semibold text-emerald-600">{formatVND(c.amount)}</td>
                       <td className="text-center">

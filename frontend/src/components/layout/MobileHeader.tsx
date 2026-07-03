@@ -12,7 +12,7 @@ interface MobileHeaderProps {
 
 const ROLE_LABEL: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Quản trị CLB',
-  CLUB_TREASURER: 'Thủ quỹ', CLUB_MEMBER: 'Thành viên',
+  CLUB_TREASURER: 'Thủ quỹ', MEMBER_VIEW: 'Thành viên',
 }
 
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
@@ -40,7 +40,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   const initials = user.username ? user.username.slice(0, 2).toUpperCase() : 'U'
 
-  const notifRoute = user.role === 'CLUB_MEMBER'
+  const notifRoute = user.role === 'MEMBER_VIEW'
     ? '/member/notifications'
     : user.role === 'SUPER_ADMIN'
       ? '/super/dashboard'
@@ -115,7 +115,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
               {/* Profile link */}
               <button
-                onClick={() => { setOpen(false); navigate(user.role === 'CLUB_MEMBER' ? '/member/dashboard' : '/dashboard') }}
+                onClick={() => { setOpen(false); navigate(user.role === 'MEMBER_VIEW' ? '/member/dashboard' : '/dashboard') }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 active:bg-slate-100"
               >
                 <User size={15} className="text-slate-400" />

@@ -60,7 +60,7 @@ export class UsersController {
         throw new ForbiddenException();
       body = { ...body, clubId: user.clubId };
     }
-    const created = await this.service.create({ ...body, role: body.role ?? Role.CLUB_MEMBER });
+    const created = await this.service.create({ ...body, role: body.role ?? Role.MEMBER_VIEW });
     this.audit.log({
       userId: user.id,
       clubId: created.clubId ?? body.clubId,

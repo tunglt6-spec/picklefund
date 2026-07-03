@@ -91,7 +91,7 @@ async function main() {
             username: 'member',
             passwordHash: await hash('member123'),
             email: 'member@sunrise.vn',
-            role: 'CLUB_MEMBER',
+            role: 'MEMBER_VIEW',
             clubId: club.id,
         },
     });
@@ -224,7 +224,7 @@ async function main() {
     console.log('  superadmin / super123 → SUPER_ADMIN');
     console.log('  admin / admin123      → CLUB_ADMIN');
     console.log('  treasurer / treasurer123 → CLUB_TREASURER');
-    console.log('  member / member123    → CLUB_MEMBER');
+    console.log('  member / member123    → MEMBER_VIEW');
 }
 main()
     .catch((e) => { console.error(e); process.exit(1); })

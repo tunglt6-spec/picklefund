@@ -37,7 +37,7 @@ interface Subscription {
 interface AiUsage { month: string; tokens: number; estimatedCostVnd: number }
 
 const ROLE_LABEL: Record<string, string> = {
-  CLUB_ADMIN: 'Admin CLB', CLUB_TREASURER: 'Thủ quỹ', CLUB_MEMBER: 'Thành viên', SUPER_ADMIN: 'Super Admin',
+  CLUB_ADMIN: 'Admin CLB', CLUB_TREASURER: 'Thủ quỹ', MEMBER_VIEW: 'Thành viên', SUPER_ADMIN: 'Super Admin',
 }
 
 const TIER_BADGE: Record<PlanTier, string> = {

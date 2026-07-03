@@ -10,7 +10,7 @@ import { useAuthStore } from '../../store/authStore'
 const LISA_ROUTES: Record<string, string> = {
   CLUB_ADMIN: '/lisa',
   CLUB_TREASURER: '/lisa',
-  CLUB_MEMBER: '/member/lisa',
+  MEMBER_VIEW: '/member/lisa',
 }
 
 export function AppLayout() {

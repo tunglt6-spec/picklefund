@@ -49,6 +49,17 @@ export interface MemberAttendance {
   sessions: MemberSession[]
 }
 
+/** Lịch sử đóng góp cá nhân (nguồn: /member/me/contributions). */
+export interface MemberContribution {
+  id: string
+  fundPeriodId: string | null
+  periodName: string | null
+  amount: number
+  isConfirmed: boolean
+  paymentDate: string
+  paymentMethod: string
+}
+
 /**
  * Hook đọc dữ liệu member portal — CHỈ gọi các endpoint self-scope theo JWT.
  * Không đụng tới clubDataStore (dữ liệu toàn CLB) → member không nhận dữ liệu member khác/quản trị.
@@ -56,6 +67,7 @@ export interface MemberAttendance {
 export function useMemberPortal() {
   const [finance, setFinance] = useState<MemberFinance | null>(null)
   const [attendance, setAttendance] = useState<MemberAttendance | null>(null)
+  const [contributions, setContributions] = useState<MemberContribution[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -69,11 +81,16 @@ export function useMemberPortal() {
         .get('/member/me/attendance')
         .then((r) => (r.data?.data ?? null) as MemberAttendance | null)
         .catch(() => null),
+      api
+        .get('/member/me/contributions')
+        .then((r) => (r.data?.data ?? []) as MemberContribution[])
+        .catch(() => []),
     ])
-      .then(([f, a]) => {
+      .then(([f, a, c]) => {
         if (!alive) return
         setFinance(f)
         setAttendance(a)
+        setContributions(c)
       })
       .finally(() => {
         if (alive) setLoading(false)
@@ -83,5 +100,5 @@ export function useMemberPortal() {
     }
   }, [])
 
-  return { finance, attendance, loading }
+  return { finance, attendance, contributions, loading }
 }

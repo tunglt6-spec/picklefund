@@ -78,7 +78,7 @@ describe('ApprovalEngineService (evaluate / preview — no execution/persist)', 
 
   it('member role → not eligible to approve', () => {
     const e = svc.evaluate(
-      { clubId: 'club-1', userId: 'u2', role: 'CLUB_MEMBER' },
+      { clubId: 'club-1', userId: 'u2', role: 'MEMBER_VIEW' },
       { actionType: 'MEMBER_REVIEW_PROPOSAL' },
     );
     expect(e.allowed).toBe(false);

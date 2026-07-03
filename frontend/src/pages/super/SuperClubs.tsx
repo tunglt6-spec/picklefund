@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 const ROLES = [
   { value: 'CLUB_ADMIN', label: 'Admin CLB' },
   { value: 'CLUB_TREASURER', label: 'Thủ quỹ' },
-  { value: 'CLUB_MEMBER', label: 'Thành viên' },
+  { value: 'MEMBER_VIEW', label: 'Thành viên' },
 ]
 
 interface ClubUser {

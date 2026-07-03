@@ -38,7 +38,7 @@ const baseUser = {
   clubId: 'club-1',
   username: 'nguyenvanan',
   email: 'nguyenvanan@club-1.picklefund.local',
-  role: 'CLUB_MEMBER',
+  role: 'MEMBER_VIEW',
   isActive: true,
   mustChangePassword: true,
   notificationEnabled: true,
@@ -70,7 +70,7 @@ describe('MemberUsersService', () => {
       const result = await service.findAll('club-1');
       expect(result).toHaveLength(1);
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { clubId: 'club-1', role: 'CLUB_MEMBER' } }),
+        expect.objectContaining({ where: { clubId: 'club-1', role: 'MEMBER_VIEW' } }),
       );
     });
   });

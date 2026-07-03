@@ -17,10 +17,10 @@ interface UserRow {
 }
 
 const roleLabel: Record<Role, string> = {
-  SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Club Admin', CLUB_TREASURER: 'Thủ Quỹ', CLUB_MEMBER: 'Thành Viên'
+  SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Club Admin', CLUB_TREASURER: 'Thủ Quỹ', MEMBER_VIEW: 'Thành Viên'
 }
 const roleVariant: Record<Role, 'purple' | 'blue' | 'green' | 'gray'> = {
-  SUPER_ADMIN: 'purple', CLUB_ADMIN: 'blue', CLUB_TREASURER: 'green', CLUB_MEMBER: 'gray'
+  SUPER_ADMIN: 'purple', CLUB_ADMIN: 'blue', CLUB_TREASURER: 'green', MEMBER_VIEW: 'gray'
 }
 
 export function SuperUsers() {
@@ -68,7 +68,7 @@ export function SuperUsers() {
     { value: 'SUPER_ADMIN', label: 'Super Admin' },
     { value: 'CLUB_ADMIN', label: 'Club Admin' },
     { value: 'CLUB_TREASURER', label: 'Thủ Quỹ' },
-    { value: 'CLUB_MEMBER', label: 'Thành Viên' },
+    { value: 'MEMBER_VIEW', label: 'Thành Viên' },
   ]
 
   return (
@@ -84,7 +84,7 @@ export function SuperUsers() {
             { label: 'Super Admin', role: 'SUPER_ADMIN', color: 'text-purple-600', bg: 'bg-purple-50', icon: <Shield size={14} className="text-purple-500" /> },
             { label: 'Club Admin', role: 'CLUB_ADMIN', color: 'text-indigo-600', bg: 'bg-indigo-50', icon: <UserCheck size={14} className="text-indigo-500" /> },
             { label: 'Thủ Quỹ', role: 'CLUB_TREASURER', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <UserCheck size={14} className="text-emerald-500" /> },
-            { label: 'Thành Viên', role: 'CLUB_MEMBER', color: 'text-slate-600', bg: 'bg-slate-100', icon: <Users size={14} className="text-slate-500" /> },
+            { label: 'Thành Viên', role: 'MEMBER_VIEW', color: 'text-slate-600', bg: 'bg-slate-100', icon: <Users size={14} className="text-slate-500" /> },
           ].map(item => (
             <div key={item.role} className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
               <div className="flex items-center gap-2 mb-2">

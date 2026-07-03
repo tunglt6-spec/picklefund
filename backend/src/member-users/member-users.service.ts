@@ -39,7 +39,7 @@ export class MemberUsersService {
 
   async findAll(clubId: string) {
     const users = await this.prisma.user.findMany({
-      where: { clubId, role: 'CLUB_MEMBER' },
+      where: { clubId, role: 'MEMBER_VIEW' },
       select: {
         id: true,
         username: true,
@@ -106,7 +106,7 @@ export class MemberUsersService {
           username,
           email,
           passwordHash: hash,
-          role: 'CLUB_MEMBER',
+          role: 'MEMBER_VIEW',
           mustChangePassword: dto.mustChangePassword ?? true,
           notificationEnabled: dto.notificationEnabled ?? true,
         },
@@ -185,7 +185,7 @@ export class MemberUsersService {
 
   async resetPassword(accountId: string, adminUserId: string, clubId: string) {
     const user = await this.prisma.user.findFirst({
-      where: { id: accountId, clubId, role: 'CLUB_MEMBER' },
+      where: { id: accountId, clubId, role: 'MEMBER_VIEW' },
     });
     if (!user) throw new NotFoundException('Tài khoản không tồn tại');
 
@@ -216,7 +216,7 @@ export class MemberUsersService {
     clubId: string,
   ) {
     const user = await this.prisma.user.findFirst({
-      where: { id: accountId, clubId, role: 'CLUB_MEMBER' },
+      where: { id: accountId, clubId, role: 'MEMBER_VIEW' },
     });
     if (!user) throw new NotFoundException('Tài khoản không tồn tại');
 

@@ -1,4 +1,4 @@
-export type Role = 'SUPER_ADMIN' | 'CLUB_ADMIN' | 'CLUB_TREASURER' | 'CLUB_MEMBER'
+export type Role = 'SUPER_ADMIN' | 'CLUB_ADMIN' | 'CLUB_TREASURER' | 'MEMBER_VIEW'
 
 export type ClubStatus = 'active' | 'suspended' | 'deleted'
 export type FundPeriodStatus = 'draft' | 'active' | 'closed' | 'finalized'

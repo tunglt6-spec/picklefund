@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 
 /**
- * MemberPortalService — read-only, JWT-scoped self-view cho CLUB_MEMBER (AUTH-IMPL-01).
+ * MemberPortalService — read-only, JWT-scoped self-view cho MEMBER_VIEW (AUTH-IMPL-01).
  * MỌI phạm vi dữ liệu suy ra từ (memberId, clubId, userId) do controller lấy từ JWT —
  * KHÔNG nhận từ client. Chỉ trả dữ liệu của CHÍNH member; không lộ member khác / dữ liệu quản trị.
  */
@@ -131,6 +131,28 @@ export class MemberPortalService {
         memberCount: summary.members.length,
       },
     };
+  }
+
+  /**
+   * Lịch sử đóng góp COMMON của CHÍNH member (scope theo memberId+clubId từ JWT).
+   * amount ép về number để frontend cộng/format an toàn (Prisma Decimal serialize ra string).
+   */
+  async getContributions(memberId: string | null, clubId: string) {
+    await this.assertMember(memberId, clubId);
+    const rows = await this.prisma.fundContribution.findMany({
+      where: { clubId, memberId: memberId as string, fundSource: 'COMMON' },
+      include: { fundPeriod: { select: { id: true, name: true } } },
+      orderBy: { paymentDate: 'desc' },
+    });
+    return rows.map((c) => ({
+      id: c.id,
+      fundPeriodId: c.fundPeriodId,
+      periodName: c.fundPeriod?.name ?? null,
+      amount: Number(c.amount),
+      isConfirmed: c.isConfirmed,
+      paymentDate: c.paymentDate,
+      paymentMethod: c.paymentMethod,
+    }));
   }
 
   async getPersonalReceipts(memberId: string | null, clubId: string) {

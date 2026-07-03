@@ -62,9 +62,9 @@ describe('TenantGuard', () => {
     expect(request.clubId).toBe('club-1');
   });
 
-  it('should allow CLUB_MEMBER with clubId', () => {
+  it('should allow MEMBER_VIEW with clubId', () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(false);
-    const ctx = makeCtx({ role: 'CLUB_MEMBER', clubId: 'club-2' });
+    const ctx = makeCtx({ role: 'MEMBER_VIEW', clubId: 'club-2' });
     expect(guard.canActivate(ctx)).toBe(true);
   });
 });

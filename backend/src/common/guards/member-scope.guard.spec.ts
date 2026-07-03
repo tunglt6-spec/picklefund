@@ -13,7 +13,7 @@ function ctxFor(user: unknown, path: string): ExecutionContext {
 describe('MemberScopeGuard', () => {
   const guard = new MemberScopeGuard();
 
-  describe('role không phải CLUB_MEMBER → luôn cho qua', () => {
+  describe('role không phải MEMBER_VIEW → luôn cho qua', () => {
     it.each([
       ['SUPER_ADMIN', '/api/members'],
       ['CLUB_ADMIN', '/api/fund-periods'],
@@ -29,8 +29,8 @@ describe('MemberScopeGuard', () => {
     });
   });
 
-  describe('CLUB_MEMBER — allowlist self/auth', () => {
-    const member = { role: 'CLUB_MEMBER' };
+  describe('MEMBER_VIEW — allowlist self/auth', () => {
+    const member = { role: 'MEMBER_VIEW' };
     it.each([
       '/api/member/me',
       '/api/member/me/attendance',
@@ -46,8 +46,8 @@ describe('MemberScopeGuard', () => {
     });
   });
 
-  describe('CLUB_MEMBER — chặn route quản trị (403)', () => {
-    const member = { role: 'CLUB_MEMBER' };
+  describe('MEMBER_VIEW — chặn route quản trị (403)', () => {
+    const member = { role: 'MEMBER_VIEW' };
     it.each([
       '/api/members',
       '/api/members/mem-B',

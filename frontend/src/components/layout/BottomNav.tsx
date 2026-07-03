@@ -44,7 +44,7 @@ const navByRole: Record<Role, NavItem[]> = {
   SUPER_ADMIN: superNav,
   CLUB_ADMIN: adminNav,
   CLUB_TREASURER: treasurerNav,
-  CLUB_MEMBER: memberNav,
+  MEMBER_VIEW: memberNav,
 }
 
 export function BottomNav() {

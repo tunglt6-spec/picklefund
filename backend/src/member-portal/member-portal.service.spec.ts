@@ -8,7 +8,10 @@ const prisma = {
   member: { findFirst: jest.fn() },
   attendanceSession: { findMany: jest.fn().mockResolvedValue([]) },
   fundPeriod: { findFirst: jest.fn().mockResolvedValue(null) },
-  fundContribution: { findFirst: jest.fn().mockResolvedValue(null) },
+  fundContribution: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   personalReceipt: { findMany: jest.fn().mockResolvedValue([]) },
   minigameParticipant: { findMany: jest.fn().mockResolvedValue([]) },
   notification: { findMany: jest.fn().mockResolvedValue([]) },
@@ -30,6 +33,7 @@ describe('MemberPortalService', () => {
     prisma.attendanceSession.findMany.mockResolvedValue([]);
     prisma.fundPeriod.findFirst.mockResolvedValue(null);
     prisma.fundContribution.findFirst.mockResolvedValue(null);
+    prisma.fundContribution.findMany.mockResolvedValue([]);
     prisma.personalReceipt.findMany.mockResolvedValue([]);
     prisma.minigameParticipant.findMany.mockResolvedValue([]);
     prisma.notification.findMany.mockResolvedValue([]);
@@ -169,6 +173,31 @@ describe('MemberPortalService', () => {
       expect(r.period).toBeNull();
       expect(r.member).toBeNull();
       expect(calculator.calculate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getContributions', () => {
+    it('scope theo memberId + clubId + fundSource COMMON; amount ép number', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
+      prisma.fundContribution.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          fundPeriodId: 'fp-1',
+          amount: '500000',
+          isConfirmed: true,
+          paymentDate: new Date('2026-01-05'),
+          paymentMethod: 'bank_transfer',
+          fundPeriod: { id: 'fp-1', name: 'Q1' },
+        },
+      ]);
+      const r = await service.getContributions('mem-A', 'club-1');
+      expect(prisma.fundContribution.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clubId: 'club-1', memberId: 'mem-A', fundSource: 'COMMON' },
+        }),
+      );
+      expect(r[0].amount).toBe(500000); // number, không phải string
+      expect(r[0].periodName).toBe('Q1');
     });
   });
 

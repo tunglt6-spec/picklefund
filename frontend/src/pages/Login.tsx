@@ -18,12 +18,12 @@ const demoAccounts = [
   { username: 'superadmin', password: 'super123', role: 'SUPER_ADMIN' as Role, label: 'Super Admin', desc: 'Quản trị toàn hệ thống', clubId: null, badge: 'purple' },
   { username: 'admin',      password: 'admin123', role: 'CLUB_ADMIN' as Role,    label: 'Quản lý CLB',  desc: 'Admin CLB Hà Nội',        clubId: 'club-1', badge: 'indigo' },
   { username: 'treasurer',  password: 'treasurer123', role: 'CLUB_TREASURER' as Role,label: 'Thủ Quỹ',      desc: 'Thủ quỹ CLB Hà Nội',     clubId: 'club-1', badge: 'teal' },
-  { username: 'member',     password: 'member123', role: 'CLUB_MEMBER' as Role,   label: 'Thành viên',   desc: 'Nguyễn Văn A',            clubId: 'club-1', badge: 'green' },
+  { username: 'member',     password: 'member123', role: 'MEMBER_VIEW' as Role,   label: 'Thành viên',   desc: 'Nguyễn Văn A',            clubId: 'club-1', badge: 'green' },
 ]
 
 const routeByRole: Record<Role, string> = {
   SUPER_ADMIN: '/super/dashboard', CLUB_ADMIN: '/dashboard',
-  CLUB_TREASURER: '/treasurer/dashboard', CLUB_MEMBER: '/member/dashboard',
+  CLUB_TREASURER: '/treasurer/dashboard', MEMBER_VIEW: '/member/dashboard',
 }
 
 const stats = [

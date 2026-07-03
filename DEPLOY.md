@@ -146,7 +146,7 @@ Seed completed!
   superadmin / super123 -> SUPER_ADMIN
   admin / admin123      -> CLUB_ADMIN
   treasurer / treasurer123 -> CLUB_TREASURER
-  member / member123    -> CLUB_MEMBER
+  member / member123    -> MEMBER_VIEW
 ```
 
 ---

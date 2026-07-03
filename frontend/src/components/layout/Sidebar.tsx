@@ -66,14 +66,14 @@ const navByRole: Record<Role, NavItem[]> = {
   SUPER_ADMIN: superAdminNav,
   CLUB_ADMIN: clubAdminBaseNav,
   CLUB_TREASURER: treasurerNav,
-  CLUB_MEMBER: memberNav,
+  MEMBER_VIEW: memberNav,
 }
 
 const roleLabels: Record<Role, string> = {
   SUPER_ADMIN: 'Super Admin',
   CLUB_ADMIN: 'Club Admin',
   CLUB_TREASURER: 'Thủ Quỹ',
-  CLUB_MEMBER: 'Thành Viên',
+  MEMBER_VIEW: 'Thành Viên',
 }
 
 
@@ -111,7 +111,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
 
-  const notifPath = user.role === 'CLUB_MEMBER' ? '/member/notifications' : '/notifications'
+  const notifPath = user.role === 'MEMBER_VIEW' ? '/member/notifications' : '/notifications'
   const navItems: NavItem[] = navByRole[user.role].map(item => {
     if (item.to === notifPath && adminUnread > 0) {
       return { ...item, badge: adminUnread }

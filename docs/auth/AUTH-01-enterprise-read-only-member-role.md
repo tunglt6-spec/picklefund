@@ -28,7 +28,7 @@ Role chính thức:
 - **Deprecated** — không dùng làm role nghiệp vụ chính.
 - Nếu còn trong DB / legacy code → **map về `MEMBER_FULL_VIEW`** ở bước implementation sau (không thực hiện trong AUTH-01 docs-only).
 
-> Danh mục role hiện tại của Product (SUPER_ADMIN / CLUB_ADMIN / CLUB_TREASURER / CLUB_MEMBER) sẽ được đối chiếu & ánh xạ ở AUTH-IMPL-01 — AUTH-01 chỉ đặc tả mô hình đích, không đổi code/DB.
+> Danh mục role của Product: SUPER_ADMIN / CLUB_ADMIN / CLUB_TREASURER / **MEMBER_VIEW**. AUTH-IMPL-01 FIX-01 đã canonicalize role member read-only từ `CLUB_MEMBER` → `MEMBER_VIEW` (enum Prisma + migration rename in-place, không mất dữ liệu; không giữ alias).
 
 ## 3. Permission Matrix
 

@@ -30,7 +30,7 @@ export function ChangePassword() {
       })
       if (user) setUser({ ...user, mustChangePassword: false })
       toast.success('Đổi mật khẩu thành công!')
-      navigate(user?.role === 'CLUB_MEMBER' ? '/member/dashboard' : '/')
+      navigate(user?.role === 'MEMBER_VIEW' ? '/member/dashboard' : '/')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Đổi mật khẩu thất bại')
     } finally {

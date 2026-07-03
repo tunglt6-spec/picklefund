@@ -33,7 +33,7 @@ describe('ActionPermissionService (role/clubId từ context, không body)', () =
 
   it('member denied', () => {
     const d = svc.check(
-      { clubId: 'club-1', userId: 'u2', role: 'CLUB_MEMBER' },
+      { clubId: 'club-1', userId: 'u2', role: 'MEMBER_VIEW' },
       cls(
         'MEMBER_REVIEW_PROPOSAL',
         ActionType.MEMBER_REVIEW_PROPOSAL,

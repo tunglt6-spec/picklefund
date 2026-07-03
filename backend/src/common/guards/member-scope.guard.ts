@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 
 /**
- * MemberScopeGuard (AUTH-IMPL-01) — enforce read-only self-scope cho CLUB_MEMBER ở tầng backend.
+ * MemberScopeGuard (AUTH-IMPL-01) — enforce read-only self-scope cho MEMBER_VIEW ở tầng backend.
  *
- * CLUB_MEMBER chỉ được truy cập nhóm route "của chính mình" (member portal, auth self-service,
+ * MEMBER_VIEW chỉ được truy cập nhóm route "của chính mình" (member portal, auth self-service,
  * phiếu thu cá nhân, thông báo cá nhân, trợ lý Lisa). MỌI route quản trị (members, fund-periods,
  * attendance, contributions, expenses, minigames, reports, users, clubs, ...) bị chặn 403 —
  * kể cả khi handler không khai báo @Roles. Guard này KHÔNG ảnh hưởng các role khác
@@ -38,8 +38,8 @@ export class MemberScopeGuard implements CanActivate {
     }>();
     const user = req.user;
 
-    // Chỉ áp dụng cho CLUB_MEMBER; role khác do các guard khác xử lý.
-    if (!user || user.role !== 'CLUB_MEMBER') return true;
+    // Chỉ áp dụng cho MEMBER_VIEW; role khác do các guard khác xử lý.
+    if (!user || user.role !== 'MEMBER_VIEW') return true;
 
     const path = this.normalize(req.path ?? req.url ?? '');
     const allowed =

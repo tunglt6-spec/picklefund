@@ -80,9 +80,9 @@ describe('ActionLayerService (proposal / dry-run / validate — no execution)', 
     }
   });
 
-  it('CLUB_MEMBER role denied for proposals', () => {
+  it('MEMBER_VIEW role denied for proposals', () => {
     const p = svc.dryRun(
-      { clubId: 'club-1', userId: 'u2', role: 'CLUB_MEMBER' },
+      { clubId: 'club-1', userId: 'u2', role: 'MEMBER_VIEW' },
       { actionType: 'MEMBER_REVIEW_PROPOSAL' },
     );
     expect(p.permissionDecision.allowed).toBe(false);

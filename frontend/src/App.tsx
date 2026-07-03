@@ -137,8 +137,8 @@ export default function App() {
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
             </Route>
-            {/* Member (CLUB_MEMBER) — chỉ member read-only; staff không rơi vào đây */}
-            <Route element={<RoleRoute allow={['CLUB_MEMBER']} />}>
+            {/* Member (MEMBER_VIEW) — chỉ member read-only; staff không rơi vào đây */}
+            <Route element={<RoleRoute allow={['MEMBER_VIEW']} />}>
             {/* Member */}
             <Route path="/member/dashboard" element={<MemberDashboard />} />
             <Route path="/member/receipt" element={<MemberReceipt />} />
