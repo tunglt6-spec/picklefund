@@ -174,6 +174,16 @@ export class MinigameService {
     )
       throw new BadRequestException('Chỉ hỗ trợ format doubles');
 
+    // FIXED TEAM LOCK: đã có lịch/kết quả → KHÔNG cho tạo lại đội (đội cố định cả mùa).
+    // Muốn ghép lại phải xoá lịch trước (DELETE /schedule) một cách tường minh.
+    const existingMatches = await this.prisma.minigameMatch.count({
+      where: { minigameId: id },
+    });
+    if (existingMatches > 0)
+      throw new BadRequestException(
+        'Đội đã được cố định. Không thể tạo lại khi đã có lịch thi đấu. Hãy xoá lịch trước.',
+      );
+
     const participants = await this.prisma.minigameParticipant.findMany({
       where: { minigameId: id },
     });
@@ -204,12 +214,33 @@ export class MinigameService {
 
   async generateSchedule(id: string, clubId: string) {
     await this.assertOwnership(id, clubId);
-    const teams = await this.prisma.minigameTeam.findMany({
+    // SCHEDULE LOCK: đã có lịch → KHÔNG sinh lại ngầm (lịch/kết quả cố định cả mùa).
+    // Muốn tạo lại phải xoá lịch trước (DELETE /schedule) một cách tường minh.
+    const existingMatches = await this.prisma.minigameMatch.count({
       where: { minigameId: id },
     });
+    if (existingMatches > 0)
+      throw new BadRequestException(
+        'Lịch thi đấu đã được cố định. Hãy xoá lịch hiện tại trước khi tạo lại.',
+      );
+    // Đội CỐ ĐỊNH (MinigameTeam) — order ổn định; lịch chỉ reference teamId, KHÔNG ghép lại.
+    const teams = await this.prisma.minigameTeam.findMany({
+      where: { minigameId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (teams.length === 0)
+      throw new BadRequestException('Vui lòng tạo đội trước khi sinh lịch.');
     if (teams.length < 2) throw new BadRequestException('Cần ít nhất 2 đội');
 
-    // Round-robin schedule
+    // Round-robin CIRCLE METHOD (mỗi đội gặp nhau đúng 1 lần, không đội nào đá 2 trận/vòng):
+    //  - Số đội chẵn: rounds = n-1, mỗi vòng n/2 trận.
+    //  - Số đội lẻ: thêm 1 BYE (null) → rounds = n, mỗi vòng có 1 đội nghỉ (không sinh trận).
+    const slots: (string | null)[] = teams.map((t) => t.id);
+    if (slots.length % 2 === 1) slots.push(null); // BYE placeholder
+    const n = slots.length;
+    const rounds = n - 1;
+    const half = n / 2;
+
     const matches: Array<{
       minigameId: string;
       teamAId: string;
@@ -217,18 +248,27 @@ export class MinigameService {
       round: number;
       courtNo: number;
     }> = [];
-    let round = 1;
-    for (let i = 0; i < teams.length - 1; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        matches.push({
-          minigameId: id,
-          teamAId: teams[i].id,
-          teamBId: teams[j].id,
-          round,
-          courtNo: (matches.length % 4) + 1,
-        });
+    // Cố định slot[0], xoay các slot còn lại qua từng vòng.
+    let arr = [...slots];
+    for (let round = 0; round < rounds; round++) {
+      let courtNo = 0;
+      for (let i = 0; i < half; i++) {
+        const a = arr[i];
+        const b = arr[n - 1 - i];
+        // a hoặc b = null ⇒ đội còn lại NGHỈ vòng (BYE) — không tạo trận.
+        if (a !== null && b !== null) {
+          courtNo++;
+          matches.push({
+            minigameId: id,
+            teamAId: a,
+            teamBId: b,
+            round: round + 1,
+            courtNo,
+          });
+        }
       }
-      round++;
+      // Xoay: giữ arr[0], đưa arr[1] về cuối.
+      arr = [arr[0], ...arr.slice(2), arr[1]];
     }
 
     await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });

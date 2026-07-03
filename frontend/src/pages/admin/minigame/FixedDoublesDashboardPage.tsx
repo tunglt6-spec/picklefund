@@ -610,6 +610,9 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
     else { removeTeam(teamId); toast.success('Đã xóa đội') }
   }
   const handleRegenerate = async () => {
+    // Rule 3: ghép lại đội là thao tác phá dữ liệu đội hiện tại → yêu cầu confirm rõ ràng.
+    // (Sau khi đã tạo lịch, backend khoá generate-teams; UI chuyển sang màn lịch nên nút này biến mất.)
+    if (!window.confirm('Ghép lại đội sẽ tạo lại toàn bộ danh sách đội hiện tại. Tiếp tục?')) return
     if (onRegenerateTeams) { await onRegenerateTeams() }
     else { autoGenerateTeams(minigameId); toast.success('Đã ghép lại!') }
   }
@@ -619,6 +622,7 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
         <div className="flex items-center gap-2">
           <Users size={16} className="text-slate-400" />
           <span className="font-bold text-slate-900">Danh Sách Đội ({teams.length})</span>
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đội sẽ được cố định sau khi tạo lịch</span>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={handleRegenerate}>
@@ -723,6 +727,8 @@ export function FixedDoublesDashboardPage() {
 
   const handleClearSchedule = useCallback(async () => {
     if (!id) return
+    // Xoá lịch = phá lịch thi đấu + kết quả + BXH hiện tại → confirm rõ ràng (Rule 3).
+    if (!window.confirm('Việc xoá lịch sẽ xoá lịch thi đấu, kết quả và bảng xếp hạng hiện tại. Tiếp tục?')) return
     try {
       await api.delete(`/minigames/${id}/schedule`)
       setTeamMatchesFromApi(id, [])
@@ -881,6 +887,7 @@ export function FixedDoublesDashboardPage() {
                 <div className="flex items-center gap-2">
                   <Calendar size={14} style={{ color: T.brand }} />
                   <span className="font-bold text-sm" style={{ color: T.txt1 }}>Lịch Thi Đấu</span>
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đội &amp; lịch đã cố định</span>
                   <span className="text-[11px]" style={{ color: T.txt2 }}>
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
