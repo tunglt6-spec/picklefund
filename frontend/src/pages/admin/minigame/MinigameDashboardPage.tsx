@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Trophy, UserMinus, UserPen } from 'lucide-react'
+import { ArrowLeft, Calendar, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
 
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { MinigameKpiCards } from '../../../components/minigame/v2/MinigameKpiCards'
@@ -25,6 +25,9 @@ export function MinigameDashboardPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ memberId: string; name: string } | null>(null)
   const [editTarget, setEditTarget] = useState<{ memberId: string; name: string } | null>(null)
   const [editName, setEditName] = useState('')
+  // Mốc thời gian ổn định: tính 1 lần qua lazy initializer khi mount
+  // (không gọi Date.now() trực tiếp trong render path, không recalculate mỗi render).
+  const [now] = useState(() => Date.now())
 
   const { getMinigame, getTournamentDashboard, getRecentActivity, lockRound, enterDoublesMatchResult, removeParticipant, updateParticipant } = useMinigameStore()
 
@@ -99,7 +102,7 @@ export function MinigameDashboardPage() {
   }
 
   function formatRelativeTime(iso: string): string {
-    const diffMs = Date.now() - new Date(iso).getTime()
+    const diffMs = now - new Date(iso).getTime()
     const sec = Math.floor(diffMs / 1000)
     if (sec < 60) return 'Vừa xong'
     const min = Math.floor(sec / 60)
@@ -205,33 +208,47 @@ export function MinigameDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
-      {/* Header */}
+      {/* Header / Top bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div className="flex flex-col gap-1.5">
-            <button
-              onClick={() => navigate('/minigames')}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
-            >
-              <ArrowLeft size={14} />
-              Danh Sách Minigame
-            </button>
+        <button
+          onClick={() => navigate('/minigames')}
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
+        >
+          <ArrowLeft size={14} />
+          Danh Sách Minigame
+        </button>
+
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
+                🏓 Đánh Đôi Ngẫu Nhiên
+              </span>
             </div>
-            {mg.description && <p className="text-sm text-slate-500">{mg.description}</p>}
+            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <Calendar size={14} />
+                {mg.startDate} — {mg.endDate}
+              </span>
+              {mg.description && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="truncate">{mg.description}</span>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 text-sm text-slate-500">
-              <Calendar size={14} />
-              <span>{mg.startDate} — {mg.endDate}</span>
-            </div>
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
-              🏓 Đánh Đôi Ngẫu Nhiên
-            </span>
-          </div>
+          {/* Primary CTA — mở rút thăm vòng mới (đánh đôi ngẫu nhiên) */}
+          <button
+            onClick={() => setIsDrawModalOpen(true)}
+            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-600/20 transition-colors hover:bg-purple-700 md:w-auto"
+          >
+            <Shuffle size={16} />
+            Đánh Đôi Ngẫu Nhiên
+          </button>
         </div>
       </div>
 
@@ -264,6 +281,7 @@ export function MinigameDashboardPage() {
               minigameId={id!}
               onDrawRound={handleDrawRound}
               onCompleteRound={handleCompleteRound}
+              canCompleteRound={!!data.currentRound}
             />
             <FairnessAlertsPanel alerts={dashboardAlerts} onAction={handleAlertAction} />
           </div>

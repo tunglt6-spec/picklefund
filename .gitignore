@@ -12,6 +12,10 @@ nginx/ssl/
 node_modules/
 dist/
 
+# Test coverage (generated)
+coverage/
+backend/coverage/
+
 # OS
 .DS_Store
 Thumbs.db

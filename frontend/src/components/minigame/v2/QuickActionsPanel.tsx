@@ -8,6 +8,8 @@ interface QuickActionsPanelProps {
   onViewSchedule?: () => void
   onViewStandings?: () => void
   minigameId: string
+  /** Có vòng đang diễn ra hay không — quyết định bật/tắt "Hoàn Thành Vòng". Mặc định true. */
+  canCompleteRound?: boolean
 }
 
 interface ActionButton {
@@ -16,6 +18,8 @@ interface ActionButton {
   bgClass: string
   hoverClass: string
   onClick: () => void
+  disabled?: boolean
+  disabledTitle?: string
 }
 
 export function QuickActionsPanel({
@@ -25,6 +29,7 @@ export function QuickActionsPanel({
   onViewSchedule,
   onViewStandings,
   minigameId,
+  canCompleteRound = true,
 }: QuickActionsPanelProps) {
   const navigate = useNavigate()
 
@@ -42,6 +47,8 @@ export function QuickActionsPanel({
       bgClass: 'bg-green-500',
       hoverClass: 'hover:bg-green-600',
       onClick: () => onCompleteRound?.(),
+      disabled: !canCompleteRound,
+      disabledTitle: 'Chưa có vòng đang diễn ra',
     },
     {
       label: 'Quản Lý Bảng',
@@ -89,10 +96,24 @@ export function QuickActionsPanel({
           <button
             key={action.label}
             onClick={action.onClick}
-            className={`${action.bgClass} ${action.hoverClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+            disabled={action.disabled}
+            title={action.disabled ? action.disabledTitle : undefined}
+            aria-disabled={action.disabled}
+            className={`${action.bgClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+              action.disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : `${action.hoverClass} cursor-pointer`
+            }`}
           >
             {action.icon}
-            <span className="text-xs font-medium text-white leading-tight">{action.label}</span>
+            <span className="text-xs font-medium text-white leading-tight">
+              {action.label}
+              {action.disabled && (
+                <span className="block text-[10px] font-normal text-white/80 mt-0.5">
+                  Chưa có vòng đang diễn ra
+                </span>
+              )}
+            </span>
           </button>
         ))}
       </div>
