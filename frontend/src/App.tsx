@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
@@ -64,6 +64,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Nhóm role nhân sự quản trị (admin/super/treasurer) vs member read-only.
+const STAFF_ROLES = ['SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER']
+
+/**
+ * RoleRoute — guard route theo role (không chỉ ẩn menu). Role không thuộc `allow`
+ * → điều hướng về "/" (RootRedirect đưa về home đúng role). Chặn member gõ URL admin.
+ */
+function RoleRoute({ allow }: { allow: string[] }) {
+  const { user } = useAuthStore()
+  if (!user) return <Navigate to="/login" replace />
+  if (!allow.includes(user.role)) return <Navigate to="/" replace />
+  return <Outlet />
+}
+
 function RootRedirect() {
   const { user, isAuthenticated } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/login" replace />
@@ -83,6 +97,8 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
 
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            {/* Staff (super/admin/treasurer) — member bị chặn khỏi các route này */}
+            <Route element={<RoleRoute allow={STAFF_ROLES} />}>
             {/* Super Admin */}
             <Route path="/super/dashboard" element={<SuperDashboard />} />
             <Route path="/super/clubs" element={<SuperClubs />} />
@@ -120,6 +136,9 @@ export default function App() {
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
+            </Route>
+            {/* Member (CLUB_MEMBER) — chỉ member read-only; staff không rơi vào đây */}
+            <Route element={<RoleRoute allow={['CLUB_MEMBER']} />}>
             {/* Member */}
             <Route path="/member/dashboard" element={<MemberDashboard />} />
             <Route path="/member/receipt" element={<MemberReceipt />} />
@@ -127,6 +146,7 @@ export default function App() {
             <Route path="/member/attendance" element={<MemberAttendance />} />
             <Route path="/member/lisa" element={<MemberLisaChat />} />
             <Route path="/member/notifications" element={<MemberNotifications />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<NotFound />} />

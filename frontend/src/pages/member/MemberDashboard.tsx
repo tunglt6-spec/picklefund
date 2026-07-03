@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { KpiCard } from '../../components/ui/KpiCard'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'
-import { useClubDataStore } from '../../store/clubDataStore'
+import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatVND, formatDate } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { exportReceiptPDF } from '../../lib/export'
@@ -11,58 +11,48 @@ import toast from 'react-hot-toast'
 
 export function MemberDashboard() {
   const { user } = useAuthStore()
-  const { getClubData } = useClubDataStore()
-  const clubData = getClubData(user?.clubId ?? '')
+  const { finance, attendance } = useMemberPortal()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
 
-  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
-  const myContribs = clubData.contributions.filter(
-    c => c.memberId === user?.memberId && (!activePeriod || c.fundPeriodId === activePeriod.id)
-  )
-  const myContribution = myContribs[0]
-  const attended = new Set(clubData.myAttendedSessionIds ?? [])
-  const completedSessions = clubData.sessions.filter(
-    s => s.status === 'completed' && (!activePeriod || s.fundPeriodId === activePeriod.id)
-  )
-  const totalSessions = completedSessions.length
-  const myAttendance = completedSessions.filter(s => attended.has(s.id)).length
+  const activePeriod = finance?.period ?? null
+  const fin = finance?.member ?? null
+  const myContribution = finance?.contribution ?? null
+
+  // Buổi đã hoàn thành + cờ có mặt (self-scope từ /member/me/attendance).
+  const completedSessions = (attendance?.sessions ?? []).filter(s => s.status === 'completed')
+  const attended = new Set(completedSessions.filter(s => s.present).map(s => s.id))
+
+  const totalSessions = fin?.totalSessions ?? attendance?.totalCompleted ?? 0
+  const myAttendance = fin?.attendedSessions ?? attendance?.attended ?? 0
   const attendanceRate = totalSessions > 0 ? Math.round((myAttendance / totalSessions) * 100) : 0
 
-  const amountPaid = myContribution?.isConfirmed ? (myContribution.amount ?? 0) : 0
-  const periodExpenses = clubData.expenses.filter(e => !activePeriod || e.fundPeriodId === activePeriod.id)
-  const COURT_KW = ['sân', 'court']
-  const courtExpTotal = periodExpenses
-    .filter(e => e.allocationRule === 'EQUAL' && COURT_KW.some(k => (e.description ?? '').toLowerCase().includes(k)))
-    .reduce((a, e) => a + e.amount, 0)
-  const livingExpTotal = periodExpenses
-    .filter(e => !(e.allocationRule === 'EQUAL' && COURT_KW.some(k => (e.description ?? '').toLowerCase().includes(k))))
-    .reduce((a, e) => a + e.amount, 0)
-  const memberCount = clubData.members.filter(m => m.status === 'active').length || 1
-  const roughCourtCost = memberCount > 0 ? Math.round(courtExpTotal / memberCount) : 0
-  const roughLivingCost = totalSessions > 0 && memberCount > 0
-    ? Math.round((myAttendance / totalSessions) * (livingExpTotal / memberCount))
-    : memberCount > 0 ? Math.round(livingExpTotal / memberCount) : 0
-  const myCost = roughCourtCost + roughLivingCost
-  const balance = amountPaid - myCost
+  const amountPaid = fin?.paidAmount ?? 0
+  const courtExpTotal = finance?.totals?.court ?? 0
+  const livingExpTotal = finance?.totals?.living ?? 0
+  const memberCount = finance?.totals?.memberCount || 1
+  const roughCourtCost = fin?.courtFee ?? 0
+  const roughLivingCost = fin?.livingFee ?? 0
+  const myCost = fin?.totalCost ?? (roughCourtCost + roughLivingCost)
+  const balance = fin?.balance ?? (amountPaid - myCost)
 
-  const memberName = clubData.members.find(m => m.id === user?.memberId)?.fullName ?? user?.username ?? 'Thành viên'
+  const memberName = fin?.memberName ?? attendance?.memberName ?? user?.username ?? 'Thành viên'
   const initials = memberName.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase()
-  const hasData = clubData.fundPeriods.length > 0
+  const hasData = !!activePeriod
   const isPaid = !!myContribution?.isConfirmed
-  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
+  const clubName = 'CLB Pickleball'
 
   function handleExportPDF() {
     exportReceiptPDF({
       receiptNo: 1,
       memberName,
       loginName: user?.username ?? '',
-      periodName: activePeriod?.name ?? clubData.fundPeriods[0]?.name ?? '',
-      periodStartDate: activePeriod?.startDate ?? clubData.fundPeriods[0]?.startDate ?? '',
-      periodEndDate: activePeriod?.endDate ?? clubData.fundPeriods[0]?.endDate ?? '',
+      periodName: activePeriod?.name ?? '',
+      periodStartDate: activePeriod?.startDate ?? '',
+      periodEndDate: activePeriod?.endDate ?? '',
       contributionAmount: activePeriod?.contributionAmount ?? 0,
       clubName,
-      clubLocation: (clubData.settings?.address as string | undefined) ?? '',
+      clubLocation: '',
       amountPaid,
       paymentDate: myContribution?.paymentDate ?? '',
       attendedSessions: myAttendance,
@@ -195,7 +185,7 @@ export function MemberDashboard() {
               <div className="px-4 py-3 space-y-2.5 text-[13px]">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Kỳ quỹ</span>
-                  <span className="font-[600] text-slate-800">{activePeriod?.name ?? clubData.fundPeriods[0]?.name ?? '—'}</span>
+                  <span className="font-[600] text-slate-800">{activePeriod?.name ?? '—'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Buổi tham gia</span>
@@ -326,7 +316,7 @@ export function MemberDashboard() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Kỳ quỹ</p>
-                    <p className="font-semibold text-gray-900">{activePeriod?.name ?? clubData.fundPeriods[0]?.name ?? '—'}</p>
+                    <p className="font-semibold text-gray-900">{activePeriod?.name ?? '—'}</p>
                   </div>
                 </div>
                 <div className="border-t border-gray-100 pt-3 space-y-2">

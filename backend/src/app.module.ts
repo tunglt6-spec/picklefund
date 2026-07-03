@@ -36,9 +36,11 @@ import { LisaModule } from './lisa/lisa.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { BillingModule } from './billing/billing.module';
 import { CategoriesModule } from './categories/categories.module';
+import { MemberPortalModule } from './member-portal/member-portal.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
+import { MemberScopeGuard } from './common/guards/member-scope.guard';
 
 @Module({
   imports: [
@@ -91,12 +93,14 @@ import { TenantGuard } from './common/guards/tenant.guard';
     TelegramModule,
     BillingModule,
     CategoriesModule,
+    MemberPortalModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: TenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: MemberScopeGuard },
   ],
 })
 export class AppModule {}

@@ -2,25 +2,26 @@ import { useState } from 'react'
 import { Calendar, CheckCircle, Clock, MapPin, Search } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
-import { useClubDataStore } from '../../store/clubDataStore'
-import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useMemberPortal } from '../../hooks/useMemberPortal'
 
 export function MemberAttendance() {
   const isMobile = useIsMobile()
-  const { user } = useAuthStore()
-  const clubId = user?.clubId ?? ''
-  const memberId = user?.memberId ?? 'mem-1'
-  const { getClubData } = useClubDataStore()
-  const data = getClubData(clubId)
-  const attended = new Set(data.myAttendedSessionIds ?? [])
+  const { attendance } = useMemberPortal()
 
-  const myMember = data.members.find(m => m.id === memberId)
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
-  const periodSessions = data.sessions.filter(s =>
-    activePeriod ? s.fundPeriodId === activePeriod.id : true
-  ).sort((a, b) => a.sessionDate.localeCompare(b.sessionDate))
+  const activePeriod = attendance?.period ?? null
+  // Session trong kỳ đã gồm cờ present + attendeeCount từ backend (self-scope, không lộ member khác).
+  const periodSessions = (attendance?.sessions ?? [])
+    .map(s => ({
+      ...s,
+      present: s.present,
+      _count: { attendanceRecords: s.attendeeCount },
+    }))
+    .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate))
+  const attended = new Set(periodSessions.filter(s => s.present).map(s => s.id))
+
+  const myMember = attendance ? { fullName: attendance.memberName } : undefined
 
   const [search, setSearch] = useState('')
   const filtered = periodSessions.filter(s =>
@@ -33,7 +34,7 @@ export function MemberAttendance() {
 
   const courtCostPerSession = completedSessions.reduce((s, sess) => {
     const present = attended.has(sess.id)
-    const attendees = sess._count?.attendanceRecords ?? 6
+    const attendees = sess._count?.attendanceRecords || 6
     return s + (present ? sess.courtFee / attendees : 0)
   }, 0)
 
