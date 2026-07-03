@@ -64,12 +64,17 @@ export class FinancialCalculatorService {
 
   /**
    * Canonical financial calculation for a fund period.
-   * - Court fee = SUM(AttendanceSession.courtFee) — the per-session actual court cost
-   * - Living fee = SUM(LivingExpense.amount WHERE fundSource='COMMON') — all living expenses
-   * - Both allocated proportionally to attendance: (attended / totalAttendance) * total
-   * - Income = confirmed contributions only
-   * - carryForward is injected by the caller (fund-periods.service looks up previous period)
-   * - clubAssets.balance = commonFund.balance + carryForward.balance (KHÔNG cộng Quỹ Phụ)
+   * Cost category theo LivingExpense.allocationRule (source of truth — CLB B32 baseline);
+   * KHÔNG dùng AttendanceSession.courtFee (chỉ là reference).
+   * - CHI PHÍ SÂN  = SUM(LivingExpense COMMON WHERE allocationRule='EQUAL')
+   *                  → chia đều /memberCount cho mọi thành viên.
+   * - SINH HOẠT    = SUM(LivingExpense COMMON WHERE allocationRule IN ('PRESENT_ONLY','ATTENDANCE'))
+   *                  → chia theo attendance: (attended / totalAttendance) * total.
+   * - FUND_ONLY    = quỹ-only: tính vào tổng chi Common Fund, KHÔNG phân bổ vào bill thành viên.
+   * - totalExpense (Common) = court + living + fundOnly.
+   * - Income = confirmed contributions only.
+   * - carryForward is injected by the caller (fund-periods.service looks up previous period).
+   * - clubAssets.balance = commonFund.balance + carryForward.balance (KHÔNG cộng Quỹ Phụ).
    */
   async calculate(
     fundPeriodId: string,
@@ -83,30 +88,38 @@ export class FinancialCalculatorService {
     const [
       commonIncomeAgg,
       miniIncomeAgg,
-      courtAgg,
-      commonLivingAgg,
+      commonExpenseByRule,
       miniExpenseAgg,
       sessions,
       members,
     ] = await Promise.all([
       this.prisma.fundContribution.aggregate({
-        where: { fundPeriodId, clubId, fundSource: 'COMMON', isConfirmed: true },
+        where: {
+          fundPeriodId,
+          clubId,
+          fundSource: 'COMMON',
+          isConfirmed: true,
+        },
         _sum: { amount: true },
       }),
       this.prisma.fundContribution.aggregate({
         where: { fundPeriodId, clubId, fundSource: 'MINI', isConfirmed: true },
         _sum: { amount: true },
       }),
-      this.prisma.attendanceSession.aggregate({
-        where: { fundPeriodId, clubId },
-        _sum: { courtFee: true },
-      }),
-      this.prisma.livingExpense.aggregate({
+      // Common Fund expenses phân loại theo allocationRule (canonical, KHÔNG dùng
+      // AttendanceSession.courtFee — session.courtFee chỉ là reference).
+      this.prisma.livingExpense.groupBy({
+        by: ['allocationRule'],
         where: { fundPeriodId, clubId, fundSource: 'COMMON' },
         _sum: { amount: true },
       }),
       this.prisma.livingExpense.aggregate({
-        where: { fundPeriodId, clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
+        where: {
+          fundPeriodId,
+          clubId,
+          fundSource: 'MINI',
+          status: { in: ['approved', 'paid'] },
+        },
         _sum: { amount: true },
       }),
       this.prisma.attendanceSession.findMany({
@@ -121,14 +134,18 @@ export class FinancialCalculatorService {
       this.prisma.member.findMany({ where: { clubId, isDeleted: false } }),
     ]);
 
-    const totalCourt = Number(courtAgg._sum.courtFee ?? 0);
-    const totalLiving = Number(commonLivingAgg._sum.amount ?? 0);
-    // LivingExpense is the expense ledger (source of truth for amounts).
-    // AttendanceSession.courtFee is used for proportional allocation only.
-    // When court fees are recorded as LivingExpense entries (totalLiving > 0),
-    // using totalCourt + totalLiving would double-count them.
-    // Fallback to totalCourt only when no LivingExpense exists for the period.
-    const totalCommonExpense = totalLiving > 0 ? totalLiving : totalCourt;
+    // Phân loại chi phí Common Fund theo allocationRule (canonical — CLB B32 baseline):
+    //  - CHI PHÍ SÂN  = EQUAL                       → chia đều /memberCount
+    //  - SINH HOẠT    = PRESENT_ONLY | ATTENDANCE   → chia theo attendance
+    //  - FUND_ONLY    = quỹ-only, KHÔNG phân bổ vào bill thành viên; vẫn tính tổng chi quỹ
+    const ruleSum = (rules: string[]) =>
+      commonExpenseByRule
+        .filter((r) => rules.includes(r.allocationRule))
+        .reduce((s, r) => s + Number(r._sum.amount ?? 0), 0);
+    const totalCourt = ruleSum(['EQUAL']);
+    const totalLiving = ruleSum(['PRESENT_ONLY', 'ATTENDANCE']);
+    const fundOnlyExpense = ruleSum(['FUND_ONLY']);
+    const totalCommonExpense = totalCourt + totalLiving + fundOnlyExpense;
     const totalCommonIncome = Number(commonIncomeAgg._sum.amount ?? 0);
     const totalMiniIncome = Number(miniIncomeAgg._sum.amount ?? 0);
     const totalMiniExpense = Number(miniExpenseAgg._sum.amount ?? 0);
@@ -139,7 +156,9 @@ export class FinancialCalculatorService {
       0,
     );
     const costPerAttendance =
-      totalAttendance > 0 ? Math.round(totalCommonExpense / totalAttendance) : 0;
+      totalAttendance > 0
+        ? Math.round(totalCommonExpense / totalAttendance)
+        : 0;
 
     const [attendanceCounts, paidAmounts] = await Promise.all([
       this.prisma.attendanceRecord.groupBy({
@@ -149,35 +168,41 @@ export class FinancialCalculatorService {
       }),
       this.prisma.fundContribution.groupBy({
         by: ['memberId'],
-        where: { fundPeriodId, clubId, fundSource: 'COMMON', isConfirmed: true },
+        where: {
+          fundPeriodId,
+          clubId,
+          fundSource: 'COMMON',
+          isConfirmed: true,
+        },
         _sum: { amount: true },
       }),
     ]);
 
-    const attendedMap = Object.fromEntries(
-      attendanceCounts.map((r) => [r.memberId, r._count.id]),
+    const attendedMap: Record<string, number> = Object.fromEntries(
+      attendanceCounts.map(
+        (r) => [r.memberId, r._count.id] as [string, number],
+      ),
     );
-    const paidMap = Object.fromEntries(
-      paidAmounts.map((r) => [r.memberId, Number(r._sum.amount ?? 0)]),
+    const paidMap: Record<string, number> = Object.fromEntries(
+      paidAmounts.map(
+        (r) => [r.memberId, Number(r._sum.amount ?? 0)] as [string, number],
+      ),
     );
 
+    const memberCount = members.length;
     const memberSummaries: MemberFinancialSummary[] = members.map((m) => {
       const attended = attendedMap[m.id] ?? 0;
       const paidAmount = paidMap[m.id] ?? 0;
-      // Allocation base matches totalCommonExpense: LivingExpense when present, sessions otherwise.
-      const allocationBase = totalLiving > 0 ? totalLiving : totalCourt;
-      // Court display portion is capped to allocationBase to prevent negative livingFee.
-      const courtBase = Math.min(totalCourt, allocationBase);
-      const memberTotalCost =
-        totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * allocationBase)
-          : 0;
+      // CHI PHÍ SÂN (EQUAL): chia đều cho mọi thành viên theo memberCount.
       const courtFee =
+        memberCount > 0 ? Math.round(totalCourt / memberCount) : 0;
+      // SINH HOẠT (PRESENT_ONLY | ATTENDANCE): chia theo số buổi tham dự.
+      const livingFee =
         totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * courtBase)
+          ? Math.round((attended / totalAttendance) * totalLiving)
           : 0;
-      const livingFee = memberTotalCost - courtFee;
-      const totalCost = memberTotalCost;
+      // FUND_ONLY KHÔNG phân bổ vào bill thành viên.
+      const totalCost = courtFee + livingFee;
       const balance = paidAmount - totalCost;
 
       let status: MemberFinancialSummary['status'];
