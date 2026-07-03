@@ -20,6 +20,7 @@ const mockPrisma = {
   },
   livingExpense: {
     aggregate: jest.fn(),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   attendanceSession: {
     findMany: jest.fn(),
@@ -148,10 +149,14 @@ describe('FundPeriodsService', () => {
       mockPrisma.attendanceSession.aggregate.mockResolvedValue({
         _sum: { courtFee: new Decimal(450000) },
       });
-      // living: COMMON, MINI
-      mockPrisma.livingExpense.aggregate
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(200000) } })
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(100000) } });
+      // COMMON expenses phân loại theo allocationRule (calculator dùng groupBy);
+      // MINI expense qua aggregate (1 lần).
+      mockPrisma.livingExpense.groupBy.mockResolvedValue([
+        { allocationRule: 'ATTENDANCE', _sum: { amount: new Decimal(200000) } },
+      ]);
+      mockPrisma.livingExpense.aggregate.mockResolvedValue({
+        _sum: { amount: new Decimal(100000) },
+      }); // MINI
       mockPrisma.attendanceSession.findMany.mockResolvedValue([
         { id: 'sess-1', _count: { attendanceRecords: 3 } },
         { id: 'sess-2', _count: { attendanceRecords: 2 } },
