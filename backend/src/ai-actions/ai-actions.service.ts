@@ -277,26 +277,52 @@ export class AiActionsService {
     return this.findOne(action.id, clubId);
   }
 
+  /**
+   * Chuyển trạng thái NGUYÊN TỬ có điều kiện + ghi sự kiện trong 1 transaction.
+   * updateMany chỉ khớp khi status === fromStatus → chỉ 1 request song song "acquire" được
+   * (count===1); còn lại count===0 → BadRequest (chống double-approve/reject/retry).
+   * Ghi sự kiện lỗi → rollback (state + event nhất quán).
+   */
+  private async atomicTransition(
+    id: string,
+    clubId: string,
+    fromStatus: string,
+    data: Prisma.AiActionUpdateManyMutationInput,
+    eventType: string,
+    eventMsg: string,
+    actorUserId: string,
+    notAcquiredMsg: string,
+  ) {
+    await this.prisma.$transaction(async (tx) => {
+      const res = await tx.aiAction.updateMany({
+        where: { id, clubId, status: fromStatus as never },
+        data,
+      });
+      if (res.count !== 1) throw new BadRequestException(notAcquiredMsg);
+      await tx.aiActionEvent.create({
+        data: {
+          actionId: id,
+          clubId,
+          type: eventType,
+          message: eventMsg,
+          actorUserId,
+        },
+      });
+    });
+  }
+
   async approve(id: string, clubIdRaw: string | null, actor: ActionActor) {
     const clubId = this.requireClub(clubIdRaw);
     const action = await this.requireAction(id, clubId);
-    if (action.status !== 'PENDING_APPROVAL') {
-      throw new BadRequestException('Chỉ duyệt được hành động đang chờ duyệt.');
-    }
-    await this.prisma.aiAction.update({
-      where: { id },
-      data: {
-        status: 'APPROVED',
-        approvedBy: actor.userId,
-        approvedAt: new Date(),
-      },
-    });
-    await this.addEvent(
+    await this.atomicTransition(
       id,
       clubId,
+      'PENDING_APPROVAL',
+      { status: 'APPROVED', approvedBy: actor.userId, approvedAt: new Date() },
       'APPROVED',
       `Đã duyệt bởi ${actor.username}.`,
       actor.userId,
+      'Chỉ duyệt được hành động đang chờ duyệt (có thể đã được xử lý).',
     );
     await this.audit(
       actor.userId,
@@ -316,26 +342,20 @@ export class AiActionsService {
   ) {
     const clubId = this.requireClub(clubIdRaw);
     const action = await this.requireAction(id, clubId);
-    if (action.status !== 'PENDING_APPROVAL') {
-      throw new BadRequestException(
-        'Chỉ từ chối được hành động đang chờ duyệt.',
-      );
-    }
-    await this.prisma.aiAction.update({
-      where: { id },
-      data: {
+    await this.atomicTransition(
+      id,
+      clubId,
+      'PENDING_APPROVAL',
+      {
         status: 'REJECTED',
         rejectedBy: actor.userId,
         rejectedAt: new Date(),
         rejectionReason: reason ?? null,
       },
-    });
-    await this.addEvent(
-      id,
-      clubId,
       'REJECTED',
       `Từ chối bởi ${actor.username}${reason ? `: ${reason}` : ''}.`,
       actor.userId,
+      'Chỉ từ chối được hành động đang chờ duyệt (có thể đã được xử lý).',
     );
     await this.audit(
       actor.userId,
@@ -350,23 +370,19 @@ export class AiActionsService {
   async retry(id: string, clubIdRaw: string | null, actor: ActionActor) {
     const clubId = this.requireClub(clubIdRaw);
     const action = await this.requireAction(id, clubId);
-    if (action.status !== 'FAILED') {
-      throw new BadRequestException('Chỉ chạy lại được hành động đã thất bại.');
-    }
-    await this.prisma.aiAction.update({
-      where: { id },
-      data: {
+    await this.atomicTransition(
+      id,
+      clubId,
+      'FAILED',
+      {
         status: 'RETRY_PENDING',
         retryCount: { increment: 1 },
         errorMessage: null,
       },
-    });
-    await this.addEvent(
-      id,
-      clubId,
       'RETRY_REQUESTED',
       `Yêu cầu chạy lại bởi ${actor.username} (lần ${action.retryCount + 1}).`,
       actor.userId,
+      'Chỉ chạy lại được hành động đã thất bại (có thể đã được xử lý).',
     );
     await this.audit(
       actor.userId,

@@ -171,81 +171,105 @@ describe('AiActionsService', () => {
     });
   });
 
-  describe('approve/reject/retry state guards', () => {
-    it('approve chỉ khi PENDING_APPROVAL, ngược lại BadRequest', async () => {
-      prisma.aiAction.findFirst.mockResolvedValueOnce({
+  describe('approve/reject/retry state guards (atomic)', () => {
+    it('approve không acquire được (updateMany count 0) → BadRequest', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
         id: 'a1',
         status: 'APPROVED',
       });
+      prisma.aiAction.updateMany.mockResolvedValue({ count: 0 });
       await expect(service.approve('a1', 'club-1', ACTOR)).rejects.toThrow(
         BadRequestException,
       );
     });
 
-    it('approve PENDING → APPROVED (update + audit)', async () => {
-      prisma.aiAction.findFirst
-        .mockResolvedValueOnce({
-          id: 'a1',
-          status: 'PENDING_APPROVAL',
-          actionType: 'x',
-        })
-        .mockResolvedValueOnce({ id: 'a1', status: 'APPROVED', events: [] });
+    it('approve PENDING → APPROVED (updateMany có điều kiện + audit)', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
+        id: 'a1',
+        status: 'APPROVED',
+        actionType: 'x',
+        events: [],
+      });
       await service.approve('a1', 'club-1', ACTOR);
+      const cond: unknown = expect.objectContaining({
+        id: 'a1',
+        clubId: 'club-1',
+        status: 'PENDING_APPROVAL',
+      });
       const approveData: unknown = expect.objectContaining({
         status: 'APPROVED',
         approvedBy: 'u1',
       });
-      expect(prisma.aiAction.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'a1' }, data: approveData }),
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: cond, data: approveData }),
       );
       expect(prisma.auditLog.create).toHaveBeenCalled();
     });
 
-    it('retry chỉ khi FAILED; tăng retryCount', async () => {
-      prisma.aiAction.findFirst.mockResolvedValueOnce({
+    it('không double-approve: lần 2 count 0 → chỉ 1 lần audit APPROVE', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
+        id: 'a1',
+        status: 'APPROVED',
+        actionType: 'x',
+        events: [],
+      });
+      prisma.aiAction.updateMany
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 0 });
+      await service.approve('a1', 'club-1', ACTOR);
+      await expect(service.approve('a1', 'club-1', ACTOR)).rejects.toThrow(
+        BadRequestException,
+      );
+      const calls = prisma.auditLog.create.mock.calls as Array<
+        [{ data?: { action?: string } }]
+      >;
+      const approveAudits = calls.filter(
+        (c) => c[0]?.data?.action === 'AI_ACTION_APPROVE',
+      );
+      expect(approveAudits).toHaveLength(1);
+    });
+
+    it('retry không acquire được → BadRequest; FAILED → RETRY_PENDING (increment)', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
         id: 'a1',
         status: 'APPROVED',
       });
+      prisma.aiAction.updateMany.mockResolvedValueOnce({ count: 0 });
       await expect(service.retry('a1', 'club-1', ACTOR)).rejects.toThrow(
         BadRequestException,
       );
 
-      prisma.aiAction.findFirst
-        .mockResolvedValueOnce({
-          id: 'a1',
-          status: 'FAILED',
-          retryCount: 1,
-          actionType: 'x',
-        })
-        .mockResolvedValueOnce({
-          id: 'a1',
-          status: 'RETRY_PENDING',
-          events: [],
-        });
+      prisma.aiAction.findFirst.mockResolvedValue({
+        id: 'a1',
+        status: 'FAILED',
+        retryCount: 1,
+        actionType: 'x',
+        events: [],
+      });
+      prisma.aiAction.updateMany.mockResolvedValueOnce({ count: 1 });
       await service.retry('a1', 'club-1', ACTOR);
       const retryData: unknown = expect.objectContaining({
         status: 'RETRY_PENDING',
         retryCount: { increment: 1 },
       });
-      expect(prisma.aiAction.update).toHaveBeenCalledWith(
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ data: retryData }),
       );
     });
 
-    it('reject PENDING → REJECTED với lý do', async () => {
-      prisma.aiAction.findFirst
-        .mockResolvedValueOnce({
-          id: 'a1',
-          status: 'PENDING_APPROVAL',
-          actionType: 'x',
-        })
-        .mockResolvedValueOnce({ id: 'a1', status: 'REJECTED', events: [] });
+    it('reject PENDING → REJECTED với lý do (updateMany có điều kiện)', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
+        id: 'a1',
+        status: 'REJECTED',
+        actionType: 'x',
+        events: [],
+      });
       await service.reject('a1', 'club-1', ACTOR, 'không hợp lệ');
       const rejectData: unknown = expect.objectContaining({
         status: 'REJECTED',
         rejectionReason: 'không hợp lệ',
       });
-      expect(prisma.aiAction.update).toHaveBeenCalledWith(
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ data: rejectData }),
       );
     });
