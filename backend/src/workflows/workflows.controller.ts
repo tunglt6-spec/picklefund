@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { HermesWorkflowService } from './hermes-workflow.service';
+import { HermesSchedulerService } from './hermes-scheduler.service';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import {
@@ -30,7 +31,10 @@ import {
 @Controller('workflows')
 @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
 export class WorkflowsController {
-  constructor(private svc: HermesWorkflowService) {}
+  constructor(
+    private svc: HermesWorkflowService,
+    private scheduler: HermesSchedulerService,
+  ) {}
 
   @Get('rules')
   @ApiOperation({ summary: 'Danh sách workflow rule (clubId từ JWT).' })
@@ -110,6 +114,36 @@ export class WorkflowsController {
         dto.idempotencyKey,
       ),
       'Đã dispatch-test',
+    );
+  }
+
+  @Get('runtime/status')
+  @ApiOperation({
+    summary:
+      'Trạng thái Scheduler Runtime (Epic 9) — enabled/interval/lastTick.',
+  })
+  runtimeStatus() {
+    return ok(this.scheduler.status());
+  }
+
+  @Get('runtime/history')
+  @ApiOperation({
+    summary:
+      'Run do scheduler dispatch (idempotencyKey SCHED:*, sanitized, clubId từ JWT).',
+  })
+  async runtimeHistory(@CurrentUser() user: JwtUser) {
+    return ok(await this.scheduler.history(user.clubId));
+  }
+
+  @Post('runtime/run-now')
+  @ApiOperation({
+    summary:
+      'Dispatch thủ công các rule scheduled của CLB (idempotent theo kỳ — kỳ đã chạy trả skippedDuplicate).',
+  })
+  async runtimeRunNow(@CurrentUser() user: JwtUser) {
+    return ok(
+      await this.scheduler.runNow(user.clubId, user.userId),
+      'Đã run-now scheduler',
     );
   }
 

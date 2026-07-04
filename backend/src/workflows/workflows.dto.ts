@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsObject,
@@ -10,6 +11,9 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
+/** Epic 9: lịch tự động — MANUAL không bao giờ được scheduler tự dispatch. */
+const SCHEDULE_TYPE_VALUES = ['MANUAL', 'DAILY', 'WEEKLY', 'MONTHLY'];
 
 /** clubId/createdBy lấy từ JWT (không nhận từ body). */
 export class CreateWorkflowRuleDto {
@@ -40,6 +44,10 @@ export class CreateWorkflowRuleDto {
   @Min(1)
   @Max(1000)
   priority?: number;
+
+  @IsOptional()
+  @IsIn(SCHEDULE_TYPE_VALUES)
+  scheduleType?: string;
 }
 
 export class UpdateWorkflowRuleDto {
@@ -72,6 +80,10 @@ export class UpdateWorkflowRuleDto {
   @Min(1)
   @Max(1000)
   priority?: number;
+
+  @IsOptional()
+  @IsIn(SCHEDULE_TYPE_VALUES)
+  scheduleType?: string;
 }
 
 /** Ngữ cảnh test thủ công (tuỳ chọn) — dùng để đánh giá điều kiện. */

@@ -169,6 +169,7 @@ export class HermesWorkflowService {
         actionsJson: (dto.actionsJson ?? undefined) as Prisma.InputJsonValue,
         enabled: dto.enabled ?? true,
         priority: dto.priority ?? 100,
+        scheduleType: dto.scheduleType ?? 'MANUAL',
         createdById: userId,
       },
     });
@@ -197,6 +198,9 @@ export class HermesWorkflowService {
           : {}),
         ...(dto.enabled !== undefined ? { enabled: dto.enabled } : {}),
         ...(dto.priority !== undefined ? { priority: dto.priority } : {}),
+        ...(dto.scheduleType !== undefined
+          ? { scheduleType: dto.scheduleType }
+          : {}),
       },
     });
     return this.toRuleResponse(rule);
@@ -286,6 +290,9 @@ export class HermesWorkflowService {
    * - Rule khớp → tạo AiAction qua Action Center (KHÔNG thực thi trực tiếp).
    * - 1 rule lỗi → run đó FAILED, các rule khác vẫn chạy (partial summary).
    * - idempotencyKey (tuỳ chọn): key đã dùng → skip toàn bộ, không tạo run mới.
+   * - options.scheduleType (POLISH Epic 9): CHỈ đánh giá rule có đúng scheduleType
+   *   đó (scheduler dùng để rule MANUAL không bao giờ tự chạy khi trùng triggerType).
+   *   Không truyền → ngữ nghĩa business event Epic 7 giữ nguyên (mọi rule enabled).
    * - Trả về DispatchSummary AN TOÀN (chỉ số đếm, không context/error thô).
    */
   async dispatchTrigger(
@@ -294,6 +301,7 @@ export class HermesWorkflowService {
     actor: WorkflowActor,
     contextJson?: Record<string, unknown>,
     idempotencyKey?: string,
+    options?: { scheduleType?: string },
   ): Promise<DispatchSummary> {
     const clubId = this.requireClub(clubIdRaw);
     if (
@@ -329,7 +337,15 @@ export class HermesWorkflowService {
     }
 
     const rules = await this.prisma.workflowRule.findMany({
-      where: { clubId, triggerType, enabled: true },
+      where: {
+        clubId,
+        triggerType,
+        enabled: true,
+        // Scheduled dispatch lọc đúng scheduleType — rule MANUAL bị loại.
+        ...(options?.scheduleType
+          ? { scheduleType: options.scheduleType }
+          : {}),
+      },
       orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
     });
     summary.totalRules = rules.length;

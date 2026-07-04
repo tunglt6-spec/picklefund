@@ -755,6 +755,8 @@ model WorkflowRule {
   actionsJson    Json?    @map("actions_json")
   enabled        Boolean  @default(true)
   priority       Int      @default(100)
+  // Epic 9: lịch tự động — MANUAL (mặc định, không tự chạy) | DAILY | WEEKLY | MONTHLY.
+  scheduleType   String   @default("MANUAL") @map("schedule_type") @db.VarChar(20)
   createdById    String?  @map("created_by")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")

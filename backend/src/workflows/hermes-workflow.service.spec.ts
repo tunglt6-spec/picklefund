@@ -299,6 +299,28 @@ describe('HermesWorkflowService', () => {
       expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', hermesArg);
     });
 
+    it('options.scheduleType (POLISH Epic9) → query lọc thêm scheduleType', async () => {
+      prisma.workflowRule.findMany.mockResolvedValue([]);
+      await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        {},
+        undefined,
+        { scheduleType: 'DAILY' },
+      );
+      expect(prisma.workflowRule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            clubId: 'club-1',
+            triggerType: 'DEBT_ESCALATION',
+            enabled: true,
+            scheduleType: 'DAILY',
+          },
+        }),
+      );
+    });
+
     it('1 rule lỗi → run FAILED, rule khác vẫn chạy (partial summary)', async () => {
       const badRule = {
         ...RULE_BASE,

@@ -16,4 +16,12 @@ describe('WorkflowsController (roles metadata)', () => {
   it('endpoint dispatch-test tồn tại (Epic 6)', () => {
     expect(typeof WorkflowsController.prototype.dispatchTest).toBe('function');
   });
+
+  it('endpoint scheduler runtime tồn tại (Epic 9) — cùng roles guard class-level', () => {
+    expect(typeof WorkflowsController.prototype.runtimeStatus).toBe('function');
+    expect(typeof WorkflowsController.prototype.runtimeHistory).toBe(
+      'function',
+    );
+    expect(typeof WorkflowsController.prototype.runtimeRunNow).toBe('function');
+  });
 });
