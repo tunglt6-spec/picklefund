@@ -59,6 +59,9 @@ import { ChangePassword } from './pages/ChangePassword'
 import { AiManagerDashboard } from './pages/admin/ai/AiManagerDashboard'
 import { AiApprovalInbox } from './pages/admin/ai/AiApprovalInbox'
 
+// Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
+import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
+
 const queryClient = new QueryClient()
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -145,6 +148,7 @@ export default function App() {
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />
+            <Route path="/admin/workflows" element={<WorkflowRules />} />
             </Route>
             {/* Member (MEMBER_VIEW) — chỉ member read-only; staff không rơi vào đây */}
             <Route element={<RoleRoute allow={['MEMBER_VIEW']} />}>

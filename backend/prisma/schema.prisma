@@ -36,6 +36,8 @@ model Club {
   minigames         Minigame[]
   payments          Payment[]
   aiActions         AiAction[]
+  workflowRules     WorkflowRule[]
+  workflowRuns      WorkflowRun[]
 
   @@map("clubs")
 }
@@ -728,4 +730,60 @@ model AiActionEvent {
 
   @@index([actionId])
   @@map("ai_action_events")
+}
+
+// ============================================================
+// HERMES WORKFLOW ENGINE (Epic 5) — rule-based workflow orchestration.
+// Operational actions ALWAYS flow through AI Action Center (never executed directly).
+// ============================================================
+enum WorkflowRunStatus {
+  PENDING
+  RUNNING
+  WAITING_APPROVAL
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model WorkflowRule {
+  id             String   @id @default(uuid())
+  clubId         String   @map("club_id")
+  name           String   @db.VarChar(200)
+  triggerType    String   @map("trigger_type") @db.VarChar(60)
+  conditionsJson Json?    @map("conditions_json")
+  actionsJson    Json?    @map("actions_json")
+  enabled        Boolean  @default(true)
+  priority       Int      @default(100)
+  createdById    String?  @map("created_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  club Club          @relation(fields: [clubId], references: [id])
+  runs WorkflowRun[]
+
+  @@index([clubId, enabled])
+  @@index([clubId, triggerType])
+  @@map("workflow_rules")
+}
+
+model WorkflowRun {
+  id             String            @id @default(uuid())
+  clubId         String            @map("club_id")
+  workflowRuleId String?           @map("workflow_rule_id")
+  triggerType    String            @map("trigger_type") @db.VarChar(60)
+  status         WorkflowRunStatus @default(PENDING)
+  contextJson    Json?             @map("context_json")
+  resultJson     Json?             @map("result_json")
+  errorMessage   String?           @map("error_message")
+  startedAt      DateTime?         @map("started_at")
+  completedAt    DateTime?         @map("completed_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  club Club          @relation(fields: [clubId], references: [id])
+  rule WorkflowRule? @relation(fields: [workflowRuleId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, status])
+  @@index([workflowRuleId])
+  @@map("workflow_runs")
 }

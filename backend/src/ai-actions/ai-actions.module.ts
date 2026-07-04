@@ -12,5 +12,6 @@ import { ACTION_EXECUTOR, NoOpExecutor } from './action-executor';
     AiActionsService,
     { provide: ACTION_EXECUTOR, useClass: NoOpExecutor },
   ],
+  exports: [AiActionsService],
 })
 export class AiActionsModule {}
