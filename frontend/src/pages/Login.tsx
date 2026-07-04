@@ -14,12 +14,22 @@ import toast from 'react-hot-toast'
 import type { User, Role } from '../types'
 
 /* ─── Constants ─── */
-const demoAccounts = [
+// P0-1: demo accounts CHỈ hiện ở dev hoặc khi bật tường minh VITE_SHOW_DEMO_ACCOUNTS=true.
+// Production build mặc định ẨN — Vite thay tĩnh import.meta.env nên nhánh false
+// (kèm credential strings) bị loại khỏi bundle production.
+const SHOW_DEMO_ACCOUNTS =
+  import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === 'true'
+
+interface DemoAccount {
+  username: string; password: string; role: Role
+  label: string; desc: string; clubId: string | null; badge: string
+}
+const demoAccounts: DemoAccount[] = SHOW_DEMO_ACCOUNTS ? [
   { username: 'superadmin', password: 'super123', role: 'SUPER_ADMIN' as Role, label: 'Super Admin', desc: 'Quản trị toàn hệ thống', clubId: null, badge: 'purple' },
   { username: 'admin',      password: 'admin123', role: 'CLUB_ADMIN' as Role,    label: 'Quản lý CLB',  desc: 'Admin CLB Hà Nội',        clubId: 'club-1', badge: 'indigo' },
   { username: 'treasurer',  password: 'treasurer123', role: 'CLUB_TREASURER' as Role,label: 'Thủ Quỹ',      desc: 'Thủ quỹ CLB Hà Nội',     clubId: 'club-1', badge: 'teal' },
   { username: 'member',     password: 'member123', role: 'MEMBER_VIEW' as Role,   label: 'Thành viên',   desc: 'Nguyễn Văn A',            clubId: 'club-1', badge: 'green' },
-]
+] : []
 
 const routeByRole: Record<Role, string> = {
   SUPER_ADMIN: '/super/dashboard', CLUB_ADMIN: '/dashboard',
@@ -818,7 +828,8 @@ export function Login() {
                     <ExternalLink size={13} className="text-slate-400 ml-auto" />
                   </motion.button>
 
-                  {/* Demo accounts accordion */}
+                  {/* Demo accounts accordion — ẨN trong production (P0-1) */}
+                  {SHOW_DEMO_ACCOUNTS && (
                   <div className="mt-4 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                     <motion.button whileTap={{ scale: 0.99 }}
                       onClick={() => setShowDemo(!showDemo)}
@@ -850,6 +861,7 @@ export function Login() {
                       )}
                     </AnimatePresence>
                   </div>
+                  )}
                 </div>
 
                 {/* Register CTA */}

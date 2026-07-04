@@ -1,8 +1,9 @@
 # Environment files — NEVER commit
+# P0-1: .env.production KHÔNG còn được track (từng chứa JWT secret thật trên repo
+# public — giá trị cũ coi như lộ, PHẢI rotate trên VPS). Chỉ example được commit.
 .env
 .env.*
 !.env.example
-!.env.production
 !.env.production.example
 
 # SSL certs
