@@ -38,6 +38,7 @@ model Club {
   aiActions         AiAction[]
   workflowRules     WorkflowRule[]
   workflowRuns      WorkflowRun[]
+  notificationJobs  NotificationJob[]
 
   @@map("clubs")
 }
@@ -764,6 +765,40 @@ model WorkflowRule {
   @@index([clubId, enabled])
   @@index([clubId, triggerType])
   @@map("workflow_rules")
+}
+
+// ============================================================
+// HERMES NOTIFICATION RUNTIME (Epic 8) — job gửi thông báo qua adapter
+// quanh hạ tầng có sẵn (Notification/Email/Telegram). payloadJson CHỈ nội bộ.
+// ============================================================
+enum NotificationJobStatus {
+  DRY_RUN // channel chưa sẵn sàng/chưa an toàn — ghi nhận, KHÔNG gửi thật
+  READY // đã gửi qua hạ tầng có sẵn
+  FAILED // adapter lỗi — errorMessage generic
+}
+
+model NotificationJob {
+  id             String                @id @default(uuid())
+  clubId         String                @map("club_id")
+  channel        NotificationChannel
+  targetType     String                @map("target_type") @db.VarChar(30)
+  targetId       String?               @map("target_id")
+  title          String                @db.VarChar(200)
+  bodySummary    String?               @map("body_summary") @db.VarChar(300)
+  payloadJson    Json?                 @map("payload_json")
+  status         NotificationJobStatus
+  idempotencyKey String?               @map("idempotency_key") @db.VarChar(120)
+  errorMessage   String?               @map("error_message")
+  aiActionId     String?               @map("ai_action_id")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  sentAt         DateTime?             @map("sent_at")
+
+  club Club @relation(fields: [clubId], references: [id])
+
+  @@unique([clubId, channel, idempotencyKey])
+  @@index([clubId, status])
+  @@index([clubId, createdAt])
+  @@map("notification_jobs")
 }
 
 model WorkflowRun {

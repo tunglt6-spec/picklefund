@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaikaCore } from '../ai/maika/maika.service';
+import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import { AiActionRisk, Prisma } from '@prisma/client';
 import type { CreateAiActionDto } from './ai-actions.dto';
 import { ACTION_EXECUTOR, type ActionExecutor } from './action-executor';
@@ -48,6 +49,7 @@ export class AiActionsService {
   constructor(
     private prisma: PrismaService,
     private maika: MaikaCore,
+    private notifications: NotificationRuntimeService,
     @Inject(ACTION_EXECUTOR) private executor: ActionExecutor,
   ) {}
 
@@ -473,6 +475,10 @@ export class AiActionsService {
         id,
         `Executed ${action.actionType} (${duration}ms)`,
       );
+      // Epic 8: action notification ĐÃ DUYỆT + ĐÃ THỰC THI → tạo NotificationJob
+      // qua runtime (DRY_RUN/READY theo channel). Fire-and-forget — lỗi runtime
+      // KHÔNG ảnh hưởng kết quả execute (đã EXECUTED, không rollback).
+      this.enqueueNotificationIfNeeded(clubId, action);
     } catch (e) {
       const finishedAt = new Date();
       const duration = finishedAt.getTime() - startedAt.getTime();
@@ -507,6 +513,51 @@ export class AiActionsService {
       );
     }
     return this.findOne(id, clubId);
+  }
+
+  /**
+   * Epic 8: action notification (targetModule='notifications' hoặc actionType
+   * bắt đầu 'notify') SAU khi EXECUTED → tạo NotificationJob qua Notification
+   * Runtime. Fire-and-forget: lỗi runtime chỉ log, KHÔNG ảnh hưởng execute.
+   * KHÔNG bypass Action Center — chỉ chạy trên action đã duyệt + đã thực thi.
+   */
+  private enqueueNotificationIfNeeded(
+    clubId: string,
+    action: {
+      id: string;
+      actionType: string;
+      targetModule: string | null;
+      title: string;
+      summary: string | null;
+      requestPayload: unknown;
+    },
+  ): void {
+    const isNotification =
+      action.targetModule === 'notifications' ||
+      action.actionType.toLowerCase().startsWith('notify');
+    if (!isNotification) return;
+    const payload = (action.requestPayload ?? {}) as Record<string, unknown>;
+    const channel =
+      typeof payload.channel === 'string' ? payload.channel : 'IN_APP';
+    const targetId =
+      typeof payload.targetUserId === 'string' ? payload.targetUserId : null;
+    void this.notifications
+      .dispatch(clubId, {
+        channel,
+        targetType: 'USER',
+        targetId,
+        title: action.title,
+        bodySummary: action.summary ?? undefined,
+        payload,
+        idempotencyKey: `AI_ACTION:${action.id}`,
+        aiActionId: action.id,
+      })
+      .catch((e: unknown) => {
+        const detail = e instanceof Error ? (e.stack ?? e.message) : String(e);
+        this.logger.error(
+          `Notification runtime lỗi (không ảnh hưởng execute): ${detail}`,
+        );
+      });
   }
 
   /** KPI tổng hợp — CHỈ dữ liệu DB thật; không có dữ liệu → 0/[]. */

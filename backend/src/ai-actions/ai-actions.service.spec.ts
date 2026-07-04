@@ -7,6 +7,7 @@ import {
 import { AiActionsService, type ActionActor } from './ai-actions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MaikaCore } from '../ai/maika/maika.service';
+import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import { ACTION_EXECUTOR } from './action-executor';
 
 const prisma = {
@@ -39,6 +40,8 @@ const maika = {
 
 const executor = { execute: jest.fn().mockResolvedValue({ executed: true }) };
 
+const notifications = { dispatch: jest.fn().mockResolvedValue(null) };
+
 const ACTOR: ActionActor = {
   userId: 'u1',
   clubId: 'club-1',
@@ -67,11 +70,13 @@ describe('AiActionsService', () => {
         ? (arg as (tx: typeof prisma) => Promise<unknown>)(prisma)
         : Promise.all(arg as Promise<unknown>[]),
     );
+    notifications.dispatch.mockResolvedValue(null);
     const mod: TestingModule = await Test.createTestingModule({
       providers: [
         AiActionsService,
         { provide: PrismaService, useValue: prisma },
         { provide: MaikaCore, useValue: maika },
+        { provide: NotificationRuntimeService, useValue: notifications },
         { provide: ACTION_EXECUTOR, useValue: executor },
       ],
     }).compile();
@@ -343,6 +348,56 @@ describe('AiActionsService', () => {
       });
       expect(prisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: failAudit }),
+      );
+    });
+
+    // EPIC8 — Notification Runtime integration
+    it('action notification EXECUTED → tạo NotificationJob qua runtime (idempotency theo action)', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue({
+        ...APPROVED,
+        actionType: 'notify:debt-reminder',
+        targetModule: 'notifications',
+        title: 'Nhắc nợ quỹ',
+        summary: 'Gửi nhắc nợ cho thành viên',
+        requestPayload: { channel: 'IN_APP', targetUserId: 'u2' },
+      });
+      await service.execute('a1', 'club-1', ACTOR);
+      await new Promise((resolve) => setImmediate(resolve));
+      const req: unknown = expect.objectContaining({
+        channel: 'IN_APP',
+        targetId: 'u2',
+        idempotencyKey: 'AI_ACTION:a1',
+        aiActionId: 'a1',
+      });
+      expect(notifications.dispatch).toHaveBeenCalledWith('club-1', req);
+    });
+
+    it('action KHÔNG phải notification → KHÔNG gọi runtime', async () => {
+      prisma.aiAction.findFirst.mockResolvedValue(APPROVED); // actionType 'x'
+      await service.execute('a1', 'club-1', ACTOR);
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(notifications.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('runtime lỗi → execute vẫn hoàn tất EXECUTED (không rollback, chỉ log)', async () => {
+      notifications.dispatch.mockRejectedValueOnce(new Error('RUNTIME_DOWN'));
+      prisma.aiAction.findFirst.mockResolvedValue({
+        ...APPROVED,
+        actionType: 'notify:x',
+        targetModule: 'notifications',
+        title: 'T',
+        summary: null,
+        requestPayload: {},
+      });
+      await expect(
+        service.execute('a1', 'club-1', ACTOR),
+      ).resolves.toBeDefined();
+      await new Promise((resolve) => setImmediate(resolve));
+      const okAudit: unknown = expect.objectContaining({
+        action: 'AI_ACTION_EXECUTE',
+      });
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: okAudit }),
       );
     });
 

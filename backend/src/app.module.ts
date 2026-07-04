@@ -39,6 +39,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { MemberPortalModule } from './member-portal/member-portal.module';
 import { AiActionsModule } from './ai-actions/ai-actions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
+import { NotificationRuntimeModule } from './notification-runtime/notification-runtime.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -98,6 +99,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     MemberPortalModule,
     AiActionsModule,
     WorkflowsModule,
+    NotificationRuntimeModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
