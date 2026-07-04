@@ -55,6 +55,10 @@ import { MemberLisaChat } from './pages/member/MemberLisaChat'
 import { MemberAccounts } from './pages/admin/MemberAccounts'
 import { ChangePassword } from './pages/ChangePassword'
 
+// AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN
+import { AiManagerDashboard } from './pages/admin/ai/AiManagerDashboard'
+import { AiApprovalInbox } from './pages/admin/ai/AiApprovalInbox'
+
 const queryClient = new QueryClient()
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -136,6 +140,11 @@ export default function App() {
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
+            </Route>
+            {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
+            <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
+            <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
+            <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />
             </Route>
             {/* Member (MEMBER_VIEW) — chỉ member read-only; staff không rơi vào đây */}
             <Route element={<RoleRoute allow={['MEMBER_VIEW']} />}>

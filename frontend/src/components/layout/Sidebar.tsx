@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
   CheckSquare, BarChart3, Settings, LogOut, Building2,
   Bell, ScrollText, Receipt, ListOrdered, ChevronDown,
-  Zap, Star, Trophy, KeyRound, Sparkles,
+  Zap, Star, Trophy, KeyRound, Sparkles, Bot,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -26,6 +26,7 @@ const superAdminNav: NavItem[] = [
   { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs' },
   { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users' },
   { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs' },
+  { label: 'AI Manager',   icon: <Bot size={18} />,             to: '/admin/ai-manager' },
   { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings' },
 ]
 
@@ -39,6 +40,7 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Minigame',   icon: <Trophy size={18} />,           to: '/minigames' },
   { label: 'Báo Cáo',   icon: <BarChart3 size={18} />,        to: '/reports' },
   { label: 'Lisa AI',         icon: <Sparkles size={18} />,  to: '/lisa' },
+  { label: 'AI Manager',      icon: <Bot size={18} />,       to: '/admin/ai-manager' },
   { label: 'Thông báo',       icon: <Bell size={18} />,      to: '/notifications' },
   { label: 'TK Thành viên', icon: <KeyRound size={18} />,    to: '/member-accounts' },
   { label: 'Gói dịch vụ',    icon: <Star size={18} />,       to: '/billing' },

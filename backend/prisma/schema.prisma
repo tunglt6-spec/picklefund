@@ -35,6 +35,7 @@ model Club {
   auditLogs         AuditLog[]
   minigames         Minigame[]
   payments          Payment[]
+  aiActions         AiAction[]
 
   @@map("clubs")
 }
@@ -645,4 +646,86 @@ model SystemSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")
+}
+
+// ============================================================
+// AI ACTION QUEUE (Epic 4.2) — persisted AI actions + approval + per-action audit trail
+// ============================================================
+enum AiAgent {
+  MAIKA
+  LISA
+  HERMES
+  MIT_DAT
+}
+
+enum AiActionRisk {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AiActionStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXECUTING
+  EXECUTED
+  FAILED
+  RETRY_PENDING
+}
+
+model AiAction {
+  id               String         @id @default(uuid())
+  clubId           String         @map("club_id")
+  requestedByAi    AiAgent        @map("requested_by_ai")
+  actionType       String         @map("action_type") @db.VarChar(100)
+  targetModule     String?        @map("target_module") @db.VarChar(100)
+  targetEntityType String?        @map("target_entity_type") @db.VarChar(100)
+  targetEntityId   String?        @map("target_entity_id")
+  riskLevel        AiActionRisk   @map("risk_level")
+  title            String         @db.VarChar(200)
+  summary          String?
+  requestPayload   Json?          @map("request_payload")
+  status           AiActionStatus @default(PENDING_APPROVAL)
+  approvalRequired Boolean        @default(true) @map("approval_required")
+  approvalPolicy   Json?          @map("approval_policy")
+  approvedBy       String?        @map("approved_by")
+  approvedAt       DateTime?      @map("approved_at")
+  rejectedBy       String?        @map("rejected_by")
+  rejectedAt       DateTime?      @map("rejected_at")
+  rejectionReason  String?        @map("rejection_reason")
+  executionResult  Json?          @map("execution_result")
+  errorMessage     String?        @map("error_message")
+  retryCount       Int            @default(0) @map("retry_count")
+  executorAgent    AiAgent?       @map("executor_agent")
+  executorStartedAt  DateTime?    @map("executor_started_at")
+  executorFinishedAt DateTime?    @map("executor_finished_at")
+  executionDuration  Int?         @map("execution_duration")
+  createdById      String?        @map("created_by")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  club   Club            @relation(fields: [clubId], references: [id])
+  events AiActionEvent[]
+
+  @@index([clubId, status])
+  @@index([clubId, requestedByAi])
+  @@index([clubId, riskLevel])
+  @@map("ai_actions")
+}
+
+model AiActionEvent {
+  id          String   @id @default(uuid())
+  actionId    String   @map("action_id")
+  clubId      String   @map("club_id")
+  type        String   @db.VarChar(40)
+  message     String?
+  actorUserId String?  @map("actor_user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  action AiAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([actionId])
+  @@map("ai_action_events")
 }

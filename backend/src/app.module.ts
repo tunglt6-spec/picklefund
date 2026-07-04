@@ -37,6 +37,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { BillingModule } from './billing/billing.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MemberPortalModule } from './member-portal/member-portal.module';
+import { AiActionsModule } from './ai-actions/ai-actions.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -47,7 +48,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1000, limit: 30 },    // 30 req/s per IP
+      { name: 'short', ttl: 1000, limit: 30 }, // 30 req/s per IP
       { name: 'medium', ttl: 60000, limit: 1000 }, // 1000 req/min per IP
     ]),
     CacheModule.registerAsync({
@@ -94,6 +95,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     BillingModule,
     CategoriesModule,
     MemberPortalModule,
+    AiActionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
