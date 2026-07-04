@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MinigameService } from './minigame.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 
 const mockPrisma = {
   minigame: {
@@ -34,6 +35,8 @@ const mockPrisma = {
   member: { findMany: jest.fn() },
 };
 
+const mockEvents = { publish: jest.fn() };
+
 const baseMg = {
   id: 'mg-1',
   clubId: 'club-1',
@@ -63,6 +66,7 @@ describe('MinigameService', () => {
       providers: [
         MinigameService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HermesEventPublisher, useValue: mockEvents },
       ],
     }).compile();
     service = module.get<MinigameService>(MinigameService);
@@ -367,6 +371,29 @@ describe('MinigameService', () => {
         dupPair: false,
         twicePerRound: false,
       });
+    });
+  });
+
+  /* ── business event (EPIC7) ── */
+  describe('endMinigame → business event (EPIC7)', () => {
+    it('phát MINIGAME_COMPLETED sau khi kết thúc minigame', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue(baseMg);
+      mockPrisma.minigame.update.mockResolvedValue({
+        ...baseMg,
+        status: 'COMPLETED',
+      });
+
+      const result = await service.endMinigame('mg-1', 'club-1');
+
+      expect(result.status).toBe('COMPLETED');
+      expect(mockEvents.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          clubId: 'club-1',
+          userId: 'user-1',
+          triggerType: 'MINIGAME_COMPLETED',
+          idempotencyKey: 'MINIGAME_COMPLETED:mg-1',
+        }),
+      );
     });
   });
 });

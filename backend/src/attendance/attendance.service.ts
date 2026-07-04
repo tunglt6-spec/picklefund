@@ -4,11 +4,15 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class AttendanceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private events: HermesEventPublisher,
+  ) {}
 
   async findAll(clubId: string, fundPeriodId?: string) {
     return this.prisma.attendanceSession.findMany({
@@ -77,7 +81,11 @@ export class AttendanceService {
     });
   }
 
-  async bulkMovePeriod(clubId: string, sessionIds: string[], targetPeriodId: string) {
+  async bulkMovePeriod(
+    clubId: string,
+    sessionIds: string[],
+    targetPeriodId: string,
+  ) {
     const period = await this.prisma.fundPeriod.findFirst({
       where: { id: targetPeriodId, clubId },
     });
@@ -120,7 +128,9 @@ export class AttendanceService {
         ...(sessionDate ? { sessionDate: new Date(sessionDate) } : {}),
         ...(courtFee !== undefined ? { courtFee: new Decimal(courtFee) } : {}),
         ...(location ? { courtName: location } : {}),
-        ...(status ? { status: status as import('@prisma/client').SessionStatus } : {}),
+        ...(status
+          ? { status: status as import('@prisma/client').SessionStatus }
+          : {}),
       },
     });
   }
@@ -214,7 +224,7 @@ export class AttendanceService {
     clubId: string,
     attendance: { memberId: string; status: 'PRESENT' | 'ABSENT' }[],
   ) {
-    await this.findOne(sessionId, clubId);
+    const session = await this.findOne(sessionId, clubId);
 
     if (attendance.length > 0) {
       const validMembers = await this.prisma.member.findMany({
@@ -256,6 +266,14 @@ export class AttendanceService {
     await this.prisma.attendanceSession.update({
       where: { id: sessionId },
       data: { status: 'completed' },
+    });
+    // Epic 7: phát event SAU khi commit — fire-and-forget, không ảnh hưởng kết quả.
+    this.events.publish({
+      clubId,
+      userId: session.createdById,
+      triggerType: 'ATTENDANCE_COMPLETED',
+      context: { sessionId, updatedCount: attendance.length, presentCount },
+      idempotencyKey: `ATTENDANCE_COMPLETED:${sessionId}`,
     });
     return { updated: attendance.length, presentCount };
   }

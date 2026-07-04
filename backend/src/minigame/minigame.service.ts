@@ -4,12 +4,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { MinigameFormat } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class MinigameService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private events: HermesEventPublisher,
+  ) {}
 
   private async assertOwnership(id: string, clubId: string) {
     const mg = await this.prisma.minigame.findUnique({ where: { id } });
@@ -342,10 +346,19 @@ export class MinigameService {
 
   async endMinigame(id: string, clubId: string) {
     await this.assertOwnership(id, clubId);
-    return this.prisma.minigame.update({
+    const mg = await this.prisma.minigame.update({
       where: { id },
       data: { status: 'COMPLETED', endedAt: new Date() },
     });
+    // Epic 7: phát event SAU khi commit — fire-and-forget.
+    this.events.publish({
+      clubId,
+      userId: mg.createdById,
+      triggerType: 'MINIGAME_COMPLETED',
+      context: { minigameId: id },
+      idempotencyKey: `MINIGAME_COMPLETED:${id}`,
+    });
+    return mg;
   }
 
   async cancel(id: string, clubId: string) {

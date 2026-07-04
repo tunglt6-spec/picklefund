@@ -24,6 +24,12 @@ export const SUPPORTED_TRIGGER_TYPES = [
   'DEBT_ESCALATION',
   'EVENT_REMINDER',
   'REPORT_DISPATCH',
+  // Business events (Epic 7) — publish bởi HermesEventPublisher sau transaction thành công.
+  'ATTENDANCE_COMPLETED',
+  'CONTRIBUTION_CONFIRMED',
+  'EXPENSE_RECORDED',
+  'FUND_PERIOD_CLOSED',
+  'MINIGAME_COMPLETED',
 ] as const;
 export type SupportedTriggerType = (typeof SUPPORTED_TRIGGER_TYPES)[number];
 

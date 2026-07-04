@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FundPeriodsService } from './fund-periods.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const mockPrisma = {
@@ -38,6 +39,8 @@ const mockPrisma = {
   $transaction: jest.fn().mockResolvedValue([]),
 };
 
+const mockEvents = { publish: jest.fn() };
+
 const basePeriod = {
   id: 'period-1',
   clubId: 'club-1',
@@ -65,6 +68,7 @@ describe('FundPeriodsService', () => {
         FundPeriodsService,
         FinancialCalculatorService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HermesEventPublisher, useValue: mockEvents },
       ],
     }).compile();
 
@@ -184,6 +188,39 @@ describe('FundPeriodsService', () => {
       expect(result.members[0].attendedSessions).toBe(4);
       // Bob has no paid contributions → balance negative
       expect(result.members[1].amountPaid).toBe(0);
+    });
+  });
+
+  /* ── business event (EPIC7) ── */
+  describe('updateStatus → business event (EPIC7)', () => {
+    it('phát FUND_PERIOD_CLOSED khi chốt sổ (finalized)', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      mockPrisma.fundPeriod.update.mockResolvedValue({
+        ...basePeriod,
+        status: 'finalized',
+      });
+
+      await service.updateStatus('period-1', 'club-1', 'finalized');
+
+      expect(mockEvents.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          clubId: 'club-1',
+          userId: 'user-1',
+          triggerType: 'FUND_PERIOD_CLOSED',
+          idempotencyKey: 'FUND_PERIOD_CLOSED:period-1',
+        }),
+      );
+    });
+
+    it('KHÔNG phát event với status khác finalized', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      mockPrisma.fundPeriod.update.mockResolvedValue({
+        ...basePeriod,
+        status: 'active',
+      });
+
+      await service.updateStatus('period-1', 'club-1', 'active');
+      expect(mockEvents.publish).not.toHaveBeenCalled();
     });
   });
 });

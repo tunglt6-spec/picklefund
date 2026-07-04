@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 import type { FundSource, MiniIncomeType } from '@prisma/client';
 import type { ImportContributionsDto } from './contributions.dto';
@@ -27,7 +28,10 @@ export interface CreateContributionDto {
 
 @Injectable()
 export class ContributionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private events: HermesEventPublisher,
+  ) {}
 
   async findAll(
     clubId: string,
@@ -138,10 +142,21 @@ export class ContributionsService {
 
   async toggleConfirm(id: string, clubId: string) {
     const c = await this.findOne(id, clubId);
-    return this.prisma.fundContribution.update({
+    const updated = await this.prisma.fundContribution.update({
       where: { id, clubId },
       data: { isConfirmed: !c.isConfirmed },
     });
+    // Epic 7: chỉ phát khi chuyển sang ĐÃ xác nhận (không phát khi bỏ xác nhận).
+    if (updated.isConfirmed) {
+      this.events.publish({
+        clubId,
+        userId: c.createdById,
+        triggerType: 'CONTRIBUTION_CONFIRMED',
+        context: { contributionId: id },
+        idempotencyKey: `CONTRIBUTION_CONFIRMED:${id}`,
+      });
+    }
+    return updated;
   }
 
   async bulkConfirm(ids: string[], clubId: string) {
@@ -150,24 +165,60 @@ export class ContributionsService {
       where: { id: { in: ids }, clubId, isConfirmed: false },
       data: { isConfirmed: true },
     });
+    // Epic 7: đọc actor fire-and-forget (không chặn response, không throw sau commit).
+    if (result.count > 0) {
+      void this.prisma.fundContribution
+        .findFirst({
+          where: { id: { in: ids }, clubId },
+          select: { createdById: true },
+        })
+        .then((sample) => {
+          if (sample) {
+            this.events.publish({
+              clubId,
+              userId: sample.createdById,
+              triggerType: 'CONTRIBUTION_CONFIRMED',
+              context: { confirmedCount: result.count, bulk: true },
+              idempotencyKey: `CONTRIBUTION_CONFIRMED:bulk:${ids[0]}:${result.count}`,
+            });
+          }
+        })
+        .catch(() => undefined);
+    }
     return { confirmed: result.count };
   }
 
-  async importBulk(clubId: string, userId: string, dto: ImportContributionsDto) {
+  async importBulk(
+    clubId: string,
+    userId: string,
+    dto: ImportContributionsDto,
+  ) {
     const [period, members] = await Promise.all([
-      this.prisma.fundPeriod.findFirst({ where: { id: dto.fundPeriodId, clubId } }),
+      this.prisma.fundPeriod.findFirst({
+        where: { id: dto.fundPeriodId, clubId },
+      }),
       this.prisma.member.findMany({
         where: { clubId, isDeleted: false },
         select: { id: true, fullName: true },
       }),
     ]);
 
-    if (!period) throw new BadRequestException('Kỳ quỹ không tồn tại hoặc không thuộc CLB này');
+    if (!period)
+      throw new BadRequestException(
+        'Kỳ quỹ không tồn tại hoặc không thuộc CLB này',
+      );
 
     const toInsert: {
-      clubId: string; createdById: string; fundSource: 'COMMON';
-      memberId: string; fundPeriodId: string; amount: Decimal;
-      paymentDate: Date; paymentMethod: string; isConfirmed: boolean; notes: string | null;
+      clubId: string;
+      createdById: string;
+      fundSource: 'COMMON';
+      memberId: string;
+      fundPeriodId: string;
+      amount: Decimal;
+      paymentDate: Date;
+      paymentMethod: string;
+      isConfirmed: boolean;
+      notes: string | null;
     }[] = [];
     const errors: { row: number; memberName: string; error: string }[] = [];
 
@@ -176,11 +227,17 @@ export class ContributionsService {
       const rowNum = i + 2; // Excel row (header = row 1)
 
       const member = members.find(
-        (m) => m.fullName.toLowerCase().trim() === row.memberName.toLowerCase().trim(),
+        (m) =>
+          m.fullName.toLowerCase().trim() ===
+          row.memberName.toLowerCase().trim(),
       );
 
       if (!member) {
-        errors.push({ row: rowNum, memberName: row.memberName, error: 'Không tìm thấy thành viên trong CLB' });
+        errors.push({
+          row: rowNum,
+          memberName: row.memberName,
+          error: 'Không tìm thấy thành viên trong CLB',
+        });
         continue;
       }
 

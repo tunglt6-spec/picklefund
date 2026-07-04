@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const mockPrisma = {
@@ -39,6 +40,8 @@ const baseExpense = {
   updatedAt: new Date(),
 };
 
+const mockEvents = { publish: jest.fn() };
+
 describe('ExpensesService', () => {
   let service: ExpensesService;
 
@@ -48,6 +51,7 @@ describe('ExpensesService', () => {
       providers: [
         ExpensesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HermesEventPublisher, useValue: mockEvents },
       ],
     }).compile();
     service = module.get<ExpensesService>(ExpensesService);
@@ -66,7 +70,9 @@ describe('ExpensesService', () => {
 
     it('throws NotFoundException for cross-tenant access', async () => {
       mockPrisma.livingExpense.findFirst.mockResolvedValue(null);
-      await expect(service.findOne('exp-1', 'club-other')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.findOne('exp-1', 'club-other'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -87,7 +93,10 @@ describe('ExpensesService', () => {
       expect(result.id).toBe('exp-1');
       expect(mockPrisma.livingExpense.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ clubId: 'club-1', fundPeriodId: 'period-1' }),
+          data: expect.objectContaining({
+            clubId: 'club-1',
+            fundPeriodId: 'period-1',
+          }),
         }),
       );
     });
@@ -106,13 +115,19 @@ describe('ExpensesService', () => {
 
     it('throws BadRequestException for COMMON without fundPeriodId', async () => {
       await expect(
-        service.create('club-1', 'user-1', { ...validDto, fundPeriodId: undefined }),
+        service.create('club-1', 'user-1', {
+          ...validDto,
+          fundPeriodId: undefined,
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('throws BadRequestException for COMMON without allocationRule', async () => {
       await expect(
-        service.create('club-1', 'user-1', { ...validDto, allocationRule: undefined }),
+        service.create('club-1', 'user-1', {
+          ...validDto,
+          allocationRule: undefined,
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -124,6 +139,45 @@ describe('ExpensesService', () => {
           amount: 100000,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    /* ── business event (EPIC7) ── */
+    it('phát EXPENSE_RECORDED sau khi tạo thành công (EPIC7)', async () => {
+      mockPrisma.livingExpense.create.mockResolvedValue(baseExpense);
+      const result = await service.create('club-1', 'user-1', validDto);
+      expect(result.id).toBe('exp-1');
+      expect(mockEvents.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          clubId: 'club-1',
+          userId: 'user-1',
+          triggerType: 'EXPENSE_RECORDED',
+          idempotencyKey: 'EXPENSE_RECORDED:exp-1',
+        }),
+      );
+    });
+
+    it('Hermes dispatch lỗi KHÔNG rollback business (publisher thật, Hermes reject) (EPIC7)', async () => {
+      const failingHermes = {
+        dispatchTrigger: jest.fn().mockRejectedValue(new Error('HERMES_DOWN')),
+      };
+      const realPublisher = new HermesEventPublisher(failingHermes as never);
+      const mod: TestingModule = await Test.createTestingModule({
+        providers: [
+          ExpensesService,
+          { provide: PrismaService, useValue: mockPrisma },
+          { provide: HermesEventPublisher, useValue: realPublisher },
+        ],
+      }).compile();
+      const svc = mod.get<ExpensesService>(ExpensesService);
+      mockPrisma.livingExpense.create.mockResolvedValue(baseExpense);
+
+      // Business transaction vẫn thành công dù Hermes runtime chết.
+      const result = await svc.create('club-1', 'user-1', validDto);
+      expect(result.id).toBe('exp-1');
+
+      // Flush fire-and-forget: dispatch đã được gọi và lỗi được nuốt (log-only).
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(failingHermes.dispatchTrigger).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -137,13 +191,19 @@ describe('ExpensesService', () => {
       const result = await service.updateStatus('exp-1', 'club-1', 'approved');
       expect(result.status).toBe('approved');
       expect(mockPrisma.livingExpense.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'exp-1', clubId: 'club-1' }, data: { status: 'approved' } }),
+        expect.objectContaining({
+          where: { id: 'exp-1', clubId: 'club-1' },
+          data: { status: 'approved' },
+        }),
       );
     });
 
     it('rejects a pending expense', async () => {
       mockPrisma.livingExpense.findFirst.mockResolvedValue(baseExpense);
-      mockPrisma.livingExpense.update.mockResolvedValue({ ...baseExpense, status: 'rejected' });
+      mockPrisma.livingExpense.update.mockResolvedValue({
+        ...baseExpense,
+        status: 'rejected',
+      });
 
       const result = await service.updateStatus('exp-1', 'club-1', 'rejected');
       expect(result.status).toBe('rejected');
@@ -178,7 +238,9 @@ describe('ExpensesService', () => {
 
     it('blocks cross-tenant delete', async () => {
       mockPrisma.livingExpense.findFirst.mockResolvedValue(null);
-      await expect(service.delete('exp-1', 'club-other')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.delete('exp-1', 'club-other'),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(mockPrisma.livingExpense.delete).not.toHaveBeenCalled();
     });
   });
@@ -190,7 +252,10 @@ describe('ExpensesService', () => {
       await service.findAll('club-1', 'period-1');
       expect(mockPrisma.livingExpense.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ clubId: 'club-1', fundPeriodId: 'period-1' }),
+          where: expect.objectContaining({
+            clubId: 'club-1',
+            fundPeriodId: 'period-1',
+          }),
         }),
       );
     });
@@ -210,7 +275,10 @@ describe('ExpensesService', () => {
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(0) }, _count: 0 })
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(200_000) }, _count: 1 });
+        .mockResolvedValueOnce({
+          _sum: { amount: new Decimal(200_000) },
+          _count: 1,
+        });
       mockPrisma.livingExpense.groupBy.mockResolvedValue([
         { miniExpenseType: 'PRIZE', _sum: { amount: new Decimal(200_000) } },
       ]);

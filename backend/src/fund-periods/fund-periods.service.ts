@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import type { FundPeriodStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
@@ -13,6 +14,7 @@ export class FundPeriodsService {
   constructor(
     private prisma: PrismaService,
     private calculator: FinancialCalculatorService,
+    private events: HermesEventPublisher,
   ) {}
 
   async findAll(clubId: string) {
@@ -127,7 +129,21 @@ export class FundPeriodsService {
     const fp = await this.findOne(id, clubId);
     const updates: any = { status };
     if (status === 'finalized') updates.finalizedAt = new Date();
-    return this.prisma.fundPeriod.update({ where: { id, clubId }, data: updates });
+    const updated = await this.prisma.fundPeriod.update({
+      where: { id, clubId },
+      data: updates,
+    });
+    // Epic 7: kỳ quỹ chốt sổ → phát event SAU khi commit — fire-and-forget.
+    if (status === 'finalized') {
+      this.events.publish({
+        clubId,
+        userId: fp.createdById,
+        triggerType: 'FUND_PERIOD_CLOSED',
+        context: { fundPeriodId: id },
+        idempotencyKey: `FUND_PERIOD_CLOSED:${id}`,
+      });
+    }
+    return updated;
   }
 
   async delete(id: string, clubId: string) {
@@ -155,11 +171,20 @@ export class FundPeriodsService {
     if (previousPeriod) {
       const [prevIncome, prevLiving, prevCourt] = await Promise.all([
         this.prisma.fundContribution.aggregate({
-          where: { fundPeriodId: previousPeriod.id, clubId, fundSource: 'COMMON', isConfirmed: true },
+          where: {
+            fundPeriodId: previousPeriod.id,
+            clubId,
+            fundSource: 'COMMON',
+            isConfirmed: true,
+          },
           _sum: { amount: true },
         }),
         this.prisma.livingExpense.aggregate({
-          where: { fundPeriodId: previousPeriod.id, clubId, fundSource: 'COMMON' },
+          where: {
+            fundPeriodId: previousPeriod.id,
+            clubId,
+            fundSource: 'COMMON',
+          },
           _sum: { amount: true },
         }),
         this.prisma.attendanceSession.aggregate({
@@ -170,7 +195,8 @@ export class FundPeriodsService {
       const prevTotalIncome = Number(prevIncome._sum.amount ?? 0);
       const prevTotalLiving = Number(prevLiving._sum.amount ?? 0);
       const prevTotalCourt = Number(prevCourt._sum.courtFee ?? 0);
-      const prevTotalExpense = prevTotalLiving > 0 ? prevTotalLiving : prevTotalCourt;
+      const prevTotalExpense =
+        prevTotalLiving > 0 ? prevTotalLiving : prevTotalCourt;
       carryForwardBalance = prevTotalIncome - prevTotalExpense;
     }
 

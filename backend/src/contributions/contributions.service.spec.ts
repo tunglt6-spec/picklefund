@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ContributionsService } from './contributions.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const mockPrisma = {
@@ -19,6 +20,8 @@ const mockPrisma = {
   fundPeriod: { findFirst: jest.fn() },
   member: { findMany: jest.fn() },
 };
+
+const mockEvents = { publish: jest.fn() };
 
 const baseContrib = {
   id: 'contrib-1',
@@ -45,6 +48,7 @@ describe('ContributionsService', () => {
       providers: [
         ContributionsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HermesEventPublisher, useValue: mockEvents },
       ],
     }).compile();
     service = module.get<ContributionsService>(ContributionsService);
@@ -56,13 +60,17 @@ describe('ContributionsService', () => {
       const result = await service.findOne('contrib-1', 'club-1');
       expect(result.id).toBe('contrib-1');
       expect(mockPrisma.fundContribution.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ id: 'contrib-1', clubId: 'club-1' }) }),
+        expect.objectContaining({
+          where: expect.objectContaining({ id: 'contrib-1', clubId: 'club-1' }),
+        }),
       );
     });
 
     it('should throw NotFoundException when contribution belongs to different club', async () => {
       mockPrisma.fundContribution.findFirst.mockResolvedValue(null);
-      await expect(service.findOne('contrib-1', 'club-2')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('contrib-1', 'club-2')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -81,23 +89,35 @@ describe('ContributionsService', () => {
       expect(result.amount).toEqual(new Decimal(300000));
       expect(mockPrisma.fundContribution.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ clubId: 'club-1', fundSource: 'COMMON' }),
+          data: expect.objectContaining({
+            clubId: 'club-1',
+            fundSource: 'COMMON',
+          }),
         }),
       );
     });
 
     it('should throw BadRequestException when amount is zero', async () => {
-      await expect(service.create('club-1', 'user-1', {
-        fundSource: 'COMMON', memberId: 'mem-1', fundPeriodId: 'period-1',
-        amount: 0, paidAt: '2026-03-01',
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create('club-1', 'user-1', {
+          fundSource: 'COMMON',
+          memberId: 'mem-1',
+          fundPeriodId: 'period-1',
+          amount: 0,
+          paidAt: '2026-03-01',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException for COMMON without memberId', async () => {
-      await expect(service.create('club-1', 'user-1', {
-        fundSource: 'COMMON', fundPeriodId: 'period-1',
-        amount: 100000, paidAt: '2026-03-01',
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create('club-1', 'user-1', {
+          fundSource: 'COMMON',
+          fundPeriodId: 'period-1',
+          amount: 100000,
+          paidAt: '2026-03-01',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -109,13 +129,17 @@ describe('ContributionsService', () => {
       await service.delete('contrib-1', 'club-1');
 
       expect(mockPrisma.fundContribution.delete).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'contrib-1', clubId: 'club-1' } }),
+        expect.objectContaining({
+          where: { id: 'contrib-1', clubId: 'club-1' },
+        }),
       );
     });
 
     it('should not delete contribution from a different club', async () => {
       mockPrisma.fundContribution.findFirst.mockResolvedValue(null);
-      await expect(service.delete('contrib-1', 'club-2')).rejects.toThrow(NotFoundException);
+      await expect(service.delete('contrib-1', 'club-2')).rejects.toThrow(
+        NotFoundException,
+      );
       expect(mockPrisma.fundContribution.delete).not.toHaveBeenCalled();
     });
   });
@@ -123,7 +147,10 @@ describe('ContributionsService', () => {
   describe('toggleConfirm', () => {
     it('should toggle isConfirmed and include clubId in update where', async () => {
       mockPrisma.fundContribution.findFirst.mockResolvedValue(baseContrib);
-      mockPrisma.fundContribution.update.mockResolvedValue({ ...baseContrib, isConfirmed: true });
+      mockPrisma.fundContribution.update.mockResolvedValue({
+        ...baseContrib,
+        isConfirmed: true,
+      });
 
       await service.toggleConfirm('contrib-1', 'club-1');
 
@@ -139,11 +166,23 @@ describe('ContributionsService', () => {
   describe('summary', () => {
     it('should count only confirmed MINI contributions in mini totals', async () => {
       mockPrisma.fundContribution.aggregate
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(1_000_000) }, _count: 2 })
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(999_000) }, _count: 1 })
-        .mockResolvedValueOnce({ _sum: { amount: new Decimal(300_000) }, _count: 1 });
+        .mockResolvedValueOnce({
+          _sum: { amount: new Decimal(1_000_000) },
+          _count: 2,
+        })
+        .mockResolvedValueOnce({
+          _sum: { amount: new Decimal(999_000) },
+          _count: 1,
+        })
+        .mockResolvedValueOnce({
+          _sum: { amount: new Decimal(300_000) },
+          _count: 1,
+        });
       mockPrisma.fundContribution.groupBy.mockResolvedValue([
-        { miniIncomeType: 'TOURNAMENT_FEE', _sum: { amount: new Decimal(300_000) } },
+        {
+          miniIncomeType: 'TOURNAMENT_FEE',
+          _sum: { amount: new Decimal(300_000) },
+        },
       ]);
 
       const result = await service.summary('club-1');
@@ -211,10 +250,12 @@ describe('ContributionsService', () => {
       mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
       mockPrisma.member.findMany.mockResolvedValue(members);
 
-      await expect(service.importBulk('club-2', 'user-1', {
-        fundPeriodId: 'period-1',
-        rows: [{ memberName: 'Nguyễn Văn A', amount: 300000 }],
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.importBulk('club-2', 'user-1', {
+          fundPeriodId: 'period-1',
+          rows: [{ memberName: 'Nguyễn Văn A', amount: 300000 }],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should not call createMany when all rows have errors', async () => {
@@ -240,10 +281,48 @@ describe('ContributionsService', () => {
         rows: [{ memberName: 'Nguyễn Văn A', amount: 300000 }],
       });
 
-      const callArg = mockPrisma.fundContribution.createMany.mock.calls[0][0] as {
+      const callArg = mockPrisma.fundContribution.createMany.mock
+        .calls[0][0] as {
         data: Array<{ paymentDate: Date }>;
       };
       expect(callArg.data[0].paymentDate).toBeInstanceOf(Date);
+    });
+  });
+
+  /* ── business event (EPIC7) ── */
+  describe('toggleConfirm → business event (EPIC7)', () => {
+    it('phát CONTRIBUTION_CONFIRMED khi chuyển sang đã xác nhận', async () => {
+      mockPrisma.fundContribution.findFirst.mockResolvedValue(baseContrib); // isConfirmed: false
+      mockPrisma.fundContribution.update.mockResolvedValue({
+        ...baseContrib,
+        isConfirmed: true,
+      });
+
+      const result = await service.toggleConfirm('contrib-1', 'club-1');
+
+      expect(result.isConfirmed).toBe(true);
+      expect(mockEvents.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          clubId: 'club-1',
+          userId: 'user-1',
+          triggerType: 'CONTRIBUTION_CONFIRMED',
+          idempotencyKey: 'CONTRIBUTION_CONFIRMED:contrib-1',
+        }),
+      );
+    });
+
+    it('KHÔNG phát event khi bỏ xác nhận (unconfirm)', async () => {
+      mockPrisma.fundContribution.findFirst.mockResolvedValue({
+        ...baseContrib,
+        isConfirmed: true,
+      });
+      mockPrisma.fundContribution.update.mockResolvedValue({
+        ...baseContrib,
+        isConfirmed: false,
+      });
+
+      await service.toggleConfirm('contrib-1', 'club-1');
+      expect(mockEvents.publish).not.toHaveBeenCalled();
     });
   });
 });

@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 import type {
   AllocationRule,
@@ -31,7 +32,10 @@ export interface CreateExpenseDto {
 
 @Injectable()
 export class ExpensesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private events: HermesEventPublisher,
+  ) {}
 
   async findAll(
     clubId: string,
@@ -75,7 +79,7 @@ export class ExpensesService {
         throw new BadRequestException('miniExpenseType bắt buộc cho Quỹ Mini');
     }
 
-    return this.prisma.livingExpense.create({
+    const expense = await this.prisma.livingExpense.create({
       data: {
         clubId,
         createdById: userId,
@@ -106,6 +110,15 @@ export class ExpensesService {
           : {}),
       },
     });
+    // Epic 7: phát event SAU khi commit — fire-and-forget.
+    this.events.publish({
+      clubId,
+      userId,
+      triggerType: 'EXPENSE_RECORDED',
+      context: { expenseId: expense.id, fundSource },
+      idempotencyKey: `EXPENSE_RECORDED:${expense.id}`,
+    });
+    return expense;
   }
 
   async update(id: string, clubId: string, dto: any) {
@@ -194,13 +207,21 @@ export class ExpensesService {
         ),
       ),
       this.prisma.livingExpense.aggregate({
-        where: { clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
+        where: {
+          clubId,
+          fundSource: 'MINI',
+          status: { in: ['approved', 'paid'] },
+        },
         _sum: { amount: true },
         _count: true,
       }),
       this.prisma.livingExpense.groupBy({
         by: ['miniExpenseType'],
-        where: { clubId, fundSource: 'MINI', status: { in: ['approved', 'paid'] } },
+        where: {
+          clubId,
+          fundSource: 'MINI',
+          status: { in: ['approved', 'paid'] },
+        },
         _sum: { amount: true },
       }),
     ]);

@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const mockPrisma = {
@@ -19,8 +20,11 @@ const mockPrisma = {
     findMany: jest.fn(),
     createMany: jest.fn(),
     updateMany: jest.fn(),
+    upsert: jest.fn(),
   },
 };
+
+const mockEvents = { publish: jest.fn() };
 
 const baseSession = {
   id: 'session-1',
@@ -48,6 +52,7 @@ describe('AttendanceService', () => {
       providers: [
         AttendanceService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HermesEventPublisher, useValue: mockEvents },
       ],
     }).compile();
     service = module.get<AttendanceService>(AttendanceService);
@@ -78,7 +83,10 @@ describe('AttendanceService', () => {
       expect(result.id).toBe('session-1');
       expect(mockPrisma.attendanceSession.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ clubId: 'club-1', fundPeriodId: 'period-1' }),
+          data: expect.objectContaining({
+            clubId: 'club-1',
+            fundPeriodId: 'period-1',
+          }),
         }),
       );
     });
@@ -125,7 +133,10 @@ describe('AttendanceService', () => {
       await service.findAll('club-1', 'period-1');
       expect(mockPrisma.attendanceSession.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ clubId: 'club-1', fundPeriodId: 'period-1' }),
+          where: expect.objectContaining({
+            clubId: 'club-1',
+            fundPeriodId: 'period-1',
+          }),
         }),
       );
     });
@@ -148,7 +159,9 @@ describe('AttendanceService', () => {
 
     it('throws NotFoundException for cross-tenant access', async () => {
       mockPrisma.attendanceSession.findFirst.mockResolvedValue(null);
-      await expect(service.findOne('session-1', 'club-other')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.findOne('session-1', 'club-other'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -156,7 +169,12 @@ describe('AttendanceService', () => {
   describe('getMemberSummary', () => {
     it('falls back to unlinked sessions (fundPeriodId="") when period has no sessions', async () => {
       mockPrisma.member.findMany.mockResolvedValue([
-        { id: 'mem-1', fullName: 'Nguyễn A', clubId: 'club-1', isDeleted: false },
+        {
+          id: 'mem-1',
+          fullName: 'Nguyễn A',
+          clubId: 'club-1',
+          isDeleted: false,
+        },
       ]);
       // First query (with exact period) returns empty
       mockPrisma.attendanceSession.findMany
@@ -168,21 +186,53 @@ describe('AttendanceService', () => {
       const result = await service.getMemberSummary('club-1', 'period-1');
 
       expect(mockPrisma.attendanceSession.findMany).toHaveBeenCalledTimes(2);
-      const fallbackCall = mockPrisma.attendanceSession.findMany.mock.calls[1][0];
+      const fallbackCall =
+        mockPrisma.attendanceSession.findMany.mock.calls[1][0];
       expect(fallbackCall.where.fundPeriodId).toBe('');
       expect(result[0].totalSessions).toBe(1);
     });
 
     it('returns zero attendance for members with no records', async () => {
       mockPrisma.member.findMany.mockResolvedValue([
-        { id: 'mem-1', fullName: 'Nguyễn A', clubId: 'club-1', isDeleted: false },
+        {
+          id: 'mem-1',
+          fullName: 'Nguyễn A',
+          clubId: 'club-1',
+          isDeleted: false,
+        },
       ]);
-      mockPrisma.attendanceSession.findMany.mockResolvedValue([{ id: 'session-1' }]);
+      mockPrisma.attendanceSession.findMany.mockResolvedValue([
+        { id: 'session-1' },
+      ]);
       mockPrisma.attendanceRecord.findMany.mockResolvedValue([]);
 
       const result = await service.getMemberSummary('club-1', 'period-1');
       expect(result[0].attendedSessions).toBe(0);
       expect(result[0].totalSessions).toBe(1);
+    });
+  });
+
+  /* ── business event (EPIC7) ── */
+  describe('updateAttendance → business event (EPIC7)', () => {
+    it('business tx thành công + phát ATTENDANCE_COMPLETED (idempotency key theo session)', async () => {
+      mockPrisma.attendanceSession.findFirst.mockResolvedValue(baseSession);
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'mem-1' }]);
+      mockPrisma.attendanceRecord.upsert.mockResolvedValue({});
+      mockPrisma.attendanceSession.update.mockResolvedValue({});
+
+      const result = await service.updateAttendance('session-1', 'club-1', [
+        { memberId: 'mem-1', status: 'PRESENT' },
+      ]);
+
+      expect(result).toEqual({ updated: 1, presentCount: 1 });
+      expect(mockEvents.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          clubId: 'club-1',
+          userId: 'user-1',
+          triggerType: 'ATTENDANCE_COMPLETED',
+          idempotencyKey: 'ATTENDANCE_COMPLETED:session-1',
+        }),
+      );
     });
   });
 });
