@@ -775,6 +775,8 @@ model WorkflowRun {
   contextJson    Json?             @map("context_json")
   resultJson     Json?             @map("result_json")
   errorMessage   String?           @map("error_message")
+  // Chống dispatch trùng (Epic 6): NULL cho test-trigger thủ công; unique per (club, rule, key).
+  idempotencyKey String?           @map("idempotency_key") @db.VarChar(120)
   startedAt      DateTime?         @map("started_at")
   completedAt    DateTime?         @map("completed_at")
   createdAt      DateTime          @default(now()) @map("created_at")
@@ -783,6 +785,7 @@ model WorkflowRun {
   club Club          @relation(fields: [clubId], references: [id])
   rule WorkflowRule? @relation(fields: [workflowRuleId], references: [id], onDelete: SetNull)
 
+  @@unique([clubId, workflowRuleId, idempotencyKey])
   @@index([clubId, status])
   @@index([workflowRuleId])
   @@map("workflow_runs")

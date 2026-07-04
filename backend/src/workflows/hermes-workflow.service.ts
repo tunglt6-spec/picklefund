@@ -19,6 +19,25 @@ export interface WorkflowActor {
   clubId: string | null;
 }
 
+/** Trigger type hỗ trợ runtime dispatch (Epic 6) — mở rộng bằng cách thêm phần tử. */
+export const SUPPORTED_TRIGGER_TYPES = [
+  'DEBT_ESCALATION',
+  'EVENT_REMINDER',
+  'REPORT_DISPATCH',
+] as const;
+export type SupportedTriggerType = (typeof SUPPORTED_TRIGGER_TYPES)[number];
+
+/** Tóm tắt dispatch AN TOÀN — chỉ số đếm, không context/payload/error thô. */
+export interface DispatchSummary {
+  triggerType: string;
+  totalRules: number;
+  matchedRules: number;
+  createdRuns: number;
+  createdActions: number;
+  failedRuns: number;
+  skippedDuplicate: boolean;
+}
+
 interface WfCondition {
   field?: string;
   op?: string;
@@ -251,6 +270,118 @@ export class HermesWorkflowService {
       return this.toRunResponse(cancelled);
     }
 
+    const finished = await this.executeRuleRun(rule, clubId, actor, context);
+    return this.toRunResponse(finished);
+  }
+
+  /**
+   * Runtime dispatch (Epic 6): đánh giá TẤT CẢ rule enabled của clubId + triggerType.
+   * - Mỗi rule tạo 1 WorkflowRun (kể cả không khớp → COMPLETED matched=false, để audit).
+   * - Rule khớp → tạo AiAction qua Action Center (KHÔNG thực thi trực tiếp).
+   * - 1 rule lỗi → run đó FAILED, các rule khác vẫn chạy (partial summary).
+   * - idempotencyKey (tuỳ chọn): key đã dùng → skip toàn bộ, không tạo run mới.
+   * - Trả về DispatchSummary AN TOÀN (chỉ số đếm, không context/error thô).
+   */
+  async dispatchTrigger(
+    clubIdRaw: string | null,
+    triggerType: string,
+    actor: WorkflowActor,
+    contextJson?: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Promise<DispatchSummary> {
+    const clubId = this.requireClub(clubIdRaw);
+    if (
+      !SUPPORTED_TRIGGER_TYPES.includes(triggerType as SupportedTriggerType)
+    ) {
+      throw new BadRequestException(
+        `Trigger type không hỗ trợ: ${SUPPORTED_TRIGGER_TYPES.join(', ')}.`,
+      );
+    }
+    const context = contextJson ?? {};
+    const key = idempotencyKey?.trim() ? idempotencyKey.trim() : null;
+
+    const summary: DispatchSummary = {
+      triggerType,
+      totalRules: 0,
+      matchedRules: 0,
+      createdRuns: 0,
+      createdActions: 0,
+      failedRuns: 0,
+      skippedDuplicate: false,
+    };
+
+    // Idempotency guard cấp service: key đã dùng cho club này → không dispatch lại.
+    if (key) {
+      const dup = await this.prisma.workflowRun.findFirst({
+        where: { clubId, idempotencyKey: key },
+        select: { id: true },
+      });
+      if (dup) {
+        summary.skippedDuplicate = true;
+        return summary;
+      }
+    }
+
+    const rules = await this.prisma.workflowRule.findMany({
+      where: { clubId, triggerType, enabled: true },
+      orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
+    });
+    summary.totalRules = rules.length;
+
+    for (const rule of rules) {
+      try {
+        const run = await this.executeRuleRun(
+          rule,
+          clubId,
+          actor,
+          context,
+          key,
+        );
+        summary.createdRuns += 1;
+        if (run.status === 'FAILED') summary.failedRuns += 1;
+        const res = (run.resultJson ?? {}) as {
+          matched?: boolean;
+          createdActionIds?: string[];
+        };
+        if (res.matched === true) {
+          summary.matchedRules += 1;
+          summary.createdActions += res.createdActionIds?.length ?? 0;
+        }
+      } catch (e) {
+        // Race 2 dispatch cùng key: unique index (clubId, ruleId, key) chặn — coi là duplicate.
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
+        ) {
+          summary.skippedDuplicate = true;
+          continue;
+        }
+        // Lỗi ngoài run-lifecycle (hiếm): log server-side, đếm failed, tiếp tục rule khác.
+        this.sanitizeError(e);
+        summary.failedRuns += 1;
+      }
+    }
+    return summary;
+  }
+
+  /**
+   * Lõi engine dùng chung (test-trigger + runtime dispatch): tạo run RUNNING →
+   * đánh giá điều kiện → tạo AiAction (HERMES) nếu khớp → cập nhật trạng thái cuối.
+   * KHÔNG ném lỗi đánh giá ra ngoài — run FAILED với errorMessage generic.
+   */
+  private async executeRuleRun(
+    rule: {
+      id: string;
+      name: string;
+      triggerType: string;
+      conditionsJson: unknown;
+      actionsJson: unknown;
+    },
+    clubId: string,
+    actor: WorkflowActor,
+    context: Record<string, unknown>,
+    idempotencyKey: string | null = null,
+  ) {
     const run = await this.prisma.workflowRun.create({
       data: {
         clubId,
@@ -258,6 +389,7 @@ export class HermesWorkflowService {
         triggerType: rule.triggerType,
         status: 'RUNNING',
         contextJson: context as Prisma.InputJsonValue,
+        idempotencyKey,
         startedAt: new Date(),
       },
     });
@@ -265,7 +397,7 @@ export class HermesWorkflowService {
     try {
       const matched = this.evaluateConditions(rule.conditionsJson, context);
       if (!matched) {
-        const done = await this.prisma.workflowRun.update({
+        return await this.prisma.workflowRun.update({
           where: { id: run.id },
           data: {
             status: 'COMPLETED',
@@ -273,7 +405,6 @@ export class HermesWorkflowService {
             completedAt: new Date(),
           },
         });
-        return this.toRunResponse(done);
       }
 
       const actions = Array.isArray(rule.actionsJson)
@@ -299,7 +430,7 @@ export class HermesWorkflowService {
         createdActionIds.push(created.id);
       }
 
-      const finished = await this.prisma.workflowRun.update({
+      return await this.prisma.workflowRun.update({
         where: { id: run.id },
         data: {
           // Có AiAction chờ duyệt → WAITING_APPROVAL; không có action operational → COMPLETED.
@@ -313,10 +444,9 @@ export class HermesWorkflowService {
           completedAt: new Date(),
         },
       });
-      return this.toRunResponse(finished);
     } catch (e) {
       // KHÔNG lưu raw Error.message — generic + log server-side.
-      const failed = await this.prisma.workflowRun.update({
+      return await this.prisma.workflowRun.update({
         where: { id: run.id },
         data: {
           status: 'FAILED',
@@ -324,7 +454,6 @@ export class HermesWorkflowService {
           completedAt: new Date(),
         },
       });
-      return this.toRunResponse(failed);
     }
   }
 

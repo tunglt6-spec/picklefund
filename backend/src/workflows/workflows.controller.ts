@@ -16,6 +16,7 @@ import {
   CreateWorkflowRuleDto,
   UpdateWorkflowRuleDto,
   TestTriggerDto,
+  DispatchTestDto,
 } from './workflows.dto';
 
 /**
@@ -86,6 +87,29 @@ export class WorkflowsController {
         dto.contextJson,
       ),
       'Đã chạy test-trigger',
+    );
+  }
+
+  @Post('triggers/:triggerType/dispatch-test')
+  @ApiOperation({
+    summary:
+      'Dispatch-test runtime (Epic 6): đánh giá TẤT CẢ rule enabled của triggerType, ' +
+      'tạo AiAction qua Action Center nếu khớp. Admin-only — KHÔNG phải scheduler/trigger production.',
+  })
+  async dispatchTest(
+    @Param('triggerType') triggerType: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: DispatchTestDto,
+  ) {
+    return ok(
+      await this.svc.dispatchTrigger(
+        user.clubId,
+        triggerType,
+        { userId: user.userId, clubId: user.clubId },
+        dto.contextJson,
+        dto.idempotencyKey,
+      ),
+      'Đã dispatch-test',
     );
   }
 

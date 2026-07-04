@@ -80,3 +80,16 @@ export class TestTriggerDto {
   @IsObject()
   contextJson?: Record<string, unknown>;
 }
+
+/** Dispatch-test runtime (Epic 6): context + idempotencyKey tuỳ chọn. clubId từ JWT. */
+export class DispatchTestDto {
+  @IsOptional()
+  @IsObject()
+  contextJson?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  idempotencyKey?: string;
+}

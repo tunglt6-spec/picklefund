@@ -99,3 +99,34 @@ export async function testTriggerRule(
   const res = await api.post(`/workflows/rules/${id}/test-trigger`, { contextJson })
   return (res.data?.data ?? res.data) as WorkflowRun
 }
+
+/** Trigger type hỗ trợ runtime dispatch (đồng bộ backend SUPPORTED_TRIGGER_TYPES). */
+export const DISPATCH_TRIGGER_TYPES = [
+  'DEBT_ESCALATION',
+  'EVENT_REMINDER',
+  'REPORT_DISPATCH',
+] as const
+
+/** Tóm tắt dispatch sanitized từ backend — chỉ số đếm, không context/payload. */
+export interface DispatchSummary {
+  triggerType: string
+  totalRules: number
+  matchedRules: number
+  createdRuns: number
+  createdActions: number
+  failedRuns: number
+  skippedDuplicate: boolean
+}
+
+/** Dispatch-test runtime (Epic 6): đánh giá mọi rule enabled của triggerType. Admin-only. */
+export async function dispatchTestTrigger(
+  triggerType: string,
+  contextJson?: Record<string, unknown>,
+  idempotencyKey?: string,
+): Promise<DispatchSummary> {
+  const res = await api.post(`/workflows/triggers/${triggerType}/dispatch-test`, {
+    contextJson,
+    idempotencyKey,
+  })
+  return (res.data?.data ?? res.data) as DispatchSummary
+}

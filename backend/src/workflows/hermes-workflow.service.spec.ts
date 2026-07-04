@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   HermesWorkflowService,
   type WorkflowActor,
@@ -249,6 +253,126 @@ describe('HermesWorkflowService', () => {
       expect(run.status).toBe('FAILED');
       expect(run.errorMessage).toBe('Workflow thất bại. Xem log máy chủ.');
       expect(String(run.errorMessage)).not.toContain('BOGUS_SECRET_OP');
+    });
+  });
+
+  describe('dispatchTrigger runtime (EPIC6)', () => {
+    const RULE2 = { ...RULE_BASE, id: 'r2', name: 'Debt 2' };
+
+    it('Forbidden khi không có clubId; BadRequest khi triggerType không hỗ trợ', async () => {
+      await expect(
+        service.dispatchTrigger(null, 'DEBT_ESCALATION', ACTOR),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.dispatchTrigger('club-1', 'NOT_A_TRIGGER', ACTOR),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('đánh giá NHIỀU rule enabled (query lọc enabled:true), summary đếm đúng', async () => {
+      prisma.workflowRule.findMany.mockResolvedValue([RULE_BASE, RULE2]);
+      const s = await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        { unpaidCount: 3 },
+      );
+      // Rule disabled bị loại ngay từ query (enabled: true).
+      expect(prisma.workflowRule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            clubId: 'club-1',
+            triggerType: 'DEBT_ESCALATION',
+            enabled: true,
+          },
+        }),
+      );
+      expect(s.totalRules).toBe(2);
+      expect(s.createdRuns).toBe(2);
+      expect(s.matchedRules).toBe(2);
+      expect(s.createdActions).toBe(2);
+      expect(s.failedRuns).toBe(0);
+      // Mỗi rule khớp tạo AiAction qua Action Center với requestedByAi HERMES.
+      expect(aiActions.create).toHaveBeenCalledTimes(2);
+      const hermesArg: unknown = expect.objectContaining({
+        requestedByAi: 'HERMES',
+      });
+      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', hermesArg);
+    });
+
+    it('1 rule lỗi → run FAILED, rule khác vẫn chạy (partial summary)', async () => {
+      const badRule = {
+        ...RULE_BASE,
+        id: 'r-bad',
+        conditionsJson: { field: 'x', op: 'BOGUS', value: 1 },
+      };
+      prisma.workflowRule.findMany.mockResolvedValue([badRule, RULE2]);
+      const s = await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        { unpaidCount: 3, x: 1 },
+      );
+      expect(s.createdRuns).toBe(2);
+      expect(s.failedRuns).toBe(1);
+      expect(s.matchedRules).toBe(1);
+      expect(s.createdActions).toBe(1);
+    });
+
+    it('summary sanitized: chỉ số đếm, không lộ giá trị context', async () => {
+      prisma.workflowRule.findMany.mockResolvedValue([RULE_BASE]);
+      const s = await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        { unpaidCount: 9, secretNote: 'TOP_SECRET_VALUE' },
+      );
+      expect(Object.keys(s).sort()).toEqual(
+        [
+          'createdActions',
+          'createdRuns',
+          'failedRuns',
+          'matchedRules',
+          'skippedDuplicate',
+          'totalRules',
+          'triggerType',
+        ].sort(),
+      );
+      expect(JSON.stringify(s)).not.toContain('TOP_SECRET_VALUE');
+    });
+
+    it('idempotencyKey đã dùng → skippedDuplicate, KHÔNG tạo run/action mới', async () => {
+      prisma.workflowRun.findFirst.mockResolvedValue({ id: 'run-old' });
+      const s = await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        {},
+        'key-1',
+      );
+      expect(s.skippedDuplicate).toBe(true);
+      expect(s.createdRuns).toBe(0);
+      expect(prisma.workflowRun.create).not.toHaveBeenCalled();
+      expect(aiActions.create).not.toHaveBeenCalled();
+    });
+
+    it('idempotencyKey mới → chạy bình thường, key lưu vào run', async () => {
+      prisma.workflowRun.findFirst.mockResolvedValue(null);
+      prisma.workflowRule.findMany.mockResolvedValue([RULE_BASE]);
+      const s = await service.dispatchTrigger(
+        'club-1',
+        'DEBT_ESCALATION',
+        ACTOR,
+        { unpaidCount: 3 },
+        'key-2',
+      );
+      expect(s.skippedDuplicate).toBe(false);
+      expect(s.createdRuns).toBe(1);
+      const dataArg: unknown = expect.objectContaining({
+        idempotencyKey: 'key-2',
+      });
+      expect(prisma.workflowRun.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: dataArg }),
+      );
     });
   });
 });

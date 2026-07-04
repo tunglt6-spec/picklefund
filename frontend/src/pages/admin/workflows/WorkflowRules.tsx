@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle } from 'lucide-react'
+import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap } from 'lucide-react'
 import {
   useWorkflows,
   createRuleFromTemplate,
   setRuleEnabled,
   deleteWorkflowRule,
   testTriggerRule,
+  dispatchTestTrigger,
+  DISPATCH_TRIGGER_TYPES,
+  type DispatchSummary,
   type WorkflowRunStatus,
 } from '../../../hooks/useWorkflows'
 
@@ -27,6 +30,7 @@ function fmtTime(iso: string): string {
 export function WorkflowRules() {
   const { rules, runs, templates, loading, available, refetch } = useWorkflows()
   const [busy, setBusy] = useState(false)
+  const [dispatchResult, setDispatchResult] = useState<DispatchSummary | null>(null)
 
   async function run(fn: () => Promise<unknown>, okMsg: string) {
     setBusy(true)
@@ -100,6 +104,48 @@ export function WorkflowRules() {
               ))
             )}
           </div>
+        </div>
+
+        {/* Dispatch-test runtime (Epic 6) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Dispatch-Test theo Trigger</h3>
+          <p className="text-xs text-slate-400 mb-3">
+            Đánh giá <b>tất cả rule đang bật</b> của một trigger type (test runtime dispatch — không phải scheduler).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {DISPATCH_TRIGGER_TYPES.map((t) => (
+              <button
+                key={t}
+                onClick={() => void run(async () => { setDispatchResult(await dispatchTestTrigger(t)) }, `Đã dispatch-test: ${t}`)}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+              >
+                <Zap size={13} /> {t}
+              </button>
+            ))}
+          </div>
+          {dispatchResult && (
+            <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-xs font-semibold text-slate-600 mb-2">Kết quả: {dispatchResult.triggerType}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                {([
+                  ['Tổng rule', dispatchResult.totalRules],
+                  ['Khớp', dispatchResult.matchedRules],
+                  ['Run tạo', dispatchResult.createdRuns],
+                  ['AiAction', dispatchResult.createdActions],
+                  ['Lỗi', dispatchResult.failedRuns],
+                ] as const).map(([label, value]) => (
+                  <div key={label} className="rounded-lg bg-white border border-slate-100 px-2 py-1.5">
+                    <p className="text-sm font-bold text-slate-800">{value}</p>
+                    <p className="text-[10px] text-slate-400">{label}</p>
+                  </div>
+                ))}
+              </div>
+              {dispatchResult.skippedDuplicate && (
+                <p className="mt-2 text-[11px] text-amber-600">Bỏ qua do idempotencyKey trùng (đã dispatch trước đó).</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Rules list */}
