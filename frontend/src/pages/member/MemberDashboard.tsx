@@ -1,7 +1,6 @@
-import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight } from 'lucide-react'
+import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight, Activity, Share2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { KpiCard } from '../../components/ui/KpiCard'
-import { Button } from '../../components/ui/Button'
+import { PageShell, PageHeader, MetricCard, ChartCard, EmptyState, ActionButton, StatusBadge } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatVND, formatDate } from '../../lib/utils'
@@ -256,109 +255,112 @@ export function MemberDashboard() {
     )
   }
 
-  /* ── Desktop layout ── */
+  /* ── Desktop layout — cùng design system Admin (read-only, self-scope) ── */
+  const canShare = typeof navigator !== 'undefined' && 'share' in navigator
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-6 md:px-6 md:py-8 text-white">
-        <p className="text-indigo-200 text-sm">Chào mừng trở lại 👋</p>
-        <h2 className="text-xl md:text-2xl font-bold mt-1">{memberName}</h2>
-        {hasData ? (
-          <>
-            <p className="text-indigo-200 text-xs md:text-sm mt-1">{activePeriod?.name ?? 'Kỳ gần nhất'}</p>
-            <div className="mt-4 flex gap-6">
-              <div>
-                <p className="text-indigo-200 text-xs">Số dư hiện tại</p>
-                <p className="text-xl md:text-2xl font-bold">{balance >= 0 ? '+' : ''}{formatVND(balance)}</p>
-              </div>
-              <div>
-                <p className="text-indigo-200 text-xs">Tham gia</p>
-                <p className="text-xl md:text-2xl font-bold">{myAttendance}/{totalSessions} buổi</p>
-              </div>
-            </div>
-          </>
-        ) : (
-          <p className="text-indigo-200 text-xs md:text-sm mt-1">Chưa có kỳ quỹ nào</p>
-        )}
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Tổng Quan"
+        subtitle={
+          hasData
+            ? `Xin chào, ${memberName} · ${activePeriod?.name ?? ''}`
+            : `Xin chào, ${memberName}`
+        }
+      />
 
-      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-        {!hasData ? (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-            <p className="text-gray-400 text-sm">CLB chưa tạo kỳ quỹ nào.<br />Hãy chờ admin khởi tạo kỳ quỹ đầu tiên.</p>
+      {!hasData ? (
+        <ChartCard title="Tổng quan cá nhân">
+          <EmptyState
+            icon={<Activity size={26} />}
+            title="Chưa có kỳ quỹ"
+            description="CLB chưa tạo kỳ quỹ nào. Hãy chờ admin khởi tạo kỳ quỹ đầu tiên."
+          />
+        </ChartCard>
+      ) : (
+        <>
+          {/* KPI — bộ MetricCard giống Admin, dữ liệu của chính mình */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
+            <MetricCard label="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
+            <MetricCard label="Tỷ Lệ Tham Gia" value={`${attendanceRate}%`} sub="So với toàn kỳ" accent={attendanceRate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
+            <MetricCard label="Số Dư" value={formatVND(balance)} sub="Số dư còn lại" accent="blue" negative={balance < 0} icon={<AlertCircle size={18} />} />
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <KpiCard title="Đã Đóng Quỹ" value={amountPaid} isCurrency icon={<DollarSign size={18} />} color="green" />
-              <KpiCard title="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} icon={<Calendar size={18} />} color="blue" />
-              <KpiCard title="Tỷ Lệ" value={`${attendanceRate}%`} icon={<TrendingUp size={18} />} color={attendanceRate >= 50 ? 'green' : 'yellow'} />
-              <KpiCard title="Số Dư" value={balance} isCurrency icon={<AlertCircle size={18} />} color={balance >= 0 ? 'blue' : 'red'} />
-            </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-base md:text-lg">Phiếu Thu Cá Nhân</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleExportPDF}>📥 PDF</Button>
-                  {typeof navigator !== 'undefined' && 'share' in navigator && (
-                    <Button variant="outline" size="sm" onClick={() => {
-                      navigator.share({ title: 'Phiếu thu quỹ CLB', text: `${memberName} - Đã đóng: ${formatVND(amountPaid)}` }).catch(() => {})
-                    }}>📤 Chia sẻ</Button>
-                  )}
+          {/* Phiếu thu cá nhân — ChartCard, chỉ đọc, hành động duy nhất là xuất/chia sẻ */}
+          <ChartCard
+            title="Phiếu Thu Cá Nhân"
+            subtitle={activePeriod?.name ?? undefined}
+            actions={
+              <div className="flex gap-2">
+                <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExportPDF}>PDF</ActionButton>
+                {canShare && (
+                  <ActionButton
+                    variant="secondary"
+                    icon={<Share2 size={15} />}
+                    onClick={() => {
+                      navigator
+                        .share({ title: 'Phiếu thu quỹ CLB', text: `${memberName} - Đã đóng: ${formatVND(amountPaid)}` })
+                        .catch(() => {})
+                    }}
+                  >
+                    Chia sẻ
+                  </ActionButton>
+                )}
+              </div>
+            }
+          >
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Thành viên</p>
+                  <p className="font-semibold [color:var(--pf-text)]">{memberName}</p>
+                </div>
+                <div>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Trạng thái</p>
+                  <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>
+                    {isPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'}
+                  </StatusBadge>
                 </div>
               </div>
-
-              <div className="px-4 py-4 md:px-6 space-y-3 text-sm">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-gray-500 text-xs">Thành viên</p>
-                    <p className="font-semibold text-gray-900">{memberName}</p>
+              <div className="border-t [border-color:var(--pf-border)] pt-3 space-y-2">
+                {[
+                  ['Số buổi toàn kỳ', `${totalSessions} buổi`, ''],
+                  ['Đã tham gia', `${myAttendance} buổi`, 'text-emerald-600'],
+                  ['Tỷ lệ tham gia', `${attendanceRate}%`, ''],
+                ].map(([k, v, c]) => (
+                  <div key={k} className="flex justify-between">
+                    <span className="[color:var(--pf-color-muted)]">{k}</span>
+                    <span className={`font-medium ${c}`}>{v}</span>
                   </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Kỳ quỹ</p>
-                    <p className="font-semibold text-gray-900">{activePeriod?.name ?? '—'}</p>
-                  </div>
+                ))}
+              </div>
+              <div className="border-t [border-color:var(--pf-border)] pt-3 space-y-2">
+                <div className="flex justify-between">
+                  <span className="[color:var(--pf-color-muted)]">Số tiền đã đóng</span>
+                  <span className="font-medium text-emerald-600">{formatVND(amountPaid)}</span>
                 </div>
-                <div className="border-t border-gray-100 pt-3 space-y-2">
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Số buổi toàn kỳ</span>
-                    <span className="font-medium">{totalSessions} buổi</span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Đã tham gia</span>
-                    <span className="font-medium text-green-600">{myAttendance} buổi</span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Tỷ lệ tham gia</span>
-                    <span className="font-medium">{attendanceRate}%</span>
-                  </div>
-                </div>
-                <div className="border-t border-gray-100 pt-3 space-y-2">
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Số tiền đã đóng</span>
-                    <span className="font-medium text-green-600">{formatVND(amountPaid)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Chi phí ước tính</span>
-                    <span className="font-medium text-orange-600">{formatVND(myCost)}</span>
-                  </div>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-sm">Số Dư Còn Lại</span>
-                    <span className={`text-xl md:text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {balance >= 0 ? '+' : ''}{formatVND(balance)}
-                    </span>
-                  </div>
-                  {balance > 0 && (
-                    <p className="text-xs text-green-600 mt-1">✓ Bạn đã đóng đủ quỹ kỳ này</p>
-                  )}
+                <div className="flex justify-between">
+                  <span className="[color:var(--pf-color-muted)]">Chi phí ước tính</span>
+                  <span className="font-medium text-rose-500">{formatVND(myCost)}</span>
                 </div>
               </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold [color:var(--pf-text)]">Số Dư Còn Lại</span>
+                  <span className={`text-xl font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {balance >= 0 ? '+' : ''}{formatVND(balance)}
+                  </span>
+                </div>
+                {balance >= 0 ? (
+                  <p className="text-xs text-emerald-600 mt-1">✓ Bạn đã đóng đủ quỹ kỳ này</p>
+                ) : (
+                  <p className="text-xs text-rose-600 mt-1">Bạn chưa đóng đủ quỹ kỳ này.</p>
+                )}
+              </div>
             </div>
-          </>
-        )}
-      </div>
-    </div>
+          </ChartCard>
+        </>
+      )}
+    </PageShell>
   )
 }
