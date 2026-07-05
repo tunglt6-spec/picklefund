@@ -6,8 +6,11 @@ export const ACTION_EXECUTOR = 'ACTION_EXECUTOR';
 /** Ngữ cảnh tối thiểu executor cần (không truyền toàn bộ entity để hạn chế rò rỉ). */
 export interface ExecutableAction {
   id: string;
+  clubId: string;
   actionType: string;
   targetModule: string | null;
+  title: string;
+  summary: string | null;
   requestPayload: unknown;
 }
 

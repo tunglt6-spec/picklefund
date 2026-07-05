@@ -4,14 +4,16 @@ import { AiActionsService } from './ai-actions.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MaikaModule } from '../ai/maika/maika.module';
 import { NotificationRuntimeModule } from '../notification-runtime/notification-runtime.module';
-import { ACTION_EXECUTOR, NoOpExecutor } from './action-executor';
+import { ACTION_EXECUTOR } from './action-executor';
+import { HermesActionExecutor } from './hermes-action-executor';
 
 @Module({
   imports: [PrismaModule, MaikaModule, NotificationRuntimeModule],
   controllers: [AiActionsController],
   providers: [
     AiActionsService,
-    { provide: ACTION_EXECUTOR, useClass: NoOpExecutor },
+    // Executor THẬT (Mít Đặc): DEBT_ESCALATION → fan-out IN_APP nhắc nợ; loại khác no-op.
+    { provide: ACTION_EXECUTOR, useClass: HermesActionExecutor },
   ],
   exports: [AiActionsService],
 })

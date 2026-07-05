@@ -441,8 +441,11 @@ export class AiActionsService {
     try {
       const raw = await this.executor.execute({
         id: action.id,
+        clubId,
         actionType: action.actionType,
         targetModule: action.targetModule,
+        title: action.title,
+        summary: action.summary,
         requestPayload: action.requestPayload,
       });
       const finishedAt = new Date();
