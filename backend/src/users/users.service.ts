@@ -4,8 +4,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcryptjs';
-import type { Role } from '@prisma/client';
+import * as argon2 from 'argon2';
+import type { Prisma, Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -56,7 +56,9 @@ export class UsersService {
       where: { username: dto.username },
     });
     if (exists) throw new ConflictException('Tên đăng nhập đã tồn tại');
-    const hash = await bcrypt.hash(dto.password, 10);
+    // FIX-USER-AUTH-HASH: dùng argon2 (đồng bộ auth.service.login + seed);
+    // trước đây dùng bcrypt → login (argon2.verify) luôn thất bại.
+    const hash = await argon2.hash(dto.password);
     return this.prisma.user.create({
       data: {
         username: dto.username,
@@ -77,12 +79,25 @@ export class UsersService {
 
   async update(
     id: string,
-    dto: { email?: string; role?: Role; isActive?: boolean },
+    dto: {
+      username?: string;
+      email?: string;
+      password?: string;
+      role?: Role;
+      isActive?: boolean;
+    },
   ) {
     await this.findOne(id);
+    // FIX-USER-AUTH-HASH: KHÔNG đẩy raw `password` vào Prisma (field không tồn
+    // tại → 500). Nếu có password → hash argon2 → map vào passwordHash.
+    const { password, ...rest } = dto;
+    const data: Prisma.UserUpdateInput = { ...rest };
+    if (password !== undefined) {
+      data.passwordHash = await argon2.hash(password);
+    }
     return this.prisma.user.update({
       where: { id },
-      data: dto,
+      data,
       select: {
         id: true,
         username: true,
