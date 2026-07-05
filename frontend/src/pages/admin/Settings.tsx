@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap } from 'lucide-react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -7,18 +7,125 @@ import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useBranding, saveBranding, type ClubBranding } from '../../hooks/useBranding'
 import toast from 'react-hot-toast'
 
-type Tab = 'club' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
+type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
+  { id: 'branding',      label: 'Thương hiệu',   icon: <Palette size={16} /> },
   { id: 'account',       label: 'Tài khoản',     icon: <User size={16} /> },
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
   { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
   { id: 'telegram',      label: 'Telegram',      icon: <Send size={16} /> },
   { id: 'billing',       label: 'Billing',       icon: <Zap size={16} />, superAdminOnly: true },
 ]
+
+// ─── Tab: Thương hiệu (EPIC10A — trắng nhãn) ──────────────────
+const HEX_RE = /^#[0-9A-Fa-f]{6}$/
+function BrandingTab() {
+  const { branding, loading, available, reload } = useBranding()
+  const [form, setForm] = useState<ClubBranding | null>(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => { if (!loading) setForm(branding) }, [loading, branding])
+  const set = (patch: Partial<ClubBranding>) => setForm(f => (f ? { ...f, ...patch } : f))
+
+  if (loading || !form) return <p className="text-sm text-slate-400">Đang tải…</p>
+  if (!available) return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      Không tải được cấu hình thương hiệu (kiểm tra quyền/đăng nhập).
+    </div>
+  )
+
+  const badHex = (v: string) => v.length > 0 && !HEX_RE.test(v)
+  const canSave = !badHex(form.primaryColor) && !badHex(form.secondaryColor)
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await saveBranding({
+        displayName: form.displayName ?? '',
+        shortName: form.shortName ?? '',
+        logoUrl: form.logoUrl ?? '',
+        primaryColor: form.primaryColor,
+        secondaryColor: form.secondaryColor,
+        loginBackground: form.loginBackground ?? '',
+        pdfFooter: form.pdfFooter,
+        faviconUrl: form.faviconUrl ?? '',
+      })
+      toast.success('Đã lưu thương hiệu. Áp dụng đầy đủ ở bản cập nhật giao diện tiếp theo.')
+      reload()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu thương hiệu thất bại')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const textField = (label: string, key: keyof ClubBranding, ph = '', max = 200) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <input
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+        value={(form[key] as string | null) ?? ''}
+        maxLength={max}
+        placeholder={ph}
+        onChange={e => set({ [key]: e.target.value } as Partial<ClubBranding>)}
+      />
+    </div>
+  )
+  const colorField = (label: string, key: 'primaryColor' | 'secondaryColor') => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <div className="flex items-center gap-2">
+        <input type="color" className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+          value={HEX_RE.test(form[key]) ? form[key] : '#6366F1'}
+          onChange={e => set({ [key]: e.target.value.toUpperCase() })} />
+        <input
+          className={cn('flex-1 rounded-lg border px-3 py-2 text-sm font-mono outline-none focus:ring-1',
+            badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500')}
+          value={form[key]} maxLength={7} placeholder="#RRGGBB"
+          onChange={e => set({ [key]: e.target.value })} />
+      </div>
+      {badHex(form[key]) && <p className="text-[11px] text-red-500 mt-1">Định dạng hex #RRGGBB</p>}
+    </div>
+  )
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+        <Palette size={16} className="text-sky-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-sky-800 leading-relaxed">
+          Tuỳ biến thương hiệu CLB (trắng nhãn). Bỏ trống → dùng mặc định PickleFund.
+          Logo/nền/favicon nhập bằng URL ảnh. Màu áp dụng dần trên giao diện & PDF ở các bản cập nhật tiếp theo.
+        </p>
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6 space-y-4">
+        <h3 className="font-semibold text-gray-900">Nhận diện</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {textField('Tên hiển thị', 'displayName', 'PickleFund', 60)}
+          {textField('Tên rút gọn', 'shortName', 'PF', 20)}
+          {textField('Logo URL', 'logoUrl', 'https://…/logo.png', 500)}
+          {textField('Favicon URL', 'faviconUrl', 'https://…/favicon.png', 500)}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {colorField('Màu chính', 'primaryColor')}
+          {colorField('Màu phụ', 'secondaryColor')}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {textField('Ảnh nền đăng nhập URL', 'loginBackground', 'https://…/bg.jpg', 500)}
+          {textField('Chân trang PDF', 'pdfFooter', 'PickleFund', 200)}
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleSave} disabled={saving || !canSave}>
+            <Save size={16} /> {saving ? 'Đang lưu…' : 'Lưu thương hiệu'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const emptySettings: ClubSettings = {
   name: '', code: '', address: '', contactPhone: '', contactEmail: '',
@@ -839,6 +946,7 @@ export function Settings() {
 
         <div className="px-4 py-4 space-y-4">
           {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
+          {activeTab === 'branding'      && <BrandingTab />}
           {activeTab === 'account'       && <AccountTab />}
           {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
           {activeTab === 'payment'       && <PaymentTab />}
@@ -871,6 +979,7 @@ export function Settings() {
         </div>
 
         {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
+        {activeTab === 'branding'      && <BrandingTab />}
         {activeTab === 'account'       && <AccountTab />}
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
         {activeTab === 'payment'       && <PaymentTab />}
