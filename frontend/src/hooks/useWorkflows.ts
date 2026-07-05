@@ -130,3 +130,16 @@ export async function dispatchTestTrigger(
   })
   return (res.data?.data ?? res.data) as DispatchSummary
 }
+
+/** Summary + ngữ cảnh dữ liệu thật của CLB (unpaidCount/upcomingSessions/periodFinalized…). */
+export interface DispatchLiveResult extends DispatchSummary {
+  liveContext: Record<string, unknown>
+}
+
+/** Dispatch dùng DỮ LIỆU THẬT của CLB — rule khớp thực tế + trả liveContext để xem. */
+export async function dispatchLiveTrigger(
+  triggerType: string,
+): Promise<DispatchLiveResult> {
+  const res = await api.post(`/workflows/triggers/${triggerType}/dispatch-live`, {})
+  return (res.data?.data ?? res.data) as DispatchLiveResult
+}

@@ -25,6 +25,10 @@ const prisma = {
     create: jest.fn(),
     update: jest.fn(),
   },
+  fundPeriod: { findFirst: jest.fn(), count: jest.fn() },
+  member: { count: jest.fn() },
+  fundContribution: { findMany: jest.fn() },
+  attendanceSession: { count: jest.fn() },
 };
 
 const aiActions = { create: jest.fn().mockResolvedValue({ id: 'act-1' }) };
@@ -395,6 +399,69 @@ describe('HermesWorkflowService', () => {
       expect(prisma.workflowRun.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: dataArg }),
       );
+    });
+  });
+
+  describe('buildLiveContext (dữ liệu thật)', () => {
+    it('DEBT_ESCALATION: unpaidCount = members - đã đóng (period active)', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-1' });
+      prisma.member.count.mockResolvedValue(10);
+      prisma.fundContribution.findMany.mockResolvedValue([
+        { memberId: 'm1' },
+        { memberId: 'm2' },
+        { memberId: 'm3' },
+      ]);
+      const ctx = await service.buildLiveContext('club-1', 'DEBT_ESCALATION');
+      expect(ctx).toEqual({
+        unpaidCount: 7,
+        memberCount: 10,
+        paidCount: 3,
+        hasActivePeriod: true,
+      });
+    });
+
+    it('DEBT_ESCALATION: không có period active → unpaidCount 0', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue(null);
+      const ctx = await service.buildLiveContext('club-1', 'DEBT_ESCALATION');
+      expect(ctx).toEqual({ unpaidCount: 0, hasActivePeriod: false });
+    });
+
+    it('EVENT_REMINDER: đếm session sắp tới', async () => {
+      prisma.attendanceSession.count.mockResolvedValue(4);
+      const ctx = await service.buildLiveContext('club-1', 'EVENT_REMINDER');
+      expect(ctx).toEqual({ upcomingSessions: 4 });
+    });
+
+    it('REPORT_DISPATCH: periodFinalized true khi có kỳ chốt', async () => {
+      prisma.fundPeriod.count.mockResolvedValue(2);
+      const ctx = await service.buildLiveContext('club-1', 'REPORT_DISPATCH');
+      expect(ctx).toEqual({ periodFinalized: true, finalizedCount: 2 });
+    });
+  });
+
+  describe('dispatchLive', () => {
+    it('dùng live context để dispatch + trả liveContext; khớp → tạo AiAction', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-1' });
+      prisma.member.count.mockResolvedValue(5);
+      prisma.fundContribution.findMany.mockResolvedValue([{ memberId: 'm1' }]);
+      prisma.workflowRun.findFirst.mockResolvedValue(null);
+      prisma.workflowRule.findMany.mockResolvedValue([RULE_BASE]); // cond unpaidCount>=1
+      const r = await service.dispatchLive('club-1', 'DEBT_ESCALATION', ACTOR);
+      expect(r.liveContext).toEqual({
+        unpaidCount: 4,
+        memberCount: 5,
+        paidCount: 1,
+        hasActivePeriod: true,
+      });
+      expect(r.matchedRules).toBe(1);
+      expect(r.createdActions).toBe(1);
+      expect(aiActions.create).toHaveBeenCalled();
+    });
+
+    it('trigger không hỗ trợ → BadRequest', async () => {
+      await expect(
+        service.dispatchLive('club-1', 'NOPE', ACTOR),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

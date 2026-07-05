@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap } from 'lucide-react'
+import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database } from 'lucide-react'
 import {
   useWorkflows,
   createRuleFromTemplate,
@@ -8,8 +8,10 @@ import {
   deleteWorkflowRule,
   testTriggerRule,
   dispatchTestTrigger,
+  dispatchLiveTrigger,
   DISPATCH_TRIGGER_TYPES,
   type DispatchSummary,
+  type DispatchLiveResult,
   type WorkflowRunStatus,
 } from '../../../hooks/useWorkflows'
 
@@ -31,6 +33,7 @@ export function WorkflowRules() {
   const { rules, runs, templates, loading, available, refetch } = useWorkflows()
   const [busy, setBusy] = useState(false)
   const [dispatchResult, setDispatchResult] = useState<DispatchSummary | null>(null)
+  const [liveResult, setLiveResult] = useState<DispatchLiveResult | null>(null)
 
   async function run(fn: () => Promise<unknown>, okMsg: string) {
     setBusy(true)
@@ -106,46 +109,74 @@ export function WorkflowRules() {
           </div>
         </div>
 
-        {/* Dispatch-test runtime (Epic 6) */}
+        {/* Dispatch theo Trigger (Epic 6 + Live data) */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Dispatch-Test theo Trigger</h3>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Chạy Dispatch theo Trigger</h3>
           <p className="text-xs text-slate-400 mb-3">
-            Đánh giá <b>tất cả rule đang bật</b> của một trigger type (test runtime dispatch — không phải scheduler).
+            <b>Dữ liệu thật</b>: lấy số liệu CLB hiện tại (nợ quỹ, buổi sắp tới, kỳ đã chốt) để rule khớp thực tế →
+            tạo AiAction vào <b>Hộp Duyệt</b>. <b>Test rỗng</b>: chỉ chạy thử với ngữ cảnh trống (thường không khớp điều kiện).
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {DISPATCH_TRIGGER_TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() => void run(async () => { setDispatchResult(await dispatchTestTrigger(t)) }, `Đã dispatch-test: ${t}`)}
-                disabled={busy}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50"
-              >
-                <Zap size={13} /> {t}
-              </button>
+              <div key={t} className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-mono text-slate-500 w-40 shrink-0">{t}</span>
+                <button
+                  onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                >
+                  <Database size={13} /> Dữ liệu thật
+                </button>
+                <button
+                  onClick={() => void run(async () => { setDispatchResult(await dispatchTestTrigger(t)); setLiveResult(null) }, `Đã dispatch-test: ${t}`)}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+                >
+                  <Zap size={13} /> Test rỗng
+                </button>
+              </div>
             ))}
           </div>
-          {dispatchResult && (
-            <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-xs font-semibold text-slate-600 mb-2">Kết quả: {dispatchResult.triggerType}</p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
-                {([
-                  ['Tổng rule', dispatchResult.totalRules],
-                  ['Khớp', dispatchResult.matchedRules],
-                  ['Run tạo', dispatchResult.createdRuns],
-                  ['AiAction', dispatchResult.createdActions],
-                  ['Lỗi', dispatchResult.failedRuns],
-                ] as const).map(([label, value]) => (
-                  <div key={label} className="rounded-lg bg-white border border-slate-100 px-2 py-1.5">
-                    <p className="text-sm font-bold text-slate-800">{value}</p>
-                    <p className="text-[10px] text-slate-400">{label}</p>
+          {(liveResult ?? dispatchResult) && (() => {
+            const r = liveResult ?? dispatchResult!
+            const isLive = !!liveResult
+            return (
+              <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-slate-600 mb-2">
+                  Kết quả {isLive ? '(dữ liệu thật)' : '(test rỗng)'}: {r.triggerType}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                  {([
+                    ['Tổng rule', r.totalRules],
+                    ['Khớp', r.matchedRules],
+                    ['Run tạo', r.createdRuns],
+                    ['AiAction', r.createdActions],
+                    ['Lỗi', r.failedRuns],
+                  ] as const).map(([label, value]) => (
+                    <div key={label} className="rounded-lg bg-white border border-slate-100 px-2 py-1.5">
+                      <p className="text-sm font-bold text-slate-800">{value}</p>
+                      <p className="text-[10px] text-slate-400">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                {isLive && (
+                  <div className="mt-2 text-[11px] text-slate-500">
+                    Số liệu CLB: {Object.entries(liveResult!.liveContext).map(([k, v]) => `${k}=${String(v)}`).join(' · ') || '(trống)'}
                   </div>
-                ))}
+                )}
+                {r.matchedRules === 0 && (
+                  <p className="mt-2 text-[11px] text-amber-600">
+                    Không rule nào khớp {isLive ? '(số liệu CLB chưa thoả điều kiện, hoặc chưa có rule bật cho trigger này)' : '(ngữ cảnh rỗng — thử "Dữ liệu thật")'}.
+                  </p>
+                )}
+                {r.createdActions > 0 && (
+                  <p className="mt-2 text-[11px] text-emerald-600">
+                    Đã tạo {r.createdActions} AiAction → xem/duyệt tại <b>AI Manager · Hộp Duyệt</b>.
+                  </p>
+                )}
               </div>
-              {dispatchResult.skippedDuplicate && (
-                <p className="mt-2 text-[11px] text-amber-600">Bỏ qua do idempotencyKey trùng (đã dispatch trước đó).</p>
-              )}
-            </div>
-          )}
+            )
+          })()}
         </div>
 
         {/* Rules list */}

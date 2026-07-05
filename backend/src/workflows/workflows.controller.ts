@@ -147,6 +147,25 @@ export class WorkflowsController {
     );
   }
 
+  @Post('triggers/:triggerType/dispatch-live')
+  @ApiOperation({
+    summary:
+      'Dispatch dùng DỮ LIỆU THẬT của CLB (unpaidCount/upcomingSessions/periodFinalized ' +
+      'tính từ DB) — để rule khớp thực tế + trả liveContext cho admin xem.',
+  })
+  async dispatchLive(
+    @Param('triggerType') triggerType: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return ok(
+      await this.svc.dispatchLive(user.clubId, triggerType, {
+        userId: user.userId,
+        clubId: user.clubId,
+      }),
+      'Đã chạy dispatch với dữ liệu thật',
+    );
+  }
+
   @Get('templates')
   @ApiOperation({ summary: 'Template workflow an toàn (read-only).' })
   templates() {

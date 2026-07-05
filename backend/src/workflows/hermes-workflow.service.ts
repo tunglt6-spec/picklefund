@@ -387,6 +387,88 @@ export class HermesWorkflowService {
   }
 
   /**
+   * Xây ngữ cảnh trigger từ DỮ LIỆU THẬT của CLB (để rule khớp thực tế, không rỗng).
+   * Trả về CHỈ số đếm/cờ tổng hợp của CLB (không PII) — an toàn hiển thị cho admin.
+   */
+  async buildLiveContext(
+    clubId: string,
+    triggerType: string,
+  ): Promise<Record<string, unknown>> {
+    if (triggerType === 'DEBT_ESCALATION') {
+      const period = await this.prisma.fundPeriod.findFirst({
+        where: { clubId, status: 'active' },
+        orderBy: { startDate: 'desc' },
+        select: { id: true },
+      });
+      if (!period) return { unpaidCount: 0, hasActivePeriod: false };
+      const [memberCount, paidRows] = await Promise.all([
+        this.prisma.member.count({ where: { clubId, isDeleted: false } }),
+        this.prisma.fundContribution.findMany({
+          where: {
+            clubId,
+            fundPeriodId: period.id,
+            fundSource: 'COMMON',
+            isConfirmed: true,
+            memberId: { not: null },
+          },
+          select: { memberId: true },
+          distinct: ['memberId'],
+        }),
+      ]);
+      const unpaidCount = Math.max(0, memberCount - paidRows.length);
+      return {
+        unpaidCount,
+        memberCount,
+        paidCount: paidRows.length,
+        hasActivePeriod: true,
+      };
+    }
+    if (triggerType === 'EVENT_REMINDER') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcomingSessions = await this.prisma.attendanceSession.count({
+        where: { clubId, sessionDate: { gte: today } },
+      });
+      return { upcomingSessions };
+    }
+    if (triggerType === 'REPORT_DISPATCH') {
+      const finalizedCount = await this.prisma.fundPeriod.count({
+        where: { clubId, status: 'finalized' },
+      });
+      return { periodFinalized: finalizedCount > 0, finalizedCount };
+    }
+    return {};
+  }
+
+  /**
+   * Dispatch dùng ngữ cảnh DỮ LIỆU THẬT (admin bấm "Chạy dữ liệu thật").
+   * Không idempotencyKey → mỗi lần chạy tạo run mới (hành động thủ công có chủ đích).
+   * Trả về summary + liveContext (số liệu CLB) để admin thấy vì sao khớp/không.
+   */
+  async dispatchLive(
+    clubIdRaw: string | null,
+    triggerType: string,
+    actor: WorkflowActor,
+  ): Promise<DispatchSummary & { liveContext: Record<string, unknown> }> {
+    const clubId = this.requireClub(clubIdRaw);
+    if (
+      !SUPPORTED_TRIGGER_TYPES.includes(triggerType as SupportedTriggerType)
+    ) {
+      throw new BadRequestException(
+        `Trigger type không hỗ trợ: ${SUPPORTED_TRIGGER_TYPES.join(', ')}.`,
+      );
+    }
+    const liveContext = await this.buildLiveContext(clubId, triggerType);
+    const summary = await this.dispatchTrigger(
+      clubId,
+      triggerType,
+      actor,
+      liveContext,
+    );
+    return { ...summary, liveContext };
+  }
+
+  /**
    * Lõi engine dùng chung (test-trigger + runtime dispatch): tạo run RUNNING →
    * đánh giá điều kiện → tạo AiAction (HERMES) nếu khớp → cập nhật trạng thái cuối.
    * KHÔNG ném lỗi đánh giá ra ngoài — run FAILED với errorMessage generic.
