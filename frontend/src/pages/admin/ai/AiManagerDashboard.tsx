@@ -29,6 +29,20 @@ const RISK_STYLE: Record<string, string> = {
   critical: 'bg-red-100 text-red-700',
 }
 
+// Map endpoint ĐỌC (read-only GET) của đề xuất AI → route thật trong app để admin xem dữ liệu.
+// Chỉ điều hướng (không mutate). Đề xuất không map được → hiển thị tĩnh, không bấm.
+const READ_ROUTE_MAP: Record<string, string> = {
+  members: '/members',
+  'fund-periods': '/fund-periods',
+  reports: '/reports',
+  minigames: '/minigames',
+}
+
+function resolveReadRoute(endpoint: string): string | null {
+  const seg = endpoint.replace(/^\//, '').split('/')[0]
+  return READ_ROUTE_MAP[seg] ?? null
+}
+
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-5 ${className}`}>
@@ -308,15 +322,35 @@ export function AiManagerDashboard() {
               <div className="space-y-3">
                 {intel?.summary && <p className="text-xs text-slate-600 leading-relaxed">{intel.summary}</p>}
                 <div className="space-y-2">
-                  {(intel?.suggestedReadActions ?? []).slice(0, 6).map((a, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-700 truncate">{a.label}</p>
-                        <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
+                  {(intel?.suggestedReadActions ?? []).slice(0, 6).map((a, i) => {
+                    const route = resolveReadRoute(a.endpoint)
+                    if (route) {
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => navigate(route)}
+                          title={a.reason}
+                          className="group flex w-full items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-left transition-colors hover:border-purple-200 hover:bg-purple-50"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-slate-700 truncate group-hover:text-purple-700">{a.label}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
+                          </div>
+                          <ChevronRight size={14} className="text-slate-300 shrink-0 transition-colors group-hover:text-purple-500" />
+                        </button>
+                      )
+                    }
+                    return (
+                      <div key={i} title={a.reason} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-slate-700 truncate">{a.label}</p>
+                          <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
+                        </div>
+                        <span className="text-[10px] text-slate-300 shrink-0">chỉ đọc</span>
                       </div>
-                      <ChevronRight size={14} className="text-slate-300 shrink-0" />
-                    </div>
-                  ))}
+                    )
+                  })}
                   {(intel?.suggestedReadActions?.length ?? 0) === 0 && (
                     <p className="text-sm text-slate-400">Chưa có đề xuất đọc.</p>
                   )}
