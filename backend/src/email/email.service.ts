@@ -29,19 +29,47 @@ export class EmailService {
     return this.transporter !== null;
   }
 
-  async send(to: string, subject: string, html: string): Promise<boolean> {
+  /**
+   * Gửi email. opts.fromName = tên hiển thị (vd tên CLB); opts.replyTo = địa chỉ trả lời
+   * (vd email admin CLB). Địa chỉ FROM thực vẫn là tài khoản SMTP đã xác thực (Gmail chặn
+   * giả mạo From) — chỉ đổi tên hiển thị + Reply-To để thư "mang danh" CLB và trả lời đúng admin.
+   */
+  async send(
+    to: string,
+    subject: string,
+    html: string,
+    opts?: { replyTo?: string; fromName?: string },
+  ): Promise<boolean> {
     if (!this.transporter) return false;
     try {
-      const from =
+      const baseFrom =
         this.config.get<string>('SMTP_FROM') ??
         'PickleFund <noreply@picklefund.app>';
-      await this.transporter.sendMail({ from, to, subject, html });
+      // Giữ address đã xác thực, chỉ đổi display name nếu có fromName (object form để
+      // nodemailer tự escape tên có dấu/ký tự đặc biệt).
+      const from = opts?.fromName
+        ? { name: opts.fromName, address: this.extractAddress(baseFrom) }
+        : baseFrom;
+      await this.transporter.sendMail({
+        from,
+        to,
+        subject,
+        html,
+        ...(opts?.replyTo ? { replyTo: opts.replyTo } : {}),
+      });
       this.logger.log(`[Email] Sent to ${to}: ${subject}`);
       return true;
-    } catch (err: any) {
-      this.logger.warn(`[Email] Send failed to ${to}: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`[Email] Send failed to ${to}: ${msg}`);
       return false;
     }
+  }
+
+  /** Lấy phần địa chỉ từ chuỗi FROM ("Tên <a@b>" → "a@b"; "a@b" → "a@b"). */
+  private extractAddress(from: string): string {
+    const m = from.match(/<([^>]+)>/);
+    return m ? m[1].trim() : from.trim();
   }
 
   buildNotifHtml(title: string, body: string): string {

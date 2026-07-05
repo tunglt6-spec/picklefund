@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import {
   Prisma,
   NotificationChannel,
+  Role,
   type NotificationJob,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -83,6 +84,39 @@ export class NotificationRuntimeService {
    */
   private isRealEmail(email: string): boolean {
     return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) && !/\.local$/i.test(email);
+  }
+
+  /**
+   * Sender "mang danh" CLB cho email: fromName = tên CLB, replyTo = email admin CLB
+   * (ưu tiên CLB_ADMIN rồi SUPER_ADMIN, đang active, email thật). Không đổi FROM address
+   * thực (Gmail chặn giả mạo). Thiếu dữ liệu → undefined (dùng SMTP_FROM mặc định).
+   */
+  private async resolveClubSender(
+    clubId: string,
+  ): Promise<{ replyTo?: string; fromName?: string }> {
+    const [club, admins] = await Promise.all([
+      this.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { name: true },
+      }),
+      this.prisma.user.findMany({
+        where: {
+          clubId,
+          isActive: true,
+          role: { in: [Role.CLUB_ADMIN, Role.SUPER_ADMIN] },
+        },
+        select: { email: true, role: true },
+      }),
+    ]);
+    // Ưu tiên tường minh CLB_ADMIN → SUPER_ADMIN (KHÔNG dựa thứ tự enum DB), email thật.
+    const real = admins.filter((a) => a.email && this.isRealEmail(a.email));
+    const chosen =
+      real.find((a) => a.role === Role.CLUB_ADMIN) ??
+      real.find((a) => a.role === Role.SUPER_ADMIN);
+    return {
+      replyTo: chosen?.email ?? undefined,
+      fromName: club?.name ?? undefined,
+    };
   }
 
   // ---------- Channel status (admin visibility) ----------
@@ -263,10 +297,13 @@ export class NotificationRuntimeService {
         sent: false,
         note: 'email placeholder/không hợp lệ — không gửi',
       };
+    // Email "mang danh" CLB: tên hiển thị = tên CLB, Reply-To = email admin CLB.
+    const sender = await this.resolveClubSender(clubId);
     const ok = await this.email.send(
       user.email,
       req.title,
       this.email.buildNotifHtml(req.title, req.bodySummary ?? req.title),
+      { replyTo: sender.replyTo, fromName: sender.fromName },
     );
     return { sent: ok, note: ok ? 'email sent' : 'email service từ chối gửi' };
   }

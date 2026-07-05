@@ -13,7 +13,8 @@ const prisma = {
     update: jest.fn(),
   },
   notification: { create: jest.fn() },
-  user: { findFirst: jest.fn() },
+  user: { findFirst: jest.fn(), findMany: jest.fn() },
+  club: { findUnique: jest.fn() },
 };
 
 const email = {
@@ -42,6 +43,8 @@ describe('NotificationRuntimeService (EPIC8)', () => {
     let createdRow: Record<string, unknown> = {};
     prisma.notificationJob.findMany.mockResolvedValue([]);
     prisma.notificationJob.findFirst.mockResolvedValue(null);
+    prisma.club.findUnique.mockResolvedValue(null);
+    prisma.user.findMany.mockResolvedValue([]);
     // create lưu row; update merge row (mô phỏng Prisma trả full row sau update).
     prisma.notificationJob.create.mockImplementation(
       (arg: { data: Record<string, unknown> }) => {
@@ -137,6 +140,31 @@ describe('NotificationRuntimeService (EPIC8)', () => {
       );
       expect(email.send).toHaveBeenCalledTimes(1);
       expect(job.status).toBe('READY');
+    });
+
+    it('EMAIL "mang danh" CLB: recipient=member, Reply-To=email admin CLB, fromName=tên CLB', async () => {
+      email.isEnabled = true;
+      email.send.mockResolvedValue(true);
+      // target recipient (findFirst) là MEMBER; admin sender (findMany) tách riêng.
+      prisma.user.findFirst.mockResolvedValue({ email: 'member@real.vn' });
+      prisma.user.findMany.mockResolvedValue([
+        { email: 'super@theping.vn', role: 'SUPER_ADMIN' },
+        { email: 'admin@theping.vn', role: 'CLUB_ADMIN' },
+      ]);
+      prisma.club.findUnique.mockResolvedValue({ name: 'THE PING' });
+      const job = (await service.dispatch('club-1', {
+        channel: 'EMAIL',
+        targetId: 'u1',
+        title: 'Nhắc lịch tập',
+      })) as Record<string, unknown>;
+      expect(job.status).toBe('READY');
+      // Gửi tới MEMBER; Reply-To ưu tiên CLB_ADMIN (không phải SUPER_ADMIN dù xuất hiện trước).
+      expect(email.send).toHaveBeenCalledWith(
+        'member@real.vn',
+        'Nhắc lịch tập',
+        expect.any(String),
+        { replyTo: 'admin@theping.vn', fromName: 'THE PING' },
+      );
     });
 
     it('EMAIL tới địa chỉ placeholder .local → DRY_RUN, KHÔNG gọi send (chặn bounce)', async () => {
