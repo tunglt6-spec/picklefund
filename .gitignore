@@ -21,3 +21,6 @@ backend/coverage/
 .DS_Store
 Thumbs.db
 .claude/worktrees/
+
+# desktop ad-hoc build verify (EPIC12) — never commit
+desktop/dist-verify/
