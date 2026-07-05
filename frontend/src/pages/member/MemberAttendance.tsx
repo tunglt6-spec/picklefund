@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Calendar, CheckCircle, Clock, MapPin, Search } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { CheckCircle, Clock, MapPin, Search } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
 import { formatDate, formatVND } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
@@ -121,127 +121,74 @@ export function MemberAttendance() {
     )
   }
 
+  // DataTable columns (desktop) — cùng design system Admin, read-only.
+  type SessRow = (typeof filtered)[number]
+  const sessColumns: Column<SessRow>[] = [
+    { key: 'idx', header: '#', render: (_s, i) => <span className="text-xs [color:var(--pf-color-muted)]">#{i + 1}</span> },
+    { key: 'date', header: 'Ngày', render: (s) => <span className="font-medium [color:var(--pf-text)]">{formatDate(s.sessionDate)}</span> },
+    { key: 'court', header: 'Sân', render: (s) => <span className="text-xs [color:var(--pf-color-muted)]">{s.courtName ?? 'Sân chưa đặt'}</span> },
+    { key: 'time', header: 'Thời gian', align: 'center', render: (s) => <span className="text-xs [color:var(--pf-color-muted)]">{s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '—'}</span> },
+    {
+      key: 'status', header: 'Tình trạng', align: 'center', render: (s) => {
+        const present = s.status === 'completed' ? attended.has(s.id) : null
+        return s.status === 'scheduled'
+          ? <StatusBadge tone="info" dot>Sắp diễn ra</StatusBadge>
+          : present
+            ? <StatusBadge tone="success" dot>Có mặt</StatusBadge>
+            : <StatusBadge tone="neutral" dot>Vắng mặt</StatusBadge>
+      },
+    },
+    {
+      key: 'cost', header: 'Chi phí sân', align: 'right', render: (s) => {
+        const present = s.status === 'completed' ? attended.has(s.id) : null
+        const attendees = s._count?.attendanceRecords ?? 6
+        return s.status === 'completed' && present
+          ? <span className="font-medium text-indigo-600">{formatVND(Math.round(s.courtFee / attendees))}</span>
+          : <span className="text-slate-300">—</span>
+      },
+    },
+  ]
+  const rateColor = rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'
+  const rateBar = rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'
+
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <PageShell maxWidth={960}>
       <PageHeader
         title="Lịch Tham Gia"
         subtitle={activePeriod ? `${activePeriod.name} · ${myMember?.fullName ?? 'Thành viên'}` : 'Chưa có kỳ quỹ'}
       />
 
-      <div className="p-6 max-w-[900px] mx-auto space-y-5">
-        {/* KPI */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <CheckCircle size={14} className="text-indigo-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Buổi tham gia</p>
-            </div>
-            <p className="text-xl font-bold text-indigo-600">{attendedCount}<span className="text-sm font-medium text-slate-400"> / {completedSessions.length}</span></p>
-            <p className="text-xs text-slate-500 mt-0.5">Tỷ lệ: {rate}%</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Clock size={14} className="text-amber-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sắp diễn ra</p>
-            </div>
-            <p className="text-xl font-bold text-amber-600">{periodSessions.filter(s => s.status === 'scheduled').length} buổi</p>
-            <p className="text-xs text-slate-500 mt-0.5">Trong kỳ này</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <MapPin size={14} className="text-emerald-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chi phí sân</p>
-            </div>
-            <p className="text-xl font-bold text-emerald-600">{formatVND(Math.round(courtCostPerSession))}</p>
-            <p className="text-xs text-slate-500 mt-0.5">Phần chia cá nhân</p>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Tìm theo ngày hoặc sân..."
-            className="input-base pl-9"
-          />
-        </div>
-
-        {/* Rate bar */}
-        {completedSessions.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-slate-700">Tỷ lệ tham gia</span>
-              <span className={`text-sm font-bold ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'}`}>{rate}%</span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
-                style={{ width: `${rate}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Table */}
-        {filtered.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-200 py-14 text-center">
-            <Calendar size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Chưa có buổi tập nào</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-            <table className="table-base">
-              <thead>
-                <tr>
-                  <th className="w-12">#</th>
-                  <th>Ngày</th>
-                  <th>Sân</th>
-                  <th className="text-center">Thời gian</th>
-                  <th className="text-center">Tình trạng</th>
-                  <th className="text-right">Chi phí sân</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s, i) => {
-                  const present = s.status === 'completed' ? attended.has(s.id) : null
-                  const attendees = s._count?.attendanceRecords ?? 6
-                  const costShare = present ? Math.round(s.courtFee / attendees) : 0
-                  return (
-                    <tr key={s.id} className={!present && s.status === 'completed' ? 'opacity-60' : ''}>
-                      <td className="text-slate-400 text-xs">#{i + 1}</td>
-                      <td className="font-medium text-slate-800">{formatDate(s.sessionDate)}</td>
-                      <td className="text-slate-600 text-xs">{s.courtName ?? 'Sân chưa đặt'}</td>
-                      <td className="text-center text-xs text-slate-500">
-                        {s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '—'}
-                      </td>
-                      <td className="text-center">
-                        {s.status === 'scheduled'
-                          ? <Badge variant="blue" dot>Sắp diễn ra</Badge>
-                          : present
-                            ? <Badge variant="green" dot>Có mặt</Badge>
-                            : <Badge variant="gray" dot>Vắng mặt</Badge>}
-                      </td>
-                      <td className="text-right font-medium">
-                        {s.status === 'completed' && present
-                          ? <span className="text-indigo-600">{formatVND(costShare)}</span>
-                          : <span className="text-slate-300">—</span>}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* KPI — MetricCard giống Admin */}
+      <div className="grid grid-cols-3 gap-4">
+        <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
+        <MetricCard label="Sắp diễn ra" value={`${periodSessions.filter(s => s.status === 'scheduled').length} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} />
+        <MetricCard label="Chi phí sân" value={formatVND(Math.round(courtCostPerSession))} sub="Phần chia cá nhân" accent="green" icon={<MapPin size={18} />} />
       </div>
-    </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Tìm theo ngày hoặc sân..."
+          className="input-base pl-9"
+        />
+      </div>
+
+      {/* Rate bar */}
+      {completedSessions.length > 0 && (
+        <ChartCard title="Tỷ lệ tham gia" actions={<span className={`text-sm font-bold ${rateColor}`}>{rate}%</span>}>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${rateBar}`} style={{ width: `${rate}%` }} />
+          </div>
+        </ChartCard>
+      )}
+
+      {/* Bảng buổi tập — DataTable read-only */}
+      <ChartCard title="Danh sách buổi tập" subtitle={`${filtered.length} buổi`}>
+        <DataTable columns={sessColumns} rows={filtered} rowKey={(s) => s.id} emptyText="Chưa có buổi tập nào" />
+      </ChartCard>
+    </PageShell>
   )
 }

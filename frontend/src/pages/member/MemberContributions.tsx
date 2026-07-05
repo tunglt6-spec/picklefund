@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { DollarSign, CheckCircle, Clock, TrendingUp, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
@@ -145,108 +145,47 @@ export function MemberContributions() {
     )
   }
 
+  // DataTable columns — cùng design system Admin, read-only.
+  type ContribRow = (typeof contributions)[number]
+  const contribColumns: Column<ContribRow>[] = [
+    { key: 'period', header: 'Kỳ quỹ', render: (c) => <span className="font-medium [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span> },
+    { key: 'date', header: 'Ngày đóng', align: 'center', render: (c) => <span className="text-xs [color:var(--pf-color-muted)]">{formatDate(c.paymentDate)}</span> },
+    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold text-emerald-600">{formatVND(c.amount)}</span> },
+    { key: 'method', header: 'Hình thức', align: 'center', render: (c) => <StatusBadge tone="neutral">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</StatusBadge> },
+    { key: 'status', header: 'Trạng thái', align: 'center', render: (c) => <StatusBadge tone={c.isConfirmed ? 'success' : 'warning'} dot>{c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}</StatusBadge> },
+  ]
+
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
-      <PageHeader
-        title="Lịch Sử Đóng Quỹ"
-        subtitle={memberName}
-      />
+    <PageShell maxWidth={960}>
+      <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName} />
 
-      <div className="p-6 max-w-[900px] mx-auto space-y-5">
-        {/* KPI cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <DollarSign size={14} className="text-indigo-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tổng đã đóng</p>
-            </div>
-            <p className="text-xl font-bold text-indigo-600">{formatVND(totalPaid)}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{contributions.length} khoản</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <CheckCircle size={14} className="text-emerald-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đã xác nhận</p>
-            </div>
-            <p className="text-xl font-bold text-emerald-600">{confirmedCount} khoản</p>
-            <p className="text-xs text-slate-500 mt-0.5">{formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Clock size={14} className="text-amber-600" />
-              </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chờ xác nhận</p>
-            </div>
-            <p className="text-xl font-bold text-amber-600">{pendingCount} khoản</p>
-            <p className="text-xs text-slate-500 mt-0.5">{activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'}</p>
-          </div>
-        </div>
+      {/* KPI — MetricCard giống Admin */}
+      <div className="grid grid-cols-3 gap-4">
+        <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={`${contributions.length} khoản`} accent="blue" icon={<DollarSign size={18} />} />
+        <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
+        <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
+      </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Tìm theo kỳ quỹ..."
-            className="input-base pl-9"
-          />
-        </div>
+      {/* Search */}
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Tìm theo kỳ quỹ..."
+          className="input-base pl-9"
+        />
+      </div>
 
-        {/* Contribution table */}
-        {filtered.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-200 py-14 text-center">
-            <TrendingUp size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Chưa có khoản đóng quỹ nào</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-            <table className="table-base">
-              <thead>
-                <tr>
-                  <th>Kỳ quỹ</th>
-                  <th className="text-center">Ngày đóng</th>
-                  <th className="text-right">Số tiền</th>
-                  <th className="text-center">Hình thức</th>
-                  <th className="text-center">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(c => {
-                  return (
-                    <tr key={c.id}>
-                      <td className="font-medium text-slate-900">{c.periodName ?? 'Kỳ quỹ'}</td>
-                      <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
-                      <td className="text-right font-semibold text-emerald-600">{formatVND(c.amount)}</td>
-                      <td className="text-center">
-                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
-                      </td>
-                      <td className="text-center">
-                        {c.isConfirmed
-                          ? <Badge variant="green" dot>Đã xác nhận</Badge>
-                          : <Badge variant="yellow" dot>Chờ xác nhận</Badge>}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* Bảng đóng quỹ — DataTable, read-only */}
+      <ChartCard title="Các khoản đóng quỹ" subtitle={`${filtered.length} khoản`}>
+        <DataTable columns={contribColumns} rows={filtered} rowKey={(c) => c.id} emptyText="Chưa có khoản đóng quỹ nào" />
+      </ChartCard>
 
-        {/* Personal receipts from finalized periods */}
-        {receipts.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Receipt size={16} className="text-slate-500" />
-              <h3 className="text-sm font-semibold text-slate-700">Sao Kê Kỳ Đã Chốt</h3>
-            </div>
-            <div className="space-y-2">
+      {/* Sao kê kỳ đã chốt */}
+      {receipts.length > 0 && (
+        <ChartCard title="Sao Kê Kỳ Đã Chốt" subtitle={`${receipts.length} kỳ`} actions={<Receipt size={16} className="[color:var(--pf-color-muted)]" />}>
+          <div className="space-y-2">
               {receipts.map(r => {
                 const balance = toNum(r.balance)
                 const isExpanded = expandedReceipt === r.id
@@ -311,10 +250,9 @@ export function MemberContributions() {
                   </div>
                 )
               })}
-            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </ChartCard>
+      )}
+    </PageShell>
   )
 }
