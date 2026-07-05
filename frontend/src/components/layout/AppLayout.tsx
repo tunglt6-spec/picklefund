@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
+import { useApplyBranding } from '../../hooks/useApplyBranding'
 import { useAuthStore } from '../../store/authStore'
 
 const LISA_ROUTES: Record<string, string> = {
@@ -16,6 +17,7 @@ const LISA_ROUTES: Record<string, string> = {
 export function AppLayout() {
   useApiSync()
   useMinigameSync()
+  useApplyBranding()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()

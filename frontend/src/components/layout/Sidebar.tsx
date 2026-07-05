@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
+import { useBrandingStore } from '../../store/brandingStore'
 import { cn } from '../../lib/utils'
 import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
@@ -104,6 +105,7 @@ function useHermesUnreadCount(user: any) {
 export function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuthStore()
   const { getClubData } = useClubDataStore()
+  const branding = useBrandingStore(s => s.branding)
   const navigate = useNavigate()
 
   // Must call all hooks before any conditional return
@@ -134,12 +136,16 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside className="flex h-screen w-60 flex-col bg-white" style={{ borderRight: '1px solid var(--color-border)', boxShadow: '1px 0 0 0 rgba(15,23,42,0.02)' }}>
 
-      {/* ── Logo ── */}
+      {/* ── Logo (branding trắng nhãn — EPIC10B) ── */}
       <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid var(--color-border-soft)' }}>
-        <PickleFundLogoMark size={30} />
-        <div className="leading-tight">
-          <p className="text-sm font-bold text-slate-900">PickleFund</p>
-          <p className="text-[10px] font-medium text-slate-400">Sports Community Platform</p>
+        {branding.logoUrl ? (
+          <img src={branding.logoUrl} alt={branding.displayName ?? 'Logo'} className="h-[30px] w-[30px] shrink-0 rounded-lg object-cover" />
+        ) : (
+          <div className="shrink-0"><PickleFundLogoMark size={30} /></div>
+        )}
+        <div className="leading-tight min-w-0 flex-1">
+          <p className="text-sm font-bold text-slate-900 truncate">{branding.displayName ?? 'PickleFund'}</p>
+          <p className="text-[10px] font-medium text-slate-400 truncate">{branding.shortName ?? 'Sports Community Platform'}</p>
         </div>
       </div>
 

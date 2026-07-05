@@ -3,6 +3,7 @@ import { Bell, LogOut, User, Menu } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useBrandingStore } from '../../store/brandingStore'
 import { buildNotifications } from '../../lib/notifications'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 
@@ -18,6 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   const { user, logout } = useAuthStore()
   const { getClubData, readNotifIds } = useClubDataStore()
+  const branding = useBrandingStore(s => s.branding)
   const navigate = useNavigate()
 
   const clubId = user?.clubId ?? ''
@@ -58,20 +60,24 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
       style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Left: Hamburger + Logo + Name */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
         <button
           onClick={onMenuClick}
           aria-label="Mở menu"
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600 active:bg-slate-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600 active:bg-slate-100"
         >
           <Menu size={20} />
         </button>
-        <PickleFundLogoMark size={26} />
-        <span className="text-[18px] font-[800] text-slate-900 tracking-tight">PickleFund</span>
+        {branding.logoUrl ? (
+          <img src={branding.logoUrl} alt={branding.displayName ?? 'Logo'} className="h-[26px] w-[26px] shrink-0 rounded-lg object-cover" />
+        ) : (
+          <div className="shrink-0"><PickleFundLogoMark size={26} /></div>
+        )}
+        <span className="text-[18px] font-[800] text-slate-900 tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
       </div>
 
       {/* Right: Bell + Avatar */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={() => navigate(notifRoute)}
           className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100"

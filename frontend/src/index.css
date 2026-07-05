@@ -6,6 +6,8 @@
   --color-primary: #6366F1;
   --color-primary-hover: #4F46E5;
   --color-primary-light: #EEF2FF;
+  /* Secondary (branding trắng nhãn — EPIC10B override runtime) */
+  --color-secondary: #06B6D4;
   /* Semantic */
   --color-success: #16A34A;
   --color-warning: #F59E0B;
