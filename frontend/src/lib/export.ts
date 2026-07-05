@@ -2,6 +2,22 @@
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 
+/* ─── EPIC10C: branding cho PDF/export ───
+ * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
+ * Bỏ trống → fallback PickleFund. */
+let exportBranding = { displayName: 'PickleFund', pdfFooter: 'PickleFund' }
+export function setExportBranding(b: {
+  displayName?: string | null
+  pdfFooter?: string | null
+}) {
+  exportBranding = {
+    displayName: b.displayName ? b.displayName : 'PickleFund',
+    pdfFooter: b.pdfFooter ? b.pdfFooter : 'PickleFund',
+  }
+}
+const brandName = () => exportBranding.displayName
+const brandFooter = () => exportBranding.pdfFooter
+
 /* ─── helpers ─── */
 function formatVND(n: number) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n)
@@ -162,7 +178,7 @@ export function exportLedgerPDF(periodName: string, rows: LedgerRow[], totalInco
 
   downloadPDF([`
     <div class="header">
-      <h1>PickleFund · Sổ Quỹ Chi Tiết</h1>
+      <h1>${brandName()} · Sổ Quỹ Chi Tiết</h1>
       <p>${periodName}</p>
       <div class="header-meta"><span>Tổng thu: ${formatVND(totalIncome)} | Tổng chi: ${formatVND(totalExpense)}</span><span>Xuất ngày: ${today()}</span></div>
     </div>
@@ -171,7 +187,7 @@ export function exportLedgerPDF(periodName: string, rows: LedgerRow[], totalInco
       <tbody>${bodyRows}</tbody>
     </table>
     <div class="summary"><span class="label">Số dư cuối kỳ</span><span class="value">${formatVND(balance)}</span></div>
-    <div class="footer">PickleFund · Xuất lúc ${todayFull()}</div>
+    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
   `], `So_Quy_${periodName.replace(/\s/g, '_')}`)
 }
 
@@ -202,7 +218,7 @@ export function exportContribPDF(periodName: string, rows: ContribRow[], total: 
 
   downloadPDF([`
     <div class="header">
-      <h1>PickleFund · Danh Sách Thu Quỹ</h1>
+      <h1>${brandName()} · Danh Sách Thu Quỹ</h1>
       <p>${periodName}</p>
       <div class="header-meta"><span>${rows.length} khoản | Đã xác nhận: ${confirmed}/${rows.length}</span><span>Xuất ngày: ${today()}</span></div>
     </div>
@@ -211,7 +227,7 @@ export function exportContribPDF(periodName: string, rows: ContribRow[], total: 
       <tbody>${bodyRows}</tbody>
     </table>
     <div class="summary"><span class="label">Tổng thu (${rows.length} khoản)</span><span class="value">${formatVND(total)}</span></div>
-    <div class="footer">PickleFund · Xuất lúc ${todayFull()}</div>
+    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
   `], `Thu_Quy_${periodName.replace(/\s/g, '_')}`)
 }
 
@@ -241,7 +257,7 @@ export function exportMembersPDF(clubName: string, rows: MemberRow[]) {
 
   downloadPDF([`
     <div class="header">
-      <h1>PickleFund · Danh Sách Thành Viên</h1>
+      <h1>${brandName()} · Danh Sách Thành Viên</h1>
       <p>${clubName}</p>
       <div class="header-meta"><span>${rows.length} thành viên</span><span>Xuất ngày: ${today()}</span></div>
     </div>
@@ -249,7 +265,7 @@ export function exportMembersPDF(clubName: string, rows: MemberRow[]) {
       <thead><tr><th class="center">#</th><th>Họ và tên</th><th>Điện thoại</th><th>Email</th><th class="center">Ngày tham gia</th><th class="center">Trạng thái</th></tr></thead>
       <tbody>${bodyRows}</tbody>
     </table>
-    <div class="footer">PickleFund · Xuất lúc ${todayFull()}</div>
+    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
   `], `Danh_Sach_Thanh_Vien_${clubName.replace(/\s/g, '_')}`)
 }
 
@@ -507,7 +523,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
     </style>
 
     <div class="rp-head">
-      <h1>PickleFund · Báo Cáo Tài Chính</h1>
+      <h1>${brandName()} · Báo Cáo Tài Chính</h1>
       <p>${data.clubName} · ${data.periodName}</p>
       <div class="rp-head-meta">
         <span>${data.memberCount} thành viên · ${data.sessionCount} buổi tập · ${data.confirmedCount} đã đóng quỹ (${confirmedPct}%)</span>
@@ -570,7 +586,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       </table>
     </div>` : ''}
 
-    <div class="rp-foot">PickleFund · ${data.clubName} · Xuất lúc ${todayFull()}</div>
+    <div class="rp-foot">${brandFooter()} · ${data.clubName} · Xuất lúc ${todayFull()}</div>
   `
 
   // ── Trang 2+: Bill card – cố định 6 thành viên/trang (2 cột × 3 hàng) ──
@@ -698,7 +714,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
         <div class="bp-layout">
           <div class="bp-head">
             <div class="bp-head-left">
-              <h1>PickleFund · Bill Chi Tiết Thành Viên</h1>
+              <h1>${brandName()} · Bill Chi Tiết Thành Viên</h1>
               <p>${data.clubName} · ${data.periodName}</p>
             </div>
             <div class="bp-head-right">
@@ -710,7 +726,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
             ${chunk.map(m => makeBillCard(m)).join('')}
           </div>
           <div class="bp-foot">
-            <span>PickleFund · ${data.clubName}</span>
+            <span>${brandFooter()} · ${data.clubName}</span>
             <span>Thành viên ${start + 1}–${Math.min(start + 6, total)} / ${total} · Xuất lúc ${todayFull()}</span>
           </div>
         </div>

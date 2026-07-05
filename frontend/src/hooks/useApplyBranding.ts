@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useBrandingStore } from '../store/brandingStore'
+import { setExportBranding } from '../lib/export'
 
 /**
  * EPIC10B: nạp branding theo CLB hiện tại và áp cấp document:
@@ -19,6 +20,12 @@ export function useApplyBranding() {
   }, [user?.clubId, load])
 
   useEffect(() => {
+    // EPIC10C: đẩy branding vào PDF/export (header displayName, footer pdfFooter).
+    setExportBranding({
+      displayName: branding.displayName,
+      pdfFooter: branding.pdfFooter,
+    })
+
     const root = document.documentElement
     root.style.setProperty('--color-primary', branding.primaryColor)
     root.style.setProperty('--color-secondary', branding.secondaryColor)
