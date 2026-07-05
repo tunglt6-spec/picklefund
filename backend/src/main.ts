@@ -1,12 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { getMissingRequiredEnv } from './common/env-validation';
+import type { Request, Response } from 'express';
 
 async function bootstrap() {
+  // EPIC13: fail-fast nếu thiếu env bắt buộc (chỉ in TÊN key, không giá trị).
+  const missingEnv = getMissingRequiredEnv();
+  if (missingEnv.length > 0) {
+    new Logger('Bootstrap').error(
+      `Thiếu biến môi trường bắt buộc: ${missingEnv.join(', ')}. Dừng khởi động.`,
+    );
+    process.exit(1);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(
@@ -46,7 +57,7 @@ async function bootstrap() {
 
   // Health check endpoint
   const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.get('/health', (_req: any, res: any) =>
+  expressApp.get('/health', (_req: Request, res: Response) =>
     res.json({ status: 'ok', timestamp: new Date().toISOString() }),
   );
 
