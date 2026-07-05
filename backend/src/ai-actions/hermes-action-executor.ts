@@ -5,20 +5,26 @@ import type { ActionExecutor, ExecutableAction } from './action-executor';
 
 type Recipient = { userId: string };
 
+/** Kênh gửi hợp lệ cho executor (TELEGRAM vẫn DRY_RUN ở runtime → không đưa vào đây). */
+const VALID_CHANNELS = ['IN_APP', 'EMAIL'];
+
 /**
  * HermesActionExecutor — Execution Bridge THẬT cho Mít Đặc (Operations Executor).
  *
- * Thay NoOpExecutor: với action ĐÃ DUYỆT, tạo sản phẩm thật = fan-out thông báo IN_APP.
+ * Thay NoOpExecutor: với action ĐÃ DUYỆT, tạo sản phẩm thật = fan-out thông báo.
  * Hỗ trợ:
  * - workflow:DEBT_ESCALATION → nhắc đóng quỹ tới member CHƯA đóng kỳ active + có tài khoản.
  * - workflow:EVENT_REMINDER  → nhắc buổi tập sắp tới tới TẤT CẢ member hoạt động có tài khoản.
  * - workflow:REPORT_DISPATCH → báo kỳ quỹ đã chốt tới TẤT CẢ member có tài khoản.
- * Member không có tài khoản (Member.userId=null) → không nhận in-app (skipped).
+ * Member không có tài khoản (Member.userId=null) → không nhận (skipped).
+ *
+ * Kênh gửi: OPT-IN theo rule qua requestPayload.channels (mặc định ['IN_APP']).
+ * EMAIL chỉ gửi được tới email THẬT — địa chỉ placeholder (.local) bị runtime chặn (DRY_RUN).
  *
  * Ranh giới an toàn:
  * - CHỈ chạy trên action đã duyệt (AiActionsService.execute gọi sau khi acquire EXECUTING).
  * - KHÔNG tính/kết luận/ghi tài chính: chỉ ĐỌC member/đóng quỹ/buổi tập/kỳ để chọn người nhận.
- * - Fan-out qua NotificationRuntime (idempotent theo action + user) — không bypass hạ tầng.
+ * - Fan-out qua NotificationRuntime (idempotent theo action+user+channel) — không bypass hạ tầng.
  * - Action type chưa hỗ trợ → no-op (tài liệu hoá rõ, không giả lập kết quả).
  */
 @Injectable()
@@ -50,31 +56,64 @@ export class HermesActionExecutor implements ActionExecutor {
 
   // ---------- Helpers dùng chung ----------
 
-  /** Fan-out IN_APP tới từng recipient; idempotent per-user. Trả số job gửi mới (READY, !duplicate). */
-  private async fanOutInApp(
+  /** Kênh gửi từ rule (requestPayload.channels) — lọc hợp lệ, mặc định IN_APP. */
+  private resolveChannels(payload: unknown): string[] {
+    const raw = (payload as { channels?: unknown } | null | undefined)
+      ?.channels;
+    if (Array.isArray(raw)) {
+      const chosen = Array.from(
+        new Set(
+          raw
+            .filter((c): c is string => typeof c === 'string')
+            .map((c) => c.toUpperCase())
+            .filter((c) => VALID_CHANNELS.includes(c)),
+        ),
+      );
+      if (chosen.length) return chosen;
+    }
+    return ['IN_APP'];
+  }
+
+  /**
+   * Fan-out tới từng recipient qua từng kênh; idempotent per action+user+channel.
+   * Trả số job GỬI MỚI (READY, !duplicate) theo từng kênh, ví dụ { IN_APP: 8, EMAIL: 0 }.
+   */
+  private async fanOut(
     clubId: string,
     actionId: string,
     recipients: Recipient[],
     title: string,
     body: string,
-  ): Promise<number> {
-    let notified = 0;
-    for (const r of recipients) {
-      const job = (await this.notifications.dispatch(clubId, {
-        channel: 'IN_APP',
-        targetType: 'USER',
-        targetId: r.userId,
-        title,
-        bodySummary: body,
-        idempotencyKey: `AI_ACTION:${actionId}:USER:${r.userId}`,
-        aiActionId: actionId,
-      })) as { status?: string; duplicate?: boolean } | null;
-      if (job && job.status === 'READY' && !job.duplicate) notified++;
+    channels: string[],
+  ): Promise<Record<string, number>> {
+    const counts: Record<string, number> = {};
+    for (const channel of channels) {
+      let n = 0;
+      for (const r of recipients) {
+        const job = (await this.notifications.dispatch(clubId, {
+          channel,
+          targetType: 'USER',
+          targetId: r.userId,
+          title,
+          bodySummary: body,
+          idempotencyKey: `AI_ACTION:${actionId}:USER:${r.userId}`,
+          aiActionId: actionId,
+        })) as { status?: string; duplicate?: boolean } | null;
+        if (job && job.status === 'READY' && !job.duplicate) n++;
+      }
+      counts[channel] = n;
     }
-    return notified;
+    return counts;
   }
 
-  /** Thành viên đang hoạt động CÓ tài khoản đăng nhập (nhận được in-app). */
+  /** "IN_APP:8, EMAIL:0" — tóm tắt số đã gửi theo kênh cho message. */
+  private countsStr(counts: Record<string, number>): string {
+    return Object.entries(counts)
+      .map(([c, n]) => `${c}:${n}`)
+      .join(', ');
+  }
+
+  /** Thành viên đang hoạt động CÓ tài khoản đăng nhập (nhận được thông báo). */
   private async membersWithAccount(clubId: string): Promise<Recipient[]> {
     const members = await this.prisma.member.findMany({
       where: { clubId, isDeleted: false },
@@ -88,6 +127,10 @@ export class HermesActionExecutor implements ActionExecutor {
   /** dd/m/yyyy theo UTC (cột @db.Date lưu ngày trần — tránh lệch múi giờ). */
   private fmtDate(d: Date): string {
     return `${d.getUTCDate()}/${d.getUTCMonth() + 1}/${d.getUTCFullYear()}`;
+  }
+
+  private liveResult(message: string): Record<string, unknown> {
+    return { ok: true, mode: 'live', executor: 'MIT_DAT', message };
   }
 
   // ---------- Branch: DEBT_ESCALATION ----------
@@ -134,24 +177,26 @@ export class HermesActionExecutor implements ActionExecutor {
       .map((m) => ({ userId: m.userId }));
     const skippedNoAccount = unpaid.length - recipients.length;
 
+    const channels = this.resolveChannels(action.requestPayload);
     const title = action.title || 'Nhắc đóng quỹ';
     const body =
       action.summary ||
       `Bạn chưa hoàn tất đóng quỹ kỳ "${period.name}". Vui lòng đóng quỹ sớm nhé.`;
 
-    const notified = await this.fanOutInApp(
+    const counts = await this.fanOut(
       clubId,
       action.id,
       recipients,
       title,
       body,
+      channels,
     );
 
     this.logger.log(
-      `DEBT_ESCALATION ${action.id}: notified=${notified}/${unpaid.length} skippedNoAccount=${skippedNoAccount}`,
+      `DEBT_ESCALATION ${action.id}: unpaid=${unpaid.length} skippedNoAccount=${skippedNoAccount} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Nhắc nợ IN_APP kỳ "${period.name}": đã gửi ${notified}/${unpaid.length} thành viên chưa đóng (${skippedNoAccount} chưa có tài khoản).`,
+      `Nhắc nợ kỳ "${period.name}": ${unpaid.length} thành viên chưa đóng (${skippedNoAccount} chưa có tài khoản). Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 
@@ -189,24 +234,26 @@ export class HermesActionExecutor implements ActionExecutor {
         : '';
     const court = session.courtName ? ` tại ${session.courtName}` : '';
 
+    const channels = this.resolveChannels(action.requestPayload);
     const title = action.title || 'Nhắc lịch tập';
     const body =
       action.summary ||
       `Sắp có buổi tập ngày ${dateStr}${timeStr}${court}. Nhớ sắp xếp tham gia nhé.`;
 
-    const notified = await this.fanOutInApp(
+    const counts = await this.fanOut(
       clubId,
       action.id,
       recipients,
       title,
       body,
+      channels,
     );
 
     this.logger.log(
-      `EVENT_REMINDER ${action.id}: notified=${notified}/${recipients.length} date=${dateStr}`,
+      `EVENT_REMINDER ${action.id}: recipients=${recipients.length} date=${dateStr} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Nhắc lịch tập ngày ${dateStr}: đã gửi ${notified}/${recipients.length} thành viên có tài khoản.`,
+      `Nhắc lịch tập ngày ${dateStr}: ${recipients.length} thành viên có tài khoản. Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 
@@ -230,29 +277,26 @@ export class HermesActionExecutor implements ActionExecutor {
     }
 
     const recipients = await this.membersWithAccount(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
     const title = action.title || 'Báo cáo kỳ quỹ';
     const body =
       action.summary ||
       `Báo cáo kỳ "${period.name}" đã chốt. Bạn có thể xem phiếu thu/quyết toán của mình trong app.`;
 
-    const notified = await this.fanOutInApp(
+    const counts = await this.fanOut(
       clubId,
       action.id,
       recipients,
       title,
       body,
+      channels,
     );
 
     this.logger.log(
-      `REPORT_DISPATCH ${action.id}: notified=${notified}/${recipients.length} period=${period.name}`,
+      `REPORT_DISPATCH ${action.id}: recipients=${recipients.length} period=${period.name} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Gửi báo cáo kỳ "${period.name}": đã gửi ${notified}/${recipients.length} thành viên có tài khoản.`,
+      `Gửi báo cáo kỳ "${period.name}": ${recipients.length} thành viên có tài khoản. Đã gửi [${this.countsStr(counts)}].`,
     );
-  }
-
-  /** Kết quả live chuẩn — số liệu nằm trong message vì sanitizeExecutionResult chỉ whitelist. */
-  private liveResult(message: string): Record<string, unknown> {
-    return { ok: true, mode: 'live', executor: 'MIT_DAT', message };
   }
 }

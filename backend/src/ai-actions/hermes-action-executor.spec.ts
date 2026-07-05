@@ -58,6 +58,7 @@ describe('HermesActionExecutor', () => {
 
     const res = await executor.execute(baseAction());
 
+    // Mặc định chỉ IN_APP (payload không có channels).
     expect(dispatch).toHaveBeenCalledTimes(1);
     expect(dispatch).toHaveBeenCalledWith(
       'club-1',
@@ -70,8 +71,27 @@ describe('HermesActionExecutor', () => {
       }),
     );
     expect(res.mode).toBe('live');
-    expect(res.message).toContain('đã gửi 1/2');
+    expect(res.message).toContain('2 thành viên chưa đóng');
     expect(res.message).toContain('1 chưa có tài khoản');
+    expect(res.message).toContain('[IN_APP:1]');
+  });
+
+  it('DEBT_ESCALATION: opt-in EMAIL qua payload.channels → gửi cả IN_APP lẫn EMAIL', async () => {
+    fundPeriodFindFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 1' });
+    memberFindMany.mockResolvedValue([{ id: 'm1', userId: 'u1' }]);
+    fundContributionFindMany.mockResolvedValue([]);
+
+    const res = await executor.execute(
+      baseAction({ requestPayload: { channels: ['IN_APP', 'EMAIL'] } }),
+    );
+
+    // 1 recipient × 2 kênh = 2 lần dispatch (cùng idempotencyKey, khác channel).
+    expect(dispatch).toHaveBeenCalledTimes(2);
+    const calls = dispatch.mock.calls as Array<[string, { channel: string }]>;
+    const channelsSent = calls.map((c) => c[1].channel).sort();
+    expect(channelsSent).toEqual(['EMAIL', 'IN_APP']);
+    expect(res.message).toContain('IN_APP:1');
+    expect(res.message).toContain('EMAIL:1');
   });
 
   it('DEBT_ESCALATION: duplicate (idempotent) KHÔNG tính là gửi mới', async () => {
@@ -81,7 +101,7 @@ describe('HermesActionExecutor', () => {
     dispatch.mockResolvedValue({ status: 'READY', duplicate: true });
 
     const res = await executor.execute(baseAction());
-    expect(res.message).toContain('đã gửi 0/1');
+    expect(res.message).toContain('[IN_APP:0]');
   });
 
   it('DEBT_ESCALATION: không có kỳ quỹ active → không gửi, báo rõ', async () => {
@@ -118,7 +138,8 @@ describe('HermesActionExecutor', () => {
     expect(dispatch).toHaveBeenCalledTimes(2);
     expect(res.mode).toBe('live');
     expect(res.message).toContain('1/8/2026');
-    expect(res.message).toContain('đã gửi 2/2');
+    expect(res.message).toContain('2 thành viên có tài khoản');
+    expect(res.message).toContain('[IN_APP:2]');
   });
 
   it('EVENT_REMINDER: không có buổi tập sắp tới → không gửi', async () => {
@@ -150,7 +171,8 @@ describe('HermesActionExecutor', () => {
     );
     expect(dispatch).toHaveBeenCalledTimes(2);
     expect(res.message).toContain('Quý 2');
-    expect(res.message).toContain('đã gửi 2/2');
+    expect(res.message).toContain('2 thành viên có tài khoản');
+    expect(res.message).toContain('[IN_APP:2]');
   });
 
   it('REPORT_DISPATCH: chưa có kỳ finalized → không gửi', async () => {

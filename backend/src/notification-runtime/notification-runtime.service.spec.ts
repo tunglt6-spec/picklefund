@@ -139,6 +139,21 @@ describe('NotificationRuntimeService (EPIC8)', () => {
       expect(job.status).toBe('READY');
     });
 
+    it('EMAIL tới địa chỉ placeholder .local → DRY_RUN, KHÔNG gọi send (chặn bounce)', async () => {
+      email.isEnabled = true;
+      email.send.mockResolvedValue(true);
+      prisma.user.findFirst.mockResolvedValue({
+        email: 'mrshang2@8bc6bf8f.picklefund.local',
+      });
+      const job = (await service.dispatch('club-1', {
+        channel: 'EMAIL',
+        targetId: 'u1',
+        title: 'Nhắc đóng quỹ',
+      })) as Record<string, unknown>;
+      expect(job.status).toBe('DRY_RUN');
+      expect(email.send).not.toHaveBeenCalled();
+    });
+
     it('EMAIL target KHÁC club → DRY_RUN, KHÔNG gọi send, không tiết lộ user tồn tại (POLISH-001)', async () => {
       email.isEnabled = true;
       // findFirst scope clubId → null dù user tồn tại ở club khác.

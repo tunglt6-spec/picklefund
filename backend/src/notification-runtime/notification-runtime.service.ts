@@ -76,6 +76,15 @@ export class NotificationRuntimeService {
     return clubId;
   }
 
+  /**
+   * Email THẬT (gửi được): đúng dạng local@domain.tld và KHÔNG phải placeholder .local.
+   * Tài khoản member tạo không kèm email được gán `${username}@<club>.picklefund.local`
+   * — chặn để không gửi ra ngoài (bounce/uy tín domain).
+   */
+  private isRealEmail(email: string): boolean {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) && !/\.local$/i.test(email);
+  }
+
   // ---------- Channel status (admin visibility) ----------
   channelStatus() {
     return {
@@ -248,6 +257,12 @@ export class NotificationRuntimeService {
     });
     if (!user?.email)
       return { sent: false, note: 'target không gửi được trong club này' };
+    // Chặn email placeholder (.local) / không hợp lệ — không gửi để tránh bounce.
+    if (!this.isRealEmail(user.email))
+      return {
+        sent: false,
+        note: 'email placeholder/không hợp lệ — không gửi',
+      };
     const ok = await this.email.send(
       user.email,
       req.title,
