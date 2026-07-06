@@ -178,7 +178,8 @@ export function useAiManager() {
         if (s.status === 'fulfilled') setSummary((s.value.data?.data ?? null) as AiActionSummary | null)
         if (q.status === 'fulfilled') setPending((q.value.data?.data ?? []) as AiActionListItem[])
         if (e.status === 'fulfilled') setExecutable((e.value.data?.data ?? []) as AiActionListItem[])
-        if (o.status === 'fulfilled') setOpsSignals((o.value.data?.data ?? []) as IntelSignal[])
+        // Lỗi/absent → clear về [] (không giữ cảnh báo vận hành stale gây hiểu nhầm CLB).
+        setOpsSignals(o.status === 'fulfilled' ? ((o.value.data?.data ?? []) as IntelSignal[]) : [])
         setAvailability({
           policies: p.status === 'fulfilled',
           intel: i.status === 'fulfilled',

@@ -41,7 +41,10 @@ describe('OperationalAlertsService', () => {
   });
 
   it('quỹ âm + công nợ + chuyên cần thấp → cảnh báo tương ứng', async () => {
-    mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 3' });
+    mockPrisma.fundPeriod.findFirst.mockResolvedValue({
+      id: 'p1',
+      name: 'Kỳ 3',
+    });
     mockFund.summary.mockResolvedValue({
       ...baseSummary,
       balance: -20000,
@@ -56,14 +59,20 @@ describe('OperationalAlertsService', () => {
   });
 
   it('đọc số từ Finance Engine (summary), không tự tính', async () => {
-    mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 3' });
+    mockPrisma.fundPeriod.findFirst.mockResolvedValue({
+      id: 'p1',
+      name: 'Kỳ 3',
+    });
     mockFund.summary.mockResolvedValue(baseSummary);
     await service.analyze('club-1');
     expect(mockFund.summary).toHaveBeenCalledWith('p1', 'club-1');
   });
 
   it('mọi chỉ số ổn → OPS_HEALTHY', async () => {
-    mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 3' });
+    mockPrisma.fundPeriod.findFirst.mockResolvedValue({
+      id: 'p1',
+      name: 'Kỳ 3',
+    });
     mockFund.summary.mockResolvedValue(baseSummary);
     const codes = (await service.analyze('club-1')).map((s) => s.code);
     expect(codes).toEqual(['OPS_HEALTHY']);

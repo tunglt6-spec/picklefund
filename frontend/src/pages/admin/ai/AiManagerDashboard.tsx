@@ -265,7 +265,7 @@ export function AiManagerDashboard() {
             <PanelTitle icon={<AlertTriangle size={16} />}>Rủi Ro & Cảnh Báo</PanelTitle>
             {loading ? (
               <p className="text-sm text-slate-400">Đang tải…</p>
-            ) : !availability.intel ? (
+            ) : !availability.intel && riskSignals.length === 0 ? (
               <p className="text-sm text-slate-400">Không tải được tín hiệu vận hành (endpoint không khả dụng).</p>
             ) : riskSignals.length === 0 ? (
               <div className="flex items-center gap-2 text-sm text-emerald-600">
