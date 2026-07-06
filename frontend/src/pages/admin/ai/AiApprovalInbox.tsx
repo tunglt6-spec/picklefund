@@ -119,8 +119,8 @@ export function AiApprovalInbox() {
         </button>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100">
-              <Inbox size={20} className="text-purple-600" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
+              <Inbox size={20} className="[color:var(--pf-primary)]" />
             </span>
             <div>
               <h1 className="text-xl font-bold text-slate-900">Hộp Duyệt AI</h1>
@@ -171,7 +171,7 @@ export function AiApprovalInbox() {
                   <div key={a.id} className="rounded-xl border border-slate-100 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <Bot size={13} className="text-purple-500 shrink-0" />
+                        <Bot size={13} className="[color:var(--pf-primary)] shrink-0" />
                         <span className="text-xs font-semibold text-slate-500">{a.requestedByAi}</span>
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>
                           {a.riskLevel}
@@ -221,7 +221,7 @@ export function AiApprovalInbox() {
                 value={actionType}
                 onChange={e => setActionType(e.target.value)}
                 placeholder="Loại hành động (VD: send-reminder)…"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
               />
               <div className="flex flex-wrap gap-1.5">
                 {RISK_OPTS.map(o => (
@@ -241,12 +241,12 @@ export function AiApprovalInbox() {
                 onChange={e => setObjective(e.target.value)}
                 rows={2}
                 placeholder="Mục tiêu (tuỳ chọn)…"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
               />
               <button
                 onClick={() => void handleEvaluate()}
                 disabled={evaluating}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
               >
                 <Play size={15} /> {evaluating ? 'Đang đánh giá…' : 'Đánh giá'}
               </button>
@@ -390,7 +390,7 @@ export function AiApprovalInbox() {
                     ) : (
                       detail.events.map(ev => (
                         <div key={ev.id} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-400" />
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />
                           <div className="min-w-0">
                             <p className="text-xs font-medium text-slate-700">{ev.type}</p>
                             {ev.message && <p className="text-[11px] text-slate-500">{ev.message}</p>}
@@ -410,7 +410,7 @@ export function AiApprovalInbox() {
                       onChange={e => setRejectReason(e.target.value)}
                       rows={2}
                       placeholder="Lý do từ chối (tuỳ chọn)…"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
                     />
                     <div className="flex gap-2">
                       <button

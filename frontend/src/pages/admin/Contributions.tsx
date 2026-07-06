@@ -253,7 +253,7 @@ export function Contributions() {
             <button
               onClick={openCreate}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+              style={{ background: 'var(--pf-primary)' }}
             >
               <Plus size={18} />
             </button>
@@ -266,11 +266,11 @@ export function Contributions() {
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
             <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chính</p>
-            <p className="text-[18px] font-[700] text-indigo-600 tabular-nums">{formatVND(commonTotal)}</p>
+            <p className="text-[18px] font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
           </div>
           <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
             <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Phụ</p>
-            <p className="text-[18px] font-[700] text-cyan-600 tabular-nums">{formatVND(miniTotal)}</p>
+            <p className="text-[18px] font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>
 
@@ -278,7 +278,7 @@ export function Contributions() {
         <div className="flex gap-1 bg-slate-100 rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? 'bg-white [color:var(--pf-primary)] shadow-sm' : 'text-slate-500'}`}
           >
             Quỹ Chính
           </button>
@@ -313,7 +313,7 @@ export function Contributions() {
                       <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
                   }
@@ -342,7 +342,7 @@ export function Contributions() {
                       <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="text-slate-400 active:text-indigo-600 p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
                   }
@@ -372,7 +372,7 @@ export function Contributions() {
                     onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
-                        ? fs === 'COMMON' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-violet-500 bg-violet-50 text-violet-700'
+                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-violet-500 bg-violet-50 text-violet-700'
                         : 'border-slate-200 text-slate-500'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -495,10 +495,10 @@ export function Contributions() {
           {/* Quỹ Chính */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <DollarSign size={14} className="text-indigo-600" />
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
+                <DollarSign size={14} className="[color:var(--pf-primary)]" />
               </div>
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Quỹ Chính</p>
+              <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(commonTotal)}</p>
             <div className="flex gap-4 mt-2 text-xs text-slate-500">
@@ -529,7 +529,7 @@ export function Contributions() {
         {/* COMMON contributions table */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded bg-indigo-100 flex items-center justify-center"><DollarSign size={11} className="text-indigo-600" /></div>
+            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><DollarSign size={11} className="[color:var(--pf-primary)]" /></div>
             <h3 className="text-sm font-semibold text-slate-700">Quỹ Chính</h3>
           </div>
           {commonContribs.length === 0 ? (
@@ -573,7 +573,7 @@ export function Contributions() {
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button onClick={() => openEdit(c)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
                             title="Sửa"><Edit2 size={13} /></button>
                           <button onClick={() => setDeleteId(c.id)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
@@ -682,7 +682,7 @@ export function Contributions() {
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all text-left flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON'
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                           : 'border-violet-500 bg-violet-50 text-violet-700'
                         : 'border-slate-200 text-slate-500 hover:border-slate-300'
                     }`}

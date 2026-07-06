@@ -76,7 +76,7 @@ export function AuditLogs() {
                 key={opt}
                 onClick={() => setAction(opt)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  action === opt ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  action === opt ? '[background:var(--pf-primary)] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {opt}

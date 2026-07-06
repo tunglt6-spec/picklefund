@@ -15,7 +15,7 @@ const RANK_CLASS: Record<number, string> = {
   3: 'bg-amber-50 border-l-2 border-amber-400',
 }
 
-const BAR_COLORS = ['#f59e0b', '#94a3b8', '#f97316', '#6366f1', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
+const BAR_COLORS = ['#f59e0b', '#94a3b8', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
 
 export function StandingsPage() {
   const { id } = useParams<{ id: string }>()
@@ -71,7 +71,7 @@ export function StandingsPage() {
                 'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition-colors',
                 activeTab === t.id ? 'text-white shadow-sm' : 'text-slate-500 bg-slate-50'
               )}
-              style={activeTab === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              style={activeTab === t.id ? { background: 'var(--pf-primary)' } : {}}>
               {t.label}
             </button>
           ))}
@@ -116,11 +116,11 @@ export function StandingsPage() {
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}</p>
+                  <p className="font-bold text-slate-900 text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
                   <p className="text-[11px] text-slate-400">{s.groupName}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[20px] font-black text-indigo-700 leading-tight">{s.rankingPoints}</p>
+                  <p className="text-[20px] font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
                   <p className="text-[10px] text-slate-400">điểm</p>
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function StandingsPage() {
               onClick={() => setActiveTab(t.id)}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                activeTab === t.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                activeTab === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
               )}
             >
               {t.label}
@@ -238,7 +238,7 @@ export function StandingsPage() {
                   <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500')}>
                     {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                   </td>
-                  <td className="px-3 py-2.5 text-center font-bold text-indigo-700 text-base">{s.rankingPoints}</td>
+                  <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary)] text-base">{s.rankingPoints}</td>
                 </tr>
               ))}
             </tbody>

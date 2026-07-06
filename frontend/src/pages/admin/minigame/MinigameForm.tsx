@@ -210,7 +210,7 @@ export function MinigameForm() {
             <div key={i} className="flex items-center gap-2">
               <div className={cn(
                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                i < step ? 'bg-green-500 text-white' : i === step ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                i < step ? 'bg-green-500 text-white' : i === step ? '[background:var(--pf-primary)] text-white' : 'bg-slate-100 text-slate-400'
               )}>
                 {i < step ? <Check size={12} /> : i + 1}
               </div>
@@ -237,7 +237,7 @@ export function MinigameForm() {
                   ]).map(opt => (
                     <label key={opt.value} className={cn(
                       'flex flex-col gap-0.5 rounded-lg px-3 py-2.5 cursor-pointer border transition-colors',
-                      form.formatType === opt.value ? 'bg-indigo-50 border-indigo-300' : 'bg-slate-50 border-transparent hover:bg-slate-100'
+                      form.formatType === opt.value ? '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary)]' : 'bg-slate-50 border-transparent hover:bg-slate-100'
                     )}>
                       <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
                         <input
@@ -245,7 +245,7 @@ export function MinigameForm() {
                           name="formatType"
                           checked={form.formatType === opt.value}
                           onChange={() => set({ formatType: opt.value })}
-                          className="accent-indigo-600"
+                          className="accent-[var(--pf-primary)]"
                           disabled={isEdit}
                         />
                         {opt.label}
@@ -286,31 +286,31 @@ export function MinigameForm() {
                   value={form.name}
                   onChange={e => set({ name: e.target.value })}
                   placeholder="VD: Minigame Q2/2026"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                 />
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mô tả</label>
                 <textarea rows={2} value={form.description} onChange={e => set({ description: e.target.value })}
                   placeholder="Mô tả giải đấu..."
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày bắt đầu</label>
                   <input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày kết thúc</label>
                   <input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
                 </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ghi chú</label>
                 <textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
               </div>
             </div>
           )}
@@ -322,7 +322,7 @@ export function MinigameForm() {
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số người mỗi bảng ({form.groupSize})</label>
                   <input type="range" min={2} max={6} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })}
-                    className="w-full accent-indigo-600" />
+                    className="w-full accent-[var(--pf-primary)]" />
                   <div className="flex justify-between text-xs text-slate-400 mt-1">
                     {[2,3,4,5,6].map(n => <span key={n}>{n}</span>)}
                   </div>
@@ -333,7 +333,7 @@ export function MinigameForm() {
                   <select
                     value={form.drawMode}
                     onChange={e => set({ drawMode: e.target.value as DrawMode })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   >
                     <option value="RANDOM">Ngẫu Nhiên (Random)</option>
                     <option value="FAIR_ROTATION">Công Bằng Theo Lượt (Fair Rotation)</option>
@@ -348,7 +348,7 @@ export function MinigameForm() {
                 </div>
                 <button
                   onClick={() => set({ allowDraw: !form.allowDraw })}
-                  className={cn('relative inline-flex h-6 w-11 rounded-full transition-colors', form.allowDraw ? 'bg-indigo-600' : 'bg-slate-200')}
+                  className={cn('relative inline-flex h-6 w-11 rounded-full transition-colors', form.allowDraw ? '[background:var(--pf-primary)]' : 'bg-slate-200')}
                 >
                   <span className={cn('inline-block h-5 w-5 rounded-full bg-white shadow transition-transform mt-0.5', form.allowDraw ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')} />
                 </button>
@@ -364,7 +364,7 @@ export function MinigameForm() {
                     <input type="number" min={0} value={form[key as keyof FormState] as number}
                       onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)}
                       disabled={disabled}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400" />
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:bg-slate-50 disabled:text-slate-400" />
                   </div>
                 ))}
               </div>
@@ -388,9 +388,9 @@ export function MinigameForm() {
                   return (
                     <div key={m.id} className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                      checked ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-transparent hover:bg-slate-100'
+                      checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : 'bg-slate-50 border border-transparent hover:bg-slate-100'
                     )}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleMember(m.id)} className="accent-indigo-600 h-4 w-4 cursor-pointer" />
+                      <input type="checkbox" checked={checked} onChange={() => toggleMember(m.id)} className="accent-[var(--pf-primary)] h-4 w-4 cursor-pointer" />
                       <span className="text-sm font-medium text-slate-800 flex-1 cursor-pointer" onClick={() => toggleMember(m.id)}>{m.fullName}</span>
                       {m.phone && <span className="text-xs text-slate-400">{m.phone}</span>}
                       {checked && (
@@ -411,7 +411,7 @@ export function MinigameForm() {
                     <button
                       type="button"
                       onClick={() => { setShowAddGuest(true); setTimeout(() => guestInputRef.current?.focus(), 50) }}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors"
                     >
                       <UserPlus size={14} /> Thêm Khách
                     </button>
@@ -426,16 +426,16 @@ export function MinigameForm() {
                       return (
                         <div key={g.id} className={cn(
                           'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                          checked ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50 border border-transparent'
+                          checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : 'bg-slate-50 border border-transparent'
                         )}>
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleMember(g.id)}
-                            className="accent-purple-600 h-4 w-4 cursor-pointer"
+                            className="accent-[var(--pf-primary)] h-4 w-4 cursor-pointer"
                           />
                           <span className="text-sm font-medium text-slate-800 flex-1">{g.name}</span>
-                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
                           <button
                             type="button"
                             onClick={() => removeGuest(g.id)}
@@ -451,7 +451,7 @@ export function MinigameForm() {
 
                 {/* Add guest inline form */}
                 {showAddGuest && (
-                  <div className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-center gap-2 p-2 [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg">
                     <input
                       ref={guestInputRef}
                       type="text"
@@ -459,13 +459,13 @@ export function MinigameForm() {
                       onChange={e => setGuestName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') { setShowAddGuest(false); setGuestName('') } }}
                       placeholder="Tên khách mời..."
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                     />
                     <button
                       type="button"
                       onClick={addGuest}
                       disabled={!guestName.trim()}
-                      className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-3 py-1.5 rounded-lg [background:var(--pf-primary)] text-white text-xs font-semibold hover:[background:var(--pf-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       Thêm
                     </button>

@@ -60,7 +60,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
             className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            style={{ background: 'var(--pf-primary)' }}
           >
             Nhập KQ
           </button>
@@ -72,7 +72,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <p className="text-slate-400 text-[12px] mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
             <button onClick={() => navigate(`/minigames/${minigameId}`)}
               className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              style={{ background: 'var(--pf-primary)' }}>
               Tới Rút Thăm
             </button>
           </div>
@@ -85,7 +85,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
                     filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
                   )}
-                  style={filter === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+                  style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
                   {t.label}
                 </button>
               ))}
@@ -131,7 +131,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     <div className="flex gap-2">
                       <button
                         onClick={() => setScoreMatch(m)}
-                        className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-indigo-600 bg-indigo-50 py-2 rounded-[10px]"
+                        className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                       >
                         <Pencil size={12} /> {m.status === 'PENDING' ? 'Nhập KQ' : 'Sửa KQ'}
                       </button>
@@ -207,7 +207,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                   onClick={() => setFilter(t.id)}
                   className={cn(
                     'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                    filter === t.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    filter === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   )}
                 >
                   {t.label}
@@ -269,7 +269,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                             ) : (
                               <button
                                 onClick={() => setScoreMatch(m)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-400 hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
                                 title="Sửa kết quả"
                               >
                                 <Pencil size={14} />
@@ -417,7 +417,7 @@ export function MatchSchedule() {
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
             className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            style={{ background: 'var(--pf-primary)' }}
           >
             Nhập KQ
           </button>
@@ -430,7 +430,7 @@ export function MatchSchedule() {
                 'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
                 filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
               )}
-              style={filter === t.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
               {t.label}
             </button>
           ))}
@@ -472,7 +472,7 @@ export function MatchSchedule() {
                 {m.status === 'PENDING' && (
                   <button
                     onClick={() => setScoreMatch(m)}
-                    className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium text-indigo-600 bg-indigo-50 py-2 rounded-[10px]"
+                    className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                   >
                     <ClipboardEdit size={12} /> Nhập Kết Quả
                   </button>
@@ -516,7 +516,7 @@ export function MatchSchedule() {
               onClick={() => setFilter(t.id)}
               className={cn(
                 'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                filter === t.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                filter === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
               )}
             >
               {t.label}

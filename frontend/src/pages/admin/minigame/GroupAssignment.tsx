@@ -99,7 +99,7 @@ export function GroupAssignment() {
       </div>
       <div className="flex gap-2 overflow-x-auto pb-0.5">
         <button onClick={handleAutoGenerate}
-          className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-[8px]">
+          className="shrink-0 flex items-center gap-1 text-[11px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] px-3 py-1.5 rounded-[8px]">
           <Shuffle size={12} /> Chia Tự Động
         </button>
         {myGroups.length > 0 && (
@@ -110,7 +110,7 @@ export function GroupAssignment() {
             </button>
             <button onClick={handleCreateSchedule}
               className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-white px-3 py-1.5 rounded-[8px]"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+              style={{ background: 'var(--pf-primary)' }}>
               <Calendar size={12} /> Tạo Lịch
             </button>
           </>
@@ -179,13 +179,13 @@ export function GroupAssignment() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myGroups.map(grp => (
                 <div key={grp.id} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 border-b border-indigo-100">
+                  <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
                     <div>
-                      <p className="text-sm font-bold text-indigo-800">{grp.groupName}</p>
-                      <p className="text-xs text-indigo-500">{grp.memberIds.length} thành viên</p>
+                      <p className="text-sm font-bold [color:var(--pf-primary)]">{grp.groupName}</p>
+                      <p className="text-xs [color:var(--pf-primary)]">{grp.memberIds.length} thành viên</p>
                     </div>
                     <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
-                      grp.status === 'LOCKED' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'
+                      grp.status === 'LOCKED' ? 'bg-green-100 text-green-700' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                     )}>
                       {grp.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
                     </span>
@@ -196,12 +196,12 @@ export function GroupAssignment() {
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm text-slate-800 flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}</span>
+                          <span className="text-sm text-slate-800 flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
                           {grp.status !== 'LOCKED' && (
                             <div className="relative">
                               <button
                                 onClick={() => setOpenMove(openMove === memberId ? null : memberId)}
-                                className="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50"
+                                className="flex items-center gap-1 text-xs text-slate-400 hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]"
                               >
                                 Chuyển <ChevronDown size={12} />
                               </button>
@@ -211,7 +211,7 @@ export function GroupAssignment() {
                                     <button
                                       key={target.id}
                                       onClick={() => handleMove(memberId, target.id)}
-                                      className="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 transition-colors"
+                                      className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] text-slate-700 hover:[color:var(--pf-primary)] transition-colors"
                                     >
                                       → {target.groupName}
                                     </button>

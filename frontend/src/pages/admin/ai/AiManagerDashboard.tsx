@@ -9,7 +9,7 @@ import {
 } from '../../../hooks/useAiManager'
 
 const ACCENT: Record<string, { dot: string; bg: string; text: string }> = {
-  indigo: { dot: 'bg-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  indigo: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
   violet: { dot: 'bg-violet-500', bg: 'bg-violet-50', text: 'text-violet-600' },
   sky: { dot: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-600' },
   emerald: { dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-600' },
@@ -116,14 +116,14 @@ export function AiManagerDashboard() {
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100">
-              <Bot size={20} className="text-purple-600" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
+              <Bot size={20} className="[color:var(--pf-primary)]" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold text-slate-900">AI Manager</h1>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                  <span className="h-1.5 w-1.5 rounded-full [background:var(--pf-primary)] animate-pulse" />
                   Trung tâm điều phối AI
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function AiManagerDashboard() {
           </div>
           <button
             onClick={() => navigate('/admin/ai-approvals')}
-            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-600/20 transition-colors hover:bg-purple-700 md:w-auto"
+            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
           >
             <Inbox size={16} />
             Hộp Duyệt AI
@@ -229,7 +229,7 @@ export function AiManagerDashboard() {
               <div key={k.label} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide leading-tight">{k.label}</span>
-                  <span className="text-purple-400">{k.icon}</span>
+                  <span className="[color:var(--pf-primary)]">{k.icon}</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{availability.actions ? k.value : '—'}</p>
                 {!availability.actions && (
@@ -353,13 +353,13 @@ export function AiManagerDashboard() {
                           type="button"
                           onClick={() => navigate(route)}
                           title={a.reason}
-                          className="group flex w-full items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-left transition-colors hover:border-purple-200 hover:bg-purple-50"
+                          className="group flex w-full items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-left transition-colors hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-medium text-slate-700 truncate group-hover:text-purple-700">{a.label}</p>
+                            <p className="text-xs font-medium text-slate-700 truncate group-hover:[color:var(--pf-primary)]">{a.label}</p>
                             <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
                           </div>
-                          <ChevronRight size={14} className="text-slate-300 shrink-0 transition-colors group-hover:text-purple-500" />
+                          <ChevronRight size={14} className="text-slate-300 shrink-0 transition-colors group-hover:[color:var(--pf-primary)]" />
                         </button>
                       )
                     }

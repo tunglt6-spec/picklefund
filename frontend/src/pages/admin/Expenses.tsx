@@ -141,7 +141,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON'
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                           : 'border-violet-500 bg-violet-50 text-violet-700'
                         : 'border-slate-200 text-slate-500 hover:border-slate-300'
                     }`}>
@@ -165,7 +165,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             )}
 
             <div>
-              <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+              <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
                 <FileText size={11} />Thông tin khoản chi
               </p>
               <div className="space-y-3.5">
@@ -214,7 +214,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
             ) : (
               <div>
-                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
                   <Users size={11} />Quy tắc phân bổ <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
                 </p>
                 <select value={form.allocationRule}
@@ -334,7 +334,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit }: {
 
   type FieldRow = { label: string; value: React.ReactNode; span?: boolean }
   const fields: FieldRow[] = [
-    { label: 'Mã chi',     value: <span className="font-mono text-xs text-indigo-600">{exp.code}</span> },
+    { label: 'Mã chi',     value: <span className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</span> },
     { label: 'Nguồn quỹ', value: isMini
       ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Phụ</Badge>
       : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chính</Badge> },
@@ -648,7 +648,7 @@ export function Expenses() {
               </button>
               <button onClick={() => setShowAdd(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-xl text-white"
-                style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+                style={{ background: 'var(--pf-primary)' }}>
                 <Plus size={16} />
               </button>
             </div>
@@ -673,7 +673,7 @@ export function Expenses() {
                 className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-[600] transition-all ${
                   tab === t.key ? 'text-white' : 'bg-slate-100 text-slate-500'
                 }`}
-                style={tab === t.key ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+                style={tab === t.key ? { background: 'var(--pf-primary)' } : {}}>
                 {t.label}
               </button>
             ))}
@@ -683,8 +683,8 @@ export function Expenses() {
         {/* KPI strip */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
           {[
-            { label: 'Quỹ Chính', val: commonAmt, color: 'text-indigo-600' },
-            { label: 'Quỹ Phụ', val: miniAmt, color: 'text-cyan-600' },
+            { label: 'Quỹ Chính', val: commonAmt, color: '[color:var(--pf-primary)]' },
+            { label: 'Quỹ Phụ', val: miniAmt, color: '[color:var(--pf-color-info)]' },
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
@@ -738,7 +738,7 @@ export function Expenses() {
                   <Eye size={12} />Chi tiết
                 </button>
                 <button onClick={() => setEditTarget(e)}
-                  className="p-1.5 text-slate-300 active:text-indigo-500">
+                  className="p-1.5 text-slate-300 active:[color:var(--pf-primary)]">
                   <Pencil size={13} />
                 </button>
                 <button onClick={() => setConfirmId(e.id)}
@@ -803,7 +803,7 @@ export function Expenses() {
       <div className="p-6 max-w-[1400px] mx-auto space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <KpiCard icon={<DollarSign size={18} />}  iconBg="bg-indigo-50"  iconColor="text-indigo-600"  label="Chi Quỹ Chính"  value={commonAmt} />
+          <KpiCard icon={<DollarSign size={18} />}  iconBg="[background:var(--pf-primary-soft)]"  iconColor="[color:var(--pf-primary)]"  label="Chi Quỹ Chính"  value={commonAmt} />
           <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Phụ"   value={miniAmt} />
           <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
           <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
@@ -819,7 +819,7 @@ export function Expenses() {
                 <button key={t.key} onClick={() => { setTab(t.key as 'all' | ExpenseStatus); setPage(1) }}
                   className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                     tab === t.key
-                      ? 'border-indigo-600 text-indigo-600'
+                      ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}>
                   {t.label}
@@ -865,7 +865,7 @@ export function Expenses() {
                     const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
                     return (
                       <tr key={exp.id}>
-                        <td className="font-mono text-xs text-indigo-600">{exp.code}</td>
+                        <td className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</td>
                         <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
                         <td className="text-center">
                           {isMini
@@ -895,7 +895,7 @@ export function Expenses() {
                               </>
                             )}
                             <button onClick={() => setDetailExp(exp)} title="Xem"
-                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
                               <Eye size={13} />
                             </button>
                             <button onClick={() => setConfirmId(exp.id)} title="Xóa"
@@ -924,7 +924,7 @@ export function Expenses() {
                 className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">‹</button>
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <button key={p} onClick={() => setPage(p)}
-                  className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? 'bg-indigo-600 text-white' : 'border border-slate-200 hover:bg-slate-50'}`}>
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? '[background:var(--pf-primary)] text-white' : 'border border-slate-200 hover:bg-slate-50'}`}>
                   {p}
                 </button>
               ))}

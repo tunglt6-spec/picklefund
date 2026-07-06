@@ -103,7 +103,7 @@ export function MemberReceipt() {
 
   if (isMobile && loading) return (
     <div className="flex-1 flex items-center justify-center min-h-screen bg-[#F8FAFC]">
-      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -115,7 +115,7 @@ export function MemberReceipt() {
             <div className="text-[17px] font-[800] text-slate-900">Phiếu Thu Cá Nhân</div>
             <div className="text-[12px] text-slate-400">{memberName}</div>
           </div>
-          <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
+          <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
             <Download size={13} />Xuất PDF
           </button>
         </div>
@@ -123,7 +123,7 @@ export function MemberReceipt() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Đã đóng', value: formatVND(totalPaid), color: 'text-indigo-600' },
+              { label: 'Đã đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
               { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
               { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
             ].map(k => (
@@ -216,7 +216,7 @@ export function MemberReceipt() {
 
   if (loading) return (
     <div className="flex-1 flex items-center justify-center bg-slate-50">
-      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -269,12 +269,12 @@ export function MemberReceipt() {
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <DollarSign size={14} className="text-indigo-600" />
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
+                <DollarSign size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tổng đã đóng</p>
             </div>
-            <p className="text-xl font-bold text-indigo-600">{formatVND(totalPaid)}</p>
+            <p className="text-xl font-bold [color:var(--pf-primary)]">{formatVND(totalPaid)}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -323,8 +323,8 @@ export function MemberReceipt() {
                     onClick={() => setExpanded(isExpanded ? null : r.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                        <Calendar size={16} className="text-indigo-600" />
+                      <div className="h-9 w-9 rounded-xl [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
+                        <Calendar size={16} className="[color:var(--pf-primary)]" />
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export function MemberReceipt() {
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-slate-100">
                           <span className="text-slate-500 font-semibold">Đã đóng</span>
-                          <span className="font-bold text-indigo-600">{formatVND(amountPaid)}</span>
+                          <span className="font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
                         </div>
                       </div>
 
