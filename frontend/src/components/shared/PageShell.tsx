@@ -19,7 +19,7 @@ export function PageShell({ children, className, maxWidth = 1440 }: PageShellPro
       style={{ background: 'var(--pf-bg)' }}
     >
       <div
-        className={cn('mx-auto w-full px-4 py-4 sm:px-6 sm:py-6', className)}
+        className={cn('pf-center-x w-full px-4 py-4 sm:px-6 sm:py-6', className)}
         style={{ maxWidth }}
       >
         {children}
