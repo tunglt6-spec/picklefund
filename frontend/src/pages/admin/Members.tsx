@@ -207,6 +207,7 @@ function MemberDetailDrawer({
   row: MemberRow | null; onClose: () => void; isMobile: boolean
   onEdit: (m: Member) => void; onToggle: (m: Member) => void; onDelete: (m: Member) => void
 }) {
+  const [tab, setTab] = useState<'info' | 'stats'>('info')
   if (!row) return null
   const m = row.member
   return (
@@ -240,7 +241,24 @@ function MemberDetailDrawer({
           </div>
         </div>
 
+        {/* Tabs: Thông tin · Thống kê */}
+        <div className="flex gap-1.5">
+          {([['info', 'Thông tin'], ['stats', 'Thống kê']] as const).map(([k, l]) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              className="min-h-11 flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+              style={tab === k
+                ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+                : { background: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
         {/* Thông tin cá nhân */}
+        {tab === 'info' && (
         <section>
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin cá nhân</p>
           <dl className="space-y-2 text-sm">
@@ -250,8 +268,19 @@ function MemberDetailDrawer({
             <DetailRow icon={<CircleUserRound size={14} />} label="Tài khoản app" value={m.userId ? 'Đã liên kết' : 'Chưa liên kết'} />
           </dl>
         </section>
+        )}
+
+        {/* Ghi chú (thuộc tab Thông tin) */}
+        {tab === 'info' && (
+        <section>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
+          <p className="text-sm [color:var(--pf-text)]">{m.notes?.trim() || <span className="[color:var(--pf-color-muted)]">Không có ghi chú</span>}</p>
+        </section>
+        )}
 
         {/* Kỳ quỹ + điểm danh */}
+        {tab === 'stats' && (
+        <>
         <section>
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ hiện tại</p>
           {row.periodName ? (
@@ -290,12 +319,8 @@ function MemberDetailDrawer({
             </ul>
           )}
         </section>
-
-        {/* Ghi chú */}
-        <section>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
-          <p className="text-sm [color:var(--pf-text)]">{m.notes?.trim() || <span className="[color:var(--pf-color-muted)]">Không có ghi chú</span>}</p>
-        </section>
+        </>
+        )}
       </div>
     </DrawerShell>
   )
