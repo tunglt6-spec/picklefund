@@ -83,11 +83,11 @@ export function ScheduleCalendar() {
           {/* Thanh điều hướng tháng */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <button onClick={prevMonth} aria-label="Tháng trước" className="flex h-9 w-9 items-center justify-center rounded-full border [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
+              <button onClick={prevMonth} aria-label="Tháng trước" className="flex h-11 w-11 items-center justify-center rounded-full border [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
                 <ChevronLeft size={18} />
               </button>
               <span className="min-w-[110px] text-center text-base font-bold [color:var(--pf-text)]">{MONTHS[month]} {year}</span>
-              <button onClick={nextMonth} aria-label="Tháng sau" className="flex h-9 w-9 items-center justify-center rounded-full border [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
+              <button onClick={nextMonth} aria-label="Tháng sau" className="flex h-11 w-11 items-center justify-center rounded-full border [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
                 <ChevronRight size={18} />
               </button>
             </div>
