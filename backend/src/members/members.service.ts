@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
 
 @Injectable()
 export class MembersService {
@@ -36,6 +41,22 @@ export class MembersService {
       notes?: string;
     },
   ) {
+    // V2.2 SaaS: enforce giới hạn thành viên theo gói dịch vụ (STARTER giới hạn; PRO/CLUB_PLUS mở).
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { plan: true },
+    });
+    const limit = club ? PLAN_MEMBER_LIMIT[club.plan] : null;
+    if (limit !== null) {
+      const count = await this.prisma.member.count({
+        where: { clubId, isDeleted: false },
+      });
+      if (count >= limit) {
+        throw new BadRequestException(
+          `Gói dịch vụ hiện tại giới hạn ${limit} thành viên. Vui lòng nâng gói để thêm thành viên.`,
+        );
+      }
+    }
     return this.prisma.member.create({
       data: { ...dto, clubId, joinDate: new Date(dto.joinDate) },
     });

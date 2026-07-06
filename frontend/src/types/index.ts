@@ -1,6 +1,7 @@
 export type Role = 'SUPER_ADMIN' | 'CLUB_ADMIN' | 'CLUB_TREASURER' | 'MEMBER_VIEW'
 
 export type ClubStatus = 'active' | 'suspended' | 'deleted'
+export type ServicePlan = 'STARTER' | 'PRO' | 'CLUB_PLUS'
 export type FundPeriodStatus = 'draft' | 'active' | 'closed' | 'finalized'
 export type FundPeriodType = 'chung' | 'game'
 export type MemberStatus = 'active' | 'inactive' | 'left'
@@ -70,6 +71,8 @@ export interface Club {
   contactEmail?: string
   contactPhone?: string
   status: ClubStatus
+  plan?: ServicePlan
+  planExpiresAt?: string | null
   settings?: Record<string, unknown>
   createdAt: string
   updatedAt: string

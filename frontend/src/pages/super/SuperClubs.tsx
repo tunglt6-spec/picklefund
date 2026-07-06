@@ -7,8 +7,41 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import type { Club } from '../../types'
+import type { Club, ServicePlan } from '../../types'
 import toast from 'react-hot-toast'
+
+const PLAN_LABEL: Record<ServicePlan, string> = {
+  STARTER: 'Starter',
+  PRO: 'Pro',
+  CLUB_PLUS: 'Club+',
+}
+const PLAN_OPTIONS: ServicePlan[] = ['STARTER', 'PRO', 'CLUB_PLUS']
+
+/** Select đổi gói dịch vụ (SUPER_ADMIN). */
+function PlanSelect({
+  club,
+  onChange,
+  onClick,
+}: {
+  club: Club
+  onChange: (plan: ServicePlan) => void
+  onClick?: (e: React.MouseEvent) => void
+}) {
+  return (
+    <select
+      value={club.plan ?? 'STARTER'}
+      onClick={onClick}
+      onChange={(e) => onChange(e.target.value as ServicePlan)}
+      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:border-indigo-400"
+      style={{ color: 'var(--pf-primary)' }}
+      title="Gói dịch vụ"
+    >
+      {PLAN_OPTIONS.map((p) => (
+        <option key={p} value={p} style={{ color: '#0F172A' }}>Gói {PLAN_LABEL[p]}</option>
+      ))}
+    </select>
+  )
+}
 
 const ROLES = [
   { value: 'CLUB_ADMIN', label: 'Admin CLB' },
@@ -77,6 +110,14 @@ export function SuperClubs() {
       setClubs(prev => prev.map(c => c.id === club.id ? { ...c, status: next } : c))
       toast.success(next === 'suspended' ? `Đã khóa ${club.name}` : `Đã mở khóa ${club.name}`)
     } catch { toast.error('Thao tác thất bại') }
+  }
+
+  const changePlan = async (club: Club, plan: ServicePlan) => {
+    try {
+      await api.patch(`/clubs/${club.id}/plan`, { plan })
+      setClubs(prev => prev.map(c => c.id === club.id ? { ...c, plan } : c))
+      toast.success(`Đã đổi gói ${club.name} → ${PLAN_LABEL[plan]}`)
+    } catch { toast.error('Đổi gói thất bại') }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -352,6 +393,7 @@ export function SuperClubs() {
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-50">
                 <div className="text-xs text-slate-500"><span className="font-semibold text-slate-900">{club._count?.members ?? 0}</span> TV</div>
                 <div className="text-xs text-slate-500"><span className="font-semibold text-slate-900">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
+                <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => changePlan(club, p)} />
                 <div className="flex-1" />
                 <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg text-indigo-500 bg-indigo-50">
                   <Pencil size={14} />
@@ -413,6 +455,7 @@ export function SuperClubs() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Địa chỉ</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-700">Thành viên</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-700">Kỳ quỹ</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-700">Gói</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-700">Trạng thái</th>
                 <th className="text-center px-4 py-3 font-semibold text-gray-700">Hành động</th>
               </tr>
@@ -427,6 +470,9 @@ export function SuperClubs() {
                   <td className="px-4 py-3 text-gray-600">{club.address || '—'}</td>
                   <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.members}</td>
                   <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.fundPeriods}</td>
+                  <td className="px-4 py-3 text-center">
+                    <PlanSelect club={club} onChange={(p) => changePlan(club, p)} />
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
                       {club.status === 'active' ? '✓ Hoạt động' : '✗ Bị khóa'}

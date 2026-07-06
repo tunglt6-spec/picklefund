@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -10,7 +10,9 @@ const mockPrisma = {
     findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    count: jest.fn(),
   },
+  club: { findUnique: jest.fn() },
   fundPeriod: { findFirst: jest.fn() },
   attendanceSession: { findMany: jest.fn() },
   attendanceRecord: { groupBy: jest.fn() },
@@ -47,6 +49,35 @@ describe('MembersService', () => {
     }).compile();
 
     service = module.get<MembersService>(MembersService);
+  });
+
+  describe('create — giới hạn gói dịch vụ (V2.2 Phase 6)', () => {
+    const dto = { fullName: 'Người mới', joinDate: '2026-02-01' };
+
+    it('STARTER đủ 20 thành viên → chặn thêm (BadRequest)', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({ plan: 'STARTER' });
+      mockPrisma.member.count.mockResolvedValue(20);
+      await expect(service.create('club-1', dto)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(mockPrisma.member.create).not.toHaveBeenCalled();
+    });
+
+    it('STARTER dưới giới hạn → cho tạo', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({ plan: 'STARTER' });
+      mockPrisma.member.count.mockResolvedValue(5);
+      mockPrisma.member.create.mockResolvedValue(baseMember);
+      await service.create('club-1', dto);
+      expect(mockPrisma.member.create).toHaveBeenCalled();
+    });
+
+    it('PRO → không giới hạn, không cần đếm', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({ plan: 'PRO' });
+      mockPrisma.member.create.mockResolvedValue(baseMember);
+      await service.create('club-1', dto);
+      expect(mockPrisma.member.count).not.toHaveBeenCalled();
+      expect(mockPrisma.member.create).toHaveBeenCalled();
+    });
   });
 
   describe('findAll', () => {

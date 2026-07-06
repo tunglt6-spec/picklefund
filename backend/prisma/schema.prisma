@@ -19,6 +19,8 @@ model Club {
   contactEmail String?  @map("contact_email") @db.VarChar(255)
   contactPhone String?  @map("contact_phone") @db.VarChar(20)
   status       ClubStatus @default(active)
+  plan          ServicePlan @default(STARTER)
+  planExpiresAt DateTime?   @map("plan_expires_at")
   settings     Json?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -48,6 +50,13 @@ enum ClubStatus {
   active
   suspended
   deleted
+}
+
+/// Gói dịch vụ SaaS (V2.2). STARTER giới hạn thành viên; PRO/CLUB_PLUS không giới hạn.
+enum ServicePlan {
+  STARTER
+  PRO
+  CLUB_PLUS
 }
 
 // ============================================================

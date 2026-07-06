@@ -222,4 +222,28 @@ describe('ClubsService', () => {
       );
     });
   });
+
+  describe('setPlan (V2.2 Phase 6)', () => {
+    it('đổi gói + hạn sử dụng', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue(baseClub);
+      mockPrisma.club.update.mockResolvedValue({ ...baseClub, plan: 'PRO' });
+      await service.setPlan('club-1', 'PRO', '2026-12-31');
+      expect(mockPrisma.club.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'club-1' },
+          data: expect.objectContaining({ plan: 'PRO' }),
+        }),
+      );
+    });
+
+    it('không hạn → planExpiresAt null', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue(baseClub);
+      mockPrisma.club.update.mockResolvedValue({ ...baseClub, plan: 'CLUB_PLUS' });
+      await service.setPlan('club-1', 'CLUB_PLUS');
+      const call = mockPrisma.club.update.mock.calls[0][0] as {
+        data: { planExpiresAt: Date | null };
+      };
+      expect(call.data.planExpiresAt).toBeNull();
+    });
+  });
 });
