@@ -259,9 +259,9 @@ export function SuperSettings() {
         </Section>
 
         <div className="bg-slate-100 rounded-xl p-4 text-xs text-slate-500 space-y-1">
-          <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold text-slate-700">v2.1.0</span></div>
-          <div className="flex justify-between"><span>Môi trường</span><span className="font-mono text-emerald-600">development</span></div>
-          <div className="flex justify-between"><span>Build</span><span className="font-mono text-slate-600">2026-06-17</span></div>
+          <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold text-slate-700">v{__APP_VERSION__}</span></div>
+          <div className="flex justify-between"><span>Môi trường</span><span className="font-mono text-emerald-600">{import.meta.env.PROD ? 'production' : 'development'}</span></div>
+          <div className="flex justify-between"><span>Build</span><span className="font-mono text-slate-600">{__BUILD_DATE__}</span></div>
         </div>
       </div>
     </div>
