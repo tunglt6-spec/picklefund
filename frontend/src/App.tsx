@@ -9,6 +9,7 @@ import { NotFound } from './pages/NotFound'
 // Public (V2.2 commercial)
 import { Landing } from './pages/public/Landing'
 import { Pricing } from './pages/public/Pricing'
+import { DemoSelector } from './pages/public/DemoSelector'
 
 // Super Admin pages
 import { SuperDashboard } from './pages/super/SuperDashboard'
@@ -122,6 +123,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/demo" element={<DemoSelector />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
 

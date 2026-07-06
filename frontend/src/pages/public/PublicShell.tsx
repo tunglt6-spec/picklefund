@@ -11,14 +11,14 @@ const NAV_LINKS: { label: string; href: string }[] = [
   { label: 'Trang chủ', href: '/' },
   { label: 'Tính năng', href: '/#features' },
   { label: 'Bảng giá', href: '/pricing' },
-  { label: 'Demo', href: '/login' },
+  { label: 'Demo', href: '/demo' },
   { label: 'Hỗ trợ', href: '/#support' },
 ]
 
 const BOTTOM_NAV: { label: string; href: string; icon: ReactNode }[] = [
   { label: 'Trang chủ', href: '/', icon: <Home size={18} /> },
   { label: 'Tính năng', href: '/#features', icon: <Sparkles size={18} /> },
-  { label: 'Demo', href: '/login', icon: <PlayCircle size={18} /> },
+  { label: 'Demo', href: '/demo', icon: <PlayCircle size={18} /> },
   { label: 'Bảng giá', href: '/pricing', icon: <Tag size={18} /> },
   { label: 'Đăng nhập', href: '/login', icon: <LogIn size={18} /> },
 ]
