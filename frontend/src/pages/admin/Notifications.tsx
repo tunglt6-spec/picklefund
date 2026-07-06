@@ -95,6 +95,43 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
   )
 }
 
+type TabKey = 'all' | 'unread' | 'notice' | 'system' | 'ai'
+const TABS: [TabKey, string][] = [
+  ['all', 'Tất cả'],
+  ['unread', 'Chưa đọc'],
+  ['notice', 'Thông báo'],
+  ['system', 'Hệ thống'],
+  ['ai', 'AI đề xuất'],
+]
+/** Phân loại notification theo eventType → tab. */
+function catOf(eventType: string): 'notice' | 'system' | 'ai' {
+  const s = (eventType || '').toLowerCase()
+  if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
+  if (/anomaly|health|system|config|error/.test(s)) return 'system'
+  return 'notice'
+}
+
+function TabBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void }) {
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto">
+      {TABS.map(([k, l]) => (
+        <button
+          key={k}
+          onClick={() => onChange(k)}
+          className="min-h-11 shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
+          style={
+            tab === k
+              ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+              : { background: 'var(--pf-surface)', color: 'var(--pf-color-muted)', border: '1px solid var(--pf-border)' }
+          }
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function Notifications() {
   const isMobile = useIsMobile()
   const { user } = useAuthStore()
@@ -143,8 +180,14 @@ export function Notifications() {
     } catch { /* silent */ }
   }
 
-  const unread = notifs.filter(n => n.status !== 'READ')
-  const read = notifs.filter(n => n.status === 'READ')
+  const [tab, setTab] = useState<TabKey>('all')
+  const filtered = notifs.filter(n =>
+    tab === 'all' ? true
+    : tab === 'unread' ? n.status !== 'READ'
+    : catOf(n.eventType) === tab,
+  )
+  const unread = filtered.filter(n => n.status !== 'READ')
+  const read = filtered.filter(n => n.status === 'READ')
 
   if (isMobile) {
     return (
@@ -161,7 +204,8 @@ export function Notifications() {
           )}
         </div>
 
-        <div className="px-4 pt-4 pb-24 space-y-4">
+        <div className="px-4 pt-3 pb-24 space-y-4">
+          <TabBar tab={tab} onChange={setTab} />
           {loading && <p className="text-center text-sm text-slate-400 py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (
@@ -182,10 +226,10 @@ export function Notifications() {
             </div>
           )}
 
-          {!loading && notifs.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="text-center py-12 text-slate-400 text-[14px]">
               <Bell size={32} className="mx-auto mb-3 text-slate-200" />
-              Không có thông báo nào
+              Không có thông báo trong mục này
             </div>
           )}
         </div>
@@ -207,7 +251,8 @@ export function Notifications() {
         }
       />
 
-      <div className="p-6 max-w-[800px] mx-auto space-y-6">
+      <div className="p-6 max-w-[800px] pf-center-x space-y-5">
+        <TabBar tab={tab} onChange={setTab} />
         {loading && <p className="text-center text-sm text-slate-400 py-8">Đang tải...</p>}
 
         {!loading && unread.length > 0 && (
@@ -228,10 +273,10 @@ export function Notifications() {
           </div>
         )}
 
-        {!loading && notifs.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="py-16 text-center">
             <Bell size={36} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Không có thông báo nào</p>
+            <p className="text-sm text-slate-400">Không có thông báo trong mục này</p>
           </div>
         )}
       </div>
