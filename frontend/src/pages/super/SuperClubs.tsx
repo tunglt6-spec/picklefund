@@ -93,6 +93,7 @@ export function SuperClubs() {
         id: c.id, name: c.name, code: c.code, address: c.address ?? '', logoUrl: undefined,
         contactEmail: c.contactEmail ?? '', contactPhone: c.contactPhone ?? '',
         status: c.status ?? 'active', settings: {},
+        plan: c.plan ?? 'STARTER', planExpiresAt: c.planExpiresAt ?? null,
         createdAt: c.createdAt, updatedAt: c.updatedAt,
         _count: c._count ?? { members: 0, fundPeriods: 0 },
       })))

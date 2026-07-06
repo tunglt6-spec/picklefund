@@ -292,7 +292,11 @@ describe('AttendanceService', () => {
       expect(mockPrisma.sessionRegistration.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
           data: [
-            { clubId: 'club-1', attendanceSessionId: 'session-1', memberId: 'mem-1' },
+            {
+              clubId: 'club-1',
+              attendanceSessionId: 'session-1',
+              memberId: 'mem-1',
+            },
           ],
           skipDuplicates: true,
         }),

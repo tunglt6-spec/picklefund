@@ -238,7 +238,10 @@ describe('ClubsService', () => {
 
     it('không hạn → planExpiresAt null', async () => {
       mockPrisma.club.findUnique.mockResolvedValue(baseClub);
-      mockPrisma.club.update.mockResolvedValue({ ...baseClub, plan: 'CLUB_PLUS' });
+      mockPrisma.club.update.mockResolvedValue({
+        ...baseClub,
+        plan: 'CLUB_PLUS',
+      });
       await service.setPlan('club-1', 'CLUB_PLUS');
       const call = mockPrisma.club.update.mock.calls[0][0] as {
         data: { planExpiresAt: Date | null };

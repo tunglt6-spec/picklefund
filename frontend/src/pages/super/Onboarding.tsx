@@ -39,7 +39,7 @@ export function Onboarding() {
 
   const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }))
 
-  const step1Valid = form.name.trim().length >= 2
+  const step1Valid = form.name.trim().length >= 2 && form.code.trim().length >= 2
   const step2Valid =
     form.adminUsername.trim().length >= 3 &&
     isEmail(form.adminEmail) &&
@@ -51,7 +51,7 @@ export function Onboarding() {
     try {
       const payload = {
         name: form.name.trim(),
-        ...(form.code.trim() ? { code: form.code.trim() } : {}),
+        code: form.code.trim(),
         ...(form.address.trim() ? { address: form.address.trim() } : {}),
         ...(form.contactEmail.trim() ? { contactEmail: form.contactEmail.trim() } : {}),
         ...(form.contactPhone.trim() ? { contactPhone: form.contactPhone.trim() } : {}),
@@ -119,7 +119,8 @@ export function Onboarding() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 text-sm font-semibold"><Building2 size={16} style={{ color: 'var(--pf-primary)' }} /> Thông tin câu lạc bộ</div>
             <Field label="Tên CLB *" value={form.name} onChange={(v) => set('name', v)} placeholder="VD: CLB The Ping" />
-            <Field label="Mã CLB (tuỳ chọn)" value={form.code} onChange={(v) => set('code', v)} placeholder="VD: THEPING" />
+            <Field label="Mã CLB *" value={form.code} onChange={(v) => set('code', v)} placeholder="VD: THEPING" />
+            <p className="-mt-2 text-xs [color:var(--pf-color-muted)]">Mã CLB dùng nội bộ để định danh, tối thiểu 2 ký tự.</p>
             <Field label="Địa chỉ" value={form.address} onChange={(v) => set('address', v)} placeholder="Sân / địa điểm sinh hoạt" />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Email liên hệ" value={form.contactEmail} onChange={(v) => set('contactEmail', v)} placeholder="clb@email.com" />

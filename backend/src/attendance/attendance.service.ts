@@ -339,7 +339,11 @@ export class AttendanceService {
       ...(toRemove.length > 0
         ? [
             this.prisma.sessionRegistration.deleteMany({
-              where: { attendanceSessionId: sessionId, memberId: { in: toRemove } },
+              where: {
+                clubId,
+                attendanceSessionId: sessionId,
+                memberId: { in: toRemove },
+              },
             }),
           ]
         : []),
@@ -357,6 +361,10 @@ export class AttendanceService {
         : []),
     ]);
 
-    return { registered: unique.length, added: toAdd.length, removed: toRemove.length };
+    return {
+      registered: unique.length,
+      added: toAdd.length,
+      removed: toRemove.length,
+    };
   }
 }

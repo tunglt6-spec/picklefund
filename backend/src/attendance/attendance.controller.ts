@@ -12,9 +12,12 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AttendanceService } from './attendance.service';
-import { CurrentUser, Roles} from '../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
-import { CreateAttendanceSessionDto, SetRegistrationsDto } from './attendance.dto';
+import {
+  CreateAttendanceSessionDto,
+  SetRegistrationsDto,
+} from './attendance.dto';
 
 @SkipThrottle()
 @ApiTags('Attendance')
@@ -50,7 +53,11 @@ export class AttendanceController {
     @Body() body: { sessionIds: string[]; targetPeriodId: string },
   ) {
     return ok(
-      await this.service.bulkMovePeriod(user.clubId, body.sessionIds, body.targetPeriodId),
+      await this.service.bulkMovePeriod(
+        user.clubId,
+        body.sessionIds,
+        body.targetPeriodId,
+      ),
       'Đã chuyển buổi chơi sang kỳ mới',
     );
   }
@@ -114,19 +121,26 @@ export class AttendanceController {
   }
 
   @Get(':id/registrations')
-  async getRegistrations(@Param('id') id: string, @CurrentUser() user: any) {
-    return ok(await this.service.getRegistrations(id, user.clubId));
+  async getRegistrations(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return ok(await this.service.getRegistrations(id, user.clubId ?? ''));
   }
 
   @Put(':id/registrations')
   @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
   async setRegistrations(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() body: SetRegistrationsDto,
   ) {
     return ok(
-      await this.service.setRegistrations(id, user.clubId, body.memberIds),
+      await this.service.setRegistrations(
+        id,
+        user.clubId ?? '',
+        body.memberIds,
+      ),
       'Cập nhật đăng ký buổi chơi thành công',
     );
   }
