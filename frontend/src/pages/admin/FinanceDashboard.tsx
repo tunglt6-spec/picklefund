@@ -59,8 +59,9 @@ export function FinanceDashboard() {
         miniIncome: n(d.miniIncome),
         miniExpense: n(d.miniExpense),
         miniBalance: n(d.miniBalance),
-        clubAssets: n(d.clubAssets),
-        carryForward: n(d.carryForward),
+        // clubAssets & carryForward là OBJECT { balance, ... } từ Finance Engine → đọc .balance.
+        clubAssets: n((d.clubAssets as { balance?: unknown } | undefined)?.balance),
+        carryForward: n((d.carryForward as { balance?: unknown } | undefined)?.balance),
         unpaidCount: n(d.unpaidCount),
         negativeBalanceCount: n(d.negativeBalanceCount),
       })
