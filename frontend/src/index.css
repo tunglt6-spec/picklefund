@@ -104,6 +104,11 @@
   padding: 0;
 }
 
+/* Fix Tailwind v4: `mx-auto` (trong @layer utilities) bị `* { margin:0 }` (unlayered) đè
+   → container full-width lệch trái ở màn rộng. Class unlayered này thắng `*` theo
+   specificity, dùng cho các container public cần căn giữa (Landing/PublicShell). */
+.pf-center-x { margin-left: auto; margin-right: auto; }
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--color-neutral-50);
