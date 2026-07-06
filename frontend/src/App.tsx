@@ -54,6 +54,7 @@ import { MinigameDashboard } from './pages/admin/minigame/MinigameDashboard'
 import { GroupAssignment } from './pages/admin/minigame/GroupAssignment'
 import { MatchSchedule } from './pages/admin/minigame/MatchSchedule'
 import { StandingsPage } from './pages/admin/minigame/StandingsPage'
+import { MatchHistory } from './pages/admin/minigame/MatchHistory'
 
 // Member pages
 import { MemberDashboard } from './pages/member/MemberDashboard'
@@ -161,6 +162,7 @@ export default function App() {
             <Route path="/minigames/:id/groups" element={<GroupAssignment />} />
             <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
             <Route path="/minigames/:id/standings" element={<StandingsPage />} />
+            <Route path="/match-history" element={<MatchHistory />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />
