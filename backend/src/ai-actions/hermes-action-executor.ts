@@ -142,7 +142,9 @@ export class HermesActionExecutor implements ActionExecutor {
   /** Tất cả thành viên đang hoạt động → recipient (userId cho IN_APP, email Liên hệ cho EMAIL). */
   private async activeMembers(clubId: string): Promise<Recipient[]> {
     const members = await this.prisma.member.findMany({
-      where: { clubId, isDeleted: false },
+      // Thống nhất tiêu chí "hoạt động" với toàn app (ai.service/maika/lisa/members):
+      // status='active' + isDeleted=false → KHÔNG gửi cho member inactive/suspended.
+      where: { clubId, status: 'active', isDeleted: false },
       select: {
         id: true,
         userId: true,
@@ -197,7 +199,8 @@ export class HermesActionExecutor implements ActionExecutor {
 
     const [members, paidRows] = await Promise.all([
       this.prisma.member.findMany({
-        where: { clubId, isDeleted: false },
+        // Chỉ nhắc nợ member đang hoạt động (thống nhất status='active' + isDeleted=false).
+        where: { clubId, status: 'active', isDeleted: false },
         select: {
           id: true,
           userId: true,

@@ -8,6 +8,18 @@ import { AppModule } from './app.module';
 import { getMissingRequiredEnv } from './common/env-validation';
 import type { Request, Response } from 'express';
 
+// Lưới an toàn tầng process: floating promise bị reject mà không .catch() sẽ làm Node
+// (>=15) thoát → container restart → 502 (bài học FIX-502-AUDIT-CRASH). Ở đây CHỈ LOG,
+// KHÔNG process.exit — giữ backend sống thay vì sập. Không thay thế việc .catch() tại nguồn.
+process.on('unhandledRejection', (reason) => {
+  const msg =
+    reason instanceof Error ? reason.stack || reason.message : String(reason);
+  new Logger('UnhandledRejection').error(msg);
+});
+process.on('uncaughtException', (err) => {
+  new Logger('UncaughtException').error(err.stack || err.message);
+});
+
 async function bootstrap() {
   // EPIC13: fail-fast nếu thiếu env bắt buộc (chỉ in TÊN key, không giá trị).
   const missingEnv = getMissingRequiredEnv();
@@ -74,4 +86,4 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   console.log(`PickleFund API running on port ${port}`);
 }
-bootstrap();
+void bootstrap();

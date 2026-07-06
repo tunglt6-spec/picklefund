@@ -64,10 +64,19 @@ import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
 
 const queryClient = new QueryClient()
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({
+  children,
+  allowMustChangePassword = false,
+}: {
+  children: React.ReactNode
+  allowMustChangePassword?: boolean
+}) {
   const { isAuthenticated, user } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/login" replace />
-  if (user?.mustChangePassword) return <Navigate to="/change-password" replace />
+  // allowMustChangePassword=true CHỈ dùng cho /change-password: không redirect vòng lại
+  // chính route đó (nếu không, user mustChangePassword sẽ bị Navigate về đây mãi, form không render).
+  if (!allowMustChangePassword && user?.mustChangePassword)
+    return <Navigate to="/change-password" replace />
   return <>{children}</>
 }
 
@@ -100,7 +109,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
 
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

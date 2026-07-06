@@ -22,6 +22,9 @@ export function useApiSync() {
 
   useEffect(() => {
     if (!isAuthenticated || !user?.clubId || !accessToken) return
+    // MEMBER_VIEW cũng có clubId nhưng KHÔNG có quyền các endpoint toàn CLB (backend chặn 403).
+    // Bỏ qua sync để không bắn ~8 request thừa + nhiễu log 403; member dùng portal self-scope.
+    if (user.role === 'MEMBER_VIEW') return
     if (isLocalToken(accessToken)) return
     if (syncedRef.current) return
 
@@ -179,6 +182,5 @@ export function useApiSync() {
     }
 
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.clubId, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
+  }, [isAuthenticated, user?.clubId, user?.role, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
 }

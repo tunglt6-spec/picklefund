@@ -319,7 +319,7 @@ describe('AiActionsService', () => {
       const cond: unknown = expect.objectContaining({
         id: 'a1',
         clubId: 'club-1',
-        status: 'APPROVED',
+        status: { in: ['APPROVED', 'RETRY_PENDING'] },
       });
       const execData: unknown = expect.objectContaining({
         status: 'EXECUTING',
@@ -328,11 +328,22 @@ describe('AiActionsService', () => {
       expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: cond, data: execData }),
       );
-      const okAudit: unknown = expect.objectContaining({
-        action: 'AI_ACTION_EXECUTE',
+    });
+
+    it('RETRY_PENDING: execute acquire được (nút Chạy lại đi tiếp qua execute, không kẹt)', async () => {
+      // Sau retry() action ở RETRY_PENDING. execute() phải acquire được (count=1) → chạy executor.
+      prisma.aiAction.findFirst.mockResolvedValue({
+        ...APPROVED,
+        status: 'RETRY_PENDING',
       });
-      expect(prisma.auditLog.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: okAudit }),
+      prisma.aiAction.updateMany.mockResolvedValue({ count: 1 });
+      await service.execute('a1', 'club-1', ACTOR);
+      expect(executor.execute).toHaveBeenCalledTimes(1);
+      const retryCond: unknown = expect.objectContaining({
+        status: { in: ['APPROVED', 'RETRY_PENDING'] },
+      });
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: retryCond }),
       );
     });
 

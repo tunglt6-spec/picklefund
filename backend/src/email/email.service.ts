@@ -72,7 +72,21 @@ export class EmailService {
     return m ? m[1].trim() : from.trim();
   }
 
+  /** Escape ký tự HTML nhạy cảm để chặn HTML/script injection từ title/body do người dùng nhập. */
+  private escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   buildNotifHtml(title: string, body: string): string {
+    // Escape TRƯỚC khi chèn vào HTML (title/body có thể chứa nội dung do agent/người tạo
+    // nhập). Với body: escape rồi mới đổi \n → <br> để xuống dòng vẫn render đúng.
+    const safeTitle = this.escapeHtml(title);
+    const safeBody = this.escapeHtml(body).replace(/\n/g, '<br>');
     return `
 <!DOCTYPE html>
 <html>
@@ -87,8 +101,8 @@ export class EmailService {
 <body>
   <div class="card">
     <div class="logo">PickleFund</div>
-    <h2>${title}</h2>
-    <p>${body.replace(/\n/g, '<br>')}</p>
+    <h2>${safeTitle}</h2>
+    <p>${safeBody}</p>
     <div class="footer">Email này được gửi tự động từ PickleFund. Vui lòng không phản hồi.</div>
   </div>
 </body>

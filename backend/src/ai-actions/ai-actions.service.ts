@@ -9,7 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MaikaCore } from '../ai/maika/maika.service';
 import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
-import { AiActionRisk, Prisma } from '@prisma/client';
+import { AiActionRisk, AiActionStatus, Prisma } from '@prisma/client';
 import type { CreateAiActionDto } from './ai-actions.dto';
 import { ACTION_EXECUTOR, type ActionExecutor } from './action-executor';
 
@@ -408,12 +408,20 @@ export class AiActionsService {
 
     const startedAt = new Date();
     // BLOCKER 1+2: chuyển trạng thái NGUYÊN TỬ + ghi EXECUTION_STARTED trong 1 transaction.
-    // updateMany có điều kiện status=APPROVED: chỉ 1 request "acquire" được (count===1);
-    // request song song thứ 2 thấy count===0 → BadRequest, KHÔNG chạy executor.
-    // Nếu ghi event lỗi → cả transaction rollback → KHÔNG kẹt EXECUTING, executor KHÔNG chạy.
+    // updateMany có điều kiện status ∈ {APPROVED, RETRY_PENDING}: chỉ 1 request "acquire"
+    // được (count===1); request song song thứ 2 thấy count===0 → BadRequest, KHÔNG chạy
+    // executor. RETRY_PENDING được chấp nhận để nút "Chạy lại" (retry: FAILED→RETRY_PENDING)
+    // đi tiếp qua đúng luồng execute cùng actionId — idempotencyKey theo actionId nên các
+    // recipient đã gửi ở lần trước không bị gửi trùng. Ghi event lỗi → rollback → không kẹt.
     await this.prisma.$transaction(async (tx) => {
       const res = await tx.aiAction.updateMany({
-        where: { id, clubId, status: 'APPROVED' },
+        where: {
+          id,
+          clubId,
+          status: {
+            in: [AiActionStatus.APPROVED, AiActionStatus.RETRY_PENDING],
+          },
+        },
         data: {
           status: 'EXECUTING',
           executorAgent: 'MIT_DAT',
@@ -423,7 +431,7 @@ export class AiActionsService {
       });
       if (res.count !== 1) {
         throw new BadRequestException(
-          'Chỉ thực thi được hành động đã DUYỆT (APPROVED) và chưa/không đang thực thi.',
+          'Chỉ thực thi được hành động đã DUYỆT (APPROVED) hoặc chờ chạy lại (RETRY_PENDING) và chưa/không đang thực thi.',
         );
       }
       await tx.aiActionEvent.create({
