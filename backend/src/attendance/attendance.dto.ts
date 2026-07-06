@@ -5,6 +5,7 @@ import {
   IsPositive,
   IsDateString,
   IsNotEmpty,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -45,4 +46,11 @@ export class UpdateAttendanceRecordDto {
 
   @IsString()
   status: 'PRESENT' | 'ABSENT';
+}
+
+/** RSVP — set toàn bộ danh sách member đăng ký 1 buổi chơi. */
+export class SetRegistrationsDto {
+  @IsArray()
+  @IsString({ each: true })
+  memberIds: string[];
 }

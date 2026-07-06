@@ -29,7 +29,7 @@ export function EmptyState({
       {icon && (
         <div
           className="flex h-14 w-14 items-center justify-center rounded-2xl"
-          style={{ background: 'var(--pf-green-soft)', color: 'var(--pf-green)' }}
+          style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}
         >
           {icon}
         </div>

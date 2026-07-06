@@ -582,7 +582,7 @@ export function Members() {
           aria-pressed={statusFilter === v}
           className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
           style={statusFilter === v
-            ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' }
+            ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
             : { color: 'var(--pf-color-muted)' }}
         >
           {l}
@@ -737,7 +737,7 @@ export function Members() {
                     aria-pressed={statusFilter === v}
                     className="rounded-full border px-3 py-1.5 text-xs font-semibold"
                     style={statusFilter === v
-                      ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' }
+                      ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
                       : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}
                   >
                     {l}

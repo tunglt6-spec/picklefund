@@ -22,7 +22,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ClubsService } from './clubs.service';
-import { ClubStatus } from '@prisma/client';
+import { ClubStatus, ServicePlan } from '@prisma/client';
 
 /** EPIC10A: hex màu #RRGGBB (6 ký tự) — chặn giá trị lạ vào CSS var/PDF. */
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -79,6 +79,11 @@ class UpdateClubDto {
 class UpdateClubStatusDto {
   @IsEnum(['active', 'suspended', 'deleted']) status!: ClubStatus;
   @IsOptional() @IsString() @MaxLength(500) reason?: string;
+}
+
+class SetPlanDto {
+  @IsEnum(['STARTER', 'PRO', 'CLUB_PLUS']) plan!: ServicePlan;
+  @IsOptional() @IsString() planExpiresAt?: string;
 }
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
@@ -201,6 +206,25 @@ export class ClubsController {
       detail: `Đổi trạng thái CLB thành ${body.status}${body.reason ? ` — ${body.reason}` : ''}`,
     });
     return ok(club);
+  }
+
+  @Patch(':id/plan')
+  @Roles('SUPER_ADMIN')
+  async setPlan(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() body: SetPlanDto,
+  ) {
+    const club = await this.clubs.setPlan(id, body.plan, body.planExpiresAt);
+    void this.audit.log({
+      userId: user.userId,
+      clubId: id,
+      action: 'UPDATE',
+      resource: 'Club',
+      resourceId: id,
+      detail: `Đổi gói dịch vụ CLB thành ${body.plan}${body.planExpiresAt ? ` (hạn ${body.planExpiresAt})` : ''}`,
+    });
+    return ok(club, 'Đã cập nhật gói dịch vụ');
   }
 
   @Delete(':id')

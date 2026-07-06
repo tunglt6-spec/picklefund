@@ -6,9 +6,14 @@ import { AppLayout } from './components/layout/AppLayout'
 import { Login } from './pages/Login'
 import { NotFound } from './pages/NotFound'
 
+// Public (V2.2 commercial)
+import { Landing } from './pages/public/Landing'
+import { Pricing } from './pages/public/Pricing'
+
 // Super Admin pages
 import { SuperDashboard } from './pages/super/SuperDashboard'
 import { SuperClubs } from './pages/super/SuperClubs'
+import { Onboarding } from './pages/super/Onboarding'
 import { SuperClubDetail } from './pages/super/SuperClubDetail'
 import { SuperUsers } from './pages/super/SuperUsers'
 import { AuditLogs } from './pages/super/AuditLogs'
@@ -24,6 +29,8 @@ import { Contributions } from './pages/admin/Contributions'
 import { Expenses } from './pages/admin/Expenses'
 import { ThuChiHub } from './pages/admin/ThuChiHub'
 import { Attendance } from './pages/admin/Attendance'
+import { WeeklyActivity } from './pages/admin/WeeklyActivity'
+import { SessionRegistration } from './pages/admin/SessionRegistration'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
 import { Notifications } from './pages/admin/Notifications'
@@ -58,6 +65,7 @@ import { ChangePassword } from './pages/ChangePassword'
 // AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN
 import { AiManagerDashboard } from './pages/admin/ai/AiManagerDashboard'
 import { AiApprovalInbox } from './pages/admin/ai/AiApprovalInbox'
+import { MitDacExecutionLog } from './pages/admin/ai/MitDacExecutionLog'
 
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
 import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
@@ -96,7 +104,8 @@ function RoleRoute({ allow }: { allow: string[] }) {
 
 function RootRedirect() {
   const { user, isAuthenticated } = useAuthStore()
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  // Khách chưa đăng nhập → trang giới thiệu công khai (V2.2 commercial).
+  if (!isAuthenticated) return <Landing />
   if (user?.role === 'SUPER_ADMIN') return <Navigate to="/super/dashboard" replace />
   if (user?.role === 'CLUB_ADMIN') return <Navigate to="/dashboard" replace />
   if (user?.role === 'CLUB_TREASURER') return <Navigate to="/treasurer/dashboard" replace />
@@ -109,6 +118,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
 
@@ -118,6 +128,7 @@ export default function App() {
             {/* Super Admin */}
             <Route path="/super/dashboard" element={<SuperDashboard />} />
             <Route path="/super/clubs" element={<SuperClubs />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/super/clubs/:id" element={<SuperClubDetail />} />
             <Route path="/super/users" element={<SuperUsers />} />
             <Route path="/super/audit-logs" element={<AuditLogs />} />
@@ -131,6 +142,8 @@ export default function App() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/thu-chi" element={<ThuChiHub />} />
             <Route path="/attendance" element={<Attendance />} />
+            <Route path="/activity" element={<WeeklyActivity />} />
+            <Route path="/session-registration" element={<SessionRegistration />} />
             <Route path="/minigames" element={<MinigameList />} />
             <Route path="/minigames/new" element={<MinigameForm />} />
             <Route path="/minigames/:id" element={<MinigameDashboard />} />
@@ -158,6 +171,7 @@ export default function App() {
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />
             <Route path="/admin/workflows" element={<WorkflowRules />} />
+            <Route path="/admin/execution-log" element={<MitDacExecutionLog />} />
             </Route>
             {/* Member (MEMBER_VIEW) — chỉ member read-only; staff không rơi vào đây */}
             <Route element={<RoleRoute allow={['MEMBER_VIEW']} />}>

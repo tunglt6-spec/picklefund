@@ -278,7 +278,7 @@ export function Reports() {
       {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as ['ALL' | FundSource, string][]).map(([v, l]) => (
         <button key={v} onClick={() => setFundFilter(v)} aria-pressed={fundFilter === v}
           className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-          style={fundFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' } : { color: 'var(--pf-color-muted)' }}>
+          style={fundFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
           {l}
         </button>
       ))}
@@ -522,7 +522,7 @@ export function Reports() {
                   {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as ['ALL' | FundSource, string][]).map(([v, l]) => (
                     <button key={v} onClick={() => setFundFilter(v)} aria-pressed={fundFilter === v}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                      style={fundFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{l}</button>
+                      style={fundFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{l}</button>
                   ))}
                 </div>
               </div>

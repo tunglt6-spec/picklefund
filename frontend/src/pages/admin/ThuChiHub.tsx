@@ -304,7 +304,7 @@ export function ThuChiHub() {
       {([['all', 'Tất cả'], ['income', 'Thu'], ['expense', 'Chi']] as [TypeFilter, string][]).map(([v, l]) => (
         <button key={v} onClick={() => setTypeFilter(v)} aria-pressed={typeFilter === v}
           className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-          style={typeFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' } : { color: 'var(--pf-color-muted)' }}>
+          style={typeFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
           {l}
         </button>
       ))}
@@ -560,7 +560,7 @@ export function ThuChiHub() {
                 {([['all', 'Tất cả'], ['income', 'Thu'], ['expense', 'Chi']] as [TypeFilter, string][]).map(([v, l]) => (
                   <button key={v} onClick={() => setTypeFilter(v)} aria-pressed={typeFilter === v}
                     className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                    style={typeFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>
+                    style={typeFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>
                     {l}
                   </button>
                 ))}
@@ -572,7 +572,7 @@ export function ThuChiHub() {
                 {([['all', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as [FundTab, string][]).map(([v, l]) => (
                   <button key={v} onClick={() => setFundTab(v)} aria-pressed={fundTab === v}
                     className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                    style={fundTab === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>
+                    style={fundTab === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>
                     {l}
                   </button>
                 ))}

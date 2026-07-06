@@ -6,7 +6,14 @@ import {
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
-import type { ClubStatus, Prisma } from '@prisma/client';
+import type { ClubStatus, Prisma, ServicePlan } from '@prisma/client';
+
+/** Giới hạn số thành viên theo gói dịch vụ (null = không giới hạn). Nguồn duy nhất. */
+export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
+  STARTER: 20,
+  PRO: null,
+  CLUB_PLUS: null,
+};
 
 /** EPIC10A: branding trắng nhãn — mặc định fallback PickleFund. */
 export interface ClubBranding {
@@ -195,6 +202,18 @@ export class ClubsService {
 
   async updateStatus(id: string, status: ClubStatus) {
     return this.prisma.club.update({ where: { id }, data: { status } });
+  }
+
+  /** SUPER_ADMIN đổi gói dịch vụ + hạn sử dụng (V2.2). */
+  async setPlan(id: string, plan: ServicePlan, planExpiresAt?: string | null) {
+    await this.findOne(id);
+    return this.prisma.club.update({
+      where: { id },
+      data: {
+        plan,
+        planExpiresAt: planExpiresAt ? new Date(planExpiresAt) : null,
+      },
+    });
   }
 
   async delete(id: string) {

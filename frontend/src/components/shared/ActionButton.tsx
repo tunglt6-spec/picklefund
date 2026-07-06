@@ -22,7 +22,7 @@ interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_STYLE: Record<Variant, CSSProperties> = {
-  primary: { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' },
+  primary: { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' },
   secondary: {
     background: 'var(--pf-surface)',
     color: 'var(--pf-text)',
@@ -32,7 +32,7 @@ const VARIANT_STYLE: Record<Variant, CSSProperties> = {
 }
 
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary: 'shadow-sm hover:shadow-md active:scale-[0.98] hover:[background:var(--pf-green-hover)]',
+  primary: 'shadow-sm hover:shadow-md active:scale-[0.98] hover:[background:var(--pf-primary-hover)]',
   secondary: 'hover:[background:var(--pf-color-muted-soft)]',
   ghost: 'hover:[background:var(--pf-color-muted-soft)]',
 }
