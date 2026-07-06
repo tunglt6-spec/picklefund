@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { isGuestId } from '../../../types/minigame'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
+import {
+  exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare,
+} from '../../../components/reports/infographic/infographic.utils'
+
+const EXPORT_ID = 'mg-standings-export'
 
 const RANK_CLASS: Record<number, string> = {
   1: 'bg-yellow-50 border-l-2 border-yellow-400',
@@ -35,6 +41,20 @@ export function StandingsPage() {
     </div>
   )
 
+  const fileBase = `BXH_${mg.name.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')}`
+  const doExportPng = async () => {
+    try { await exportInfographicAsPng(EXPORT_ID, `${fileBase}.png`); toast.success('Đã tải ảnh bảng xếp hạng') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportPdf = async () => {
+    try { await exportInfographicAsPdf(EXPORT_ID, `${fileBase}.pdf`); toast.success('Đã tải PDF bảng xếp hạng') }
+    catch { toast.error('Xuất PDF thất bại') }
+  }
+  const doShare = async () => {
+    try { await shareInfographic(EXPORT_ID, `Bảng xếp hạng ${mg.name}`) }
+    catch { /* user hủy hoặc không hỗ trợ */ }
+  }
+
   const displayed = activeTab === 'all'
     ? standings
     : standings.filter(s => s.groupId === activeTab)
@@ -61,6 +81,16 @@ export function StandingsPage() {
             <p className="text-[15px] font-bold text-slate-800 truncate">Bảng Xếp Hạng</p>
             <p className="text-[11px] text-slate-400 truncate">{mg.name} · {standings.length} thành viên</p>
           </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={doExportPng} aria-label="Tải ảnh" className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+              <ImageIcon size={16} />
+            </button>
+            {canShare() && (
+              <button onClick={doShare} aria-label="Chia sẻ" className="flex h-9 w-9 items-center justify-center rounded-xl text-white [background:var(--pf-primary)] active:opacity-70">
+                <Share2 size={16} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Scrollable group tabs */}
@@ -77,7 +107,7 @@ export function StandingsPage() {
           ))}
         </div>
 
-        <div className="px-4 py-4 space-y-3">
+        <div id={EXPORT_ID} className="px-4 py-4 space-y-3">
           {/* Bar chart */}
           {sorted.length > 0 && (
             <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
@@ -151,6 +181,21 @@ export function StandingsPage() {
       <PageHeader
         title={`Bảng Xếp Hạng – ${mg.name}`}
         subtitle={`${standings.length} thành viên`}
+        actions={
+          <div className="flex items-center gap-2">
+            <button onClick={doExportPng} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:opacity-90">
+              <ImageIcon size={14} />Ảnh
+            </button>
+            <button onClick={doExportPdf} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50">
+              <FileText size={14} />PDF
+            </button>
+            {canShare() && (
+              <button onClick={doShare} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]">
+                <Share2 size={14} />Chia sẻ
+              </button>
+            )}
+          </div>
+        }
       />
 
       <div className="p-6">
@@ -174,9 +219,10 @@ export function StandingsPage() {
           ))}
         </div>
 
+        <div id={EXPORT_ID} className="space-y-4">
         {/* Bar chart */}
         {sorted.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 mb-4">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
             <p className="text-sm font-semibold text-slate-800 mb-3">Điểm Xếp Hạng</p>
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
@@ -243,6 +289,7 @@ export function StandingsPage() {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       </div>
     </div>
