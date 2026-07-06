@@ -2,10 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
 :root {
-  /* Primary */
-  --color-primary: #6366F1;
-  --color-primary-hover: #4F46E5;
-  --color-primary-light: #EEF2FF;
+  /* Primary (V2.2 Clean Modern SaaS — tím) */
+  --color-primary: #6D5DFB;
+  --color-primary-hover: #5B4BE8;
+  --color-primary-light: #EEEDFE;
   /* Secondary (branding trắng nhãn — EPIC10B override runtime) */
   --color-secondary: #06B6D4;
   /* Semantic */
@@ -26,16 +26,25 @@
 
   /* ── UDP-01 — Unified Product Design Constitution (Design Source of Truth) ──
      Additive namespace --pf-* ; KHÔNG đổi token cũ (Zero Refactor). */
-  --pf-bg:            #F7F9FC; /* nền app sáng */
+  --pf-bg:            #F8FAFC; /* nền app sáng (V2.2) */
   --pf-surface:       #FFFFFF; /* card trắng */
   --pf-surface-muted: #F1F5F9;
-  --pf-border:        #E8EDF3;
+  --pf-border:        #E2E8F0;
   --pf-text:          #0F172A;
   --pf-text-muted:    #64748B;
-  /* Brand: PickleFund green chủ đạo */
+  /* V2.2 Brand primary — TÍM (Clean Modern SaaS). Dùng cho brand/primary UI:
+     nút primary, tab active, pill chọn, focus ring, link. */
+  --pf-primary:       #6D5DFB;
+  --pf-primary-hover: #5B4BE8;
+  --pf-primary-soft:  #EEEDFE;
+  --pf-primary-on:    #FFFFFF;
+  /* Green — DÀNH cho ngữ nghĩa TIỀN/thu-dương/success (KHÔNG còn là brand primary). */
   --pf-green:       #059669;
   --pf-green-hover: #047857;
   --pf-green-soft:  #ECFDF5;
+  /* Secondary — xanh (V2.2) */
+  --pf-secondary:      #22C55E;
+  --pf-secondary-soft: #EAF9EF;
   /* Module accents (accent phụ theo module) */
   --pf-accent-blue:   #2563EB;   --pf-accent-blue-soft:   #EFF6FF;
   --pf-accent-violet: #7C3AED;   --pf-accent-violet-soft: #F5F3FF;
@@ -50,16 +59,16 @@
   --pf-shadow:       0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
   --pf-shadow-hover: 0 6px 20px -4px rgb(15 23 42 / 0.12);
   /* Semantic color tokens (status) — shared components map qua đây, không hard-code */
-  --pf-color-primary: #059669;  --pf-color-primary-soft: #ECFDF5;
-  --pf-color-success: #16A34A;  --pf-color-success-soft: #F0FDF4;
-  --pf-color-warning: #D97706;  --pf-color-warning-soft: #FFFBEB;
-  --pf-color-danger:  #E11D48;  --pf-color-danger-soft:  #FFF1F2;
-  --pf-color-info:    #2563EB;  --pf-color-info-soft:    #EFF6FF;
-  --pf-color-ai:      #7C3AED;  --pf-color-ai-soft:      #F5F3FF;
+  --pf-color-primary: #6D5DFB;  --pf-color-primary-soft: #EEEDFE;
+  --pf-color-success: #22C55E;  --pf-color-success-soft: #EAF9EF;
+  --pf-color-warning: #F97316;  --pf-color-warning-soft: #FFF3EA;
+  --pf-color-danger:  #EF4444;  --pf-color-danger-soft:  #FEECEC;
+  --pf-color-info:    #0EA5E9;  --pf-color-info-soft:    #E8F7FE;
+  --pf-color-ai:      #6D5DFB;  --pf-color-ai-soft:      #EEEDFE;
   --pf-color-muted:   #64748B;  --pf-color-muted-soft:   #F1F5F9;
-  --pf-text-on-primary: #FFFFFF; /* chữ trên nền primary/green */
+  --pf-text-on-primary: #FFFFFF; /* chữ trên nền primary (tím) */
   --pf-border-soft:     #EEF2F6; /* viền rất nhẹ (row divider) */
-  --pf-focus-ring:      rgb(5 150 105 / 0.20); /* focus ring theo primary */
+  --pf-focus-ring:      rgb(109 93 251 / 0.22); /* focus ring theo primary tím */
   /* Spacing scale */
   --space-1: 4px;
   --space-2: 8px;

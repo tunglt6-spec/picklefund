@@ -38,7 +38,7 @@ export function ResponsiveTabs({
             className={cn(
               'relative whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors',
               isActive
-                ? '[color:var(--pf-green)]'
+                ? '[color:var(--pf-primary)]'
                 : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]',
             )}
           >
@@ -53,7 +53,7 @@ export function ResponsiveTabs({
             {isActive && (
               <span
                 className="absolute inset-x-2 -bottom-px h-0.5 rounded-full"
-                style={{ background: 'var(--pf-green)' }}
+                style={{ background: 'var(--pf-primary)' }}
               />
             )}
           </button>
