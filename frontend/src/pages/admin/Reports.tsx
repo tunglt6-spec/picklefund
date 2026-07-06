@@ -106,6 +106,7 @@ export function Reports() {
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
   const [reportTab, setReportTab] = useState<ReportTab>('overview')
   const [showInfographic, setShowInfographic] = useState(false)
+  const [reportType, setReportType] = useState<'full' | 'financial'>('full')
   // fundSummary = backend Source of Truth (raw response.data.data)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fundSummary, setFundSummary] = useState<any>(null)
@@ -240,8 +241,9 @@ export function Reports() {
     try {
       // exportReportsPDF trả Promise (downloadPDF là async) → phải await để bắt lỗi
       // render/tải file; không báo success trước khi hoàn tất.
-      await exportReportsPDF(buildExportSummary(), billRowsForExport())
-      toast.success('Đã xuất PDF báo cáo!')
+      // reportType 'financial' = tổng quan tài chính (không kèm bảng kê thành viên).
+      await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport())
+      toast.success(reportType === 'financial' ? 'Đã xuất PDF tổng quan tài chính!' : 'Đã xuất PDF báo cáo đầy đủ!')
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportPDF failed:', e)
       toast.error(EXPORT_FAILED)
@@ -250,10 +252,10 @@ export function Reports() {
   const doExportExcel = () => {
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
     try {
-      exportReportsExcel(buildExportSummary(), memberBillRows.map(r => ({
+      exportReportsExcel(buildExportSummary(), reportType === 'financial' ? [] : memberBillRows.map(r => ({
         name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
       })))
-      toast.success('Đã xuất Excel báo cáo!')
+      toast.success(reportType === 'financial' ? 'Đã xuất Excel tổng quan tài chính!' : 'Đã xuất Excel báo cáo đầy đủ!')
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportExcel failed:', e)
       toast.error(EXPORT_FAILED)
@@ -497,8 +499,18 @@ export function Reports() {
             <div className="min-w-0">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Xuất báo cáo</h3>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
-                {officialReady ? 'PDF · Excel · Infographic — dùng dữ liệu tổng hợp backend hiện có.' : `${EXPORT_HINT} (Chưa có đủ dữ liệu backend summary)`}
+                {officialReady ? 'Chọn loại báo cáo rồi xuất PDF · Excel · Infographic.' : `${EXPORT_HINT} (Chưa có đủ dữ liệu backend summary)`}
               </p>
+              {/* Chọn loại báo cáo */}
+              <div className="mt-2.5 flex items-center gap-1 rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]" role="radiogroup" aria-label="Loại báo cáo">
+                {([['full', 'Đầy đủ (kèm bảng kê)'], ['financial', 'Tổng quan tài chính']] as ['full' | 'financial', string][]).map(([v, l]) => (
+                  <button key={v} type="button" role="radio" aria-checked={reportType === v} onClick={() => setReportType(v)}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                    style={reportType === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <ActionButton variant="secondary" icon={<FileText size={15} />} onClick={doExportPDF} disabled={!officialReady} title={officialReady ? 'Xuất PDF' : EXPORT_HINT}>PDF</ActionButton>
