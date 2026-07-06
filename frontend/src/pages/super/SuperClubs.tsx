@@ -385,7 +385,12 @@ export function SuperClubs() {
       <PageHeader
         title="Quản lý CLB"
         subtitle={`${clubs.length} câu lạc bộ trong hệ thống`}
-        actions={<Button onClick={() => setShowCreate(true)}><Plus size={16} />Tạo CLB mới</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate('/onboarding')}>Onboarding</Button>
+            <Button onClick={() => setShowCreate(true)}><Plus size={16} />Tạo CLB mới</Button>
+          </div>
+        }
       />
 
       <div className="p-6 space-y-4">

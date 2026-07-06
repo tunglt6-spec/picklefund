@@ -6,9 +6,14 @@ import { AppLayout } from './components/layout/AppLayout'
 import { Login } from './pages/Login'
 import { NotFound } from './pages/NotFound'
 
+// Public (V2.2 commercial)
+import { Landing } from './pages/public/Landing'
+import { Pricing } from './pages/public/Pricing'
+
 // Super Admin pages
 import { SuperDashboard } from './pages/super/SuperDashboard'
 import { SuperClubs } from './pages/super/SuperClubs'
+import { Onboarding } from './pages/super/Onboarding'
 import { SuperClubDetail } from './pages/super/SuperClubDetail'
 import { SuperUsers } from './pages/super/SuperUsers'
 import { AuditLogs } from './pages/super/AuditLogs'
@@ -96,7 +101,8 @@ function RoleRoute({ allow }: { allow: string[] }) {
 
 function RootRedirect() {
   const { user, isAuthenticated } = useAuthStore()
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  // Khách chưa đăng nhập → trang giới thiệu công khai (V2.2 commercial).
+  if (!isAuthenticated) return <Landing />
   if (user?.role === 'SUPER_ADMIN') return <Navigate to="/super/dashboard" replace />
   if (user?.role === 'CLUB_ADMIN') return <Navigate to="/dashboard" replace />
   if (user?.role === 'CLUB_TREASURER') return <Navigate to="/treasurer/dashboard" replace />
@@ -109,6 +115,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
 
@@ -118,6 +125,7 @@ export default function App() {
             {/* Super Admin */}
             <Route path="/super/dashboard" element={<SuperDashboard />} />
             <Route path="/super/clubs" element={<SuperClubs />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/super/clubs/:id" element={<SuperClubDetail />} />
             <Route path="/super/users" element={<SuperUsers />} />
             <Route path="/super/audit-logs" element={<AuditLogs />} />
