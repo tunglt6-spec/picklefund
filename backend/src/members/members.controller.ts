@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { MembersService } from './members.service';
-import { CurrentUser, Roles} from '../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { CreateMemberDto, UpdateMemberDto } from './members.dto';
 
@@ -25,6 +25,12 @@ export class MembersController {
   @Get()
   async findAll(@CurrentUser() user: any, @Query('search') search?: string) {
     return ok(await this.members.findAll(user.clubId, search));
+  }
+
+  // Đặt TRƯỚC @Get(':id') để không bị route ':id' nuốt.
+  @Get('ai-rating')
+  async aiRating(@CurrentUser() user: JwtUser) {
+    return ok(await this.members.aiRating(user.clubId ?? ''));
   }
 
   @Post()

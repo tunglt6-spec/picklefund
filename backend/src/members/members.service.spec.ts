@@ -11,6 +11,12 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
   },
+  fundPeriod: { findFirst: jest.fn() },
+  attendanceSession: { findMany: jest.fn() },
+  attendanceRecord: { groupBy: jest.fn() },
+  fundContribution: { findMany: jest.fn() },
+  minigame: { findMany: jest.fn() },
+  minigameParticipant: { findMany: jest.fn() },
 };
 
 const baseMember = {
@@ -109,6 +115,46 @@ describe('MembersService', () => {
           data: expect.objectContaining({ isDeleted: true }),
         }),
       );
+    });
+  });
+
+  describe('aiRating (điểm hoạt động TB)', () => {
+    it('tính điểm có trọng số + renormalize; TB = trung bình các thành viên', async () => {
+      mockPrisma.member.findMany.mockResolvedValue([
+        { id: 'm1' },
+        { id: 'm2' },
+      ]);
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'p1' });
+      // 2 buổi hoàn tất
+      mockPrisma.attendanceSession.findMany.mockResolvedValue([
+        { id: 's1' },
+        { id: 's2' },
+      ]);
+      // m1 có mặt 2/2, m2 có mặt 1/2
+      mockPrisma.attendanceRecord.groupBy.mockResolvedValue([
+        { memberId: 'm1', _count: { _all: 2 } },
+        { memberId: 'm2', _count: { _all: 1 } },
+      ]);
+      // m1 đã đóng quỹ, m2 chưa
+      mockPrisma.fundContribution.findMany.mockResolvedValue([
+        { memberId: 'm1' },
+      ]);
+      // CLB có 1 minigame; m1 tham gia, m2 không
+      mockPrisma.minigame.findMany.mockResolvedValue([{ id: 'g1' }]);
+      mockPrisma.minigameParticipant.findMany.mockResolvedValue([
+        { memberId: 'm1' },
+      ]);
+
+      const res = await service.aiRating('club-1');
+
+      // m1 = 0.4*1 + 0.4*1 + 0.2*1 = 100 ; m2 = 0.4*0.5 + 0 + 0 = 20 ; TB = 60
+      expect(res).toEqual({ average: 60, rated: 2, total: 2 });
+    });
+
+    it('CLB không có thành viên → average null', async () => {
+      mockPrisma.member.findMany.mockResolvedValue([]);
+      const res = await service.aiRating('club-1');
+      expect(res).toEqual({ average: null, rated: 0, total: 0 });
     });
   });
 });

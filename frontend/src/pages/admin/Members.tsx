@@ -335,6 +335,8 @@ export function Members() {
   const [joinTo, setJoinTo] = useState('')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
+  // AI Rating (điểm hoạt động TB) — compute-on-read từ backend (GET /members/ai-rating).
+  const [aiRating, setAiRating] = useState<{ average: number | null; rated: number; total: number } | null>(null)
 
   /* ── Workspace fetch (dùng ĐÚNG API hiện có: GET /members?clubId=…) ──
      Không đổi business logic — chỉ nạp danh sách vào store + điều khiển Loading/Error.
@@ -371,6 +373,17 @@ export function Members() {
     if (isLocalToken(accessToken)) return
     if (getClubData(clubId).members.length === 0) void fetchMembers()
   }, [accessToken, clubId, fetchMembers, getClubData])
+
+  // Nạp AI Rating TB (điểm hoạt động) — read-only, lỗi/không có → null → hiển thị "Chưa có".
+  useEffect(() => {
+    if (isLocalToken(accessToken)) return
+    let alive = true
+    api
+      .get('/members/ai-rating')
+      .then(r => { if (alive) setAiRating(r.data?.data ?? null) })
+      .catch(() => { if (alive) setAiRating(null) })
+    return () => { alive = false }
+  }, [accessToken, clubId])
 
   /* ── Kỳ quỹ hiện tại + dữ liệu phái sinh (chỉ đọc, dữ liệu thật) ──
      React Compiler tự memo hoá (không dùng useMemo thủ công để tránh xung đột). */
@@ -610,7 +623,7 @@ export function Members() {
         <MetricCard label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} sub="Thành viên active" accent="green" icon={<UserCheck size={18} />} />
         <MetricCard label="Tạm ngưng" value={inactiveCount.toLocaleString('vi-VN')} sub="Tạm nghỉ sinh hoạt" accent="amber" icon={<Power size={18} />} />
         <MetricCard label="Đã rời CLB" value={leftCount.toLocaleString('vi-VN')} sub="Không còn sinh hoạt" accent="rose" icon={<UserMinus size={18} />} />
-        <MetricCard label="AI Rating TB" value="Chưa có" sub="Chưa có dữ liệu" accent="violet" icon={<Sparkles size={18} />} />
+        <MetricCard label="AI Rating TB" value={aiRating?.average != null ? `${aiRating.average}/100` : 'Chưa có'} sub={aiRating?.average != null ? `Điểm hoạt động · ${aiRating.rated} TV` : 'Chưa có dữ liệu'} accent="violet" icon={<Sparkles size={18} />} />
       </div>
 
       {/* ── Filter / Search ── */}
