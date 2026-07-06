@@ -82,7 +82,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg md:hidden [color:var(--pf-text)]"
+            className="flex h-11 w-11 items-center justify-center rounded-lg md:hidden [color:var(--pf-text)]"
             aria-label="Menu"
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
