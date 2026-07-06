@@ -659,7 +659,7 @@ export function ClubDashboard() {
                     className="px-3 py-1 text-xs font-medium transition-colors"
                     style={
                       txTab === tab
-                        ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' }
+                        ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
                         : { background: 'var(--pf-surface)', color: 'var(--pf-color-muted)' }
                     }
                   >

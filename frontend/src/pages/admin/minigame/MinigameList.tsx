@@ -162,7 +162,7 @@ export function MinigameList() {
       {STATUS_FILTERS.map(([v, l]) => (
         <button key={v} onClick={() => setStatusFilter(v)} aria-pressed={statusFilter === v}
           className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-          style={statusFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)' } : { color: 'var(--pf-color-muted)' }}>
+          style={statusFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
           {l}
         </button>
       ))}
@@ -177,7 +177,7 @@ export function MinigameList() {
   const Progress = ({ pct }: { pct: number }) => (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-16 overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--pf-green)' }} />
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--pf-primary)' }} />
       </div>
       <span className="text-xs tabular-nums [color:var(--pf-color-muted)]">{pct}%</span>
     </div>
@@ -330,7 +330,7 @@ export function MinigameList() {
                   {MODE_TABS.map(t => (
                     <button key={t.key} onClick={() => setModeTab(t.key as ModeTab)} aria-pressed={modeTab === t.key}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                      style={modeTab === t.key ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{t.label}</button>
+                      style={modeTab === t.key ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{t.label}</button>
                   ))}
                 </div>
               </div>
@@ -340,7 +340,7 @@ export function MinigameList() {
                   {STATUS_FILTERS.map(([v, l]) => (
                     <button key={v} onClick={() => setStatusFilter(v)} aria-pressed={statusFilter === v}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                      style={statusFilter === v ? { background: 'var(--pf-green)', color: 'var(--pf-text-on-primary)', borderColor: 'var(--pf-green)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{l}</button>
+                      style={statusFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{l}</button>
                   ))}
                 </div>
               </div>
