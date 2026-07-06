@@ -433,6 +433,7 @@ export function Reports() {
                     {!hasAttendanceData ? (
                       <div className="flex h-52 items-center justify-center text-sm [color:var(--pf-color-muted)]">Chưa có dữ liệu điểm danh</div>
                     ) : (
+                      <>
                       <ResponsiveContainer width="100%" height={Math.max(200, Math.min(attendanceRates.length, 10) * 28)}>
                         <BarChart data={attendanceRates.slice(0, 10)} layout="vertical" barSize={10}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" horizontal={false} />
@@ -442,6 +443,15 @@ export function Reports() {
                           <Bar dataKey="rate" fill="#2563EB" radius={[0, 4, 4, 0]} name="Tỷ lệ %" background={{ fill: '#F7F9FC', radius: 4 }} />
                         </BarChart>
                       </ResponsiveContainer>
+                      {attendanceRates.some((r) => r.rate < 50) && (
+                        <div className="mt-3 flex items-start gap-2 rounded-xl px-3 py-2" style={{ background: 'var(--pf-color-warning-soft)' }}>
+                          <AlertCircle size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--pf-color-warning)' }} />
+                          <p className="text-xs" style={{ color: 'var(--pf-color-warning)' }}>
+                            {attendanceRates.filter((r) => r.rate < 50).length} thành viên chuyên cần dưới 50% — nên nhắc nhở tham gia.
+                          </p>
+                        </div>
+                      )}
+                      </>
                     )}
                   </ChartCard>
                 )}
