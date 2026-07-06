@@ -14,6 +14,7 @@ const prisma = {
   },
   notification: { create: jest.fn() },
   user: { findFirst: jest.fn(), findMany: jest.fn() },
+  member: { findFirst: jest.fn() },
   club: { findUnique: jest.fn() },
 };
 
@@ -45,6 +46,7 @@ describe('NotificationRuntimeService (EPIC8)', () => {
     prisma.notificationJob.findFirst.mockResolvedValue(null);
     prisma.club.findUnique.mockResolvedValue(null);
     prisma.user.findMany.mockResolvedValue([]);
+    prisma.member.findFirst.mockResolvedValue(null);
     // create lưu row; update merge row (mô phỏng Prisma trả full row sau update).
     prisma.notificationJob.create.mockImplementation(
       (arg: { data: Record<string, unknown> }) => {
@@ -140,6 +142,57 @@ describe('NotificationRuntimeService (EPIC8)', () => {
       );
       expect(email.send).toHaveBeenCalledTimes(1);
       expect(job.status).toBe('READY');
+    });
+
+    it('EMAIL targetType=MEMBER → gửi tới Member.email (email Liên hệ), scope clubId', async () => {
+      email.isEnabled = true;
+      email.send.mockResolvedValue(true);
+      prisma.member.findFirst.mockResolvedValue({
+        email: 'lienhe@real.vn',
+        user: { email: 'account@real.vn' },
+      });
+      const job = (await service.dispatch('club-1', {
+        channel: 'EMAIL',
+        targetType: 'MEMBER',
+        targetId: 'member-1',
+        title: 'Nhắc lịch tập',
+      })) as Record<string, unknown>;
+      // Lookup member scope clubId (chống cross-club).
+      expect(prisma.member.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'member-1', clubId: 'club-1', isDeleted: false },
+        }),
+      );
+      expect(job.status).toBe('READY');
+      // Ưu tiên Member.email (Liên hệ), KHÔNG dùng email tài khoản.
+      expect(email.send).toHaveBeenCalledWith(
+        'lienhe@real.vn',
+        'Nhắc lịch tập',
+        expect.any(String),
+        expect.any(Object),
+      );
+    });
+
+    it('EMAIL targetType=MEMBER: Member.email trống → fallback email tài khoản', async () => {
+      email.isEnabled = true;
+      email.send.mockResolvedValue(true);
+      prisma.member.findFirst.mockResolvedValue({
+        email: null,
+        user: { email: 'account@real.vn' },
+      });
+      const job = (await service.dispatch('club-1', {
+        channel: 'EMAIL',
+        targetType: 'MEMBER',
+        targetId: 'member-1',
+        title: 'Nhắc',
+      })) as Record<string, unknown>;
+      expect(job.status).toBe('READY');
+      expect(email.send).toHaveBeenCalledWith(
+        'account@real.vn',
+        'Nhắc',
+        expect.any(String),
+        expect.any(Object),
+      );
     });
 
     it('EMAIL "mang danh" CLB: recipient=member, Reply-To=email admin CLB, fromName=tên CLB', async () => {

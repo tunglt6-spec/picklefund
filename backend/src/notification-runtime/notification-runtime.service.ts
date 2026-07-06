@@ -280,19 +280,21 @@ export class NotificationRuntimeService {
     if (!this.email.isEnabled) {
       return { sent: false, note: 'SMTP chưa cấu hình — DRY_RUN' };
     }
-    if ((req.targetType ?? 'USER') !== 'USER' || !req.targetId) {
-      return { sent: false, note: 'email cần targetType=USER + targetId' };
+    if (!req.targetId) {
+      return { sent: false, note: 'email cần targetId' };
     }
-    // POLISH-001: lookup PHẢI scope theo clubId (giống in-app) — target khác club
-    // → DRY_RUN, không gửi, note chung không tiết lộ user có tồn tại hay không.
-    const user = await this.prisma.user.findFirst({
-      where: { id: req.targetId, clubId },
-      select: { email: true },
-    });
-    if (!user?.email)
+    // Địa chỉ nhận theo targetType — MEMBER → email Liên hệ (Member.email, fallback email
+    // tài khoản); USER → email tài khoản. Lookup scope clubId (chống cross-club), không
+    // tiết lộ tồn tại. Địa chỉ được RESOLVE ở server (không tin email do caller truyền).
+    const to = await this.resolveRecipientEmail(
+      clubId,
+      req.targetType ?? 'USER',
+      req.targetId,
+    );
+    if (!to)
       return { sent: false, note: 'target không gửi được trong club này' };
     // Chặn email placeholder (.local) / không hợp lệ — không gửi để tránh bounce.
-    if (!this.isRealEmail(user.email))
+    if (!this.isRealEmail(to))
       return {
         sent: false,
         note: 'email placeholder/không hợp lệ — không gửi',
@@ -300,12 +302,36 @@ export class NotificationRuntimeService {
     // Email "mang danh" CLB: tên hiển thị = tên CLB, Reply-To = email admin CLB.
     const sender = await this.resolveClubSender(clubId);
     const ok = await this.email.send(
-      user.email,
+      to,
       req.title,
       this.email.buildNotifHtml(req.title, req.bodySummary ?? req.title),
       { replyTo: sender.replyTo, fromName: sender.fromName },
     );
     return { sent: ok, note: ok ? 'email sent' : 'email service từ chối gửi' };
+  }
+
+  /**
+   * Địa chỉ email nhận theo targetType (scope clubId, chống cross-club):
+   * - MEMBER: Member.email (email Liên hệ) ưu tiên, fallback email tài khoản liên kết.
+   * - USER:   email tài khoản đăng nhập.
+   */
+  private async resolveRecipientEmail(
+    clubId: string,
+    targetType: string,
+    targetId: string,
+  ): Promise<string | null> {
+    if (targetType === 'MEMBER') {
+      const m = await this.prisma.member.findFirst({
+        where: { id: targetId, clubId, isDeleted: false },
+        select: { email: true, user: { select: { email: true } } },
+      });
+      return m?.email ?? m?.user?.email ?? null;
+    }
+    const u = await this.prisma.user.findFirst({
+      where: { id: targetId, clubId },
+      select: { email: true },
+    });
+    return u?.email ?? null;
   }
 
   /** Telegram: foundation này CHƯA gửi thật — DRY_RUN only (tài liệu hoá). */

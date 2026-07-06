@@ -3,7 +3,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import type { ActionExecutor, ExecutableAction } from './action-executor';
 
-type Recipient = { userId: string };
+// email = email nhận (ưu tiên Member.email "Liên hệ", fallback email tài khoản) để gửi EMAIL;
+// userId để gửi IN_APP. Một trong hai có thể null (chỉ có tài khoản, hoặc chỉ có email Liên hệ).
+type Recipient = {
+  memberId: string;
+  userId: string | null;
+  email: string | null;
+};
 
 /** Kênh gửi hợp lệ cho executor (TELEGRAM vẫn DRY_RUN ở runtime → không đưa vào đây). */
 const VALID_CHANNELS = ['IN_APP', 'EMAIL'];
@@ -13,13 +19,14 @@ const VALID_CHANNELS = ['IN_APP', 'EMAIL'];
  *
  * Thay NoOpExecutor: với action ĐÃ DUYỆT, tạo sản phẩm thật = fan-out thông báo.
  * Hỗ trợ:
- * - workflow:DEBT_ESCALATION → nhắc đóng quỹ tới member CHƯA đóng kỳ active + có tài khoản.
- * - workflow:EVENT_REMINDER  → nhắc buổi tập sắp tới tới TẤT CẢ member hoạt động có tài khoản.
- * - workflow:REPORT_DISPATCH → báo kỳ quỹ đã chốt tới TẤT CẢ member có tài khoản.
- * Member không có tài khoản (Member.userId=null) → không nhận (skipped).
+ * - workflow:DEBT_ESCALATION → nhắc đóng quỹ tới member CHƯA đóng kỳ active.
+ * - workflow:EVENT_REMINDER  → nhắc buổi tập sắp tới tới TẤT CẢ member hoạt động.
+ * - workflow:REPORT_DISPATCH → báo kỳ quỹ đã chốt tới TẤT CẢ member hoạt động.
  *
- * Kênh gửi: OPT-IN theo rule qua requestPayload.channels (mặc định ['IN_APP']).
- * EMAIL chỉ gửi được tới email THẬT — địa chỉ placeholder (.local) bị runtime chặn (DRY_RUN).
+ * Route theo kênh (OPT-IN qua requestPayload.channels, mặc định ['IN_APP']):
+ * - IN_APP → tài khoản đăng nhập (Member.userId); member không tài khoản → không nhận in-app.
+ * - EMAIL  → email Liên hệ (Member.email) ưu tiên, fallback email tài khoản; member không có
+ *   email (hoặc .local placeholder) → runtime chặn (DRY_RUN, không tính là gửi).
  *
  * Ranh giới an toàn:
  * - CHỈ chạy trên action đã duyệt (AiActionsService.execute gọi sau khi acquire EXECUTING).
@@ -90,13 +97,32 @@ export class HermesActionExecutor implements ActionExecutor {
     for (const channel of channels) {
       let n = 0;
       for (const r of recipients) {
+        // IN_APP → tài khoản (userId); EMAIL → thành viên (memberId → Member.email "Liên hệ").
+        // Recipient thiếu đích của kênh đó → bỏ qua (vd EMAIL nhưng không có email Liên hệ).
+        const target =
+          channel === 'IN_APP'
+            ? r.userId
+              ? {
+                  targetType: 'USER',
+                  targetId: r.userId,
+                  key: `USER:${r.userId}`,
+                }
+              : null
+            : r.email
+              ? {
+                  targetType: 'MEMBER',
+                  targetId: r.memberId,
+                  key: `MEMBER:${r.memberId}`,
+                }
+              : null;
+        if (!target) continue;
         const job = (await this.notifications.dispatch(clubId, {
           channel,
-          targetType: 'USER',
-          targetId: r.userId,
+          targetType: target.targetType,
+          targetId: target.targetId,
           title,
           bodySummary: body,
-          idempotencyKey: `AI_ACTION:${actionId}:USER:${r.userId}`,
+          idempotencyKey: `AI_ACTION:${actionId}:${target.key}`,
           aiActionId: actionId,
         })) as { status?: string; duplicate?: boolean } | null;
         if (job && job.status === 'READY' && !job.duplicate) n++;
@@ -113,15 +139,32 @@ export class HermesActionExecutor implements ActionExecutor {
       .join(', ');
   }
 
-  /** Thành viên đang hoạt động CÓ tài khoản đăng nhập (nhận được thông báo). */
-  private async membersWithAccount(clubId: string): Promise<Recipient[]> {
+  /** Tất cả thành viên đang hoạt động → recipient (userId cho IN_APP, email Liên hệ cho EMAIL). */
+  private async activeMembers(clubId: string): Promise<Recipient[]> {
     const members = await this.prisma.member.findMany({
       where: { clubId, isDeleted: false },
-      select: { userId: true },
+      select: {
+        id: true,
+        userId: true,
+        email: true,
+        user: { select: { email: true } },
+      },
     });
-    return members
-      .filter((m): m is { userId: string } => !!m.userId)
-      .map((m) => ({ userId: m.userId }));
+    return members.map((m) => this.toRecipient(m));
+  }
+
+  /** Chuẩn hoá 1 member → Recipient: email = Member.email (Liên hệ) ưu tiên, fallback email tài khoản. */
+  private toRecipient(m: {
+    id: string;
+    userId: string | null;
+    email: string | null;
+    user: { email: string | null } | null;
+  }): Recipient {
+    return {
+      memberId: m.id,
+      userId: m.userId,
+      email: m.email ?? m.user?.email ?? null,
+    };
   }
 
   /** dd/m/yyyy theo UTC (cột @db.Date lưu ngày trần — tránh lệch múi giờ). */
@@ -155,7 +198,12 @@ export class HermesActionExecutor implements ActionExecutor {
     const [members, paidRows] = await Promise.all([
       this.prisma.member.findMany({
         where: { clubId, isDeleted: false },
-        select: { id: true, userId: true },
+        select: {
+          id: true,
+          userId: true,
+          email: true,
+          user: { select: { email: true } },
+        },
       }),
       this.prisma.fundContribution.findMany({
         where: {
@@ -172,10 +220,7 @@ export class HermesActionExecutor implements ActionExecutor {
 
     const paid = new Set(paidRows.map((r) => r.memberId));
     const unpaid = members.filter((m) => !paid.has(m.id));
-    const recipients: Recipient[] = unpaid
-      .filter((m): m is { id: string; userId: string } => !!m.userId)
-      .map((m) => ({ userId: m.userId }));
-    const skippedNoAccount = unpaid.length - recipients.length;
+    const recipients = unpaid.map((m) => this.toRecipient(m));
 
     const channels = this.resolveChannels(action.requestPayload);
     const title = action.title || 'Nhắc đóng quỹ';
@@ -193,10 +238,10 @@ export class HermesActionExecutor implements ActionExecutor {
     );
 
     this.logger.log(
-      `DEBT_ESCALATION ${action.id}: unpaid=${unpaid.length} skippedNoAccount=${skippedNoAccount} counts=${this.countsStr(counts)}`,
+      `DEBT_ESCALATION ${action.id}: unpaid=${unpaid.length} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Nhắc nợ kỳ "${period.name}": ${unpaid.length} thành viên chưa đóng (${skippedNoAccount} chưa có tài khoản). Đã gửi [${this.countsStr(counts)}].`,
+      `Nhắc nợ kỳ "${period.name}": ${unpaid.length} thành viên chưa đóng. Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 
@@ -226,7 +271,7 @@ export class HermesActionExecutor implements ActionExecutor {
       );
     }
 
-    const recipients = await this.membersWithAccount(clubId);
+    const recipients = await this.activeMembers(clubId);
     const dateStr = this.fmtDate(session.sessionDate);
     const timeStr =
       session.startTime && session.endTime
@@ -253,7 +298,7 @@ export class HermesActionExecutor implements ActionExecutor {
       `EVENT_REMINDER ${action.id}: recipients=${recipients.length} date=${dateStr} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Nhắc lịch tập ngày ${dateStr}: ${recipients.length} thành viên có tài khoản. Đã gửi [${this.countsStr(counts)}].`,
+      `Nhắc lịch tập ngày ${dateStr}: ${recipients.length} thành viên. Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 
@@ -276,7 +321,7 @@ export class HermesActionExecutor implements ActionExecutor {
       );
     }
 
-    const recipients = await this.membersWithAccount(clubId);
+    const recipients = await this.activeMembers(clubId);
     const channels = this.resolveChannels(action.requestPayload);
     const title = action.title || 'Báo cáo kỳ quỹ';
     const body =
@@ -296,7 +341,7 @@ export class HermesActionExecutor implements ActionExecutor {
       `REPORT_DISPATCH ${action.id}: recipients=${recipients.length} period=${period.name} counts=${this.countsStr(counts)}`,
     );
     return this.liveResult(
-      `Gửi báo cáo kỳ "${period.name}": ${recipients.length} thành viên có tài khoản. Đã gửi [${this.countsStr(counts)}].`,
+      `Gửi báo cáo kỳ "${period.name}": ${recipients.length} thành viên. Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 }
