@@ -32,6 +32,7 @@ import { Attendance } from './pages/admin/Attendance'
 import { WeeklyActivity } from './pages/admin/WeeklyActivity'
 import { SessionRegistration } from './pages/admin/SessionRegistration'
 import { CheckIn } from './pages/admin/CheckIn'
+import { ScheduleCalendar } from './pages/admin/ScheduleCalendar'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
 import { Notifications } from './pages/admin/Notifications'
@@ -146,6 +147,7 @@ export default function App() {
             <Route path="/activity" element={<WeeklyActivity />} />
             <Route path="/session-registration" element={<SessionRegistration />} />
             <Route path="/check-in" element={<CheckIn />} />
+            <Route path="/schedule" element={<ScheduleCalendar />} />
             <Route path="/minigames" element={<MinigameList />} />
             <Route path="/minigames/new" element={<MinigameForm />} />
             <Route path="/minigames/:id" element={<MinigameDashboard />} />
