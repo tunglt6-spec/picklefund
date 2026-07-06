@@ -14,7 +14,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { AttendanceService } from './attendance.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
-import { CreateAttendanceSessionDto } from './attendance.dto';
+import { CreateAttendanceSessionDto, SetRegistrationsDto } from './attendance.dto';
 
 @SkipThrottle()
 @ApiTags('Attendance')
@@ -110,6 +110,24 @@ export class AttendanceController {
     return ok(
       await this.service.updateAttendance(id, user.clubId, body.attendance),
       'Cập nhật điểm danh thành công',
+    );
+  }
+
+  @Get(':id/registrations')
+  async getRegistrations(@Param('id') id: string, @CurrentUser() user: any) {
+    return ok(await this.service.getRegistrations(id, user.clubId));
+  }
+
+  @Put(':id/registrations')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  async setRegistrations(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: SetRegistrationsDto,
+  ) {
+    return ok(
+      await this.service.setRegistrations(id, user.clubId, body.memberIds),
+      'Cập nhật đăng ký buổi chơi thành công',
     );
   }
 }

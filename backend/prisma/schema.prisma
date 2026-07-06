@@ -39,6 +39,7 @@ model Club {
   workflowRules     WorkflowRule[]
   workflowRuns      WorkflowRun[]
   notificationJobs  NotificationJob[]
+  sessionRegistrations SessionRegistration[]
 
   @@map("clubs")
 }
@@ -119,6 +120,7 @@ model Member {
   teamsAsPlayer1    MinigameTeam[]     @relation("TeamPlayer1")
   teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
   payments          Payment[]
+  sessionRegistrations SessionRegistration[]
 
   @@index([clubId, isDeleted])
   @@map("members")
@@ -185,14 +187,34 @@ model AttendanceSession {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  club              Club               @relation(fields: [clubId], references: [id])
-  fundPeriod        FundPeriod         @relation(fields: [fundPeriodId], references: [id])
-  createdBy         User               @relation("SessionCreatedBy", fields: [createdById], references: [id])
+  club              Club                  @relation(fields: [clubId], references: [id])
+  fundPeriod        FundPeriod            @relation(fields: [fundPeriodId], references: [id])
+  createdBy         User                  @relation("SessionCreatedBy", fields: [createdById], references: [id])
   attendanceRecords AttendanceRecord[]
+  registrations     SessionRegistration[]
   expenses          LivingExpense[]
 
   @@index([clubId, fundPeriodId])
   @@map("attendance_sessions")
+}
+
+/// RSVP — thành viên đăng ký tham gia buổi chơi (trước khi diễn ra / check-in).
+/// TÁCH BIỆT với AttendanceRecord (điểm danh thực tế PRESENT/ABSENT dùng tính quỹ) —
+/// đăng ký KHÔNG ảnh hưởng tính Common Fund / Mini Fund.
+model SessionRegistration {
+  id                  String   @id @default(uuid())
+  clubId              String   @map("club_id")
+  attendanceSessionId String   @map("attendance_session_id")
+  memberId            String   @map("member_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  club              Club              @relation(fields: [clubId], references: [id])
+  attendanceSession AttendanceSession @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
+  member            Member            @relation(fields: [memberId], references: [id])
+
+  @@unique([attendanceSessionId, memberId])
+  @@index([clubId, attendanceSessionId])
+  @@map("session_registrations")
 }
 
 enum SessionStatus {

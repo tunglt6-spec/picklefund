@@ -277,4 +277,86 @@ export class AttendanceService {
     });
     return { updated: attendance.length, presentCount };
   }
+
+  /**
+   * RSVP — danh sách thành viên (active) kèm cờ đã đăng ký buổi chơi.
+   * KHÔNG liên quan điểm danh thực tế; chỉ là ý định tham gia.
+   */
+  async getRegistrations(sessionId: string, clubId: string) {
+    await this.findOne(sessionId, clubId);
+    const [members, regs] = await Promise.all([
+      this.prisma.member.findMany({
+        where: { clubId, status: 'active', isDeleted: false },
+        orderBy: { fullName: 'asc' },
+        select: { id: true, fullName: true },
+      }),
+      this.prisma.sessionRegistration.findMany({
+        where: { clubId, attendanceSessionId: sessionId },
+        select: { memberId: true },
+      }),
+    ]);
+    const registered = new Set(regs.map((r) => r.memberId));
+    return members.map((m) => ({
+      memberId: m.id,
+      memberName: m.fullName,
+      registered: registered.has(m.id),
+    }));
+  }
+
+  /**
+   * RSVP — set toàn bộ danh sách đăng ký của 1 buổi (bulk, idempotent):
+   * thêm member mới đăng ký, gỡ member không còn trong danh sách. Scope theo clubId.
+   */
+  async setRegistrations(
+    sessionId: string,
+    clubId: string,
+    memberIds: string[],
+  ) {
+    await this.findOne(sessionId, clubId);
+    const unique = Array.from(new Set(memberIds));
+
+    if (unique.length > 0) {
+      const valid = await this.prisma.member.findMany({
+        where: { id: { in: unique }, clubId, isDeleted: false },
+        select: { id: true },
+      });
+      if (valid.length !== unique.length) {
+        throw new BadRequestException('Một số thành viên không thuộc CLB này');
+      }
+    }
+
+    const existing = await this.prisma.sessionRegistration.findMany({
+      where: { clubId, attendanceSessionId: sessionId },
+      select: { memberId: true },
+    });
+    const existingIds = new Set(existing.map((r) => r.memberId));
+    const target = new Set(unique);
+
+    const toRemove = [...existingIds].filter((id) => !target.has(id));
+    const toAdd = unique.filter((id) => !existingIds.has(id));
+
+    await this.prisma.$transaction([
+      ...(toRemove.length > 0
+        ? [
+            this.prisma.sessionRegistration.deleteMany({
+              where: { attendanceSessionId: sessionId, memberId: { in: toRemove } },
+            }),
+          ]
+        : []),
+      ...(toAdd.length > 0
+        ? [
+            this.prisma.sessionRegistration.createMany({
+              data: toAdd.map((memberId) => ({
+                clubId,
+                attendanceSessionId: sessionId,
+                memberId,
+              })),
+              skipDuplicates: true,
+            }),
+          ]
+        : []),
+    ]);
+
+    return { registered: unique.length, added: toAdd.length, removed: toRemove.length };
+  }
 }

@@ -22,6 +22,12 @@ const mockPrisma = {
     updateMany: jest.fn(),
     upsert: jest.fn(),
   },
+  sessionRegistration: {
+    findMany: jest.fn(),
+    deleteMany: jest.fn(),
+    createMany: jest.fn(),
+  },
+  $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
 };
 
 const mockEvents = { publish: jest.fn() };
@@ -233,6 +239,73 @@ describe('AttendanceService', () => {
           idempotencyKey: 'ATTENDANCE_COMPLETED:session-1',
         }),
       );
+    });
+  });
+
+  /* ── RSVP đăng ký buổi chơi (Phase 3b) ── */
+  describe('getRegistrations', () => {
+    it('trả member active kèm cờ registered', async () => {
+      mockPrisma.attendanceSession.findFirst.mockResolvedValue(baseSession);
+      mockPrisma.member.findMany.mockResolvedValue([
+        { id: 'mem-1', fullName: 'A' },
+        { id: 'mem-2', fullName: 'B' },
+      ]);
+      mockPrisma.sessionRegistration.findMany.mockResolvedValue([
+        { memberId: 'mem-1' },
+      ]);
+
+      const result = await service.getRegistrations('session-1', 'club-1');
+      expect(result).toEqual([
+        { memberId: 'mem-1', memberName: 'A', registered: true },
+        { memberId: 'mem-2', memberName: 'B', registered: false },
+      ]);
+    });
+
+    it('cross-tenant: session không thuộc club → NotFound', async () => {
+      mockPrisma.attendanceSession.findFirst.mockResolvedValue(null);
+      await expect(
+        service.getRegistrations('session-1', 'club-other'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('setRegistrations', () => {
+    it('bulk: thêm member mới + gỡ member cũ (idempotent)', async () => {
+      mockPrisma.attendanceSession.findFirst.mockResolvedValue(baseSession);
+      // validation members thuộc club
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'mem-1' }]);
+      // existing đang đăng ký mem-2 (sẽ bị gỡ)
+      mockPrisma.sessionRegistration.findMany.mockResolvedValue([
+        { memberId: 'mem-2' },
+      ]);
+
+      const result = await service.setRegistrations('session-1', 'club-1', [
+        'mem-1',
+      ]);
+
+      expect(result).toEqual({ registered: 1, added: 1, removed: 1 });
+      expect(mockPrisma.sessionRegistration.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ memberId: { in: ['mem-2'] } }),
+        }),
+      );
+      expect(mockPrisma.sessionRegistration.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: [
+            { clubId: 'club-1', attendanceSessionId: 'session-1', memberId: 'mem-1' },
+          ],
+          skipDuplicates: true,
+        }),
+      );
+    });
+
+    it('chặn member không thuộc CLB → BadRequest', async () => {
+      mockPrisma.attendanceSession.findFirst.mockResolvedValue(baseSession);
+      mockPrisma.member.findMany.mockResolvedValue([]); // không khớp
+      await expect(
+        service.setRegistrations('session-1', 'club-1', ['mem-x']),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockPrisma.sessionRegistration.createMany).not.toHaveBeenCalled();
     });
   });
 });
