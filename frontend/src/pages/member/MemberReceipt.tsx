@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode } from 'lucide-react'
+import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -53,9 +54,9 @@ export function MemberReceipt() {
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
   const [loading, setLoading] = useState(!isLocal)
   const [expanded, setExpanded] = useState<string | null>(null)
-  // Thông tin bank/QR đến từ /system-settings vốn KHÔNG mở cho MEMBER_VIEW.
-  // Fix này không tự mở quyền → luôn null, UI hiển thị trạng thái thiếu dữ liệu an toàn.
-  const [bankInfo] = useState<BankInfo | null>(null)
+  // Thông tin bank/QR lấy từ endpoint member-scope /member/me/bank-info
+  // (chỉ 3 field công khai phục vụ chuyển khoản; null nếu CLB chưa cấu hình).
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null)
 
   const activePeriod = finance?.period ?? null
   const memberName =
@@ -68,6 +69,14 @@ export function MemberReceipt() {
       .then(r => setReceipts(r.data?.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
+  }, [isLocal])
+
+  // Thông tin ngân hàng CLB (member-scope) để dựng QR VietQR.
+  useEffect(() => {
+    if (isLocal) return
+    api.get('/member/me/bank-info')
+      .then(r => { const d = r.data?.data; if (d?.bank_account_number) setBankInfo(d as BankInfo) })
+      .catch(() => {})
   }, [isLocal])
 
   const displayReceipts: PersonalReceipt[] = isLocal ? [] : receipts
@@ -99,6 +108,33 @@ export function MemberReceipt() {
     window.print()
     document.head.removeChild(style)
     if (el) el.removeAttribute('id')
+  }
+
+  // Tải ảnh QR (fetch blob → download; fallback mở tab mới nếu CORS chặn).
+  const downloadQr = async (url: string) => {
+    try {
+      const res = await fetch(url)
+      const blob = await res.blob()
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href; a.download = 'QR-thanh-toan-quy.jpg'
+      document.body.appendChild(a); a.click(); a.remove()
+      URL.revokeObjectURL(href)
+      toast.success('Đã tải mã QR')
+    } catch {
+      window.open(url, '_blank')
+    }
+  }
+
+  // Chia sẻ thông tin thanh toán (Web Share API; fallback copy clipboard).
+  const shareQr = async (url: string, amount: number, periodName: string) => {
+    if (!bankInfo) return
+    const text = `Đóng quỹ ${periodName} — ${formatVND(amount)}\nNgân hàng: ${bankInfo.bank_code}\nSố TK: ${bankInfo.bank_account_number}\nTên TK: ${bankInfo.bank_account_name}`
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Thanh toán quỹ CLB', text, url }) } catch { /* user hủy */ }
+    } else {
+      try { await navigator.clipboard.writeText(`${text}\n${url}`); toast.success('Đã sao chép thông tin thanh toán') } catch { /* noop */ }
+    }
   }
 
   if (isMobile && loading) return (
@@ -182,15 +218,27 @@ export function MemberReceipt() {
                                 <AlertCircle size={12} />Còn thiếu {formatVND(needToPay)}
                               </div>
                               {qr && (
-                                <div className="flex gap-3 items-center">
-                                  <img src={qr} alt="QR" className="w-24 h-24 rounded-lg bg-white border border-amber-200" />
-                                  <div className="text-[11px] text-slate-600 space-y-0.5">
-                                    <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
-                                    <p>{bankInfo!.bank_account_name}</p>
-                                    <p className="text-amber-700 font-bold">{formatVND(needToPay)}</p>
-                                    <p className="text-slate-400">Quét QR để thanh toán</p>
+                                <>
+                                  <div className="flex gap-3 items-center">
+                                    <img src={qr} alt="QR" className="w-24 h-24 rounded-lg bg-white border border-amber-200" />
+                                    <div className="text-[11px] text-slate-600 space-y-0.5">
+                                      <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
+                                      <p>{bankInfo!.bank_account_name}</p>
+                                      <p className="text-amber-700 font-bold">{formatVND(needToPay)}</p>
+                                      <p className="text-slate-400">Quét QR để thanh toán</p>
+                                    </div>
                                   </div>
-                                </div>
+                                  <div className="flex gap-2">
+                                    <button onClick={() => downloadQr(qr)}
+                                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] active:opacity-80">
+                                      <Download size={13} />Tải QR
+                                    </button>
+                                    <button onClick={() => shareQr(qr, needToPay, period?.name ?? '')}
+                                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 bg-white active:bg-amber-50">
+                                      <Share2 size={13} />Chia sẻ
+                                    </button>
+                                  </div>
+                                </>
                               )}
                             </div>
                           )
@@ -260,6 +308,18 @@ export function MemberReceipt() {
                   <p><span className="text-slate-400">Tên TK:</span> {bankInfo.bank_account_name}</p>
                 </div>
                 <p className="text-xs text-slate-400 mt-2">Mở app ngân hàng → Quét mã QR → Kiểm tra số tiền → Chuyển khoản</p>
+                {qr && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button onClick={() => downloadQr(qr)}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
+                      <Download size={14} />Tải mã QR
+                    </button>
+                    <button onClick={() => shareQr(qr, debt, period?.name ?? '')}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 bg-white hover:bg-amber-50 transition-colors">
+                      <Share2 size={14} />Chia sẻ
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )

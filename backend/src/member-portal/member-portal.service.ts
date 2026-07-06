@@ -43,6 +43,30 @@ export class MemberPortalService {
     };
   }
 
+  /**
+   * Thông tin ngân hàng CLB để member tự thanh toán quỹ (QR VietQR).
+   * CHỈ 3 field công khai phục vụ chuyển khoản (mã NH, số TK, tên TK) — không lộ
+   * cấu hình nhạy cảm khác. Trả null nếu CLB chưa cấu hình đủ số/tên TK.
+   */
+  async getBankInfo(memberId: string | null, clubId: string) {
+    await this.assertMember(memberId, clubId);
+    const prefix = `${clubId}_`;
+    const keys = ['bank_code', 'bank_account_number', 'bank_account_name'];
+    const rows = await this.prisma.systemSetting.findMany({
+      where: { key: { in: keys.map((k) => `${prefix}${k}`) } },
+    });
+    const map: Record<string, string> = {};
+    for (const r of rows) map[r.key.slice(prefix.length)] = r.value;
+    const accNo = map['bank_account_number'] ?? '';
+    const accName = map['bank_account_name'] ?? '';
+    if (!accNo || !accName) return null;
+    return {
+      bank_code: map['bank_code'] ?? '',
+      bank_account_number: accNo,
+      bank_account_name: accName,
+    };
+  }
+
   /** Kỳ quỹ đang mở của CLB (mới nhất theo startDate); null nếu chưa có. */
   private async activePeriod(clubId: string) {
     return this.prisma.fundPeriod.findFirst({

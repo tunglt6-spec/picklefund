@@ -53,6 +53,11 @@ export class MemberPortalController {
     return ok(await this.svc.getMinigames(user.memberId, user.clubId));
   }
 
+  @Get('me/bank-info')
+  async bankInfo(@CurrentUser() user: RequestUser) {
+    return ok(await this.svc.getBankInfo(user.memberId, user.clubId));
+  }
+
   @Get('me/notifications')
   async notifications(@CurrentUser() user: RequestUser) {
     return ok(await this.svc.getNotifications(user.userId, user.clubId));
