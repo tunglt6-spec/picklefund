@@ -22,6 +22,13 @@ const SIGNAL_STYLE: Record<SignalLevel, { bg: string; text: string; dot: string;
   warning: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: 'Cảnh báo' },
 }
 
+// Runtime health tone → dot color (runtime AI thật, KHÔNG phụ thuộc Club Memory).
+const HEALTH_DOT: Record<'ok' | 'warn' | 'info', string> = {
+  ok: 'bg-emerald-500',
+  warn: 'bg-amber-500',
+  info: 'bg-sky-500',
+}
+
 const RISK_STYLE: Record<string, string> = {
   low: 'bg-emerald-100 text-emerald-700',
   medium: 'bg-amber-100 text-amber-700',
@@ -91,6 +98,16 @@ export function AiManagerDashboard() {
     { label: 'Thất bại', value: summary?.failedActions ?? 0, icon: <AlertTriangle size={16} /> },
     { label: 'Thực thi hôm nay', value: summary?.executedToday ?? 0, icon: <Zap size={16} /> },
     { label: 'TG duyệt TB', value: fmtDuration(summary?.averageApprovalTime ?? 0), icon: <Clock size={16} /> },
+  ]
+
+  // Sức khoẻ & Runtime AI — tín hiệu THẬT từ availability + executor (luôn có, không cần Club Memory).
+  const ex = summary?.executor
+  const implAgents = AI_TEAM.filter(t => t.implemented).length
+  const runtimeHealth: { tone: 'ok' | 'warn' | 'info'; label: string; detail: string }[] = [
+    { tone: availability.actions ? 'ok' : 'warn', label: 'AI Action Center', detail: availability.actions ? 'Kết nối' : 'Không khả dụng' },
+    { tone: availability.intel ? 'ok' : 'warn', label: 'Maika Intelligence', detail: availability.intel ? 'Kết nối' : 'Không khả dụng' },
+    { tone: (ex?.failedToday ?? 0) > 0 ? 'warn' : 'ok', label: 'Executor Mít Đặc', detail: ex ? `${ex.executedToday} thực thi · ${ex.failedToday} lỗi hôm nay · TB ${ex.averageExecutionMs ?? 0}ms` : 'Chưa có hoạt động hôm nay' },
+    { tone: 'info', label: 'Đội ngũ AI', detail: `${implAgents}/${AI_TEAM.length} agent hoạt động` },
   ]
 
   return (
@@ -289,26 +306,29 @@ export function AiManagerDashboard() {
             )}
           </Card>
 
-          {/* AI Health / Runtime — REAL healthSignals */}
+          {/* Sức Khoẻ & Runtime AI — runtime THẬT (availability + executor), không cần Club Memory */}
           <Card>
             <PanelTitle icon={<Activity size={16} />}>Sức Khoẻ & Runtime AI</PanelTitle>
             {loading ? (
               <p className="text-sm text-slate-400">Đang tải…</p>
-            ) : !availability.intel ? (
-              <p className="text-sm text-slate-400">Không tải được tín hiệu sức khoẻ (endpoint không khả dụng).</p>
-            ) : (intel?.healthSignals?.length ?? 0) === 0 ? (
-              <p className="text-sm text-slate-400">Chưa có tín hiệu sức khoẻ.</p>
             ) : (
-              <div className="space-y-2">
-                {intel!.healthSignals.map((s, i) => {
-                  const st = SIGNAL_STYLE[s.level]
-                  return (
-                    <div key={`${s.code}-${i}`} className="flex items-start gap-2">
-                      <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${st.dot}`} />
-                      <p className="text-xs text-slate-600">{s.message}</p>
-                    </div>
-                  )
-                })}
+              <div className="space-y-2.5">
+                {runtimeHealth.map((h, i) => (
+                  <div key={`rt-${i}`} className="flex items-start justify-between gap-2">
+                    <span className="flex min-w-0 items-start gap-2">
+                      <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${HEALTH_DOT[h.tone]}`} />
+                      <span className="text-xs font-medium text-slate-700">{h.label}</span>
+                    </span>
+                    <span className="text-right text-[11px] text-slate-500">{h.detail}</span>
+                  </div>
+                ))}
+                {/* Tín hiệu tri thức nền (nếu CLB có Club Memory) */}
+                {(intel?.healthSignals ?? []).map((s, i) => (
+                  <div key={`hs-${i}`} className="flex items-start gap-2 border-t border-slate-50 pt-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                    <p className="text-xs text-slate-600">{s.message}</p>
+                  </div>
+                ))}
               </div>
             )}
           </Card>
