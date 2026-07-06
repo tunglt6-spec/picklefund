@@ -62,7 +62,7 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
 
 export function AiManagerDashboard() {
   const navigate = useNavigate()
-  const { policies, intel, summary, loading, availability } = useAiManager()
+  const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
 
   const team = useMemo(() => {
@@ -72,6 +72,8 @@ export function AiManagerDashboard() {
   }, [teamFilter])
 
   const riskSignals: IntelSignal[] = [
+    // Cảnh báo vận hành thật (quỹ/công nợ/chuyên cần từ Finance Engine) — ưu tiên hiển thị trước.
+    ...opsSignals,
     ...(intel?.attentionSignals ?? []),
     ...(intel?.dataQualitySignals ?? []),
   ]

@@ -154,6 +154,7 @@ export function useAiManager() {
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [pending, setPending] = useState<AiActionListItem[]>([])
   const [executable, setExecutable] = useState<AiActionListItem[]>([])
+  const [opsSignals, setOpsSignals] = useState<IntelSignal[]>([])
   const [loading, setLoading] = useState(true)
   const [availability, setAvailability] = useState({ policies: false, intel: false, actions: false })
   const [refreshKey, setRefreshKey] = useState(0)
@@ -168,14 +169,16 @@ export function useAiManager() {
       api.get('/ai/actions/summary'),
       api.get('/ai/actions?status=PENDING_APPROVAL&limit=50'),
       api.get('/ai/actions?status=APPROVED&limit=50'),
+      api.get('/ai/maika/operational-alerts'),
     ])
-      .then(([p, i, s, q, e]) => {
+      .then(([p, i, s, q, e, o]) => {
         if (!alive) return
         if (p.status === 'fulfilled') setPolicies((p.value.data?.data ?? []) as ApprovalPolicy[])
         if (i.status === 'fulfilled') setIntel((i.value.data?.data ?? null) as OrgIntelligence | null)
         if (s.status === 'fulfilled') setSummary((s.value.data?.data ?? null) as AiActionSummary | null)
         if (q.status === 'fulfilled') setPending((q.value.data?.data ?? []) as AiActionListItem[])
         if (e.status === 'fulfilled') setExecutable((e.value.data?.data ?? []) as AiActionListItem[])
+        if (o.status === 'fulfilled') setOpsSignals((o.value.data?.data ?? []) as IntelSignal[])
         setAvailability({
           policies: p.status === 'fulfilled',
           intel: i.status === 'fulfilled',
@@ -190,7 +193,7 @@ export function useAiManager() {
     }
   }, [refreshKey])
 
-  return { policies, intel, summary, pending, executable, loading, availability, refetch }
+  return { policies, intel, summary, pending, executable, opsSignals, loading, availability, refetch }
 }
 
 /** Preview điều kiện duyệt (read-only) — POST /ai/maika/approval/evaluate. */
