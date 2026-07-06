@@ -9,11 +9,18 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsBoolean,
+  MaxLength,
+} from 'class-validator';
 import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { CurrentUser, Roles} from '../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 
 class CreateUserDto {
@@ -43,14 +50,18 @@ export class UsersController {
 
   @Get()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
-  async findAll(@CurrentUser() user: any, @Query('clubId') clubId?: string) {
-    const scopedClubId = user.role === 'SUPER_ADMIN' ? clubId : user.clubId;
+  async findAll(
+    @CurrentUser() user: JwtUser,
+    @Query('clubId') clubId?: string,
+  ) {
+    const scopedClubId =
+      (user.role === 'SUPER_ADMIN' ? clubId : user.clubId) ?? undefined;
     return ok(await this.service.findAll(scopedClubId));
   }
 
   @Post()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
-  async create(@CurrentUser() user: any, @Body() body: CreateUserDto) {
+  async create(@CurrentUser() user: JwtUser, @Body() body: CreateUserDto) {
     if (user.role === 'CLUB_ADMIN') {
       if (body.role === 'SUPER_ADMIN')
         throw new ForbiddenException(
@@ -58,11 +69,14 @@ export class UsersController {
         );
       if (body.clubId && body.clubId !== user.clubId)
         throw new ForbiddenException();
-      body = { ...body, clubId: user.clubId };
+      body = { ...body, clubId: user.clubId ?? undefined };
     }
-    const created = await this.service.create({ ...body, role: body.role ?? Role.MEMBER_VIEW });
-    this.audit.log({
-      userId: user.id,
+    const created = await this.service.create({
+      ...body,
+      role: body.role ?? Role.MEMBER_VIEW,
+    });
+    void this.audit.log({
+      userId: user.userId,
       clubId: created.clubId ?? body.clubId,
       action: 'CREATE',
       resource: 'User',
@@ -75,7 +89,7 @@ export class UsersController {
   @Put(':id')
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   async update(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Param('id') id: string,
     @Body() body: UpdateUserDto,
   ) {
@@ -84,8 +98,8 @@ export class UsersController {
       if (target.clubId !== user.clubId) throw new ForbiddenException();
     }
     const updated = await this.service.update(id, body);
-    this.audit.log({
-      userId: user.id,
+    void this.audit.log({
+      userId: user.userId,
       clubId: updated.clubId,
       action: 'UPDATE',
       resource: 'User',

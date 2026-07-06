@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuditLogsService {
+  private readonly logger = new Logger(AuditLogsService.name);
   constructor(private prisma: PrismaService) {}
 
   async findAll(filters: {
@@ -37,6 +38,12 @@ export class AuditLogsService {
     });
   }
 
+  /**
+   * Ghi audit — KHÔNG BAO GIỜ ném/reject (callers thường gọi floating: `this.audit.log(...)`).
+   * Trước đây userId=undefined (caller truyền nhầm user.id) → Prisma ném "Argument user is
+   * missing" → unhandledRejection → SẬP backend (502). Nay: thiếu userId → bỏ qua; lỗi khác
+   * → nuốt + log. Audit là phụ trợ, không được ảnh hưởng nghiệp vụ.
+   */
   async log(data: {
     userId: string;
     clubId?: string | null;
@@ -46,6 +53,20 @@ export class AuditLogsService {
     detail?: string;
     ipAddress?: string;
   }) {
-    return this.prisma.auditLog.create({ data });
+    if (!data.userId) {
+      this.logger.warn(
+        `Bỏ qua audit thiếu userId: ${data.action} ${data.resource}`,
+      );
+      return null;
+    }
+    try {
+      return await this.prisma.auditLog.create({ data });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.error(
+        `Ghi audit thất bại (không ảnh hưởng nghiệp vụ): ${msg}`,
+      );
+      return null;
+    }
   }
 }
