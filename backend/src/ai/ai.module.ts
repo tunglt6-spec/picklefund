@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { FundPeriodsModule } from '../fund-periods/fund-periods.module';
 import { AiService } from './ai.service';
 import { AiController } from './ai.controller';
+import { OperationalAlertsService } from './maika/operational-alerts.service';
+import { OperationalAlertsController } from './operational-alerts.controller';
 import { AIConfigService } from './harness/ai-config.service';
 import { CircuitBreakerService } from './harness/circuit-breaker.service';
 import { RetryPolicyService } from './harness/retry-policy.service';
@@ -17,6 +19,7 @@ import { AIGatewayService } from './harness/ai-gateway.service';
   imports: [ConfigModule, FundPeriodsModule],
   providers: [
     AiService,
+    OperationalAlertsService,
     AIConfigService,
     CircuitBreakerService,
     RetryPolicyService,
@@ -26,7 +29,7 @@ import { AIGatewayService } from './harness/ai-gateway.service';
     AIRouterService,
     AIGatewayService,
   ],
-  controllers: [AiController],
+  controllers: [AiController, OperationalAlertsController],
   exports: [AIGatewayService, TelemetryService, TokenAccountingService],
 })
 export class AiModule {}

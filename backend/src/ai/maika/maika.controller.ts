@@ -6,7 +6,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MaikaCore } from './maika.service';
-import { OperationalAlertsService } from './operational-alerts.service';
 import { CurrentUser, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 import { UnderstandDto } from './maika.dto';
@@ -19,10 +18,7 @@ import { ApprovalRequestDto } from './approval-request.dto';
 @ApiBearerAuth()
 @Controller('ai/maika')
 export class MaikaController {
-  constructor(
-    private readonly maika: MaikaCore,
-    private readonly operationalAlerts: OperationalAlertsService,
-  ) {}
+  constructor(private readonly maika: MaikaCore) {}
 
   @Post('understand')
   @ApiOperation({
@@ -48,15 +44,6 @@ export class MaikaController {
   })
   async organizationIntelligence(@CurrentUser() user: JwtUser) {
     return ok(await this.maika.analyzeOrganization(user.clubId));
-  }
-
-  @Get('operational-alerts')
-  @ApiOperation({
-    summary:
-      'Maika Insight — cảnh báo vận hành (quỹ thấp/công nợ/chuyên cần). Số liệu ĐỌC từ Finance Engine, không tự tính. clubId từ JWT.',
-  })
-  async operationalAlertsList(@CurrentUser() user: JwtUser) {
-    return ok(await this.operationalAlerts.analyze(user.clubId ?? ''));
   }
 
   @Get('workflow-plans/templates')
