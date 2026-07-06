@@ -2,12 +2,13 @@ import { useState, useMemo, useEffect } from 'react'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
-  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag,
+  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag, Paperclip,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
@@ -19,6 +20,14 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
 /* ── Constants ── */
+/** receiptUrl backend trả dạng `/uploads/receipts/xxx` phục vụ ở origin API (bỏ hậu tố /api). */
+function resolveReceiptUrl(u: string): string {
+  if (!u) return u
+  if (/^https?:\/\//i.test(u)) return u
+  const origin = (import.meta.env.VITE_API_URL ?? '').replace(/\/api\/?$/, '')
+  return `${origin}${u}`
+}
+
 const ruleLabels: Record<AllocationRule, string> = {
   ATTENDANCE:   'Theo số buổi tham gia',
   EQUAL:        'Đều nhau',
@@ -324,8 +333,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
   )
 }
 
-function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit }: {
-  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void
+function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAttach }: {
+  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void; onAttach: () => void
 }) {
   const cfg = statusCfg[exp.status]
   const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
@@ -381,6 +390,41 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit }: {
                 <div className="text-xs text-slate-700">{f.value}</div>
               </div>
             ))}
+          </div>
+
+          {/* Chứng từ / hóa đơn */}
+          <div className="px-6 pb-6">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
+            {exp.receiptUrl ? (
+              <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                {/\.(jpe?g|png|webp)$/i.test(exp.receiptUrl) ? (
+                  <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer" className="shrink-0">
+                    <img src={resolveReceiptUrl(exp.receiptUrl)} alt="Hóa đơn" className="h-16 w-16 rounded-lg object-cover border border-slate-200" />
+                  </a>
+                ) : (
+                  <div className="h-16 w-16 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                    <FileText size={22} className="[color:var(--pf-primary)]" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-slate-700">Đã đính kèm hóa đơn</p>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
+                      <Eye size={12} />Xem
+                    </a>
+                    <button onClick={onAttach} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700">
+                      <Paperclip size={12} />Đổi hóa đơn
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button onClick={onAttach}
+                className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors">
+                <Paperclip size={15} />Đính kèm hóa đơn
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -446,6 +490,13 @@ export function Expenses() {
   const [filterValues, setFilterValues] = useState<FilterValues>({ status: 'all', rule: 'all', from: '', to: '' })
   const [detailExp, setDetailExp] = useState<RichExpense | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [receiptTarget, setReceiptTarget] = useState<RichExpense | null>(null)
+
+  const handleReceiptSuccess = (expenseId: string, receiptUrl: string) => {
+    save(clubData.expenses.map(e => e.id === expenseId ? { ...e, receiptUrl } : e))
+    setDetailExp(prev => prev && prev.id === expenseId ? { ...prev, receiptUrl } : prev)
+    setReceiptTarget(null)
+  }
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
 
@@ -638,18 +689,18 @@ export function Expenses() {
               {(selectedPeriodId || activePeriod) && <p className="text-[11px] text-slate-400">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={exportExcel}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-                <Download size={14} />
+              <button onClick={exportExcel} aria-label="Xuất Excel"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                <Download size={16} />
               </button>
-              <button onClick={() => setShowFilter(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
-                <Filter size={14} />
+              <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
+                <Filter size={16} />
               </button>
-              <button onClick={() => setShowAdd(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-white"
+              <button onClick={() => setShowAdd(true)} aria-label="Thêm khoản chi"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
                 style={{ background: 'var(--pf-primary)' }}>
-                <Plus size={16} />
+                <Plus size={18} />
               </button>
             </div>
           </div>
@@ -756,7 +807,12 @@ export function Expenses() {
             onDelete={() => setConfirmId(detailExp.id)}
             onApprove={() => handleApprove(detailExp.id)}
             onReject={() => handleReject(detailExp.id)}
-            onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }} />
+            onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
+            onAttach={() => setReceiptTarget(detailExp)} />
+        )}
+        {receiptTarget && (
+          <ReceiptUploadModal expenseId={receiptTarget.id} expenseLabel={receiptTarget.description}
+            onSuccess={handleReceiptSuccess} onClose={() => setReceiptTarget(null)} />
         )}
         <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
         <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
@@ -974,7 +1030,12 @@ export function Expenses() {
           onApprove={() => handleApprove(detailExp.id)}
           onReject={() => handleReject(detailExp.id)}
           onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
+          onAttach={() => setReceiptTarget(detailExp)}
         />
+      )}
+      {receiptTarget && (
+        <ReceiptUploadModal expenseId={receiptTarget.id} expenseLabel={receiptTarget.description}
+          onSuccess={handleReceiptSuccess} onClose={() => setReceiptTarget(null)} />
       )}
       <ConfirmDialog
         open={confirmId !== null}

@@ -245,14 +245,16 @@ export function Contributions() {
             {contributions.length > 0 && (
               <button
                 onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+                aria-label="Xuất Excel"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
               >
                 <FileSpreadsheet size={16} />
               </button>
             )}
             <button
               onClick={openCreate}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
+              aria-label="Thêm khoản thu"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
               style={{ background: 'var(--pf-primary)' }}
             >
               <Plus size={18} />
