@@ -7,6 +7,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ClubMemoryModule } from '../club-memory/club-memory.module';
+import { FundPeriodsModule } from '../../fund-periods/fund-periods.module';
+import { OperationalAlertsService } from './operational-alerts.service';
 import { VectorContentPolicyService } from '../vector/vector-content-policy.service';
 import { MaikaCore } from './maika.service';
 import { MaikaController } from './maika.controller';
@@ -32,11 +34,13 @@ import {
 } from './maika.interfaces';
 
 @Module({
-  imports: [ConfigModule, ClubMemoryModule],
+  imports: [ConfigModule, ClubMemoryModule, FundPeriodsModule],
   providers: [
     // Defense-in-depth sanitizer (deterministic, KHÔNG embed/vector search).
     VectorContentPolicyService,
     OrganizationIntelligenceService,
+    // V2.2 Maika Insight — cảnh báo vận hành (đọc Finance Engine, không tự tính tài chính).
+    OperationalAlertsService,
     WorkflowTemplateService,
     WorkflowPlanningService,
     ActionPermissionService,

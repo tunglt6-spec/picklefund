@@ -62,7 +62,7 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
 
 export function AiManagerDashboard() {
   const navigate = useNavigate()
-  const { policies, intel, summary, loading, availability } = useAiManager()
+  const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
 
   const team = useMemo(() => {
@@ -72,6 +72,8 @@ export function AiManagerDashboard() {
   }, [teamFilter])
 
   const riskSignals: IntelSignal[] = [
+    // Cảnh báo vận hành thật (quỹ/công nợ/chuyên cần từ Finance Engine) — ưu tiên hiển thị trước.
+    ...opsSignals,
     ...(intel?.attentionSignals ?? []),
     ...(intel?.dataQualitySignals ?? []),
   ]
@@ -263,7 +265,7 @@ export function AiManagerDashboard() {
             <PanelTitle icon={<AlertTriangle size={16} />}>Rủi Ro & Cảnh Báo</PanelTitle>
             {loading ? (
               <p className="text-sm text-slate-400">Đang tải…</p>
-            ) : !availability.intel ? (
+            ) : !availability.intel && riskSignals.length === 0 ? (
               <p className="text-sm text-slate-400">Không tải được tín hiệu vận hành (endpoint không khả dụng).</p>
             ) : riskSignals.length === 0 ? (
               <div className="flex items-center gap-2 text-sm text-emerald-600">
