@@ -687,7 +687,7 @@ export function Members() {
 
       {/* ── Mobile sticky quick action: Thêm thành viên ── */}
       {isMobile && (
-        <div className="pointer-events-none fixed bottom-20 right-4 z-30">
+        <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
           <ActionButton
             className="pointer-events-auto h-12 w-12 shadow-lg"
             iconOnly

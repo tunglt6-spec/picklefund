@@ -499,7 +499,7 @@ export function Reports() {
 
           {/* ── Mobile sticky quick action: Infographic ── */}
           {isMobile && (
-            <div className="pointer-events-none fixed bottom-20 right-4 z-30">
+            <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
               <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo Infographic" icon={<Sparkles size={20} />} onClick={openInfographic} disabled={!officialReady} title={officialReady ? 'Tạo Infographic' : EXPORT_HINT} />
             </div>
           )}
