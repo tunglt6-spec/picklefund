@@ -15,7 +15,10 @@ import {
   IsString,
   IsOptional,
   IsEnum,
+  IsEmail,
+  IsNotEmpty,
   MaxLength,
+  MinLength,
   Matches,
 } from 'class-validator';
 import { ClubsService } from './clubs.service';
@@ -42,6 +45,9 @@ export class BrandingDto {
   @IsOptional() @IsString() @MaxLength(500) faviconUrl?: string;
 }
 
+/** Email admin phải là email thật — chặn đuôi .local (placeholder) vì dùng để gửi thông báo. */
+const NOT_LOCAL_EMAIL = /^(?!.*\.local$).+$/i;
+
 class CreateClubDto {
   @IsString() @MaxLength(200) name!: string;
   @IsString() @MaxLength(20) code!: string;
@@ -49,6 +55,16 @@ class CreateClubDto {
   @IsOptional() @IsString() address?: string;
   @IsOptional() @IsString() @MaxLength(255) contactEmail?: string;
   @IsOptional() @IsString() @MaxLength(20) contactPhone?: string;
+
+  // Tài khoản admin ban đầu (bắt buộc) — người tạo CLB; email dùng để gửi thông báo về sau.
+  @IsString() @IsNotEmpty() @MaxLength(50) adminUsername!: string;
+  @IsEmail()
+  @MaxLength(255)
+  @Matches(NOT_LOCAL_EMAIL, {
+    message: 'Email admin phải là email thật (không dùng đuôi .local)',
+  })
+  adminEmail!: string;
+  @IsString() @MinLength(6) @MaxLength(100) adminPassword!: string;
 }
 
 class UpdateClubDto {

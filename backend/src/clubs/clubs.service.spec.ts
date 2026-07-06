@@ -13,6 +13,12 @@ const mockPrisma = {
     delete: jest.fn(),
     count: jest.fn(),
   },
+  user: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  },
+  $transaction: jest.fn(),
 };
 
 const baseClub = {
@@ -88,31 +94,88 @@ describe('ClubsService', () => {
 
     it('throws NotFoundException when club does not exist', async () => {
       mockPrisma.club.findUnique.mockResolvedValue(null);
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   /* ── create ── */
   describe('create', () => {
-    it('creates club with required fields', async () => {
+    const adminFields = {
+      adminUsername: 'admin_pball',
+      adminEmail: 'owner@pball.vn',
+      adminPassword: 'secret123',
+    };
+
+    it('creates club + CLUB_ADMIN account (mustChangePassword) trong transaction', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null); // email chưa dùng
+      mockPrisma.user.findFirst.mockResolvedValue(null); // username chưa dùng
+      mockPrisma.$transaction.mockImplementation(
+        (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+      );
       mockPrisma.club.create.mockResolvedValue(baseClub);
+      mockPrisma.user.create.mockResolvedValue({ id: 'u-admin' });
+
       const result = await service.create({
         name: 'CLB Pickleball Hà Nội',
         code: 'PBALL-HN',
+        ...adminFields,
       });
+
       expect(result.id).toBe('club-1');
       expect(mockPrisma.club.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ name: 'CLB Pickleball Hà Nội', code: 'PBALL-HN' }),
+          data: expect.objectContaining({
+            name: 'CLB Pickleball Hà Nội',
+            code: 'PBALL-HN',
+          }),
         }),
       );
+      // Admin tạo với role CLUB_ADMIN, gắn clubId, buộc đổi mật khẩu, KHÔNG lưu mật khẩu thô.
+      expect(mockPrisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            clubId: 'club-1',
+            username: 'admin_pball',
+            email: 'owner@pball.vn',
+            role: 'CLUB_ADMIN',
+            mustChangePassword: true,
+          }),
+        }),
+      );
+      const created = mockPrisma.user.create.mock.calls[0][0].data;
+      expect(created.passwordHash).toBeDefined();
+      expect(created.passwordHash).not.toBe('secret123'); // đã hash
+      expect(created.password).toBeUndefined();
+    });
+
+    it('email admin đã dùng → BadRequest, KHÔNG tạo club', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'existing' });
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create({ name: 'X', code: 'X1', ...adminFields }),
+      ).rejects.toThrow('Email admin đã được sử dụng');
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('username admin đã dùng → BadRequest, KHÔNG tạo club', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findFirst.mockResolvedValue({ id: 'existing' });
+      await expect(
+        service.create({ name: 'X', code: 'X1', ...adminFields }),
+      ).rejects.toThrow('Username admin đã tồn tại');
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
   });
 
   /* ── update ── */
   describe('update', () => {
     it('updates direct fields (name, address, etc.)', async () => {
-      mockPrisma.club.update.mockResolvedValue({ ...baseClub, name: 'CLB mới' });
+      mockPrisma.club.update.mockResolvedValue({
+        ...baseClub,
+        name: 'CLB mới',
+      });
       const result = await service.update('club-1', { name: 'CLB mới' });
       expect(result.name).toBe('CLB mới');
       expect(mockPrisma.club.update).toHaveBeenCalledWith(
@@ -124,13 +187,19 @@ describe('ClubsService', () => {
     });
 
     it('merges extra settings fields into JSON settings column', async () => {
-      mockPrisma.club.findUnique.mockResolvedValue({ ...baseClub, settings: { theme: 'dark' } });
+      mockPrisma.club.findUnique.mockResolvedValue({
+        ...baseClub,
+        settings: { theme: 'dark' },
+      });
       mockPrisma.club.update.mockResolvedValue(baseClub);
 
       await service.update('club-1', { defaultContribution: 500000 });
 
       const call = mockPrisma.club.update.mock.calls[0][0];
-      expect(call.data.settings).toMatchObject({ theme: 'dark', defaultContribution: 500000 });
+      expect(call.data.settings).toMatchObject({
+        theme: 'dark',
+        defaultContribution: 500000,
+      });
     });
 
     it('does not fetch settings when only direct fields are updated', async () => {
@@ -143,8 +212,11 @@ describe('ClubsService', () => {
   /* ── updateStatus ── */
   describe('updateStatus', () => {
     it('updates club status', async () => {
-      mockPrisma.club.update.mockResolvedValue({ ...baseClub, status: 'suspended' });
-      await service.updateStatus('club-1', 'suspended' as any, 'Vi phạm nội quy');
+      mockPrisma.club.update.mockResolvedValue({
+        ...baseClub,
+        status: 'suspended',
+      });
+      await service.updateStatus('club-1', 'suspended');
       expect(mockPrisma.club.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'club-1' } }),
       );

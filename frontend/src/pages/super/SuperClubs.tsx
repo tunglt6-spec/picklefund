@@ -32,7 +32,10 @@ export function SuperClubs() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })
+  const [form, setForm] = useState({
+    name: '', code: '', address: '', contactEmail: '', contactPhone: '',
+    adminUsername: '', adminEmail: '', adminPassword: '',
+  })
 
   // Edit modal
   const [editClub, setEditClub] = useState<Club | null>(null)
@@ -85,9 +88,16 @@ export function SuperClubs() {
       const d = res.data?.data
       setClubs(prev => [...prev, { ...d, logoUrl: undefined, settings: {}, _count: { members: 0, fundPeriods: 0 } }])
       setShowCreate(false)
-      setForm({ name: '', code: '', address: '', contactEmail: '', contactPhone: '' })
-      toast.success(`Tạo CLB ${form.name} thành công!`)
-    } catch { toast.error('Tạo CLB thất bại. Vui lòng thử lại.') }
+      setForm({
+        name: '', code: '', address: '', contactEmail: '', contactPhone: '',
+        adminUsername: '', adminEmail: '', adminPassword: '',
+      })
+      toast.success(`Tạo CLB ${form.name} thành công! Admin đăng nhập bằng ${form.adminUsername} và đổi mật khẩu lần đầu.`)
+    } catch (err) {
+      // Hiện thông báo cụ thể từ backend (email/username trùng, email .local, ...).
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(typeof msg === 'string' ? msg : 'Tạo CLB thất bại. Vui lòng thử lại.')
+    }
     finally { setIsSaving(false) }
   }
 
@@ -170,6 +180,33 @@ export function SuperClubs() {
             <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
           </div>
         </div>
+
+        {/* Tài khoản admin ban đầu — bắt buộc. Email admin dùng để gửi thông báo cho thành viên. */}
+        <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
+          <p className="text-sm font-semibold text-gray-800 mb-1">Tài khoản Admin CLB *</p>
+          <p className="text-xs text-gray-500 mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập admin *</label>
+              <input required value={form.adminUsername}
+                onChange={e => setForm({ ...form, adminUsername: e.target.value.trim() })}
+                placeholder="VD: admin_pbhn" className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu admin *</label>
+              <input required type="password" minLength={6} value={form.adminPassword}
+                onChange={e => setForm({ ...form, adminPassword: e.target.value })}
+                placeholder="Tối thiểu 6 ký tự" className={inputCls} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email cá nhân admin *</label>
+              <input required type="email" value={form.adminEmail}
+                onChange={e => setForm({ ...form, adminEmail: e.target.value.trim() })}
+                placeholder="email thật (không dùng đuôi .local)" className={inputCls} />
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
           <Button variant="secondary" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy</Button>
           <Button type="submit" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo CLB'}</Button>

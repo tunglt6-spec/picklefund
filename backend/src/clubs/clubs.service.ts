@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '@prisma/client';
 import type { ClubStatus, Prisma } from '@prisma/client';
 
 /** EPIC10A: branding trắng nhãn — mặc định fallback PickleFund. */
@@ -108,14 +114,54 @@ export class ClubsService {
     return club;
   }
 
+  /**
+   * Tạo CLB kèm tài khoản admin ban đầu (bắt buộc) trong 1 transaction.
+   * Admin = người tạo CLB, có email cá nhân thật → dùng làm email gửi thông báo về sau.
+   * Mật khẩu do SUPER_ADMIN đặt + buộc đổi lần đầu (mustChangePassword). Argon2 hash.
+   */
   async create(dto: {
     name: string;
     code: string;
     address?: string;
     contactEmail?: string;
     contactPhone?: string;
+    adminUsername: string;
+    adminEmail: string;
+    adminPassword: string;
   }) {
-    return this.prisma.club.create({ data: dto });
+    // Chặn trùng email/username trước khi tạo (thông báo rõ thay vì lỗi Prisma thô).
+    const [emailConflict, usernameConflict] = await Promise.all([
+      this.prisma.user.findUnique({ where: { email: dto.adminEmail } }),
+      this.prisma.user.findFirst({ where: { username: dto.adminUsername } }),
+    ]);
+    if (emailConflict)
+      throw new BadRequestException('Email admin đã được sử dụng');
+    if (usernameConflict)
+      throw new BadRequestException('Username admin đã tồn tại');
+
+    const passwordHash = await argon2.hash(dto.adminPassword);
+    return this.prisma.$transaction(async (tx) => {
+      const club = await tx.club.create({
+        data: {
+          name: dto.name,
+          code: dto.code,
+          address: dto.address,
+          contactEmail: dto.contactEmail,
+          contactPhone: dto.contactPhone,
+        },
+      });
+      await tx.user.create({
+        data: {
+          clubId: club.id,
+          username: dto.adminUsername,
+          email: dto.adminEmail,
+          passwordHash,
+          role: Role.CLUB_ADMIN,
+          mustChangePassword: true,
+        },
+      });
+      return club;
+    });
   }
 
   async update(id: string, dto: Record<string, unknown>) {
