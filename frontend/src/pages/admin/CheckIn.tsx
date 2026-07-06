@@ -146,7 +146,7 @@ export function CheckIn() {
               <button
                 key={s.id}
                 onClick={() => setSessionId(s.id)}
-                className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                className="min-h-11 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors"
                 style={
                   sessionId === s.id
                     ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
@@ -196,7 +196,7 @@ export function CheckIn() {
                         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
                         style={
                           on
-                            ? { background: 'var(--pf-primary)', color: '#fff', borderColor: 'var(--pf-primary)' }
+                            ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
                             : { borderColor: 'var(--pf-border)', color: 'transparent' }
                         }
                       >
