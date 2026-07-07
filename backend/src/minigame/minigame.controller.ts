@@ -214,4 +214,10 @@ export class MinigameController {
   async cancel(@Param('id') id: string, @CurrentUser() user: RequestUser) {
     return ok(await this.svc.cancel(id, user.clubId));
   }
+
+  @Delete(':id')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async remove(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return ok(await this.svc.remove(id, user.clubId), 'Đã xóa giải đấu');
+  }
 }

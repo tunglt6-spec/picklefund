@@ -368,4 +368,11 @@ export class MinigameService {
       data: { status: 'CANCELLED' },
     });
   }
+
+  /** Xóa hẳn giải đấu (hard delete) — participants/teams/matches cascade theo schema. */
+  async remove(id: string, clubId: string) {
+    await this.assertOwnership(id, clubId);
+    await this.prisma.minigame.delete({ where: { id } });
+    return { deleted: true };
+  }
 }

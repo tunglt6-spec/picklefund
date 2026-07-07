@@ -157,13 +157,14 @@ export function MinigameList() {
 
   /* ── Actions (GIỮ NGUYÊN logic/API) ── */
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Hủy giải đấu "${name}"?`)) return
+    if (!window.confirm(`Xóa hẳn giải đấu "${name}"? Hành động này không thể hoàn tác.`)) return
     try {
-      await api.post(`/minigames/${id}/cancel`)
+      // Hard delete backend (participants/teams/matches cascade) — trước đây chỉ cancel nên F5 giải hiện lại.
+      await api.delete(`/minigames/${id}`)
       deleteMinigame(id)
-      toast.success('Đã hủy giải đấu')
+      toast.success('Đã xóa giải đấu')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Hủy giải đấu thất bại')
+      toast.error(err?.response?.data?.message ?? 'Xóa giải đấu thất bại')
     }
   }
 
@@ -231,7 +232,7 @@ export function MinigameList() {
     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
       <IconBtn label="Xem chi tiết" onClick={() => navigate(`/minigames/${r.mg.id}`)}><Eye size={15} /></IconBtn>
       {canManage && <IconBtn label="Chỉnh sửa" onClick={() => navigate(`/minigames/${r.mg.id}/edit`)}><Edit2 size={15} /></IconBtn>}
-      {canManage && <IconBtn label="Hủy giải đấu" danger onClick={() => handleDelete(r.mg.id, r.mg.name)}><Trash2 size={15} /></IconBtn>}
+      {canManage && <IconBtn label="Xóa giải đấu" danger onClick={() => handleDelete(r.mg.id, r.mg.name)}><Trash2 size={15} /></IconBtn>}
     </div>
   )
 
