@@ -1,4 +1,4 @@
-import type { Club, Member, FundPeriod, AttendanceSession, FundContribution, LivingExpense, FundPeriodSummary, SuperAdminStats } from '../types'
+import type { Club, Member, FundPeriod, AttendanceSession, FundContribution, LivingExpense, SuperAdminStats } from '../types'
 
 export const mockClubs: Club[] = [
   { id: 'club-1', name: 'CLB Pickleball Hà Nội', code: 'PBHN', address: 'Sân Mỹ Đình, Hà Nội', contactEmail: 'pbhn@gmail.com', contactPhone: '0912345678', status: 'active', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-06-01T00:00:00Z', _count: { members: 18, fundPeriods: 2 } },
@@ -66,29 +66,6 @@ export const mockExpenses: LivingExpense[] = [
   { id: 'exp-3', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 100000, description: 'Phí duy trì nhóm Zalo', allocationRule: 'EQUAL', expenseDate: '2026-04-01', createdBy: 'user-1', createdAt: '2026-04-01T00:00:00Z' },
   { id: 'exp-4', clubId: 'club-1', fundSource: 'COMMON' as const, allocationEnabled: true, fundPeriodId: 'fp-2', amount: 500000, description: 'Mua vợt dùng chung', allocationRule: 'FUND_ONLY', expenseDate: '2026-04-10', createdBy: 'user-1', createdAt: '2026-04-10T00:00:00Z' },
 ]
-
-export const mockFundSummary: FundPeriodSummary = {
-  totalIncome: 8000000,
-  totalExpenses: 6455704,
-  courtExpenses: 5387500,
-  livingExpenses: 1068204,
-  balance: 1544296,
-  totalAttendance: 78,
-  costPerAttendance: 82765,
-  unpaidCount: 2,
-  negativeBalanceCount: 0,
-  lowAttendanceCount: 1,
-  members: [
-    { memberId: 'mem-1', memberName: 'Nguyễn Văn A', attendedSessions: 13, amountPaid: true, courtCost: 731250, livingCost: 178205, totalCost: 909455, balance: 90545, contributionPaid: true },
-    { memberId: 'mem-2', memberName: 'Trần Thị B', attendedSessions: 11, amountPaid: true, courtCost: 618750, livingCost: 150641, totalCost: 769391, balance: 230609, contributionPaid: true },
-    { memberId: 'mem-3', memberName: 'Lê Văn C', attendedSessions: 10, amountPaid: true, courtCost: 562500, livingCost: 136923, totalCost: 699423, balance: 300577, contributionPaid: true },
-    { memberId: 'mem-4', memberName: 'Phạm Thị D', attendedSessions: 9, amountPaid: false, courtCost: 506250, livingCost: 123205, totalCost: 629455, balance: 370545, contributionPaid: false },
-    { memberId: 'mem-5', memberName: 'Hoàng Văn E', attendedSessions: 13, amountPaid: true, courtCost: 731250, livingCost: 178205, totalCost: 909455, balance: 90545, contributionPaid: true },
-    { memberId: 'mem-6', memberName: 'Đặng Thị F', attendedSessions: 8, amountPaid: true, courtCost: 450000, livingCost: 109487, totalCost: 559487, balance: 440513, contributionPaid: true },
-    { memberId: 'mem-7', memberName: 'Bùi Văn G', attendedSessions: 7, amountPaid: true, courtCost: 393750, livingCost: 95769, totalCost: 489519, balance: 510481, contributionPaid: true },
-    { memberId: 'mem-8', memberName: 'Vũ Thị H', attendedSessions: 7, amountPaid: false, courtCost: 393750, livingCost: 95769, totalCost: 489519, balance: 510481, contributionPaid: false },
-  ],
-}
 
 export const mockSuperStats: SuperAdminStats = {
   totalClubs: 3,
