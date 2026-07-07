@@ -144,7 +144,7 @@ describe('HermesWorkflowService', () => {
       const run = await service.testTrigger('r1', 'club-1', ACTOR, {
         unpaidCount: 5,
       });
-      expect(run.status).toBe('CANCELLED');
+      expect(run).toMatchObject({ status: 'CANCELLED' });
       expect(aiActions.create).not.toHaveBeenCalled();
     });
 
@@ -153,7 +153,7 @@ describe('HermesWorkflowService', () => {
       const run = await service.testTrigger('r1', 'club-1', ACTOR, {
         unpaidCount: 0,
       });
-      expect(run.status).toBe('COMPLETED');
+      expect(run).toMatchObject({ status: 'COMPLETED' });
       expect(aiActions.create).not.toHaveBeenCalled();
     });
 
@@ -167,7 +167,7 @@ describe('HermesWorkflowService', () => {
         requestedByAi: 'HERMES',
       });
       expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', createArg);
-      expect(run.status).toBe('WAITING_APPROVAL');
+      expect(run).toMatchObject({ status: 'WAITING_APPROVAL' });
     });
 
     it('điều kiện lỗi (op không hỗ trợ) → FAILED an toàn, không ném ra ngoài', async () => {
@@ -176,7 +176,7 @@ describe('HermesWorkflowService', () => {
         conditionsJson: { field: 'x', op: 'BOGUS', value: 1 },
       });
       const run = await service.testTrigger('r1', 'club-1', ACTOR, { x: 1 });
-      expect(run.status).toBe('FAILED');
+      expect(run).toMatchObject({ status: 'FAILED' });
       expect(aiActions.create).not.toHaveBeenCalled();
     });
 
@@ -188,7 +188,7 @@ describe('HermesWorkflowService', () => {
       const run = await service.testTrigger('r1', 'club-1', ACTOR, {
         unpaidCount: 2,
       });
-      expect(run.status).toBe('COMPLETED');
+      expect(run).toMatchObject({ status: 'COMPLETED' });
       expect(aiActions.create).not.toHaveBeenCalled();
     });
   });
@@ -254,7 +254,7 @@ describe('HermesWorkflowService', () => {
       const run = (await service.testTrigger('r1', 'club-1', ACTOR, {
         x: 1,
       })) as Record<string, unknown>;
-      expect(run.status).toBe('FAILED');
+      expect(run).toMatchObject({ status: 'FAILED' });
       expect(run.errorMessage).toBe('Workflow thất bại. Xem log máy chủ.');
       expect(String(run.errorMessage)).not.toContain('BOGUS_SECRET_OP');
     });

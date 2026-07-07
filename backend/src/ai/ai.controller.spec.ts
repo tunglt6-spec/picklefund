@@ -21,7 +21,11 @@ describe('AiController — POST /ai/chat', () => {
       chat: jest.fn(),
       getHealthStatus: jest.fn(),
     };
-    controller = new AiController(service, gateway as any);
+    const tokenAccounting = {
+      getUsageSummary: jest.fn(),
+      recordUsage: jest.fn(),
+    } as any;
+    controller = new AiController(service, gateway as any, tokenAccounting);
   });
 
   it('routes a chat request through the gateway and wraps the response', async () => {
