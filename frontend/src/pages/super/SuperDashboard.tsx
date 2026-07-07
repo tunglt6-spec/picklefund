@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
 import { KpiCard } from '../../components/ui/KpiCard'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileWelcomeCard } from '../../components/mobile/MobileWelcomeCard'
@@ -114,10 +114,10 @@ export function SuperDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageShell maxWidth={1280}>
       <PageHeader title="Super Admin Dashboard" subtitle="Tổng quan toàn hệ thống PickleFund" />
 
-      <div className="p-6 space-y-6">
+      <div className="flex flex-col gap-6">
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <KpiCard title="Tổng CLB" value={stats.totalClubs} icon={<Building2 size={18} />} color="blue" />
           <KpiCard title="CLB Hoạt động" value={stats.activeClubs} icon={<Activity size={18} />} color="green" />
@@ -128,8 +128,8 @@ export function SuperDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-4">Tổng Quan Hệ Thống</h3>
+          <div className="rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+            <h3 className="font-semibold [color:var(--pf-text)] mb-4">Tổng Quan Hệ Thống</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={barChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -141,8 +141,8 @@ export function SuperDashboard() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-4">Danh Sách CLB</h3>
+          <div className="rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+            <h3 className="font-semibold [color:var(--pf-text)] mb-4">Danh Sách CLB</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -177,6 +177,6 @@ export function SuperDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }
