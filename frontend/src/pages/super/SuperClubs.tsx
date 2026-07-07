@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -424,7 +424,7 @@ export function SuperClubs() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageShell maxWidth={1280}>
       <PageHeader
         title="Quản lý CLB"
         subtitle={`${clubs.length} câu lạc bộ trong hệ thống`}
@@ -436,7 +436,7 @@ export function SuperClubs() {
         }
       />
 
-      <div className="p-6 space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
           <input
@@ -448,7 +448,7 @@ export function SuperClubs() {
           />
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="rounded-2xl border overflow-hidden [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -513,6 +513,6 @@ export function SuperClubs() {
       {editModal}
       {deleteModal}
       {rolesModal}
-    </div>
+    </PageShell>
   )
 }
