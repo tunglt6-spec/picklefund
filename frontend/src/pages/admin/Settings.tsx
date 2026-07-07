@@ -3,6 +3,7 @@ import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { cn } from '../../lib/utils'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
@@ -793,11 +794,15 @@ function PaymentTab() {
 }
 
 // ─── Tab: Billing (SUPER_ADMIN only) ─────────────────────────
-type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE'
+// Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, dùng chung với
+// SuperClubs.tsx/SuperClubDetail.tsx). Trước đây dùng PlanTier (FREE/STARTER/
+// PRO/ENTERPRISE) + POST /billing/upgrade — hệ SystemSetting song song không
+// liên quan Club.plan thật, đã gộp về đây.
+type ServicePlan = 'STARTER' | 'PRO' | 'CLUB_PLUS'
 interface SubscriptionStatus {
   clubId: string
-  tier: PlanTier
-  plan: { name: string; maxMembers: number; priceMonthly: number; aiFeatures: boolean; telegramBot: boolean }
+  tier: ServicePlan
+  plan: { name: string; maxMembers: number; priceMonthly: number | null; aiFeatures: boolean; telegramBot: boolean }
   expiresAt: string | null
   isActive: boolean
   daysRemaining: number | null
@@ -808,9 +813,10 @@ function BillingTab() {
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([])
   const [selected, setSelected] = useState<string>('')
   const [sub, setSub] = useState<SubscriptionStatus | null>(null)
-  const [upgradeForm, setUpgradeForm] = useState({ tier: 'STARTER' as PlanTier, months: 1 })
+  const [upgradeForm, setUpgradeForm] = useState({ tier: 'STARTER' as ServicePlan, months: 1 })
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [confirmUpgrade, setConfirmUpgrade] = useState(false)
 
   useEffect(() => {
     api.get('/clubs').then(r => {
@@ -833,14 +839,19 @@ function BillingTab() {
     if (!selected) return
     setSaving(true)
     try {
-      await api.post('/billing/upgrade', { clubId: selected, tier: upgradeForm.tier, months: upgradeForm.months })
-      toast.success('Nâng cấp thành công')
+      // Dùng chung PATCH /clubs/:id/plan (nguồn duy nhất Club.plan) thay vì
+      // POST /billing/upgrade (đã xóa — hệ SystemSetting song song cũ).
+      const expiry = new Date()
+      expiry.setMonth(expiry.getMonth() + upgradeForm.months)
+      await api.patch(`/clubs/${selected}/plan`, { plan: upgradeForm.tier, planExpiresAt: expiry.toISOString() })
+      toast.success('Đã đổi gói dịch vụ')
       const r = await api.get(`/billing/subscription?clubId=${selected}`)
       setSub(r.data?.data ?? null)
     } catch {
-      toast.error('Nâng cấp thất bại')
+      toast.error('Đổi gói thất bại')
     } finally {
       setSaving(false)
+      setConfirmUpgrade(false)
     }
   }
 
@@ -865,7 +876,7 @@ function BillingTab() {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-slate-500">Gói:</span> <span className="font-medium">{sub.plan.name}</span></div>
             <div><span className="text-slate-500">Trạng thái:</span> <span className={sub.isActive ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{sub.isActive ? 'Hoạt động' : 'Hết hạn'}</span></div>
-            <div><span className="text-slate-500">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers}</div>
+            <div><span className="text-slate-500">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</div>
             <div><span className="text-slate-500">Còn lại:</span> {sub.daysRemaining != null ? `${sub.daysRemaining} ngày` : 'Không giới hạn'}</div>
             <div><span className="text-slate-500">AI:</span> {sub.plan.aiFeatures ? '✓' : '✗'}</div>
             <div><span className="text-slate-500">Telegram:</span> {sub.plan.telegramBot ? '✓' : '✗'}</div>
@@ -882,9 +893,9 @@ function BillingTab() {
             <select
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
               value={upgradeForm.tier}
-              onChange={e => setUpgradeForm(p => ({ ...p, tier: e.target.value as PlanTier }))}
+              onChange={e => setUpgradeForm(p => ({ ...p, tier: e.target.value as ServicePlan }))}
             >
-              {(['FREE', 'STARTER', 'PRO', 'ENTERPRISE'] as PlanTier[]).map(t => (
+              {(['STARTER', 'PRO', 'CLUB_PLUS'] as ServicePlan[]).map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
@@ -901,10 +912,21 @@ function BillingTab() {
             />
           </div>
         </div>
-        <Button onClick={handleUpgrade} disabled={saving || !selected} className="w-full">
-          {saving ? 'Đang lưu...' : 'Xác nhận nâng cấp'}
+        <Button onClick={() => setConfirmUpgrade(true)} disabled={saving || !selected || upgradeForm.tier === sub?.tier} className="w-full">
+          {saving ? 'Đang lưu...' : 'Xác nhận đổi gói'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmUpgrade}
+        variant="warning"
+        title="Xác nhận đổi gói dịch vụ"
+        message={`Đổi gói CLB "${clubs.find(c => c.id === selected)?.name ?? ''}" sang ${upgradeForm.tier} trong ${upgradeForm.months} tháng? Thao tác này ảnh hưởng giới hạn thành viên và tính năng CLB có thể dùng.`}
+        confirmLabel="Xác nhận"
+        cancelLabel="Hủy bỏ"
+        onCancel={() => setConfirmUpgrade(false)}
+        onConfirm={handleUpgrade}
+      />
     </div>
   )
 }

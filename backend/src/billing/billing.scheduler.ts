@@ -42,29 +42,29 @@ export class BillingScheduler {
   private async checkClubSubscription(clubId: string, clubName: string) {
     const sub = await this.billing.getSubscription(clubId);
 
-    // FREE plan never expires
-    if (sub.tier === 'FREE' || !sub.expiresAt) return;
+    // Không đặt hạn (planExpiresAt = null) → không bao giờ hết hạn, kể cả PRO/CLUB_PLUS.
+    if (!sub.expiresAt) return;
 
     const daysLeft = sub.daysRemaining ?? 0;
 
     if (daysLeft <= 0) {
-      // Expired — downgrade to FREE and notify
+      // Hết hạn — hạ về STARTER (gói cơ bản/miễn phí) qua Club.plan thật, không
+      // còn ghi SystemSetting song song (nguồn duy nhất = Club.plan/planExpiresAt).
       await Promise.all([
-        this.prisma.systemSetting.upsert({
-          where: { key: `subscription_tier_${clubId}` },
-          create: { key: `subscription_tier_${clubId}`, value: 'FREE' },
-          update: { value: 'FREE' },
+        this.prisma.club.update({
+          where: { id: clubId },
+          data: { plan: 'STARTER', planExpiresAt: null },
         }),
         this.hermes.dispatch({
           eventType: 'subscription_expired',
           clubId,
           title: 'Gói dịch vụ đã hết hạn',
-          body: `CLB ${clubName} — gói ${sub.plan.name} đã hết hạn. Hệ thống đã chuyển về gói Miễn phí. Vui lòng gia hạn để tiếp tục sử dụng tính năng AI và Telegram Bot.`,
+          body: `CLB ${clubName} — gói ${sub.plan.name} đã hết hạn. Hệ thống đã chuyển về gói Starter. Vui lòng gia hạn để tiếp tục sử dụng tính năng AI và Telegram Bot.`,
           metadata: { tier: sub.tier, expiredAt: sub.expiresAt },
         }),
       ]);
       this.logger.warn(
-        `[Billing] Club ${clubId} subscription expired — downgraded to FREE`,
+        `[Billing] Club ${clubId} subscription expired — downgraded to STARTER`,
       );
       return;
     }

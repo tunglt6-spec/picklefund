@@ -1,16 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrisma = {
+  club: { findUnique: jest.fn() },
+  member: { count: jest.fn() },
   systemSetting: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
     upsert: jest.fn(),
   },
-  member: { count: jest.fn() },
 };
 
 describe('BillingService', () => {
@@ -27,30 +27,43 @@ describe('BillingService', () => {
     service = module.get<BillingService>(BillingService);
   });
 
-  /* ── getSubscription ── */
+  /* ── getSubscription — nguồn thật Club.plan/planExpiresAt ── */
   describe('getSubscription', () => {
-    it('returns FREE tier when no subscription setting exists', async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
-      mockPrisma.member.count.mockResolvedValue(5);
-      const result = await service.getSubscription('club-1');
-      expect(result.tier).toBe('FREE');
-      expect(result.isActive).toBe(true); // FREE is always active
+    it('throws NotFoundException when club does not exist', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue(null);
+      await expect(service.getSubscription('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
-    it('returns tier from system settings', async () => {
-      mockPrisma.systemSetting.findUnique
-        .mockResolvedValueOnce({ value: 'PRO' })   // tier setting
-        .mockResolvedValueOnce({ value: new Date(Date.now() + 86400000 * 30).toISOString() }); // expiry 30d
+    it('returns STARTER tier + isActive=true when club has no expiry', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({
+        plan: 'STARTER',
+        planExpiresAt: null,
+      });
+      mockPrisma.member.count.mockResolvedValue(5);
+      const result = await service.getSubscription('club-1');
+      expect(result.tier).toBe('STARTER');
+      expect(result.isActive).toBe(true);
+      expect(result.daysRemaining).toBeNull();
+    });
+
+    it('reads tier directly from Club.plan (PRO)', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({
+        plan: 'PRO',
+        planExpiresAt: new Date(Date.now() + 86400000 * 30),
+      });
       mockPrisma.member.count.mockResolvedValue(10);
       const result = await service.getSubscription('club-1');
       expect(result.tier).toBe('PRO');
       expect(result.isActive).toBe(true);
     });
 
-    it('sets isActive=false when subscription is expired', async () => {
-      mockPrisma.systemSetting.findUnique
-        .mockResolvedValueOnce({ value: 'STARTER' })
-        .mockResolvedValueOnce({ value: new Date('2020-01-01').toISOString() }); // past
+    it('sets isActive=false when planExpiresAt is in the past', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue({
+        plan: 'PRO',
+        planExpiresAt: new Date('2020-01-01'),
+      });
       mockPrisma.member.count.mockResolvedValue(5);
       const result = await service.getSubscription('club-1');
       expect(result.isActive).toBe(false);
@@ -58,71 +71,40 @@ describe('BillingService', () => {
     });
 
     it('includes member count in usage', async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+      mockPrisma.club.findUnique.mockResolvedValue({
+        plan: 'STARTER',
+        planExpiresAt: null,
+      });
       mockPrisma.member.count.mockResolvedValue(42);
       const result = await service.getSubscription('club-1');
       expect(result.usage.members).toBe(42);
     });
   });
 
-  /* ── assertFeature ── */
-  describe('assertFeature', () => {
-    it('throws ForbiddenException when AI features not included in plan', async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null); // FREE tier
-      mockPrisma.member.count.mockResolvedValue(0);
-      await expect(service.assertFeature('club-1', 'aiFeatures')).rejects.toBeInstanceOf(ForbiddenException);
-    });
-  });
-
-  /* ── assertMemberLimit ── */
-  describe('assertMemberLimit', () => {
-    it('throws ForbiddenException when member count at limit', async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null); // FREE: maxMembers = 20
-      mockPrisma.member.count.mockResolvedValue(20);
-      await expect(service.assertMemberLimit('club-1')).rejects.toBeInstanceOf(ForbiddenException);
-    });
-
-    it('does not throw when under member limit', async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null); // FREE: maxMembers = 20
-      mockPrisma.member.count.mockResolvedValue(19);
-      await expect(service.assertMemberLimit('club-1')).resolves.not.toThrow();
-    });
-  });
-
-  /* ── upgradePlan ── */
-  describe('upgradePlan', () => {
-    it('upserts tier and expiry settings', async () => {
-      mockPrisma.systemSetting.upsert.mockResolvedValue({});
-      const result = await service.upgradePlan('club-1', 'STARTER', 3);
-      expect(result.tier).toBe('STARTER');
-      expect(result.months).toBe(3);
-      expect(mockPrisma.systemSetting.upsert).toHaveBeenCalledTimes(2);
-    });
-
-    it('sets correct expiry date (+N months from now)', async () => {
-      mockPrisma.systemSetting.upsert.mockResolvedValue({});
-      const before = new Date();
-      const result = await service.upgradePlan('club-1', 'PRO', 6);
-      const expiry = new Date(result.expiresAt);
-      const sixMonthsLater = new Date(before);
-      sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
-      // Allow 5s clock drift
-      expect(Math.abs(expiry.getTime() - sixMonthsLater.getTime())).toBeLessThan(5000);
-    });
-  });
-
-  /* ── getPlans ── */
+  /* ── getPlans — khớp ServicePlan (STARTER/PRO/CLUB_PLUS), không còn FREE/ENTERPRISE ── */
   describe('getPlans', () => {
-    it('returns all plan configs', () => {
+    it('returns exactly the 3 ServicePlan tiers', () => {
       const plans = service.getPlans();
-      expect(plans.length).toBeGreaterThanOrEqual(4); // FREE, STARTER, PRO, ENTERPRISE
-      const tiers = plans.map(p => p.tier);
-      expect(tiers).toContain('FREE');
-      expect(tiers).toContain('PRO');
+      const tiers = plans.map((p) => p.tier).sort();
+      expect(tiers).toEqual(['CLUB_PLUS', 'PRO', 'STARTER']);
+    });
+
+    it('STARTER maxMembers matches PLAN_MEMBER_LIMIT (20)', () => {
+      const plans = service.getPlans();
+      const starter = plans.find((p) => p.tier === 'STARTER');
+      expect(starter?.maxMembers).toBe(20);
+    });
+
+    it('PRO/CLUB_PLUS are unlimited (sentinel 9999)', () => {
+      const plans = service.getPlans();
+      const pro = plans.find((p) => p.tier === 'PRO');
+      const clubPlus = plans.find((p) => p.tier === 'CLUB_PLUS');
+      expect(pro?.maxMembers).toBe(9999);
+      expect(clubPlus?.maxMembers).toBe(9999);
     });
   });
 
-  /* ── AI usage tracking ── */
+  /* ── AI usage tracking — độc lập với gói dịch vụ, giữ nguyên hành vi cũ ── */
   describe('trackAiCall / getAiUsage', () => {
     it('upserts monthly token counter', async () => {
       mockPrisma.systemSetting.findUnique.mockResolvedValue({ value: '1000' });

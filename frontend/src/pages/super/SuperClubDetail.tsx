@@ -8,6 +8,7 @@ import api from '../../lib/api'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 
@@ -21,15 +22,18 @@ interface ClubMember {
   id: string; username: string; email: string; role: string; isActive: boolean
 }
 
-type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE'
+// Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, dùng chung với
+// SuperClubs.tsx). Trước đây có PlanTier (FREE/STARTER/PRO/ENTERPRISE) là hệ
+// song song đọc SystemSetting riêng, không liên quan Club.plan thật.
+type ServicePlan = 'STARTER' | 'PRO' | 'CLUB_PLUS'
 
 interface Plan {
-  tier: PlanTier; name: string; priceMonthly: number
+  tier: ServicePlan; name: string; priceMonthly: number | null
   maxMembers: number; aiFeatures: boolean; telegramBot: boolean
 }
 
 interface Subscription {
-  tier: PlanTier; plan: Plan
+  tier: ServicePlan; plan: Plan
   expiresAt: string | null; isActive: boolean; daysRemaining: number | null
   usage: { members: number }
 }
@@ -40,18 +44,22 @@ const ROLE_LABEL: Record<string, string> = {
   CLUB_ADMIN: 'Admin CLB', CLUB_TREASURER: 'Thủ quỹ', MEMBER_VIEW: 'Thành viên', SUPER_ADMIN: 'Super Admin',
 }
 
-const TIER_BADGE: Record<PlanTier, string> = {
-  FREE: 'bg-slate-100 text-slate-600',
-  STARTER: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+const TIER_BADGE: Record<ServicePlan, string> = {
+  STARTER: 'bg-slate-100 text-slate-600',
   PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
-  ENTERPRISE: 'bg-amber-100 text-amber-700',
+  CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
 
-const TIER_BORDER: Record<PlanTier, string> = {
-  FREE: 'border-slate-200',
-  STARTER: '[border-color:var(--pf-primary-soft)]',
+const TIER_BORDER: Record<ServicePlan, string> = {
+  STARTER: 'border-slate-200',
   PRO: '[border-color:var(--pf-primary-soft)]',
-  ENTERPRISE: 'border-amber-200',
+  CLUB_PLUS: 'border-amber-200',
+}
+
+function fmtPlanPrice(price: number | null) {
+  if (price === null) return 'Liên hệ'
+  if (price === 0) return 'Miễn phí'
+  return `${price.toLocaleString('vi-VN')}đ/tháng`
 }
 
 function fmtMonth(m: string) {
@@ -76,9 +84,10 @@ export function SuperClubDetail() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [aiUsage, setAiUsage] = useState<AiUsage[]>([])
   const [billingLoading, setBillingLoading] = useState(false)
-  const [upgradeTier, setUpgradeTier] = useState<PlanTier>('STARTER')
+  const [upgradeTier, setUpgradeTier] = useState<ServicePlan>('STARTER')
   const [upgradeMonths, setUpgradeMonths] = useState(3)
   const [upgrading, setUpgrading] = useState(false)
+  const [confirmUpgrade, setConfirmUpgrade] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -109,7 +118,7 @@ export function SuperClubDetail() {
       if (planRes.status === 'fulfilled') {
         const p = planRes.value.data?.data ?? []
         setPlans(p)
-        if (p.length > 0) setUpgradeTier(p.find((x: Plan) => x.tier !== 'FREE')?.tier ?? 'STARTER')
+        if (p.length > 0) setUpgradeTier((subRes.status === 'fulfilled' ? subRes.value.data?.data?.tier : null) ?? 'STARTER')
       }
       if (usageRes.status === 'fulfilled') setAiUsage(usageRes.value.data?.data ?? [])
     }).finally(() => setBillingLoading(false))
@@ -119,15 +128,21 @@ export function SuperClubDetail() {
     if (!id) return
     setUpgrading(true)
     try {
-      await api.post('/billing/upgrade', { clubId: id, tier: upgradeTier, months: upgradeMonths })
-      toast.success(`Đã nâng cấp lên ${upgradeTier} ${upgradeMonths} tháng`)
+      // Dùng chung PATCH /clubs/:id/plan (nguồn duy nhất Club.plan — cùng endpoint
+      // SuperClubs.tsx đã dùng), thay vì POST /billing/upgrade (hệ SystemSetting
+      // song song cũ, không liên quan Club.plan thật).
+      const expiry = new Date()
+      expiry.setMonth(expiry.getMonth() + upgradeMonths)
+      await api.patch(`/clubs/${id}/plan`, { plan: upgradeTier, planExpiresAt: expiry.toISOString() })
+      toast.success(`Đã đổi gói CLB thành ${upgradeTier} (${upgradeMonths} tháng)`)
       // Refresh billing
       const res = await api.get(`/billing/subscription?clubId=${id}`)
       setSub(res.data?.data)
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Nâng cấp thất bại')
+      toast.error(err?.response?.data?.message ?? 'Đổi gói thất bại')
     } finally {
       setUpgrading(false)
+      setConfirmUpgrade(false)
     }
   }
 
@@ -222,7 +237,7 @@ export function SuperClubDetail() {
                   <div className="font-medium">
                     {sub.expiresAt
                       ? `${new Date(sub.expiresAt).toLocaleDateString('vi-VN')} (còn ${sub.daysRemaining} ngày)`
-                      : sub.tier === 'FREE' ? 'Không giới hạn' : 'Không có'}
+                      : sub.tier === 'STARTER' ? 'Không giới hạn' : 'Không có'}
                   </div>
                 </div>
                 <div>
@@ -258,12 +273,12 @@ export function SuperClubDetail() {
                 <label className="block text-xs text-slate-500 mb-1">Gói</label>
                 <select
                   value={upgradeTier}
-                  onChange={e => setUpgradeTier(e.target.value as PlanTier)}
+                  onChange={e => setUpgradeTier(e.target.value as ServicePlan)}
                   className="input-base text-sm"
                 >
-                  {plans.filter(p => p.tier !== 'FREE').map(p => (
+                  {plans.map(p => (
                     <option key={p.tier} value={p.tier}>
-                      {p.name} — {p.priceMonthly.toLocaleString('vi-VN')}đ/tháng
+                      {p.name} — {fmtPlanPrice(p.priceMonthly)}
                     </option>
                   ))}
                 </select>
@@ -283,13 +298,16 @@ export function SuperClubDetail() {
             </div>
             {plans.find(p => p.tier === upgradeTier) && (
               <div className="rounded-lg [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
-                Tổng: <strong>
-                  {((plans.find(p => p.tier === upgradeTier)?.priceMonthly ?? 0) * upgradeMonths).toLocaleString('vi-VN')}đ
-                </strong> · Hết hạn sau {upgradeMonths} tháng
+                {(() => {
+                  const price = plans.find(p => p.tier === upgradeTier)?.priceMonthly ?? null
+                  return price === null
+                    ? <>Gói <strong>{upgradeTier}</strong> — liên hệ để báo giá</>
+                    : <>Tổng: <strong>{(price * upgradeMonths).toLocaleString('vi-VN')}đ</strong> · Hết hạn sau {upgradeMonths} tháng</>
+                })()}
               </div>
             )}
-            <Button onClick={handleUpgrade} disabled={upgrading} className="w-full">
-              <Zap size={14} />{upgrading ? 'Đang xử lý...' : 'Xác nhận nâng cấp'}
+            <Button onClick={() => setConfirmUpgrade(true)} disabled={upgrading || upgradeTier === sub?.tier} className="w-full">
+              <Zap size={14} />{upgrading ? 'Đang xử lý...' : 'Xác nhận đổi gói'}
             </Button>
           </div>
 
@@ -325,6 +343,19 @@ export function SuperClubDetail() {
         </>
       )}
     </div>
+  )
+
+  const upgradeConfirmDialog = (
+    <ConfirmDialog
+      open={confirmUpgrade}
+      variant="warning"
+      title="Xác nhận đổi gói dịch vụ"
+      message={`Đổi gói CLB "${club?.name}" sang ${upgradeTier} trong ${upgradeMonths} tháng? Thao tác này ảnh hưởng giới hạn thành viên và tính năng CLB có thể dùng.`}
+      confirmLabel="Xác nhận"
+      cancelLabel="Hủy bỏ"
+      onCancel={() => setConfirmUpgrade(false)}
+      onConfirm={handleUpgrade}
+    />
   )
 
   if (isMobile) {
@@ -372,6 +403,7 @@ export function SuperClubDetail() {
             {tab === 'members' ? membersList : billingPanel}
           </div>
         </div>
+        {upgradeConfirmDialog}
       </div>
     )
   }
@@ -467,6 +499,7 @@ export function SuperClubDetail() {
           )}
         </div>
       </div>
+      {upgradeConfirmDialog}
     </PageShell>
   )
 }

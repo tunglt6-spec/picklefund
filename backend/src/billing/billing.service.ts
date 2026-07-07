@@ -1,6 +1,6 @@
-import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PLAN_CONFIGS, PlanTier, SubscriptionStatus } from './billing.types';
+import { PLAN_CONFIGS, SubscriptionStatus } from './billing.types';
 
 @Injectable()
 export class BillingService {
@@ -8,24 +8,25 @@ export class BillingService {
 
   constructor(private prisma: PrismaService) {}
 
-  // ─── Get current subscription ─────────────────────────────────────────────
+  // ─── Get current subscription — nguồn thật `Club.plan`/`Club.planExpiresAt` ──
+  // (trước đây đọc SystemSetting `subscription_tier_*` — hệ song song không liên
+  // quan tới `Club.plan` thật mà PATCH /clubs/:id/plan + giới hạn thành viên dùng).
 
   async getSubscription(clubId: string): Promise<SubscriptionStatus> {
-    const [tierSetting, expirySetting, memberCount] = await Promise.all([
-      this.prisma.systemSetting.findUnique({
-        where: { key: `subscription_tier_${clubId}` },
-      }),
-      this.prisma.systemSetting.findUnique({
-        where: { key: `subscription_expiry_${clubId}` },
+    const [club, memberCount] = await Promise.all([
+      this.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { plan: true, planExpiresAt: true },
       }),
       this.prisma.member.count({ where: { clubId, isDeleted: false } }),
     ]);
+    if (!club) throw new NotFoundException('CLB không tồn tại');
 
-    const tier = (tierSetting?.value as PlanTier) ?? 'FREE';
-    const plan = PLAN_CONFIGS[tier] ?? PLAN_CONFIGS.FREE;
-    const expiresAt = expirySetting?.value ?? null;
+    const tier = club.plan;
+    const plan = PLAN_CONFIGS[tier];
+    const expiresAt = club.planExpiresAt?.toISOString() ?? null;
 
-    let isActive = tier === 'FREE';
+    let isActive = true;
     let daysRemaining: number | null = null;
 
     if (expiresAt) {
@@ -44,53 +45,6 @@ export class BillingService {
       daysRemaining,
       usage: { members: memberCount, clubs: 1 },
     };
-  }
-
-  // ─── Feature gate check ───────────────────────────────────────────────────
-
-  async assertFeature(clubId: string, feature: 'aiFeatures' | 'telegramBot') {
-    const sub = await this.getSubscription(clubId);
-    if (!sub.isActive || !sub.plan[feature]) {
-      throw new ForbiddenException(
-        `Tính năng này yêu cầu gói ${feature === 'aiFeatures' ? 'Starter' : 'Pro'} trở lên.`,
-      );
-    }
-  }
-
-  async assertMemberLimit(clubId: string) {
-    const sub = await this.getSubscription(clubId);
-    if (sub.usage.members >= sub.plan.maxMembers) {
-      throw new ForbiddenException(
-        `Đã đạt giới hạn ${sub.plan.maxMembers} thành viên của gói ${sub.plan.name}.`,
-      );
-    }
-  }
-
-  // ─── Admin: upgrade subscription ─────────────────────────────────────────
-
-  async upgradePlan(clubId: string, tier: PlanTier, months: number) {
-    const plan = PLAN_CONFIGS[tier];
-    const expiry = new Date();
-    expiry.setMonth(expiry.getMonth() + months);
-    const expiryStr = expiry.toISOString();
-
-    await Promise.all([
-      this.prisma.systemSetting.upsert({
-        where: { key: `subscription_tier_${clubId}` },
-        create: { key: `subscription_tier_${clubId}`, value: tier },
-        update: { value: tier },
-      }),
-      this.prisma.systemSetting.upsert({
-        where: { key: `subscription_expiry_${clubId}` },
-        create: { key: `subscription_expiry_${clubId}`, value: expiryStr },
-        update: { value: expiryStr },
-      }),
-    ]);
-
-    this.logger.log(
-      `[Billing] Club ${clubId} upgraded to ${tier} until ${expiryStr}`,
-    );
-    return { clubId, tier, plan, expiresAt: expiryStr, months };
   }
 
   // ─── List all plans ───────────────────────────────────────────────────────

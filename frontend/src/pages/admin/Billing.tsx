@@ -5,12 +5,15 @@ import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 
-type PlanTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE'
+// Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, PATCH /clubs/:id/plan
+// dùng chung). Trước đây có PlanTier (FREE/STARTER/PRO/ENTERPRISE) là hệ song song
+// đọc SystemSetting riêng, không liên quan Club.plan thật — đã gộp về ServicePlan.
+type ServicePlan = 'STARTER' | 'PRO' | 'CLUB_PLUS'
 
 type Plan = {
-  tier: PlanTier
+  tier: ServicePlan
   name: string
-  priceMonthly: number
+  priceMonthly: number | null
   maxMembers: number
   maxClubs: number
   aiFeatures: boolean
@@ -18,7 +21,7 @@ type Plan = {
 }
 
 type Subscription = {
-  tier: PlanTier
+  tier: ServicePlan
   plan: Plan
   expiresAt: string | null
   isActive: boolean
@@ -28,21 +31,20 @@ type Subscription = {
 
 type AiUsage = { month: string; tokens: number; estimatedCostVnd: number }
 
-const PLAN_COLORS: Record<PlanTier, string> = {
-  FREE: 'bg-slate-50 border-slate-200',
-  STARTER: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
+const PLAN_COLORS: Record<ServicePlan, string> = {
+  STARTER: 'bg-slate-50 border-slate-200',
   PRO: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
-  ENTERPRISE: 'bg-amber-50 border-amber-200',
+  CLUB_PLUS: 'bg-amber-50 border-amber-200',
 }
 
-const PLAN_BADGE: Record<PlanTier, string> = {
-  FREE: 'bg-slate-100 text-slate-600',
-  STARTER: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+const PLAN_BADGE: Record<ServicePlan, string> = {
+  STARTER: 'bg-slate-100 text-slate-600',
   PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
-  ENTERPRISE: 'bg-amber-100 text-amber-700',
+  CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
 
-function fmtPrice(price: number) {
+function fmtPrice(price: number | null) {
+  if (price === null) return 'Liên hệ'
   if (price === 0) return 'Miễn phí'
   return `${price.toLocaleString('vi-VN')}đ/tháng`
 }
@@ -77,7 +79,7 @@ export function Billing() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  const currentTier = sub?.tier ?? 'FREE'
+  const currentTier = sub?.tier ?? 'STARTER'
 
   const content = (
     <div className="space-y-6 max-w-[860px]">
@@ -93,7 +95,7 @@ export function Billing() {
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_BADGE[currentTier]}`}>
                     {sub.plan.name ?? currentTier}
                   </span>
-                  {sub.isActive && currentTier !== 'FREE' && (
+                  {sub.isActive && currentTier !== 'STARTER' && (
                     <span className="text-xs text-emerald-600 font-medium">● Đang hoạt động</span>
                   )}
                 </div>
@@ -106,17 +108,17 @@ export function Billing() {
                   </p>
                 )}
               </div>
-              <Star size={28} className={currentTier === 'FREE' ? 'text-slate-300' : 'text-amber-400'} />
+              <Star size={28} className={currentTier === 'STARTER' ? 'text-slate-300' : 'text-amber-400'} />
             </div>
 
             {/* Usage */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="bg-white/70 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Thành viên</p>
-                <p className="text-lg font-bold text-slate-900">{sub.usage.members} <span className="text-sm font-normal text-slate-500">/ {sub.plan.maxMembers}</span></p>
+                <p className="text-lg font-bold text-slate-900">{sub.usage.members} <span className="text-sm font-normal text-slate-500">/ {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</span></p>
                 <div className="mt-1.5 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full [background:var(--pf-primary)] rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
+                    style={{ width: sub.plan.maxMembers >= 9999 ? '4px' : `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
                 </div>
               </div>
               <div className="bg-white/70 rounded-lg p-3">
@@ -201,14 +203,14 @@ export function Billing() {
           )}
 
           {/* Contact to upgrade */}
-          {currentTier === 'FREE' && (
+          {currentTier === 'STARTER' && (
             <div className="bg-gradient-to-r from-[var(--pf-primary)] to-[var(--pf-primary-hover)] rounded-xl p-5 md:p-6 text-white">
               <div className="flex items-center gap-2 mb-2">
                 <Zap size={18} className="text-yellow-300" />
                 <h3 className="font-semibold">Nâng cấp để dùng AI đầy đủ</h3>
               </div>
               <p className="text-sm text-white/80 mb-4">
-                Gói Starter (99.000đ/tháng) mở khoá Maika AI, Lisa AI, báo cáo tự động và phát hiện bất thường.
+                Gói Pro (199.000đ/tháng) mở khoá không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
               </p>
               <button
                 onClick={() => window.open('mailto:admin@picklefund.app?subject=Nâng cấp gói PickleFund', '_blank')}

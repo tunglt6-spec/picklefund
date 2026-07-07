@@ -1,10 +1,9 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { BillingService } from './billing.service';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
-import { UpgradePlanDto } from './billing.dto';
 
 @SkipThrottle()
 @ApiTags('Billing')
@@ -38,9 +37,7 @@ export class BillingController {
     return ok(await this.svc.getAiUsage(clubId));
   }
 
-  @Roles('SUPER_ADMIN')
-  @Post('upgrade')
-  async upgrade(@Body() body: UpgradePlanDto) {
-    return ok(await this.svc.upgradePlan(body.clubId, body.tier, body.months));
-  }
+  // Đổi gói dịch vụ: dùng chung PATCH /clubs/:id/plan (ClubsController) — đã có
+  // confirm dialog + audit log ở SuperClubs.tsx. Endpoint POST /billing/upgrade
+  // (ghi SystemSetting song song, không đụng Club.plan thật) đã bị xóa.
 }
