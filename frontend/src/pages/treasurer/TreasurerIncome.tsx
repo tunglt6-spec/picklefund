@@ -251,6 +251,12 @@ export function TreasurerIncome() {
                 <CheckCircle size={11} />{isBulkConfirming ? '…' : `XN tất cả (${unconfirmedIds.length})`}
               </button>
             )}
+            {contributions.length > 0 && (
+              <button onClick={exportExcel} aria-label="Xuất Excel"
+                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                <Download size={14} />
+              </button>
+            )}
             <button onClick={openCreate}
               className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white active:opacity-80">
               <Plus size={13} />Ghi nhận

@@ -599,8 +599,10 @@ export function FundPeriods() {
                         <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                           onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                       )}
+                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
                       <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                        onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
+                        onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -643,8 +645,10 @@ export function FundPeriods() {
                         <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                           onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                       )}
+                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
                       <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                        onClick={() => handleDelete(p)}><Trash2 size={13} /></button>
+                        onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}

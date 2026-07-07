@@ -85,6 +85,9 @@ export function StandingsPage() {
             <button onClick={doExportPng} aria-label="Tải ảnh" className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
               <ImageIcon size={16} />
             </button>
+            <button onClick={doExportPdf} aria-label="Xuất PDF" className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+              <FileText size={16} />
+            </button>
             {canShare() && (
               <button onClick={doShare} aria-label="Chia sẻ" className="flex h-9 w-9 items-center justify-center rounded-xl text-white [background:var(--pf-primary)] active:opacity-70">
                 <Share2 size={16} />

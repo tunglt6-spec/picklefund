@@ -243,13 +243,22 @@ export function Contributions() {
           </div>
           <div className="flex items-center gap-2">
             {contributions.length > 0 && (
-              <button
-                onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
-                aria-label="Xuất Excel"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
-              >
-                <FileSpreadsheet size={16} />
-              </button>
+              <>
+                <button
+                  onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
+                  aria-label="Xuất Excel"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+                >
+                  <FileSpreadsheet size={16} />
+                </button>
+                <button
+                  onClick={() => exportContribPDF(activePeriod?.name ?? 'Thu Quỹ', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)}
+                  aria-label="Xuất PDF"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+                >
+                  <FileText size={16} />
+                </button>
+              </>
             )}
             <button
               onClick={openCreate}
