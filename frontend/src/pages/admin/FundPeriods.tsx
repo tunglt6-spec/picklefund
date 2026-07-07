@@ -763,6 +763,9 @@ export function FundPeriods() {
           onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null) })}
           editing={!!editingChung}
           isSaving={isSaving}
+          showCopyMembers
+          prevPeriodInfo={prevChungPeriod}
+          prevPeriodError={prevChungPeriodError}
         />
         <FundModal
           open={showCreateGame}
