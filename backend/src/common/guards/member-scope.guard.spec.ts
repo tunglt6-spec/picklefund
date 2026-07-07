@@ -2,10 +2,14 @@ import { ForbiddenException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import { MemberScopeGuard } from './member-scope.guard';
 
-function ctxFor(user: unknown, path: string): ExecutionContext {
+function ctxFor(
+  user: unknown,
+  path: string,
+  method = 'GET',
+): ExecutionContext {
   return {
     switchToHttp: () => ({
-      getRequest: () => ({ user, path }),
+      getRequest: () => ({ user, path, method }),
     }),
   } as unknown as ExecutionContext;
 }
@@ -46,19 +50,56 @@ describe('MemberScopeGuard', () => {
     });
   });
 
+  describe('MEMBER_VIEW — portal read-only (GET) toàn CLB', () => {
+    const member = { role: 'MEMBER_VIEW' };
+    it.each([
+      '/api/attendance',
+      '/api/attendance/sessions',
+      '/api/fund-periods',
+      '/api/fund-periods/x/summary',
+      '/api/contributions',
+      '/api/expenses',
+      '/api/members',
+      '/api/clubs/me',
+      '/api/clubs/me/minigame-delegates',
+    ])('cho phép GET %s', (path) => {
+      expect(guard.canActivate(ctxFor(member, path, 'GET'))).toBe(true);
+    });
+
+    it('chặn mutation trên route GET-only (POST /attendance → 403)', () => {
+      expect(() =>
+        guard.canActivate(ctxFor(member, '/api/attendance', 'POST')),
+      ).toThrow(ForbiddenException);
+    });
+
+    it.each(['/api/members', '/api/fund-periods', '/api/expenses'])(
+      'chặn POST %s',
+      (path) => {
+        expect(() =>
+          guard.canActivate(ctxFor(member, path, 'POST')),
+        ).toThrow(ForbiddenException);
+      },
+    );
+  });
+
+  describe('MEMBER_VIEW — minigame mọi method (siết ở MinigameDelegateGuard)', () => {
+    const member = { role: 'MEMBER_VIEW' };
+    it.each([
+      ['GET', '/api/minigames'],
+      ['POST', '/api/minigames'],
+      ['POST', '/api/minigames/mg-1/start'],
+    ])('cho phép %s %s', (method, path) => {
+      expect(guard.canActivate(ctxFor(member, path, method))).toBe(true);
+    });
+  });
+
   describe('MEMBER_VIEW — chặn route quản trị (403)', () => {
     const member = { role: 'MEMBER_VIEW' };
     it.each([
-      '/api/members',
-      '/api/members/mem-B',
-      '/api/fund-periods',
-      '/api/attendance',
-      '/api/contributions',
-      '/api/expenses',
-      '/api/minigames',
       '/api/reports/summary',
       '/api/users',
       '/api/clubs',
+      '/api/clubs/abc-123',
       '/api/personal-receipts', // danh sách toàn CLB — không phải /mine
     ])('chặn %s', (path) => {
       expect(() => guard.canActivate(ctxFor(member, path))).toThrow(
@@ -69,6 +110,12 @@ describe('MemberScopeGuard', () => {
     it('không lách được bằng path traversal tiền tố (/member-accounts)', () => {
       expect(() =>
         guard.canActivate(ctxFor(member, '/api/member-accounts')),
+      ).toThrow(ForbiddenException);
+    });
+
+    it('không lách được tiền tố GET-only (/members-export)', () => {
+      expect(() =>
+        guard.canActivate(ctxFor(member, '/api/members-export')),
       ).toThrow(ForbiddenException);
     });
   });

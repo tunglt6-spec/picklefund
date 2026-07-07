@@ -6,7 +6,15 @@ import { FinancialCalculatorService } from '../financial/financial-calculator.se
 
 const prisma = {
   member: { findFirst: jest.fn() },
-  attendanceSession: { findMany: jest.fn().mockResolvedValue([]) },
+  attendanceSession: {
+    findMany: jest.fn().mockResolvedValue([]),
+    findFirst: jest.fn(),
+  },
+  sessionRegistration: {
+    upsert: jest.fn().mockResolvedValue({}),
+    deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+  },
+  attendanceRecord: { upsert: jest.fn().mockResolvedValue({}) },
   fundPeriod: { findFirst: jest.fn().mockResolvedValue(null) },
   fundContribution: {
     findFirst: jest.fn().mockResolvedValue(null),
@@ -31,6 +39,7 @@ describe('MemberPortalService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     prisma.attendanceSession.findMany.mockResolvedValue([]);
+    prisma.attendanceSession.findFirst.mockResolvedValue(null);
     prisma.fundPeriod.findFirst.mockResolvedValue(null);
     prisma.fundContribution.findFirst.mockResolvedValue(null);
     prisma.fundContribution.findMany.mockResolvedValue([]);
@@ -229,6 +238,90 @@ describe('MemberPortalService', () => {
           where: { userId: 'user-A', clubId: 'club-1' },
         }),
       );
+    });
+  });
+
+  describe('selfRegister', () => {
+    const SESSION = { id: 's1', clubId: 'club-1' };
+
+    it('memberId null → Forbidden', async () => {
+      await expect(
+        service.selfRegister(null, 'club-1', 's1', true),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('session không thuộc club → NotFound (scope clubId)', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue(null);
+      await expect(
+        service.selfRegister('mem-A', 'club-1', 's-other', true),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.attendanceSession.findFirst).toHaveBeenCalledWith({
+        where: { id: 's-other', clubId: 'club-1' },
+      });
+    });
+
+    it('register=true → upsert theo unique attendanceSessionId_memberId (idempotent)', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue(SESSION);
+      const r = await service.selfRegister('mem-A', 'club-1', 's1', true);
+      expect(prisma.sessionRegistration.upsert).toHaveBeenCalledWith({
+        where: {
+          attendanceSessionId_memberId: {
+            attendanceSessionId: 's1',
+            memberId: 'mem-A',
+          },
+        },
+        create: { clubId: 'club-1', attendanceSessionId: 's1', memberId: 'mem-A' },
+        update: {},
+      });
+      expect(r).toEqual({ sessionId: 's1', registered: true });
+    });
+
+    it('register=false → deleteMany scope club+session+member', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue(SESSION);
+      const r = await service.selfRegister('mem-A', 'club-1', 's1', false);
+      expect(prisma.sessionRegistration.deleteMany).toHaveBeenCalledWith({
+        where: { clubId: 'club-1', attendanceSessionId: 's1', memberId: 'mem-A' },
+      });
+      expect(r).toEqual({ sessionId: 's1', registered: false });
+    });
+  });
+
+  describe('selfCheckin', () => {
+    it('memberId null → Forbidden', async () => {
+      await expect(service.selfCheckin(null, 'club-1', 's1')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('session không tồn tại trong club → NotFound', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue(null);
+      await expect(
+        service.selfCheckin('mem-A', 'club-1', 's1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('upsert PRESENT idempotent theo unique attendanceSessionId_memberId', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue({
+        id: 's1',
+        clubId: 'club-1',
+      });
+      const r = await service.selfCheckin('mem-A', 'club-1', 's1');
+      expect(prisma.attendanceRecord.upsert).toHaveBeenCalledWith({
+        where: {
+          attendanceSessionId_memberId: {
+            attendanceSessionId: 's1',
+            memberId: 'mem-A',
+          },
+        },
+        create: {
+          attendanceSessionId: 's1',
+          memberId: 'mem-A',
+          clubId: 'club-1',
+          status: 'PRESENT',
+        },
+        update: { status: 'PRESENT' },
+      });
+      expect(r).toEqual({ sessionId: 's1', checkedIn: true });
     });
   });
 });

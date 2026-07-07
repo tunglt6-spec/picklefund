@@ -17,6 +17,8 @@ import {
   IsEnum,
   IsEmail,
   IsNotEmpty,
+  IsArray,
+  ArrayMaxSize,
   MaxLength,
   MinLength,
   Matches,
@@ -85,6 +87,11 @@ class SetPlanDto {
   @IsEnum(['STARTER', 'PRO', 'CLUB_PLUS']) plan!: ServicePlan;
   @IsOptional() @IsString() planExpiresAt?: string;
 }
+
+/** Danh sách memberId được ủy quyền quản lý minigame (lưu Club.settings). */
+class SetMinigameDelegatesDto {
+  @IsArray() @ArrayMaxSize(100) @IsString({ each: true }) memberIds!: string[];
+}
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok, paginated } from '../common/response';
@@ -144,6 +151,29 @@ export class ClubsController {
       detail: 'Cập nhật thương hiệu CLB',
     });
     return ok(branding, 'Đã cập nhật thương hiệu');
+  }
+
+  // ── Ủy quyền minigame (clubId LẤY TỪ JWT — tenant-scoped) ──
+  /** Mọi role đã đăng nhập trong CLB đọc được (member cần biết mình có quyền). */
+  @Get('me/minigame-delegates')
+  async getMinigameDelegates(@CurrentUser() user: JwtUser) {
+    if (!user.clubId)
+      throw new ForbiddenException('Tài khoản chưa gắn với CLB nào.');
+    return ok(await this.clubs.getMinigameDelegates(user.clubId));
+  }
+
+  @Patch('me/minigame-delegates')
+  @Roles('CLUB_ADMIN')
+  async setMinigameDelegates(
+    @CurrentUser() user: JwtUser,
+    @Body() body: SetMinigameDelegatesDto,
+  ) {
+    if (!user.clubId)
+      throw new ForbiddenException('Tài khoản chưa gắn với CLB nào.');
+    return ok(
+      await this.clubs.setMinigameDelegates(user.clubId, body.memberIds),
+      'Đã cập nhật ủy quyền minigame',
+    );
   }
 
   @Get(':id')

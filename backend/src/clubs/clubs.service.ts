@@ -224,6 +224,49 @@ export class ClubsService {
     });
   }
 
+  /** Danh sách memberId được ủy quyền quản lý minigame (lưu trong Club.settings JSON — additive, không migration). */
+  async getMinigameDelegates(clubId: string): Promise<string[]> {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    if (!club) throw new NotFoundException('CLB không tồn tại');
+    const settings = club.settings as Record<string, unknown> | null;
+    return (settings?.minigameDelegateMemberIds as string[]) ?? [];
+  }
+
+  /** CLUB_ADMIN cập nhật danh sách ủy quyền minigame (validate member thuộc CLB). */
+  async setMinigameDelegates(
+    clubId: string,
+    memberIds: string[],
+  ): Promise<string[]> {
+    const unique = [...new Set(memberIds)];
+    if (unique.length > 0) {
+      const found = await this.prisma.member.findMany({
+        where: { id: { in: unique }, clubId, isDeleted: false },
+        select: { id: true },
+      });
+      if (found.length !== unique.length)
+        throw new BadRequestException('Một số thành viên không thuộc CLB này');
+    }
+    const current = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    if (!current) throw new NotFoundException('CLB không tồn tại');
+    const existing = (current.settings as Record<string, unknown> | null) ?? {};
+    await this.prisma.club.update({
+      where: { id: clubId },
+      data: {
+        settings: {
+          ...existing,
+          minigameDelegateMemberIds: unique,
+        } as Prisma.InputJsonValue,
+      },
+    });
+    return unique;
+  }
+
   async stats() {
     const [total, active, suspended, totalMembers, totalPeriods] =
       await Promise.all([

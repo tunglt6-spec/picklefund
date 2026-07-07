@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { IsBoolean } from 'class-validator';
 import { MemberPortalService } from './member-portal.service';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
@@ -10,6 +11,11 @@ interface RequestUser {
   clubId: string;
   memberId: string | null;
   role: string;
+}
+
+/** Body đăng ký / hủy đăng ký buổi chơi (self-scope). */
+class SelfRegistrationDto {
+  @IsBoolean() register!: boolean;
 }
 
 /**
@@ -56,6 +62,36 @@ export class MemberPortalController {
   @Get('me/bank-info')
   async bankInfo(@CurrentUser() user: RequestUser) {
     return ok(await this.svc.getBankInfo(user.memberId, user.clubId));
+  }
+
+  /** Member tự đăng ký / hủy đăng ký 1 buổi chơi (idempotent). */
+  @Put('me/sessions/:sessionId/registration')
+  async selfRegister(
+    @Param('sessionId') sessionId: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: SelfRegistrationDto,
+  ) {
+    return ok(
+      await this.svc.selfRegister(
+        user.memberId,
+        user.clubId,
+        sessionId,
+        body.register,
+      ),
+      body.register ? 'Đã đăng ký buổi chơi' : 'Đã hủy đăng ký',
+    );
+  }
+
+  /** Member tự check-in PRESENT vào buổi chơi (idempotent). */
+  @Put('me/sessions/:sessionId/checkin')
+  async selfCheckin(
+    @Param('sessionId') sessionId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.selfCheckin(user.memberId, user.clubId, sessionId),
+      'Đã check-in',
+    );
   }
 
   @Get('me/notifications')

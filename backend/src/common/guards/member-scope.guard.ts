@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 
 /**
- * MemberScopeGuard (AUTH-IMPL-01) — enforce read-only self-scope cho MEMBER_VIEW ở tầng backend.
+ * MemberScopeGuard (AUTH-IMPL-01, mở rộng portal member) — giới hạn phạm vi cho MEMBER_VIEW.
  *
- * MEMBER_VIEW chỉ được truy cập nhóm route "của chính mình" (member portal, auth self-service,
- * phiếu thu cá nhân, thông báo cá nhân, trợ lý Lisa). MỌI route quản trị (members, fund-periods,
- * attendance, contributions, expenses, minigames, reports, users, clubs, ...) bị chặn 403 —
- * kể cả khi handler không khai báo @Roles. Guard này KHÔNG ảnh hưởng các role khác
+ * MEMBER_VIEW được:
+ * - Truy cập nhóm route "của chính mình" mọi method (member portal, auth self-service,
+ *   phiếu thu cá nhân, thông báo cá nhân, trợ lý Lisa).
+ * - ĐỌC (GET-only) dữ liệu toàn CLB phục vụ portal: lịch chơi / đăng ký / check-in /
+ *   công nợ / tài chính / danh sách thành viên / thông tin CLB.
+ * - Minigame mọi method — mutation do MinigameDelegateGuard siết (chỉ member được ủy quyền).
+ * MỌI route quản trị khác (reports, users, clubs quản trị, ...) hoặc mutation ngoài allowlist
+ * bị chặn 403 — kể cả khi handler không khai báo @Roles. Guard này KHÔNG ảnh hưởng role khác
  * (SUPER_ADMIN / CLUB_ADMIN / CLUB_TREASURER đi qua bình thường).
  *
  * Bảo mật không tin client: phạm vi dữ liệu thực tế vẫn do các service suy ra từ JWT
@@ -30,11 +34,25 @@ export class MemberScopeGuard implements CanActivate {
   /** Route chính xác được phép (self-scope; không lộ thông tin member khác). */
   private static readonly ALLOW_EXACT = ['/personal-receipts/mine'];
 
+  /** Tiền tố route member được đọc (GET-only) — mở rộng portal: lịch/đăng ký/check-in/công nợ/tài chính/minigame. */
+  private static readonly ALLOW_GET_PREFIXES = [
+    '/attendance',
+    '/fund-periods',
+    '/contributions',
+    '/expenses',
+    '/members',
+    '/clubs/me',
+  ];
+
+  /** Minigame: cho qua mọi method — mutation do MinigameDelegateGuard siết (chỉ member được ủy quyền). */
+  private static readonly ALLOW_ALL_METHOD_PREFIXES = ['/minigames'];
+
   canActivate(ctx: ExecutionContext): boolean {
     const req = ctx.switchToHttp().getRequest<{
       user?: { role?: string };
       path?: string;
       url?: string;
+      method?: string;
     }>();
     const user = req.user;
 
@@ -42,11 +60,19 @@ export class MemberScopeGuard implements CanActivate {
     if (!user || user.role !== 'MEMBER_VIEW') return true;
 
     const path = this.normalize(req.path ?? req.url ?? '');
+    const method = (req.method ?? 'GET').toUpperCase();
     const allowed =
       MemberScopeGuard.ALLOW_EXACT.includes(path) ||
       MemberScopeGuard.ALLOW_PREFIXES.some(
         (p) => path === p || path.startsWith(p + '/'),
-      );
+      ) ||
+      MemberScopeGuard.ALLOW_ALL_METHOD_PREFIXES.some(
+        (p) => path === p || path.startsWith(p + '/'),
+      ) ||
+      (method === 'GET' &&
+        MemberScopeGuard.ALLOW_GET_PREFIXES.some(
+          (p) => path === p || path.startsWith(p + '/'),
+        ));
 
     if (!allowed) {
       throw new ForbiddenException(

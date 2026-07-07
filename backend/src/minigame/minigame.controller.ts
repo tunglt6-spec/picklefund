@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -22,6 +23,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MinigameService } from './minigame.service';
+import { MinigameDelegateGuard } from './minigame-delegate.guard';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import { MinigameFormat } from '@prisma/client';
@@ -30,6 +32,8 @@ import { MinigameFormat } from '@prisma/client';
 interface RequestUser {
   clubId: string;
   userId: string;
+  memberId: string | null;
+  role: string;
 }
 
 class CreateMinigameDto {
@@ -81,6 +85,7 @@ class UpdateMatchScoreDto {
 @ApiTags('Minigame')
 @ApiBearerAuth()
 @Controller('minigames')
+@UseGuards(MinigameDelegateGuard)
 export class MinigameController {
   constructor(private svc: MinigameService) {}
 
@@ -95,7 +100,7 @@ export class MinigameController {
   }
 
   @Post()
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async create(
     @CurrentUser() user: RequestUser,
     @Body() body: CreateMinigameDto,
@@ -109,7 +114,7 @@ export class MinigameController {
   }
 
   @Post(':id/participants')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async addParticipants(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
@@ -126,7 +131,7 @@ export class MinigameController {
   }
 
   @Post(':id/generate-teams')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async generateTeams(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
@@ -135,7 +140,7 @@ export class MinigameController {
   }
 
   @Post(':id/generate-schedule')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async generateSchedule(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
@@ -144,7 +149,7 @@ export class MinigameController {
   }
 
   @Post(':id/teams')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async createTeam(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
@@ -154,7 +159,7 @@ export class MinigameController {
   }
 
   @Delete(':id/teams/:teamId')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async deleteTeam(
     @Param('id') id: string,
     @Param('teamId') teamId: string,
@@ -164,7 +169,7 @@ export class MinigameController {
   }
 
   @Delete(':id/schedule')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async clearSchedule(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
@@ -176,13 +181,13 @@ export class MinigameController {
   }
 
   @Post(':id/start')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async start(@Param('id') id: string, @CurrentUser() user: RequestUser) {
     return ok(await this.svc.startMinigame(id, user.clubId));
   }
 
   @Patch('matches/:matchId/score')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async score(
     @Param('matchId') matchId: string,
     @CurrentUser() user: RequestUser,
@@ -199,13 +204,13 @@ export class MinigameController {
   }
 
   @Post(':id/end')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async end(@Param('id') id: string, @CurrentUser() user: RequestUser) {
     return ok(await this.svc.endMinigame(id, user.clubId));
   }
 
   @Post(':id/cancel')
-  @Roles('CLUB_ADMIN')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async cancel(@Param('id') id: string, @CurrentUser() user: RequestUser) {
     return ok(await this.svc.cancel(id, user.clubId));
   }

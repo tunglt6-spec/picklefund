@@ -206,6 +206,71 @@ export class MemberPortalService {
     }));
   }
 
+  /** Bảo đảm buổi chơi thuộc đúng club (chống truy cập chéo). */
+  private async assertSession(sessionId: string, clubId: string) {
+    const session = await this.prisma.attendanceSession.findFirst({
+      where: { id: sessionId, clubId },
+    });
+    if (!session) throw new NotFoundException('Không tìm thấy buổi chơi.');
+    return session;
+  }
+
+  /** Member tự đăng ký / hủy đăng ký 1 buổi chơi (self-scope, idempotent). */
+  async selfRegister(
+    memberId: string | null,
+    clubId: string,
+    sessionId: string,
+    register: boolean,
+  ) {
+    if (!memberId)
+      throw new ForbiddenException(
+        'Tài khoản chưa liên kết hồ sơ thành viên.',
+      );
+    await this.assertSession(sessionId, clubId);
+    if (register) {
+      await this.prisma.sessionRegistration.upsert({
+        where: {
+          attendanceSessionId_memberId: {
+            attendanceSessionId: sessionId,
+            memberId,
+          },
+        },
+        create: { clubId, attendanceSessionId: sessionId, memberId },
+        update: {},
+      });
+    } else {
+      await this.prisma.sessionRegistration.deleteMany({
+        where: { clubId, attendanceSessionId: sessionId, memberId },
+      });
+    }
+    return { sessionId, registered: register };
+  }
+
+  /** Member tự check-in PRESENT vào buổi chơi (self-scope, idempotent). */
+  async selfCheckin(memberId: string | null, clubId: string, sessionId: string) {
+    if (!memberId)
+      throw new ForbiddenException(
+        'Tài khoản chưa liên kết hồ sơ thành viên.',
+      );
+    await this.assertSession(sessionId, clubId);
+    await this.prisma.attendanceRecord.upsert({
+      where: {
+        attendanceSessionId_memberId: {
+          attendanceSessionId: sessionId,
+          memberId,
+        },
+      },
+      create: {
+        attendanceSessionId: sessionId,
+        memberId,
+        clubId,
+        status: 'PRESENT',
+      },
+      update: { status: 'PRESENT' },
+    });
+    return { sessionId, checkedIn: true };
+  }
+
   async getNotifications(userId: string, clubId: string) {
     return this.prisma.notification.findMany({
       where: { userId, clubId },
