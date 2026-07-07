@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, FileText, FileSpreadsheet } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -168,7 +168,7 @@ export function TreasurerLedger() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <PageShell maxWidth={1000}>
       <PageHeader
         title="Sổ Quỹ Chi Tiết"
         subtitle={activePeriod
@@ -194,7 +194,7 @@ export function TreasurerLedger() {
         }
       />
 
-      <div className="p-6 max-w-[1000px] mx-auto space-y-5">
+      <div className="flex flex-col gap-5">
         {/* KPI */}
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
@@ -305,6 +305,6 @@ export function TreasurerLedger() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }

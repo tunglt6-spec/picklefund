@@ -3,7 +3,7 @@ import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download
 import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -426,7 +426,7 @@ export function TreasurerIncome() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <PageShell maxWidth={1000}>
       <PageHeader
         title="Nhập Khoản Thu"
         subtitle="Ghi nhận thu quỹ cho Quỹ Chính và Quỹ Phụ"
@@ -444,7 +444,7 @@ export function TreasurerIncome() {
         }
       />
 
-      <div className="p-6 max-w-[1000px] mx-auto space-y-5">
+      <div className="flex flex-col gap-5">
         {members.length === 0 && activePeriods.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
@@ -723,6 +723,6 @@ export function TreasurerIncome() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />
-    </div>
+    </PageShell>
   )
 }

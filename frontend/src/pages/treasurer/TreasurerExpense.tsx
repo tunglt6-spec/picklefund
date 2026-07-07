@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Receipt } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -254,7 +254,7 @@ export function TreasurerExpense() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <PageShell maxWidth={1000}>
       <PageHeader
         title="Nhập Khoản Chi"
         subtitle="Ghi nhận chi phí của CLB"
@@ -265,7 +265,7 @@ export function TreasurerExpense() {
         }
       />
 
-      <div className="p-6 max-w-[1000px] mx-auto space-y-5">
+      <div className="flex flex-col gap-5">
         {activePeriods.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
@@ -408,6 +408,6 @@ export function TreasurerExpense() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}
       />
-    </div>
+    </PageShell>
   )
 }
