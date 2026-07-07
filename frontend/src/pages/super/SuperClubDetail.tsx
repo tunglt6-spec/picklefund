@@ -5,7 +5,7 @@ import {
   Star, Zap, CheckCircle2, CreditCard,
 } from 'lucide-react'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -377,7 +377,7 @@ export function SuperClubDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageShell maxWidth={1280}>
       <PageHeader
         title={club.name}
         subtitle={`Mã: ${club.code} · ${club._count?.members ?? members.length} thành viên`}
@@ -388,9 +388,9 @@ export function SuperClubDetail() {
         }
       />
 
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Club info sidebar */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4">
+        <div className="rounded-2xl border p-5 space-y-4 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="flex items-center gap-2 text-gray-700 font-semibold">
             <Building2 size={16} />Thông tin CLB
           </div>
@@ -424,7 +424,7 @@ export function SuperClubDetail() {
         </div>
 
         {/* Main panel with tabs */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 rounded-2xl border overflow-hidden [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="px-5 pt-4">
             {tabBar}
           </div>
@@ -467,6 +467,6 @@ export function SuperClubDetail() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }
