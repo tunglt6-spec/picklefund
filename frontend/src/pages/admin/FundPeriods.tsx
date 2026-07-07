@@ -9,7 +9,7 @@ import {
   Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -717,7 +717,7 @@ export function FundPeriods() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <PageShell maxWidth={1200}>
       <PageHeader
         title="Kỳ Quỹ"
         subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
@@ -733,7 +733,7 @@ export function FundPeriods() {
         }
       />
 
-      <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
+      <div className="flex flex-col gap-5">
 
         {/* KPI cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1388,7 +1388,7 @@ export function FundPeriods() {
           )}
         </div>
       </Modal>
-    </div>
+    </PageShell>
   )
 }
 
