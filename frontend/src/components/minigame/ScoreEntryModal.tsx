@@ -77,7 +77,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
               value={p1Score}
               onChange={e => setP1Score(e.target.value)}
               placeholder="0"
-              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
             />
           </div>
           <div className="text-center">
@@ -88,7 +88,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
               value={p2Score}
               onChange={e => setP2Score(e.target.value)}
               placeholder="0"
-              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
           />
         </div>
 
@@ -125,7 +125,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ghi chú về trận đấu..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
           />
         </div>
       </div>

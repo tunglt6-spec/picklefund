@@ -4,7 +4,7 @@ import type { InfographicReportData } from './infographic.types'
 const VND = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.round(Math.abs(n))) + ' đ'
 const FONT = "'Inter', Arial, sans-serif"
 
-const AVATAR_COLORS = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899','#06B6D4','#F97316']
+const AVATAR_COLORS = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899','#5B4BE8','#F97316']
 function getColor(name: string) {
   let h = 0; for (let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h)
   return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length]

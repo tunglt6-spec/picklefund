@@ -9,7 +9,7 @@ interface MobileWelcomeCardProps {
 export function MobileWelcomeCard({ title, subtitle, stats }: MobileWelcomeCardProps) {
   return (
     <div className="relative overflow-hidden rounded-[20px] p-[18px]"
-      style={{ background: 'linear-gradient(135deg,#4F46E5 0%,#06B6D4 100%)' }}>
+      style={{ background: 'linear-gradient(135deg,#6D5DFB 0%,#5B4BE8 100%)' }}>
       {/* Background icon */}
       <Network
         size={120}

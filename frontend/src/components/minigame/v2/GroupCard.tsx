@@ -22,24 +22,24 @@ interface GroupCardProps {
 }
 
 const BORDER_COLORS = [
-  'border-indigo-500',
-  'border-purple-500',
+  '[border-color:var(--pf-primary)]',
+  '[border-color:var(--pf-primary)]',
   'border-emerald-500',
   'border-amber-500',
   'border-rose-500',
 ] as const
 
 const LABEL_COLORS = [
-  'text-indigo-600',
-  'text-purple-600',
+  '[color:var(--pf-primary)]',
+  '[color:var(--pf-primary)]',
   'text-emerald-600',
   'text-amber-600',
   'text-rose-600',
 ] as const
 
 const PROGRESS_COLORS = [
-  'bg-indigo-500',
-  'bg-purple-500',
+  '[background:var(--pf-primary)]',
+  '[background:var(--pf-primary)]',
   'bg-emerald-500',
   'bg-amber-500',
   'bg-rose-500',
@@ -124,7 +124,7 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
         {onViewGroup && (
           <button
             onClick={onViewGroup}
-            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-indigo-600 transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:[color:var(--pf-primary)] transition-colors"
           >
             <Eye size={13} />
             Xem chi tiết

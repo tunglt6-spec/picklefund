@@ -96,7 +96,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           <button
             onClick={() => setOpen(v => !v)}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-[12px] font-[800] text-white active:opacity-80"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            style={{ background: 'var(--pf-primary)' }}
           >
             {initials}
           </button>
@@ -108,7 +108,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
                 <div className="flex items-center gap-2.5">
                   <div
                     className="h-8 w-8 rounded-xl flex items-center justify-center text-[11px] font-[800] text-white shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+                    style={{ background: 'var(--pf-primary)' }}
                   >
                     {initials}
                   </div>

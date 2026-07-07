@@ -17,8 +17,8 @@ import toast from 'react-hot-toast'
 
 // ── design tokens ──────────────────────────────────────────────────────────────
 const T = {
-  brand:   '#4F46E5',
-  cyan:    '#06B6D4',
+  brand:   '#6D5DFB',
+  cyan:    '#5B4BE8',
   success: '#22C55E',
   warning: '#F59E0B',
   danger:  '#EF4444',
@@ -40,7 +40,7 @@ const CARD = {
 const STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
   DRAFT:       { label: 'Nháp',          bg: '#F1F5F9', color: '#64748B' },
   PAIRED:      { label: 'Đã Ghép Cặp',  bg: '#F5F3FF', color: '#7C3AED' },
-  SCHEDULED:   { label: 'Có Lịch',      bg: '#EEF2FF', color: '#4F46E5' },
+  SCHEDULED:   { label: 'Có Lịch',      bg: '#EEEDFE', color: '#6D5DFB' },
   IN_PROGRESS: { label: 'Đang Diễn Ra', bg: '#DCFCE7', color: '#16A34A' },
   COMPLETED:   { label: 'Hoàn Thành',   bg: '#DCFCE7', color: '#16A34A' },
   CANCELLED:   { label: 'Đã Hủy',       bg: '#FEE2E2', color: '#DC2626' },
@@ -144,7 +144,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
                   style={{ borderColor: T.border }}>−</button>
                 <input type="number" min={0} value={side.val}
                   onChange={e => side.set(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="flex-1 text-center text-2xl font-extrabold border rounded-xl py-2 outline-none focus:ring-2 focus:ring-indigo-300"
+                  className="flex-1 text-center text-2xl font-extrabold border rounded-xl py-2 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   style={{ borderColor: T.border }} />
                 <button onClick={() => adj(side.set, 1)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg text-white"
@@ -508,11 +508,11 @@ function TournamentStatusCard({ status }: { status: string }) {
   if (status !== 'IN_PROGRESS') return null
   return (
     <div className="rounded-2xl border p-4 flex gap-3"
-      style={{ background: '#EEF2FF', borderColor: '#C7D2FE' }}>
+      style={{ background: '#EEEDFE', borderColor: '#C7C2FB' }}>
       <AlertCircle size={16} style={{ color: T.brand }} className="shrink-0 mt-0.5" />
       <div>
         <p className="text-sm font-bold" style={{ color: T.brand }}>Giải đấu đang diễn ra</p>
-        <p className="text-xs mt-0.5" style={{ color: '#6366F1' }}>
+        <p className="text-xs mt-0.5" style={{ color: '#6D5DFB' }}>
           Nhập điểm sau mỗi trận để cập nhật bảng xếp hạng theo thời gian thực.
         </p>
       </div>
@@ -579,7 +579,7 @@ function DraftPanel({ minigameId, onAutoGenerate }: { minigameId: string; onAuto
             <div key={p.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
               <span className="w-5 h-5 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-bold text-slate-500">{i + 1}</span>
               <span className="text-sm text-slate-800 truncate">{p.memberName}</span>
-              {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">Khách</span>}
+              {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
             </div>
           ))}
         </div>

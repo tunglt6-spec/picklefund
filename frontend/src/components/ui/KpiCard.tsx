@@ -16,12 +16,12 @@ interface KpiCardProps {
 }
 
 const iconBgMap: Record<string, string> = {
-  indigo: 'bg-indigo-50 text-indigo-600',
+  indigo: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   green:  'bg-emerald-50 text-emerald-600',
   red:    'bg-red-50 text-red-600',
   orange: 'bg-orange-50 text-orange-600',
-  purple: 'bg-purple-50 text-purple-600',
-  cyan:   'bg-cyan-50 text-cyan-600',
+  purple: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  cyan:   '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
   yellow: 'bg-yellow-50 text-yellow-600',
   slate:  'bg-slate-100 text-slate-600',
   blue:   'bg-blue-50 text-blue-600',

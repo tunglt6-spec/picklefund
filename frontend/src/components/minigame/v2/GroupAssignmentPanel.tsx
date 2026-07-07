@@ -41,11 +41,11 @@ export function GroupAssignmentPanel({
       {/* Panel header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Users size={20} className="text-indigo-600 shrink-0" />
+          <Users size={20} className="[color:var(--pf-primary)] shrink-0" />
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
             Phân Bảng &amp; Thành Viên
           </h2>
-          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700">
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
             {totalMembers} thành viên
           </span>
         </div>
@@ -53,7 +53,7 @@ export function GroupAssignmentPanel({
         {onDrawAgain && (
           <button
             onClick={onDrawAgain}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border [border-color:var(--pf-primary)] px-3 py-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
           >
             <Shuffle size={14} />
             Rút Thăm Lại

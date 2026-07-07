@@ -136,7 +136,7 @@ export function SuperDashboard() {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} name="Số lượng" />
+                <Bar dataKey="value" fill="#6D5DFB" radius={[4, 4, 0, 0]} name="Số lượng" />
               </BarChart>
             </ResponsiveContainer>
           </div>

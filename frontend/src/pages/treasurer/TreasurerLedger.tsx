@@ -97,7 +97,7 @@ export function TreasurerLedger() {
               const pName = activePeriod?.name ?? 'Sổ Quỹ'
               exportLedgerPDF(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })), totalIncome, totalExpense, currentBalance)
               toast.success('Đã xuất PDF!')
-            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-[12px] font-[600] bg-indigo-50 text-indigo-600 active:bg-indigo-100">
+            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-[12px] font-[600] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
               <FileText size={13} />PDF
             </button>
           </div>
@@ -108,7 +108,7 @@ export function TreasurerLedger() {
             {[
               { label: 'Tổng thu', value: formatVND(totalIncome), color: 'text-emerald-600' },
               { label: 'Tổng chi', value: formatVND(totalExpense), color: 'text-red-500' },
-              { label: 'Số dư', value: formatVND(currentBalance), color: currentBalance >= 0 ? 'text-indigo-600' : 'text-red-500' },
+              { label: 'Số dư', value: formatVND(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
                 <div className={`text-[13px] font-[800] ${k.color} truncate`}>{k.value}</div>
@@ -121,12 +121,12 @@ export function TreasurerLedger() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm giao dịch..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:border-indigo-400" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           <div className="flex gap-1 bg-white rounded-[12px] border border-slate-200 p-1">
             {(['all', 'Thu', 'Chi'] as const).map(t => (
               <button key={t} onClick={() => setTypeFilter(t)}
-                className={`flex-1 py-1.5 rounded-[9px] text-[12px] font-[600] transition-all ${typeFilter === t ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500'}`}>
+                className={`flex-1 py-1.5 rounded-[9px] text-[12px] font-[600] transition-all ${typeFilter === t ? '[background:var(--pf-primary)] text-white shadow-sm' : 'text-slate-500'}`}>
                 {t === 'all' ? 'Tất cả' : t}
               </button>
             ))}
@@ -219,12 +219,12 @@ export function TreasurerLedger() {
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <Wallet size={14} className="text-indigo-600" />
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
+                <Wallet size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Số dư</p>
             </div>
-            <p className={`text-xl font-bold ${currentBalance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
+            <p className={`text-xl font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
               {formatVND(currentBalance)}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">{rows.length} giao dịch</p>
@@ -249,7 +249,7 @@ export function TreasurerLedger() {
                 onClick={() => setTypeFilter(t)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                   typeFilter === t
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? '[background:var(--pf-primary)] text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -298,7 +298,7 @@ export function TreasurerLedger() {
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
                   <td colSpan={3} className="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Số dư cuối kỳ</td>
                   <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{currentBalance >= 0 ? '+' : ''}{formatVND(currentBalance)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-indigo-700' : 'text-red-600'}`}>{formatVND(currentBalance)}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-600'}`}>{formatVND(currentBalance)}</td>
                 </tr>
               </tfoot>
             </table>

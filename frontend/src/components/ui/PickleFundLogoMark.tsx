@@ -16,11 +16,11 @@ export function PickleFundLogoMark({ size = 32 }: { size?: number }) {
       ))}
       <circle cx={cx} cy={cy} r="5" fill="white" />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-        fontSize="6" fontWeight="800" fill="#4F46E5" fontFamily="Inter,system-ui,sans-serif">P</text>
+        fontSize="6" fontWeight="800" fill="#6D5DFB" fontFamily="Inter,system-ui,sans-serif">P</text>
       <defs>
         <linearGradient id="lgNet" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4F46E5" />
-          <stop offset="1" stopColor="#06B6D4" />
+          <stop stopColor="#6D5DFB" />
+          <stop offset="1" stopColor="#5B4BE8" />
         </linearGradient>
       </defs>
     </svg>

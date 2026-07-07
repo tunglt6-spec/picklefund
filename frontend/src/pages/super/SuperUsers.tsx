@@ -81,8 +81,8 @@ export function SuperUsers() {
       <div className="p-6 max-w-[1100px] mx-auto space-y-5">
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: 'Super Admin', role: 'SUPER_ADMIN', color: 'text-purple-600', bg: 'bg-purple-50', icon: <Shield size={14} className="text-purple-500" /> },
-            { label: 'Club Admin', role: 'CLUB_ADMIN', color: 'text-indigo-600', bg: 'bg-indigo-50', icon: <UserCheck size={14} className="text-indigo-500" /> },
+            { label: 'Super Admin', role: 'SUPER_ADMIN', color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', icon: <Shield size={14} className="[color:var(--pf-primary)]" /> },
+            { label: 'Club Admin', role: 'CLUB_ADMIN', color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', icon: <UserCheck size={14} className="[color:var(--pf-primary)]" /> },
             { label: 'Thủ Quỹ', role: 'CLUB_TREASURER', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <UserCheck size={14} className="text-emerald-500" /> },
             { label: 'Thành Viên', role: 'MEMBER_VIEW', color: 'text-slate-600', bg: 'bg-slate-100', icon: <Users size={14} className="text-slate-500" /> },
           ].map(item => (
@@ -114,7 +114,7 @@ export function SuperUsers() {
                 key={opt.value}
                 onClick={() => setRoleFilter(opt.value)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  roleFilter === opt.value ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  roleFilter === opt.value ? '[background:var(--pf-primary)] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {opt.label}

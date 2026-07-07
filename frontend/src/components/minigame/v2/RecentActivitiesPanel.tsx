@@ -20,12 +20,12 @@ const typeConfig: Record<
     icon: <Trophy size={14} className="text-green-500" />,
   },
   round: {
-    dotColor: 'bg-indigo-500',
-    icon: <RefreshCw size={14} className="text-indigo-500" />,
+    dotColor: '[background:var(--pf-primary)]',
+    icon: <RefreshCw size={14} className="[color:var(--pf-primary)]" />,
   },
   group: {
-    dotColor: 'bg-purple-500',
-    icon: <Users size={14} className="text-purple-500" />,
+    dotColor: '[background:var(--pf-primary)]',
+    icon: <Users size={14} className="[color:var(--pf-primary)]" />,
   },
   system: {
     dotColor: 'bg-slate-400',
@@ -81,7 +81,7 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
 
       {hasMore && (
         <div className="mt-3 pt-3 border-t border-slate-100">
-          <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-150">
+          <button className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)] font-medium transition-colors duration-150">
             Xem thêm ({activities.length - MAX_VISIBLE} hoạt động)
           </button>
         </div>

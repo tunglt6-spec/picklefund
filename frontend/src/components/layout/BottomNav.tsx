@@ -82,14 +82,14 @@ export function BottomNav() {
                   {/* Icon */}
                   <span className={`relative z-10 transition-all duration-150 ${
                     isActive ? 'scale-105' : ''
-                  }`} style={{ color: isActive ? '#4F46E5' : '#94A3B8' }}>
+                  }`} style={{ color: isActive ? '#6D5DFB' : '#94A3B8' }}>
                     {item.icon}
                   </span>
 
                   {/* Label */}
                   <span
                     className="text-[11px] font-[600] leading-none"
-                    style={{ color: isActive ? '#4F46E5' : '#94A3B8' }}
+                    style={{ color: isActive ? '#6D5DFB' : '#94A3B8' }}
                   >
                     {item.label}
                   </span>
@@ -97,7 +97,7 @@ export function BottomNav() {
                   {/* Active dot */}
                   {isActive && (
                     <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                      style={{ background: '#4F46E5' }} />
+                      style={{ background: '#6D5DFB' }} />
                   )}
                 </>
               )}
@@ -138,7 +138,7 @@ export function BottomNav() {
                   onClick={() => { navigate(item.to); setShowMore(false) }}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-[14px] bg-slate-50 hover:bg-slate-100 transition-colors"
                 >
-                  <span className="text-indigo-600">{item.icon}</span>
+                  <span className="[color:var(--pf-primary)]">{item.icon}</span>
                   <span className="text-[11px] font-[600] text-slate-700">{item.label}</span>
                 </button>
               ))}

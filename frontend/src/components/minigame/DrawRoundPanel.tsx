@@ -10,7 +10,7 @@ const STATUS_LABEL: Record<MiniGameRound['status'], string> = {
 const STATUS_CLASS: Record<MiniGameRound['status'], string> = {
   DRAFT: 'bg-slate-100 text-slate-600',
   ACTIVE: 'bg-amber-100 text-amber-700',
-  LOCKED: 'bg-indigo-100 text-indigo-700',
+  LOCKED: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   COMPLETED: 'bg-green-100 text-green-700',
 }
 
@@ -30,7 +30,7 @@ export function DrawRoundPanel({ currentRound, currentRoundHasCompletedMatches, 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Shuffle size={15} className="text-indigo-600" />
+        <Shuffle size={15} className="[color:var(--pf-primary)]" />
         <p className="text-sm font-semibold text-slate-800">Bốc Thăm Lượt Đấu</p>
       </div>
 

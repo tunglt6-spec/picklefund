@@ -32,7 +32,7 @@ const STATUS_STYLE: Record<string, string> = {
   EXECUTING: 'bg-sky-100 text-sky-700',
   EXECUTED: 'bg-green-100 text-green-700',
   FAILED: 'bg-red-100 text-red-700',
-  RETRY_PENDING: 'bg-violet-100 text-violet-700',
+  RETRY_PENDING: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
 }
 
 function fmtTime(iso: string): string {

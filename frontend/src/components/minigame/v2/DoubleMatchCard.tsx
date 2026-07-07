@@ -110,7 +110,7 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
       {status === 'PENDING_RESULT' && onEnterScore && (
         <button
           onClick={() => onEnterScore(match.id)}
-          className="mt-1 w-full flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-1.5 px-3 transition-colors"
+          className="mt-1 w-full flex items-center justify-center gap-1.5 rounded-lg [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] text-white text-xs font-semibold py-1.5 px-3 transition-colors"
         >
           <ClipboardEdit size={14} />
           Nhập Điểm

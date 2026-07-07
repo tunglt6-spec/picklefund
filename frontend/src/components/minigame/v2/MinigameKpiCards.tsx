@@ -24,8 +24,8 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
           <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
             Thành viên
           </span>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
-            <Users size={18} className="text-indigo-600" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
+            <Users size={18} className="[color:var(--pf-primary)]" />
           </span>
         </div>
         <div>
@@ -87,8 +87,8 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
           <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
             Vòng Hiện Tại
           </span>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100">
-            <RefreshCw size={18} className="text-purple-600" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
+            <RefreshCw size={18} className="[color:var(--pf-primary)]" />
           </span>
         </div>
         <div>

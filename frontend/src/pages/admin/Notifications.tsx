@@ -20,20 +20,20 @@ type HermesNotif = {
 
 function eventIcon(eventType: string) {
   if (eventType.includes('payment') || eventType.includes('fund')) return <DollarSign size={15} className="text-emerald-500" />
-  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={15} className="text-indigo-500" />
-  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={15} className="text-purple-500" />
+  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={15} className="[color:var(--pf-primary)]" />
+  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={15} className="[color:var(--pf-primary)]" />
   if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={15} className="text-amber-500" />
-  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={15} className="text-indigo-500" />
+  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={15} className="[color:var(--pf-primary)]" />
   if (eventType.includes('reminder')) return <Receipt size={15} className="text-orange-500" />
   return <Zap size={15} className="text-slate-400" />
 }
 
 function eventBg(eventType: string) {
   if (eventType.includes('payment') || eventType.includes('fund')) return 'bg-emerald-50'
-  if (eventType.includes('session') || eventType.includes('event')) return 'bg-indigo-50'
-  if (eventType.includes('member') || eventType.includes('inactivity')) return 'bg-purple-50'
+  if (eventType.includes('session') || eventType.includes('event')) return '[background:var(--pf-primary-soft)]'
+  if (eventType.includes('member') || eventType.includes('inactivity')) return '[background:var(--pf-primary-soft)]'
   if (eventType.includes('anomaly') || eventType.includes('health')) return 'bg-amber-50'
-  if (eventType.includes('brief') || eventType.includes('report')) return 'bg-indigo-50'
+  if (eventType.includes('brief') || eventType.includes('report')) return '[background:var(--pf-primary-soft)]'
   return 'bg-slate-50'
 }
 
@@ -62,12 +62,12 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
     return (
       <div onClick={() => !isRead && onRead(n.id)}
         className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
-          ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white border-indigo-100'}`}>
+          ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white [border-color:var(--pf-primary-soft)]'}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <p className={`text-[14px] font-[700] ${isRead ? 'text-slate-400' : 'text-slate-900'}`}>{n.title}</p>
-            {!isRead && <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0" />}
+            {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
             {priorityBadge(n.priority)}
           </div>
           <p className="text-[12px] text-slate-500 leading-relaxed">{n.body}</p>
@@ -80,12 +80,12 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
   return (
     <div onClick={() => !isRead && onRead(n.id)}
       className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm
-        ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white border-indigo-100 shadow-sm'}`}>
+        ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <p className={`text-sm font-semibold ${isRead ? 'text-slate-400' : 'text-slate-900'}`}>{n.title}</p>
-          {!isRead && <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0" />}
+          {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
           {priorityBadge(n.priority)}
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">{n.body}</p>
@@ -198,7 +198,7 @@ export function Notifications() {
             <div className="text-[12px] text-slate-400">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
           {unreadCount > 0 && (
-            <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70">
+            <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
               <Check size={13} />Đánh dấu đã đọc
             </button>
           )}
@@ -244,7 +244,7 @@ export function Notifications() {
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
         actions={
           unreadCount > 0
-            ? <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800">
+            ? <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
             : undefined

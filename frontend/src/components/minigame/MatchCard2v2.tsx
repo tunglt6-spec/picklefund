@@ -54,7 +54,7 @@ export function MatchCard2v2({ match, onEnterScore }: Props) {
         {match.status === 'PENDING' ? (
           <button
             onClick={() => onEnterScore(match)}
-            className="text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1"
+            className="text-xs font-medium [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1"
           >
             ✏ Nhập Kết Quả
           </button>

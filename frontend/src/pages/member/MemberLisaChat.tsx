@@ -114,25 +114,25 @@ export function MemberLisaChat() {
       <div className="flex flex-col gap-3">
         {messages.map(m => (
           <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${m.role === 'lisa' ? 'bg-indigo-100' : 'bg-slate-100'}`}>
-              {m.role === 'lisa' ? <Bot size={14} className="text-indigo-600" /> : <User size={14} className="text-slate-500" />}
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${m.role === 'lisa' ? '[background:var(--pf-primary-soft)]' : 'bg-slate-100'}`}>
+              {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary)]" /> : <User size={14} className="text-slate-500" />}
             </div>
-            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${m.role === 'lisa' ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-sm' : 'bg-indigo-600 text-white rounded-tr-sm'}`}>
+            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${m.role === 'lisa' ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-sm' : '[background:var(--pf-primary)] text-white rounded-tr-sm'}`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
-              <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? 'text-slate-400' : 'text-indigo-200'}`}>{m.time}</p>
+              <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? 'text-slate-400' : 'text-white/70'}`}>{m.time}</p>
             </div>
           </div>
         ))}
         {loading && (
           <div className="flex gap-2">
-            <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Bot size={14} className="text-indigo-600" />
+            <div className="w-7 h-7 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
+              <Bot size={14} className="[color:var(--pf-primary)]" />
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function MemberLisaChat() {
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map(s => (
             <button key={s} onClick={() => sendMessage(s)}
-              className="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full hover:border-indigo-300 hover:text-indigo-600 transition-colors shadow-sm">
+              className="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors shadow-sm">
               {s}
             </button>
           ))}
@@ -188,9 +188,9 @@ export function MemberLisaChat() {
           <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <input value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
-              className="flex-1 text-sm bg-slate-100 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="flex-1 text-sm bg-slate-100 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
             <button type="submit" disabled={!input.trim() || loading}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
               <Send size={15} className="text-white" />
             </button>
           </form>
@@ -203,7 +203,7 @@ export function MemberLisaChat() {
     <div className="flex flex-col h-full bg-slate-50">
       <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-100 shadow-sm">
+          <div className="w-9 h-9 rounded-full overflow-hidden border-2 [border-color:var(--pf-primary-soft)] shadow-sm">
             <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
           </div>
           <div>
@@ -211,7 +211,7 @@ export function MemberLisaChat() {
             <p className="text-xs text-emerald-500">● Trợ lý cá nhân thông minh</p>
           </div>
         </div>
-        <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600">
+        <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:[color:var(--pf-primary)]">
           <RefreshCw size={13} />Làm mới
         </button>
       </div>
@@ -220,9 +220,9 @@ export function MemberLisaChat() {
         <form onSubmit={handleSubmit} className="flex gap-3">
           <input value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa về tình trạng đóng quỹ, buổi tập, chi phí..."
-            className="flex-1 text-sm bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-200 transition-all" />
+            className="flex-1 text-sm bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all" />
           <button type="submit" disabled={!input.trim() || loading}
-            className="px-5 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:bg-indigo-700 transition-colors">
+            className="px-5 py-3 rounded-xl [background:var(--pf-primary)] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:[background:var(--pf-primary-hover)] transition-colors">
             <Send size={14} />Gửi
           </button>
         </form>

@@ -163,7 +163,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <div className="rounded-xl px-3 py-2.5 bg-slate-50" style={{ border: '1px solid var(--color-border-soft)' }}>
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white text-xs font-bold"
-              style={{ background: 'linear-gradient(135deg, #4F46E5, #06B6D4)' }}>
+              style={{ background: 'linear-gradient(135deg, #6D5DFB, #5B4BE8)' }}>
               {(clubData.settings?.name ?? user.username ?? 'C').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
@@ -198,7 +198,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             className={({ isActive }) => cn(
               'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
               isActive
-                ? 'text-indigo-700 bg-indigo-50'
+                ? '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
                 : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
             )}
           >
@@ -207,9 +207,9 @@ export function Sidebar({ onClose }: SidebarProps) {
                 {/* Active accent bar */}
                 <span className={cn(
                   'absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full transition-all',
-                  isActive ? 'bg-indigo-600 opacity-100' : 'opacity-0'
+                  isActive ? '[background:var(--pf-primary)] opacity-100' : 'opacity-0'
                 )} />
-                <span className={cn('shrink-0 transition-colors', isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600')}>
+                <span className={cn('shrink-0 transition-colors', isActive ? '[color:var(--pf-primary)]' : 'text-slate-400 group-hover:text-slate-600')}>
                   {item.icon}
                 </span>
                 <span className="flex-1 leading-none">{item.label}</span>
@@ -228,10 +228,10 @@ export function Sidebar({ onClose }: SidebarProps) {
       <div className="mx-3 mb-3 rounded-xl p-3.5" style={{ background: 'var(--color-primary-light)', border: '1px solid #E0E7FF' }}>
         <div className="flex items-center gap-1.5 mb-1.5">
           <Star size={13} className="text-amber-500" />
-          <span className="text-xs font-semibold text-indigo-700">Gói Professional</span>
+          <span className="text-xs font-semibold [color:var(--pf-primary)]">Gói Professional</span>
         </div>
-        <p className="text-[10px] mb-2.5 text-indigo-400">Còn 245 ngày sử dụng</p>
-        <button className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-white text-indigo-600 border border-indigo-100 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors py-1.5 text-xs font-semibold">
+        <p className="text-[10px] mb-2.5 [color:var(--pf-primary)]">Còn 245 ngày sử dụng</p>
+        <button className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-white [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white hover:[border-color:var(--pf-primary)] transition-colors py-1.5 text-xs font-semibold">
           <Zap size={12} />Nâng cấp gói
         </button>
       </div>
@@ -239,7 +239,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* ── User profile + Logout ── */}
       <div className="p-3 space-y-1" style={{ borderTop: '1px solid var(--color-border-soft)' }}>
         <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer transition-colors bg-slate-50 hover:bg-slate-100">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 text-white text-xs font-bold select-none">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] text-white text-xs font-bold select-none">
             {initials}
           </div>
           <div className="min-w-0 flex-1">

@@ -30,15 +30,15 @@ type AiUsage = { month: string; tokens: number; estimatedCostVnd: number }
 
 const PLAN_COLORS: Record<PlanTier, string> = {
   FREE: 'bg-slate-50 border-slate-200',
-  STARTER: 'bg-indigo-50 border-indigo-200',
-  PRO: 'bg-purple-50 border-purple-200',
+  STARTER: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
+  PRO: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
   ENTERPRISE: 'bg-amber-50 border-amber-200',
 }
 
 const PLAN_BADGE: Record<PlanTier, string> = {
   FREE: 'bg-slate-100 text-slate-600',
-  STARTER: 'bg-indigo-100 text-indigo-700',
-  PRO: 'bg-purple-100 text-purple-700',
+  STARTER: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   ENTERPRISE: 'bg-amber-100 text-amber-700',
 }
 
@@ -115,7 +115,7 @@ export function Billing() {
                 <p className="text-xs text-slate-500">Thành viên</p>
                 <p className="text-lg font-bold text-slate-900">{sub.usage.members} <span className="text-sm font-normal text-slate-500">/ {sub.plan.maxMembers}</span></p>
                 <div className="mt-1.5 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full transition-all"
+                  <div className="h-full [background:var(--pf-primary)] rounded-full transition-all"
                     style={{ width: `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
                 </div>
               </div>
@@ -162,7 +162,7 @@ export function Billing() {
                     <tr key={row.label} className="border-b border-slate-50 hover:bg-slate-50/50">
                       <td className="px-4 py-3 text-slate-700">{row.label}</td>
                       {plans.map(p => (
-                        <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? 'bg-indigo-50/50' : ''}`}>
+                        <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
                           {row.fn(p)}
                         </td>
                       ))}
@@ -177,7 +177,7 @@ export function Billing() {
           {usage.length > 0 && (
             <div className="bg-white rounded-xl border border-slate-200 p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={18} className="text-indigo-500" />
+                <TrendingUp size={18} className="[color:var(--pf-primary)]" />
                 <h3 className="font-semibold text-slate-900">Lịch sử sử dụng AI</h3>
               </div>
               <div className="space-y-2">
@@ -202,12 +202,12 @@ export function Billing() {
 
           {/* Contact to upgrade */}
           {currentTier === 'FREE' && (
-            <div className="bg-gradient-to-r from-indigo-600 to-cyan-500 rounded-xl p-5 md:p-6 text-white">
+            <div className="bg-gradient-to-r from-[var(--pf-primary)] to-[var(--pf-primary-hover)] rounded-xl p-5 md:p-6 text-white">
               <div className="flex items-center gap-2 mb-2">
                 <Zap size={18} className="text-yellow-300" />
                 <h3 className="font-semibold">Nâng cấp để dùng AI đầy đủ</h3>
               </div>
-              <p className="text-sm text-indigo-100 mb-4">
+              <p className="text-sm text-white/80 mb-4">
                 Gói Starter (99.000đ/tháng) mở khoá Maika AI, Lisa AI, báo cáo tự động và phát hiện bất thường.
               </p>
               <button

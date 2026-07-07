@@ -39,11 +39,11 @@ export function ChangePassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--pf-primary-soft)] via-white to-[var(--pf-primary-soft)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] shadow-lg mb-4">
             <ShieldCheck size={32} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Đổi mật khẩu</h1>
@@ -65,7 +65,7 @@ export function ChangePassword() {
                   value={form.oldPassword}
                   onChange={e => setForm(f => ({ ...f, oldPassword: e.target.value }))}
                   placeholder="Nhập mật khẩu hiện tại"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, old: !s.old }))}
@@ -85,7 +85,7 @@ export function ChangePassword() {
                   value={form.newPassword}
                   onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, new: !s.new }))}
@@ -105,7 +105,7 @@ export function ChangePassword() {
                   value={form.confirm}
                   onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
@@ -130,7 +130,7 @@ export function ChangePassword() {
             <button
               type="submit"
               disabled={!canSubmit || saving}
-              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-indigo-600 hover:to-cyan-600 transition-all"
+              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[var(--pf-primary)] to-[var(--pf-primary-hover)] text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-[var(--pf-primary)] hover:to-[var(--pf-primary-hover)] transition-all"
             >
               {saving ? 'Đang lưu...' : 'Xác nhận đổi mật khẩu'}
             </button>

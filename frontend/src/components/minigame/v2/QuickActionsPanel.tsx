@@ -37,8 +37,8 @@ export function QuickActionsPanel({
     {
       label: 'Rút Thăm Vòng Mới',
       icon: <Shuffle size={18} className="text-white" />,
-      bgClass: 'bg-indigo-600',
-      hoverClass: 'hover:bg-indigo-700',
+      bgClass: '[background:var(--pf-primary)]',
+      hoverClass: 'hover:[background:var(--pf-primary-hover)]',
       onClick: () => onDrawRound?.(),
     },
     {
@@ -53,8 +53,8 @@ export function QuickActionsPanel({
     {
       label: 'Quản Lý Bảng',
       icon: <Users size={18} className="text-white" />,
-      bgClass: 'bg-purple-600',
-      hoverClass: 'hover:bg-purple-700',
+      bgClass: '[background:var(--pf-primary)]',
+      hoverClass: 'hover:[background:var(--pf-primary-hover)]',
       onClick: () => {
         onViewGroups?.()
         navigate(`/minigames/${minigameId}/groups`)
@@ -99,7 +99,7 @@ export function QuickActionsPanel({
             disabled={action.disabled}
             title={action.disabled ? action.disabledTitle : undefined}
             aria-disabled={action.disabled}
-            className={`${action.bgClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+            className={`${action.bgClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary)] ${
               action.disabled
                 ? 'opacity-50 cursor-not-allowed'
                 : `${action.hoverClass} cursor-pointer`

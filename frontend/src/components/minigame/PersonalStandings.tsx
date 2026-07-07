@@ -63,7 +63,7 @@ export function PersonalStandings({ standings }: Props) {
                 <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500')}>
                   {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                 </td>
-                <td className="px-3 py-2.5 text-center font-bold text-indigo-700 text-base">{s.rankingPoints}</td>
+                <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary)] text-base">{s.rankingPoints}</td>
                 <td className="px-3 py-2.5 text-center text-slate-700">{s.winRate}%</td>
                 <td className="px-3 py-2.5 text-center text-slate-500">{s.sitOutCount}</td>
               </tr>

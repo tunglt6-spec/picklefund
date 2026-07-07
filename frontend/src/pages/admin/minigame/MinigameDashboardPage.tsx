@@ -223,7 +223,7 @@ export function MinigameDashboardPage() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700">
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                 🏓 Đánh Đôi Ngẫu Nhiên
               </span>
             </div>
@@ -244,7 +244,7 @@ export function MinigameDashboardPage() {
           {/* Primary CTA — mở rút thăm vòng mới (đánh đôi ngẫu nhiên) */}
           <button
             onClick={() => setIsDrawModalOpen(true)}
-            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-600/20 transition-colors hover:bg-purple-700 md:w-auto"
+            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
           >
             <Shuffle size={16} />
             Đánh Đôi Ngẫu Nhiên
@@ -305,15 +305,15 @@ export function MinigameDashboardPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center gap-2 mb-4">
-              <Trophy size={20} className="text-indigo-600" />
+              <Trophy size={20} className="[color:var(--pf-primary)]" />
               <h3 className="text-lg font-bold text-slate-900">
                 Nhập Kết Quả Trận #{scoreEntryMatch.matchNumber}
               </h3>
             </div>
 
             <div className="space-y-4">
-              <div className="bg-indigo-50 rounded-xl p-3">
-                <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-1">Đội 1</p>
+              <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
+                <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 1</p>
                 <p className="text-sm font-medium text-slate-800">
                   {scoreEntryMatch.team1[0].memberName} &amp; {scoreEntryMatch.team1[1].memberName}
                 </p>
@@ -328,7 +328,7 @@ export function MinigameDashboardPage() {
                     max={21}
                     value={score1}
                     onChange={e => setScore1(Math.max(0, Math.min(21, Number(e.target.value))))}
-                    className="w-20 h-12 text-center text-2xl font-bold text-indigo-600 border-2 border-indigo-200 rounded-xl focus:outline-none focus:border-indigo-500"
+                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
                 </div>
                 <span className="text-2xl font-bold text-slate-300 mt-5">—</span>
@@ -340,13 +340,13 @@ export function MinigameDashboardPage() {
                     max={21}
                     value={score2}
                     onChange={e => setScore2(Math.max(0, Math.min(21, Number(e.target.value))))}
-                    className="w-20 h-12 text-center text-2xl font-bold text-purple-600 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500"
+                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
                 </div>
               </div>
 
-              <div className="bg-purple-50 rounded-xl p-3">
-                <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Đội 2</p>
+              <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
+                <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 2</p>
                 <p className="text-sm font-medium text-slate-800">
                   {scoreEntryMatch.team2[0].memberName} &amp; {scoreEntryMatch.team2[1].memberName}
                 </p>
@@ -362,7 +362,7 @@ export function MinigameDashboardPage() {
               </button>
               <button
                 onClick={handleSaveScore}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl [background:var(--pf-primary)] text-white text-sm font-medium hover:[background:var(--pf-primary-hover)] transition-colors"
               >
                 Lưu Kết Quả
               </button>
@@ -418,8 +418,8 @@ export function MinigameDashboardPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                <UserPen size={18} className="text-indigo-600" />
+              <div className="w-10 h-10 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
+                <UserPen size={18} className="[color:var(--pf-primary)]" />
               </div>
               <h3 className="text-base font-bold text-slate-900">Sửa thành viên</h3>
             </div>
@@ -433,7 +433,7 @@ export function MinigameDashboardPage() {
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleConfirmEdit()}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
                   placeholder="Nhập tên..."
                   autoFocus
                 />
@@ -449,7 +449,7 @@ export function MinigameDashboardPage() {
               <button
                 onClick={handleConfirmEdit}
                 disabled={!editName.trim()}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl [background:var(--pf-primary)] text-white text-sm font-medium hover:[background:var(--pf-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Lưu
               </button>

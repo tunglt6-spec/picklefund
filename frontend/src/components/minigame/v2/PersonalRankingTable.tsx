@@ -25,16 +25,16 @@ interface PersonalRankingTableProps {
 }
 
 const GROUP_BORDER: Record<string, string> = {
-  A: 'border-indigo-400',
-  B: 'border-purple-400',
+  A: '[border-color:var(--pf-primary)]',
+  B: '[border-color:var(--pf-primary)]',
   C: 'border-emerald-400',
   D: 'border-amber-400',
   E: 'border-rose-400',
 };
 
 const GROUP_TEXT: Record<string, string> = {
-  A: 'text-indigo-700 bg-indigo-50',
-  B: 'text-purple-700 bg-purple-50',
+  A: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
+  B: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
   C: 'text-emerald-700 bg-emerald-50',
   D: 'text-amber-700 bg-amber-50',
   E: 'text-rose-700 bg-rose-50',
@@ -49,7 +49,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <BarChart2 size={18} className="text-indigo-600" />
+          <BarChart2 size={18} className="[color:var(--pf-primary)]" />
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
             Bảng Xếp Hạng Cá Nhân
           </h2>
@@ -57,7 +57,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
         {compact && (
           <a
             href="#full-ranking"
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+            className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)] font-medium"
           >
             Xem tất cả
           </a>
@@ -152,7 +152,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                   </td>
 
                   {/* Points */}
-                  <td className="py-2 px-2 text-right font-bold text-indigo-700">{r.points}</td>
+                  <td className="py-2 px-2 text-right font-bold [color:var(--pf-primary)]">{r.points}</td>
 
                   {/* Win Rate */}
                   <td className="py-2 px-2 text-right min-w-[80px]">
@@ -167,7 +167,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                       </div>
                       <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-indigo-500 rounded-full"
+                          className="h-full [background:var(--pf-primary)] rounded-full"
                           style={{ width: `${Math.min(r.winRate, 100)}%` }}
                         />
                       </div>
@@ -181,7 +181,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                         {onEdit && (
                           <button
                             onClick={() => onEdit(r.memberId, r.name)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
                             title="Sửa thành viên"
                           >
                             <Pencil size={14} />

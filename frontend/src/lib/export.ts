@@ -39,12 +39,12 @@ const BASE_CSS = `
   .${PDF_ROOT} * { box-sizing: border-box; margin: 0; padding: 0; }
   .${PDF_ROOT} { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1e293b; background: #fff; }
   .${PDF_ROOT} .page { width: 754px; padding: 28px 32px; background: #fff; }
-  .${PDF_ROOT} .header { background: #6366f1; color: #fff; border-radius: 10px 10px 0 0; padding: 16px 22px 12px; }
+  .${PDF_ROOT} .header { background: #6D5DFB; color: #fff; border-radius: 10px 10px 0 0; padding: 16px 22px 12px; }
   .${PDF_ROOT} .header h1 { font-size: 17px; font-weight: 700; }
   .${PDF_ROOT} .header p { font-size: 12px; opacity: .85; margin-top: 3px; }
   .${PDF_ROOT} .header-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; opacity: .75; }
   .${PDF_ROOT} table { width: 100%; border-collapse: collapse; }
-  .${PDF_ROOT} th { background: #6366f1; color: #fff; padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .${PDF_ROOT} th { background: #6D5DFB; color: #fff; padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
   .${PDF_ROOT} th.right, .${PDF_ROOT} td.right { text-align: right; }
   .${PDF_ROOT} th.center, .${PDF_ROOT} td.center { text-align: center; }
   .${PDF_ROOT} td { padding: 7px 11px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
@@ -53,7 +53,7 @@ const BASE_CSS = `
   .${PDF_ROOT} .badge-red { color: #ef4444; font-weight: 600; }
   .${PDF_ROOT} .badge-yellow { color: #d97706; font-weight: 600; }
   .${PDF_ROOT} .summary { background: #eef2ff; border-radius: 8px; padding: 12px 16px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .${PDF_ROOT} .summary .label { font-size: 12px; color: #6366f1; font-weight: 600; }
+  .${PDF_ROOT} .summary .label { font-size: 12px; color: #6D5DFB; font-weight: 600; }
   .${PDF_ROOT} .summary .value { font-size: 15px; font-weight: 700; color: #4338ca; }
   .${PDF_ROOT} .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; }
 `
@@ -306,7 +306,7 @@ export function exportReceiptPDF(data: ReceiptData) {
 
   const receiptCSS = `
     .r-wrap { font-family: 'Segoe UI', Arial, sans-serif; }
-    .r-head { background: #6366f1; color: #fff; padding: 18px 24px 14px; border-radius: 10px 10px 0 0; display: flex; align-items: flex-start; justify-content: space-between; }
+    .r-head { background: #6D5DFB; color: #fff; padding: 18px 24px 14px; border-radius: 10px 10px 0 0; display: flex; align-items: flex-start; justify-content: space-between; }
     .r-head-left { display: flex; align-items: center; gap: 12px; }
     .r-logo { width: 40px; height: 40px; background: rgba(255,255,255,.18); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     .r-title-sub { font-size: 10px; font-weight: 600; letter-spacing: 1px; opacity: .85; text-transform: uppercase; }
@@ -317,19 +317,19 @@ export function exportReceiptPDF(data: ReceiptData) {
     .r-cards { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid #e2e8f0; border-top: none; }
     .r-card { padding: 13px 18px; }
     .r-card + .r-card { border-left: 1.5px solid #e2e8f0; }
-    .r-clabel { font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+    .r-clabel { font-size: 9px; font-weight: 700; color: #6D5DFB; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
     .r-field { display: flex; justify-content: space-between; margin-bottom: 4px; }
     .r-fk { font-size: 11px; color: #64748b; }
     .r-fv { font-size: 11px; font-weight: 600; color: #1e293b; }
-    .r-fv.accent { color: #6366f1; }
-    .r-banner { background: linear-gradient(135deg,#6366f1,#818cf8); color:#fff; padding:18px 24px; display:flex; align-items:center; justify-content:space-between; border-left:1.5px solid #6366f1; border-right:1.5px solid #6366f1; }
+    .r-fv.accent { color: #6D5DFB; }
+    .r-banner { background: linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:18px 24px; display:flex; align-items:center; justify-content:space-between; border-left:1.5px solid #6D5DFB; border-right:1.5px solid #6D5DFB; }
     .r-blabel { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: .85; }
     .r-bval { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-top: 2px; }
     .r-bdate { font-size: 11px; opacity: .75; margin-top: 2px; }
     .r-badge { background: #fff; color: #16a34a; border-radius: 20px; padding: 5px 13px; font-size: 11px; font-weight: 700; white-space: nowrap; }
     .r-badge.pending { color: #d97706; }
     .r-sec { border: 1.5px solid #e2e8f0; border-top: none; padding: 14px 18px; }
-    .r-stitle { font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eef2ff; }
+    .r-stitle { font-size: 9px; font-weight: 700; color: #6D5DFB; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eef2ff; }
     .r-stitle.gray { color: #64748b; margin-top: 8px; }
     .r-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
     .r-rk { font-size: 11px; color: #475569; }
@@ -490,7 +490,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
   // ── Trang 1: Tổng quan ──────────────────────────────────────────
   const summarySection = `
     <style>
-      .rp-head { background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border-radius:10px 10px 0 0; padding:18px 24px 14px; }
+      .rp-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; border-radius:10px 10px 0 0; padding:18px 24px 14px; }
       .rp-head h1 { font-size:18px; font-weight:800; letter-spacing:-.2px; }
       .rp-head p  { font-size:11px; opacity:.85; margin-top:3px; }
       .rp-head-meta { display:flex; justify-content:space-between; margin-top:8px; font-size:10px; opacity:.7; }
@@ -500,21 +500,21 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .rp-kpi-val   { font-size:20px; font-weight:800; margin-top:4px; color:#1e293b; }
       .rp-kpi-val.green { color:#16a34a; }
       .rp-kpi-val.red   { color:#ef4444; }
-      .rp-kpi-val.blue  { color:#6366f1; }
+      .rp-kpi-val.blue  { color:#6D5DFB; }
       .rp-kpi-sub { font-size:9px; color:#94a3b8; margin-top:2px; }
       .rp-bar-wrap { margin-top:14px; border:1.5px solid #e2e8f0; border-radius:9px; padding:12px 16px; }
       .rp-bar-title { font-size:10px; font-weight:700; color:#475569; margin-bottom:8px; }
       .rp-bar-track { background:#f1f5f9; border-radius:99px; height:10px; overflow:hidden; }
-      .rp-bar-fill  { background:linear-gradient(90deg,#6366f1,#818cf8); height:100%; border-radius:99px; transition:width .3s; }
+      .rp-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; transition:width .3s; }
       .rp-bar-labels { display:flex; justify-content:space-between; margin-top:5px; font-size:9px; color:#64748b; }
       .rp-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
       .rp-stat  { border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
       .rp-stat-label { font-size:11px; color:#475569; }
       .rp-stat-val   { font-size:13px; font-weight:700; color:#1e293b; }
       .rp-member-section { margin-top:14px; }
-      .rp-section-title { font-size:9px; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:1px; padding-bottom:6px; border-bottom:2px solid #eef2ff; margin-bottom:8px; }
+      .rp-section-title { font-size:9px; font-weight:700; color:#6D5DFB; text-transform:uppercase; letter-spacing:1px; padding-bottom:6px; border-bottom:2px solid #eef2ff; margin-bottom:8px; }
       .rp-mtable { width:100%; border-collapse:collapse; font-size:11px; }
-      .rp-mtable th { background:#6366f1; color:#fff; padding:7px 10px; text-align:left; font-size:10px; font-weight:600; }
+      .rp-mtable th { background:#6D5DFB; color:#fff; padding:7px 10px; text-align:left; font-size:10px; font-weight:600; }
       .rp-mtable th.r { text-align:right; }
       .rp-mtable td { padding:6px 10px; border-bottom:1px solid #f1f5f9; }
       .rp-mtable td.r { text-align:right; }
@@ -543,7 +543,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
         <div class="rp-kpi-sub">Tỷ lệ chi / thu: ${expensePct}%</div>
       </div>
       <div class="rp-kpi-card" style="background:#eef2ff;border-color:#c7d2fe;">
-        <div class="rp-kpi-label" style="color:#6366f1;">Số Dư Quỹ</div>
+        <div class="rp-kpi-label" style="color:#6D5DFB;">Số Dư Quỹ</div>
         <div class="rp-kpi-val blue">${formatVND(data.balance)}</div>
         <div class="rp-kpi-sub">${data.balance >= 0 ? 'Quỹ còn dư' : 'Quỹ âm – cần bổ sung'}</div>
       </div>
@@ -575,7 +575,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
           <tr>
             <td style="color:#94a3b8;font-size:10px;">${i + 1}</td>
             <td style="font-weight:600;">${m.memberName}</td>
-            <td class="r" style="color:#6366f1;font-weight:600;">${m.attendedSessions}/${m.totalSessions}</td>
+            <td class="r" style="color:#6D5DFB;font-weight:600;">${m.attendedSessions}/${m.totalSessions}</td>
             <td class="r"><span style="color:${m.contributionPaid ? '#16a34a' : '#ef4444'};font-weight:600;">${m.contributionPaid ? '✓ Đã đóng' : '✗ Chưa đóng'}</span></td>
             <td class="r">${formatVND(m.courtCost)}</td>
             <td class="r">${formatVND(m.livingCost)}</td>
@@ -614,7 +614,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       /* ── card ── */
       .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden;
             display:flex; flex-direction:column; }
-      .bc-head { background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; padding:10px 13px 9px; flex-shrink:0; }
+      .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; flex-shrink:0; }
       .bc-name { font-size:13px; font-weight:800; line-height:1.3; }
       .bc-meta { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
       .bc-meta-lft { font-size:10px; opacity:.88; }
@@ -625,7 +625,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bc-bar-lk  { font-size:9px; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
       .bc-bar-lv  { font-size:13px; font-weight:800; color:#4338ca; }
       .bc-bar-track { background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden; }
-      .bc-bar-fill  { background:linear-gradient(90deg,#6366f1,#818cf8); height:100%; border-radius:99px; }
+      .bc-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; }
       .bc-bar-pct   { font-size:9px; color:#94a3b8; margin-top:2px; text-align:right; }
       .bc-rows  { padding:7px 13px 0; flex:1; }
       .bc-row   { display:flex; justify-content:space-between; align-items:center;
@@ -635,7 +635,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bc-rk em { font-size:9px; color:#94a3b8; font-style:normal; }
       .bc-rv    { font-size:11px; font-weight:700; white-space:nowrap; }
       .bc-rv.g  { color:#16a34a; }
-      .bc-rv.v  { color:#6366f1; }
+      .bc-rv.v  { color:#6D5DFB; }
       .bc-rv.c  { color:#0891b2; }
       .bc-rv.o  { color:#ea580c; }
       .bc-rv.b  { color:#1e293b; }

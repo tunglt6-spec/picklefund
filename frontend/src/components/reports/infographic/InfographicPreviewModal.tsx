@@ -134,7 +134,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               onClick={handleExportPdf}
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}
+              style={{ background: 'linear-gradient(135deg, #6D5DFB, #7C3AED)' }}
             >
               {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
               Xuất PDF
@@ -145,7 +145,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
                 onClick={handleShare}
                 disabled={isLoading}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #0891B2, #06B6D4)' }}
+                style={{ background: 'linear-gradient(135deg, #0891B2, #5B4BE8)' }}
               >
                 {exporting === 'share' ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
                 Chia sẻ

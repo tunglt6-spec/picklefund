@@ -151,7 +151,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                       form.fundSource === fs
                         ? fs === 'COMMON'
                           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : 'border-violet-500 bg-violet-50 text-violet-700'
+                          : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                         : 'border-slate-200 text-slate-500 hover:border-slate-300'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -201,7 +201,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {isMini ? (
               <div className="space-y-3.5">
                 <div>
-                  <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
                     <Wallet size={11} />Chi tiết Quỹ Phụ
                   </p>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại chi <span className="text-red-500">*</span></label>
@@ -217,7 +217,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
-                <div className="bg-violet-50 rounded-lg px-3 py-2 text-xs text-violet-700">
+                <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
                   Khoản chi này không phân bổ cho thành viên và không ảnh hưởng đến công nợ cá nhân.
                 </div>
               </div>
@@ -860,7 +860,7 @@ export function Expenses() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
           <KpiCard icon={<DollarSign size={18} />}  iconBg="[background:var(--pf-primary-soft)]"  iconColor="[color:var(--pf-primary)]"  label="Chi Quỹ Chính"  value={commonAmt} />
-          <KpiCard icon={<Wallet size={18} />}      iconBg="bg-violet-50"  iconColor="text-violet-600"  label="Chi Quỹ Phụ"   value={miniAmt} />
+          <KpiCard icon={<Wallet size={18} />}      iconBg="[background:var(--pf-primary-soft)]"  iconColor="[color:var(--pf-primary)]"  label="Chi Quỹ Phụ"   value={miniAmt} />
           <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
           <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
           <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={periodFiltered.length} isCount unit="khoản" />

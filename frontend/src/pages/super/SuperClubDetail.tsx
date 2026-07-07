@@ -42,15 +42,15 @@ const ROLE_LABEL: Record<string, string> = {
 
 const TIER_BADGE: Record<PlanTier, string> = {
   FREE: 'bg-slate-100 text-slate-600',
-  STARTER: 'bg-indigo-100 text-indigo-700',
-  PRO: 'bg-purple-100 text-purple-700',
+  STARTER: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   ENTERPRISE: 'bg-amber-100 text-amber-700',
 }
 
 const TIER_BORDER: Record<PlanTier, string> = {
   FREE: 'border-slate-200',
-  STARTER: 'border-indigo-200',
-  PRO: 'border-purple-200',
+  STARTER: '[border-color:var(--pf-primary-soft)]',
+  PRO: '[border-color:var(--pf-primary-soft)]',
   ENTERPRISE: 'border-amber-200',
 }
 
@@ -159,7 +159,7 @@ export function SuperClubDetail() {
           onClick={() => setTab(t.key)}
           className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             tab === t.key
-              ? 'border-indigo-500 text-indigo-600'
+              ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
               : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -182,7 +182,7 @@ export function SuperClubDetail() {
                 <div className="text-xs text-slate-400 truncate">{m.email}</div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium">
+                <span className="text-xs px-2 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
                   {ROLE_LABEL[m.role] ?? m.role}
                 </span>
                 {!m.isActive && <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600">Tắt</span>}
@@ -250,7 +250,7 @@ export function SuperClubDetail() {
           {/* Upgrade form */}
           <div className="rounded-xl border border-slate-100 p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Zap size={15} className="text-indigo-500" />
+              <Zap size={15} className="[color:var(--pf-primary)]" />
               <span className="font-semibold text-sm text-slate-800">Nâng cấp gói</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -282,7 +282,7 @@ export function SuperClubDetail() {
               </div>
             </div>
             {plans.find(p => p.tier === upgradeTier) && (
-              <div className="rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2 text-xs text-indigo-700">
+              <div className="rounded-lg [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
                 Tổng: <strong>
                   {((plans.find(p => p.tier === upgradeTier)?.priceMonthly ?? 0) * upgradeMonths).toLocaleString('vi-VN')}đ
                 </strong> · Hết hạn sau {upgradeMonths} tháng
@@ -297,7 +297,7 @@ export function SuperClubDetail() {
           {aiUsage.length > 0 && (
             <div className="rounded-xl border border-slate-100 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Zap size={14} className="text-violet-500" />
+                <Zap size={14} className="[color:var(--pf-primary)]" />
                 <span className="font-semibold text-sm text-slate-800">AI Token sử dụng</span>
               </div>
               <div className="space-y-2">
@@ -308,12 +308,12 @@ export function SuperClubDetail() {
                     <div key={u.month} className="flex items-center gap-2 text-xs">
                       <div className="w-14 text-slate-400 shrink-0">{fmtMonth(u.month)}</div>
                       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-violet-400 rounded-full" style={{ width: `${pct}%` }} />
+                        <div className="h-full [background:var(--pf-primary)] rounded-full" style={{ width: `${pct}%` }} />
                       </div>
                       <div className="w-28 text-right text-slate-500 shrink-0">
                         {u.tokens.toLocaleString('vi-VN')} tokens
                       </div>
-                      <div className="w-20 text-right text-violet-600 font-medium shrink-0">
+                      <div className="w-20 text-right [color:var(--pf-primary)] font-medium shrink-0">
                         {u.estimatedCostVnd.toLocaleString('vi-VN')}đ
                       </div>
                     </div>
@@ -448,7 +448,7 @@ export function SuperClubDetail() {
                       <td className="px-4 py-3 font-medium text-gray-900">{m.username}</td>
                       <td className="px-4 py-3 text-gray-500">{m.email}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium">
+                        <span className="inline-block text-xs px-2.5 py-1 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
                           {ROLE_LABEL[m.role] ?? m.role}
                         </span>
                       </td>

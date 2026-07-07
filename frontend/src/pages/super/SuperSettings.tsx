@@ -81,7 +81,7 @@ const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string;
       <p className="text-xs text-slate-400">{desc}</p>
     </div>
     <button onClick={() => onChange(!value)}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : 'bg-slate-200'}`}>
       <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   </div>
@@ -90,7 +90,7 @@ const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string;
 const Section = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
   <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
     <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2.5">
-      <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">{icon}</div>
+      <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">{icon}</div>
       <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
     </div>
     <div className="p-5">{children}</div>
@@ -155,7 +155,7 @@ export function SuperSettings() {
 
   if (loading) return (
     <div className="flex-1 flex items-center justify-center bg-slate-50">
-      <div className="h-8 w-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
@@ -172,7 +172,7 @@ export function SuperSettings() {
       />
 
       <div className="p-6 max-w-[800px] mx-auto space-y-5">
-        <Section icon={<Globe size={14} className="text-indigo-500" />} title="Thông tin hệ thống">
+        <Section icon={<Globe size={14} className="[color:var(--pf-primary)]" />} title="Thông tin hệ thống">
           <div className="grid grid-cols-2 gap-4">
             <S id="siteName" label="Tên nền tảng" value={settings.siteName} onChange={v => setSettings(p => ({ ...p, siteName: v }))} />
             <S id="email" label="Email hỗ trợ" type="email" value={settings.supportEmail} onChange={v => setSettings(p => ({ ...p, supportEmail: v }))} />
@@ -181,7 +181,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Shield size={14} className="text-indigo-500" />} title="Bảo mật & Phiên đăng nhập">
+        <Section icon={<Shield size={14} className="[color:var(--pf-primary)]" />} title="Bảo mật & Phiên đăng nhập">
           <div className="space-y-4">
             <S id="timeout" label="Thời gian hết phiên (phút)" type="number" value={settings.sessionTimeoutMinutes} onChange={v => setSettings(p => ({ ...p, sessionTimeoutMinutes: v }))} />
             <Toggle label="Xác minh email bắt buộc" desc="Người dùng mới phải xác minh email trước khi đăng nhập"
@@ -190,7 +190,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Bell size={14} className="text-indigo-500" />} title="Thông báo & Đăng ký">
+        <Section icon={<Bell size={14} className="[color:var(--pf-primary)]" />} title="Thông báo & Đăng ký">
           <div>
             <Toggle label="Thông báo email hệ thống" desc="Gửi email khi có sự kiện quan trọng (lỗi, đăng ký mới...)"
               value={settings.emailNotifications}
@@ -201,7 +201,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Database size={14} className="text-indigo-500" />} title="Hệ thống & Backup">
+        <Section icon={<Database size={14} className="[color:var(--pf-primary)]" />} title="Hệ thống & Backup">
           <div>
             <Toggle label="Tự động backup dữ liệu" desc="Backup toàn bộ dữ liệu lúc 2:00 AM mỗi ngày"
               value={settings.autoBackup}
@@ -212,7 +212,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<KeyRound size={14} className="text-indigo-500" />} title="Tài khoản & Mật khẩu">
+        <Section icon={<KeyRound size={14} className="[color:var(--pf-primary)]" />} title="Tài khoản & Mật khẩu">
           <div className="space-y-4 max-w-md">
             <div className="grid grid-cols-2 gap-4">
               <div>

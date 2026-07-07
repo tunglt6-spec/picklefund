@@ -32,7 +32,7 @@ function PlanSelect({
       value={club.plan ?? 'STARTER'}
       onClick={onClick}
       onChange={(e) => onChange(e.target.value as ServicePlan)}
-      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:border-indigo-400"
+      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:[border-color:var(--pf-primary)]"
       style={{ color: 'var(--pf-primary)' }}
       title="Gói dịch vụ"
     >
@@ -57,7 +57,7 @@ interface ClubUser {
   isActive: boolean
 }
 
-const inputCls = 'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white'
+const inputCls = 'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white'
 
 export function SuperClubs() {
   const navigate = useNavigate()
@@ -224,7 +224,7 @@ export function SuperClubs() {
         </div>
 
         {/* Tài khoản admin ban đầu — bắt buộc. Email admin dùng để gửi thông báo cho thành viên. */}
-        <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
+        <div className="rounded-lg border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] p-4">
           <p className="text-sm font-semibold text-gray-800 mb-1">Tài khoản Admin CLB *</p>
           <p className="text-xs text-gray-500 mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
           <div className="grid grid-cols-2 gap-4">
@@ -326,7 +326,7 @@ export function SuperClubs() {
               value={u.role}
               disabled={savingRole === u.id}
               onChange={e => handleRoleChange(u.id, e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-60"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-60"
             >
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               {!ROLES.find(r => r.value === u.role) && (
@@ -353,7 +353,7 @@ export function SuperClubs() {
           <button
             onClick={() => setShowCreate(true)}
             className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-            style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+            style={{ background: 'var(--pf-primary)' }}
           >
             <Plus size={18} />
           </button>
@@ -367,7 +367,7 @@ export function SuperClubs() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm tên hoặc mã CLB..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-indigo-400"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:[border-color:var(--pf-primary)]"
             />
           </div>
         </div>
@@ -396,10 +396,10 @@ export function SuperClubs() {
                 <div className="text-xs text-slate-500"><span className="font-semibold text-slate-900">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
                 <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => changePlan(club, p)} />
                 <div className="flex-1" />
-                <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg text-indigo-500 bg-indigo-50">
+                <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
                   <Pencil size={14} />
                 </button>
-                <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg text-violet-500 bg-violet-50">
+                <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
                   <ShieldCheck size={14} />
                 </button>
                 <button
@@ -444,7 +444,7 @@ export function SuperClubs() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm CLB theo tên hoặc mã..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white"
           />
         </div>
 
@@ -484,10 +484,10 @@ export function SuperClubs() {
                       <button className="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
                       </button>
-                      <button className="text-indigo-600 hover:text-indigo-800 p-1.5 rounded hover:bg-indigo-50" title="Sửa thông tin" onClick={() => openEdit(club)}>
+                      <button className="[color:var(--pf-primary)] hover:[color:var(--pf-primary)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
                         <Pencil size={15} />
                       </button>
-                      <button className="text-violet-600 hover:text-violet-800 p-1.5 rounded hover:bg-violet-50" title="Phân quyền thành viên" onClick={() => openRoles(club)}>
+                      <button className="[color:var(--pf-primary)] hover:[color:var(--pf-primary)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Phân quyền thành viên" onClick={() => openRoles(club)}>
                         <ShieldCheck size={15} />
                       </button>
                       <button

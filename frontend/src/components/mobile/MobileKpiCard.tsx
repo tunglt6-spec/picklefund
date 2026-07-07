@@ -5,7 +5,7 @@ interface MobileKpiCardProps {
   accent?: string
 }
 
-export function MobileKpiCard({ label, value, icon, accent = '#4F46E5' }: MobileKpiCardProps) {
+export function MobileKpiCard({ label, value, icon, accent = '#6D5DFB' }: MobileKpiCardProps) {
   return (
     <div className="bg-white rounded-[18px] border border-slate-100 p-3.5 flex flex-col justify-between shadow-sm"
       style={{ minHeight: 92 }}>

@@ -14,7 +14,7 @@ import { formatDate, formatVND } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 function MemberAvatar({ name, id }: { name: string; id: string }) {
-  const colors = ['bg-indigo-500','bg-emerald-500','bg-orange-500','bg-purple-500','bg-cyan-500','bg-rose-500']
+  const colors = ['[background:var(--pf-primary)]','bg-emerald-500','bg-orange-500','[background:var(--pf-primary)]','[background:var(--pf-color-info)]','bg-rose-500']
   const color  = colors[id.charCodeAt(id.length - 1) % colors.length]
   return (
     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${color} text-white text-xs font-bold select-none`}>
@@ -202,7 +202,7 @@ export function Attendance() {
             <span className="text-[17px] font-[800] text-slate-900">Điểm Danh</span>
             <button
               className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80 disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}
+              style={{ background: 'var(--pf-primary)' }}
               onClick={() => setShowCreate(true)}
             >
               <Plus size={14} />Tạo buổi
@@ -220,7 +220,7 @@ export function Attendance() {
               {sessions.length > 0 && (
                 <button
                   onClick={() => setShowMovePeriod(true)}
-                  className="shrink-0 px-2.5 py-1.5 rounded-[8px] text-[12px] font-[600] text-violet-600 border border-violet-200 active:bg-violet-50"
+                  className="shrink-0 px-2.5 py-1.5 rounded-[8px] text-[12px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                 >
                   Chuyển kỳ
                 </button>
@@ -239,7 +239,7 @@ export function Attendance() {
                 { label: 'TB/buổi', value: completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—', sub: 'người' },
               ].map(k => (
                 <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
-                  <div className="text-[18px] font-[800] text-indigo-600">{k.value}</div>
+                  <div className="text-[18px] font-[800] [color:var(--pf-primary)]">{k.value}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">{k.sub}</div>
                 </div>
               ))}
@@ -283,13 +283,13 @@ export function Attendance() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="flex-1 py-2 rounded-[10px] text-[13px] font-[600] text-indigo-600 border border-indigo-200 flex items-center justify-center gap-1 active:bg-indigo-50"
+                      className="flex-1 py-2 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] flex items-center justify-center gap-1 active:[background:var(--pf-primary-soft)]"
                       onClick={() => openAttendance(session)}
                     >
                       <CheckSquare size={14} />Điểm danh
                     </button>
                     <button
-                      className="px-3 py-2 rounded-[10px] text-slate-400 border border-slate-100 active:bg-slate-50 active:text-indigo-600"
+                      className="px-3 py-2 rounded-[10px] text-slate-400 border border-slate-100 active:bg-slate-50 active:[color:var(--pf-primary)]"
                       onClick={() => openEdit(session)}
                     >
                       <Edit2 size={14} />
@@ -389,7 +389,7 @@ export function Attendance() {
           footer={
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setShowMovePeriod(false)} disabled={isMoving}>Hủy</Button>
-              <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="bg-violet-600 hover:bg-violet-700 text-white border-violet-600">
+              <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] text-white [border-color:var(--pf-primary)]">
                 {isMoving ? 'Đang chuyển...' : 'Xác nhận chuyển'}
               </Button>
             </div>
@@ -468,7 +468,7 @@ export function Attendance() {
           {sessions.length > 0 && (
             <button
               onClick={() => setShowMovePeriod(true)}
-              className="mb-[2px] px-3 py-1.5 rounded-lg text-[13px] font-[600] text-violet-600 border border-violet-200 hover:bg-violet-50 transition-colors"
+              className="mb-[2px] px-3 py-1.5 rounded-lg text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
             >
               Chuyển kỳ ({sessions.length} buổi)
             </button>
@@ -486,7 +486,7 @@ export function Attendance() {
             </div>
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Tổng lượt tham gia</p>
-              <p className="text-2xl font-bold text-indigo-600">{totalAttendance}</p>
+              <p className="text-2xl font-bold [color:var(--pf-primary)]">{totalAttendance}</p>
               <p className="text-xs text-slate-400 mt-0.5">lượt</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
@@ -652,7 +652,7 @@ export function Attendance() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setShowMovePeriod(false)} disabled={isMoving}>Hủy</Button>
-            <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="bg-violet-600 hover:bg-violet-700 text-white border-violet-600">
+            <Button onClick={handleMovePeriod} disabled={isMoving || !moveToPeriodId} className="[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] text-white [border-color:var(--pf-primary)]">
               {isMoving ? 'Đang chuyển...' : 'Xác nhận chuyển'}
             </Button>
           </div>

@@ -54,8 +54,8 @@ export function WorkflowRules() {
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100">
-              <Workflow size={20} className="text-purple-600" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
+              <Workflow size={20} className="[color:var(--pf-primary)]" />
             </span>
             <div>
               <h1 className="text-xl font-bold text-slate-900">Hermes Workflows</h1>
@@ -100,7 +100,7 @@ export function WorkflowRules() {
                   key={t.key}
                   onClick={() => void run(() => createRuleFromTemplate(t), `Đã tạo rule: ${t.name}`)}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl [background:var(--pf-primary)] px-3 py-2 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
                 >
                   <Plus size={13} /> {t.name}
                 </button>
@@ -123,14 +123,14 @@ export function WorkflowRules() {
                 <button
                   onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl [background:var(--pf-primary)] px-3 py-2 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
                 >
                   <Database size={13} /> Dữ liệu thật
                 </button>
                 <button
                   onClick={() => void run(async () => { setDispatchResult(await dispatchTestTrigger(t)); setLiveResult(null) }, `Đã dispatch-test: ${t}`)}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] disabled:opacity-50"
                 >
                   <Zap size={13} /> Test rỗng
                 </button>
@@ -213,7 +213,7 @@ export function WorkflowRules() {
                     <button
                       onClick={() => void run(async () => { const rr = await testTriggerRule(r.id); toast(`Run: ${rr.status}`) }, 'Đã test-trigger')}
                       disabled={busy}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg [background:var(--pf-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
                     >
                       <Play size={13} /> Test
                     </button>

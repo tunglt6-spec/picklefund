@@ -48,7 +48,7 @@ const STATUS_LABEL: Record<MinigameStatus, string> = {
 }
 const STATUS_CLASS: Record<MinigameStatus, string> = {
   DRAFT: 'bg-slate-100 text-slate-600', GROUPED: 'bg-sky-100 text-sky-600',
-  PAIRED: 'bg-violet-100 text-violet-700', SCHEDULED: 'bg-indigo-100 text-indigo-700',
+  PAIRED: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]', SCHEDULED: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   IN_PROGRESS: 'bg-amber-100 text-amber-700', COMPLETED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-600',
 }
@@ -110,7 +110,7 @@ export function TournamentDashboard() {
             {noActiveRound && mg.status !== 'COMPLETED' && (
               <button onClick={() => setIsDrawModalOpen(true)}
                 className="flex-1 text-[12px] font-semibold text-white py-2 rounded-[10px]"
-                style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+                style={{ background: 'var(--pf-primary)' }}>
                 Bốc Thăm Lượt Mới
               </button>
             )}

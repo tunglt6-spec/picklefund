@@ -7,9 +7,9 @@ export { FinanceLegend } from './FinanceLegend'
 
 export const FUND_COLORS = {
   chinh: { from: '#059669', to: '#0D9488' },
-  phu:   { from: '#7C3AED', to: '#4F46E5' },
+  phu:   { from: '#7C3AED', to: '#6D5DFB' },
   carry: { from: '#D97706', to: '#EA580C' },
-  total: { from: '#2563EB', to: '#06B6D4' },
+  total: { from: '#2563EB', to: '#5B4BE8' },
 } as const
 
 export const FUND_LABELS = {

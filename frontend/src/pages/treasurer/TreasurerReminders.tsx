@@ -111,7 +111,7 @@ export function TreasurerReminders() {
             <button
               onClick={sendAll}
               disabled={sendingAll}
-              className="flex items-center gap-1 text-[12px] font-[600] text-indigo-600 active:opacity-70 disabled:opacity-50"
+              className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50"
             >
               <Send size={13} />{sendingAll ? 'Đang gửi…' : 'Nhắc tất cả'}
             </button>
@@ -222,7 +222,7 @@ export function TreasurerReminders() {
             ? <button
                 onClick={sendAll}
                 disabled={sendingAll}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                className="flex items-center gap-2 px-4 py-2 rounded-lg [background:var(--pf-primary)] text-white text-sm font-semibold hover:[background:var(--pf-primary-hover)] disabled:opacity-50 transition-colors">
                 <Send size={14} />{sendingAll ? 'Đang gửi…' : `Nhắc tất cả (${unpaidMembers.length})`}
               </button>
             : undefined
@@ -302,7 +302,7 @@ export function TreasurerReminders() {
                           <button
                             onClick={() => sendReminder(m)}
                             disabled={sent || loadingIds.has(m.id)}
-                            className="h-7 px-3 flex items-center gap-1 mx-auto rounded-md text-xs font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="h-7 px-3 flex items-center gap-1 mx-auto rounded-md text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             <Send size={11} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>

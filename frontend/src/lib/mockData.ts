@@ -107,7 +107,7 @@ export const mockChartData = {
     { period: 'Q2/2026', income: 8000000, expense: 5200000 },
   ],
   costBreakdown: [
-    { name: 'Tiền sân', value: 5387500, fill: '#6366f1' },
+    { name: 'Tiền sân', value: 5387500, fill: '#6D5DFB' },
     { name: 'Sinh hoạt', value: 1068204, fill: '#06b6d4' },
     { name: 'Khác', value: 0, fill: '#f59e0b' },
   ],

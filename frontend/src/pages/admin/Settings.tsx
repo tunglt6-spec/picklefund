@@ -67,7 +67,7 @@ function BrandingTab() {
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       <input
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
         value={(form[key] as string | null) ?? ''}
         maxLength={max}
         placeholder={ph}
@@ -80,11 +80,11 @@ function BrandingTab() {
       <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       <div className="flex items-center gap-2">
         <input type="color" className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
-          value={HEX_RE.test(form[key]) ? form[key] : '#6366F1'}
+          value={HEX_RE.test(form[key]) ? form[key] : '#6D5DFB'}
           onChange={e => set({ [key]: e.target.value.toUpperCase() })} />
         <input
           className={cn('flex-1 rounded-lg border px-3 py-2 text-sm font-mono outline-none focus:ring-1',
-            badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500')}
+            badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:[border-color:var(--pf-primary)] focus:ring-[color:var(--pf-primary)]')}
           value={form[key]} maxLength={7} placeholder="#RRGGBB"
           onChange={e => set({ [key]: e.target.value })} />
       </div>
@@ -163,7 +163,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên CLB <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.name}
               onChange={e => set({ name: e.target.value })}
             />
@@ -180,7 +180,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ</label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.address}
               onChange={e => set({ address: e.target.value })}
             />
@@ -188,7 +188,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.contactPhone}
               onChange={e => set({ contactPhone: e.target.value })}
             />
@@ -197,7 +197,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email liên hệ</label>
             <input
               type="email"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.contactEmail}
               onChange={e => set({ contactEmail: e.target.value })}
             />
@@ -206,7 +206,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Mô tả CLB</label>
             <textarea
               rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none resize-none"
               value={form.description}
               onChange={e => set({ description: e.target.value })}
             />
@@ -222,7 +222,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Số thành viên tối đa</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.maxMembers}
               onChange={e => set({ maxMembers: e.target.value })}
             />
@@ -231,7 +231,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Mức đóng quỹ mặc định (₫)</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.defaultContribution}
               onChange={e => set({ defaultContribution: e.target.value })}
             />
@@ -241,7 +241,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Số buổi dự kiến/kỳ</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.defaultSessions}
               onChange={e => set({ defaultSessions: e.target.value })}
             />
@@ -293,7 +293,7 @@ function AccountTab() {
       <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Thông tin tài khoản</h3>
         <div className="flex items-center gap-4 mb-5">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-2xl font-bold text-white">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl [background:var(--pf-primary)] text-2xl font-bold text-white">
             {user?.username?.slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -335,7 +335,7 @@ function AccountTab() {
               <div className="relative">
                 <input
                   type={field.show ? 'text' : 'password'}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
                   value={pw[field.key]}
                   onChange={e => setPw(p => ({ ...p, [field.key]: e.target.value }))}
                   placeholder="••••••••"
@@ -402,7 +402,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
   return (
     <button onClick={() => onChange(!value)}
       className={cn('relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
-        value ? 'bg-indigo-600' : 'bg-gray-200')}>
+        value ? '[background:var(--pf-primary)]' : 'bg-gray-200')}>
       <span className={cn('inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 mt-0.5',
         value ? 'translate-x-5' : 'translate-x-0.5')} />
     </button>
@@ -468,10 +468,10 @@ function NotificationsTab(_: { clubId: string }) {
           {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
             <label key={ch} className={cn(
               'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-colors',
-              pref.preferredChannel === ch ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+              pref.preferredChannel === ch ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-gray-200 hover:border-gray-300'
             )}>
               <input type="radio" name="channel" value={ch} checked={pref.preferredChannel === ch}
-                onChange={() => set({ preferredChannel: ch })} className="accent-indigo-600" />
+                onChange={() => set({ preferredChannel: ch })} className="accent-[var(--pf-primary)]" />
               <div>
                 <p className="text-sm font-medium text-gray-900">
                   {ch === 'IN_APP' ? '📱 Trong ứng dụng' : ch === 'EMAIL' ? '📧 Email' : '✈️ Telegram'}
@@ -492,10 +492,10 @@ function NotificationsTab(_: { clubId: string }) {
         <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
           <h3 className="font-semibold text-gray-900 mb-1">Liên kết Telegram</h3>
           <p className="text-xs text-gray-500 mb-3">
-            Nhắn tin cho <span className="font-mono text-indigo-600">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
+            Nhắn tin cho <span className="font-mono [color:var(--pf-primary)]">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
           </p>
           <input
-            className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
             placeholder="Ví dụ: 123456789"
             value={pref.telegramChatId ?? ''}
             onChange={e => set({ telegramChatId: e.target.value })}
@@ -511,7 +511,7 @@ function NotificationsTab(_: { clubId: string }) {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Từ</label>
             <input type="number" min={0} max={23}
-              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursStart}
               onChange={e => set({ quietHoursStart: +e.target.value })} />
             <span className="text-xs text-gray-400 ml-1">h</span>
@@ -520,7 +520,7 @@ function NotificationsTab(_: { clubId: string }) {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Đến</label>
             <input type="number" min={0} max={23}
-              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursEnd}
               onChange={e => set({ quietHoursEnd: +e.target.value })} />
             <span className="text-xs text-gray-400 ml-1">h</span>
@@ -535,14 +535,14 @@ function NotificationsTab(_: { clubId: string }) {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Email tối đa</label>
             <input type="number" min={0} max={10}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyEmail}
               onChange={e => set({ maxDailyEmail: +e.target.value })} />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Telegram tối đa</label>
             <input type="number" min={0} max={20}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyTelegram}
               onChange={e => set({ maxDailyTelegram: +e.target.value })} />
           </div>
@@ -629,11 +629,11 @@ function TelegramTab() {
           </div>
         )}
 
-        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-5 space-y-1.5">
-          <p className="text-sm font-medium text-indigo-800">Hướng dẫn lấy Chat ID:</p>
-          <ol className="text-sm text-indigo-700 space-y-1 list-decimal list-inside">
+        <div className="[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg p-4 mb-5 space-y-1.5">
+          <p className="text-sm font-medium [color:var(--pf-primary)]">Hướng dẫn lấy Chat ID:</p>
+          <ol className="text-sm [color:var(--pf-primary)] space-y-1 list-decimal list-inside">
             <li>Mở Telegram, nhắn tin cho bot hoặc thêm bot vào nhóm CLB</li>
-            <li>Gõ lệnh <code className="bg-indigo-100 px-1 rounded">/myid</code></li>
+            <li>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code></li>
             <li>Bot trả về Chat ID — copy và dán vào ô bên dưới</li>
           </ol>
         </div>
@@ -641,7 +641,7 @@ function TelegramTab() {
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">Chat ID</label>
           <input
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
             placeholder="Ví dụ: -1001234567890 hoặc 123456789"
             value={chatId}
             onChange={e => { setChatId(e.target.value); setLinked(false) }}
@@ -673,7 +673,7 @@ function TelegramTab() {
             { cmd: '/myid',      desc: 'Lấy Chat ID của bạn' },
           ].map(({ cmd, desc }) => (
             <div key={cmd} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-              <code className="text-indigo-600 font-mono font-medium">{cmd}</code>
+              <code className="[color:var(--pf-primary)] font-mono font-medium">{cmd}</code>
               <span className="text-gray-500">— {desc}</span>
             </div>
           ))}
@@ -740,7 +740,7 @@ function PaymentTab() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngân hàng</label>
             <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={info.bank_code}
               onChange={e => set({ bank_code: e.target.value })}>
               {POPULAR_BANKS.map(b => <option key={b.code} value={b.code}>{b.name} ({b.code})</option>)}
@@ -749,7 +749,7 @@ function PaymentTab() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none font-mono"
               placeholder="Ví dụ: 0123456789"
               value={info.bank_account_number}
               onChange={e => set({ bank_account_number: e.target.value })} />
@@ -757,7 +757,7 @@ function PaymentTab() {
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none uppercase"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none uppercase"
               placeholder="VD: NGUYEN VAN A"
               value={info.bank_account_name}
               onChange={e => set({ bank_account_name: e.target.value.toUpperCase() })} />
@@ -937,7 +937,7 @@ export function Settings() {
                   ? 'text-white shadow-sm'
                   : 'text-slate-500 bg-slate-50'
               )}
-              style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' } : {}}>
+              style={activeTab === tab.id ? { background: 'var(--pf-primary)' } : {}}>
               {tab.icon}
               <span>{tab.label}</span>
             </button>
@@ -969,7 +969,7 @@ export function Settings() {
               className={cn(
                 'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.id
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? '[background:var(--pf-primary)] text-white shadow-sm'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               )}>
               {tab.icon}

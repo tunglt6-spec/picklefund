@@ -49,7 +49,7 @@ export function MemberAttendance() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Tham gia', value: `${attendedCount}/${completedSessions.length}`, color: 'text-indigo-600' },
+              { label: 'Tham gia', value: `${attendedCount}/${completedSessions.length}`, color: '[color:var(--pf-primary)]' },
               { label: 'Tỷ lệ', value: `${rate}%`, color: rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500' },
               { label: 'Sắp TG', value: `${periodSessions.filter(s => s.status === 'scheduled').length}`, color: 'text-amber-600' },
             ].map(k => (
@@ -71,7 +71,7 @@ export function MemberAttendance() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo ngày hoặc sân..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:border-indigo-400" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           {/* Rate bar */}
           {completedSessions.length > 0 && (
@@ -109,7 +109,7 @@ export function MemberAttendance() {
                       {s.startTime && s.endTime && <span><Clock size={11} className="inline mr-0.5" />{s.startTime}–{s.endTime}</span>}
                     </div>
                     {present && costShare > 0 && (
-                      <div className="mt-2 text-[12px] text-indigo-600 font-[600]">Chi phí: {formatVND(costShare)}</div>
+                      <div className="mt-2 text-[12px] [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
                     )}
                   </div>
                 )
@@ -143,7 +143,7 @@ export function MemberAttendance() {
         const present = s.status === 'completed' ? attended.has(s.id) : null
         const attendees = s._count?.attendanceRecords ?? 6
         return s.status === 'completed' && present
-          ? <span className="font-medium text-indigo-600">{formatVND(Math.round(s.courtFee / attendees))}</span>
+          ? <span className="font-medium [color:var(--pf-primary)]">{formatVND(Math.round(s.courtFee / attendees))}</span>
           : <span className="text-slate-300">—</span>
       },
     },

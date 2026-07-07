@@ -161,8 +161,8 @@ export function TreasurerDashboard() {
           {/* Fund cards */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Quỹ Chính', income: commonIncome, expense: commonExpTotal, balance, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { label: 'Quỹ Phụ', income: miniIncome, expense: miniExpTotal, balance: miniBalance, color: 'text-violet-600', bg: 'bg-violet-50' },
+              { label: 'Quỹ Chính', income: commonIncome, expense: commonExpTotal, balance, color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]' },
+              { label: 'Quỹ Phụ', income: miniIncome, expense: miniExpTotal, balance: miniBalance, color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]' },
             ].map(f => (
               <div key={f.label} className="bg-white rounded-[16px] border border-slate-100 p-3 shadow-sm">
                 <div className={`text-[11px] font-[700] ${f.color} mb-2`}>{f.label}</div>
@@ -175,10 +175,10 @@ export function TreasurerDashboard() {
             ))}
           </div>
           {/* Total asset */}
-          <div className="rounded-[16px] p-4 text-white" style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
-            <div className="text-[11px] font-[700] text-indigo-200 uppercase mb-1">Tổng Tài Sản CLB</div>
+          <div className="rounded-[16px] p-4 text-white" style={{ background: 'var(--pf-primary)' }}>
+            <div className="text-[11px] font-[700] text-white/70 uppercase mb-1">Tổng Tài Sản CLB</div>
             <div className="text-[22px] font-[800]">{formatVND(clubAssetsBalance)}</div>
-            <div className="text-[11px] text-indigo-200 mt-0.5">Quỹ Chính + Số dư chuyển kỳ</div>
+            <div className="text-[11px] text-white/70 mt-0.5">Quỹ Chính + Số dư chuyển kỳ</div>
           </div>
           {/* Alert KPIs */}
           <div className="grid grid-cols-3 gap-2">
@@ -201,7 +201,7 @@ export function TreasurerDashboard() {
                 <div key={c.id} className="flex items-center gap-2 bg-red-50 rounded-[10px] px-3 py-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
                   <span className="text-[12px] text-red-700 flex-1 truncate"><strong>{c.member?.fullName}</strong> chưa xác nhận</span>
-                  <button onClick={() => sendReminder(c.id, c.member?.userId, c.member?.fullName ?? '')} disabled={reminding === c.id} className="text-[11px] text-indigo-600 font-[600] shrink-0 disabled:opacity-40">
+                  <button onClick={() => sendReminder(c.id, c.member?.userId, c.member?.fullName ?? '')} disabled={reminding === c.id} className="text-[11px] [color:var(--pf-primary)] font-[600] shrink-0 disabled:opacity-40">
                     {reminding === c.id ? '...' : 'Nhắc'}
                   </button>
                 </div>
@@ -222,7 +222,7 @@ export function TreasurerDashboard() {
           <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
               <span className="text-[14px] font-[700] text-slate-800">Sổ Quỹ Gần Đây</span>
-              <button onClick={exportLedger} className="text-[12px] font-[600] text-indigo-600 active:opacity-70">Xuất</button>
+              <button onClick={exportLedger} className="text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">Xuất</button>
             </div>
             {recent.length === 0 ? (
               <div className="text-center py-8 text-slate-400 text-[13px]">Chưa có giao dịch</div>
@@ -271,30 +271,30 @@ export function TreasurerDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center"><DollarSign size={14} className="text-indigo-600" /></div>
-              <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Quỹ Chính</p>
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center"><DollarSign size={14} className="[color:var(--pf-primary)]" /></div>
+              <p className="text-xs font-bold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(commonIncome)}</p></div>
               <div><p className="text-[10px] text-slate-400">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(commonExpTotal)}</p></div>
-              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${balance >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>{formatVND(balance)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${balance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>{formatVND(balance)}</p></div>
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center"><Wallet size={14} className="text-violet-600" /></div>
-              <p className="text-xs font-bold text-violet-600 uppercase tracking-wide">Quỹ Phụ</p>
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center"><Wallet size={14} className="[color:var(--pf-primary)]" /></div>
+              <p className="text-xs font-bold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div><p className="text-[10px] text-slate-400">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(miniIncome)}</p></div>
               <div><p className="text-[10px] text-slate-400">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(miniExpTotal)}</p></div>
-              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${miniBalance >= 0 ? 'text-violet-600' : 'text-red-500'}`}>{formatVND(miniBalance)}</p></div>
+              <div><p className="text-[10px] text-slate-400">Số dư</p><p className={`text-sm font-bold ${miniBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>{formatVND(miniBalance)}</p></div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl p-4 text-white">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-200 mb-2">Tổng Tài Sản CLB</p>
+          <div className="bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] rounded-xl p-4 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-white/70 mb-2">Tổng Tài Sản CLB</p>
             <p className="text-xl font-bold">{formatVND(clubAssetsBalance)}</p>
-            <p className="text-xs text-indigo-200 mt-1">Quỹ Chính + Số dư chuyển kỳ</p>
+            <p className="text-xs text-white/70 mt-1">Quỹ Chính + Số dư chuyển kỳ</p>
           </div>
         </div>
 

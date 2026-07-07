@@ -31,12 +31,12 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <PlayCircle size={20} className="text-indigo-600 shrink-0" />
+          <PlayCircle size={20} className="[color:var(--pf-primary)] shrink-0" />
           <h2 className="text-base font-semibold text-slate-800">
             Vòng {roundNumber} – Đang Diễn Ra
           </h2>
         </div>
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
           {completedMatches}/{totalMatches} trận xong
         </span>
       </div>

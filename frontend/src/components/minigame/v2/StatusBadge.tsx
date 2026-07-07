@@ -28,7 +28,7 @@ const STATUS_CONFIG: Record<MinigameStatus, StatusConfig> = {
   },
   SCHEDULED: {
     label: 'Có Lịch',
-    badgeClass: 'bg-indigo-100 text-indigo-700',
+    badgeClass: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   },
   IN_PROGRESS: {
     label: 'Đang Diễn Ra',

@@ -27,7 +27,7 @@ export function MobileClubCard({ name, code, memberCount, fundPeriodCount, statu
     >
       {/* Avatar */}
       <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl font-[800] text-sm text-white"
-        style={{ background: 'linear-gradient(135deg,#4F46E5,#06B6D4)' }}>
+        style={{ background: 'var(--pf-primary)' }}>
         {code.slice(0, 2).toUpperCase()}
       </div>
 

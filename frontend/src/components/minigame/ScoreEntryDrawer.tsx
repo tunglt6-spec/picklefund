@@ -66,7 +66,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         min={0}
         value={value}
         onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
-        className="w-16 text-center text-2xl font-bold border border-slate-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+        className="w-16 text-center text-2xl font-bold border border-slate-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
       />
       <button
         onClick={() => onChange(value + 1)}
@@ -123,7 +123,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
           />
         </div>
 
@@ -134,7 +134,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Ghi chú về trận đấu..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
           />
         </div>
       </div>

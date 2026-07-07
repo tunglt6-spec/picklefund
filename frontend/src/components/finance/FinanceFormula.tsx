@@ -29,7 +29,7 @@ export function FinanceFormula({ lines, className = '' }: FinanceFormulaProps) {
             </div>
             <span className={`text-[12px] tabular-nums font-semibold shrink-0 ${
               line.highlight
-                ? (line.value < 0 ? 'text-red-600 font-bold' : 'text-indigo-700 font-bold')
+                ? (line.value < 0 ? 'text-red-600 font-bold' : '[color:var(--pf-primary)] font-bold')
                 : (line.value < 0 ? 'text-red-500' : 'text-slate-700')
             }`}>
               {formatVND(line.value)}

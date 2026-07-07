@@ -374,7 +374,7 @@ export function Contributions() {
                     onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
-                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-violet-500 bg-violet-50 text-violet-700'
+                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                         : 'border-slate-200 text-slate-500'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -511,10 +511,10 @@ export function Contributions() {
           {/* Quỹ Phụ */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                <Wallet size={14} className="text-violet-600" />
+              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
+                <Wallet size={14} className="[color:var(--pf-primary)]" />
               </div>
-              <p className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Quỹ Phụ</p>
+              <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <p className="text-2xl font-bold text-slate-900">{formatVND(miniTotal)}</p>
             <div className="flex gap-3 mt-2 flex-wrap">
@@ -593,7 +593,7 @@ export function Contributions() {
         {/* MINI contributions table */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded bg-violet-100 flex items-center justify-center"><Wallet size={11} className="text-violet-600" /></div>
+            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><Wallet size={11} className="[color:var(--pf-primary)]" /></div>
             <h3 className="text-sm font-semibold text-slate-700">Quỹ Phụ</h3>
           </div>
           {miniContribs.length === 0 ? (
@@ -623,7 +623,7 @@ export function Contributions() {
                         <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>
                       </td>
                       <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
-                      <td className="text-right font-semibold text-violet-700">{formatVND(c.amount)}</td>
+                      <td className="text-right font-semibold [color:var(--pf-primary)]">{formatVND(c.amount)}</td>
                       <td className="text-center">
                         <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
                       </td>
@@ -641,7 +641,7 @@ export function Contributions() {
                       <td className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button onClick={() => openEdit(c)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors"
+                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
                             title="Sửa"><Edit2 size={13} /></button>
                           <button onClick={() => setDeleteId(c.id)}
                             className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
@@ -685,7 +685,7 @@ export function Contributions() {
                       form.fundSource === fs
                         ? fs === 'COMMON'
                           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : 'border-violet-500 bg-violet-50 text-violet-700'
+                          : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                         : 'border-slate-200 text-slate-500 hover:border-slate-300'
                     }`}
                   >

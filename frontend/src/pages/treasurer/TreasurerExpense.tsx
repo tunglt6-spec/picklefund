@@ -130,7 +130,7 @@ export function TreasurerExpense() {
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="text-[17px] font-[800] text-slate-900">Khoản Chi</div>
           <button onClick={openCreate} disabled={activePeriods.length === 0}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] bg-indigo-600 text-white disabled:opacity-40 active:opacity-80">
+            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white disabled:opacity-40 active:opacity-80">
             <Plus size={13} />Thêm
           </button>
         </div>
@@ -176,7 +176,7 @@ export function TreasurerExpense() {
                               : <Badge variant="yellow" dot>Chưa có HĐ</Badge>}
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:bg-indigo-50 active:text-indigo-600">
+                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary)]">
                               <Edit2 size={14} />
                             </button>
                             <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:bg-red-50 active:text-red-500">
@@ -208,12 +208,12 @@ export function TreasurerExpense() {
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Mô tả <span className="text-red-500">*</span></label>
               <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="VD: Tiền sân, Nước uống..."
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
               <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white">
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white">
                 <option value="">-- Chọn kỳ quỹ --</option>
                 {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -222,21 +222,21 @@ export function TreasurerExpense() {
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input required type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi</label>
                 <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none bg-white" />
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
               </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-2">Quy tắc phân bổ</label>
               <div className="space-y-2">
                 {RULES.map(r => (
-                  <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer ${form.allocationRule === r.value ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
+                  <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200'}`}>
                     <input type="radio" name="rule-m" value={r.value} checked={form.allocationRule === r.value}
-                      onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-indigo-600" />
+                      onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-[var(--pf-primary)]" />
                     <div>
                       <p className="font-semibold text-sm text-slate-900">{r.label}</p>
                       <p className="text-xs text-slate-500">{r.desc}</p>
@@ -323,7 +323,7 @@ export function TreasurerExpense() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
                                 <Edit2 size={13} />
                               </button>
                               <button onClick={() => setDeleteId(e.id)} className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
@@ -359,12 +359,12 @@ export function TreasurerExpense() {
             <label className="block text-xs font-medium text-slate-700 mb-1.5">Mô tả khoản chi <span className="text-red-500">*</span></label>
             <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               placeholder="VD: Tiền sân buổi 5, Nước uống, Giải thưởng..."
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white" />
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
             <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white">
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white">
               <option value="">-- Chọn kỳ quỹ --</option>
               {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -374,21 +374,21 @@ export function TreasurerExpense() {
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                 placeholder="VD: 450000"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white" />
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi</label>
               <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-white" />
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-2">Quy tắc phân bổ</label>
             <div className="space-y-2">
               {RULES.map(r => (
-                <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${form.allocationRule === r.value ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200 hover:border-slate-300'}`}>
                   <input type="radio" name="rule" value={r.value} checked={form.allocationRule === r.value}
-                    onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-indigo-600" />
+                    onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-[var(--pf-primary)]" />
                   <div>
                     <p className="font-semibold text-sm text-slate-900">{r.label}</p>
                     <p className="text-xs text-slate-500">{r.desc}</p>

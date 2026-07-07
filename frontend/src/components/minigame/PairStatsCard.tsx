@@ -13,7 +13,7 @@ export function PairStatsCard({ pairStats }: Props) {
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Users size={15} className="text-indigo-600" />
+        <Users size={15} className="[color:var(--pf-primary)]" />
         <p className="text-sm font-semibold text-slate-800">Cặp Đấu Tốt Nhất</p>
       </div>
 

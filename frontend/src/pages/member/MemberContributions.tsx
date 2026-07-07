@@ -69,7 +69,7 @@ export function MemberContributions() {
         <div className="px-4 pt-4 pb-6 space-y-4">
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Tổng đóng', value: formatVND(totalPaid), color: 'text-indigo-600' },
+              { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
               { label: 'Xác nhận', value: `${confirmedCount}`, color: 'text-emerald-600' },
               { label: 'Chờ', value: `${pendingCount}`, color: 'text-amber-600' },
             ].map(k => (
@@ -82,7 +82,7 @@ export function MemberContributions() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo kỳ quỹ..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:border-indigo-400" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           {filtered.length === 0 ? (
             <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có khoản đóng quỹ nào</div>

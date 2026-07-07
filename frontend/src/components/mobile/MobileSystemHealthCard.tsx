@@ -37,7 +37,7 @@ export function MobileSystemHealthCard({ suspendedClubs, loginsLast24h, activeCl
             <div className="flex items-center gap-2 text-slate-600">
               <span className={
                 row.status === 'warn' ? 'text-amber-500' :
-                row.status === 'ok' ? 'text-emerald-500' : 'text-indigo-500'
+                row.status === 'ok' ? 'text-emerald-500' : '[color:var(--pf-primary)]'
               }>
                 {row.status === 'warn' ? <AlertTriangle size={15} /> : row.icon}
               </span>
@@ -48,7 +48,7 @@ export function MobileSystemHealthCard({ suspendedClubs, loginsLast24h, activeCl
                 ? 'bg-amber-50 text-amber-600'
                 : row.status === 'ok'
                 ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-indigo-50 text-indigo-700'
+                : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
             }`}>
               {row.value}
             </span>

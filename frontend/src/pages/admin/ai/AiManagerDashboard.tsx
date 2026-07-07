@@ -10,7 +10,7 @@ import {
 
 const ACCENT: Record<string, { dot: string; bg: string; text: string }> = {
   indigo: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
-  violet: { dot: 'bg-violet-500', bg: 'bg-violet-50', text: 'text-violet-600' },
+  violet: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
   sky: { dot: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-600' },
   emerald: { dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-600' },
   slate: { dot: 'bg-slate-400', bg: 'bg-slate-100', text: 'text-slate-500' },
