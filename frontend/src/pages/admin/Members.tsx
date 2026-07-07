@@ -472,15 +472,24 @@ export function Members() {
 
   const handleSave = async (form: typeof emptyForm) => {
     setIsSaving(true)
+    // KHÔNG gửi clubId (backend lấy từ JWT, DTO cấm field lạ); field optional rỗng → bỏ khỏi payload
+    // để không vướng @IsEmail/@IsString trên chuỗi rỗng.
+    const payload = {
+      fullName: form.fullName,
+      joinDate: form.joinDate,
+      ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
+      ...(form.email.trim() ? { email: form.email.trim() } : {}),
+      ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+    }
     try {
       if (editMember) {
-        const res = await api.put(`/members/${editMember.id}`, form)
+        const res = await api.put(`/members/${editMember.id}`, payload)
         const updated = res.data?.data ?? { ...editMember, ...form }
         setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated } : m))
         closeForm()
         toast.success('Cập nhật thành viên thành công!')
       } else {
-        const res = await api.post('/members', { ...form, clubId })
+        const res = await api.post('/members', payload)
         const created = res.data?.data
         setMembers(prev => [...prev, { ...created }])
         closeForm()

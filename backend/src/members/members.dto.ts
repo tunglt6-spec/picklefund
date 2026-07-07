@@ -6,6 +6,11 @@ import {
   IsNotEmpty,
   MaxLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+/** Form gửi chuỗi rỗng cho field không bắt buộc → coi như bỏ trống (tránh fail @IsEmail trên ''). */
+const emptyToUndefined = ({ value }: { value: unknown }) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
 
 export class CreateMemberDto {
   @IsString()
@@ -18,6 +23,7 @@ export class CreateMemberDto {
   @MaxLength(20)
   phone?: string;
 
+  @Transform(emptyToUndefined)
   @IsOptional()
   @IsEmail()
   email?: string;
@@ -43,6 +49,7 @@ export class UpdateMemberDto {
   @MaxLength(20)
   phone?: string;
 
+  @Transform(emptyToUndefined)
   @IsOptional()
   @IsEmail()
   email?: string;
