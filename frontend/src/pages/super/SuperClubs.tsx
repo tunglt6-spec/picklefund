@@ -79,6 +79,13 @@ export function SuperClubs() {
   const [deleteClub, setDeleteClub] = useState<Club | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // Confirm dialog cho thao tác nhạy cảm ảnh hưởng toàn CLB (khóa/mở khóa, đổi gói) —
+  // trước đây gọi API ngay khi click, không có xác nhận (khác handleDelete đã có modal).
+  const [pendingAction, setPendingAction] = useState<
+    { club: Club; kind: 'status'; nextPlan?: undefined } | { club: Club; kind: 'plan'; nextPlan: ServicePlan } | null
+  >(null)
+  const [confirmingAction, setConfirmingAction] = useState(false)
+
   // Roles modal
   const [rolesClub, setRolesClub] = useState<Club | null>(null)
   const [clubUsers, setClubUsers] = useState<ClubUser[]>([])
@@ -119,6 +126,18 @@ export function SuperClubs() {
       setClubs(prev => prev.map(c => c.id === club.id ? { ...c, plan } : c))
       toast.success(`Đã đổi gói ${club.name} → ${PLAN_LABEL[plan]}`)
     } catch { toast.error('Đổi gói thất bại') }
+  }
+
+  const confirmPendingAction = async () => {
+    if (!pendingAction) return
+    setConfirmingAction(true)
+    try {
+      if (pendingAction.kind === 'status') await toggleStatus(pendingAction.club)
+      else await changePlan(pendingAction.club, pendingAction.nextPlan)
+    } finally {
+      setConfirmingAction(false)
+      setPendingAction(null)
+    }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -306,6 +325,39 @@ export function SuperClubs() {
     </Modal>
   )
 
+  const actionConfirmModal = (
+    <Modal
+      open={!!pendingAction}
+      onClose={() => setPendingAction(null)}
+      title={pendingAction?.kind === 'status' ? 'Xác nhận đổi trạng thái CLB' : 'Xác nhận đổi gói dịch vụ'}
+      size="sm"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          {pendingAction?.kind === 'status' ? (
+            <>
+              Bạn có chắc muốn {pendingAction.club.status === 'active' ? 'khóa' : 'mở khóa'} CLB{' '}
+              <span className="font-semibold text-gray-900">{pendingAction.club.name}</span>?
+              {pendingAction.club.status === 'active' && ' Toàn bộ thành viên CLB sẽ không thể đăng nhập cho tới khi mở khóa lại.'}
+            </>
+          ) : pendingAction?.kind === 'plan' ? (
+            <>
+              Bạn có chắc muốn đổi gói CLB{' '}
+              <span className="font-semibold text-gray-900">{pendingAction.club.name}</span>{' '}
+              sang <span className="font-semibold text-gray-900">{PLAN_LABEL[pendingAction.nextPlan]}</span>?
+            </>
+          ) : null}
+        </p>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="secondary" type="button" onClick={() => setPendingAction(null)} disabled={confirmingAction}>Hủy</Button>
+          <Button onClick={confirmPendingAction} disabled={confirmingAction}>
+            {confirmingAction ? 'Đang xử lý...' : 'Xác nhận'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+
   const rolesModal = (
     <Modal open={!!rolesClub} onClose={() => setRolesClub(null)} title={`Phân quyền: ${rolesClub?.name ?? ''}`} size="lg">
       <div className="space-y-3">
@@ -394,7 +446,7 @@ export function SuperClubs() {
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-50">
                 <div className="text-xs text-slate-500"><span className="font-semibold text-slate-900">{club._count?.members ?? 0}</span> TV</div>
                 <div className="text-xs text-slate-500"><span className="font-semibold text-slate-900">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
-                <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => changePlan(club, p)} />
+                <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                 <div className="flex-1" />
                 <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
                   <Pencil size={14} />
@@ -403,7 +455,7 @@ export function SuperClubs() {
                   <ShieldCheck size={14} />
                 </button>
                 <button
-                  onClick={e => { e.stopPropagation(); toggleStatus(club) }}
+                  onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
                   className={`p-2 rounded-lg ${club.status === 'active' ? 'text-orange-500 bg-orange-50' : 'text-green-600 bg-green-50'}`}
                 >
                   {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
@@ -419,6 +471,7 @@ export function SuperClubs() {
         {editModal}
         {deleteModal}
         {rolesModal}
+        {actionConfirmModal}
       </div>
     )
   }
@@ -472,7 +525,7 @@ export function SuperClubs() {
                   <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.members}</td>
                   <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.fundPeriods}</td>
                   <td className="px-4 py-3 text-center">
-                    <PlanSelect club={club} onChange={(p) => changePlan(club, p)} />
+                    <PlanSelect club={club} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
@@ -491,7 +544,7 @@ export function SuperClubs() {
                         <ShieldCheck size={15} />
                       </button>
                       <button
-                        onClick={() => toggleStatus(club)}
+                        onClick={() => setPendingAction({ club, kind: 'status' })}
                         className={club.status === 'active' ? 'text-orange-500 hover:text-orange-700 p-1.5 rounded hover:bg-orange-50' : 'text-green-600 hover:text-green-800 p-1.5 rounded hover:bg-green-50'}
                         title={club.status === 'active' ? 'Khóa CLB' : 'Mở khóa'}
                       >
@@ -513,6 +566,7 @@ export function SuperClubs() {
       {editModal}
       {deleteModal}
       {rolesModal}
+      {actionConfirmModal}
     </PageShell>
   )
 }

@@ -200,6 +200,8 @@ export class ExpensesService {
               ...(fundPeriodId ? { fundPeriodId } : {}),
               fundSource: 'COMMON',
               allocationRule: rule,
+              // Nhất quán với Mini Fund: chỉ tính chi đã duyệt/đã chi vào tổng quỹ.
+              status: { in: ['approved', 'paid'] },
             },
             _sum: { amount: true },
             _count: true,

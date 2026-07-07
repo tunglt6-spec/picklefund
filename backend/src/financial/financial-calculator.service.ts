@@ -108,9 +108,16 @@ export class FinancialCalculatorService {
       }),
       // Common Fund expenses phân loại theo allocationRule (canonical, KHÔNG dùng
       // AttendanceSession.courtFee — session.courtFee chỉ là reference).
+      // status filter approved/paid: nhất quán với Mini Fund + workflow duyệt chi trên UI
+      // (Expenses.tsx có approve/reject) — chi pending/rejected KHÔNG được tính vào quỹ.
       this.prisma.livingExpense.groupBy({
         by: ['allocationRule'],
-        where: { fundPeriodId, clubId, fundSource: 'COMMON' },
+        where: {
+          fundPeriodId,
+          clubId,
+          fundSource: 'COMMON',
+          status: { in: ['approved', 'paid'] },
+        },
         _sum: { amount: true },
       }),
       this.prisma.livingExpense.aggregate({

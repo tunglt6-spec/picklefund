@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Bot, User, RefreshCw } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -60,6 +61,9 @@ export function LisaChat() {
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       }])
     } catch {
+      // Phân biệt lỗi kết nối với "chưa có brief thật" — người dùng cần biết Lisa
+      // đang hiển thị lời chào mặc định vì API lỗi, không phải vì không có dữ liệu.
+      toast.error('Không tải được tóm tắt từ Lisa — đang hiển thị lời chào mặc định.')
       setMessages([{
         id: 'welcome',
         role: 'lisa',

@@ -135,6 +135,18 @@ export class MinigameService {
     dto: { name: string; player1Id: string; player2Id?: string },
   ) {
     await this.assertOwnership(id, clubId);
+    const playerIds = [
+      dto.player1Id,
+      ...(dto.player2Id ? [dto.player2Id] : []),
+    ];
+    const participants = await this.prisma.minigameParticipant.findMany({
+      where: { minigameId: id, memberId: { in: playerIds } },
+      select: { memberId: true },
+    });
+    if (participants.length !== playerIds.length)
+      throw new BadRequestException(
+        'Cầu thủ phải là thành viên tham gia giải đấu này',
+      );
     return this.prisma.minigameTeam.create({
       data: {
         minigameId: id,

@@ -1,9 +1,17 @@
-import { Controller, Post, Get, Body, Patch, Req, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Patch,
+  Req,
+  HttpCode,
+} from '@nestjs/common';
 import { type Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { CurrentUser, Public} from '../common/decorators';
+import { CurrentUser, Public } from '../common/decorators';
 import { ok } from '../common/response';
 import {
   LoginDto,
@@ -61,6 +69,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @Throttle({ short: { ttl: 60000, limit: 5 } })
   @Patch('change-password')
   async changePassword(
     @CurrentUser() user: any,

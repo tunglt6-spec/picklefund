@@ -9,8 +9,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { HermesService } from './hermes.service';
-import { CurrentUser, Roles} from '../common/decorators';
+import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import type { HermesEvent } from './hermes.types';
 
@@ -64,6 +65,7 @@ export class HermesController {
   }
 
   // Test email delivery for current user
+  @Throttle({ short: { ttl: 60000, limit: 3 } })
   @Post('test-email')
   async testEmail(@CurrentUser() user: { userId: string }) {
     const result = await this.svc.testEmail(user.userId);
@@ -92,12 +94,23 @@ export class HermesController {
       enabled?: boolean;
     },
   ) {
-    const { quietHoursStart: qs, quietHoursEnd: qe, maxDailyPush: mp, maxDailyEmail: me, maxDailyTelegram: mt } = body;
-    if (qs !== undefined && (qs < 0 || qs > 23)) throw new BadRequestException('quietHoursStart phải từ 0–23');
-    if (qe !== undefined && (qe < 0 || qe > 23)) throw new BadRequestException('quietHoursEnd phải từ 0–23');
-    if (mp !== undefined && (mp < 0 || mp > 100)) throw new BadRequestException('maxDailyPush phải từ 0–100');
-    if (me !== undefined && (me < 0 || me > 100)) throw new BadRequestException('maxDailyEmail phải từ 0–100');
-    if (mt !== undefined && (mt < 0 || mt > 100)) throw new BadRequestException('maxDailyTelegram phải từ 0–100');
+    const {
+      quietHoursStart: qs,
+      quietHoursEnd: qe,
+      maxDailyPush: mp,
+      maxDailyEmail: me,
+      maxDailyTelegram: mt,
+    } = body;
+    if (qs !== undefined && (qs < 0 || qs > 23))
+      throw new BadRequestException('quietHoursStart phải từ 0–23');
+    if (qe !== undefined && (qe < 0 || qe > 23))
+      throw new BadRequestException('quietHoursEnd phải từ 0–23');
+    if (mp !== undefined && (mp < 0 || mp > 100))
+      throw new BadRequestException('maxDailyPush phải từ 0–100');
+    if (me !== undefined && (me < 0 || me > 100))
+      throw new BadRequestException('maxDailyEmail phải từ 0–100');
+    if (mt !== undefined && (mt < 0 || mt > 100))
+      throw new BadRequestException('maxDailyTelegram phải từ 0–100');
     return ok(
       await this.svc.updatePreferences(user.userId, body),
       'Đã cập nhật cài đặt thông báo',

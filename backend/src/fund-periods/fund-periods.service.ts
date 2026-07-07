@@ -167,37 +167,16 @@ export class FundPeriodsService {
       select: { id: true, name: true },
     });
 
+    // carryForward = SỐ DƯ CUỐI kỳ trước (clubAssets.balance của kỳ đó — đã bao gồm
+    // carryForward của chính kỳ đó). Gọi ĐỆ QUY summary() của kỳ trước để chuỗi carryForward
+    // cộng dồn đúng qua nhiều kỳ liên tiếp (kỳ N-2 không bị bỏ sót khi tính kỳ N).
+    // Trước đây tính trực tiếp "prevIncome - prevExpense" chỉ của RIÊNG kỳ liền trước (không đệ quy)
+    // → mất số dư các kỳ xa hơn N-1; đồng thời fallback prevTotalLiving>0?prevTotalLiving:prevTotalCourt
+    // không khớp canonical (financial-calculator dùng tổng EQUAL+PRESENT_ONLY/ATTENDANCE+FUND_ONLY).
     let carryForwardBalance = 0;
     if (previousPeriod) {
-      const [prevIncome, prevLiving, prevCourt] = await Promise.all([
-        this.prisma.fundContribution.aggregate({
-          where: {
-            fundPeriodId: previousPeriod.id,
-            clubId,
-            fundSource: 'COMMON',
-            isConfirmed: true,
-          },
-          _sum: { amount: true },
-        }),
-        this.prisma.livingExpense.aggregate({
-          where: {
-            fundPeriodId: previousPeriod.id,
-            clubId,
-            fundSource: 'COMMON',
-          },
-          _sum: { amount: true },
-        }),
-        this.prisma.attendanceSession.aggregate({
-          where: { fundPeriodId: previousPeriod.id, clubId },
-          _sum: { courtFee: true },
-        }),
-      ]);
-      const prevTotalIncome = Number(prevIncome._sum.amount ?? 0);
-      const prevTotalLiving = Number(prevLiving._sum.amount ?? 0);
-      const prevTotalCourt = Number(prevCourt._sum.courtFee ?? 0);
-      const prevTotalExpense =
-        prevTotalLiving > 0 ? prevTotalLiving : prevTotalCourt;
-      carryForwardBalance = prevTotalIncome - prevTotalExpense;
+      const prevSummary = await this.summary(previousPeriod.id, clubId);
+      carryForwardBalance = prevSummary.clubAssets.balance;
     }
 
     const result = await this.calculator.calculate(id, clubId, {

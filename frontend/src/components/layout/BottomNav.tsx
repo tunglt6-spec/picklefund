@@ -97,30 +97,27 @@ export function BottomNav() {
                   {/* Active pill */}
                   {isActive && (
                     <span
-                      className="absolute top-1 left-1/2 -translate-x-1/2 h-8 w-14 rounded-full"
-                      style={{ background: 'linear-gradient(135deg,rgba(79,70,229,0.12),rgba(6,182,212,0.12))' }}
+                      className="absolute top-1 left-1/2 -translate-x-1/2 h-8 w-14 rounded-full [background:var(--pf-primary-soft)]"
                     />
                   )}
 
                   {/* Icon */}
                   <span className={`relative z-10 transition-all duration-150 ${
-                    isActive ? 'scale-105' : ''
-                  }`} style={{ color: isActive ? '#6D5DFB' : '#94A3B8' }}>
+                    isActive ? 'scale-105 [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'
+                  }`}>
                     {item.icon}
                   </span>
 
                   {/* Label */}
                   <span
-                    className="text-[11px] font-[600] leading-none"
-                    style={{ color: isActive ? '#6D5DFB' : '#94A3B8' }}
+                    className={`text-[11px] font-[600] leading-none ${isActive ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}
                   >
                     {item.label}
                   </span>
 
                   {/* Active dot */}
                   {isActive && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                      style={{ background: '#6D5DFB' }} />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full [background:var(--pf-primary)]" />
                   )}
                 </>
               )}

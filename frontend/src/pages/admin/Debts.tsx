@@ -1,12 +1,16 @@
 /**
  * Debts (19) — Công nợ cá nhân: màn gộp riêng tổng hợp thành viên còn nợ quỹ
- * kỳ đang mở. Read-only từ clubDataStore (không backend mới); cùng cách suy ra
- * "chưa đóng" như TreasurerReminders (không có contribution COMMON đã xác nhận).
+ * kỳ đang mở. Trạng thái (chưa đóng/chờ xác nhận/đã đóng) suy từ contributions
+ * trong clubDataStore như TreasurerReminders; SỐ TIỀN còn nợ lấy từ
+ * GET /fund-periods/:id/summary (financial-calculator canonical — chia đều
+ * chi phí sân + chia theo tỉ lệ tham dự sinh hoạt) để khớp với Reports/FundPeriods,
+ * KHÔNG dùng flat contributionAmount (sai khi CLB có chi sinh hoạt phân bổ theo buổi).
  * Dùng shared kit V2.2 (PageShell/PageHeader/MetricCard/DataTable/MobileCardList/
  * StatusBadge/EmptyState) — token màu, không hardcode brand.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Users, AlertCircle, Clock, Wallet } from 'lucide-react'
+import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
@@ -14,6 +18,10 @@ import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
   StatusBadge, EmptyState, ResponsiveTabs, type Column, type TabItem, type StatusTone,
 } from '../../components/shared'
+
+function isLocalToken(token?: string | null) {
+  return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
+}
 
 type DebtStatus = 'unpaid' | 'pending' | 'paid'
 interface DebtRow {
@@ -32,6 +40,7 @@ const STATUS_META: Record<DebtStatus, { label: string; tone: StatusTone }> = {
 
 export function Debts() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const accessToken = useAuthStore((s) => s.accessToken)
   const data = useClubDataStore((s) => s.getClubData(clubId))
   const { members, contributions, fundPeriods } = data
 
@@ -40,6 +49,20 @@ export function Debts() {
     [fundPeriods],
   )
   const amount = activePeriod?.contributionAmount ?? 0
+
+  // Số nợ thật/thành viên (courtFee chia đều + livingFee theo tỉ lệ tham dự - đã đóng),
+  // canonical từ financial-calculator qua fund-periods summary — khớp Reports/FundPeriods.
+  const [memberBalances, setMemberBalances] = useState<Record<string, number>>({})
+  useEffect(() => {
+    if (!activePeriod?.id || isLocalToken(accessToken)) { setMemberBalances({}); return }
+    let cancelled = false
+    api.get(`/fund-periods/${activePeriod.id}/summary`).then((res) => {
+      if (cancelled) return
+      const list = (res.data?.data?.members ?? []) as { memberId: string; balance: number }[]
+      setMemberBalances(Object.fromEntries(list.map((m) => [m.memberId, m.balance])))
+    }).catch(() => { if (!cancelled) setMemberBalances({}) })
+    return () => { cancelled = true }
+  }, [activePeriod?.id, accessToken])
 
   const rows = useMemo<DebtRow[]>(() => {
     const commonContribs = contributions.filter((c) => (c.fundSource ?? 'COMMON') === 'COMMON')
@@ -50,19 +73,23 @@ export function Debts() {
           (c) => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id),
         )
         const status: DebtStatus = !contrib ? 'unpaid' : contrib.isConfirmed ? 'paid' : 'pending'
+        // Ưu tiên số dư thật (balance < 0 = còn nợ) từ backend; fallback mức đóng chuẩn
+        // khi chưa có dữ liệu backend (demo/local token hoặc đang tải).
+        const realBalance = memberBalances[m.id]
+        const owed = realBalance !== undefined ? Math.max(0, -realBalance) : amount
         return {
           id: m.id,
           name: m.fullName,
           phone: m.phone,
           status,
-          amount: status === 'paid' ? 0 : amount,
+          amount: status === 'paid' ? 0 : owed,
         }
       })
       .sort((a, b) => {
         const order: Record<DebtStatus, number> = { unpaid: 0, pending: 1, paid: 2 }
         return order[a.status] - order[b.status] || a.name.localeCompare(b.name, 'vi')
       })
-  }, [members, contributions, activePeriod, amount])
+  }, [members, contributions, activePeriod, amount, memberBalances])
 
   const stats = useMemo(() => {
     const unpaid = rows.filter((r) => r.status === 'unpaid')

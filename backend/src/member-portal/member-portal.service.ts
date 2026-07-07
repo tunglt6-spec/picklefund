@@ -1,5 +1,6 @@
 import {
   Injectable,
+  BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -223,9 +224,7 @@ export class MemberPortalService {
     register: boolean,
   ) {
     if (!memberId)
-      throw new ForbiddenException(
-        'Tài khoản chưa liên kết hồ sơ thành viên.',
-      );
+      throw new ForbiddenException('Tài khoản chưa liên kết hồ sơ thành viên.');
     await this.assertSession(sessionId, clubId);
     if (register) {
       await this.prisma.sessionRegistration.upsert({
@@ -247,12 +246,16 @@ export class MemberPortalService {
   }
 
   /** Member tự check-in PRESENT vào buổi chơi (self-scope, idempotent). */
-  async selfCheckin(memberId: string | null, clubId: string, sessionId: string) {
+  async selfCheckin(
+    memberId: string | null,
+    clubId: string,
+    sessionId: string,
+  ) {
     if (!memberId)
-      throw new ForbiddenException(
-        'Tài khoản chưa liên kết hồ sơ thành viên.',
-      );
-    await this.assertSession(sessionId, clubId);
+      throw new ForbiddenException('Tài khoản chưa liên kết hồ sơ thành viên.');
+    const session = await this.assertSession(sessionId, clubId);
+    if (session.status === 'cancelled')
+      throw new BadRequestException('Buổi chơi đã bị hủy, không thể check-in.');
     await this.prisma.attendanceRecord.upsert({
       where: {
         attendanceSessionId_memberId: {

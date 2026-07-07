@@ -135,7 +135,6 @@ export default function App() {
             {/* Super Admin */}
             <Route path="/super/dashboard" element={<SuperDashboard />} />
             <Route path="/super/clubs" element={<SuperClubs />} />
-            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/super/clubs/:id" element={<SuperClubDetail />} />
             <Route path="/super/users" element={<SuperUsers />} />
             <Route path="/super/audit-logs" element={<AuditLogs />} />
@@ -163,6 +162,10 @@ export default function App() {
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
+            </Route>
+            {/* Onboarding tạo CLB mới — chỉ SUPER_ADMIN (nút vào chỉ hiện ở SuperClubs cho SUPER_ADMIN) */}
+            <Route element={<RoleRoute allow={['SUPER_ADMIN']} />}>
+            <Route path="/onboarding" element={<Onboarding />} />
             </Route>
             {/* Màn dùng chung admin + member (member: read-only / self-scope / theo ủy quyền minigame) */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN', 'MEMBER_VIEW']} />}>

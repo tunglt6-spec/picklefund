@@ -96,6 +96,10 @@ export class UsersController {
     if (user.role !== 'SUPER_ADMIN') {
       const target = await this.service.findOne(id);
       if (target.clubId !== user.clubId) throw new ForbiddenException();
+      if (body.role === 'SUPER_ADMIN')
+        throw new ForbiddenException(
+          'CLUB_ADMIN không thể nâng quyền tài khoản lên SUPER_ADMIN',
+        );
     }
     const updated = await this.service.update(id, body);
     void this.audit.log({

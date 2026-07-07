@@ -36,11 +36,12 @@ const routeByRole: Record<Role, string> = {
   CLUB_TREASURER: '/treasurer/dashboard', MEMBER_VIEW: '/member/dashboard',
 }
 
+// Khớp với số liệu ở Landing.tsx (trang public) — tránh 2 con số marketing khác nhau
+// gây thiếu nhất quán khi khách xem cả Landing lẫn Login.
 const stats = [
-  { value: '500+',   label: 'CLB sử dụng' },
-  { value: '10K+',   label: 'Thành viên' },
-  { value: '1M+',    label: 'Giao dịch' },
-  { value: '99.9%',  label: 'Uptime' },
+  { value: '30+',    label: 'CLB sử dụng' },
+  { value: '1.000+', label: 'Thành viên' },
+  { value: '98%',    label: 'Hài lòng' },
 ]
 
 const features = [
