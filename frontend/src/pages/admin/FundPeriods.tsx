@@ -78,10 +78,13 @@ export function FundPeriods() {
   const [editingGame, setEditingGame] = useState<FundPeriod | null>(null)
   const [viewPeriod, setViewPeriod] = useState<FundPeriod | null>(null)
 
-  // FUND-IMPL-01: thông tin kỳ Quỹ Phụ gần nhất để hiển thị block "sao chép thành viên"
-  // trong modal Tạo Quỹ Phụ. undefined = đang tải, null = không có kỳ trước / lỗi tải.
+  // FUND-IMPL-01: thông tin kỳ gần nhất để hiển thị block "sao chép thành viên"
+  // trong modal Tạo Quỹ. undefined = đang tải, null = không có kỳ trước / lỗi tải.
+  // Áp dụng cho CẢ Quỹ Chính (chung) lẫn Quỹ Phụ (game) — nghiệp vụ giống nhau.
   const [prevGamePeriod, setPrevGamePeriod] = useState<PreviousPeriodInfo | null | undefined>(undefined)
   const [prevGamePeriodError, setPrevGamePeriodError] = useState(false)
+  const [prevChungPeriod, setPrevChungPeriod] = useState<PreviousPeriodInfo | null | undefined>(undefined)
+  const [prevChungPeriodError, setPrevChungPeriodError] = useState(false)
 
   useEffect(() => {
     if (!showCreateGame || editingGame) return
@@ -103,6 +106,26 @@ export function FundPeriods() {
     })
     return () => { cancelled = true }
   }, [showCreateGame, editingGame])
+
+  useEffect(() => {
+    if (!showCreateChung || editingChung) return
+    let cancelled = false
+    setPrevChungPeriod(undefined)
+    setPrevChungPeriodError(false)
+    api.get('/fund-periods/previous', { params: { type: 'chung' } }).then(res => {
+      if (cancelled) return
+      const info = res.data?.data as PreviousPeriodInfo | null
+      setPrevChungPeriod(info)
+      if (info && info.memberCount > 0) {
+        setFormChung(f => ({ ...f, copyMembersFromPreviousPeriod: true }))
+      }
+    }).catch(() => {
+      if (cancelled) return
+      setPrevChungPeriod(null)
+      setPrevChungPeriodError(true)
+    })
+    return () => { cancelled = true }
+  }, [showCreateChung, editingChung])
 
   const openEdit = (p: FundPeriod) => {
     const form = periodToForm(p)
@@ -1163,6 +1186,9 @@ export function FundPeriods() {
         editing={!!editingChung}
         isSaving={isSaving}
         onSubmit={handleSave('chung', formChung, editingChung, () => { setShowCreateChung(false); setEditingChung(null); setFormChung({ ...emptyForm }) })}
+        showCopyMembers
+        prevPeriodInfo={prevChungPeriod}
+        prevPeriodError={prevChungPeriodError}
       />
 
       {/* Quỹ Phụ modal (create or edit) */}
@@ -1938,7 +1964,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             {!prevPeriodError && prevPeriodInfo && prevPeriodInfo.memberCount > 0 && form.copyMembersFromPreviousPeriod && (
               <div className="mt-2.5 space-y-2.5">
                 <p className="text-xs text-slate-600">
-                  Hệ thống sẽ sao chép danh sách thành viên từ kỳ quỹ gần nhất của Quỹ Phụ này.
+                  Hệ thống sẽ sao chép danh sách thành viên từ kỳ quỹ gần nhất cùng loại.
                 </p>
                 <div className="rounded-[12px] border p-3 [background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] space-y-1">
                   <p className="text-[11px] font-[600] uppercase tracking-wide [color:var(--pf-color-muted)]">Kỳ quỹ gần nhất</p>
