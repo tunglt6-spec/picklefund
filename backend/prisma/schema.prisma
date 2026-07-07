@@ -42,6 +42,7 @@ model Club {
   workflowRuns      WorkflowRun[]
   notificationJobs  NotificationJob[]
   sessionRegistrations SessionRegistration[]
+  fundPeriodMembers FundPeriodMember[]
 
   @@map("clubs")
 }
@@ -130,6 +131,7 @@ model Member {
   teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
   payments          Payment[]
   sessionRegistrations SessionRegistration[]
+  fundPeriodMemberships FundPeriodMember[]
 
   @@index([clubId, isDeleted])
   @@map("members")
@@ -166,9 +168,33 @@ model FundPeriod {
   attendanceSessions AttendanceSession[]
   expenses           LivingExpense[]
   personalReceipts   PersonalReceipt[]
+  periodMembers      FundPeriodMember[]
 
   @@index([clubId])
   @@map("fund_periods")
+}
+
+/// Roster thành viên "được kỳ vọng đóng" của 1 kỳ quỹ (chủ yếu Quỹ Phụ/giải đấu —
+/// không phải mọi thành viên CLB đều tham gia mỗi giải). TÁCH BIỆT FundContribution
+/// (log giao dịch thực tế) — roster tồn tại kể cả khi chưa có giao dịch nào, dùng để
+/// biết "ai thuộc kỳ này + mức đóng kỳ vọng"; trạng thái đã đóng/chưa đóng luôn SUY RA
+/// từ FundContribution (không lưu paidAmount/status ở đây để tránh dữ liệu trùng/lệch).
+model FundPeriodMember {
+  id             String   @id @default(uuid())
+  clubId         String   @map("club_id")
+  fundPeriodId   String   @map("fund_period_id")
+  memberId       String   @map("member_id")
+  expectedAmount Decimal  @map("expected_amount") @db.Decimal(15, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  club       Club       @relation(fields: [clubId], references: [id])
+  fundPeriod FundPeriod @relation(fields: [fundPeriodId], references: [id], onDelete: Cascade)
+  member     Member     @relation(fields: [memberId], references: [id])
+
+  @@unique([fundPeriodId, memberId])
+  @@index([clubId, fundPeriodId])
+  @@map("fund_period_members")
 }
 
 enum FundPeriodStatus {

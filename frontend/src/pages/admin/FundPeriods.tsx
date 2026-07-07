@@ -30,7 +30,9 @@ const DONUT_COLORS = ['#6D5DFB', '#7c3aed']
 
 const emptyForm = {
   name: '', startDate: '', endDate: '',
-  contributionAmount: 1000000, totalSessions: 13, notes: ''
+  contributionAmount: 1000000, totalSessions: 13, notes: '',
+  // FUND-IMPL-01: chỉ dùng cho modal Tạo Quỹ Phụ (create, không áp dụng khi sửa).
+  copyMembersFromPreviousPeriod: false,
 }
 
 type FormData = typeof emptyForm
@@ -43,7 +45,16 @@ function periodToForm(p: FundPeriod): FormData {
     contributionAmount: p.contributionAmount,
     totalSessions: p.totalSessions,
     notes: p.notes ?? '',
+    copyMembersFromPreviousPeriod: false,
   }
+}
+
+interface PreviousPeriodInfo {
+  id: string
+  name: string
+  startDate: string
+  endDate: string
+  memberCount: number
 }
 
 type Tab = 'list' | 'history' | 'highlights'
@@ -66,6 +77,32 @@ export function FundPeriods() {
   const [editingChung, setEditingChung] = useState<FundPeriod | null>(null)
   const [editingGame, setEditingGame] = useState<FundPeriod | null>(null)
   const [viewPeriod, setViewPeriod] = useState<FundPeriod | null>(null)
+
+  // FUND-IMPL-01: thông tin kỳ Quỹ Phụ gần nhất để hiển thị block "sao chép thành viên"
+  // trong modal Tạo Quỹ Phụ. undefined = đang tải, null = không có kỳ trước / lỗi tải.
+  const [prevGamePeriod, setPrevGamePeriod] = useState<PreviousPeriodInfo | null | undefined>(undefined)
+  const [prevGamePeriodError, setPrevGamePeriodError] = useState(false)
+
+  useEffect(() => {
+    if (!showCreateGame || editingGame) return
+    let cancelled = false
+    setPrevGamePeriod(undefined)
+    setPrevGamePeriodError(false)
+    api.get('/fund-periods/previous', { params: { type: 'game' } }).then(res => {
+      if (cancelled) return
+      const info = res.data?.data as PreviousPeriodInfo | null
+      setPrevGamePeriod(info)
+      // Đề xuất mặc định bật nếu có kỳ trước hợp lệ VÀ có thành viên để copy.
+      if (info && info.memberCount > 0) {
+        setFormGame(f => ({ ...f, copyMembersFromPreviousPeriod: true }))
+      }
+    }).catch(() => {
+      if (cancelled) return
+      setPrevGamePeriod(null)
+      setPrevGamePeriodError(true)
+    })
+    return () => { cancelled = true }
+  }, [showCreateGame, editingGame])
 
   const openEdit = (p: FundPeriod) => {
     const form = periodToForm(p)
@@ -326,8 +363,11 @@ export function FundPeriods() {
     }
     setIsSaving(true)
     try {
-      const payload = { ...form, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
+      // copyMembersFromPreviousPeriod chỉ áp dụng khi TẠO MỚI — PUT (sửa) không có field
+      // này ở backend (UpdateFundPeriodDto), tách riêng để tránh gửi field lạ.
+      const { copyMembersFromPreviousPeriod, ...formRest } = form
       if (editing) {
+        const payload = { ...formRest, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
         const res = await api.put(`/fund-periods/${editing.id}`, payload)
         const d = res.data?.data
         const updated: FundPeriod = { ...editing, ...payload, ...(d ?? {}), contributionAmount: Number((d ?? payload).contributionAmount) }
@@ -335,12 +375,13 @@ export function FundPeriods() {
         onClose()
         toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
       } else {
+        const payload = { ...formRest, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions), copyMembersFromPreviousPeriod }
         const res = await api.post('/fund-periods', payload)
         const d = res.data?.data
         const newPeriod: FundPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
         setPeriods(prev => [newPeriod, ...prev])
         onClose()
-        toast.success(`Tạo kỳ quỹ "${form.name}" thành công!`)
+        toast.success(res.data?.message ?? `Tạo kỳ quỹ "${form.name}" thành công!`)
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? (editing ? 'Cập nhật kỳ quỹ thất bại' : 'Tạo kỳ quỹ thất bại'))
@@ -711,6 +752,9 @@ export function FundPeriods() {
           onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null) })}
           editing={!!editingGame}
           isSaving={isSaving}
+          showCopyMembers
+          prevPeriodInfo={prevGamePeriod}
+          prevPeriodError={prevGamePeriodError}
         />
       </div>
     )
@@ -1133,6 +1177,9 @@ export function FundPeriods() {
         editing={!!editingGame}
         isSaving={isSaving}
         onSubmit={handleSave('game', formGame, editingGame, () => { setShowCreateGame(false); setEditingGame(null); setFormGame({ ...emptyForm }) })}
+        showCopyMembers
+        prevPeriodInfo={prevGamePeriod}
+        prevPeriodError={prevGamePeriodError}
       />
 
       {/* View period detail modal */}
@@ -1807,11 +1854,15 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   )
 }
 
-function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit, editing, isSaving }: {
+function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSubmit, editing, isSaving, showCopyMembers, prevPeriodInfo, prevPeriodError }: {
   open: boolean; onClose: () => void; title: string; subtitle: string
   formId: string; form: FormData
   setForm: (f: FormData) => void; onSubmit: (e: React.FormEvent) => void
   editing?: boolean; isSaving?: boolean
+  // FUND-IMPL-01 — chỉ modal Tạo Quỹ Phụ (create) truyền các prop này.
+  showCopyMembers?: boolean
+  prevPeriodInfo?: PreviousPeriodInfo | null
+  prevPeriodError?: boolean
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} subtitle={subtitle} size="lg"
@@ -1848,6 +1899,63 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
               onChange={e => setForm({ ...form, totalSessions: Number(e.target.value) })} className="input-base" />
           </div>
         </div>
+
+        {showCopyMembers && !editing && (
+          <div className="rounded-[16px] border p-3.5 [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)]">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded shrink-0"
+                style={{ accentColor: 'var(--pf-primary)' }}
+                checked={form.copyMembersFromPreviousPeriod}
+                disabled={prevPeriodError || prevPeriodInfo === null || prevPeriodInfo === undefined}
+                onChange={e => setForm({ ...form, copyMembersFromPreviousPeriod: e.target.checked })}
+              />
+              <span className="flex items-center gap-2 flex-wrap text-[13px] font-medium text-slate-700">
+                Sao chép thành viên từ kỳ quỹ trước
+                <Badge variant="green">Đề xuất</Badge>
+              </span>
+            </label>
+
+            {prevPeriodInfo === undefined && !prevPeriodError && (
+              <p className="mt-2 text-xs text-slate-400">Đang tải thông tin kỳ quỹ trước...</p>
+            )}
+
+            {prevPeriodError && (
+              <p className="mt-2 text-xs text-amber-600">
+                Không tải được thông tin kỳ quỹ trước. Bạn vẫn có thể tạo kỳ quỹ không sao chép.
+              </p>
+            )}
+
+            {!prevPeriodError && prevPeriodInfo === null && (
+              <p className="mt-2 text-xs text-slate-500">Chưa có kỳ quỹ trước để sao chép thành viên.</p>
+            )}
+
+            {!prevPeriodError && prevPeriodInfo && prevPeriodInfo.memberCount === 0 && (
+              <p className="mt-2 text-xs text-slate-500">Kỳ quỹ trước chưa có thành viên để sao chép.</p>
+            )}
+
+            {!prevPeriodError && prevPeriodInfo && prevPeriodInfo.memberCount > 0 && form.copyMembersFromPreviousPeriod && (
+              <div className="mt-2.5 space-y-2.5">
+                <p className="text-xs text-slate-600">
+                  Hệ thống sẽ sao chép danh sách thành viên từ kỳ quỹ gần nhất của Quỹ Phụ này.
+                </p>
+                <div className="rounded-[12px] border p-3 [background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] space-y-1">
+                  <p className="text-[11px] font-[600] uppercase tracking-wide [color:var(--pf-color-muted)]">Kỳ quỹ gần nhất</p>
+                  <p className="text-sm font-semibold text-slate-800">{prevPeriodInfo.name}</p>
+                  <p className="text-xs text-slate-500">Thời gian: {formatDate(prevPeriodInfo.startDate)} - {formatDate(prevPeriodInfo.endDate)}</p>
+                  <p className="text-xs text-slate-500">Số lượng thành viên: {prevPeriodInfo.memberCount} thành viên</p>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  Danh sách thành viên sẽ được sao chép sang kỳ quỹ mới.<br />
+                  Mức đóng/người sẽ áp dụng theo giá trị bạn nhập ở trên.<br />
+                  Trạng thái mặc định: Chưa đóng (0 đ).
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}

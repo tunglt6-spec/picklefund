@@ -36,6 +36,11 @@ const mockPrisma = {
   personalReceipt: {
     upsert: jest.fn(),
   },
+  fundPeriodMember: {
+    findMany: jest.fn(),
+    createMany: jest.fn(),
+    count: jest.fn(),
+  },
   $transaction: jest.fn().mockResolvedValue([]),
 };
 
@@ -136,6 +141,174 @@ describe('FundPeriodsService', () => {
       await expect(service.create('club-1', 'user-1', badDto)).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('should not open a transaction when copyMembersFromPreviousPeriod is false/omitted', async () => {
+      mockPrisma.fundPeriod.create.mockResolvedValue({ ...basePeriod });
+      const result = await service.create('club-1', 'user-1', validDto);
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(result.copiedMembersCount).toBe(0);
+    });
+  });
+
+  describe('create — FUND-IMPL-01 copy members from previous period', () => {
+    const gameDto = {
+      name: 'Giải Hè 2026',
+      startDate: '2026-07-01',
+      endDate: '2026-07-31',
+      contributionAmount: 200000,
+      type: 'game',
+      copyMembersFromPreviousPeriod: true,
+    };
+    const newPeriod = {
+      ...basePeriod,
+      id: 'period-new',
+      type: 'game',
+      contributionAmount: new Decimal(200000),
+      startDate: new Date('2026-07-01'),
+      endDate: new Date('2026-07-31'),
+    };
+    const prevPeriod = {
+      ...basePeriod,
+      id: 'period-prev',
+      type: 'game',
+      startDate: new Date('2026-04-01'),
+      endDate: new Date('2026-04-30'),
+    };
+
+    beforeEach(() => {
+      mockPrisma.$transaction.mockImplementation(
+        async (cb: (tx: typeof mockPrisma) => Promise<unknown>) =>
+          cb(mockPrisma),
+      );
+      mockPrisma.fundPeriod.create.mockResolvedValue(newPeriod);
+    });
+
+    it('copies active members roster from nearest previous period of same type', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(prevPeriod);
+      mockPrisma.fundPeriodMember.findMany.mockResolvedValue([
+        { memberId: 'mem-1' },
+        { memberId: 'mem-2' },
+      ]);
+      mockPrisma.member.findMany.mockResolvedValue([
+        { id: 'mem-1' },
+        { id: 'mem-2' },
+      ]);
+      mockPrisma.fundPeriodMember.createMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.create('club-1', 'user-1', gameDto);
+
+      expect(mockPrisma.fundPeriod.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ clubId: 'club-1', type: 'game' }),
+        }),
+      );
+      expect(mockPrisma.fundPeriodMember.createMany).toHaveBeenCalledWith({
+        data: [
+          {
+            clubId: 'club-1',
+            fundPeriodId: 'period-new',
+            memberId: 'mem-1',
+            expectedAmount: newPeriod.contributionAmount,
+          },
+          {
+            clubId: 'club-1',
+            fundPeriodId: 'period-new',
+            memberId: 'mem-2',
+            expectedAmount: newPeriod.contributionAmount,
+          },
+        ],
+        skipDuplicates: true,
+      });
+      expect(result.copiedMembersCount).toBe(2);
+    });
+
+    it('excludes members that are no longer active (inactive/left)', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(prevPeriod);
+      mockPrisma.fundPeriodMember.findMany.mockResolvedValue([
+        { memberId: 'mem-1' },
+        { memberId: 'mem-2' },
+      ]);
+      // Chỉ mem-1 còn active — member.findMany filter status:'active' đã loại mem-2.
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'mem-1' }]);
+      mockPrisma.fundPeriodMember.createMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.create('club-1', 'user-1', gameDto);
+
+      expect(mockPrisma.member.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'active',
+            isDeleted: false,
+          }),
+        }),
+      );
+      expect(result.copiedMembersCount).toBe(1);
+    });
+
+    it('creates the period without members when there is no previous period', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
+
+      const result = await service.create('club-1', 'user-1', gameDto);
+
+      expect(mockPrisma.fundPeriodMember.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.fundPeriodMember.createMany).not.toHaveBeenCalled();
+      expect(result.copiedMembersCount).toBe(0);
+    });
+
+    it('creates the period without members when previous period has an empty roster', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(prevPeriod);
+      mockPrisma.fundPeriodMember.findMany.mockResolvedValue([]);
+
+      const result = await service.create('club-1', 'user-1', gameDto);
+
+      expect(mockPrisma.member.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.fundPeriodMember.createMany).not.toHaveBeenCalled();
+      expect(result.copiedMembersCount).toBe(0);
+    });
+
+    it('rolls back (rejects) the whole transaction when the copy step fails', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(prevPeriod);
+      mockPrisma.fundPeriodMember.findMany.mockResolvedValue([
+        { memberId: 'mem-1' },
+      ]);
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'mem-1' }]);
+      mockPrisma.fundPeriodMember.createMany.mockRejectedValue(
+        new Error('DB_FAIL_COPY'),
+      );
+
+      await expect(service.create('club-1', 'user-1', gameDto)).rejects.toThrow(
+        'DB_FAIL_COPY',
+      );
+    });
+  });
+
+  describe('previousPeriodInfo', () => {
+    it('returns null when club has no period of the given type', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
+      const result = await service.previousPeriodInfo('club-1', 'game');
+      expect(result).toBeNull();
+      expect(mockPrisma.fundPeriodMember.count).not.toHaveBeenCalled();
+    });
+
+    it('returns period info with member count when found', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue({
+        id: 'period-prev',
+        name: 'Giải Xuân 2026',
+        startDate: new Date('2026-01-01'),
+        endDate: new Date('2026-03-31'),
+      });
+      mockPrisma.fundPeriodMember.count.mockResolvedValue(13);
+
+      const result = await service.previousPeriodInfo('club-1', 'game');
+
+      expect(result).toEqual({
+        id: 'period-prev',
+        name: 'Giải Xuân 2026',
+        startDate: new Date('2026-01-01'),
+        endDate: new Date('2026-03-31'),
+        memberCount: 13,
+      });
     });
   });
 

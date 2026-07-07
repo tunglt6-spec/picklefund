@@ -75,25 +75,116 @@ export class FundPeriodsService {
       totalSessions?: number;
       notes?: string;
       type?: string;
+      copyMembersFromPreviousPeriod?: boolean;
     },
   ) {
     if (new Date(dto.endDate) <= new Date(dto.startDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
     }
-    const { type, ...safeDto } = dto;
-    return this.prisma.fundPeriod.create({
-      data: {
-        ...safeDto,
-        clubId,
-        createdById: userId,
-        type: type ?? 'chung',
-        startDate: new Date(dto.startDate),
-        endDate: new Date(dto.endDate),
-        contributionAmount: new Decimal(dto.contributionAmount),
-        totalSessions: dto.totalSessions ?? 0,
-        status: new Date(dto.startDate) > new Date() ? 'draft' : 'active',
-      },
+    const { type, copyMembersFromPreviousPeriod, ...safeDto } = dto;
+    const periodType = type ?? 'chung';
+    const data = {
+      ...safeDto,
+      clubId,
+      createdById: userId,
+      type: periodType,
+      startDate: new Date(dto.startDate),
+      endDate: new Date(dto.endDate),
+      contributionAmount: new Decimal(dto.contributionAmount),
+      totalSessions: dto.totalSessions ?? 0,
+      status: (new Date(dto.startDate) > new Date()
+        ? 'draft'
+        : 'active') as FundPeriodStatus,
+    };
+
+    if (!copyMembersFromPreviousPeriod) {
+      const created = await this.prisma.fundPeriod.create({ data });
+      return { ...created, copiedMembersCount: 0 };
+    }
+
+    // FUND-IMPL-01: tạo kỳ quỹ + copy roster thành viên từ kỳ gần nhất CÙNG LOẠI
+    // trong 1 transaction — copy lỗi phải rollback luôn kỳ quỹ mới (không partial data).
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.fundPeriod.create({ data });
+
+      const previousPeriod = await tx.fundPeriod.findFirst({
+        where: {
+          clubId,
+          type: periodType,
+          id: { not: created.id },
+          OR: [
+            { startDate: { lt: created.startDate } },
+            { endDate: { lt: created.endDate } },
+          ],
+        },
+        orderBy: [
+          { endDate: 'desc' },
+          { startDate: 'desc' },
+          { createdAt: 'desc' },
+        ],
+      });
+      if (!previousPeriod) return { ...created, copiedMembersCount: 0 };
+
+      // Roster của kỳ trước (KHÔNG phải toàn bộ member CLB) — quỹ phụ/giải đấu
+      // thường không phải ai cũng tham gia.
+      const previousRoster = await tx.fundPeriodMember.findMany({
+        where: { fundPeriodId: previousPeriod.id },
+        select: { memberId: true },
+      });
+      if (previousRoster.length === 0)
+        return { ...created, copiedMembersCount: 0 };
+
+      // §8: không copy member đã inactive/rời CLB — chỉ giữ member đang active.
+      const activeMembers = await tx.member.findMany({
+        where: {
+          clubId,
+          isDeleted: false,
+          status: 'active',
+          id: { in: previousRoster.map((r) => r.memberId) },
+        },
+        select: { id: true },
+      });
+      if (activeMembers.length === 0)
+        return { ...created, copiedMembersCount: 0 };
+
+      // Reset theo kỳ mới: expectedAmount = mức đóng/người kỳ mới; KHÔNG copy
+      // paidAmount/payment history/confirmed cũ (chỉ tạo roster, không tạo contribution).
+      const { count } = await tx.fundPeriodMember.createMany({
+        data: activeMembers.map((m) => ({
+          clubId,
+          fundPeriodId: created.id,
+          memberId: m.id,
+          expectedAmount: created.contributionAmount,
+        })),
+        skipDuplicates: true,
+      });
+
+      return { ...created, copiedMembersCount: count };
     });
+  }
+
+  /** FUND-IMPL-01: thông tin kỳ quỹ gần nhất CÙNG LOẠI để hiển thị preview copy-member
+   * trong modal tạo kỳ quỹ mới (trước khi kỳ mới tồn tại). */
+  async previousPeriodInfo(clubId: string, type: string) {
+    const previousPeriod = await this.prisma.fundPeriod.findFirst({
+      where: { clubId, type },
+      orderBy: [
+        { endDate: 'desc' },
+        { startDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+    if (!previousPeriod) return null;
+    const memberCount = await this.prisma.fundPeriodMember.count({
+      where: { fundPeriodId: previousPeriod.id },
+    });
+    return {
+      id: previousPeriod.id,
+      name: previousPeriod.name,
+      startDate: previousPeriod.startDate,
+      endDate: previousPeriod.endDate,
+      memberCount,
+    };
   }
 
   async update(id: string, clubId: string, dto: any) {

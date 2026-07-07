@@ -5,6 +5,7 @@ import {
   IsPositive,
   IsDateString,
   IsInt,
+  IsBoolean,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -37,6 +38,13 @@ export class CreateFundPeriodDto {
   @IsOptional()
   @IsString()
   type?: string;
+
+  // FUND-IMPL-01: sao chép roster thành viên từ kỳ quỹ gần nhất cùng loại (chủ yếu
+  // dùng cho Quỹ Phụ/giải đấu) sang kỳ mới. Default false — giữ nguyên behavior cũ.
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  copyMembersFromPreviousPeriod?: boolean;
 }
 
 export class UpdateFundPeriodStatusDto {

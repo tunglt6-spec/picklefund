@@ -7,11 +7,12 @@ import {
   Delete,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { FundPeriodsService } from './fund-periods.service';
-import { CurrentUser, Roles} from '../common/decorators';
+import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import {
   CreateFundPeriodDto,
@@ -34,9 +35,18 @@ export class FundPeriodsController {
   @Post()
   @Roles('CLUB_ADMIN')
   async create(@CurrentUser() user: any, @Body() body: CreateFundPeriodDto) {
+    const created = await this.service.create(user.clubId, user.userId, body);
+    const message = created.copiedMembersCount
+      ? `Tạo kỳ quỹ thành công. Đã sao chép ${created.copiedMembersCount} thành viên từ kỳ quỹ trước.`
+      : 'Tạo kỳ quỹ thành công.';
+    return ok(created, message);
+  }
+
+  // FUND-IMPL-01: đặt TRƯỚC ':id' để tránh NestJS match nhầm 'previous' thành :id.
+  @Get('previous')
+  async previous(@CurrentUser() user: any, @Query('type') type?: string) {
     return ok(
-      await this.service.create(user.clubId, user.userId, body),
-      'Tạo kỳ quỹ thành công',
+      await this.service.previousPeriodInfo(user.clubId, type ?? 'chung'),
     );
   }
 
