@@ -26,7 +26,10 @@ function fmtSession(dateIso: string, courtName?: string, startTime?: string): st
 }
 
 export function SessionRegistration() {
-  const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const user = useAuthStore((s) => s.user)
+  const clubId = user?.clubId ?? ''
+  const isMember = user?.role === 'MEMBER_VIEW'
+  const myMemberId = user?.memberId
   const { sessions } = useClubDataStore((s) => s.getClubData(clubId))
 
   const upcoming = useMemo(() => {
@@ -77,6 +80,23 @@ export function SessionRegistration() {
       return next
     })
 
+  // Member self-scope: chỉ toggle CHÍNH mình, lưu ngay qua PUT /member/me/sessions/:id/registration.
+  const memberToggleSelf = async () => {
+    if (!sessionId || !myMemberId || saving) return
+    const register = !selected.has(myMemberId)
+    setSaving(true)
+    try {
+      await api.put(`/member/me/sessions/${sessionId}/registration`, { register })
+      toggle(myMemberId)
+      setRows((rs) => rs.map((r) => (r.memberId === myMemberId ? { ...r, registered: register } : r)))
+      toast.success(register ? 'Đã đăng ký buổi chơi' : 'Đã hủy đăng ký')
+    } catch {
+      toast.error('Cập nhật đăng ký thất bại. Vui lòng thử lại.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const save = async () => {
     if (!sessionId) return
     setSaving(true)
@@ -99,7 +119,7 @@ export function SessionRegistration() {
         title="Đăng ký buổi chơi"
         subtitle="Chọn buổi sắp tới và đánh dấu thành viên tham gia"
         actions={
-          sessionId && rows.length > 0 ? (
+          !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>
               {saving ? 'Đang lưu…' : 'Lưu đăng ký'}
             </ActionButton>
@@ -150,12 +170,15 @@ export function SessionRegistration() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((r) => {
                   const on = selected.has(r.memberId)
+                  const isSelf = r.memberId === myMemberId
+                  const disabled = isMember && !isSelf
                   return (
                     <button
                       key={r.memberId}
-                      onClick={() => toggle(r.memberId)}
+                      onClick={() => (isMember ? (isSelf ? void memberToggleSelf() : undefined) : toggle(r.memberId))}
                       aria-pressed={on}
-                      className="flex items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-colors"
+                      disabled={disabled}
+                      className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55"
                       style={{
                         background: on ? 'var(--pf-primary-soft)' : 'var(--pf-surface)',
                         borderColor: on ? 'var(--pf-primary)' : 'var(--pf-border)',

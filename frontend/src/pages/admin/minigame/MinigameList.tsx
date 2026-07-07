@@ -13,11 +13,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
-  PlayCircle, AlertCircle, RefreshCw,
+  PlayCircle, AlertCircle, RefreshCw, UserCheck, Check,
 } from 'lucide-react'
 import api from '../../../lib/api'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
+import { useClubDataStore } from '../../../store/clubDataStore'
+import { useMinigameDelegate } from '../../../hooks/useMinigameDelegate'
 import type { MinigameStatus, MiniGame } from '../../../types/minigame'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
@@ -78,6 +80,41 @@ export function MinigameList() {
   const { getMinigames, deleteMinigame, setMinigamesFromApi, participants, groups, matches } = useMinigameStore()
   const minigames = getMinigames(clubId)
   const isMobile = useIsMobile()
+  const { canManage } = useMinigameDelegate()
+  const isClubAdmin = user?.role === 'CLUB_ADMIN'
+  const activeMembers = useClubDataStore((s) => s.getClubData(clubId).members).filter((m) => m.status === 'active')
+
+  /* ── Ủy quyền minigame (CLUB_ADMIN) ── */
+  const [showDelegateModal, setShowDelegateModal] = useState(false)
+  const [delegateIds, setDelegateIds] = useState<Set<string>>(new Set())
+  const [delegateSaving, setDelegateSaving] = useState(false)
+
+  const openDelegateModal = async () => {
+    setShowDelegateModal(true)
+    try {
+      const res = await api.get('/clubs/me/minigame-delegates')
+      setDelegateIds(new Set((res.data?.data ?? []) as string[]))
+    } catch { /* giữ danh sách rỗng */ }
+  }
+  const toggleDelegate = (memberId: string) =>
+    setDelegateIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(memberId)) next.delete(memberId)
+      else next.add(memberId)
+      return next
+    })
+  const saveDelegates = async () => {
+    setDelegateSaving(true)
+    try {
+      await api.patch('/clubs/me/minigame-delegates', { memberIds: [...delegateIds] })
+      toast.success('Đã cập nhật ủy quyền')
+      setShowDelegateModal(false)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Cập nhật ủy quyền thất bại')
+    } finally {
+      setDelegateSaving(false)
+    }
+  }
 
   const [search, setSearch] = useState('')
   const [modeTab, setModeTab] = useState<ModeTab>('all')
@@ -170,7 +207,14 @@ export function MinigameList() {
   )
 
   const headerActions = (
-    <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton>
+    <div className="flex items-center gap-2">
+      {isClubAdmin && (
+        <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => void openDelegateModal()}>Ủy quyền</ActionButton>
+      )}
+      {canManage && (
+        <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton>
+      )}
+    </div>
   )
 
   /* ── Progress bar (completion) ── */
@@ -186,8 +230,8 @@ export function MinigameList() {
   const RowActions = ({ r }: { r: TourRow }) => (
     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
       <IconBtn label="Xem chi tiết" onClick={() => navigate(`/minigames/${r.mg.id}`)}><Eye size={15} /></IconBtn>
-      <IconBtn label="Chỉnh sửa" onClick={() => navigate(`/minigames/${r.mg.id}/edit`)}><Edit2 size={15} /></IconBtn>
-      <IconBtn label="Hủy giải đấu" danger onClick={() => handleDelete(r.mg.id, r.mg.name)}><Trash2 size={15} /></IconBtn>
+      {canManage && <IconBtn label="Chỉnh sửa" onClick={() => navigate(`/minigames/${r.mg.id}/edit`)}><Edit2 size={15} /></IconBtn>}
+      {canManage && <IconBtn label="Hủy giải đấu" danger onClick={() => handleDelete(r.mg.id, r.mg.name)}><Trash2 size={15} /></IconBtn>}
     </div>
   )
 
@@ -274,7 +318,7 @@ export function MinigameList() {
               ) : (
                 <EmptyState icon={<Trophy size={26} />} title="Chưa có giải đấu nào"
                   description="Tạo giải đấu / minigame đầu tiên cho câu lạc bộ."
-                  action={<ActionButton icon={<Plus size={15} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton>} />
+                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton> : undefined} />
               )
             ) : isMobile ? (
               <div className="p-3">
@@ -306,12 +350,59 @@ export function MinigameList() {
           </div>
 
           {/* ── Mobile sticky quick action: Tạo minigame ── */}
-          {isMobile && (
+          {isMobile && canManage && (
             <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
               <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo minigame" icon={<Plus size={20} />} onClick={() => navigate('/minigames/new')} />
             </div>
           )}
         </>
+      )}
+
+      {/* ── Modal ủy quyền minigame (CLUB_ADMIN) ── */}
+      {isClubAdmin && showDelegateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDelegateModal(false)} />
+          <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white [box-shadow:var(--pf-shadow)]">
+            <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
+              <h2 className="flex items-center gap-2 text-base font-semibold [color:var(--pf-text)]">
+                <UserCheck size={18} className="[color:var(--pf-primary)]" />Ủy quyền quản lý minigame
+              </h2>
+              <button onClick={() => setShowDelegateModal(false)} aria-label="Đóng" className="flex h-9 w-9 items-center justify-center rounded-xl text-lg [color:var(--pf-color-muted)]"><span aria-hidden>✕</span></button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <p className="mb-3 text-xs [color:var(--pf-color-muted)]">Thành viên được chọn có thể tạo và quản lý minigame như admin.</p>
+              {activeMembers.length === 0 ? (
+                <p className="py-6 text-center text-sm [color:var(--pf-color-muted)]">Chưa có thành viên hoạt động</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {activeMembers.map((m) => {
+                    const on = delegateIds.has(m.id)
+                    return (
+                      <button key={m.id} onClick={() => toggleDelegate(m.id)} aria-pressed={on}
+                        className="flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors"
+                        style={{
+                          background: on ? 'var(--pf-primary-soft)' : 'var(--pf-surface)',
+                          borderColor: on ? 'var(--pf-primary)' : 'var(--pf-border)',
+                        }}>
+                        <span className="truncate text-sm font-medium [color:var(--pf-text)]">{m.fullName}</span>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                          style={on
+                            ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
+                            : { borderColor: 'var(--pf-border)', color: 'transparent' }}>
+                          <Check size={14} />
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 border-t px-5 py-4 border-[color:var(--pf-border)]">
+              <ActionButton variant="secondary" fullWidth onClick={() => setShowDelegateModal(false)}>Hủy</ActionButton>
+              <ActionButton fullWidth onClick={() => void saveDelegates()} disabled={delegateSaving}>{delegateSaving ? 'Đang lưu…' : 'Lưu'}</ActionButton>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Mobile filter bottom sheet ── */}

@@ -30,7 +30,10 @@ function fmtSession(dateIso: string, courtName?: string, startTime?: string): st
 }
 
 export function CheckIn() {
-  const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const user = useAuthStore((s) => s.user)
+  const clubId = user?.clubId ?? ''
+  const isMember = user?.role === 'MEMBER_VIEW'
+  const myMemberId = user?.memberId
   const { sessions } = useClubDataStore((s) => s.getClubData(clubId))
 
   // Buổi gần hôm nay nhất trước (check-in thường cho buổi hôm nay); lấy tối đa 12 buổi.
@@ -98,6 +101,21 @@ export function CheckIn() {
       return next
     })
 
+  // Member self-scope: check-in CHÍNH mình qua PUT /member/me/sessions/:id/checkin (không body).
+  const memberCheckInSelf = async () => {
+    if (!sessionId || !myMemberId || saving) return
+    setSaving(true)
+    try {
+      await api.put(`/member/me/sessions/${sessionId}/checkin`)
+      toast.success('Đã check-in')
+      await load(sessionId)
+    } catch {
+      toast.error('Check-in thất bại. Vui lòng thử lại.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const save = async () => {
     if (!sessionId) return
     setSaving(true)
@@ -125,7 +143,7 @@ export function CheckIn() {
         title="Check-in nhanh"
         subtitle="Chọn buổi chơi và điểm danh một chạm"
         actions={
-          sessionId && rows.length > 0 ? (
+          !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>
               {saving ? 'Đang lưu…' : 'Lưu điểm danh'}
             </ActionButton>
@@ -175,12 +193,15 @@ export function CheckIn() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((r) => {
                   const on = present.has(r.memberId)
+                  const isSelf = r.memberId === myMemberId
+                  const disabled = isMember && (!isSelf || on)
                   return (
                     <button
                       key={r.memberId}
-                      onClick={() => toggle(r.memberId)}
+                      onClick={() => (isMember ? (isSelf && !on ? void memberCheckInSelf() : undefined) : toggle(r.memberId))}
                       aria-pressed={on}
-                      className="flex items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-colors"
+                      disabled={disabled}
+                      className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55"
                       style={{
                         background: on ? 'var(--pf-primary-soft)' : 'var(--pf-surface)',
                         borderColor: on ? 'var(--pf-primary)' : 'var(--pf-border)',

@@ -65,6 +65,7 @@ function initials(name: string): string {
 export function ScheduleCalendar() {
   const navigate = useNavigate()
   const { user, accessToken } = useAuthStore()
+  const isMember = user?.role === 'MEMBER_VIEW'
   const clubId = user?.clubId ?? ''
   const { sessions, members } = useClubDataStore((s) => s.getClubData(clubId))
   const setSessions = useClubDataStore((s) => s.setSessions)
@@ -198,6 +199,20 @@ export function ScheduleCalendar() {
     }
   }
 
+  // Member self-scope: toggle đăng ký của CHÍNH mình (PUT /member/me/sessions/:id/registration).
+  const handleMemberToggle = async (s: AttendanceSession) => {
+    const myId = user?.memberId
+    if (!myId) return
+    const registered = (regMap[s.id]?.members ?? []).some((m) => m.memberId === myId && m.registered)
+    try {
+      await api.put(`/member/me/sessions/${s.id}/registration`, { register: !registered })
+      toast.success(!registered ? 'Đã đăng ký buổi chơi' : 'Đã hủy đăng ký')
+      void loadRegs(monthSessionKey ? monthSessionKey.split(',') : [])
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Cập nhật đăng ký thất bại')
+    }
+  }
+
   const statusTone = (st: AttendanceSession['status']) => st === 'completed' ? 'neutral' : st === 'cancelled' ? 'danger' : 'success'
   const statusText = (st: AttendanceSession['status']) => st === 'completed' ? 'Đã hoàn tất' : st === 'cancelled' ? 'Đã hủy' : 'Đang mở'
 
@@ -209,7 +224,7 @@ export function ScheduleCalendar() {
       <PageHeader
         title="Lịch sinh hoạt"
         subtitle="Quản lý lịch chơi và đăng ký của CLB"
-        actions={<ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
+        actions={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
       />
 
       {sessions.length === 0 ? (
@@ -217,7 +232,7 @@ export function ScheduleCalendar() {
           icon={<CalendarDays size={24} />}
           title="Chưa có buổi chơi"
           description="Tạo buổi chơi ở mục Điểm Danh để hiển thị trên lịch."
-          action={<ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
+          action={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
         />
       ) : (
         <div className="flex flex-col gap-5">
@@ -341,7 +356,7 @@ export function ScheduleCalendar() {
                     <CalendarDays size={22} className="[color:var(--pf-primary)]" />
                   </div>
                   <p className="text-sm font-medium [color:var(--pf-text)]">Không có buổi chơi trong ngày này</p>
-                  <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>
+                  {!isMember && <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -399,26 +414,46 @@ export function ScheduleCalendar() {
 
                         {/* Nút chính */}
                         <div className="mt-3 flex gap-2">
-                          <button onClick={() => navigate('/check-in')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]">
-                            <UserCheck size={14} />Điểm danh
-                          </button>
-                          <button onClick={() => navigate('/session-registration')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]">
-                            <CalendarPlus size={14} />Đăng ký
-                          </button>
+                          {!isMember && (
+                            <button onClick={() => navigate('/check-in')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]">
+                              <UserCheck size={14} />Điểm danh
+                            </button>
+                          )}
+                          {isMember ? (
+                            (() => {
+                              const myReg = (info?.members ?? []).some((m) => m.memberId === user?.memberId && m.registered)
+                              return (
+                                <button onClick={() => handleMemberToggle(s)} className={cn(
+                                  'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold',
+                                  myReg
+                                    ? 'border [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]'
+                                    : 'text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]',
+                                )}>
+                                  <CalendarPlus size={14} />{myReg ? 'Hủy đăng ký' : 'Đăng ký'}
+                                </button>
+                              )
+                            })()
+                          ) : (
+                            <button onClick={() => navigate('/session-registration')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]">
+                              <CalendarPlus size={14} />Đăng ký
+                            </button>
+                          )}
                         </div>
 
-                        {/* Thao tác nhanh */}
-                        <div className="mt-2 flex items-center gap-1 border-t pt-2 [border-color:var(--pf-border)]">
-                          <button onClick={() => navigate('/attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
-                            <Pencil size={12} />Sửa
-                          </button>
-                          <button onClick={() => handleCopy(s)} aria-label="Sao chép buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
-                            <Copy size={12} />Sao chép
-                          </button>
-                          <button onClick={() => setConfirmDel(s)} aria-label="Xóa buổi" className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
-                            <Trash2 size={12} />Xóa
-                          </button>
-                        </div>
+                        {/* Thao tác nhanh (chỉ admin) */}
+                        {!isMember && (
+                          <div className="mt-2 flex items-center gap-1 border-t pt-2 [border-color:var(--pf-border)]">
+                            <button onClick={() => navigate('/attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
+                              <Pencil size={12} />Sửa
+                            </button>
+                            <button onClick={() => handleCopy(s)} aria-label="Sao chép buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
+                              <Copy size={12} />Sao chép
+                            </button>
+                            <button onClick={() => setConfirmDel(s)} aria-label="Xóa buổi" className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
+                              <Trash2 size={12} />Xóa
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}

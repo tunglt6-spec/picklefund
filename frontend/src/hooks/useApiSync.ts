@@ -22,9 +22,7 @@ export function useApiSync() {
 
   useEffect(() => {
     if (!isAuthenticated || !user?.clubId || !accessToken) return
-    // MEMBER_VIEW cũng có clubId nhưng KHÔNG có quyền các endpoint toàn CLB (backend chặn 403).
-    // Bỏ qua sync để không bắn ~8 request thừa + nhiễu log 403; member dùng portal self-scope.
-    if (user.role === 'MEMBER_VIEW') return
+    // MEMBER_VIEW từ V2.3 được đọc read-only dữ liệu CLB (MemberScopeGuard allowlist GET) → sync như các role khác.
     if (isLocalToken(accessToken)) return
     if (syncedRef.current) return
 

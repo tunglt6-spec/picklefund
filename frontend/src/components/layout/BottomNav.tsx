@@ -5,6 +5,7 @@ import {
   CheckSquare, BarChart3, Building2, ScrollText,
   Receipt, ListOrdered, CreditCard, Bell,
   Menu, Settings, Trophy,
+  Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import type { Role } from '../../types'
@@ -28,10 +29,31 @@ const treasurerNav: NavItem[] = [
 const memberNav: NavItem[] = [
   { label: 'Tổng quan',   icon: <LayoutDashboard size={22} />, to: '/member/dashboard' },
   { label: 'Phiếu thu',   icon: <Receipt size={22} />,         to: '/member/receipt' },
-  { label: 'Đóng quỹ',   icon: <DollarSign size={22} />,      to: '/member/contributions' },
   { label: 'Lịch chơi',  icon: <Calendar size={22} />,         to: '/member/attendance' },
   { label: 'Thông báo',  icon: <Bell size={22} />,             to: '/member/notifications' },
 ]
+
+// Drawer "Thêm" — danh mục mở rộng theo role.
+const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNode; to: string }[]>> = {
+  CLUB_ADMIN: [
+    { label: 'Thành viên', icon: <Users size={20} />, to: '/members' },
+    { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },
+    { label: 'Cài đặt', icon: <Settings size={20} />, to: '/settings' },
+    { label: 'Thông báo', icon: <Bell size={20} />, to: '/notifications' },
+    { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
+  ],
+  MEMBER_VIEW: [
+    { label: 'Đóng quỹ', icon: <DollarSign size={20} />, to: '/member/contributions' },
+    { label: 'Công nợ', icon: <Coins size={20} />, to: '/debts' },
+    { label: 'Lịch sinh hoạt', icon: <CalendarDays size={20} />, to: '/schedule' },
+    { label: 'Đăng ký buổi', icon: <CalendarPlus size={20} />, to: '/session-registration' },
+    { label: 'Check-in', icon: <ClipboardCheck size={20} />, to: '/check-in' },
+    { label: 'Hoạt động tuần', icon: <Activity size={20} />, to: '/activity' },
+    { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
+    { label: 'Lịch sử thi đấu', icon: <History size={20} />, to: '/match-history' },
+    { label: 'Tài chính', icon: <Wallet size={20} />, to: '/finance-dashboard' },
+  ],
+}
 
 const superNav: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard size={22} />, to: '/super/dashboard' },
@@ -54,7 +76,8 @@ export function BottomNav() {
   if (!user) return null
 
   const items = navByRole[user.role]
-  const isAdmin = user.role === 'CLUB_ADMIN'
+  const moreItems = moreItemsByRole[user.role] ?? []
+  const hasMore = moreItems.length > 0
 
   return (
     <>
@@ -103,7 +126,7 @@ export function BottomNav() {
               )}
             </NavLink>
           ))}
-          {isAdmin && (
+          {hasMore && (
             <button
               onClick={() => setShowMore(true)}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors text-slate-400"
@@ -115,7 +138,7 @@ export function BottomNav() {
         </div>
       </nav>
 
-      {isAdmin && showMore && (
+      {hasMore && showMore && (
         <>
           {/* Backdrop */}
           <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setShowMore(false)} />
@@ -126,17 +149,11 @@ export function BottomNav() {
               Điều hướng
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Thành viên', icon: <Users size={20} />, to: '/members' },
-                { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },
-                { label: 'Cài đặt', icon: <Settings size={20} />, to: '/settings' },
-                { label: 'Thông báo', icon: <Bell size={20} />, to: '/notifications' },
-                { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
-              ].map(item => (
+              {moreItems.map(item => (
                 <button
                   key={item.to}
                   onClick={() => { navigate(item.to); setShowMore(false) }}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-[14px] bg-slate-50 hover:bg-slate-100 transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 min-h-11 rounded-[14px] bg-slate-50 hover:bg-slate-100 transition-colors"
                 >
                   <span className="[color:var(--pf-primary)]">{item.icon}</span>
                   <span className="text-[11px] font-[600] text-slate-700">{item.label}</span>

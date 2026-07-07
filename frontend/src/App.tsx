@@ -147,22 +147,8 @@ export default function App() {
             <Route path="/fund-periods" element={<FundPeriods />} />
             <Route path="/contributions" element={<Contributions />} />
             <Route path="/expenses" element={<Expenses />} />
-            <Route path="/debts" element={<Debts />} />
             <Route path="/thu-chi" element={<ThuChiHub />} />
             <Route path="/attendance" element={<Attendance />} />
-            <Route path="/activity" element={<WeeklyActivity />} />
-            <Route path="/session-registration" element={<SessionRegistration />} />
-            <Route path="/check-in" element={<CheckIn />} />
-            <Route path="/schedule" element={<ScheduleCalendar />} />
-            <Route path="/finance-dashboard" element={<FinanceDashboard />} />
-            <Route path="/minigames" element={<MinigameList />} />
-            <Route path="/minigames/new" element={<MinigameForm />} />
-            <Route path="/minigames/:id" element={<MinigameDashboard />} />
-            <Route path="/minigames/:id/edit" element={<MinigameForm />} />
-            <Route path="/minigames/:id/groups" element={<GroupAssignment />} />
-            <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
-            <Route path="/minigames/:id/standings" element={<StandingsPage />} />
-            <Route path="/match-history" element={<MatchHistory />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />
@@ -177,6 +163,23 @@ export default function App() {
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
+            </Route>
+            {/* Màn dùng chung admin + member (member: read-only / self-scope / theo ủy quyền minigame) */}
+            <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN', 'MEMBER_VIEW']} />}>
+            <Route path="/debts" element={<Debts />} />
+            <Route path="/schedule" element={<ScheduleCalendar />} />
+            <Route path="/session-registration" element={<SessionRegistration />} />
+            <Route path="/check-in" element={<CheckIn />} />
+            <Route path="/activity" element={<WeeklyActivity />} />
+            <Route path="/minigames" element={<MinigameList />} />
+            <Route path="/minigames/new" element={<MinigameForm />} />
+            <Route path="/minigames/:id" element={<MinigameDashboard />} />
+            <Route path="/minigames/:id/edit" element={<MinigameForm />} />
+            <Route path="/minigames/:id/groups" element={<GroupAssignment />} />
+            <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
+            <Route path="/minigames/:id/standings" element={<StandingsPage />} />
+            <Route path="/match-history" element={<MatchHistory />} />
+            <Route path="/finance-dashboard" element={<FinanceDashboard />} />
             </Route>
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
