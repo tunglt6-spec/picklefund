@@ -32,6 +32,9 @@ interface Summary {
 }
 
 const num = (v: unknown): number => (v == null ? 0 : Number(v) || 0)
+function isLocalToken(token?: string | null) {
+  return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
+}
 const CHART_INCOME = '#059669' // --pf-green (tiền)
 const CHART_EXPENSE = '#E11D48' // --pf-accent-rose (chi)
 const DONUT_COMMON = '#059669' // Quỹ Chính
@@ -39,6 +42,7 @@ const DONUT_MINI = '#7C3AED' // Quỹ Phụ
 
 export function FinanceDashboard() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const accessToken = useAuthStore((s) => s.accessToken)
   const { fundPeriods } = useClubDataStore((s) => s.getClubData(clubId))
   const activePeriod = useMemo(
     () => fundPeriods.find((p) => p.status === 'active') ?? null,
@@ -50,6 +54,14 @@ export function FinanceDashboard() {
   const [error, setError] = useState(false)
 
   const load = useCallback(async (periodId: string) => {
+    // Đồng bộ pattern với Reports.tsx/ThuChiHub.tsx/Debts.tsx: token demo/local thì
+    // không gọi API thật (không có backend tương ứng) — tránh treo ErrorState vô ích.
+    if (isLocalToken(accessToken)) {
+      setSummary(null)
+      setError(false)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(false)
     try {
@@ -72,7 +84,7 @@ export function FinanceDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     if (activePeriod) void load(activePeriod.id)
@@ -188,7 +200,9 @@ export function FinanceDashboard() {
             </ChartCard>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <EmptyState icon={<Wallet size={24} />} title="Chưa có dữ liệu" description="Không tải được số liệu tài chính cho kỳ quỹ này." />
+      )}
     </PageShell>
   )
 }

@@ -3,6 +3,7 @@ import { Search, UserCheck, UserX, Shield, Users } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import type { Role } from '../../types'
 import toast from 'react-hot-toast'
 
@@ -27,6 +28,8 @@ export function SuperUsers() {
   const [users, setUsers] = useState<UserRow[]>([])
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all')
+  const [pendingToggle, setPendingToggle] = useState<UserRow | null>(null)
+  const [toggling, setToggling] = useState(false)
 
   useEffect(() => {
     api.get('/users').then(res => {
@@ -45,12 +48,16 @@ export function SuperUsers() {
 
   const toggleActive = async (u: UserRow) => {
     const next = !u.isActive
+    setToggling(true)
     try {
       await api.put(`/users/${u.id}`, { isActive: next })
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, isActive: next } : x))
       toast.success(`${next ? 'Mở khóa' : 'Khóa'} tài khoản ${u.username}`)
     } catch {
       toast.error('Thao tác thất bại')
+    } finally {
+      setToggling(false)
+      setPendingToggle(null)
     }
   }
 
@@ -153,7 +160,7 @@ export function SuperUsers() {
                   </td>
                   <td className="text-center">
                     <button
-                      onClick={() => toggleActive(u)}
+                      onClick={() => setPendingToggle(u)}
                       disabled={u.role === 'SUPER_ADMIN'}
                       className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed
                         ${u.isActive
@@ -177,6 +184,21 @@ export function SuperUsers() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingToggle}
+        variant={pendingToggle?.isActive ? 'danger' : 'warning'}
+        title={pendingToggle?.isActive ? 'Xác nhận khóa tài khoản' : 'Xác nhận mở khóa tài khoản'}
+        message={
+          pendingToggle?.isActive
+            ? `Khóa tài khoản "${pendingToggle?.username}"? Người dùng này sẽ không thể đăng nhập cho tới khi được mở khóa lại.`
+            : `Mở khóa tài khoản "${pendingToggle?.username}"?`
+        }
+        confirmLabel={toggling ? 'Đang xử lý...' : (pendingToggle?.isActive ? 'Khóa' : 'Mở khóa')}
+        cancelLabel="Hủy bỏ"
+        onCancel={() => setPendingToggle(null)}
+        onConfirm={() => pendingToggle && toggleActive(pendingToggle)}
+      />
     </div>
   )
 }
