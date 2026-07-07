@@ -539,7 +539,7 @@ export function Contributions() {
               <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
               <table className="table-base">
                 <thead>
                   <tr>
@@ -601,7 +601,7 @@ export function Contributions() {
               <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
               <table className="table-base">
                 <thead>
                   <tr>

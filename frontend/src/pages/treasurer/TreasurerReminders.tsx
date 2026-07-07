@@ -268,7 +268,7 @@ export function TreasurerReminders() {
 
         {/* Unpaid members */}
         {unpaidMembers.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
               <Bell size={14} className="text-red-500" />
               <h3 className="text-sm font-semibold text-slate-800">Thành viên chưa đóng quỹ</h3>
@@ -320,7 +320,7 @@ export function TreasurerReminders() {
 
         {/* Pending confirmation */}
         {pendingMembers.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
               <Clock size={14} className="text-amber-500" />
               <h3 className="text-sm font-semibold text-slate-800">Chờ xác nhận thanh toán</h3>
