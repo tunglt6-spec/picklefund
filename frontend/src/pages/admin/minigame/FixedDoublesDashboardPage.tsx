@@ -841,7 +841,7 @@ export function FixedDoublesDashboardPage() {
       </div>
 
       {/* ── page body ── */}
-      <div className="px-4 sm:px-6 py-5 space-y-5">
+      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-5">
 
         {/* champion banner */}
         {mg.status === 'COMPLETED' && standings.length > 0 && (

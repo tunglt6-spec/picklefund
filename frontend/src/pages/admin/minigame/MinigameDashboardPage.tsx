@@ -207,7 +207,7 @@ export function MinigameDashboardPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header / Top bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <button
@@ -253,7 +253,7 @@ export function MinigameDashboardPage() {
       </div>
 
       {/* Main content */}
-      <div className="px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
         <MinigameKpiCards kpi={kpi} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
