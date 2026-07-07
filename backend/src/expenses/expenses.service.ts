@@ -60,6 +60,41 @@ export class ExpensesService {
     return e;
   }
 
+  /**
+   * Chống nhiễm chéo tenant: FK từ body (fundPeriodId/attendanceSessionId/categoryId/relatedMinigameId)
+   * BẮT BUỘC thuộc cùng clubId người gọi trước khi gán.
+   */
+  private async assertFkOwnership(clubId: string, dto: Partial<CreateExpenseDto>) {
+    if (dto.fundPeriodId) {
+      const p = await this.prisma.fundPeriod.findFirst({
+        where: { id: dto.fundPeriodId, clubId },
+        select: { id: true },
+      });
+      if (!p) throw new BadRequestException('Kỳ quỹ không thuộc CLB này');
+    }
+    if (dto.attendanceSessionId) {
+      const s = await this.prisma.attendanceSession.findFirst({
+        where: { id: dto.attendanceSessionId, clubId },
+        select: { id: true },
+      });
+      if (!s) throw new BadRequestException('Buổi chơi không thuộc CLB này');
+    }
+    if (dto.categoryId) {
+      const c = await this.prisma.expenseCategory.findFirst({
+        where: { id: dto.categoryId, clubId },
+        select: { id: true },
+      });
+      if (!c) throw new BadRequestException('Danh mục không thuộc CLB này');
+    }
+    if (dto.relatedMinigameId) {
+      const g = await this.prisma.minigame.findFirst({
+        where: { id: dto.relatedMinigameId, clubId },
+        select: { id: true },
+      });
+      if (!g) throw new BadRequestException('Giải đấu không thuộc CLB này');
+    }
+  }
+
   async create(clubId: string, userId: string, dto: CreateExpenseDto) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON';
 
@@ -78,6 +113,8 @@ export class ExpensesService {
       if (!dto.miniExpenseType)
         throw new BadRequestException('miniExpenseType bắt buộc cho Quỹ Mini');
     }
+
+    await this.assertFkOwnership(clubId, dto);
 
     const expense = await this.prisma.livingExpense.create({
       data: {
@@ -130,6 +167,7 @@ export class ExpensesService {
       throw new BadRequestException('Số tiền phải lớn hơn 0');
     }
     const fundSource = dto.fundSource ?? existing.fundSource;
+    await this.assertFkOwnership(clubId, dto);
     return this.prisma.livingExpense.update({
       where: { id, clubId },
       data: {

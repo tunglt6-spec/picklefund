@@ -16,6 +16,11 @@ const mockPrisma = {
     aggregate: jest.fn(),
     groupBy: jest.fn(),
   },
+  // FK ownership validation (assertFkOwnership)
+  fundPeriod: { findFirst: jest.fn() },
+  attendanceSession: { findFirst: jest.fn() },
+  expenseCategory: { findFirst: jest.fn() },
+  minigame: { findFirst: jest.fn() },
 };
 
 const baseExpense = {
@@ -55,6 +60,11 @@ describe('ExpensesService', () => {
       ],
     }).compile();
     service = module.get<ExpensesService>(ExpensesService);
+    // Mặc định FK thuộc club (assertFkOwnership PASS); test cross-tenant override null.
+    mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'period-1' });
+    mockPrisma.attendanceSession.findFirst.mockResolvedValue({ id: 'sess-1' });
+    mockPrisma.expenseCategory.findFirst.mockResolvedValue({ id: 'cat-1' });
+    mockPrisma.minigame.findFirst.mockResolvedValue({ id: 'mg-1' });
   });
 
   /* ── findOne ── */
@@ -129,6 +139,17 @@ describe('ExpensesService', () => {
           allocationRule: undefined,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects cross-club fundPeriod FK (multi-tenant isolation)', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(null); // kỳ quỹ CLB khác
+      await expect(
+        service.create('club-1', 'user-1', {
+          ...validDto,
+          fundPeriodId: 'period-of-other-club',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockPrisma.livingExpense.create).not.toHaveBeenCalled();
     });
 
     it('throws BadRequestException for MINI without miniExpenseType', async () => {

@@ -238,7 +238,12 @@ export class LisaService {
     let clubTotalExpenses = 0;
     try {
       const expenses = await this.prisma.livingExpense.findMany({
-        where: { clubId: member.clubId },
+        // Chỉ chi Common Fund đã duyệt — không trộn quỹ MINI, không tính khoản pending/rejected
+        where: {
+          clubId: member.clubId,
+          fundSource: 'COMMON',
+          status: { in: ['approved', 'paid'] },
+        },
         select: { amount: true },
       });
       clubTotalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);

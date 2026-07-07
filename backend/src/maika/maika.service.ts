@@ -49,7 +49,8 @@ export class MaikaService {
           select: { amount: true, fundSource: true },
         }),
         this.prisma.livingExpense.findMany({
-          where: { clubId },
+          // status approved/paid — nhất quán FinancialCalculatorService (chi pending/rejected KHÔNG tính vào quỹ)
+          where: { clubId, status: { in: ['approved', 'paid'] } },
           select: { amount: true, fundSource: true },
         }),
         this.prisma.attendanceSession.findMany({

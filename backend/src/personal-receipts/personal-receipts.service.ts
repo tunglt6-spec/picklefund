@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -35,6 +35,12 @@ export class PersonalReceiptsService {
 
   // Compute and snapshot all member receipts for a fund period
   async generateForPeriod(fundPeriodId: string, clubId: string) {
+    // Chống nhiễm chéo tenant: kỳ quỹ BẮT BUỘC thuộc clubId người gọi (calculate() nhận id từ URL param).
+    const period = await this.prisma.fundPeriod.findFirst({
+      where: { id: fundPeriodId, clubId },
+      select: { id: true },
+    });
+    if (!period) throw new NotFoundException('Kỳ quỹ không thuộc CLB này');
     const summary = await this.calculator.calculate(fundPeriodId, clubId);
 
     const receipts = await Promise.all(

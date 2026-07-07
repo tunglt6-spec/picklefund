@@ -170,7 +170,7 @@ export class FinancialCalculatorService {
     const [attendanceCounts, paidAmounts] = await Promise.all([
       this.prisma.attendanceRecord.groupBy({
         by: ['memberId'],
-        where: { status: 'PRESENT', attendanceSession: { fundPeriodId } },
+        where: { status: 'PRESENT', clubId, attendanceSession: { fundPeriodId } },
         _count: { id: true },
       }),
       this.prisma.fundContribution.groupBy({

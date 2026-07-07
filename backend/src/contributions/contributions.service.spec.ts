@@ -18,7 +18,8 @@ const mockPrisma = {
     groupBy: jest.fn(),
   },
   fundPeriod: { findFirst: jest.fn() },
-  member: { findMany: jest.fn() },
+  member: { findMany: jest.fn(), findFirst: jest.fn() },
+  minigame: { findFirst: jest.fn() },
 };
 
 const mockEvents = { publish: jest.fn() };
@@ -76,6 +77,9 @@ describe('ContributionsService', () => {
 
   describe('create', () => {
     it('should create COMMON contribution with valid data', async () => {
+      // FK ownership validation: member + fundPeriod thuộc club
+      mockPrisma.member.findFirst.mockResolvedValue({ id: 'mem-1' });
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue({ id: 'period-1' });
       mockPrisma.fundContribution.create.mockResolvedValue(baseContrib);
 
       const result = await service.create('club-1', 'user-1', {
@@ -118,6 +122,21 @@ describe('ContributionsService', () => {
           paidAt: '2026-03-01',
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject cross-club fundPeriod FK (multi-tenant isolation)', async () => {
+      mockPrisma.member.findFirst.mockResolvedValue({ id: 'mem-1' });
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(null); // kỳ quỹ CLB khác
+      await expect(
+        service.create('club-1', 'user-1', {
+          fundSource: 'COMMON',
+          memberId: 'mem-1',
+          fundPeriodId: 'period-of-other-club',
+          amount: 100000,
+          paidAt: '2026-03-01',
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.fundContribution.create).not.toHaveBeenCalled();
     });
   });
 

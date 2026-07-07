@@ -181,8 +181,8 @@ export class AttendanceService {
     }
     // Fallback 2: match by date range of the fund period (sessions linked to wrong/other period)
     if (fundPeriodId && sessions.length === 0) {
-      const period = await this.prisma.fundPeriod.findUnique({
-        where: { id: fundPeriodId },
+      const period = await this.prisma.fundPeriod.findFirst({
+        where: { id: fundPeriodId, clubId },
         select: { startDate: true, endDate: true },
       });
       if (period) {

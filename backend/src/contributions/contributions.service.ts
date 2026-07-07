@@ -57,6 +57,37 @@ export class ContributionsService {
     return c;
   }
 
+  /**
+   * Chống nhiễm chéo tenant: FK từ body (memberId/fundPeriodId/relatedMinigameId)
+   * BẮT BUỘC thuộc cùng clubId người gọi trước khi gán. (Nhất quán attendance.create / importBulk.)
+   */
+  private async assertFkOwnership(
+    clubId: string,
+    dto: Partial<CreateContributionDto>,
+  ) {
+    if (dto.memberId) {
+      const m = await this.prisma.member.findFirst({
+        where: { id: dto.memberId, clubId },
+        select: { id: true },
+      });
+      if (!m) throw new BadRequestException('Thành viên không thuộc CLB này');
+    }
+    if (dto.fundPeriodId) {
+      const p = await this.prisma.fundPeriod.findFirst({
+        where: { id: dto.fundPeriodId, clubId },
+        select: { id: true },
+      });
+      if (!p) throw new BadRequestException('Kỳ quỹ không thuộc CLB này');
+    }
+    if (dto.relatedMinigameId) {
+      const g = await this.prisma.minigame.findFirst({
+        where: { id: dto.relatedMinigameId, clubId },
+        select: { id: true },
+      });
+      if (!g) throw new BadRequestException('Giải đấu không thuộc CLB này');
+    }
+  }
+
   async create(clubId: string, userId: string, dto: CreateContributionDto) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON';
 
@@ -75,6 +106,8 @@ export class ContributionsService {
       if (!dto.miniIncomeType)
         throw new BadRequestException('miniIncomeType bắt buộc cho Quỹ Mini');
     }
+
+    await this.assertFkOwnership(clubId, dto);
 
     return this.prisma.fundContribution.create({
       data: {
@@ -111,6 +144,7 @@ export class ContributionsService {
     ) {
       throw new BadRequestException('Số tiền phải lớn hơn 0');
     }
+    await this.assertFkOwnership(clubId, dto);
     return this.prisma.fundContribution.update({
       where: { id, clubId },
       data: {
