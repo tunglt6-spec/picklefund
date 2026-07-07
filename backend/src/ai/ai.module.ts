@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { FundPeriodsModule } from '../fund-periods/fund-periods.module';
+import { BillingModule } from '../billing/billing.module';
 import { AiService } from './ai.service';
 import { AiController } from './ai.controller';
 import { OperationalAlertsService } from './maika/operational-alerts.service';
@@ -16,7 +17,7 @@ import { AIGatewayService } from './harness/ai-gateway.service';
 
 @Module({
   // FundPeriodsModule → Finance Engine RC1 (read-only source of truth for AI)
-  imports: [ConfigModule, FundPeriodsModule],
+  imports: [ConfigModule, FundPeriodsModule, BillingModule],
   providers: [
     AiService,
     OperationalAlertsService,

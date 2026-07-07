@@ -1,10 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { AIRouterService } from './ai-router.service';
 import { TelemetryService } from './telemetry.service';
 import { TokenAccountingService } from './token-accounting.service';
 import { AIProviderManagerService } from './ai-provider-manager.service';
 import { AIConfigService } from './ai-config.service';
+import { BillingService } from '../../billing/billing.service';
 import {
   AIGatewayRequest,
   AIGatewayResponse,
@@ -21,6 +22,9 @@ export class AIGatewayService {
     private readonly tokenAccounting: TokenAccountingService,
     private readonly providerManager: AIProviderManagerService,
     private readonly aiConfig: AIConfigService,
+    // Optional: metering token theo tháng cho Billing. @Optional để harness unit-test
+    // dựng gateway trực tiếp (không cần BillingModule) vẫn chạy; runtime luôn có (AiModule import BillingModule).
+    @Optional() private readonly billing?: BillingService,
   ) {}
 
   /** Shared gateway for both Desktop and Mobile — single entry point for all AI requests */
@@ -79,6 +83,16 @@ export class AIGatewayService {
         sessionId: request.sessionId,
         timestamp: new Date(),
       });
+
+      // Metering token tích luỹ theo tháng cho Billing (persisted, SystemSetting) —
+      // fire-and-forget: lỗi ghi metering KHÔNG được ảnh hưởng phản hồi AI.
+      if (this.billing && request.clubId && response.totalTokens > 0) {
+        void this.billing
+          .trackAiCall(request.clubId, response.totalTokens)
+          .catch(() => {
+            this.logger.warn('Billing.trackAiCall thất bại (bỏ qua, không chặn AI)');
+          });
+      }
 
       return {
         ...response,

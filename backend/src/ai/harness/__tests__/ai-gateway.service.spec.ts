@@ -6,6 +6,7 @@ import { TelemetryService } from '../telemetry.service';
 import { TokenAccountingService } from '../token-accounting.service';
 import { AIProviderManagerService } from '../ai-provider-manager.service';
 import { AIConfigService } from '../ai-config.service';
+import { BillingService } from '../../../billing/billing.service';
 import { AIGatewayRequest } from '../interfaces/ai-gateway.interface';
 import { AIResponse } from '../interfaces/ai-provider.interface';
 
@@ -27,14 +28,17 @@ describe('AIGatewayService', () => {
   let telemetry: TelemetryService;
   let tokenAccounting: TokenAccountingService;
   let providerManager: jest.Mocked<AIProviderManagerService>;
+  let billing: { trackAiCall: jest.Mock };
 
   beforeEach(async () => {
+    billing = { trackAiCall: jest.fn().mockResolvedValue(undefined) };
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true })],
       providers: [
         AIConfigService,
         TelemetryService,
         TokenAccountingService,
+        { provide: BillingService, useValue: billing },
         {
           provide: AIRouterService,
           useValue: {
@@ -112,6 +116,23 @@ describe('AIGatewayService', () => {
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({ success: false }),
     );
+  });
+
+  it('meters token cho Billing (trackAiCall) khi thành công', async () => {
+    await gateway.chat(makeRequest({ clubId: 'club-1' }));
+    expect(billing.trackAiCall).toHaveBeenCalledWith('club-1', 150);
+  });
+
+  it('KHÔNG meter Billing khi lỗi provider', async () => {
+    router.route.mockRejectedValueOnce(new Error('Provider down'));
+    await expect(gateway.chat(makeRequest())).rejects.toThrow('Provider down');
+    expect(billing.trackAiCall).not.toHaveBeenCalled();
+  });
+
+  it('lỗi trackAiCall KHÔNG chặn phản hồi AI (fire-and-forget)', async () => {
+    billing.trackAiCall.mockRejectedValueOnce(new Error('metering DB down'));
+    const res = await gateway.chat(makeRequest({ clubId: 'club-1' }));
+    expect(res.content).toBe('Response');
   });
 
   it('getHealthStatus returns overall health', async () => {
