@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import type { ClubStatus, Prisma, ServicePlan } from '@prisma/client';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
+import { ScoringService } from '../scoring/scoring.service';
 
 /** Giới hạn số thành viên theo gói dịch vụ (null = không giới hạn). Nguồn duy nhất. */
 export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
@@ -53,6 +54,7 @@ export class ClubsService {
   constructor(
     private prisma: PrismaService,
     private clubMemory: ClubMemoryService,
+    private scoring: ScoringService,
   ) {}
 
   /** Branding hiệu lực = branding đã lưu, fallback về tên/logo CLB rồi tới PickleFund. */
@@ -188,6 +190,15 @@ export class ClubsService {
       .catch((err: unknown) =>
         this.logger.warn(
           `Seed Club Memory mặc định thất bại cho club ${club.id}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+
+    // Seed quy tắc chấm điểm mặc định (fire-and-forget, không chặn tạo CLB).
+    this.scoring
+      .seedDefaultRules(club.id)
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `Seed quy tắc điểm mặc định thất bại cho club ${club.id}: ${err instanceof Error ? err.message : String(err)}`,
         ),
       );
 

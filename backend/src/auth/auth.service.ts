@@ -10,6 +10,7 @@ import * as argon2 from 'argon2';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
+import { ScoringService } from '../scoring/scoring.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
     private clubMemory: ClubMemoryService,
+    private scoring: ScoringService,
   ) {}
 
   private hashToken(token: string): string {
@@ -260,6 +262,15 @@ export class AuthService {
       .catch((err: unknown) =>
         this.logger.warn(
           `Seed Club Memory mặc định thất bại cho club ${result.club.id}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+
+    // Seed quy tắc chấm điểm mặc định (fire-and-forget, không chặn đăng ký).
+    this.scoring
+      .seedDefaultRules(result.club.id)
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `Seed quy tắc điểm mặc định thất bại cho club ${result.club.id}: ${err instanceof Error ? err.message : String(err)}`,
         ),
       );
 

@@ -9,17 +9,42 @@ function createMockPrisma() {
   return {
     scoringRule: {
       findFirst: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn().mockResolvedValue({ id: 'r1' }),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     club: {
       findMany: jest.fn().mockResolvedValue([]),
     },
     member: {
+      findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
     },
     memberScoreEvent: {
       aggregate: jest.fn(),
       groupBy: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockResolvedValue({ id: 'ev1' }),
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
+      delete: jest.fn(),
+    },
+    memberScoreSnapshot: {
+      upsert: jest.fn().mockResolvedValue({}),
+    },
+    attendanceSession: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    attendanceRecord: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    fundPeriod: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    fundContribution: {
+      findFirst: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
     },
   };
 }
@@ -125,6 +150,197 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       expect(a.memberName).toBe('An');
       expect(b.total).toBe(100);
       expect(b.classification).toBe('Xuất sắc');
+    });
+  });
+
+  // ── Phase 2 ────────────────────────────────────────────────────────────
+
+  describe('createRule', () => {
+    it('tạo rule MANUAL active, validate ok', async () => {
+      await svc.createRule('c1', {
+        category: 'CONDUCT',
+        label: 'Fair play',
+        delta: 3,
+      });
+      expect(prisma.scoringRule.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            clubId: 'c1',
+            category: 'CONDUCT',
+            label: 'Fair play',
+            delta: 3,
+            source: 'MANUAL',
+            active: true,
+          }),
+        }),
+      );
+    });
+
+    it('category lạ → BadRequest', async () => {
+      await expect(
+        svc.createRule('c1', {
+          category: 'HACK' as never,
+          label: 'x',
+          delta: 1,
+        }),
+      ).rejects.toThrow('Danh mục');
+    });
+
+    it('delta không nguyên/ngoài range → BadRequest', async () => {
+      await expect(
+        svc.createRule('c1', { category: 'BONUS', label: 'x', delta: 999 }),
+      ).rejects.toThrow('delta');
+    });
+  });
+
+  describe('updateRule (scope clubId)', () => {
+    it('rule khác club → NotFound', async () => {
+      prisma.scoringRule.findFirst.mockResolvedValue(null);
+      await expect(
+        svc.updateRule('c1', 'r-other', { label: 'x' }),
+      ).rejects.toThrow('không tồn tại');
+    });
+
+    it('rule thuộc club → update field cho phép', async () => {
+      prisma.scoringRule.findFirst.mockResolvedValue({ id: 'r1' });
+      prisma.scoringRule.update.mockResolvedValue({ id: 'r1' });
+      await svc.updateRule('c1', 'r1', { delta: 5, active: false });
+      expect(prisma.scoringRule.update).toHaveBeenCalledWith({
+        where: { id: 'r1' },
+        data: { delta: 5, active: false },
+      });
+    });
+  });
+
+  describe('deleteRule (scope clubId)', () => {
+    it('rule khác club → NotFound', async () => {
+      prisma.scoringRule.findFirst.mockResolvedValue(null);
+      await expect(svc.deleteRule('c1', 'r-other')).rejects.toThrow(
+        'không tồn tại',
+      );
+    });
+
+    it('rule thuộc club → delete', async () => {
+      prisma.scoringRule.findFirst.mockResolvedValue({ id: 'r1' });
+      await svc.deleteRule('c1', 'r1');
+      expect(prisma.scoringRule.delete).toHaveBeenCalledWith({
+        where: { id: 'r1' },
+      });
+    });
+  });
+
+  describe('addManualEvent', () => {
+    it('member không thuộc club → BadRequest', async () => {
+      prisma.member.findFirst.mockResolvedValue(null);
+      await expect(
+        svc.addManualEvent(
+          'c1',
+          { memberId: 'm-other', category: 'BONUS', label: 'x', delta: 5 },
+          'admin',
+        ),
+      ).rejects.toThrow('không thuộc CLB');
+    });
+
+    it('có ruleId → ưu tiên category/label/delta từ rule khi dto không truyền', async () => {
+      prisma.member.findFirst.mockResolvedValue({ id: 'm1' });
+      prisma.scoringRule.findFirst.mockResolvedValue({
+        id: 'r1',
+        category: 'DISCIPLINE',
+        label: 'Gian lận thi đấu',
+        delta: -10,
+      });
+      await svc.addManualEvent(
+        'c1',
+        { memberId: 'm1', ruleId: 'r1', periodMonth: '2026-07' },
+        'admin',
+      );
+      expect(prisma.memberScoreEvent.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            memberId: 'm1',
+            ruleId: 'r1',
+            category: 'DISCIPLINE',
+            label: 'Gian lận thi đấu',
+            delta: -10,
+            source: 'MANUAL',
+            refId: null,
+            periodMonth: '2026-07',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('finalizePeriod', () => {
+    it('upsert snapshot cho mọi member active', async () => {
+      prisma.member.findMany.mockResolvedValue([
+        { id: 'A', fullName: 'An' },
+        { id: 'B', fullName: 'Bình' },
+      ]);
+      prisma.memberScoreEvent.groupBy.mockResolvedValue([
+        { memberId: 'A', _sum: { delta: -10 } },
+      ]);
+      const r = await svc.finalizePeriod('c1', '2026-07', 'admin');
+      expect(r.finalized).toBe(2);
+      expect(prisma.memberScoreSnapshot.upsert).toHaveBeenCalledTimes(2);
+      expect(prisma.memberScoreSnapshot.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { memberId_periodMonth: { memberId: 'A', periodMonth: '2026-07' } },
+        }),
+      );
+    });
+  });
+
+  describe('runAutoScoring', () => {
+    it('2 buổi PRESENT → 2 event điểm danh +2; đúng hạn +2 / nợ quá hạn -10; createMany skipDuplicates', async () => {
+      // Rule điểm danh
+      prisma.scoringRule.findFirst.mockResolvedValue({
+        id: 'ra',
+        label: 'Tham gia đúng giờ',
+        delta: 2,
+      });
+      // Rule tài chính
+      prisma.scoringRule.findMany.mockResolvedValue([
+        { id: 'rf1', label: 'Đóng quỹ đúng hạn', delta: 2 },
+        { id: 'rf2', label: 'Đóng quỹ trễ hạn', delta: -5 },
+        { id: 'rf3', label: 'Nợ quỹ quá hạn', delta: -10 },
+      ]);
+      // 1 buổi trong tháng, 2 record PRESENT
+      prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }]);
+      prisma.attendanceRecord.findMany.mockResolvedValue([
+        { memberId: 'm1', attendanceSessionId: 's1' },
+        { memberId: 'm2', attendanceSessionId: 's1' },
+      ]);
+      // 1 kỳ quỹ endDate trong tháng (quá hạn so với hôm nay 2026-07)
+      prisma.fundPeriod.findMany.mockResolvedValue([
+        { id: 'fp1', endDate: new Date('2020-01-31') },
+      ]);
+      prisma.member.findMany.mockResolvedValue([
+        { id: 'm1' },
+        { id: 'm2' },
+      ]);
+      // m1 đã đóng đúng hạn (batch findMany trả list), m2 chưa đóng (không có trong list)
+      prisma.fundContribution.findMany.mockResolvedValue([
+        { fundPeriodId: 'fp1', memberId: 'm1', paymentDate: new Date('2020-01-15') },
+      ]);
+
+      const r = await svc.runAutoScoring('c1', '2020-01');
+      expect(r.attendanceEvents).toBe(2);
+      expect(r.financeEvents).toBe(2); // m1 đúng hạn, m2 nợ quá hạn
+
+      const call = prisma.memberScoreEvent.createMany.mock.calls[0][0];
+      expect(call.skipDuplicates).toBe(true);
+      const deltas = call.data.map((e: { delta: number }) => e.delta).sort();
+      // [-10, +2, +2, +2] → điểm danh m1/m2 (+2,+2), đúng hạn m1 (+2), nợ m2 (-10)
+      expect(deltas).toEqual([-10, 2, 2, 2]);
+    });
+
+    it('không có rule điểm danh active → bỏ nhánh điểm danh', async () => {
+      prisma.scoringRule.findFirst.mockResolvedValue(null);
+      prisma.scoringRule.findMany.mockResolvedValue([]);
+      const r = await svc.runAutoScoring('c1', '2026-07');
+      expect(r.attendanceEvents).toBe(0);
+      expect(r.financeEvents).toBe(0);
     });
   });
 });

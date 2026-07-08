@@ -4,9 +4,14 @@ import { NotFoundException } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
+import { ScoringService } from '../scoring/scoring.service';
 
 const mockClubMemory = {
   seedDefaultTemplate: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
+};
+
+const mockScoring = {
+  seedDefaultRules: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
 };
 
 const mockPrisma = {
@@ -51,6 +56,7 @@ describe('ClubsService', () => {
         ClubsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ClubMemoryService, useValue: mockClubMemory },
+        { provide: ScoringService, useValue: mockScoring },
       ],
     }).compile();
     service = module.get<ClubsService>(ClubsService);

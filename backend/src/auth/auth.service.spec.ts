@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
+import { ScoringService } from '../scoring/scoring.service';
 import * as argon2 from 'argon2';
 
 jest.mock('argon2');
@@ -45,6 +46,10 @@ const mockClubMemory = {
   seedDefaultTemplate: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
 };
 
+const mockScoring = {
+  seedDefaultRules: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -58,6 +63,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwt },
         { provide: ConfigService, useValue: mockConfig },
         { provide: ClubMemoryService, useValue: mockClubMemory },
+        { provide: ScoringService, useValue: mockScoring },
       ],
     }).compile();
 
