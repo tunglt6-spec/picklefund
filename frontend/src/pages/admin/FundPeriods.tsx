@@ -17,6 +17,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
+import { BulkImportModal } from '../../components/admin/BulkImportModal'
 import toast from 'react-hot-toast'
 
 const statusLabel: Record<FundPeriodStatus, string> = {
@@ -154,6 +155,7 @@ export function FundPeriods() {
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<{ imported: number; total: number; errors: ImportError[] } | null>(null)
   const importFileRef = useRef<HTMLInputElement>(null)
+  const [showBulkImport, setShowBulkImport] = useState(false)
 
   const commonPeriods = periods.filter(p => (p.type ?? 'chung') === 'chung')
 
@@ -487,6 +489,11 @@ export function FundPeriods() {
               title="Nhập Excel"
             ><Upload size={16} /></button>
             <button
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+              onClick={() => setShowBulkImport(true)}
+              title="Nhập dữ liệu CLB mới"
+            ><FileSpreadsheet size={16} /></button>
+            <button
               className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
               onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
             >
@@ -786,6 +793,11 @@ export function FundPeriods() {
           prevPeriodInfo={prevGamePeriod}
           prevPeriodError={prevGamePeriodError}
         />
+        <BulkImportModal
+          open={showBulkImport}
+          onClose={() => setShowBulkImport(false)}
+          onImported={() => window.location.reload()}
+        />
       </div>
     )
   }
@@ -900,6 +912,9 @@ export function FundPeriods() {
                 </div>
                 <Button variant="outline" size="sm" onClick={() => { resetImport(); setShowImport(true) }}>
                   <FileSpreadsheet size={13} />Nhập Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowBulkImport(true)}>
+                  <Upload size={13} />Nhập dữ liệu CLB mới
                 </Button>
               </div>
 
@@ -1213,6 +1228,12 @@ export function FundPeriods() {
         showCopyMembers
         prevPeriodInfo={prevGamePeriod}
         prevPeriodError={prevGamePeriodError}
+      />
+
+      <BulkImportModal
+        open={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        onImported={() => window.location.reload()}
       />
 
       {/* View period detail modal */}

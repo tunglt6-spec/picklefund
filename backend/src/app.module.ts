@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { ClubsModule } from './clubs/clubs.module';
 import { MembersModule } from './members/members.module';
 import { FundPeriodsModule } from './fund-periods/fund-periods.module';
+import { BulkImportModule } from './bulk-import/bulk-import.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { ContributionsModule } from './contributions/contributions.module';
 import { ExpensesModule } from './expenses/expenses.module';
@@ -70,6 +71,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     ClubsModule,
     MembersModule,
     FundPeriodsModule,
+    BulkImportModule,
     AttendanceModule,
     ContributionsModule,
     ExpensesModule,
