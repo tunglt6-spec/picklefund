@@ -39,6 +39,7 @@ export class MembersService {
       email?: string;
       joinDate: string;
       notes?: string;
+      skillLevel?: number;
     },
   ) {
     // V2.2 SaaS: enforce giới hạn thành viên theo gói dịch vụ (STARTER giới hạn; PRO/CLUB_PLUS mở).

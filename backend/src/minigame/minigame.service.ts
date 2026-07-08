@@ -205,26 +205,60 @@ export class MinigameService {
         'Đội đã được cố định. Không thể tạo lại khi đã có lịch thi đấu. Hãy xoá lịch trước.',
       );
 
+    // Chế độ ghép cặp (lưu trong settings). MANUAL → tự tạo cặp qua POST /teams.
+    const pairingMode = (mg.settings as Record<string, unknown> | null)
+      ?.pairingMode as string | undefined;
+    if (pairingMode === 'MANUAL_PAIRING')
+      throw new BadRequestException(
+        'Chế độ ghép thủ công — hãy tự tạo cặp trong dashboard, không dùng ghép tự động.',
+      );
+
     const participants = await this.prisma.minigameParticipant.findMany({
       where: { minigameId: id },
     });
     if (participants.length < 2)
       throw new BadRequestException('Cần ít nhất 2 người chơi');
 
-    // Shuffle
-    const shuffled = [...participants].sort(() => Math.random() - 0.5);
+    // Sắp thứ tự người chơi theo chế độ ghép:
+    //  - BALANCED_SKILL_PAIRING: sắp theo skill giảm dần rồi xen kẽ mạnh↔yếu để
+    //    mỗi đôi = 1 mạnh + 1 yếu → cân bằng trình độ giữa các đội.
+    //  - RANDOM_PAIRING (mặc định): xáo trộn ngẫu nhiên.
+    let ordered = [...participants];
+    if (pairingMode === 'BALANCED_SKILL_PAIRING') {
+      const members = await this.prisma.member.findMany({
+        where: { id: { in: participants.map((p) => p.memberId) } },
+        select: { id: true, skillLevel: true },
+      });
+      const skillOf = new Map(members.map((m) => [m.id, m.skillLevel ?? 3]));
+      const sorted = [...participants].sort(
+        (a, b) =>
+          (skillOf.get(b.memberId) ?? 3) - (skillOf.get(a.memberId) ?? 3),
+      );
+      ordered = [];
+      let lo = 0;
+      let hi = sorted.length - 1;
+      while (lo <= hi) {
+        ordered.push(sorted[lo]);
+        if (lo !== hi) ordered.push(sorted[hi]);
+        lo++;
+        hi--;
+      }
+    } else {
+      ordered.sort(() => Math.random() - 0.5);
+    }
+
     const teams: Array<{
       minigameId: string;
       name: string;
       player1Id: string;
       player2Id?: string;
     }> = [];
-    for (let i = 0; i < shuffled.length; i += 2) {
+    for (let i = 0; i < ordered.length; i += 2) {
       teams.push({
         minigameId: id,
         name: `Đôi ${Math.floor(i / 2) + 1}`,
-        player1Id: shuffled[i].memberId,
-        player2Id: shuffled[i + 1]?.memberId,
+        player1Id: ordered[i].memberId,
+        player2Id: ordered[i + 1]?.memberId,
       });
     }
 

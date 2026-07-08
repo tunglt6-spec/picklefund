@@ -34,7 +34,7 @@ function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
 }
 
-const emptyForm = { fullName: '', phone: '', email: '', joinDate: new Date().toISOString().slice(0, 10), notes: '' }
+const emptyForm = { fullName: '', phone: '', email: '', joinDate: new Date().toISOString().slice(0, 10), notes: '', skillLevel: '' }
 
 /** Hiển thị ngày an toàn: dữ liệu thiếu/không hợp lệ → "—" (không hiện "Invalid Date"). */
 function safeDate(dateStr?: string): string {
@@ -121,7 +121,7 @@ function MemberFormDrawer({
   onSave: (form: typeof emptyForm) => void; isSaving?: boolean; isMobile: boolean
 }) {
   const [form, setForm] = useState(() => editMember
-    ? { fullName: editMember.fullName, phone: editMember.phone || '', email: editMember.email || '', joinDate: editMember.joinDate, notes: editMember.notes || '' }
+    ? { fullName: editMember.fullName, phone: editMember.phone || '', email: editMember.email || '', joinDate: editMember.joinDate, notes: editMember.notes || '', skillLevel: editMember.skillLevel != null ? String(editMember.skillLevel) : '' }
     : { ...emptyForm })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -179,6 +179,17 @@ function MemberFormDrawer({
         </div>
         <div>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin bổ sung</p>
+          <div className="mb-3">
+            <label htmlFor="mf-skill" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">Trình độ <span className="[color:var(--pf-color-muted)]">(1–5, cho ghép cặp cân bằng)</span></label>
+            <select id="mf-skill" value={form.skillLevel} onChange={e => setForm({ ...form, skillLevel: e.target.value })} className="input-base">
+              <option value="">— Chưa đánh giá —</option>
+              <option value="1">1 · Mới chơi</option>
+              <option value="2">2 · Cơ bản</option>
+              <option value="3">3 · Trung bình</option>
+              <option value="4">4 · Khá</option>
+              <option value="5">5 · Giỏi</option>
+            </select>
+          </div>
           <div>
             <label htmlFor="mf-notes" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">Ghi chú</label>
             <textarea id="mf-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
@@ -484,6 +495,7 @@ export function Members() {
           phone: form.phone.trim() || null,
           email: form.email.trim() || null,
           notes: form.notes.trim() || null,
+          skillLevel: form.skillLevel ? Number(form.skillLevel) : null,
         }
         const res = await api.put(`/members/${editMember.id}`, payload)
         const updated = res.data?.data ?? { ...editMember, ...form }
@@ -497,6 +509,7 @@ export function Members() {
           ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
           ...(form.email.trim() ? { email: form.email.trim() } : {}),
           ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+          ...(form.skillLevel ? { skillLevel: Number(form.skillLevel) } : {}),
         }
         const res = await api.post('/members', payload)
         const created = res.data?.data

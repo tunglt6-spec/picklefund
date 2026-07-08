@@ -90,6 +90,7 @@ export interface Member {
   status: MemberStatus
   avatarUrl?: string
   notes?: string
+  skillLevel?: number
 }
 
 export interface FundPeriod {

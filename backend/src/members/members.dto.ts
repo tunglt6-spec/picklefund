@@ -5,12 +5,22 @@ import {
   IsDateString,
   IsNotEmpty,
   MaxLength,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 /** Form gửi chuỗi rỗng cho field không bắt buộc → coi như bỏ trống (tránh fail @IsEmail trên ''). */
 const emptyToUndefined = ({ value }: { value: unknown }) =>
   typeof value === 'string' && value.trim() === '' ? undefined : value;
+
+/** '' hoặc null → undefined; số dạng chuỗi → number (skill level nhập từ form). */
+const emptyToUndefinedNum = ({ value }: { value: unknown }) => {
+  if (value === '' || value === null || value === undefined) return undefined;
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isNaN(n) ? undefined : n;
+};
 
 export class CreateMemberDto {
   @IsString()
@@ -35,6 +45,13 @@ export class CreateMemberDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @Transform(emptyToUndefinedNum)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  skillLevel?: number;
 }
 
 export class UpdateMemberDto {
@@ -66,4 +83,11 @@ export class UpdateMemberDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @Transform(emptyToUndefinedNum)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  skillLevel?: number;
 }

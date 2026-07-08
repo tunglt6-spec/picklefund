@@ -119,11 +119,12 @@ model Member {
   email     String?      @db.VarChar(255)
   joinDate  DateTime     @map("join_date") @db.Date
   status    MemberStatus @default(active)
-  avatarUrl String?      @map("avatar_url")
-  notes     String?
-  isDeleted Boolean      @default(false) @map("is_deleted")
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  avatarUrl  String?      @map("avatar_url")
+  notes      String?
+  skillLevel Int?         @map("skill_level")
+  isDeleted  Boolean      @default(false) @map("is_deleted")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
 
   club                  Club                  @relation(fields: [clubId], references: [id])
   user                  User?                 @relation(fields: [userId], references: [id])

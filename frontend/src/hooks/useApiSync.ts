@@ -54,6 +54,7 @@ export function useApiSync() {
             status: m.status ?? 'active',
             avatarUrl: m.avatarUrl ?? undefined,
             notes: m.notes ?? undefined,
+            skillLevel: m.skillLevel ?? undefined,
           }))
           setMembers(clubId, members)
         }

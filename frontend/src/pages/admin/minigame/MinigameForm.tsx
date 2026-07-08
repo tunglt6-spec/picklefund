@@ -172,7 +172,7 @@ export function MinigameForm() {
         // description chỉ là field UI cục bộ → không gửi lên API create.
         const res = await api.post('/minigames', {
           name: form.name,
-          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
+          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined },
         })
         const mgId: string = res.data?.data?.id
         await api.post(`/minigames/${mgId}/participants`, { memberIds: realMemberIds, guests: guestPayload })
