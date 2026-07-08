@@ -119,7 +119,7 @@ export class ScoringController {
     return ok(await this.scoring.removeEvent(user.clubId as string, id));
   }
 
-  // ── Chốt tháng + auto-scoring ────────────────────────────────────────────
+  // ── Chốt tháng ────────────────────────────────────────────────────────────
   @Post('finalize')
   @Roles('CLUB_ADMIN')
   @ApiOperation({ summary: 'Chốt điểm cuối tháng (snapshot)' })
@@ -131,19 +131,6 @@ export class ScoringController {
         user.userId,
       ),
       'Đã chốt điểm tháng',
-    );
-  }
-
-  @Post('auto-run')
-  @Roles('CLUB_ADMIN')
-  @ApiOperation({ summary: 'Chạy chấm điểm tự động (điểm danh + tài chính)' })
-  async autoRun(@Query('month') month: string, @CurrentUser() user: JwtUser) {
-    return ok(
-      await this.scoring.runAutoScoring(
-        user.clubId as string,
-        this.resolveMonth(month),
-      ),
-      'Đã chạy chấm điểm tự động',
     );
   }
 

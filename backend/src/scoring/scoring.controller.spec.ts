@@ -33,9 +33,6 @@ describe('ScoringController (clubId từ JWT)', () => {
       addManualEvent: jest.fn().mockResolvedValue({ id: 'ev1' }),
       removeEvent: jest.fn().mockResolvedValue({ deleted: true }),
       finalizePeriod: jest.fn().mockResolvedValue({ finalized: 3 }),
-      runAutoScoring: jest
-        .fn()
-        .mockResolvedValue({ attendanceEvents: 2, financeEvents: 1 }),
       seedDefaultRulesForAllClubs: jest
         .fn()
         .mockResolvedValue({ clubsProcessed: 1 }),
@@ -82,11 +79,6 @@ describe('ScoringController (clubId từ JWT)', () => {
       await expect(ctrl.finalize('bad' as never, admin)).rejects.toThrow(
         BadRequestException,
       );
-    });
-
-    it('auto-run truyền clubId + month resolved', async () => {
-      await ctrl.autoRun('2026-05', admin);
-      expect(svc.runAutoScoring).toHaveBeenCalledWith('club-1', '2026-05');
     });
   });
 

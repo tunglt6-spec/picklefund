@@ -2,12 +2,14 @@
  * MemberScoring — Chấm điểm thành viên động (Phase 3 UI).
  * 2 tab: "Bảng điểm" (mọi staff xem) + "Thang điểm" (chỉ CLUB_ADMIN).
  * API envelope { success, data, message } → luôn đọc res.data.data.
- * clubId lấy từ JWT ở backend (KHÔNG truyền). Quyền sửa (rule/event/finalize/auto-run) = CLUB_ADMIN.
+ * clubId lấy từ JWT ở backend (KHÔNG truyền). Quyền sửa (rule/event/finalize) = CLUB_ADMIN.
+ * Engine tính LIVE: điểm mặc định 100, trừ tự động theo điểm danh & đóng quỹ (autoLines),
+ * cộng thêm điều chỉnh thủ công (events MANUAL). KHÔNG còn "chạy tự động".
  * Chuẩn UI V2.2 shared-kit, token --pf-*, responsive DataTable + MobileCardList.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Award, Play, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star } from 'lucide-react'
+import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star } from 'lucide-react'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import {
@@ -46,11 +48,16 @@ interface ScoreEvent {
   note?: string | null
   createdAt: string
 }
+interface AutoLine {
+  label: string
+  delta: number
+}
 interface MemberDetail {
   memberId: string
   memberName: string
   total: number
   classification: string
+  autoLines: AutoLine[]
   events: ScoreEvent[]
 }
 
@@ -190,22 +197,6 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
     return { total: rows.length, excellent, good, review }
   }, [rows])
 
-  const handleAutoRun = async () => {
-    setBusy(true)
-    try {
-      const res = await api.post(`/scoring/auto-run?month=${month}`)
-      const d = res.data?.data ?? {}
-      toast.success(
-        `Đã chạy tự động: ${d.attendanceEvents ?? 0} sự kiện điểm danh, ${d.financeEvents ?? 0} sự kiện tài chính`,
-      )
-      await load()
-    } catch (err) {
-      toast.error(apiMessage(err, 'Chạy tự động thất bại'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const handleFinalize = async () => {
     setConfirmFinalize(false)
     setBusy(true)
@@ -267,15 +258,6 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
         {isAdmin && (
           <div className="flex flex-wrap items-center gap-2">
             <ActionButton
-              variant="secondary"
-              icon={<Play size={16} />}
-              onClick={handleAutoRun}
-              disabled={busy}
-              className="min-h-11"
-            >
-              Chạy tự động
-            </ActionButton>
-            <ActionButton
               icon={<Lock size={16} />}
               onClick={() => setConfirmFinalize(true)}
               disabled={busy}
@@ -295,6 +277,11 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
         <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" value={stats.review} sub="cần cải thiện / xem xét" />
       </div>
 
+      <p className="text-xs [color:var(--pf-color-muted)]">
+        Điểm cập nhật tự động theo điểm danh &amp; đóng quỹ. Mỗi thành viên bắt đầu ở 100 điểm,
+        bị trừ khi vắng/nợ quỹ/vi phạm; có thể cộng/trừ thêm bằng điều chỉnh thủ công.
+      </p>
+
       {/* Bảng điểm */}
       <div className="rounded-[20px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
         {loading ? (
@@ -305,7 +292,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
           <EmptyState
             icon={<Award size={24} />}
             title="Chưa có dữ liệu chấm điểm"
-            description={isAdmin ? 'Bấm "Chạy tự động" để tạo điểm từ điểm danh & tài chính.' : 'Chưa có điểm cho tháng này.'}
+            description="Điểm cập nhật tự động theo điểm danh & đóng quỹ. Mặc định 100, trừ khi vắng/nợ/vi phạm."
           />
         ) : (
           <>
@@ -494,6 +481,39 @@ function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: Mem
             <StatusBadge tone={classificationTone(detail.classification)}>{detail.classification}</StatusBadge>
           </div>
 
+          {/* Điểm tự động (điểm danh + tài chính) — chỉ hiển thị, không sửa/xóa */}
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold [color:var(--pf-text)]">
+              Điểm tự động (điểm danh + tài chính)
+            </p>
+            {detail.autoLines.length === 0 ? (
+              <p className="rounded-[16px] border border-dashed p-3 text-sm [color:var(--pf-color-muted)] border-[color:var(--pf-border)]">
+                Không có khoản trừ tự động (đủ chuyên cần, đóng quỹ đầy đủ).
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {detail.autoLines.map((line, i) => (
+                  <li
+                    key={`${line.label}-${i}`}
+                    className="flex items-center justify-between gap-3 rounded-[16px] border p-3 [background:var(--pf-surface)] border-[color:var(--pf-border)]"
+                  >
+                    <span className="min-w-0 text-sm [color:var(--pf-text)]">{line.label}</span>
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1 text-sm font-bold tabular-nums"
+                      style={{ color: line.delta >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}
+                    >
+                      {line.delta >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                      {line.delta > 0 ? '+' : ''}{line.delta}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Điều chỉnh thủ công */}
+          <p className="text-sm font-semibold [color:var(--pf-text)]">Điều chỉnh thủ công</p>
+
           {/* Form thêm event (chỉ admin) */}
           {isAdmin && (
             showForm ? (
@@ -578,9 +598,9 @@ function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: Mem
             )
           )}
 
-          {/* Danh sách event */}
+          {/* Danh sách điều chỉnh thủ công */}
           {detail.events.length === 0 ? (
-            <EmptyState icon={<Award size={22} />} title="Chưa có sự kiện chấm điểm nào" />
+            <EmptyState icon={<Award size={22} />} title="Chưa có điều chỉnh thủ công nào" />
           ) : (
             <ul className="flex flex-col gap-2">
               {detail.events.map((ev) => (
@@ -591,9 +611,6 @@ function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: Mem
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium [color:var(--pf-text)]">{ev.label}</span>
-                      <StatusBadge tone={ev.source === 'AUTO' ? 'info' : 'neutral'}>
-                        {ev.source === 'AUTO' ? 'Tự động' : 'Thủ công'}
-                      </StatusBadge>
                     </div>
                     <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
                       {CATEGORY_LABELS[ev.category]} · {formatDate(ev.createdAt)}

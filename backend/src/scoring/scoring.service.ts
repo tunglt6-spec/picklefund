@@ -1,8 +1,10 @@
 /**
- * ScoringService (Chấm điểm thành viên động — Phase 1: NỀN TẢNG).
- * Mỗi TV bắt đầu SCORE_BASELINE (100đ), cộng/trừ theo các event trong tháng,
- * clamp [0,100], xếp loại theo classifyScore. Quy tắc điểm seed per-club từ
- * DEFAULT_SCORING_RULES (CLB sửa được — phần "động"). Scope theo clubId.
+ * ScoringService (Chấm điểm thành viên động — model MỚI: chỉ giảm điểm).
+ * Mỗi TV mặc định SCORE_BASELINE (100đ). Điểm danh + tài chính tính LIVE từ data
+ * thật mỗi lần đọc (KHÔNG persist event). Tiêu chí khác full mặc định, admin nhập
+ * tay khi vi phạm (trừ) / thưởng (cộng, cap 100).
+ *   total = clamp(100 + autoAttendance + autoFinance + Σ manualEvents.delta, 0, 100)
+ * Quy tắc điểm seed per-club từ DEFAULT_SCORING_RULES (CLB sửa được). Scope clubId.
  */
 import {
   BadRequestException,
@@ -17,6 +19,17 @@ import {
   SCORE_BASELINE,
   classifyScore,
 } from './scoring-rules.constant';
+
+/** Kết quả tính AUTO cho 1 member trong tháng (điểm danh + tài chính). */
+interface AutoDelta {
+  attendance: number;
+  finance: number;
+  lateDelta: number;
+  overdueDelta: number;
+  absentCount: number;
+  lateCount: number;
+  overdueCount: number;
+}
 
 /** Danh mục chấm điểm hợp lệ (whitelist chống inject). */
 const SCORING_CATEGORIES: ScoringCategory[] = [
@@ -90,25 +103,166 @@ export class ScoringService {
   }
 
   /**
-   * Tính điểm 1 thành viên trong 1 tháng: baseline + tổng delta các event khớp
-   * clubId+memberId+periodMonth, clamp [0,100], xếp loại.
+   * Tính deltas AUTO (điểm danh + tài chính) LIVE từ data thật cho 1 tháng.
+   * BATCH hiệu quả (không N+1). Trả Map theo memberId. memberIds=undefined → mọi
+   * member (dùng cho bảng điểm); truyền [id] → chỉ 1 member (dùng cho chi tiết).
+   *
+   * - attendance = absentCount × attendanceRule.delta (delta ÂM). PRESENT không trừ.
+   * - finance = lateCount × lateRule.delta + overdueCount × overdueRule.delta.
+   * Rule thiếu/inactive → phần đó = 0.
+   */
+  private async computeAutoDeltas(
+    clubId: string,
+    periodMonth: string,
+    memberIds?: string[],
+  ): Promise<Map<string, AutoDelta>> {
+    const { start, end } = this.monthRange(periodMonth);
+    const now = new Date();
+
+    // Đọc 3 AUTO rule qua systemKey (active). delta mặc định 0 nếu thiếu.
+    const autoRules = await this.prisma.scoringRule.findMany({
+      where: {
+        clubId,
+        active: true,
+        source: { in: ['AUTO_ATTENDANCE', 'AUTO_FINANCE'] },
+      },
+      select: { systemKey: true, delta: true },
+    });
+    const ruleDelta = (key: string): number =>
+      autoRules.find((r) => r.systemKey === key)?.delta ?? 0;
+    const absentDelta = ruleDelta(RULE_KEY.ATTENDANCE_ABSENT);
+    const lateDelta = ruleDelta(RULE_KEY.FINANCE_LATE);
+    const overdueDelta = ruleDelta(RULE_KEY.FINANCE_OVERDUE);
+
+    const result = new Map<string, AutoDelta>();
+    const ensure = (id: string) => {
+      let e = result.get(id);
+      if (!e) {
+        e = {
+          attendance: 0,
+          finance: 0,
+          lateDelta: 0,
+          overdueDelta: 0,
+          absentCount: 0,
+          lateCount: 0,
+          overdueCount: 0,
+        };
+        result.set(id, e);
+      }
+      return e;
+    };
+
+    // ── Điểm danh: đếm buổi ABSENT của member trong tháng ──
+    const sessions = await this.prisma.attendanceSession.findMany({
+      where: { clubId, sessionDate: { gte: start, lt: end } },
+      select: { id: true },
+    });
+    const sessionIds = sessions.map((s) => s.id);
+    if (sessionIds.length > 0) {
+      const absentGroups = await this.prisma.attendanceRecord.groupBy({
+        by: ['memberId'],
+        where: {
+          clubId,
+          status: 'ABSENT',
+          attendanceSessionId: { in: sessionIds },
+          ...(memberIds ? { memberId: { in: memberIds } } : {}),
+        },
+        _count: { _all: true },
+      });
+      for (const g of absentGroups) {
+        const e = ensure(g.memberId);
+        e.absentCount = g._count._all;
+        e.attendance = e.absentCount * absentDelta;
+      }
+    }
+
+    // ── Tài chính: mỗi kỳ quỹ 'chung' có endDate trong tháng ──
+    const periods = await this.prisma.fundPeriod.findMany({
+      where: { clubId, type: 'chung', endDate: { gte: start, lt: end } },
+      select: { id: true, endDate: true },
+    });
+    if (periods.length > 0) {
+      const periodIds = periods.map((p) => p.id);
+      // member active (lọc theo memberIds nếu có) — chỉ member này mới bị chấm.
+      const members = await this.prisma.member.findMany({
+        where: {
+          clubId,
+          status: 'active',
+          isDeleted: false,
+          ...(memberIds ? { id: { in: memberIds } } : {}),
+        },
+        select: { id: true },
+      });
+      const contribs = await this.prisma.fundContribution.findMany({
+        where: {
+          clubId,
+          fundPeriodId: { in: periodIds },
+          fundSource: 'COMMON',
+          isConfirmed: true,
+        },
+        select: { fundPeriodId: true, memberId: true, paymentDate: true },
+      });
+      // Map "kỳ|member" → paymentDate SỚM NHẤT.
+      const earliestPaid = new Map<string, Date>();
+      for (const c of contribs) {
+        if (!c.memberId || !c.fundPeriodId) continue;
+        const key = `${c.fundPeriodId}|${c.memberId}`;
+        const cur = earliestPaid.get(key);
+        if (!cur || c.paymentDate < cur) earliestPaid.set(key, c.paymentDate);
+      }
+      for (const period of periods) {
+        for (const member of members) {
+          const paid = earliestPaid.get(`${period.id}|${member.id}`);
+          if (paid) {
+            if (paid <= period.endDate) continue; // đúng hạn → 0
+            const e = ensure(member.id);
+            e.lateCount++;
+          } else if (period.endDate < now) {
+            const e = ensure(member.id);
+            e.overdueCount++;
+          }
+        }
+      }
+      // Quy đổi count → delta (giữ tách trễ / nợ để hiển thị chi tiết).
+      for (const e of result.values()) {
+        e.lateDelta = e.lateCount * lateDelta;
+        e.overdueDelta = e.overdueCount * overdueDelta;
+        e.finance = e.lateDelta + e.overdueDelta;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Tính điểm 1 thành viên trong 1 tháng LIVE:
+   *   total = clamp(100 + autoAttendance + autoFinance + Σ manualEvents.delta).
    */
   async computeMemberScore(
     clubId: string,
     memberId: string,
     periodMonth: string,
   ): Promise<{ total: number; classification: string }> {
-    const agg = await this.prisma.memberScoreEvent.aggregate({
-      where: { clubId, memberId, periodMonth },
-      _sum: { delta: true },
-    });
-    const total = this.clamp(SCORE_BASELINE + (agg._sum.delta ?? 0));
+    const [autoMap, manualAgg] = await Promise.all([
+      this.computeAutoDeltas(clubId, periodMonth, [memberId]),
+      this.prisma.memberScoreEvent.aggregate({
+        where: { clubId, memberId, periodMonth, source: 'MANUAL' },
+        _sum: { delta: true },
+      }),
+    ]);
+    const auto = autoMap.get(memberId);
+    const total = this.clamp(
+      SCORE_BASELINE +
+        (auto?.attendance ?? 0) +
+        (auto?.finance ?? 0) +
+        (manualAgg._sum.delta ?? 0),
+    );
     return { total, classification: classifyScore(total) };
   }
 
   /**
-   * Điểm tháng của mọi member active trong CLB. Aggregate delta theo memberId
-   * bằng 1 query groupBy. Member chưa có event → baseline (100).
+   * Điểm tháng của mọi member active trong CLB (LIVE). auto tính batch;
+   * manual aggregate theo memberId (chỉ source MANUAL).
    */
   async getPeriodScores(
     clubId: string,
@@ -126,18 +280,27 @@ export class ScoringService {
       select: { id: true, fullName: true },
     });
 
-    const grouped = await this.prisma.memberScoreEvent.groupBy({
-      by: ['memberId'],
-      where: { clubId, periodMonth },
-      _sum: { delta: true },
-    });
-    const deltaByMember = new Map<string, number>();
+    const [autoMap, grouped] = await Promise.all([
+      this.computeAutoDeltas(clubId, periodMonth),
+      this.prisma.memberScoreEvent.groupBy({
+        by: ['memberId'],
+        where: { clubId, periodMonth, source: 'MANUAL' },
+        _sum: { delta: true },
+      }),
+    ]);
+    const manualByMember = new Map<string, number>();
     for (const g of grouped) {
-      deltaByMember.set(g.memberId, g._sum.delta ?? 0);
+      manualByMember.set(g.memberId, g._sum.delta ?? 0);
     }
 
     return members.map((m) => {
-      const total = this.clamp(SCORE_BASELINE + (deltaByMember.get(m.id) ?? 0));
+      const auto = autoMap.get(m.id);
+      const total = this.clamp(
+        SCORE_BASELINE +
+          (auto?.attendance ?? 0) +
+          (auto?.finance ?? 0) +
+          (manualByMember.get(m.id) ?? 0),
+      );
       return {
         memberId: m.id,
         memberName: m.fullName,
@@ -310,7 +473,10 @@ export class ScoringService {
     return { deleted: true };
   }
 
-  /** Chi tiết điểm 1 thành viên trong tháng: tổng + xếp loại + danh sách event. */
+  /**
+   * Chi tiết điểm 1 thành viên trong tháng: tổng + xếp loại + dòng AUTO (LIVE)
+   * + danh sách event thủ công. autoLines chỉ hiện phần có phát sinh trừ.
+   */
   async getMemberDetail(
     clubId: string,
     memberId: string,
@@ -322,19 +488,52 @@ export class ScoringService {
     });
     if (!member) throw new NotFoundException('Thành viên không tồn tại');
 
-    const [{ total, classification }, events] = await Promise.all([
-      this.computeMemberScore(clubId, memberId, periodMonth),
+    const [autoMap, manualAgg, events] = await Promise.all([
+      this.computeAutoDeltas(clubId, periodMonth, [memberId]),
+      this.prisma.memberScoreEvent.aggregate({
+        where: { clubId, memberId, periodMonth, source: 'MANUAL' },
+        _sum: { delta: true },
+      }),
       this.prisma.memberScoreEvent.findMany({
-        where: { clubId, memberId, periodMonth },
+        where: { clubId, memberId, periodMonth, source: 'MANUAL' },
         orderBy: { createdAt: 'desc' },
       }),
     ]);
+
+    const auto = autoMap.get(memberId);
+    const attendance = auto?.attendance ?? 0;
+    const finance = auto?.finance ?? 0;
+    const manualSum = manualAgg._sum.delta ?? 0;
+    const total = this.clamp(
+      SCORE_BASELINE + attendance + finance + manualSum,
+    );
+
+    const autoLines: Array<{ label: string; delta: number }> = [];
+    if (auto && auto.absentCount > 0 && attendance < 0) {
+      autoLines.push({
+        label: `Vắng ${auto.absentCount} buổi`,
+        delta: attendance,
+      });
+    }
+    if (auto && auto.lateCount > 0) {
+      autoLines.push({
+        label: `Đóng trễ ${auto.lateCount} kỳ`,
+        delta: auto.lateDelta,
+      });
+    }
+    if (auto && auto.overdueCount > 0) {
+      autoLines.push({
+        label: `Nợ ${auto.overdueCount} kỳ`,
+        delta: auto.overdueDelta,
+      });
+    }
 
     return {
       memberId: member.id,
       memberName: member.fullName,
       total,
-      classification,
+      classification: classifyScore(total),
+      autoLines,
       events,
     };
   }
@@ -374,149 +573,6 @@ export class ScoringService {
       });
     }
     return { finalized: scores.length };
-  }
-
-  // ── Auto-scoring (ON-DEMAND) ─────────────────────────────────────────────
-
-  /**
-   * Chạy chấm điểm tự động cho 1 tháng: điểm danh (+2 mỗi buổi PRESENT) + tài
-   * chính (đúng hạn/trễ/nợ theo kỳ quỹ chung). Idempotent qua unique
-   * (memberId, source, periodMonth, refId) + createMany({skipDuplicates:true}).
-   *
-   * LƯU Ý Phase 2: nếu điểm danh/khoản đóng THAY ĐỔI sau lần chạy đầu, event cũ
-   * GIỮ NGUYÊN (không tự sửa/xóa) — chấp nhận trong Phase 2.
-   */
-  async runAutoScoring(clubId: string, periodMonth: string) {
-    const { start, end } = this.monthRange(periodMonth);
-
-    const events: Prisma.MemberScoreEventCreateManyInput[] = [];
-
-    // ── Nhánh điểm danh ──
-    // Khớp qua systemKey BẤT BIẾN (không phụ thuộc label CLB có thể sửa).
-    const attendanceRule = await this.prisma.scoringRule.findFirst({
-      where: {
-        clubId,
-        systemKey: RULE_KEY.ATTENDANCE_ON_TIME,
-        active: true,
-      },
-    });
-    if (attendanceRule) {
-      const sessions = await this.prisma.attendanceSession.findMany({
-        where: { clubId, sessionDate: { gte: start, lt: end } },
-        select: { id: true },
-      });
-      const sessionIds = sessions.map((s) => s.id);
-      if (sessionIds.length > 0) {
-        const records = await this.prisma.attendanceRecord.findMany({
-          where: {
-            clubId,
-            status: 'PRESENT',
-            attendanceSessionId: { in: sessionIds },
-          },
-          select: { memberId: true, attendanceSessionId: true },
-        });
-        for (const r of records) {
-          events.push({
-            clubId,
-            memberId: r.memberId,
-            ruleId: attendanceRule.id,
-            category: 'PARTICIPATION',
-            label: attendanceRule.label,
-            delta: attendanceRule.delta,
-            source: 'AUTO_ATTENDANCE',
-            periodMonth,
-            refId: r.attendanceSessionId,
-          });
-        }
-      }
-    }
-
-    // ── Nhánh tài chính ──
-    const financeRules = await this.prisma.scoringRule.findMany({
-      where: { clubId, source: 'AUTO_FINANCE', active: true },
-    });
-    const onTimeRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_ON_TIME);
-    const lateRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_LATE);
-    const overdueRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_OVERDUE);
-
-    if (onTimeRule || lateRule || overdueRule) {
-      const now = new Date();
-      const periods = await this.prisma.fundPeriod.findMany({
-        where: { clubId, type: 'chung', endDate: { gte: start, lt: end } },
-        select: { id: true, endDate: true },
-      });
-      if (periods.length > 0) {
-        const members = await this.prisma.member.findMany({
-          where: { clubId, status: 'active', isDeleted: false },
-          select: { id: true },
-        });
-        // 1 query thay cho N+1 (trước đây findFirst mỗi member×kỳ): lấy mọi khoản đóng
-        // COMMON đã xác nhận của các kỳ trong tháng, rồi map trong bộ nhớ.
-        const periodIds = periods.map((p) => p.id);
-        const contribs = await this.prisma.fundContribution.findMany({
-          where: {
-            clubId,
-            fundPeriodId: { in: periodIds },
-            fundSource: 'COMMON',
-            isConfirmed: true,
-          },
-          select: { fundPeriodId: true, memberId: true, paymentDate: true },
-        });
-        // Map "kỳ|member" → paymentDate SỚM NHẤT (giữ ngữ nghĩa orderBy paymentDate asc cũ).
-        const earliestPaid = new Map<string, Date>();
-        for (const c of contribs) {
-          if (!c.memberId || !c.fundPeriodId) continue;
-          const key = `${c.fundPeriodId}|${c.memberId}`;
-          const cur = earliestPaid.get(key);
-          if (!cur || c.paymentDate < cur) earliestPaid.set(key, c.paymentDate);
-        }
-        for (const period of periods) {
-          for (const member of members) {
-            const paid = earliestPaid.get(`${period.id}|${member.id}`);
-
-            let rule = null as (typeof financeRules)[number] | null;
-            if (paid) {
-              rule =
-                paid <= period.endDate
-                  ? onTimeRule ?? null
-                  : lateRule ?? null;
-            } else if (period.endDate < now) {
-              rule = overdueRule ?? null;
-            }
-            if (!rule) continue;
-
-            events.push({
-              clubId,
-              memberId: member.id,
-              ruleId: rule.id,
-              category: 'FINANCE',
-              label: rule.label,
-              delta: rule.delta,
-              source: 'AUTO_FINANCE',
-              periodMonth,
-              refId: period.id,
-            });
-          }
-        }
-      }
-    }
-
-    const attendanceEvents = events.filter(
-      (e) => e.source === 'AUTO_ATTENDANCE',
-    ).length;
-    const financeEvents = events.filter(
-      (e) => e.source === 'AUTO_FINANCE',
-    ).length;
-
-    if (events.length > 0) {
-      // skipDuplicates chống cộng trùng khi chạy lại (unique memberId+source+periodMonth+refId).
-      await this.prisma.memberScoreEvent.createMany({
-        data: events,
-        skipDuplicates: true,
-      });
-    }
-
-    return { attendanceEvents, financeEvents };
   }
 
   /** Kỳ hiện tại 'YYYY-MM' theo thời điểm gọi (default cho API/job, KHÔNG hardcode). */
