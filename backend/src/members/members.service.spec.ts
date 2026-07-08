@@ -149,6 +149,42 @@ describe('MembersService', () => {
     });
   });
 
+  describe('update — cho phép clear field optional bằng null (regression 3c75bf91)', () => {
+    it('gửi email=null → update data có email:null (XÓA giá trị cũ), scope clubId', async () => {
+      mockPrisma.member.findFirst.mockResolvedValue(baseMember);
+      mockPrisma.member.update.mockResolvedValue({ ...baseMember, email: null });
+
+      await service.update('mem-1', 'club-1', { email: null, notes: null });
+
+      expect(mockPrisma.member.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'mem-1', clubId: 'club-1' },
+          data: expect.objectContaining({ email: null, notes: null }),
+        }),
+      );
+    });
+
+    it('loại clubId/id/createdById khỏi data (chống field lạ/leo tenant)', async () => {
+      mockPrisma.member.findFirst.mockResolvedValue(baseMember);
+      mockPrisma.member.update.mockResolvedValue(baseMember);
+
+      await service.update('mem-1', 'club-1', {
+        clubId: 'club-HACK',
+        id: 'other',
+        createdById: 'x',
+        fullName: 'B',
+      });
+
+      const arg = mockPrisma.member.update.mock.calls[0][0] as {
+        data: Record<string, unknown>;
+      };
+      expect(arg.data).not.toHaveProperty('clubId');
+      expect(arg.data).not.toHaveProperty('id');
+      expect(arg.data).not.toHaveProperty('createdById');
+      expect(arg.data.fullName).toBe('B');
+    });
+  });
+
   describe('aiRating (điểm hoạt động TB)', () => {
     it('tính điểm có trọng số + renormalize; TB = trung bình các thành viên', async () => {
       mockPrisma.member.findMany.mockResolvedValue([

@@ -472,23 +472,32 @@ export function Members() {
 
   const handleSave = async (form: typeof emptyForm) => {
     setIsSaving(true)
-    // KHÔNG gửi clubId (backend lấy từ JWT, DTO cấm field lạ); field optional rỗng → bỏ khỏi payload
-    // để không vướng @IsEmail/@IsString trên chuỗi rỗng.
-    const payload = {
-      fullName: form.fullName,
-      joinDate: form.joinDate,
-      ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
-      ...(form.email.trim() ? { email: form.email.trim() } : {}),
-      ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
-    }
+    // KHÔNG gửi clubId (backend lấy từ JWT, DTO cấm field lạ).
+    const base = { fullName: form.fullName, joinDate: form.joinDate }
     try {
       if (editMember) {
+        // SỬA: gửi TƯỜNG MINH optional field; rỗng → null để XÓA được giá trị cũ
+        // (backend @IsOptional cho qua null → Prisma set null). Nếu omit như tạo mới thì
+        // không thể xoá trắng email/sđt/ghi chú đã có.
+        const payload = {
+          ...base,
+          phone: form.phone.trim() || null,
+          email: form.email.trim() || null,
+          notes: form.notes.trim() || null,
+        }
         const res = await api.put(`/members/${editMember.id}`, payload)
         const updated = res.data?.data ?? { ...editMember, ...form }
         setMembers(prev => prev.map(m => m.id === editMember.id ? { ...m, ...updated } : m))
         closeForm()
         toast.success('Cập nhật thành viên thành công!')
       } else {
+        // TẠO MỚI: bỏ optional rỗng khỏi payload (tránh vướng @IsEmail/@IsString trên chuỗi rỗng).
+        const payload = {
+          ...base,
+          ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
+          ...(form.email.trim() ? { email: form.email.trim() } : {}),
+          ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+        }
         const res = await api.post('/members', payload)
         const created = res.data?.data
         setMembers(prev => [...prev, { ...created }])
