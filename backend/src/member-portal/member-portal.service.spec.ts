@@ -250,7 +250,17 @@ describe('MemberPortalService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
+    it('member stale/đã xóa/khác club → NotFound, KHÔNG chạm session (chống token stale)', async () => {
+      prisma.member.findFirst.mockResolvedValue(null); // member không còn hợp lệ trong club
+      await expect(
+        service.selfRegister('mem-stale', 'club-1', 's1', true),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.attendanceSession.findFirst).not.toHaveBeenCalled();
+      expect(prisma.sessionRegistration.upsert).not.toHaveBeenCalled();
+    });
+
     it('session không thuộc club → NotFound (scope clubId)', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
       prisma.attendanceSession.findFirst.mockResolvedValue(null);
       await expect(
         service.selfRegister('mem-A', 'club-1', 's-other', true),
@@ -261,6 +271,7 @@ describe('MemberPortalService', () => {
     });
 
     it('register=true → upsert theo unique attendanceSessionId_memberId (idempotent)', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
       prisma.attendanceSession.findFirst.mockResolvedValue(SESSION);
       const r = await service.selfRegister('mem-A', 'club-1', 's1', true);
       expect(prisma.sessionRegistration.upsert).toHaveBeenCalledWith({
@@ -277,6 +288,7 @@ describe('MemberPortalService', () => {
     });
 
     it('register=false → deleteMany scope club+session+member', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
       prisma.attendanceSession.findFirst.mockResolvedValue(SESSION);
       const r = await service.selfRegister('mem-A', 'club-1', 's1', false);
       expect(prisma.sessionRegistration.deleteMany).toHaveBeenCalledWith({
@@ -293,7 +305,17 @@ describe('MemberPortalService', () => {
       );
     });
 
+    it('member stale/đã xóa/khác club → NotFound, KHÔNG chạm session (chống token stale)', async () => {
+      prisma.member.findFirst.mockResolvedValue(null);
+      await expect(
+        service.selfCheckin('mem-stale', 'club-1', 's1'),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.attendanceSession.findFirst).not.toHaveBeenCalled();
+      expect(prisma.attendanceRecord.upsert).not.toHaveBeenCalled();
+    });
+
     it('session không tồn tại trong club → NotFound', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
       prisma.attendanceSession.findFirst.mockResolvedValue(null);
       await expect(
         service.selfCheckin('mem-A', 'club-1', 's1'),
@@ -301,6 +323,7 @@ describe('MemberPortalService', () => {
     });
 
     it('upsert PRESENT idempotent theo unique attendanceSessionId_memberId', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
       prisma.attendanceSession.findFirst.mockResolvedValue({
         id: 's1',
         clubId: 'club-1',

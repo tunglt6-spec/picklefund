@@ -223,23 +223,24 @@ export class MemberPortalService {
     sessionId: string,
     register: boolean,
   ) {
-    if (!memberId)
-      throw new ForbiddenException('Tài khoản chưa liên kết hồ sơ thành viên.');
+    // Xác thực member THẬT với DB (thuộc clubId + chưa xóa) — chống memberId stale
+    // trong access token cũ khi member bị xóa/đổi CLB. Dùng member.id đã verify, không tin token.
+    const member = await this.assertMember(memberId, clubId);
     await this.assertSession(sessionId, clubId);
     if (register) {
       await this.prisma.sessionRegistration.upsert({
         where: {
           attendanceSessionId_memberId: {
             attendanceSessionId: sessionId,
-            memberId,
+            memberId: member.id,
           },
         },
-        create: { clubId, attendanceSessionId: sessionId, memberId },
+        create: { clubId, attendanceSessionId: sessionId, memberId: member.id },
         update: {},
       });
     } else {
       await this.prisma.sessionRegistration.deleteMany({
-        where: { clubId, attendanceSessionId: sessionId, memberId },
+        where: { clubId, attendanceSessionId: sessionId, memberId: member.id },
       });
     }
     return { sessionId, registered: register };
@@ -251,8 +252,8 @@ export class MemberPortalService {
     clubId: string,
     sessionId: string,
   ) {
-    if (!memberId)
-      throw new ForbiddenException('Tài khoản chưa liên kết hồ sơ thành viên.');
+    // Xác thực member THẬT với DB (thuộc clubId + chưa xóa) — chống memberId stale token.
+    const member = await this.assertMember(memberId, clubId);
     const session = await this.assertSession(sessionId, clubId);
     if (session.status === 'cancelled')
       throw new BadRequestException('Buổi chơi đã bị hủy, không thể check-in.');
@@ -260,12 +261,12 @@ export class MemberPortalService {
       where: {
         attendanceSessionId_memberId: {
           attendanceSessionId: sessionId,
-          memberId,
+          memberId: member.id,
         },
       },
       create: {
         attendanceSessionId: sessionId,
-        memberId,
+        memberId: member.id,
         clubId,
         status: 'PRESENT',
       },
