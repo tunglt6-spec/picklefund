@@ -179,6 +179,11 @@ export class MinigameService {
     const { count } = await this.prisma.minigameMatch.deleteMany({
       where: { minigameId: id },
     });
+    // Reset thống kê đội — nếu không, BXH giữ điểm rác từ lịch cũ đã xoá.
+    await this.prisma.minigameTeam.updateMany({
+      where: { minigameId: id },
+      data: { wins: 0, losses: 0, points: 0 },
+    });
     return { deleted: count };
   }
 
@@ -315,6 +320,36 @@ export class MinigameService {
 
     const winnerId =
       scoreA > scoreB ? match.teamAId : scoreB > scoreA ? match.teamBId : null;
+
+    // IDEMPOTENT: nếu trận đã chấm trước đó → ĐẢO kết quả cũ khỏi thống kê đội
+    // trước khi cộng kết quả mới, tránh double-count khi sửa điểm.
+    if (match.status === 'COMPLETED') {
+      const oldA = match.scoreA ?? 0;
+      const oldB = match.scoreB ?? 0;
+      const oldAWin = oldA > oldB;
+      const oldBWin = oldB > oldA;
+      const oldDraw = oldA === oldB;
+      if (match.teamAId) {
+        await this.prisma.minigameTeam.update({
+          where: { id: match.teamAId },
+          data: {
+            wins: { decrement: oldAWin ? 1 : 0 },
+            losses: { decrement: oldBWin ? 1 : 0 },
+            points: { decrement: oldAWin ? 3 : oldDraw ? 1 : 0 },
+          },
+        });
+      }
+      if (match.teamBId) {
+        await this.prisma.minigameTeam.update({
+          where: { id: match.teamBId },
+          data: {
+            wins: { decrement: oldBWin ? 1 : 0 },
+            losses: { decrement: oldAWin ? 1 : 0 },
+            points: { decrement: oldBWin ? 3 : oldDraw ? 1 : 0 },
+          },
+        });
+      }
+    }
 
     await this.prisma.minigameMatch.update({
       where: { id: matchId },

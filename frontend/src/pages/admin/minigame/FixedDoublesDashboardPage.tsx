@@ -773,8 +773,13 @@ export function FixedDoublesDashboardPage() {
     }
   }
 
-  const canEnter   = mg.status === 'SCHEDULED' || mg.status === 'IN_PROGRESS'
-  const showSched  = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED'].includes(mg.status)
+  // Phase suy TỪ DỮ LIỆU (teams/schedule), KHÔNG dựa status backend — backend chỉ
+  // có DRAFT/ACTIVE/COMPLETED/CANCELLED, không có PAIRED/SCHEDULED nên các cờ cũ
+  // luôn false → kẹt luồng đôi cố định.
+  const hasTeams   = teams.length > 0
+  const hasSchedule = schedule.length > 0
+  const showSched  = hasSchedule
+  const canEnter   = hasSchedule && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
 
   const completed  = schedule.filter(m => m.status === 'COMPLETED').length
   const totalFor   = schedule.reduce((s, m) => s + (m.team1Score ?? 0) + (m.team2Score ?? 0), 0)
@@ -872,9 +877,9 @@ export function FixedDoublesDashboardPage() {
           </div>
         )}
 
-        {/* status-specific panels */}
-        {mg.status === 'DRAFT'  && <DraftPanel  minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
-        {mg.status === 'PAIRED' && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
+        {/* phase-specific panels (suy từ dữ liệu) */}
+        {!hasTeams && <DraftPanel minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
+        {hasTeams && !hasSchedule && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
 
         {/* main 12-col grid */}
         {showSched && (
