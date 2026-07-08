@@ -56,6 +56,7 @@ export function Contributions() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
   const [isSaving, setIsSaving] = useState(false)
+  const [bulkAll, setBulkAll] = useState(false)
   const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
 
   // Refresh contributions + periods when page mounts (in case data changed from another tab/session)
@@ -116,6 +117,7 @@ export function Contributions() {
     setFormPeriodId(pid)
     setForm({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
     setEditTarget(null)
+    setBulkAll(false)
     setShowCreate(true)
   }
 
@@ -157,6 +159,38 @@ export function Contributions() {
         setIsSaving(false)
         return
       }
+      // BULK: ghi nhận cho tất cả thành viên active CHƯA đóng kỳ này
+      if (!editTarget && bulkAll) {
+        // Loại mọi TV đã CÓ bản ghi khoản thu kỳ này (đã đóng hoặc chờ xác nhận) → tránh tạo trùng
+        const recordedIds = new Set(
+          commonContribs.filter(c => c.fundPeriodId === formPeriodId).map(c => c.memberId),
+        )
+        const targets = members.filter(m => m.status === 'active' && !recordedIds.has(m.id))
+        if (targets.length === 0) {
+          toast.error('Tất cả thành viên đã đóng kỳ này')
+          setIsSaving(false)
+          return
+        }
+        const results = await Promise.allSettled(
+          targets.map(m => api.post('/contributions', {
+            fundSource: 'COMMON', memberId: m.id, fundPeriodId: formPeriodId,
+            amount: Number(form.amount),
+            paidAt: form.paymentDate, paymentMethod: form.paymentMethod, notes: form.notes,
+          })),
+        )
+        const created = results.flatMap((r, i) =>
+          r.status === 'fulfilled'
+            ? [{ ...r.value.data?.data, amount: Number(r.value.data?.data?.amount), member: targets[i], fundSource: 'COMMON' as const }]
+            : [],
+        )
+        if (created.length) setContributions(prev => [...prev, ...created])
+        const failed = targets.length - created.length
+        toast.success(`Đã ghi nhận ${created.length} thành viên đóng ${formatVND(Number(form.amount))}${failed ? ` (${failed} lỗi)` : ''}`)
+        setIsSaving(false)
+        setShowCreate(false)
+        return
+      }
+
       const member = members.find(m => m.id === form.memberId)
       if (!member) { setIsSaving(false); return }
 
@@ -399,9 +433,15 @@ export function Contributions() {
                     Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chính.
                   </div>
                 )}
-                <div>
+                {!editTarget && (
+                  <label className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer [border-color:var(--pf-border)]">
+                    <input type="checkbox" checked={bulkAll} onChange={e => setBulkAll(e.target.checked)} className="h-4 w-4 rounded accent-[var(--pf-primary)]" />
+                    <span className="text-xs font-medium text-slate-700">Ghi cho <strong>tất cả TV chưa đóng</strong> kỳ này</span>
+                  </label>
+                )}
+                <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
                   <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                  <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
+                  <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                     <option value="">-- Chọn thành viên --</option>
                     {members.filter(m => m.status === 'active' || m.id === editTarget?.memberId).map(m => <option key={m.id} value={m.id}>{m.fullName}{m.status !== 'active' ? ' (tạm nghỉ)' : ''}</option>)}
                   </select>
@@ -713,9 +753,15 @@ export function Contributions() {
                   Chưa có kỳ quỹ đang hoạt động. Vui lòng tạo kỳ quỹ trước khi ghi nhận Quỹ Chính.
                 </div>
               )}
-              <div>
+              {!editTarget && (
+                <label className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer [border-color:var(--pf-border)]">
+                  <input type="checkbox" checked={bulkAll} onChange={e => setBulkAll(e.target.checked)} className="h-4 w-4 rounded accent-[var(--pf-primary)]" />
+                  <span className="text-xs font-medium text-slate-700">Ghi cho <strong>tất cả thành viên chưa đóng</strong> kỳ này</span>
+                </label>
+              )}
+              <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
+                <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                   <option value="">-- Chọn thành viên --</option>
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
