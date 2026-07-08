@@ -494,14 +494,14 @@ export function FundPeriods() {
               title="Nhập dữ liệu CLB mới"
             ><FileSpreadsheet size={16} /></button>
             <button
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
+              style={{ background: 'var(--pf-primary)' }}
               onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
             >
               <Plus size={14} />Chung
             </button>
             <button
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
-              style={{ background: 'var(--pf-primary)' }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
               onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
             >
               <Plus size={14} />Mini
@@ -809,10 +809,10 @@ export function FundPeriods() {
         subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
+            <Button onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
               <Building2 size={14} />+ Tạo Quỹ Chính
             </Button>
-            <Button onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
+            <Button variant="outline" onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
               <Wallet size={14} />+ Tạo Quỹ Phụ
             </Button>
           </div>
