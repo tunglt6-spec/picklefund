@@ -237,11 +237,38 @@ export class FundPeriodsService {
     return updated;
   }
 
+  /**
+   * Xóa kỳ quỹ + TOÀN BỘ dữ liệu con (buổi sinh hoạt, điểm danh, đăng ký, thu,
+   * chi, phiếu thu cá nhân). Các bảng con phần lớn KHÔNG có onDelete:Cascade
+   * (chỉ SessionRegistration + FundPeriodMember có) — xóa thẳng fundPeriod
+   * trước đây gây lỗi 500 (vi phạm khóa ngoại) nếu kỳ có bất kỳ dữ liệu nào.
+   * Dùng $transaction để đảm bảo xóa trọn vẹn hoặc không xóa gì (rollback nếu lỗi).
+   */
   async delete(id: string, clubId: string) {
     const fp = await this.findOne(id, clubId);
     if (fp.status === 'finalized')
       throw new BadRequestException('Kỳ đã chốt không thể xóa');
-    return this.prisma.fundPeriod.delete({ where: { id, clubId } });
+    await this.prisma.$transaction([
+      // AttendanceRecord không cascade theo session — phải xóa trước session.
+      this.prisma.attendanceRecord.deleteMany({
+        where: { attendanceSession: { fundPeriodId: id } },
+      }),
+      // LivingExpense có thể gắn theo fundPeriodId hoặc theo attendanceSessionId
+      // (buổi thuộc kỳ này) — xóa cả 2 trường hợp trước khi xóa session.
+      this.prisma.livingExpense.deleteMany({
+        where: {
+          OR: [{ fundPeriodId: id }, { attendanceSession: { fundPeriodId: id } }],
+        },
+      }),
+      // SessionRegistration có onDelete:Cascade theo session nên tự xóa theo.
+      this.prisma.attendanceSession.deleteMany({ where: { fundPeriodId: id } }),
+      this.prisma.fundContribution.deleteMany({ where: { fundPeriodId: id } }),
+      this.prisma.personalReceipt.deleteMany({ where: { fundPeriodId: id } }),
+      // FundPeriodMember có onDelete:Cascade theo fundPeriod — không cần xóa tay,
+      // nhưng vẫn để prisma.fundPeriod.delete() ở cuối tự cuốn theo.
+      this.prisma.fundPeriod.delete({ where: { id, clubId } }),
+    ]);
+    return { deleted: true };
   }
 
   async summary(id: string, clubId: string) {

@@ -18,23 +18,28 @@ const mockPrisma = {
   fundContribution: {
     aggregate: jest.fn(),
     groupBy: jest.fn(),
+    deleteMany: jest.fn(),
   },
   livingExpense: {
     aggregate: jest.fn(),
     groupBy: jest.fn().mockResolvedValue([]),
+    deleteMany: jest.fn(),
   },
   attendanceSession: {
     findMany: jest.fn(),
     aggregate: jest.fn(),
+    deleteMany: jest.fn(),
   },
   attendanceRecord: {
     groupBy: jest.fn(),
+    deleteMany: jest.fn(),
   },
   member: {
     findMany: jest.fn(),
   },
   personalReceipt: {
     upsert: jest.fn(),
+    deleteMany: jest.fn(),
   },
   fundPeriodMember: {
     findMany: jest.fn(),
@@ -105,6 +110,66 @@ describe('FundPeriodsService', () => {
       mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('missing', 'club-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('delete', () => {
+    // Bug thật gặp trên production: prisma.fundPeriod.delete() trực tiếp vi phạm
+    // khóa ngoại (attendanceRecord/livingExpense/fundContribution/personalReceipt
+    // KHÔNG có onDelete:Cascade) → 500 Internal Server Error nếu kỳ có bất kỳ
+    // dữ liệu con nào. Fix: xóa hết dữ liệu con trong $transaction trước khi xóa kỳ.
+    it('xóa dữ liệu con theo đúng thứ tự trong 1 transaction rồi mới xóa kỳ quỹ', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      mockPrisma.$transaction.mockImplementationOnce(async (ops: unknown[]) => ops);
+
+      const result = await service.delete('period-1', 'club-1');
+
+      expect(mockPrisma.attendanceRecord.deleteMany).toHaveBeenCalledWith({
+        where: { attendanceSession: { fundPeriodId: 'period-1' } },
+      });
+      expect(mockPrisma.livingExpense.deleteMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { fundPeriodId: 'period-1' },
+            { attendanceSession: { fundPeriodId: 'period-1' } },
+          ],
+        },
+      });
+      expect(mockPrisma.attendanceSession.deleteMany).toHaveBeenCalledWith({
+        where: { fundPeriodId: 'period-1' },
+      });
+      expect(mockPrisma.fundContribution.deleteMany).toHaveBeenCalledWith({
+        where: { fundPeriodId: 'period-1' },
+      });
+      expect(mockPrisma.personalReceipt.deleteMany).toHaveBeenCalledWith({
+        where: { fundPeriodId: 'period-1' },
+      });
+      expect(mockPrisma.fundPeriod.delete).toHaveBeenCalledWith({
+        where: { id: 'period-1', clubId: 'club-1' },
+      });
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ deleted: true });
+    });
+
+    it('chặn xóa kỳ đã chốt (finalized), KHÔNG chạm tới dữ liệu con', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue({
+        ...basePeriod,
+        status: 'finalized',
+      });
+
+      await expect(service.delete('period-1', 'club-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(mockPrisma.fundPeriod.delete).not.toHaveBeenCalled();
+    });
+
+    it('throw NotFoundException nếu kỳ quỹ không tồn tại/khác club', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
+
+      await expect(service.delete('missing', 'club-1')).rejects.toThrow(
         NotFoundException,
       );
     });
