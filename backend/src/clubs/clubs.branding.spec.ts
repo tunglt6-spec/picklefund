@@ -3,9 +3,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 
 const prisma = {
   club: { findUnique: jest.fn(), update: jest.fn() },
+};
+
+const mockClubMemory = {
+  seedDefaultTemplate: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
 };
 
 describe('ClubsService branding (EPIC10A)', () => {
@@ -17,7 +22,11 @@ describe('ClubsService branding (EPIC10A)', () => {
       (arg: { data: Record<string, unknown> }) => Promise.resolve(arg),
     );
     const mod: TestingModule = await Test.createTestingModule({
-      providers: [ClubsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ClubsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ClubMemoryService, useValue: mockClubMemory },
+      ],
     }).compile();
     service = mod.get(ClubsService);
   });

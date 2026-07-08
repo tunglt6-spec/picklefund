@@ -10,7 +10,7 @@ describe('OrganizationIntelligenceService (read-only org intelligence)', () => {
   let svc: OrganizationIntelligenceService;
 
   beforeEach(() => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     svc = new OrganizationIntelligenceService(
       new OrganizationContextManager(
         clubMemory,

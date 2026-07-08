@@ -67,7 +67,7 @@ describe('ConversationContextBuilder', () => {
   });
 
   it('Epic 2.3: includes Club Memory retrieval as additive source', async () => {
-    const clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    const clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     const retrieval = new RetrievalEngine(
       clubMemory,
       new IndexManager(),

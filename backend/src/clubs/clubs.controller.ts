@@ -186,7 +186,7 @@ export class ClubsController {
   @Post()
   @Roles('SUPER_ADMIN')
   async create(@CurrentUser() user: JwtUser, @Body() body: CreateClubDto) {
-    const club = await this.clubs.create(body);
+    const club = await this.clubs.create(body, user.userId);
     void this.audit.log({
       userId: user.userId,
       clubId: club.id,

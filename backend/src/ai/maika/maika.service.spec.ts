@@ -24,7 +24,7 @@ describe('MaikaCore (Club Intelligence — Hiểu → Lập kế hoạch → Đ�
   let maika: MaikaCore;
 
   beforeEach(async () => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     const port = new PickleFundApiReferencePort();
     const policy = new VectorContentPolicyService();
     const orgCtx = new OrganizationContextManager(clubMemory, policy);

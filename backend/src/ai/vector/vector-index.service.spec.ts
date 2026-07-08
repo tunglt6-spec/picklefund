@@ -19,7 +19,7 @@ describe('VectorIndexService (derived view, rebuildable)', () => {
   let index: VectorIndexService;
 
   beforeEach(() => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     store = new InMemoryVectorStoreProvider();
     const embedding = new EmbeddingService(
       new LocalHashEmbeddingProvider(16),

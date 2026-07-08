@@ -15,7 +15,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ClubMemoryService } from './club-memory.service';
 import { CreateClubMemoryDto, UpdateClubMemoryDto } from './club-memory.dto';
-import { CurrentUser, type JwtUser } from '../../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 
 @ApiTags('AI Club Memory')
@@ -58,5 +58,19 @@ export class ClubMemoryController {
     const deleted = await this.clubMemory.delete(user.clubId, id);
     if (!deleted) throw new NotFoundException('Club memory không tồn tại');
     return ok({ deleted });
+  }
+
+  // ── Template mặc định toàn nền tảng (SUPER_ADMIN) ──────────────────────
+  @Post('seed-default-all')
+  @Roles('SUPER_ADMIN')
+  @ApiOperation({
+    summary:
+      'Backfill template Club Memory mặc định cho TOÀN BỘ CLB đang hoạt động (idempotent)',
+  })
+  async seedDefaultAll(@CurrentUser() user: JwtUser) {
+    return ok(
+      await this.clubMemory.seedDefaultForAllClubs(user.userId),
+      'Đã backfill template mặc định',
+    );
   }
 }

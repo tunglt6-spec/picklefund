@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { deepFreeze } from '../memory/memory.types';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   CLUB_MEMORY_REPOSITORY,
   CreateClubMemoryInput,
@@ -18,12 +19,14 @@ import {
 } from './club-memory.interfaces';
 import type { IClubMemoryRepository } from './club-memory.interfaces';
 import { ClubMemoryObject } from './club-memory.types';
+import { DEFAULT_CLUB_MEMORY_TEMPLATE } from './club-memory-default-template';
 
 @Injectable()
 export class ClubMemoryService {
   constructor(
     @Inject(CLUB_MEMORY_REPOSITORY)
     private readonly repo: IClubMemoryRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   async save(
@@ -99,6 +102,58 @@ export class ClubMemoryService {
     const existing = await this.load(clubId, memoryId);
     if (!existing) return false;
     return this.repo.deleteById(memoryId);
+  }
+
+  /**
+   * Seed template mặc định toàn nền tảng (DEFAULT_CLUB_MEMORY_TEMPLATE) cho 1 CLB.
+   * Idempotent theo (clubId, title) — chỉ tạo mục CHƯA có, không đè/nhân đôi mục
+   * CLB đã tự sửa/xóa. Gọi khi: CLB mới đăng ký (auth.service/clubs.service) hoặc
+   * backfill CLB đã tồn tại (SUPER_ADMIN, POST /club-memory/seed-default-all).
+   */
+  async seedDefaultTemplate(
+    clubId: string,
+    actorUserId: string,
+  ): Promise<{ created: number; skipped: number }> {
+    const existing = await this.listByClub(clubId);
+    const existingTitles = new Set(existing.map((m) => m.title));
+    let created = 0;
+    let skipped = 0;
+    for (const item of DEFAULT_CLUB_MEMORY_TEMPLATE) {
+      if (existingTitles.has(item.title)) {
+        skipped++;
+        continue;
+      }
+      await this.save(clubId, actorUserId, item);
+      created++;
+    }
+    return { created, skipped };
+  }
+
+  /**
+   * Backfill template mặc định cho TOÀN BỘ CLB đang hoạt động trên nền tảng
+   * (SUPER_ADMIN only — xem ClubMemoryController). Idempotent per-club như
+   * seedDefaultTemplate — an toàn chạy lại nhiều lần.
+   */
+  async seedDefaultForAllClubs(actorUserId: string): Promise<{
+    clubsProcessed: number;
+    totalCreated: number;
+    totalSkipped: number;
+  }> {
+    const clubs = await this.prisma.club.findMany({
+      where: { status: { not: 'deleted' } },
+      select: { id: true },
+    });
+    let totalCreated = 0;
+    let totalSkipped = 0;
+    for (const club of clubs) {
+      const { created, skipped } = await this.seedDefaultTemplate(
+        club.id,
+        actorUserId,
+      );
+      totalCreated += created;
+      totalSkipped += skipped;
+    }
+    return { clubsProcessed: clubs.length, totalCreated, totalSkipped };
   }
 
   /** Club Memory bắt buộc club context — thiếu clubId → reject (no global). */

@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import * as argon2 from 'argon2';
 
 jest.mock('argon2');
@@ -20,7 +21,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  club: { create: jest.fn() },
+  club: { create: jest.fn(), findFirst: jest.fn() },
   member: { create: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -40,6 +41,10 @@ const mockConfig = {
   }),
 };
 
+const mockClubMemory = {
+  seedDefaultTemplate: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -52,6 +57,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwt },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: ClubMemoryService, useValue: mockClubMemory },
       ],
     }).compile();
 
@@ -110,6 +116,49 @@ describe('AuthService', () => {
       await expect(service.login('admin', 'wrongpass')).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('register', () => {
+    const registerDto = {
+      club: { name: 'CLB Mới', code: 'NEW-1' },
+      admin: {
+        fullName: 'Nguyễn Văn A',
+        username: 'admin_new',
+        email: 'admin@new.vn',
+        password: 'secret123',
+      },
+    };
+
+    beforeEach(() => {
+      mockPrisma.user.findUnique.mockResolvedValue(null); // username chưa dùng
+      mockPrisma.club.findFirst.mockResolvedValue(null); // mã CLB chưa dùng
+      mockPrisma.club.create.mockResolvedValue({ id: 'club-new' });
+      mockPrisma.user.create.mockResolvedValue({ id: 'user-new' });
+      mockPrisma.member.create.mockResolvedValue({ id: 'member-new' });
+      mockPrisma.$transaction.mockImplementation(
+        (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+      );
+      mockArgon2.hash.mockResolvedValue('hashed' as never);
+    });
+
+    it('seed Club Memory template mặc định cho CLB mới đăng ký, gán createdBy = admin vừa tạo', async () => {
+      await service.register(registerDto);
+
+      expect(mockClubMemory.seedDefaultTemplate).toHaveBeenCalledWith(
+        'club-new',
+        'user-new',
+      );
+    });
+
+    it('seed lỗi KHÔNG chặn đăng ký (vẫn trả về token bình thường)', async () => {
+      mockClubMemory.seedDefaultTemplate.mockRejectedValueOnce(
+        new Error('DB down'),
+      );
+
+      const result = await service.register(registerDto);
+
+      expect(result.accessToken).toBe('mock_token');
     });
   });
 });

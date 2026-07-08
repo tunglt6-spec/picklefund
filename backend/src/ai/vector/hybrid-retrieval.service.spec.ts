@@ -38,7 +38,7 @@ describe('HybridRetrievalEngine (deterministic priority + semantic supplement)',
   let deterministic: RetrievalEngine;
 
   beforeEach(async () => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     store = new InMemoryVectorStoreProvider();
     obs = new VectorObservabilityService();
     embedding = new EmbeddingService(

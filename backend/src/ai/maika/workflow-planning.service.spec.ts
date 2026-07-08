@@ -13,7 +13,7 @@ describe('WorkflowPlanningService (preview / read-only)', () => {
   let svc: WorkflowPlanningService;
 
   beforeEach(() => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     const policy = new VectorContentPolicyService();
     const orgCtx = new OrganizationContextManager(clubMemory, policy);
     svc = new WorkflowPlanningService(

@@ -30,6 +30,7 @@ describe('MaikaController (read-only API, clubId từ JWT)', () => {
   beforeEach(async () => {
     const clubMemory = new ClubMemoryService(
       new InMemoryClubMemoryRepository(),
+      {} as never,
     );
     const port = new PickleFundApiReferencePort();
     const policy = new VectorContentPolicyService();

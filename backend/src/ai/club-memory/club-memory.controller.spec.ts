@@ -18,6 +18,7 @@ describe('ClubMemoryController (clubId+userId from JWT)', () => {
     load: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
+    seedDefaultForAllClubs: jest.Mock;
   };
   let ctrl: ClubMemoryController;
 
@@ -28,6 +29,9 @@ describe('ClubMemoryController (clubId+userId from JWT)', () => {
       load: jest.fn().mockResolvedValue({ memoryId: 'm1' }),
       update: jest.fn().mockResolvedValue({ memoryId: 'm1' }),
       delete: jest.fn().mockResolvedValue(true),
+      seedDefaultForAllClubs: jest
+        .fn()
+        .mockResolvedValue({ clubsProcessed: 3, totalCreated: 48, totalSkipped: 0 }),
     };
     ctrl = new ClubMemoryController(svc as never);
   });
@@ -63,5 +67,12 @@ describe('ClubMemoryController (clubId+userId from JWT)', () => {
     await expect(ctrl.remove('m1', u1)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('seedDefaultAll passes actorUserId từ JWT, trả kết quả backfill', async () => {
+    const superAdmin: JwtUser = { ...u1, userId: 'super-1', role: 'SUPER_ADMIN' };
+    const res = await ctrl.seedDefaultAll(superAdmin);
+    expect(svc.seedDefaultForAllClubs).toHaveBeenCalledWith('super-1');
+    expect(res.data).toEqual({ clubsProcessed: 3, totalCreated: 48, totalSkipped: 0 });
   });
 });

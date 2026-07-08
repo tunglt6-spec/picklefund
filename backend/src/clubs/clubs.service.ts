@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import type { ClubStatus, Prisma, ServicePlan } from '@prisma/client';
+import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 
 /** Giới hạn số thành viên theo gói dịch vụ (null = không giới hạn). Nguồn duy nhất. */
 export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
@@ -46,7 +48,12 @@ const BRANDING_KEYS = [
 
 @Injectable()
 export class ClubsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ClubsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private clubMemory: ClubMemoryService,
+  ) {}
 
   /** Branding hiệu lực = branding đã lưu, fallback về tên/logo CLB rồi tới PickleFund. */
   async getBranding(clubId: string): Promise<ClubBranding> {
@@ -126,16 +133,19 @@ export class ClubsService {
    * Admin = người tạo CLB, có email cá nhân thật → dùng làm email gửi thông báo về sau.
    * Mật khẩu do SUPER_ADMIN đặt + buộc đổi lần đầu (mustChangePassword). Argon2 hash.
    */
-  async create(dto: {
-    name: string;
-    code: string;
-    address?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    adminUsername: string;
-    adminEmail: string;
-    adminPassword: string;
-  }) {
+  async create(
+    dto: {
+      name: string;
+      code: string;
+      address?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      adminUsername: string;
+      adminEmail: string;
+      adminPassword: string;
+    },
+    actorUserId: string,
+  ) {
     // Chặn trùng email/username trước khi tạo (thông báo rõ thay vì lỗi Prisma thô).
     const [emailConflict, usernameConflict] = await Promise.all([
       this.prisma.user.findUnique({ where: { email: dto.adminEmail } }),
@@ -147,7 +157,7 @@ export class ClubsService {
       throw new BadRequestException('Username admin đã tồn tại');
 
     const passwordHash = await argon2.hash(dto.adminPassword);
-    return this.prisma.$transaction(async (tx) => {
+    const club = await this.prisma.$transaction(async (tx) => {
       const club = await tx.club.create({
         data: {
           name: dto.name,
@@ -169,6 +179,19 @@ export class ClubsService {
       });
       return club;
     });
+
+    // Seed template Club Memory mặc định (toàn nền tảng) SAU khi transaction commit
+    // (PrismaClubMemoryRepository dùng connection riêng — gọi trong tx sẽ vi phạm
+    // khóa ngoại vì club.id chưa commit). Không chặn tạo CLB nếu seed lỗi.
+    this.clubMemory
+      .seedDefaultTemplate(club.id, actorUserId)
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `Seed Club Memory mặc định thất bại cho club ${club.id}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+
+    return club;
   }
 
   async update(id: string, dto: Record<string, unknown>) {

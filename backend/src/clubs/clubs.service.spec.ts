@@ -3,6 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
+
+const mockClubMemory = {
+  seedDefaultTemplate: jest.fn().mockResolvedValue({ created: 0, skipped: 0 }),
+};
 
 const mockPrisma = {
   club: {
@@ -45,6 +50,7 @@ describe('ClubsService', () => {
       providers: [
         ClubsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ClubMemoryService, useValue: mockClubMemory },
       ],
     }).compile();
     service = module.get<ClubsService>(ClubsService);
@@ -117,11 +123,14 @@ describe('ClubsService', () => {
       mockPrisma.club.create.mockResolvedValue(baseClub);
       mockPrisma.user.create.mockResolvedValue({ id: 'u-admin' });
 
-      const result = await service.create({
-        name: 'CLB Pickleball Hà Nội',
-        code: 'PBALL-HN',
-        ...adminFields,
-      });
+      const result = await service.create(
+        {
+          name: 'CLB Pickleball Hà Nội',
+          code: 'PBALL-HN',
+          ...adminFields,
+        },
+        'super-admin-1',
+      );
 
       expect(result.id).toBe('club-1');
       expect(mockPrisma.club.create).toHaveBeenCalledWith(
@@ -150,11 +159,31 @@ describe('ClubsService', () => {
       expect(created.password).toBeUndefined();
     });
 
+    it('seed Club Memory template mặc định cho CLB mới, gán actorUserId là người tạo', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(
+        (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+      );
+      mockPrisma.club.create.mockResolvedValue(baseClub);
+      mockPrisma.user.create.mockResolvedValue({ id: 'u-admin' });
+
+      await service.create(
+        { name: 'CLB Pickleball Hà Nội', code: 'PBALL-HN', ...adminFields },
+        'super-admin-1',
+      );
+
+      expect(mockClubMemory.seedDefaultTemplate).toHaveBeenCalledWith(
+        'club-1',
+        'super-admin-1',
+      );
+    });
+
     it('email admin đã dùng → BadRequest, KHÔNG tạo club', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'existing' });
       mockPrisma.user.findFirst.mockResolvedValue(null);
       await expect(
-        service.create({ name: 'X', code: 'X1', ...adminFields }),
+        service.create({ name: 'X', code: 'X1', ...adminFields }, 'super-admin-1'),
       ).rejects.toThrow('Email admin đã được sử dụng');
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
@@ -163,7 +192,7 @@ describe('ClubsService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.user.findFirst.mockResolvedValue({ id: 'existing' });
       await expect(
-        service.create({ name: 'X', code: 'X1', ...adminFields }),
+        service.create({ name: 'X', code: 'X1', ...adminFields }, 'super-admin-1'),
       ).rejects.toThrow('Username admin đã tồn tại');
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });

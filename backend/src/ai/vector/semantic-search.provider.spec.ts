@@ -55,7 +55,7 @@ describe('SemanticSearchProvider (sanitized query, fallback-safe, club-scoped)',
   }
 
   beforeEach(async () => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     store = new InMemoryVectorStoreProvider();
     obs = new VectorObservabilityService();
     policy = new VectorContentPolicyService();

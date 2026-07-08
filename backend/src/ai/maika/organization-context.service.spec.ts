@@ -9,7 +9,7 @@ describe('OrganizationContextManager (PII/finance-safe, read-only)', () => {
   let mgr: OrganizationContextManager;
 
   beforeEach(() => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     mgr = new OrganizationContextManager(
       clubMemory,
       new VectorContentPolicyService(),

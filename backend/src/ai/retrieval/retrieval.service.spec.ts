@@ -10,7 +10,7 @@ describe('RetrievalEngine (deterministic, derived index, noop semantic)', () => 
   let engine: RetrievalEngine;
 
   beforeEach(() => {
-    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository());
+    clubMemory = new ClubMemoryService(new InMemoryClubMemoryRepository(), {} as never);
     engine = new RetrievalEngine(
       clubMemory,
       new IndexManager(),

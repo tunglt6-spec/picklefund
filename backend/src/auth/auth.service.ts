@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
@@ -8,13 +9,17 @@ import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private clubMemory: ClubMemoryService,
   ) {}
 
   private hashToken(token: string): string {
@@ -246,6 +251,17 @@ export class AuthService {
       });
       return { club, user, member };
     });
+
+    // Seed template Club Memory mặc định (toàn nền tảng) SAU khi transaction commit
+    // (PrismaClubMemoryRepository dùng connection riêng — gọi trong tx sẽ vi phạm
+    // khóa ngoại vì club.id chưa commit). Không chặn đăng ký nếu seed lỗi.
+    this.clubMemory
+      .seedDefaultTemplate(result.club.id, result.user.id)
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `Seed Club Memory mặc định thất bại cho club ${result.club.id}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
 
     const accessToken = this.signAccess(
       result.user.id,
