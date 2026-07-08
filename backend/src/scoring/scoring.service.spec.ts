@@ -293,17 +293,18 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
 
   describe('runAutoScoring', () => {
     it('2 buổi PRESENT → 2 event điểm danh +2; đúng hạn +2 / nợ quá hạn -10; createMany skipDuplicates', async () => {
-      // Rule điểm danh
+      // Rule điểm danh (khớp qua systemKey)
       prisma.scoringRule.findFirst.mockResolvedValue({
         id: 'ra',
+        systemKey: 'PARTICIPATION_ON_TIME',
         label: 'Tham gia đúng giờ',
         delta: 2,
       });
-      // Rule tài chính
+      // Rule tài chính (khớp qua systemKey, không phụ thuộc label)
       prisma.scoringRule.findMany.mockResolvedValue([
-        { id: 'rf1', label: 'Đóng quỹ đúng hạn', delta: 2 },
-        { id: 'rf2', label: 'Đóng quỹ trễ hạn', delta: -5 },
-        { id: 'rf3', label: 'Nợ quỹ quá hạn', delta: -10 },
+        { id: 'rf1', systemKey: 'FINANCE_ON_TIME', label: 'Đóng quỹ đúng hạn', delta: 2 },
+        { id: 'rf2', systemKey: 'FINANCE_LATE', label: 'Đóng quỹ trễ hạn', delta: -5 },
+        { id: 'rf3', systemKey: 'FINANCE_OVERDUE', label: 'Nợ quỹ quá hạn', delta: -10 },
       ]);
       // 1 buổi trong tháng, 2 record PRESENT
       prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }]);
@@ -341,6 +342,24 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       const r = await svc.runAutoScoring('c1', '2026-07');
       expect(r.attendanceEvents).toBe(0);
       expect(r.financeEvents).toBe(0);
+    });
+
+    it('khớp rule qua systemKey kể cả khi CLB ĐỔI LABEL (bền vững)', async () => {
+      // Rule điểm danh label đã bị đổi tùy ý nhưng systemKey giữ nguyên → vẫn khớp.
+      prisma.scoringRule.findFirst.mockResolvedValue({
+        id: 'ra',
+        systemKey: 'PARTICIPATION_ON_TIME',
+        label: 'Đi tập chuyên cần (CLB tự đặt)',
+        delta: 2,
+      });
+      prisma.scoringRule.findMany.mockResolvedValue([]);
+      prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }]);
+      prisma.attendanceRecord.findMany.mockResolvedValue([
+        { memberId: 'm1', attendanceSessionId: 's1' },
+      ]);
+      prisma.fundPeriod.findMany.mockResolvedValue([]);
+      const r = await svc.runAutoScoring('c1', '2026-07');
+      expect(r.attendanceEvents).toBe(1); // khớp dù label khác mặc định
     });
   });
 });

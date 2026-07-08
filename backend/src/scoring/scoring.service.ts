@@ -13,6 +13,7 @@ import type { Prisma, ScoringCategory } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   DEFAULT_SCORING_RULES,
+  RULE_KEY,
   SCORE_BASELINE,
   classifyScore,
 } from './scoring-rules.constant';
@@ -32,8 +33,8 @@ export class ScoringService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Seed quy tắc điểm mặc định cho 1 CLB. Idempotent theo (clubId, category, label):
-   * chỉ tạo rule CHƯA có, không đè/nhân đôi rule CLB đã tự sửa/xóa.
+   * Seed quy tắc điểm mặc định cho 1 CLB. Idempotent theo (clubId, systemKey):
+   * chỉ tạo rule template CHƯA có, không đè/nhân đôi rule CLB đã tự sửa/xóa.
    */
   async seedDefaultRules(
     clubId: string,
@@ -42,7 +43,7 @@ export class ScoringService {
     let skipped = 0;
     for (const rule of DEFAULT_SCORING_RULES) {
       const existing = await this.prisma.scoringRule.findFirst({
-        where: { clubId, category: rule.category, label: rule.label },
+        where: { clubId, systemKey: rule.systemKey },
         select: { id: true },
       });
       if (existing) {
@@ -52,6 +53,7 @@ export class ScoringService {
       await this.prisma.scoringRule.create({
         data: {
           clubId,
+          systemKey: rule.systemKey,
           category: rule.category,
           label: rule.label,
           delta: rule.delta,
@@ -390,12 +392,11 @@ export class ScoringService {
     const events: Prisma.MemberScoreEventCreateManyInput[] = [];
 
     // ── Nhánh điểm danh ──
+    // Khớp qua systemKey BẤT BIẾN (không phụ thuộc label CLB có thể sửa).
     const attendanceRule = await this.prisma.scoringRule.findFirst({
       where: {
         clubId,
-        source: 'AUTO_ATTENDANCE',
-        category: 'PARTICIPATION',
-        label: 'Tham gia đúng giờ',
+        systemKey: RULE_KEY.ATTENDANCE_ON_TIME,
         active: true,
       },
     });
@@ -434,9 +435,9 @@ export class ScoringService {
     const financeRules = await this.prisma.scoringRule.findMany({
       where: { clubId, source: 'AUTO_FINANCE', active: true },
     });
-    const onTimeRule = financeRules.find((r) => r.label === 'Đóng quỹ đúng hạn');
-    const lateRule = financeRules.find((r) => r.label === 'Đóng quỹ trễ hạn');
-    const overdueRule = financeRules.find((r) => r.label === 'Nợ quỹ quá hạn');
+    const onTimeRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_ON_TIME);
+    const lateRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_LATE);
+    const overdueRule = financeRules.find((r) => r.systemKey === RULE_KEY.FINANCE_OVERDUE);
 
     if (onTimeRule || lateRule || overdueRule) {
       const now = new Date();

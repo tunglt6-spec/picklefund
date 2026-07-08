@@ -948,6 +948,9 @@ enum ScoringSource {
 model ScoringRule {
   id        String          @id @default(uuid())
   clubId    String          @map("club_id")
+  // Khóa hệ thống BẤT BIẾN cho rule template (auto-scoring khớp qua đây, không phụ thuộc
+  // label CLB có thể sửa). Rule do CLB tự tạo = null. Unique theo (clubId, systemKey).
+  systemKey String?         @map("system_key") @db.VarChar(60)
   category  ScoringCategory
   label     String          @db.VarChar(200)
   delta     Int
@@ -960,6 +963,7 @@ model ScoringRule {
   club   Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   events MemberScoreEvent[]
 
+  @@unique([clubId, systemKey])
   @@index([clubId, category])
   @@map("scoring_rules")
 }
