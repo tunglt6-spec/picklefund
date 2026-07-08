@@ -44,6 +44,9 @@ model Club {
   sessionRegistrations SessionRegistration[]
   fundPeriodMembers    FundPeriodMember[]
   clubMemories         ClubMemory[]
+  scoringRules         ScoringRule[]
+  memberScoreEvents    MemberScoreEvent[]
+  memberScoreSnapshots MemberScoreSnapshot[]
 
   @@map("clubs")
 }
@@ -133,6 +136,8 @@ model Member {
   payments              Payment[]
   sessionRegistrations  SessionRegistration[]
   fundPeriodMemberships FundPeriodMember[]
+  scoreEvents           MemberScoreEvent[]
+  scoreSnapshots        MemberScoreSnapshot[]
 
   @@index([clubId, isDeleted])
   @@map("members")
@@ -919,4 +924,88 @@ enum ClubMemoryType {
   POLICY
   KNOWLEDGE
   OPERATIONAL_NOTE
+}
+
+// ============================================================
+// MEMBER SCORING (Chấm điểm thành viên động — Phase 1)
+// ============================================================
+enum ScoringCategory {
+  PARTICIPATION
+  CONDUCT
+  CONTRIBUTION
+  DISCIPLINE
+  FINANCE
+  BONUS
+}
+
+enum ScoringSource {
+  AUTO_ATTENDANCE
+  AUTO_FINANCE
+  MANUAL
+}
+
+/// Quy tắc điểm CÓ CẤU TRÚC per-club (seed từ template, CLB sửa qua UI — phần "động").
+model ScoringRule {
+  id        String          @id @default(uuid())
+  clubId    String          @map("club_id")
+  category  ScoringCategory
+  label     String          @db.VarChar(200)
+  delta     Int
+  source    ScoringSource   @default(MANUAL)
+  active    Boolean         @default(true)
+  sortOrder Int             @default(0) @map("sort_order")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  club   Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  events MemberScoreEvent[]
+
+  @@index([clubId, category])
+  @@map("scoring_rules")
+}
+
+/// Sự kiện cộng/trừ điểm của 1 thành viên trong 1 tháng.
+model MemberScoreEvent {
+  id          String          @id @default(uuid())
+  clubId      String          @map("club_id")
+  memberId    String          @map("member_id")
+  ruleId      String?         @map("rule_id")
+  category    ScoringCategory
+  label       String          @db.VarChar(200)
+  delta       Int
+  source      ScoringSource
+  periodMonth String          @map("period_month") @db.VarChar(7) // YYYY-MM
+  note        String?
+  refId       String?         @map("ref_id") // id buổi/khoản đóng để chống cộng trùng auto
+  createdById String?         @map("created_by")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  club   Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  rule   ScoringRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+
+  // Chống cộng trùng event auto (refId set). Manual có refId=null → Postgres coi NULL khác nhau → cho phép lặp.
+  @@unique([memberId, source, periodMonth, refId], name: "uniq_auto_score_event")
+  @@index([clubId, periodMonth])
+  @@index([memberId, periodMonth])
+  @@map("member_score_events")
+}
+
+/// Snapshot chốt điểm cuối tháng (tháng hiện tại tính live; tháng đã chốt đọc snapshot).
+model MemberScoreSnapshot {
+  id             String   @id @default(uuid())
+  clubId         String   @map("club_id")
+  memberId       String   @map("member_id")
+  periodMonth    String   @map("period_month") @db.VarChar(7)
+  totalScore     Int      @map("total_score")
+  classification String   @db.VarChar(40)
+  finalizedById  String?  @map("finalized_by")
+  finalizedAt    DateTime @default(now()) @map("finalized_at")
+
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, periodMonth])
+  @@index([clubId, periodMonth])
+  @@map("member_score_snapshots")
 }
