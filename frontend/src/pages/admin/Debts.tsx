@@ -13,7 +13,7 @@ import { Users, AlertCircle, Clock, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatVND } from '../../lib/utils'
+import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
   StatusBadge, EmptyState, ResponsiveTabs, type Column, type TabItem, type StatusTone,
@@ -45,7 +45,7 @@ export function Debts() {
   const { members, contributions, fundPeriods } = data
 
   const activePeriod = useMemo(
-    () => fundPeriods.find((p) => p.status === 'active') ?? null,
+    () => getActiveChungPeriod(fundPeriods) ?? null,
     [fundPeriods],
   )
   const amount = activePeriod?.contributionAmount ?? 0

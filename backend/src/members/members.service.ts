@@ -125,7 +125,7 @@ export class MembersService {
     const memberIds = members.map((m) => m.id);
 
     const period = await this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'active' },
+      where: { clubId, status: 'active', type: 'chung' },
       orderBy: { startDate: 'desc' },
       select: { id: true },
     });

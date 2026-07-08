@@ -6,7 +6,7 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { PageShell, PageHeader, DataTable, MobileCardList, StatusBadge, ActionButton, type Column } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
 import * as XLSX from 'xlsx'
 import toast from 'react-hot-toast'
@@ -41,7 +41,7 @@ export function TreasurerDashboard() {
   const noReceipt = clubData.expenses.filter(e => !e.receiptUrl)
   const pendingCount = unpaid.length
 
-  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
+  const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
   const subtitle = activePeriod ? `Kỳ ${activePeriod.name}` : 'Chưa có kỳ quỹ nào đang mở'
 
   // Finance summary từ backend — source of truth cho Tổng tài sản CLB

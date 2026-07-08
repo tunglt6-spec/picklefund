@@ -8,7 +8,7 @@ import { Modal } from '../../components/ui/Modal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { AttendanceSession } from '../../types'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 function MemberAvatar({ name, id }: { name: string; id: string }) {
@@ -36,7 +36,9 @@ export function Attendance() {
     [...data.fundPeriods].sort((a, b) => b.startDate.localeCompare(a.startDate)),
     [data.fundPeriods]
   )
-  const activePeriod = allPeriods.find(p => p.status === 'active') ?? allPeriods[0]
+  const activePeriod = getActiveChungPeriod(allPeriods)
+    ?? allPeriods.find(p => p.status === 'active')
+    ?? allPeriods[0]
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => activePeriod?.id ?? '')
 
   const sessions = useMemo(() => {

@@ -68,10 +68,10 @@ export class MemberPortalService {
     };
   }
 
-  /** Kỳ quỹ đang mở của CLB (mới nhất theo startDate); null nếu chưa có. */
+  /** Kỳ Quỹ Chính đang mở của CLB (mới nhất theo startDate); null nếu chưa có. */
   private async activePeriod(clubId: string) {
     return this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'active' },
+      where: { clubId, status: 'active', type: 'chung' },
       orderBy: { startDate: 'desc' },
     });
   }

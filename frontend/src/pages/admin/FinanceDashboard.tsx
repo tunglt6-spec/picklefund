@@ -12,7 +12,7 @@ import {
 import { ArrowUpRight, ArrowDownLeft, Wallet } from 'lucide-react'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatVND } from '../../lib/utils'
+import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, EmptyState, LoadingState, ErrorState,
@@ -45,7 +45,7 @@ export function FinanceDashboard() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const { fundPeriods } = useClubDataStore((s) => s.getClubData(clubId))
   const activePeriod = useMemo(
-    () => fundPeriods.find((p) => p.status === 'active') ?? null,
+    () => getActiveChungPeriod(fundPeriods) ?? null,
     [fundPeriods],
   )
 

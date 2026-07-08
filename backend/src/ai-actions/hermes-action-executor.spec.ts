@@ -196,7 +196,7 @@ describe('HermesActionExecutor', () => {
 
     expect(fundPeriodFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { clubId: 'club-1', status: 'finalized' },
+        where: { clubId: 'club-1', status: 'finalized', type: 'chung' },
       }),
     );
     expect(dispatch).toHaveBeenCalledTimes(2);

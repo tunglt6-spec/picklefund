@@ -18,7 +18,7 @@ import {
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { Member } from '../../types'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, getActiveChungPeriod, isChungPeriod } from '../../lib/utils'
 import { exportMembersExcel, exportMembersPDF } from '../../lib/export'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
@@ -414,8 +414,8 @@ export function Members() {
      React Compiler tự memo hoá (không dùng useMemo thủ công để tránh xung đột). */
   const periods = clubData.fundPeriods ?? []
   const currentPeriod =
-    periods.find(p => p.status === 'active')
-    ?? [...periods].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''))[0]
+    getActiveChungPeriod(periods)
+    ?? [...periods].filter(isChungPeriod).sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''))[0]
     ?? null
 
   const attendanceByMember = new Map<string, { attended: number; total: number }>()

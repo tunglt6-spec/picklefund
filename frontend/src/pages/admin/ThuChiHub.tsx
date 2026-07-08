@@ -22,7 +22,7 @@ import {
 } from 'recharts'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatVND } from '../../lib/utils'
+import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
@@ -166,7 +166,9 @@ export function ThuChiHub() {
   const clubData = useClubDataStore(s => s.getClubData(clubId))
   const { contributions, expenses, members, fundPeriods } = clubData
 
-  const currentPeriod = fundPeriods.find(p => p.status === 'active') ?? fundPeriods[0] ?? null
+  const currentPeriod = getActiveChungPeriod(fundPeriods)
+    ?? fundPeriods.find(p => (p.type ?? 'chung') === 'chung')
+    ?? fundPeriods[0] ?? null
 
   const [summary, setSummary] = useState<FinanceSummary | null>(null)
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')

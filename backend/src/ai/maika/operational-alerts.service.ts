@@ -25,7 +25,7 @@ export class OperationalAlertsService {
     if (!clubId) return [];
 
     const period = await this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'active' },
+      where: { clubId, status: 'active', type: 'chung' },
       orderBy: { startDate: 'desc' },
       select: { id: true, name: true },
     });

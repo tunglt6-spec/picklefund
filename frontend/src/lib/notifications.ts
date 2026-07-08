@@ -1,5 +1,5 @@
 import type { ClubData } from '../store/clubDataStore'
-import { formatDate } from './utils'
+import { formatDate, getActiveChungPeriod } from './utils'
 
 export type NotifType = 'payment' | 'session' | 'member' | 'expense' | 'period' | 'warning'
 
@@ -13,7 +13,7 @@ export interface Notif {
 
 /** Action items — counts toward unread badge */
 export function buildNotifications(data: ClubData): Notif[] {
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+  const activePeriod = getActiveChungPeriod(data.fundPeriods)
   const unpaid = data.contributions.filter(c => !c.isConfirmed)
   const upcoming = data.sessions.filter(s => s.status === 'scheduled')
   const today = new Date()

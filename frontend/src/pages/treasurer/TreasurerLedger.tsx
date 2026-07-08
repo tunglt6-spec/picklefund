@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportLedgerExcel, exportLedgerPDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -25,7 +25,7 @@ export function TreasurerLedger() {
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
 
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+  const activePeriod = getActiveChungPeriod(data.fundPeriods)
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'Thu' | 'Chi'>('all')

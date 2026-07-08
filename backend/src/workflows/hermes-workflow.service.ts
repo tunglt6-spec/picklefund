@@ -396,7 +396,7 @@ export class HermesWorkflowService {
   ): Promise<Record<string, unknown>> {
     if (triggerType === 'DEBT_ESCALATION') {
       const period = await this.prisma.fundPeriod.findFirst({
-        where: { clubId, status: 'active' },
+        where: { clubId, status: 'active', type: 'chung' },
         orderBy: { startDate: 'desc' },
         select: { id: true },
       });

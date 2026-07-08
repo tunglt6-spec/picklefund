@@ -187,7 +187,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const clubId = action.clubId;
 
     const period = await this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'active' },
+      where: { clubId, status: 'active', type: 'chung' },
       orderBy: { startDate: 'desc' },
       select: { id: true, name: true },
     });
@@ -314,7 +314,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const clubId = action.clubId;
 
     const period = await this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'finalized' },
+      where: { clubId, status: 'finalized', type: 'chung' },
       orderBy: { startDate: 'desc' },
       select: { name: true },
     });

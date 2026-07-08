@@ -10,7 +10,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { AllocationRule, LivingExpense } from '../../types'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 const RULES: { value: AllocationRule; label: string; desc: string }[] = [
@@ -34,7 +34,7 @@ export function TreasurerExpense() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const data = getClubData(clubId)
-  const activePeriods = data.fundPeriods.filter(p => p.status === 'active')
+  const activePeriods = data.fundPeriods.filter(p => p.status === 'active' && isChungPeriod(p))
   const expenses = data.expenses
 
   const save = (next: LivingExpense[]) => setExpenses(clubId, next)

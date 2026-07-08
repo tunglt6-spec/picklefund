@@ -4,7 +4,7 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatVND } from '../../lib/utils'
+import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -16,7 +16,7 @@ export function TreasurerReminders() {
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
 
-  const activePeriod = data.fundPeriods.find(p => p.status === 'active')
+  const activePeriod = getActiveChungPeriod(data.fundPeriods)
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set())
   const [sendingAll, setSendingAll] = useState(false)

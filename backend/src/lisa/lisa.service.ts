@@ -167,7 +167,7 @@ export class LisaService {
     if (!member) throw new NotFoundException(`Member ${memberId} not found`);
 
     const activePeriod = await this.prisma.fundPeriod.findFirst({
-      where: { clubId: member.clubId, status: 'active' },
+      where: { clubId: member.clubId, status: 'active', type: 'chung' },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -465,7 +465,7 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
 
   async generateRemindersForClub(clubId: string): Promise<SmartReminder[]> {
     const activePeriod = await this.prisma.fundPeriod.findFirst({
-      where: { clubId, status: 'active' },
+      where: { clubId, status: 'active', type: 'chung' },
       orderBy: { createdAt: 'desc' },
     });
 

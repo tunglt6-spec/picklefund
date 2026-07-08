@@ -22,7 +22,7 @@ import {
   TrendingUp, TrendingDown, Wallet, Gamepad2, ArrowLeftRight, Users, Calendar,
   Activity, AlertCircle, RefreshCw, FileSpreadsheet, FileText, Sparkles,
 } from 'lucide-react'
-import { formatVND } from '../../lib/utils'
+import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel } from '../../lib/export'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
@@ -100,7 +100,9 @@ export function Reports() {
   const { getClubData, setMemberAttendanceSummary } = useClubDataStore()
   const isMobile = useIsMobile()
   const clubData = getClubData(user?.clubId ?? '')
-  const defaultPeriod = clubData.fundPeriods.find(p => p.status === 'active') ?? clubData.fundPeriods[0]
+  const defaultPeriod = getActiveChungPeriod(clubData.fundPeriods)
+    ?? clubData.fundPeriods.find(p => (p.type ?? 'chung') === 'chung')
+    ?? clubData.fundPeriods[0]
 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
   const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')

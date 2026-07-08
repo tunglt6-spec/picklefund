@@ -51,7 +51,7 @@ export class AiService {
         orderBy: { fullName: 'asc' },
       }),
       this.prisma.fundPeriod.findFirst({
-        where: { clubId, status: 'active' },
+        where: { clubId, status: 'active', type: 'chung' },
         select: {
           id: true,
           name: true,

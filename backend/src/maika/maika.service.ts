@@ -58,7 +58,7 @@ export class MaikaService {
           select: { fundPeriodId: true },
         }),
         this.prisma.fundPeriod.findFirst({
-          where: { clubId, status: 'active' },
+          where: { clubId, status: 'active', type: 'chung' },
           orderBy: { createdAt: 'desc' },
         }),
       ]);

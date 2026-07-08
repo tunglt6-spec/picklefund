@@ -9,7 +9,7 @@ import {
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { useBrandingStore } from '../../store/brandingStore'
-import { cn } from '../../lib/utils'
+import { cn, getActiveChungPeriod } from '../../lib/utils'
 import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 import api from '../../lib/api'
@@ -132,7 +132,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   if (!user) return null
 
-  const activePeriod = clubData.fundPeriods.find(p => p.status === 'active')
+  const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
 
   const notifPath = user.role === 'MEMBER_VIEW' ? '/member/notifications' : '/notifications'
   const navItems: NavItem[] = navByRole[user.role].map(item => {

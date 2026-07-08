@@ -12,7 +12,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
-import { formatDate, formatVND } from '../../lib/utils'
+import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
 const BLANK = {
@@ -34,7 +34,7 @@ export function TreasurerIncome() {
   const { getClubData, setContributions } = useClubDataStore()
   const data = getClubData(clubId)
   const members = data.members
-  const activePeriods = data.fundPeriods.filter(p => p.status === 'active')
+  const activePeriods = data.fundPeriods.filter(p => p.status === 'active' && isChungPeriod(p))
   const contributions = data.contributions
 
   const save = (next: FundContribution[]) => setContributions(clubId, next)
