@@ -1,9 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import {
   HermesEvent,
   HermesChannel,
+  ALL_CHANNELS,
   EVENT_PRIORITY,
   EVENT_RECIPIENTS,
 } from './hermes.types';
@@ -15,6 +17,7 @@ export class HermesService {
   constructor(
     private prisma: PrismaService,
     private email: EmailService,
+    private config: ConfigService,
   ) {}
 
   // ─── Main entry point ────────────────────────────────────────────────────────
@@ -31,46 +34,115 @@ export class HermesService {
 
     let dispatched = 0;
     for (const userId of recipients) {
-      try {
-        const channel = await this.selectChannel(userId, priority);
-        if (!channel) continue;
+      // Fetch pref MỘT LẦN cho user này (tránh N truy vấn lặp lại trong selectChannels/
+      // checkRateLimit/deliverExternal — vốn trước đây mỗi hàm tự findUnique riêng).
+      const pref = await this.prisma.notificationPreference.findUnique({
+        where: { userId },
+      });
+      // Mỗi channel xử lý ĐỘC LẬP: 1 channel fail KHÔNG làm fail các channel còn lại.
+      const channels = await this.selectChannels(pref, priority, userId);
+      if (channels.length === 0) continue;
 
-        await this.createNotification({
-          userId,
-          clubId: event.clubId,
-          eventType: event.eventType,
-          priority,
-          channel,
-          title: event.title,
-          body: event.body,
-          metadata: event.metadata,
-        });
-
-        // Deliver via external channel
-        if (channel === 'EMAIL') {
-          const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true },
+      let userDelivered = 0;
+      for (const channel of channels) {
+        const startedAt = Date.now();
+        let notificationId: string | null = null;
+        try {
+          const notif = await this.createNotification({
+            userId,
+            clubId: event.clubId,
+            eventType: event.eventType,
+            priority,
+            channel,
+            title: event.title,
+            body: event.body,
+            metadata: event.metadata,
           });
-          if (user?.email) {
-            await this.email.send(
-              user.email,
-              event.title,
-              this.email.buildNotifHtml(event.title, event.body),
-            );
-          }
-        }
+          notificationId = notif.id;
 
-        dispatched++;
-      } catch (err: any) {
-        this.logger.error(`dispatch failed for user ${userId}: ${err.message}`);
+          // Deliver qua kênh ngoài (IN_APP = chỉ ghi DB, không cần gửi ngoài).
+          await this.deliverExternal(channel, userId, event, pref);
+
+          userDelivered++;
+          this.logger.log(
+            `[Hermes] notif=${notificationId} user=${userId} channel=${channel} ` +
+              `event=${event.eventType} status=SUCCESS retry=0 tookMs=${Date.now() - startedAt}`,
+          );
+        } catch (err: any) {
+          this.logger.error(
+            `[Hermes] notif=${notificationId ?? 'n/a'} user=${userId} channel=${channel} ` +
+              `event=${event.eventType} status=FAILED retry=0 tookMs=${Date.now() - startedAt} err=${err.message}`,
+          );
+          // Không throw — tiếp tục channel kế tiếp.
+        }
       }
+      if (userDelivered > 0) dispatched++;
     }
 
     this.logger.log(
-      `[Hermes] dispatched ${dispatched}/${recipients.length} for ${event.eventType}`,
+      `[Hermes] dispatched ${dispatched}/${recipients.length} recipients for ${event.eventType}`,
     );
     return { dispatched };
+  }
+
+  /**
+   * Gửi thông báo qua kênh ngoài. IN_APP đã ghi DB ở createNotification (no-op ở đây).
+   * EMAIL qua EmailService; TELEGRAM qua Telegram Bot API (HTTP trực tiếp — tránh
+   * phụ thuộc TelegramModule để không tạo circular DI với Maika/Lisa).
+   */
+  private async deliverExternal(
+    channel: HermesChannel,
+    userId: string,
+    event: HermesEvent,
+    pref: { telegramChatId?: string | null } | null,
+  ): Promise<void> {
+    if (channel === 'IN_APP') return;
+
+    if (channel === 'EMAIL') {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+      if (!user?.email) return; // không có email → bỏ qua kênh này (không lỗi)
+      const sent = await this.email.send(
+        user.email,
+        event.title,
+        this.email.buildNotifHtml(event.title, event.body),
+      );
+      // EmailService.send() nuốt lỗi SMTP và trả false thay vì throw — phải kiểm tra
+      // kết quả để log FAILED chính xác (nếu không, dispatch() sẽ log nhầm SUCCESS).
+      if (!sent) throw new Error('Email send failed');
+      return;
+    }
+
+    if (channel === 'TELEGRAM') {
+      if (!pref?.telegramChatId) return; // chưa liên kết chat → bỏ qua (không lỗi)
+      await this.sendTelegram(
+        pref.telegramChatId,
+        `*${event.title}*\n${event.body}`,
+      );
+    }
+  }
+
+  /** Gửi tin nhắn qua Telegram Bot API (HTTP) — self-contained, không phụ thuộc TelegramModule. */
+  private async sendTelegram(chatId: string, text: string): Promise<void> {
+    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) return; // bot chưa cấu hình → bỏ qua (không lỗi)
+    const res = await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'Markdown',
+        }),
+      },
+    );
+    if (!res.ok) {
+      throw new Error(`Telegram API ${res.status}`);
+    }
   }
 
   // ─── Recipient resolution ────────────────────────────────────────────────────
@@ -112,30 +184,74 @@ export class HermesService {
 
   // ─── Channel selection ───────────────────────────────────────────────────────
 
-  private async selectChannel(
-    userId: string,
+  /**
+   * Chọn DANH SÁCH kênh gửi cho 1 user (multi-channel).
+   * Giữ nguyên nghiệp vụ cũ: enabled/quiet-hours/priority/rate-limit per-channel.
+   *  - !enabled → [] (không gửi).
+   *  - Quiet hours → chỉ IN_APP (chặn EMAIL/TELEGRAM ban đêm).
+   *  - MEDIUM/LOW → chỉ IN_APP (chống notification fatigue) — KHÔNG đổi.
+   *  - HIGH → tất cả kênh user bật; EMAIL/TELEGRAM bị bỏ nếu quá quota (per-channel);
+   *           IN_APP luôn được giữ; nếu rỗng → fallback [IN_APP] (không để user im lặng).
+   */
+  private async selectChannels(
+    pref: {
+      enabled: boolean;
+      quietHoursStart: number;
+      quietHoursEnd: number;
+      channels?: HermesChannel[] | null;
+      preferredChannel?: HermesChannel | null;
+      maxDailyEmail?: number | null;
+      maxDailyTelegram?: number | null;
+    } | null,
     priority: string,
-  ): Promise<HermesChannel | null> {
-    const pref = await this.prisma.notificationPreference.findUnique({
-      where: { userId },
-    });
+    userId: string,
+  ): Promise<HermesChannel[]> {
+    if (pref && !pref.enabled) return [];
 
-    if (pref && !pref.enabled) return null;
-
-    // Quiet hours → only IN_APP (no push/email/telegram)
     if (pref && this.isQuietHours(pref.quietHoursStart, pref.quietHoursEnd)) {
-      return 'IN_APP';
+      return ['IN_APP'];
     }
 
-    // HIGH priority → use preferred channel (or IN_APP default)
-    // MEDIUM / LOW → IN_APP only (to avoid notification fatigue)
-    if (priority === 'HIGH') {
-      const preferred = (pref?.preferredChannel as HermesChannel) ?? 'IN_APP';
-      const withinLimit = await this.checkRateLimit(userId, preferred);
-      return withinLimit ? preferred : 'IN_APP';
+    if (priority !== 'HIGH') {
+      return ['IN_APP'];
     }
 
-    return 'IN_APP';
+    // HIGH: gửi tới ĐÚNG các kênh user đã bật (nguồn chân lý = channels; fallback
+    // preferredChannel cho dữ liệu cũ chưa migrate). EMAIL/TELEGRAM lọc theo quota
+    // per-channel (kênh vượt quota bị bỏ, KHÔNG ảnh hưởng kênh khác). IN_APP không giới hạn.
+    const selected = this.resolveChannels(pref);
+    const result: HermesChannel[] = [];
+    for (const ch of selected) {
+      if (ch === 'IN_APP') {
+        result.push('IN_APP');
+        continue;
+      }
+      if (await this.checkRateLimit(userId, ch, pref)) {
+        result.push(ch);
+      }
+    }
+    // Fallback: nếu tất cả kênh bị chặn (vượt quota) → vẫn giữ IN_APP để không im lặng.
+    if (result.length === 0) return ['IN_APP'];
+    return result;
+  }
+
+  /**
+   * Danh sách kênh đã bật của user (multi). Nguồn chân lý = `channels`;
+   * nếu rỗng/thiếu (dữ liệu cũ) → suy từ `preferredChannel` (backward-compat).
+   * Lọc whitelist + khử trùng lặp.
+   */
+  private resolveChannels(pref: {
+    channels?: HermesChannel[] | null;
+    preferredChannel?: HermesChannel | null;
+  } | null): HermesChannel[] {
+    const raw =
+      pref?.channels && pref.channels.length > 0
+        ? pref.channels
+        : [pref?.preferredChannel ?? 'IN_APP'];
+    const valid = raw.filter((c): c is HermesChannel =>
+      ALL_CHANNELS.includes(c as HermesChannel),
+    );
+    return Array.from(new Set(valid.length > 0 ? valid : ['IN_APP']));
   }
 
   // ─── Quiet hours check ───────────────────────────────────────────────────────
@@ -151,11 +267,8 @@ export class HermesService {
   private async checkRateLimit(
     userId: string,
     channel: HermesChannel,
+    pref: { maxDailyEmail?: number | null; maxDailyTelegram?: number | null } | null,
   ): Promise<boolean> {
-    const pref = await this.prisma.notificationPreference.findUnique({
-      where: { userId },
-    });
-
     const maxMap: Record<HermesChannel, number> = {
       IN_APP: 99,
       EMAIL: pref?.maxDailyEmail ?? 1,
@@ -256,6 +369,7 @@ export class HermesService {
       // Return defaults
       return {
         userId,
+        channels: ['IN_APP'],
         preferredChannel: 'IN_APP',
         telegramChatId: null,
         quietHoursStart: 23,
@@ -265,6 +379,10 @@ export class HermesService {
         maxDailyTelegram: 5,
         enabled: true,
       };
+    }
+    // Backward-compat: dữ liệu cũ có channels rỗng → suy từ preferredChannel.
+    if (!pref.channels || pref.channels.length === 0) {
+      return { ...pref, channels: this.resolveChannels(pref) };
     }
     return pref;
   }
@@ -295,6 +413,7 @@ export class HermesService {
   async updatePreferences(
     userId: string,
     dto: {
+      channels?: HermesChannel[];
       preferredChannel?: 'IN_APP' | 'EMAIL' | 'TELEGRAM';
       telegramChatId?: string;
       quietHoursStart?: number;
@@ -305,10 +424,29 @@ export class HermesService {
       enabled?: boolean;
     },
   ) {
+    // Chuẩn hoá channels: whitelist + khử trùng. Nếu client chỉ gửi preferredChannel
+    // (client cũ) → suy channels từ đó. Đồng bộ preferredChannel = channels[0] (backward-compat).
+    const data: Record<string, unknown> = { ...dto };
+    let channels: HermesChannel[] | undefined;
+    if (dto.channels !== undefined) {
+      channels = Array.from(
+        new Set(
+          dto.channels.filter((c) => ALL_CHANNELS.includes(c as HermesChannel)),
+        ),
+      );
+    } else if (dto.preferredChannel !== undefined) {
+      channels = [dto.preferredChannel];
+    }
+    if (channels !== undefined) {
+      data.channels = channels;
+      // Giữ preferredChannel đồng bộ (kênh đầu tiên, mặc định IN_APP nếu rỗng).
+      data.preferredChannel = channels[0] ?? 'IN_APP';
+    }
+
     return this.prisma.notificationPreference.upsert({
       where: { userId },
-      create: { userId, ...dto } as any,
-      update: dto as any,
+      create: { userId, ...data } as any,
+      update: data as any,
     });
   }
 }

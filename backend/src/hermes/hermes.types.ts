@@ -16,6 +16,9 @@ export type HermesEventType =
 export type HermesPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 export type HermesChannel = 'IN_APP' | 'EMAIL' | 'TELEGRAM';
 
+/** Whitelist kênh hợp lệ — dùng để validate input (chống inject giá trị ngoài danh sách). */
+export const ALL_CHANNELS: HermesChannel[] = ['IN_APP', 'EMAIL', 'TELEGRAM'];
+
 // Recipients resolved from event type
 export type RecipientRole =
   | 'CLUB_ADMIN'

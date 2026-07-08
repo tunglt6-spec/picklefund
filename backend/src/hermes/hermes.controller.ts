@@ -13,7 +13,8 @@ import { Throttle } from '@nestjs/throttler';
 import { HermesService } from './hermes.service';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
-import type { HermesEvent } from './hermes.types';
+import type { HermesEvent, HermesChannel } from './hermes.types';
+import { ALL_CHANNELS } from './hermes.types';
 
 @ApiTags('Hermes')
 @ApiBearerAuth()
@@ -84,6 +85,7 @@ export class HermesController {
     @CurrentUser() user: any,
     @Body()
     body: {
+      channels?: string[];
       preferredChannel?: 'IN_APP' | 'EMAIL' | 'TELEGRAM';
       telegramChatId?: string;
       quietHoursStart?: number;
@@ -95,12 +97,31 @@ export class HermesController {
     },
   ) {
     const {
+      channels,
+      preferredChannel,
       quietHoursStart: qs,
       quietHoursEnd: qe,
       maxDailyPush: mp,
       maxDailyEmail: me,
       maxDailyTelegram: mt,
     } = body;
+    // Validate channels: phải là mảng, mọi phần tử nằm trong whitelist (chống inject).
+    if (channels !== undefined) {
+      if (!Array.isArray(channels))
+        throw new BadRequestException('channels phải là mảng');
+      const invalid = channels.filter(
+        (c) => !ALL_CHANNELS.includes(c as HermesChannel),
+      );
+      if (invalid.length > 0)
+        throw new BadRequestException(
+          `Kênh không hợp lệ: ${invalid.join(', ')}. Chỉ chấp nhận ${ALL_CHANNELS.join(', ')}.`,
+        );
+    }
+    if (
+      preferredChannel !== undefined &&
+      !ALL_CHANNELS.includes(preferredChannel as HermesChannel)
+    )
+      throw new BadRequestException('preferredChannel không hợp lệ');
     if (qs !== undefined && (qs < 0 || qs > 23))
       throw new BadRequestException('quietHoursStart phải từ 0–23');
     if (qe !== undefined && (qe < 0 || qe > 23))
@@ -112,7 +133,7 @@ export class HermesController {
     if (mt !== undefined && (mt < 0 || mt > 100))
       throw new BadRequestException('maxDailyTelegram phải từ 0–100');
     return ok(
-      await this.svc.updatePreferences(user.userId, body),
+      await this.svc.updatePreferences(user.userId, body as never),
       'Đã cập nhật cài đặt thông báo',
     );
   }

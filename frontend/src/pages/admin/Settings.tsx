@@ -381,6 +381,7 @@ function AccountTab() {
 // ─── Tab: Thông báo (Hermes Preferences) ─────────────────────
 type HermesPref = {
   preferredChannel: 'IN_APP' | 'EMAIL' | 'TELEGRAM'
+  channels: ('IN_APP' | 'EMAIL' | 'TELEGRAM')[]
   telegramChatId: string | null
   quietHoursStart: number
   quietHoursEnd: number
@@ -391,6 +392,7 @@ type HermesPref = {
 
 const defaultPref: HermesPref = {
   preferredChannel: 'IN_APP',
+  channels: ['IN_APP'],
   telegramChatId: null,
   quietHoursStart: 23,
   quietHoursEnd: 7,
@@ -419,7 +421,8 @@ function NotificationsTab(_: { clubId: string }) {
     api.get('/hermes/preferences')
       .then(res => {
         const d = res.data?.data ?? res.data
-        setPref({ ...defaultPref, ...d })
+        const channels = d?.channels?.length ? d.channels : [d?.preferredChannel ?? 'IN_APP']
+        setPref({ ...defaultPref, ...d, channels })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -431,7 +434,8 @@ function NotificationsTab(_: { clubId: string }) {
     setSaving(true)
     try {
       await api.patch('/hermes/preferences', {
-        preferredChannel: pref.preferredChannel,
+        channels: pref.channels,
+        preferredChannel: pref.channels[0] ?? 'IN_APP',
         telegramChatId: pref.telegramChatId || null,
         quietHoursStart: pref.quietHoursStart,
         quietHoursEnd: pref.quietHoursEnd,
@@ -469,10 +473,15 @@ function NotificationsTab(_: { clubId: string }) {
           {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
             <label key={ch} className={cn(
               'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-colors',
-              pref.preferredChannel === ch ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-gray-200 hover:border-gray-300'
+              pref.channels.includes(ch) ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-gray-200 hover:border-gray-300'
             )}>
-              <input type="radio" name="channel" value={ch} checked={pref.preferredChannel === ch}
-                onChange={() => set({ preferredChannel: ch })} className="accent-[var(--pf-primary)]" />
+              <input type="checkbox" value={ch} checked={pref.channels.includes(ch)}
+                onChange={() => {
+                  const next = pref.channels.includes(ch)
+                    ? pref.channels.filter(c => c !== ch)
+                    : [...pref.channels, ch]
+                  set({ channels: next })
+                }} className="accent-[var(--pf-primary)]" />
               <div>
                 <p className="text-sm font-medium text-gray-900">
                   {ch === 'IN_APP' ? '📱 Trong ứng dụng' : ch === 'EMAIL' ? '📧 Email' : '✈️ Telegram'}
@@ -489,7 +498,7 @@ function NotificationsTab(_: { clubId: string }) {
       </div>
 
       {/* Telegram Chat ID */}
-      {pref.preferredChannel === 'TELEGRAM' && (
+      {pref.channels.includes('TELEGRAM') && (
         <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
           <h3 className="font-semibold text-gray-900 mb-1">Liên kết Telegram</h3>
           <p className="text-xs text-gray-500 mb-3">

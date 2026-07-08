@@ -475,6 +475,9 @@ model Notification {
 model NotificationPreference {
   id               String              @id @default(uuid())
   userId           String              @unique @map("user_id")
+  // Multi-channel: các kênh user chọn nhận thông báo (bật đồng thời nhiều kênh).
+  // Nguồn chân lý mới. `preferredChannel` giữ lại để backward-compat (đồng bộ = channels[0]).
+  channels         NotificationChannel[] @default([IN_APP])
   preferredChannel NotificationChannel @default(IN_APP) @map("preferred_channel")
   telegramChatId   String?             @map("telegram_chat_id") @db.VarChar(50)
   quietHoursStart  Int                 @default(23) @map("quiet_hours_start")
