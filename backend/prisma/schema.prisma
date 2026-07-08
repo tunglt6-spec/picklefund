@@ -11,38 +11,39 @@ datasource db {
 // CLUBS (Multi-tenant root)
 // ============================================================
 model Club {
-  id           String   @id @default(uuid())
-  name         String   @db.VarChar(200)
-  code         String   @unique @db.VarChar(20)
-  logoUrl      String?  @map("logo_url")
-  address      String?
-  contactEmail String?  @map("contact_email") @db.VarChar(255)
-  contactPhone String?  @map("contact_phone") @db.VarChar(20)
-  status       ClubStatus @default(active)
+  id            String      @id @default(uuid())
+  name          String      @db.VarChar(200)
+  code          String      @unique @db.VarChar(20)
+  logoUrl       String?     @map("logo_url")
+  address       String?
+  contactEmail  String?     @map("contact_email") @db.VarChar(255)
+  contactPhone  String?     @map("contact_phone") @db.VarChar(20)
+  status        ClubStatus  @default(active)
   plan          ServicePlan @default(STARTER)
   planExpiresAt DateTime?   @map("plan_expires_at")
-  settings     Json?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  settings      Json?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
-  users             User[]
-  members           Member[]
-  fundPeriods       FundPeriod[]
-  attendanceSessions AttendanceSession[]
-  attendanceRecords AttendanceRecord[]
-  contributions     FundContribution[]
-  expenses          LivingExpense[]
-  expenseCategories ExpenseCategory[]
-  personalReceipts  PersonalReceipt[]
-  auditLogs         AuditLog[]
-  minigames         Minigame[]
-  payments          Payment[]
-  aiActions         AiAction[]
-  workflowRules     WorkflowRule[]
-  workflowRuns      WorkflowRun[]
-  notificationJobs  NotificationJob[]
+  users                User[]
+  members              Member[]
+  fundPeriods          FundPeriod[]
+  attendanceSessions   AttendanceSession[]
+  attendanceRecords    AttendanceRecord[]
+  contributions        FundContribution[]
+  expenses             LivingExpense[]
+  expenseCategories    ExpenseCategory[]
+  personalReceipts     PersonalReceipt[]
+  auditLogs            AuditLog[]
+  minigames            Minigame[]
+  payments             Payment[]
+  aiActions            AiAction[]
+  workflowRules        WorkflowRule[]
+  workflowRuns         WorkflowRun[]
+  notificationJobs     NotificationJob[]
   sessionRegistrations SessionRegistration[]
-  fundPeriodMembers FundPeriodMember[]
+  fundPeriodMembers    FundPeriodMember[]
+  clubMemories         ClubMemory[]
 
   @@map("clubs")
 }
@@ -74,23 +75,23 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  club    Club?   @relation(fields: [clubId], references: [id])
-  member  Member?
-  auditLogs AuditLog[]
-  createdFundPeriods    FundPeriod[]        @relation("FundPeriodCreatedBy")
-  createdSessions       AttendanceSession[] @relation("SessionCreatedBy")
-  createdContributions  FundContribution[]  @relation("ContributionCreatedBy")
-  createdExpenses       LivingExpense[]     @relation("ExpenseCreatedBy")
-  refreshTokens RefreshToken[]
-  apiKeys       ApiKey[]
-  totpSecret           String?   @map("totp_secret")
-  totpEnabled          Boolean   @default(false) @map("totp_enabled")
-  mustChangePassword   Boolean   @default(false) @map("must_change_password")
-  lastLoginAt          DateTime? @map("last_login_at")
-  notificationEnabled  Boolean   @default(true) @map("notification_enabled")
+  club                 Club?                   @relation(fields: [clubId], references: [id])
+  member               Member?
+  auditLogs            AuditLog[]
+  createdFundPeriods   FundPeriod[]            @relation("FundPeriodCreatedBy")
+  createdSessions      AttendanceSession[]     @relation("SessionCreatedBy")
+  createdContributions FundContribution[]      @relation("ContributionCreatedBy")
+  createdExpenses      LivingExpense[]         @relation("ExpenseCreatedBy")
+  refreshTokens        RefreshToken[]
+  apiKeys              ApiKey[]
+  totpSecret           String?                 @map("totp_secret")
+  totpEnabled          Boolean                 @default(false) @map("totp_enabled")
+  mustChangePassword   Boolean                 @default(false) @map("must_change_password")
+  lastLoginAt          DateTime?               @map("last_login_at")
+  notificationEnabled  Boolean                 @default(true) @map("notification_enabled")
   notifications        Notification[]
   notificationPref     NotificationPreference?
-  confirmedPayments    Payment[]              @relation("PaymentConfirmedBy")
+  confirmedPayments    Payment[]               @relation("PaymentConfirmedBy")
 
   @@index([clubId])
   @@map("users")
@@ -121,16 +122,16 @@ model Member {
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
 
-  club              Club               @relation(fields: [clubId], references: [id])
-  user              User?              @relation(fields: [userId], references: [id])
-  contributions     FundContribution[]
-  attendanceRecords AttendanceRecord[]
-  personalReceipts  PersonalReceipt[]
-  minigames         MinigameParticipant[]
-  teamsAsPlayer1    MinigameTeam[]     @relation("TeamPlayer1")
-  teamsAsPlayer2    MinigameTeam[]     @relation("TeamPlayer2")
-  payments          Payment[]
-  sessionRegistrations SessionRegistration[]
+  club                  Club                  @relation(fields: [clubId], references: [id])
+  user                  User?                 @relation(fields: [userId], references: [id])
+  contributions         FundContribution[]
+  attendanceRecords     AttendanceRecord[]
+  personalReceipts      PersonalReceipt[]
+  minigames             MinigameParticipant[]
+  teamsAsPlayer1        MinigameTeam[]        @relation("TeamPlayer1")
+  teamsAsPlayer2        MinigameTeam[]        @relation("TeamPlayer2")
+  payments              Payment[]
+  sessionRegistrations  SessionRegistration[]
   fundPeriodMemberships FundPeriodMember[]
 
   @@index([clubId, isDeleted])
@@ -162,8 +163,8 @@ model FundPeriod {
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
 
-  club               Club               @relation(fields: [clubId], references: [id])
-  createdBy          User               @relation("FundPeriodCreatedBy", fields: [createdById], references: [id])
+  club               Club                @relation(fields: [clubId], references: [id])
+  createdBy          User                @relation("FundPeriodCreatedBy", fields: [createdById], references: [id])
   contributions      FundContribution[]
   attendanceSessions AttendanceSession[]
   expenses           LivingExpense[]
@@ -208,19 +209,19 @@ enum FundPeriodStatus {
 // ATTENDANCE SESSIONS (Each play session)
 // ============================================================
 model AttendanceSession {
-  id             String        @id @default(uuid())
-  clubId         String        @map("club_id")
-  fundPeriodId   String        @map("fund_period_id")
-  sessionDate    DateTime      @map("session_date") @db.Date
-  startTime      String?       @map("start_time") @db.VarChar(5)
-  endTime        String?       @map("end_time") @db.VarChar(5)
-  courtFee       Decimal       @default(0) @map("court_fee") @db.Decimal(15, 2)
-  courtName      String?       @map("court_name") @db.VarChar(200)
-  status         SessionStatus @default(scheduled)
-  notes          String?
-  createdById    String        @map("created_by")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  id           String        @id @default(uuid())
+  clubId       String        @map("club_id")
+  fundPeriodId String        @map("fund_period_id")
+  sessionDate  DateTime      @map("session_date") @db.Date
+  startTime    String?       @map("start_time") @db.VarChar(5)
+  endTime      String?       @map("end_time") @db.VarChar(5)
+  courtFee     Decimal       @default(0) @map("court_fee") @db.Decimal(15, 2)
+  courtName    String?       @map("court_name") @db.VarChar(200)
+  status       SessionStatus @default(scheduled)
+  notes        String?
+  createdById  String        @map("created_by")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   club              Club                  @relation(fields: [clubId], references: [id])
   fundPeriod        FundPeriod            @relation(fields: [fundPeriodId], references: [id])
@@ -287,22 +288,22 @@ enum AttendanceStatus {
 // FUND CONTRIBUTIONS (Member payments)
 // ============================================================
 model FundContribution {
-  id                 String          @id @default(uuid())
-  clubId             String          @map("club_id")
-  fundPeriodId       String?         @map("fund_period_id")
-  memberId           String?         @map("member_id")
-  fundSource         FundSource      @default(COMMON) @map("fund_source")
-  miniIncomeType     MiniIncomeType? @map("mini_income_type")
-  payerName          String?         @map("payer_name") @db.VarChar(200)
-  relatedMinigameId  String?         @map("related_minigame_id")
-  amount             Decimal         @db.Decimal(15, 2)
-  paymentDate        DateTime        @map("payment_date") @db.Date
-  paymentMethod      String          @default("bank_transfer") @map("payment_method") @db.VarChar(50)
-  isConfirmed        Boolean         @default(false) @map("is_confirmed")
-  notes              String?
-  createdById        String          @map("created_by")
-  createdAt          DateTime        @default(now()) @map("created_at")
-  updatedAt          DateTime        @updatedAt @map("updated_at")
+  id                String          @id @default(uuid())
+  clubId            String          @map("club_id")
+  fundPeriodId      String?         @map("fund_period_id")
+  memberId          String?         @map("member_id")
+  fundSource        FundSource      @default(COMMON) @map("fund_source")
+  miniIncomeType    MiniIncomeType? @map("mini_income_type")
+  payerName         String?         @map("payer_name") @db.VarChar(200)
+  relatedMinigameId String?         @map("related_minigame_id")
+  amount            Decimal         @db.Decimal(15, 2)
+  paymentDate       DateTime        @map("payment_date") @db.Date
+  paymentMethod     String          @default("bank_transfer") @map("payment_method") @db.VarChar(50)
+  isConfirmed       Boolean         @default(false) @map("is_confirmed")
+  notes             String?
+  createdById       String          @map("created_by")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   club            Club        @relation(fields: [clubId], references: [id])
   fundPeriod      FundPeriod? @relation(fields: [fundPeriodId], references: [id])
@@ -348,7 +349,7 @@ model ExpenseCategory {
   isDefault Boolean  @default(false) @map("is_default")
   createdAt DateTime @default(now()) @map("created_at")
 
-  club     Club           @relation(fields: [clubId], references: [id])
+  club     Club            @relation(fields: [clubId], references: [id])
   expenses LivingExpense[]
 
   @@index([clubId])
@@ -359,25 +360,25 @@ model ExpenseCategory {
 // LIVING EXPENSES (Chi phí sinh hoạt)
 // ============================================================
 model LivingExpense {
-  id                  String          @id @default(uuid())
-  clubId              String          @map("club_id")
-  fundPeriodId        String?         @map("fund_period_id")
-  attendanceSessionId String?         @map("attendance_session_id")
-  categoryId          String?         @map("category_id")
-  fundSource          FundSource      @default(COMMON) @map("fund_source")
+  id                  String           @id @default(uuid())
+  clubId              String           @map("club_id")
+  fundPeriodId        String?          @map("fund_period_id")
+  attendanceSessionId String?          @map("attendance_session_id")
+  categoryId          String?          @map("category_id")
+  fundSource          FundSource       @default(COMMON) @map("fund_source")
   miniExpenseType     MiniExpenseType? @map("mini_expense_type")
-  receiverName        String?         @map("receiver_name") @db.VarChar(200)
-  relatedMinigameId   String?         @map("related_minigame_id")
-  allocationEnabled   Boolean         @default(true) @map("allocation_enabled")
-  status              String          @default("pending")
-  amount              Decimal         @db.Decimal(15, 2)
+  receiverName        String?          @map("receiver_name") @db.VarChar(200)
+  relatedMinigameId   String?          @map("related_minigame_id")
+  allocationEnabled   Boolean          @default(true) @map("allocation_enabled")
+  status              String           @default("pending")
+  amount              Decimal          @db.Decimal(15, 2)
   description         String
-  allocationRule      AllocationRule  @default(FUND_ONLY) @map("allocation_rule")
-  expenseDate         DateTime        @map("expense_date") @db.Date
-  receiptUrl          String?         @map("receipt_url")
-  createdById         String          @map("created_by")
-  createdAt           DateTime        @default(now()) @map("created_at")
-  updatedAt           DateTime        @updatedAt @map("updated_at")
+  allocationRule      AllocationRule   @default(FUND_ONLY) @map("allocation_rule")
+  expenseDate         DateTime         @map("expense_date") @db.Date
+  receiptUrl          String?          @map("receipt_url")
+  createdById         String           @map("created_by")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
 
   club              Club               @relation(fields: [clubId], references: [id])
   fundPeriod        FundPeriod?        @relation(fields: [fundPeriodId], references: [id])
@@ -401,20 +402,20 @@ enum AllocationRule {
 // PERSONAL RECEIPTS (Snapshot per member per period)
 // ============================================================
 model PersonalReceipt {
-  id              String   @id @default(uuid())
-  clubId          String   @map("club_id")
-  fundPeriodId    String   @map("fund_period_id")
-  memberId        String   @map("member_id")
-  totalSessions   Int      @map("total_sessions")
-  attendedSessions Int     @map("attended_sessions")
-  attendanceRate  Decimal  @map("attendance_rate") @db.Decimal(5, 2)
-  amountPaid      Decimal  @map("amount_paid") @db.Decimal(15, 2)
-  courtCost       Decimal  @map("court_cost") @db.Decimal(15, 2)
-  livingCost      Decimal  @map("living_cost") @db.Decimal(15, 2)
-  totalCost       Decimal  @map("total_cost") @db.Decimal(15, 2)
-  balance         Decimal  @db.Decimal(15, 2)
-  needToPay       Decimal  @default(0) @map("need_to_pay") @db.Decimal(15, 2)
-  snapshotAt      DateTime @default(now()) @map("snapshot_at")
+  id               String   @id @default(uuid())
+  clubId           String   @map("club_id")
+  fundPeriodId     String   @map("fund_period_id")
+  memberId         String   @map("member_id")
+  totalSessions    Int      @map("total_sessions")
+  attendedSessions Int      @map("attended_sessions")
+  attendanceRate   Decimal  @map("attendance_rate") @db.Decimal(5, 2)
+  amountPaid       Decimal  @map("amount_paid") @db.Decimal(15, 2)
+  courtCost        Decimal  @map("court_cost") @db.Decimal(15, 2)
+  livingCost       Decimal  @map("living_cost") @db.Decimal(15, 2)
+  totalCost        Decimal  @map("total_cost") @db.Decimal(15, 2)
+  balance          Decimal  @db.Decimal(15, 2)
+  needToPay        Decimal  @default(0) @map("need_to_pay") @db.Decimal(15, 2)
+  snapshotAt       DateTime @default(now()) @map("snapshot_at")
 
   club       Club       @relation(fields: [clubId], references: [id])
   fundPeriod FundPeriod @relation(fields: [fundPeriodId], references: [id])
@@ -429,15 +430,15 @@ model PersonalReceipt {
 // AUDIT LOGS
 // ============================================================
 model AuditLog {
-  id        String   @id @default(uuid())
-  clubId    String?  @map("club_id")
-  userId    String   @map("user_id")
-  action    String   @db.VarChar(50)
-  resource  String   @db.VarChar(100)
-  resourceId String? @map("resource_id")
-  detail    String?
-  ipAddress String?  @map("ip_address") @db.VarChar(45)
-  createdAt DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  clubId     String?  @map("club_id")
+  userId     String   @map("user_id")
+  action     String   @db.VarChar(50)
+  resource   String   @db.VarChar(100)
+  resourceId String?  @map("resource_id")
+  detail     String?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
 
   club Club? @relation(fields: [clubId], references: [id])
   user User  @relation(fields: [userId], references: [id])
@@ -473,21 +474,21 @@ model Notification {
 }
 
 model NotificationPreference {
-  id               String              @id @default(uuid())
-  userId           String              @unique @map("user_id")
+  id               String                @id @default(uuid())
+  userId           String                @unique @map("user_id")
   // Multi-channel: các kênh user chọn nhận thông báo (bật đồng thời nhiều kênh).
   // Nguồn chân lý mới. `preferredChannel` giữ lại để backward-compat (đồng bộ = channels[0]).
   channels         NotificationChannel[] @default([IN_APP])
-  preferredChannel NotificationChannel @default(IN_APP) @map("preferred_channel")
-  telegramChatId   String?             @map("telegram_chat_id") @db.VarChar(50)
-  quietHoursStart  Int                 @default(23) @map("quiet_hours_start")
-  quietHoursEnd    Int                 @default(7) @map("quiet_hours_end")
-  maxDailyPush     Int                 @default(3) @map("max_daily_push")
-  maxDailyEmail    Int                 @default(1) @map("max_daily_email")
-  maxDailyTelegram Int                 @default(5) @map("max_daily_telegram")
-  enabled          Boolean             @default(true)
-  createdAt        DateTime            @default(now()) @map("created_at")
-  updatedAt        DateTime            @updatedAt @map("updated_at")
+  preferredChannel NotificationChannel   @default(IN_APP) @map("preferred_channel")
+  telegramChatId   String?               @map("telegram_chat_id") @db.VarChar(50)
+  quietHoursStart  Int                   @default(23) @map("quiet_hours_start")
+  quietHoursEnd    Int                   @default(7) @map("quiet_hours_end")
+  maxDailyPush     Int                   @default(3) @map("max_daily_push")
+  maxDailyEmail    Int                   @default(1) @map("max_daily_email")
+  maxDailyTelegram Int                   @default(5) @map("max_daily_telegram")
+  enabled          Boolean               @default(true)
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -517,14 +518,14 @@ enum NotificationStatus {
 // REFRESH TOKENS
 // ============================================================
 model RefreshToken {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  token     String   @unique @db.VarChar(500)
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  token     String    @unique @db.VarChar(500)
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
   revokedAt DateTime? @map("revoked_at")
-  ipAddress String?  @map("ip_address") @db.VarChar(45)
-  userAgent String?  @map("user_agent") @db.VarChar(500)
+  ipAddress String?   @map("ip_address") @db.VarChar(45)
+  userAgent String?   @map("user_agent") @db.VarChar(500)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -537,18 +538,18 @@ model RefreshToken {
 // MINIGAME (Tournament management)
 // ============================================================
 model Minigame {
-  id          String          @id @default(uuid())
-  clubId      String          @map("club_id")
-  name        String          @db.VarChar(200)
+  id          String         @id @default(uuid())
+  clubId      String         @map("club_id")
+  name        String         @db.VarChar(200)
   format      MinigameFormat
-  status      MinigameStatus  @default(DRAFT)
+  status      MinigameStatus @default(DRAFT)
   settings    Json?
-  scheduledAt DateTime?       @map("scheduled_at")
-  startedAt   DateTime?       @map("started_at")
-  endedAt     DateTime?       @map("ended_at")
-  createdById String          @map("created_by")
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
+  scheduledAt DateTime?      @map("scheduled_at")
+  startedAt   DateTime?      @map("started_at")
+  endedAt     DateTime?      @map("ended_at")
+  createdById String         @map("created_by")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
   club              Club                  @relation(fields: [clubId], references: [id])
   teams             MinigameTeam[]
@@ -600,11 +601,11 @@ model MinigameTeam {
   points     Int      @default(0)
   createdAt  DateTime @default(now()) @map("created_at")
 
-  minigame     Minigame       @relation(fields: [minigameId], references: [id], onDelete: Cascade)
-  player1      Member         @relation("TeamPlayer1", fields: [player1Id], references: [id])
-  player2      Member?        @relation("TeamPlayer2", fields: [player2Id], references: [id])
-  matchesAsA   MinigameMatch[] @relation("MatchTeamA")
-  matchesAsB   MinigameMatch[] @relation("MatchTeamB")
+  minigame   Minigame        @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  player1    Member          @relation("TeamPlayer1", fields: [player1Id], references: [id])
+  player2    Member?         @relation("TeamPlayer2", fields: [player2Id], references: [id])
+  matchesAsA MinigameMatch[] @relation("MatchTeamA")
+  matchesAsB MinigameMatch[] @relation("MatchTeamB")
 
   @@map("minigame_teams")
 }
@@ -660,27 +661,27 @@ model ApiKey {
 // PAYMENTS (QR Payment — Sprint 01)
 // ============================================================
 model Payment {
-  id            String        @id @default(uuid())
-  clubId        String        @map("club_id")
-  memberId      String        @map("member_id")
-  amount        Decimal       @db.Decimal(15, 2)
-  description   String        @db.VarChar(500)
+  id            String         @id @default(uuid())
+  clubId        String         @map("club_id")
+  memberId      String         @map("member_id")
+  amount        Decimal        @db.Decimal(15, 2)
+  description   String         @db.VarChar(500)
   referenceType PaymentRefType @map("reference_type")
-  referenceId   String?       @map("reference_id")
-  bankCode      String        @default("MB") @map("bank_code") @db.VarChar(10)
-  accountNumber String        @map("account_number") @db.VarChar(30)
-  accountName   String        @map("account_name") @db.VarChar(100)
-  qrImageUrl    String?       @map("qr_image_url")
-  status        PaymentStatus @default(PENDING)
-  confirmedById String?       @map("confirmed_by")
-  confirmedAt   DateTime?     @map("confirmed_at")
-  expiredAt     DateTime?     @map("expired_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  referenceId   String?        @map("reference_id")
+  bankCode      String         @default("MB") @map("bank_code") @db.VarChar(10)
+  accountNumber String         @map("account_number") @db.VarChar(30)
+  accountName   String         @map("account_name") @db.VarChar(100)
+  qrImageUrl    String?        @map("qr_image_url")
+  status        PaymentStatus  @default(PENDING)
+  confirmedById String?        @map("confirmed_by")
+  confirmedAt   DateTime?      @map("confirmed_at")
+  expiredAt     DateTime?      @map("expired_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  club        Club    @relation(fields: [clubId], references: [id])
-  member      Member  @relation(fields: [memberId], references: [id])
-  confirmedBy User?   @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])
+  club        Club   @relation(fields: [clubId], references: [id])
+  member      Member @relation(fields: [memberId], references: [id])
+  confirmedBy User?  @relation("PaymentConfirmedBy", fields: [confirmedById], references: [id])
 
   @@index([clubId, status])
   @@index([memberId])
@@ -739,35 +740,35 @@ enum AiActionStatus {
 }
 
 model AiAction {
-  id               String         @id @default(uuid())
-  clubId           String         @map("club_id")
-  requestedByAi    AiAgent        @map("requested_by_ai")
-  actionType       String         @map("action_type") @db.VarChar(100)
-  targetModule     String?        @map("target_module") @db.VarChar(100)
-  targetEntityType String?        @map("target_entity_type") @db.VarChar(100)
-  targetEntityId   String?        @map("target_entity_id")
-  riskLevel        AiActionRisk   @map("risk_level")
-  title            String         @db.VarChar(200)
-  summary          String?
-  requestPayload   Json?          @map("request_payload")
-  status           AiActionStatus @default(PENDING_APPROVAL)
-  approvalRequired Boolean        @default(true) @map("approval_required")
-  approvalPolicy   Json?          @map("approval_policy")
-  approvedBy       String?        @map("approved_by")
-  approvedAt       DateTime?      @map("approved_at")
-  rejectedBy       String?        @map("rejected_by")
-  rejectedAt       DateTime?      @map("rejected_at")
-  rejectionReason  String?        @map("rejection_reason")
-  executionResult  Json?          @map("execution_result")
-  errorMessage     String?        @map("error_message")
-  retryCount       Int            @default(0) @map("retry_count")
-  executorAgent    AiAgent?       @map("executor_agent")
-  executorStartedAt  DateTime?    @map("executor_started_at")
-  executorFinishedAt DateTime?    @map("executor_finished_at")
-  executionDuration  Int?         @map("execution_duration")
-  createdById      String?        @map("created_by")
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
+  id                 String         @id @default(uuid())
+  clubId             String         @map("club_id")
+  requestedByAi      AiAgent        @map("requested_by_ai")
+  actionType         String         @map("action_type") @db.VarChar(100)
+  targetModule       String?        @map("target_module") @db.VarChar(100)
+  targetEntityType   String?        @map("target_entity_type") @db.VarChar(100)
+  targetEntityId     String?        @map("target_entity_id")
+  riskLevel          AiActionRisk   @map("risk_level")
+  title              String         @db.VarChar(200)
+  summary            String?
+  requestPayload     Json?          @map("request_payload")
+  status             AiActionStatus @default(PENDING_APPROVAL)
+  approvalRequired   Boolean        @default(true) @map("approval_required")
+  approvalPolicy     Json?          @map("approval_policy")
+  approvedBy         String?        @map("approved_by")
+  approvedAt         DateTime?      @map("approved_at")
+  rejectedBy         String?        @map("rejected_by")
+  rejectedAt         DateTime?      @map("rejected_at")
+  rejectionReason    String?        @map("rejection_reason")
+  executionResult    Json?          @map("execution_result")
+  errorMessage       String?        @map("error_message")
+  retryCount         Int            @default(0) @map("retry_count")
+  executorAgent      AiAgent?       @map("executor_agent")
+  executorStartedAt  DateTime?      @map("executor_started_at")
+  executorFinishedAt DateTime?      @map("executor_finished_at")
+  executionDuration  Int?           @map("execution_duration")
+  createdById        String?        @map("created_by")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
 
   club   Club            @relation(fields: [clubId], references: [id])
   events AiActionEvent[]
@@ -886,4 +887,36 @@ model WorkflowRun {
   @@index([clubId, status])
   @@index([workflowRuleId])
   @@map("workflow_runs")
+}
+
+/// Club Memory v2.2 — persist thay In-Memory Repository (trước đây mất dữ liệu
+/// mỗi lần backend restart/deploy). Nguồn tri thức chung của club: Maika đọc qua
+/// OrganizationContextManager (lọc PII/finance trước khi vào AI context).
+model ClubMemory {
+  id        String         @id @default(uuid())
+  clubId    String         @map("club_id")
+  type      ClubMemoryType
+  title     String?        @db.VarChar(300)
+  content   String
+  tags      String[]       @default([])
+  metadata  Json           @default("{}")
+  createdBy String?        @map("created_by")
+  updatedBy String?        @map("updated_by")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  club Club @relation(fields: [clubId], references: [id])
+
+  @@index([clubId])
+  @@index([clubId, type])
+  @@map("club_memories")
+}
+
+enum ClubMemoryType {
+  FACT
+  RULE
+  PREFERENCE
+  POLICY
+  KNOWLEDGE
+  OPERATIONAL_NOTE
 }

@@ -72,6 +72,7 @@ import { ChangePassword } from './pages/ChangePassword'
 import { AiManagerDashboard } from './pages/admin/ai/AiManagerDashboard'
 import { AiApprovalInbox } from './pages/admin/ai/AiApprovalInbox'
 import { MitDacExecutionLog } from './pages/admin/ai/MitDacExecutionLog'
+import { ClubMemoryManager } from './pages/admin/ai/ClubMemoryManager'
 
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
 import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
@@ -187,6 +188,7 @@ export default function App() {
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
+            <Route path="/admin/ai-manager/club-memory" element={<ClubMemoryManager />} />
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />
             <Route path="/admin/workflows" element={<WorkflowRules />} />
             <Route path="/admin/execution-log" element={<MitDacExecutionLog />} />
