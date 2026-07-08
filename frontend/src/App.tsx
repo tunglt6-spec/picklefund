@@ -37,6 +37,7 @@ import { CheckIn } from './pages/admin/CheckIn'
 import { ScheduleCalendar } from './pages/admin/ScheduleCalendar'
 import { FinanceDashboard } from './pages/admin/FinanceDashboard'
 import { Reports } from './pages/admin/Reports'
+import { MemberScoring } from './pages/admin/MemberScoring'
 import { Settings } from './pages/admin/Settings'
 import { Notifications } from './pages/admin/Notifications'
 
@@ -150,6 +151,7 @@ export default function App() {
             <Route path="/thu-chi" element={<ThuChiHub />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/scoring" element={<MemberScoring />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />
             <Route path="/billing" element={<Billing />} />

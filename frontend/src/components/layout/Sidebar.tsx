@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
   CheckSquare, BarChart3, Settings, LogOut, Building2,
   Bell, ScrollText, Receipt, ListOrdered, ChevronDown,
-  Zap, Star, Trophy, KeyRound, Sparkles, Bot, Workflow, Activity, Cog, CalendarPlus, ClipboardCheck, CalendarDays, Wallet, Coins, History,
+  Zap, Star, Trophy, KeyRound, Sparkles, Bot, Workflow, Activity, Cog, CalendarPlus, ClipboardCheck, CalendarDays, Wallet, Coins, History, Award,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -49,6 +49,7 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Lịch sử thi đấu', icon: <History size={18} />,      to: '/match-history' },
   { label: 'Dashboard tài chính', icon: <Wallet size={18} />, to: '/finance-dashboard' },
   { label: 'Báo Cáo',   icon: <BarChart3 size={18} />,        to: '/reports' },
+  { label: 'Chấm điểm', icon: <Award size={18} />,            to: '/scoring' },
   { label: 'Lisa AI',         icon: <Sparkles size={18} />,  to: '/lisa' },
   { label: 'AI Manager',      icon: <Bot size={18} />,       to: '/admin/ai-manager' },
   { label: 'Workflows',       icon: <Workflow size={18} />,  to: '/admin/workflows' },
@@ -64,6 +65,7 @@ const treasurerNav: NavItem[] = [
   { label: 'Nhập Thu',  icon: <DollarSign size={18} />,      to: '/treasurer/income' },
   { label: 'Nhập Chi',  icon: <CreditCard size={18} />,      to: '/treasurer/expense' },
   { label: 'Sổ Quỹ',   icon: <ListOrdered size={18} />,     to: '/treasurer/ledger' },
+  { label: 'Chấm điểm', icon: <Award size={18} />,           to: '/scoring' },
   { label: 'Nhắc Nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders' },
 ]
 
