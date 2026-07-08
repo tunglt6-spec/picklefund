@@ -80,6 +80,10 @@ export function SessionRegistration() {
       return next
     })
 
+  const allSelected = rows.length > 0 && selected.size === rows.length
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.memberId)))
+
   // Member self-scope: chỉ toggle CHÍNH mình, lưu ngay qua PUT /member/me/sessions/:id/registration.
   const memberToggleSelf = async () => {
     if (!sessionId || !myMemberId || saving) return
@@ -161,11 +165,19 @@ export function SessionRegistration() {
             <EmptyState icon={<Users size={24} />} title="Chưa có thành viên hoạt động" />
           ) : (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)]">
-                <Users size={15} />
-                <span>
-                  <span className="font-bold" style={{ color: 'var(--pf-primary)' }}>{selected.size}</span> / {rows.length} đã đăng ký
-                </span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)]">
+                  <Users size={15} />
+                  <span>
+                    <span className="font-bold" style={{ color: 'var(--pf-primary)' }}>{selected.size}</span> / {rows.length} đã đăng ký
+                  </span>
+                </div>
+                {!isMember && (
+                  <button type="button" onClick={toggleAll}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors">
+                    <Check size={13} />{allSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                  </button>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((r) => {

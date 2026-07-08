@@ -195,6 +195,9 @@ export function Attendance() {
   const completedSessions = sessions.filter(s => s.status === 'completed').length
   const totalAttendance = sessions.reduce((s, sess) => s + (sess._count?.attendanceRecords ?? 0), 0)
   const activeMemberList = members.filter(m => m.status === 'active')
+  const allPresent = activeMemberList.length > 0 && activeMemberList.every(m => attendance[m.id])
+  const toggleAllAttendance = () =>
+    setAttendance(allPresent ? {} : Object.fromEntries(activeMemberList.map(m => [m.id, true])))
 
   return (
     <PageShell maxWidth={1200}>
@@ -301,6 +304,13 @@ export function Attendance() {
             </div>
           }
         >
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs [color:var(--pf-color-muted)]">{activeMemberList.length} thành viên</span>
+            <button type="button" onClick={toggleAllAttendance}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors">
+              <CheckSquare size={13} />{allPresent ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+            </button>
+          </div>
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {activeMemberList.map(m => (
               <label key={m.id} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${

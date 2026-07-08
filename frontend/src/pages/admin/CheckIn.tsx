@@ -136,6 +136,9 @@ export function CheckIn() {
   }
 
   const registeredCount = rows.filter((r) => r.registered).length
+  const allCheckedIn = rows.length > 0 && present.size === rows.length
+  const toggleAllCheckin = () =>
+    setPresent(allCheckedIn ? new Set() : new Set(rows.map((r) => r.memberId)))
 
   return (
     <PageShell>
@@ -190,6 +193,14 @@ export function CheckIn() {
                 <MetricCard accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} />
               </div>
 
+              {!isMember && (
+                <div className="flex justify-end">
+                  <button type="button" onClick={toggleAllCheckin}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors">
+                    <Check size={13} />{allCheckedIn ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((r) => {
                   const on = present.has(r.memberId)
