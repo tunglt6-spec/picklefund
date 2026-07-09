@@ -61,6 +61,7 @@ export type AiActionStatus =
   | 'EXECUTED'
   | 'FAILED'
   | 'RETRY_PENDING'
+  | 'EXPIRED'
 
 export interface AiActionListItem {
   id: string

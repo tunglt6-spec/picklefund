@@ -751,6 +751,7 @@ enum AiActionStatus {
   EXECUTED
   FAILED
   RETRY_PENDING
+  EXPIRED
 }
 
 model AiAction {

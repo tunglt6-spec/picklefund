@@ -164,8 +164,35 @@ export class AiActionsService {
     });
   }
 
+  /** TTL duyệt (giờ) — env override, mặc định 7 ngày. */
+  private approvalTtlHours(): number {
+    const raw = Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS);
+    return Number.isFinite(raw) && raw > 0 ? raw : 168;
+  }
+
+  /**
+   * Tự hết hạn đề xuất CHỜ DUYỆT quá TTL → EXPIRED. ADDITIVE: không đụng luồng
+   * approve/reject/execute; chỉ chuyển PENDING_APPROVAL cũ. Gọi lazy khi list/summary
+   * để trạng thái luôn cập nhật mà KHÔNG cần bật scheduler. Bọc try/catch — lỗi (vd enum
+   * chưa migrate xong) KHÔNG được chặn việc đọc danh sách.
+   */
+  private async expireStale(clubId: string): Promise<void> {
+    const cutoff = new Date(Date.now() - this.approvalTtlHours() * 3_600_000);
+    try {
+      await this.prisma.aiAction.updateMany({
+        where: { clubId, status: 'PENDING_APPROVAL', createdAt: { lt: cutoff } },
+        data: { status: 'EXPIRED' as never },
+      });
+    } catch (e) {
+      this.logger.warn(
+        `expireStale bỏ qua (không ảnh hưởng đọc): ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
+  }
+
   async list(clubIdRaw: string | null, f: ListFilters) {
     const clubId = this.requireClub(clubIdRaw);
+    await this.expireStale(clubId);
     const page = Math.max(1, Number(f.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(f.limit) || 20));
     const where: Prisma.AiActionWhereInput = {
@@ -574,6 +601,7 @@ export class AiActionsService {
   /** KPI tổng hợp — CHỈ dữ liệu DB thật; không có dữ liệu → 0/[]. */
   async summary(clubIdRaw: string | null) {
     const clubId = this.requireClub(clubIdRaw);
+    await this.expireStale(clubId);
     const [byStatus, byAi, byRisk] = await Promise.all([
       this.prisma.aiAction.groupBy({
         by: ['status'],

@@ -98,6 +98,27 @@ describe('AiActionsService', () => {
       );
     });
 
+    it('expireStale: list/summary tự chuyển PENDING_APPROVAL quá hạn → EXPIRED', async () => {
+      await service.list('club-1', {});
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clubId: 'club-1',
+            status: 'PENDING_APPROVAL',
+            createdAt: expect.objectContaining({ lt: expect.any(Date) }),
+          }),
+          data: { status: 'EXPIRED' },
+        }),
+      );
+      jest.clearAllMocks();
+      prisma.aiAction.groupBy.mockResolvedValue([]);
+      prisma.aiAction.findMany.mockResolvedValue([]);
+      await service.summary('club-1');
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'EXPIRED' } }),
+      );
+    });
+
     it('approve NotFound khi action thuộc club khác (findFirst null)', async () => {
       prisma.aiAction.findFirst.mockResolvedValue(null);
       await expect(service.approve('a1', 'club-1', ACTOR)).rejects.toThrow(
