@@ -3,10 +3,43 @@ import { useNavigate } from 'react-router-dom'
 import {
   Bot, ShieldCheck, Activity, AlertTriangle, Inbox, ClipboardList,
   CheckCircle2, XCircle, Clock, Zap, Info, ChevronRight, BookOpen,
+  Workflow, ClipboardCheck, Send, Bell, CalendarClock, Database, Gauge,
+  ScrollText, LayoutGrid,
 } from 'lucide-react'
 import {
   useAiManager, AI_TEAM, type IntelSignal, type SignalLevel,
 } from '../../../hooks/useAiManager'
+import { useAuthStore } from '../../../store/authStore'
+
+/** Các khu vực của AI Operations Center. Trạng thái:
+ *  - 'here'   : chính trang hub này (không điều hướng).
+ *  - 'active' : đã có, nối route thật.
+ *  - 'soon'   : sẽ kích hoạt ở các pha kế tiếp (Scheduler/Alert/Data Monitor/KPI).
+ *  KHÔNG đổi route backend/API — chỉ gom điều hướng UI (additive). */
+interface OpsSection {
+  key: string
+  label: string
+  desc: string
+  icon: React.ReactNode
+  to: string | null
+  status: 'here' | 'active' | 'soon'
+}
+
+function buildSections(isSuper: boolean): OpsSection[] {
+  return [
+    { key: 'hermes', label: 'Hermes (AI COO)', desc: 'Trung tâm điều phối — bạn đang ở đây', icon: <Bot size={18} />, to: null, status: 'here' },
+    { key: 'workflow', label: 'Workflow Studio', desc: 'Luật tự động hoá & lịch chạy', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active' },
+    { key: 'approval', label: 'Approval Center', desc: 'Hàng đợi duyệt hành động AI', icon: <ClipboardCheck size={18} />, to: '/admin/ai-approvals', status: 'active' },
+    { key: 'dispatch', label: 'AI Dispatch', desc: 'Nhật ký điều phối & thực thi (Mít Đặc)', icon: <Send size={18} />, to: '/admin/execution-log', status: 'active' },
+    { key: 'memory', label: 'Club Memory', desc: 'Kho tri thức của CLB', icon: <BookOpen size={18} />, to: '/admin/ai-manager/club-memory', status: 'active' },
+    { key: 'notif', label: 'Notification Center', desc: 'Hộp thông báo đa kênh', icon: <Bell size={18} />, to: '/notifications', status: 'active' },
+    { key: 'scheduler', label: 'Scheduler', desc: 'Lịch cron & tác vụ định kỳ', icon: <CalendarClock size={18} />, to: null, status: 'soon' },
+    { key: 'alert', label: 'Alert Center', desc: 'Cảnh báo vận hành & lỗi hệ thống', icon: <AlertTriangle size={18} />, to: null, status: 'soon' },
+    { key: 'monitor', label: 'Data Monitor', desc: 'Chất lượng & toàn vẹn dữ liệu', icon: <Database size={18} />, to: null, status: 'soon' },
+    { key: 'kpi', label: 'KPI Monitor', desc: 'Chỉ số vận hành & sức khoẻ', icon: <Gauge size={18} />, to: null, status: 'soon' },
+    { key: 'audit', label: 'Audit Logs', desc: 'Nhật ký kiểm toán', icon: <ScrollText size={18} />, to: isSuper ? '/super/audit-logs' : null, status: isSuper ? 'active' : 'soon' },
+  ]
+}
 
 const ACCENT: Record<string, { dot: string; bg: string; text: string }> = {
   indigo: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
@@ -69,8 +102,11 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
 
 export function AiManagerDashboard() {
   const navigate = useNavigate()
+  const role = useAuthStore(s => s.user?.role)
   const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
+
+  const sections = useMemo(() => buildSections(role === 'SUPER_ADMIN'), [role])
 
   const team = useMemo(() => {
     if (teamFilter === 'active') return AI_TEAM.filter(t => t.implemented)
@@ -121,13 +157,13 @@ export function AiManagerDashboard() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-slate-900">AI Manager</h1>
+                <h1 className="text-xl font-bold text-slate-900">AI Operations Center</h1>
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                   <span className="h-1.5 w-1.5 rounded-full [background:var(--pf-primary)] animate-pulse" />
-                  Trung tâm điều phối AI
+                  Hermes · AI COO
                 </span>
               </div>
-              <p className="text-sm text-slate-500">Đội ngũ AI · Chính sách duyệt · Tín hiệu vận hành (read-only)</p>
+              <p className="text-sm text-slate-500">Điều phối · Duyệt · Thông báo · Lịch · Cảnh báo · Giám sát (read-only)</p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0 w-full md:w-auto">
@@ -150,6 +186,52 @@ export function AiManagerDashboard() {
       </div>
 
       <div className="px-4 sm:px-6 py-5 space-y-6">
+        {/* Hub điều hướng — gom 11 khu vực của AI Operations Center */}
+        <Card>
+          <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {sections.map(s => {
+              const clickable = s.status === 'active' && s.to
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => clickable && navigate(s.to!)}
+                  className={`group relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-all ${
+                    s.status === 'here'
+                      ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
+                      : clickable
+                        ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] cursor-pointer'
+                        : 'border-slate-100 bg-slate-50/60 cursor-default'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                      s.status === 'soon' ? 'bg-slate-100 text-slate-400' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                    }`}>
+                      {s.icon}
+                    </span>
+                    {s.status === 'here' && (
+                      <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
+                    )}
+                    {s.status === 'soon' && (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Đang phát triển</span>
+                    )}
+                    {clickable && (
+                      <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold truncate ${s.status === 'soon' ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
+                    <p className="text-[11px] text-slate-400 leading-snug">{s.desc}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </Card>
+
         {/* Backend status banner — trung thực */}
         <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
           <Info size={16} className="text-sky-600 shrink-0 mt-0.5" />
