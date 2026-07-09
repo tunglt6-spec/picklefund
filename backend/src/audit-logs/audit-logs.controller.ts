@@ -25,4 +25,27 @@ export class AuditLogsController {
       }),
     );
   }
+
+  /**
+   * Audit log CỦA RIÊNG CLB (AI Operations Center). clubId ÉP TỪ JWT — client KHÔNG
+   * override được (tenant isolation). CLUB_ADMIN chỉ thấy log club mình; SUPER_ADMIN
+   * dùng endpoint gốc `GET /audit-logs` để xem toàn hệ thống.
+   */
+  @Get('club')
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async findForClub(
+    @CurrentUser() user: any,
+    @Query('action') action?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.svc.findAll({
+        clubId: user.clubId, // FORCE theo JWT — không nhận clubId từ query
+        action: action || undefined,
+        search: search || undefined,
+        limit: limit ? parseInt(limit, 10) : 100,
+      }),
+    );
+  }
 }

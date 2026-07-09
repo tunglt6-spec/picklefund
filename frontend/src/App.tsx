@@ -77,6 +77,7 @@ import { SchedulerPage } from './pages/admin/ai/SchedulerPage'
 import { AlertCenterPage } from './pages/admin/ai/AlertCenterPage'
 import { DataMonitorPage } from './pages/admin/ai/DataMonitorPage'
 import { KpiMonitorPage } from './pages/admin/ai/KpiMonitorPage'
+import { AuditLogViewer } from './pages/admin/ai/AuditLogViewer'
 import { ClubMemoryManager } from './pages/admin/ai/ClubMemoryManager'
 
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
@@ -202,6 +203,7 @@ export default function App() {
             <Route path="/admin/ai-alerts" element={<AlertCenterPage />} />
             <Route path="/admin/ai-data-monitor" element={<DataMonitorPage />} />
             <Route path="/admin/ai-kpi" element={<KpiMonitorPage />} />
+            <Route path="/admin/ai-audit-logs" element={<AuditLogViewer />} />
             </Route>
             {/* Member (MEMBER_VIEW) — chỉ member read-only; staff không rơi vào đây */}
             <Route element={<RoleRoute allow={['MEMBER_VIEW']} />}>
