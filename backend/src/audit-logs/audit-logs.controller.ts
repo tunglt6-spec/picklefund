@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, ForbiddenException } from '@nestjs/common';
 import { AuditLogsService } from './audit-logs.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
@@ -39,9 +39,17 @@ export class AuditLogsController {
     @Query('search') search?: string,
     @Query('limit') limit?: string,
   ) {
+    // FAIL-FAST: endpoint này BẮT BUỘC có clubId (ép từ JWT). Nếu tài khoản không gắn CLB
+    // (vd SUPER_ADMIN toàn hệ thống) mà vẫn gọi → service sẽ bỏ filter clubId và trả log
+    // MỌI CLB (rò rỉ cross-tenant). Chặn tại đây; SUPER_ADMIN dùng GET /audit-logs.
+    if (!user.clubId) {
+      throw new ForbiddenException(
+        'Tài khoản không gắn CLB. SUPER_ADMIN dùng GET /audit-logs để xem toàn hệ thống.',
+      );
+    }
     return ok(
       await this.svc.findAll({
-        clubId: user.clubId, // FORCE theo JWT — không nhận clubId từ query
+        clubId: user.clubId, // đã đảm bảo truthy → luôn scope theo đúng CLB
         action: action || undefined,
         search: search || undefined,
         limit: limit ? parseInt(limit, 10) : 100,

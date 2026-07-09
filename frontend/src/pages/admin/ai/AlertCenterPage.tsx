@@ -50,6 +50,7 @@ export function AlertCenterPage() {
   const [dataQuality, setDataQuality] = useState<IntelSignal[]>([])
   const [failedRuns, setFailedRuns] = useState<FailedRun[]>([])
   const [failedActions, setFailedActions] = useState<FailedAction[]>([])
+  const [partial, setPartial] = useState<string[]>([]) // tên nguồn lỗi (partial-failure)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -66,6 +67,14 @@ export function AlertCenterPage() {
     if ([o, i, wr, aa].every(r => r.status === 'rejected')) {
       setError(true); setLoading(false); return
     }
+    // Ghi nhận nguồn lỗi CỤC BỘ → cảnh báo "thiếu dữ liệu một phần" (Reality Filter:
+    // KHÔNG khẳng định "ổn định" nếu có nguồn cảnh báo chưa tải được).
+    const failed: string[] = []
+    if (o.status === 'rejected') failed.push('Cảnh báo vận hành')
+    if (i.status === 'rejected') failed.push('Phân tích tổ chức')
+    if (wr.status === 'rejected') failed.push('Workflow')
+    if (aa.status === 'rejected') failed.push('Lỗi AI')
+    setPartial(failed)
     const grab = <T,>(r: PromiseSettledResult<any>): T[] =>
       r.status === 'fulfilled' ? ((r.value.data?.data ?? r.value.data ?? []) as T[]) : []
     setOps(grab<IntelSignal>(o))
@@ -123,7 +132,14 @@ export function AlertCenterPage() {
             <MetricCard label="Lỗi AI / Thực thi" value={failedActions.length} icon={<Bot size={16} />} negative={failedActions.length > 0} />
           </div>
 
-          {totalAlerts === 0 && (
+          {/* Thiếu dữ liệu một phần — KHÔNG khẳng định ổn định khi có nguồn lỗi */}
+          {partial.length > 0 && (
+            <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+              <span>Thiếu dữ liệu một phần — không tải được: <b>{partial.join(', ')}</b>. Có thể còn cảnh báo chưa hiển thị; hãy thử lại.</span>
+            </div>
+          )}
+          {totalAlerts === 0 && partial.length === 0 && (
             <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               <CheckCircle2 size={16} /> Không có cảnh báo — hệ thống đang ổn định.
             </div>

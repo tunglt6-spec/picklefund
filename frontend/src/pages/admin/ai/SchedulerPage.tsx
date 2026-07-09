@@ -80,25 +80,31 @@ export function SchedulerPage() {
   const [runs, setRuns] = useState<SchedRun[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [partial, setPartial] = useState<string[]>([]) // nguồn lỗi cục bộ
   const [running, setRunning] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(false)
-    try {
-      const [st, rl, hi] = await Promise.all([
-        api.get('/workflows/runtime/status'),
-        api.get('/workflows/rules'),
-        api.get('/workflows/runtime/history'),
-      ])
-      setStatus(st.data?.data ?? st.data ?? null)
-      setRules(((rl.data?.data ?? rl.data ?? []) as WorkflowRule[]))
-      setRuns(((hi.data?.data ?? hi.data ?? []) as SchedRun[]))
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
+    // allSettled: 1 nguồn lỗi KHÔNG làm rơi cả trang — render từng section độc lập,
+    // chỉ ErrorState toàn trang khi TẤT CẢ nguồn fail.
+    const [st, rl, hi] = await Promise.allSettled([
+      api.get('/workflows/runtime/status'),
+      api.get('/workflows/rules'),
+      api.get('/workflows/runtime/history'),
+    ])
+    if ([st, rl, hi].every(r => r.status === 'rejected')) {
+      setError(true); setLoading(false); return
     }
+    const failed: string[] = []
+    if (st.status === 'fulfilled') setStatus(st.value.data?.data ?? st.value.data ?? null)
+    else failed.push('Trạng thái timer')
+    if (rl.status === 'fulfilled') setRules((rl.value.data?.data ?? rl.value.data ?? []) as WorkflowRule[])
+    else failed.push('Lịch định kỳ')
+    if (hi.status === 'fulfilled') setRuns((hi.value.data?.data ?? hi.value.data ?? []) as SchedRun[])
+    else failed.push('Lịch sử chạy')
+    setPartial(failed)
+    setLoading(false)
   }, [])
 
   useEffect(() => { void load() }, [load])
@@ -145,6 +151,12 @@ export function SchedulerPage() {
         <ErrorState onRetry={() => void load()} />
       ) : (
         <div className="flex flex-col gap-6">
+          {partial.length > 0 && (
+            <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <Clock size={16} className="shrink-0 mt-0.5" />
+              <span>Thiếu dữ liệu một phần — không tải được: <b>{partial.join(', ')}</b>. Các phần còn lại vẫn hiển thị bên dưới.</span>
+            </div>
+          )}
           {/* Trạng thái runtime */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MetricCard
