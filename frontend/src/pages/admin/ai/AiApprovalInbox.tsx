@@ -109,14 +109,14 @@ export function AiApprovalInbox() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <button
           onClick={() => navigate('/admin/ai-manager')}
           className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
         >
-          <ArrowLeft size={14} /> AI Manager
+          <ArrowLeft size={14} /> AI Operations Center
         </button>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export function AiApprovalInbox() {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
         {!availability.actions && !loading && (
           <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
             <Info size={16} className="text-amber-600 shrink-0 mt-0.5" />

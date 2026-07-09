@@ -174,7 +174,7 @@ export function ClubMemoryManager() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/ai-manager')}>
-              <ArrowLeft size={14} />Quay lại AI Manager
+              <ArrowLeft size={14} />Quay lại AI Operations Center
             </Button>
             <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
           </div>

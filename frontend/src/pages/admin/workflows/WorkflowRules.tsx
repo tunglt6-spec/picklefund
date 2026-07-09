@@ -49,7 +49,7 @@ export function WorkflowRules() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -71,7 +71,7 @@ export function WorkflowRules() {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
         {/* Banner */}
         <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
           <Info size={16} className="text-sky-600 shrink-0 mt-0.5" />
@@ -171,7 +171,7 @@ export function WorkflowRules() {
                 )}
                 {r.createdActions > 0 && (
                   <p className="mt-2 text-[11px] text-emerald-600">
-                    Đã tạo {r.createdActions} AiAction → xem/duyệt tại <b>AI Manager · Hộp Duyệt</b>.
+                    Đã tạo {r.createdActions} AiAction → xem/duyệt tại <b>AI Operations Center · Hộp Duyệt</b>.
                   </p>
                 )}
               </div>
