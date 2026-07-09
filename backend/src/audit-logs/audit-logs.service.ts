@@ -10,13 +10,27 @@ export class AuditLogsService {
     clubId?: string;
     action?: string;
     search?: string;
+    from?: string;
+    to?: string;
     limit?: number;
   }) {
-    const { clubId, action, search, limit = 100 } = filters;
+    const { clubId, action, search, from, to, limit = 100 } = filters;
+    // Lọc theo khoảng ngày (createdAt). `to` mở rộng tới cuối ngày để bao trọn ngày đó.
+    let createdAt: { gte?: Date; lte?: Date } | undefined;
+    if (from || to) {
+      createdAt = {};
+      if (from) createdAt.gte = new Date(from);
+      if (to) {
+        const toEnd = new Date(to);
+        toEnd.setHours(23, 59, 59, 999);
+        createdAt.lte = toEnd;
+      }
+    }
     return this.prisma.auditLog.findMany({
       where: {
         ...(clubId ? { clubId } : {}),
         ...(action ? { action } : {}),
+        ...(createdAt ? { createdAt } : {}),
         ...(search
           ? {
               OR: [

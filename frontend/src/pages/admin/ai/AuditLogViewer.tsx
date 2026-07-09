@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ScrollText, ArrowLeft, Search } from 'lucide-react'
+import { ScrollText, ArrowLeft, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState,
@@ -38,17 +38,25 @@ export function AuditLogViewer() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [search, setSearch] = useState('')
   const [action, setAction] = useState('Tất cả')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+
+  const PAGE_SIZE = 20
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(false)
+    setPage(1) // đổi bộ lọc → về trang đầu
     try {
       const params = new URLSearchParams()
       if (action !== 'Tất cả') params.set('action', action)
       if (search.trim()) params.set('search', search.trim())
-      params.set('limit', '200')
+      if (from) params.set('from', from)
+      if (to) params.set('to', to)
+      params.set('limit', '500')
       const res = await api.get(`/audit-logs/club?${params.toString()}`)
       setLogs((res.data?.data ?? res.data ?? []) as AuditLog[])
     } catch {
@@ -56,9 +64,13 @@ export function AuditLogViewer() {
     } finally {
       setLoading(false)
     }
-  }, [action, search])
+  }, [action, search, from, to])
 
   useEffect(() => { void load() }, [load])
+
+  const totalPages = Math.max(1, Math.ceil(logs.length / PAGE_SIZE))
+  const pageSafe = Math.min(page, totalPages)
+  const paged = logs.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE)
 
   return (
     <PageShell>
@@ -74,28 +86,41 @@ export function AuditLogViewer() {
 
       <div className="flex flex-col gap-4">
         {/* Bộ lọc */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm theo người dùng, mô tả, tài nguyên…"
-              className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
-            />
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm theo người dùng, mô tả, tài nguyên…"
+                className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+              />
+            </div>
+            <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 overflow-x-auto">
+              {ACTION_OPTIONS.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => setAction(opt)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                    action === opt ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 overflow-x-auto">
-            {ACTION_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => setAction(opt)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  action === opt ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span>Từ ngày</span>
+            <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+            <span>đến</span>
+            <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+            {(from || to) && (
+              <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary)] hover:underline font-medium">Xoá lọc ngày</button>
+            )}
           </div>
         </div>
 
@@ -118,7 +143,7 @@ export function AuditLogViewer() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {logs.map(log => (
+                  {paged.map(log => (
                     <tr key={log.id} className="hover:bg-slate-50/50">
                       <td className="px-4 py-2.5 text-xs text-slate-400 whitespace-nowrap">{fmt(log.createdAt)}</td>
                       <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{log.user?.username ?? '—'}</td>
@@ -130,6 +155,30 @@ export function AuditLogViewer() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Phân trang */}
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
+              <span className="text-[11px] text-slate-400">
+                {logs.length} bản ghi · Trang {pageSafe}/{totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={pageSafe <= 1}
+                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-500 disabled:opacity-40 hover:bg-slate-50"
+                  aria-label="Trang trước"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={pageSafe >= totalPages}
+                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-500 disabled:opacity-40 hover:bg-slate-50"
+                  aria-label="Trang sau"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
             </div>
           </div>
         )}

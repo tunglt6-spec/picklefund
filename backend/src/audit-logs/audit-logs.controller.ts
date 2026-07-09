@@ -37,6 +37,8 @@ export class AuditLogsController {
     @CurrentUser() user: any,
     @Query('action') action?: string,
     @Query('search') search?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('limit') limit?: string,
   ) {
     // FAIL-FAST: endpoint này BẮT BUỘC có clubId (ép từ JWT). Nếu tài khoản không gắn CLB
@@ -52,7 +54,9 @@ export class AuditLogsController {
         clubId: user.clubId, // đã đảm bảo truthy → luôn scope theo đúng CLB
         action: action || undefined,
         search: search || undefined,
-        limit: limit ? parseInt(limit, 10) : 100,
+        from: from || undefined,
+        to: to || undefined,
+        limit: limit ? parseInt(limit, 10) : 200,
       }),
     );
   }

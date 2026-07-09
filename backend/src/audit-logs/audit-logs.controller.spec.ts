@@ -18,10 +18,16 @@ describe('AuditLogsController.findForClub (tenant isolation)', () => {
     expect(svc.findAll).not.toHaveBeenCalled();
   });
 
-  it('ép clubId TỪ JWT vào findAll (không nhận từ query)', async () => {
-    await ctrl.findForClub({ clubId: 'club-1', role: 'CLUB_ADMIN' }, 'CREATE', 'x', '50');
+  it('ép clubId TỪ JWT vào findAll (không nhận từ query) + truyền from/to/limit', async () => {
+    await ctrl.findForClub(
+      { clubId: 'club-1', role: 'CLUB_ADMIN' },
+      'CREATE', 'x', '2026-07-01', '2026-07-09', '50',
+    );
     expect(svc.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ clubId: 'club-1', action: 'CREATE', search: 'x', limit: 50 }),
+      expect.objectContaining({
+        clubId: 'club-1', action: 'CREATE', search: 'x',
+        from: '2026-07-01', to: '2026-07-09', limit: 50,
+      }),
     );
   });
 });
