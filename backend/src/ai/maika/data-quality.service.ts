@@ -57,6 +57,15 @@ export class DataQualityService {
     }
     const dupName = [...byName.entries()].filter(([, c]) => c > 1);
 
+    // ── Trùng lặp email (active) ──
+    const byEmail = new Map<string, string[]>();
+    for (const m of active) {
+      const e = (m.email ?? '').trim().toLowerCase();
+      if (!e) continue;
+      byEmail.set(e, [...(byEmail.get(e) ?? []), m.fullName]);
+    }
+    const dupEmail = [...byEmail.entries()].filter(([, n]) => n.length > 1);
+
     // ── Thiếu liên hệ: active thiếu CẢ SĐT lẫn email ──
     const missingContact = active
       .filter((m) => !(m.phone ?? '').trim() && !(m.email ?? '').trim())
@@ -72,6 +81,13 @@ export class DataQualityService {
     });
     const totalSessions = await this.prisma.attendanceSession.count({
       where: { clubId },
+    });
+
+    // ── Nhất quán: buổi tập QUÁ HẠN (trước hôm nay) mà vẫn ở trạng thái "scheduled" ──
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const staleSessions = await this.prisma.attendanceSession.count({
+      where: { clubId, status: 'scheduled', sessionDate: { lt: todayStart } },
     });
 
     const checks: DataQualityCheck[] = [
@@ -92,12 +108,30 @@ export class DataQualityService {
         items: dupName.slice(0, 10).map(([n, c]) => `${n} (×${c})`),
       },
       {
+        key: 'DUP_EMAIL',
+        dimension: 'Trùng lặp',
+        label: 'Email trùng giữa các thành viên',
+        level: dupEmail.length ? 'attention' : 'ok',
+        count: dupEmail.length,
+        items: dupEmail.slice(0, 10).map(([e, names]) => `${e}: ${names.join(', ')}`),
+      },
+      {
         key: 'MISSING_CONTACT',
         dimension: 'Thiếu dữ liệu',
         label: 'Thành viên thiếu cả SĐT lẫn email',
         level: missingContact.length ? 'attention' : 'ok',
         count: missingContact.length,
         items: missingContact.slice(0, 10),
+      },
+      {
+        key: 'STALE_SESSION',
+        dimension: 'Nhất quán',
+        label: 'Buổi tập quá hạn chưa chốt (còn "dự kiến")',
+        level: staleSessions ? 'attention' : 'ok',
+        count: staleSessions,
+        items: staleSessions
+          ? [`${staleSessions} buổi trước hôm nay vẫn ở trạng thái "dự kiến" — hãy chốt hoặc huỷ.`]
+          : [],
       },
       {
         key: 'ACTIVE_CHUNG',

@@ -7,6 +7,7 @@ describe('DataQualityService', () => {
     { fullName: 'Nguyễn Văn A', phone: '0900000001', email: 'a@x.vn', status: 'active' },
     { fullName: 'Nguyễn Văn A', phone: '0900000001', email: null, status: 'active' }, // trùng SĐT + trùng tên
     { fullName: 'Trần B', phone: null, email: null, status: 'active' }, // thiếu liên hệ
+    { fullName: 'Phạm C', phone: '0900000009', email: 'a@x.vn', status: 'active' }, // trùng EMAIL với A
     { fullName: 'Đã Nghỉ', phone: null, email: null, status: 'left' }, // không tính (không active)
   ];
 
@@ -32,18 +33,20 @@ describe('DataQualityService', () => {
     svc = mod.get(DataQualityService);
   });
 
-  it('phát hiện trùng SĐT / trùng tên / thiếu liên hệ, chỉ tính member active', async () => {
+  it('phát hiện trùng SĐT/tên/email / thiếu liên hệ, chỉ tính member active', async () => {
     const r = await svc.analyze('club-1');
     const byKey = Object.fromEntries(r.checks.map((c) => [c.key, c]));
 
     expect(byKey.DUP_PHONE.count).toBe(1);
     expect(byKey.DUP_PHONE.level).toBe('warning');
     expect(byKey.DUP_NAME.count).toBe(1);
+    expect(byKey.DUP_EMAIL.count).toBe(1); // A & Phạm C cùng a@x.vn
     expect(byKey.MISSING_CONTACT.count).toBe(1); // chỉ "Trần B" active; "Đã Nghỉ" bị loại
     expect(byKey.MISSING_CONTACT.items).toContain('Trần B');
+    expect(byKey.STALE_SESSION).toBeDefined(); // kiểm tra buổi quá hạn có mặt
 
-    expect(r.totals.members).toBe(4);
-    expect(r.totals.activeMembers).toBe(3);
+    expect(r.totals.members).toBe(5);
+    expect(r.totals.activeMembers).toBe(4);
     expect(r.totals.sessions).toBe(12);
   });
 

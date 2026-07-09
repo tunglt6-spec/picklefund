@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Database, ArrowLeft, Users, CalendarDays, CalendarClock, ShieldAlert,
+  Database, ArrowLeft, ArrowRight, Users, CalendarDays, CalendarClock, ShieldAlert,
   CheckCircle2, AlertTriangle, AlertCircle,
 } from 'lucide-react'
 import api from '../../../lib/api'
@@ -22,6 +22,16 @@ interface DqReport {
   generatedAt: string
   totals: { members: number; activeMembers: number; fundPeriods: number; sessions: number }
   checks: DqCheck[]
+}
+
+// Link "sửa nhanh" theo từng kiểm tra → màn xử lý tương ứng.
+const FIX_LINK: Record<string, { to: string; label: string }> = {
+  DUP_PHONE: { to: '/members', label: 'Sửa ở Thành viên' },
+  DUP_NAME: { to: '/members', label: 'Sửa ở Thành viên' },
+  DUP_EMAIL: { to: '/members', label: 'Sửa ở Thành viên' },
+  MISSING_CONTACT: { to: '/members', label: 'Bổ sung liên hệ' },
+  ACTIVE_CHUNG: { to: '/fund-periods', label: 'Mở màn Kỳ Quỹ' },
+  STALE_SESSION: { to: '/schedule', label: 'Chốt buổi tập' },
 }
 
 const LEVEL_TONE: Record<DqLevel, StatusTone> = { ok: 'success', attention: 'warning', warning: 'danger' }
@@ -108,7 +118,17 @@ export function DataMonitorPage() {
                         <p className="text-[11px] text-slate-400">{c.dimension} · {c.count} mục</p>
                       </div>
                     </div>
-                    <StatusBadge tone={LEVEL_TONE[c.level]}>{LEVEL_LABEL[c.level]}</StatusBadge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {c.level !== 'ok' && FIX_LINK[c.key] && (
+                        <button
+                          onClick={() => navigate(FIX_LINK[c.key].to)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold [color:var(--pf-primary)] hover:underline"
+                        >
+                          {FIX_LINK[c.key].label} <ArrowRight size={12} />
+                        </button>
+                      )}
+                      <StatusBadge tone={LEVEL_TONE[c.level]}>{LEVEL_LABEL[c.level]}</StatusBadge>
+                    </div>
                   </div>
                   {c.items.length > 0 && (
                     <ul className="mt-2.5 space-y-1 border-t border-slate-50 pt-2.5">
