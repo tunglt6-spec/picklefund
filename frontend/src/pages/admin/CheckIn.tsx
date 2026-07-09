@@ -162,22 +162,31 @@ export function CheckIn() {
         />
       ) : (
         <div className="flex flex-col gap-5">
-          <div className="flex flex-wrap gap-2">
-            {sessionOptions.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSessionId(s.id)}
-                className="min-h-11 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors"
-                style={
-                  sessionId === s.id
-                    ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
-                    : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)', background: 'var(--pf-surface)' }
-                }
-              >
-                {fmtSession(s.sessionDate, s.courtName, s.startTime)}
-              </button>
-            ))}
-          </div>
+          {/* Chọn buổi — gom vào 1 box gọn (label + vùng cuộn) */}
+          <section
+            className="rounded-2xl border p-3.5 sm:p-4"
+            style={{ borderColor: 'var(--pf-border)', background: 'var(--pf-surface)', boxShadow: 'var(--pf-shadow)' }}
+          >
+            <div className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--pf-color-muted)' }}>
+              <ClipboardCheck size={14} /> Chọn buổi chơi · {sessionOptions.length}
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
+              {sessionOptions.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSessionId(s.id)}
+                  className="min-h-11 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors"
+                  style={
+                    sessionId === s.id
+                      ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
+                      : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)', background: 'var(--pf-surface)' }
+                  }
+                >
+                  {fmtSession(s.sessionDate, s.courtName, s.startTime)}
+                </button>
+              ))}
+            </div>
+          </section>
 
           {loading ? (
             <LoadingState rows={5} />
