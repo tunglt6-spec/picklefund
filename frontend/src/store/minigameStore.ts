@@ -1758,12 +1758,21 @@ export const useMinigameStore = create<MinigameStore>()(
       // ── Fixed Doubles Round-Robin actions ─────────────────────────────────
 
       setTeamsFromApi: (minigameId, apiTeams) => {
+        // Slot player: MEMBER (player1 relation) HOẶC KHÁCH (player1GuestId + player1Name).
         const teams: MiniGameTeam[] = apiTeams.map(t => ({
           id: t.id,
           minigameId,
           name: t.name,
-          player1: { memberId: t.player1.id, memberName: t.player1.fullName },
-          player2: t.player2 ? { memberId: t.player2.id, memberName: t.player2.fullName } : { memberId: '', memberName: '' },
+          player1: {
+            memberId: t.player1?.id ?? t.player1GuestId ?? '',
+            memberName: t.player1?.fullName ?? t.player1Name ?? '',
+          },
+          player2: (t.player2 || t.player2Id || t.player2GuestId)
+            ? {
+                memberId: t.player2?.id ?? t.player2GuestId ?? '',
+                memberName: t.player2?.fullName ?? t.player2Name ?? '',
+              }
+            : { memberId: '', memberName: '' },
           seedLevel: 1,
         }))
         set(s => ({ teams: [...s.teams.filter(t => t.minigameId !== minigameId), ...teams] }))
@@ -1796,15 +1805,19 @@ export const useMinigameStore = create<MinigameStore>()(
         const partOf = new Map(parts.map(p => [p.memberId, p]))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const teamMap = new Map<string, any>((apiTeams ?? []).map((t: any) => [t.id, t]))
-        const toPlayer = (mid?: string): DoublesPlayer | null => {
-          if (!mid) return null
-          const p = partOf.get(mid)
-          return { memberId: mid, memberName: p?.memberName ?? mid, skillLevel: p?.skillLevel }
+        // Slot = MEMBER (id + participant name) HOẶC KHÁCH (guestId + tên denormalized trên team).
+        const toPlayer = (id?: string, guestName?: string): DoublesPlayer | null => {
+          if (!id) return null
+          const p = partOf.get(id)
+          return { memberId: id, memberName: p?.memberName ?? guestName ?? id, skillLevel: p?.skillLevel }
         }
         const teamPlayers = (teamId?: string): DoublesPlayer[] => {
           const t = teamId ? teamMap.get(teamId) : undefined
           if (!t) return []
-          return [toPlayer(t.player1Id), toPlayer(t.player2Id)].filter(Boolean) as DoublesPlayer[]
+          return [
+            toPlayer(t.player1Id ?? t.player1GuestId, t.player1Name),
+            toPlayer(t.player2Id ?? t.player2GuestId, t.player2Name),
+          ].filter(Boolean) as DoublesPlayer[]
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const byRound = new Map<number, any[]>()

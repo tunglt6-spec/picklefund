@@ -600,8 +600,13 @@ model MinigameTeam {
   id         String   @id @default(uuid())
   minigameId String   @map("minigame_id")
   name       String   @db.VarChar(100)
-  player1Id  String   @map("player1_id")
-  player2Id  String?  @map("player2_id")
+  // Mỗi slot là MEMBER (playerNId FK) HOẶC KHÁCH (playerNGuestId + playerNName denormalized).
+  player1Id      String? @map("player1_id")
+  player1GuestId String? @map("player1_guest_id")
+  player1Name    String? @map("player1_name")
+  player2Id      String? @map("player2_id")
+  player2GuestId String? @map("player2_guest_id")
+  player2Name    String? @map("player2_name")
   round      Int?
   wins       Int      @default(0)
   losses     Int      @default(0)
@@ -609,7 +614,7 @@ model MinigameTeam {
   createdAt  DateTime @default(now()) @map("created_at")
 
   minigame   Minigame        @relation(fields: [minigameId], references: [id], onDelete: Cascade)
-  player1    Member          @relation("TeamPlayer1", fields: [player1Id], references: [id])
+  player1    Member?         @relation("TeamPlayer1", fields: [player1Id], references: [id])
   player2    Member?         @relation("TeamPlayer2", fields: [player2Id], references: [id])
   matchesAsA MinigameMatch[] @relation("MatchTeamA")
   matchesAsB MinigameMatch[] @relation("MatchTeamB")

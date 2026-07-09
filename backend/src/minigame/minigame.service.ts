@@ -211,6 +211,50 @@ export class MinigameService {
     return { deleted: count };
   }
 
+  /**
+   * Pool người chơi cho ghép cặp/đội = THÀNH VIÊN (minigame_participants) + KHÁCH MỜI
+   * (settings.guests). Khách là người chơi hạng nhất — có thể đông hơn thành viên.
+   */
+  private async getPlayerPool(
+    id: string,
+  ): Promise<
+    Array<{ memberId?: string; guestId?: string; name: string; skill: number }>
+  > {
+    const parts = await this.prisma.minigameParticipant.findMany({
+      where: { minigameId: id },
+      include: { member: { select: { fullName: true, skillLevel: true } } },
+    });
+    const mg = await this.prisma.minigame.findUnique({
+      where: { id },
+      select: { settings: true },
+    });
+    const guests =
+      ((mg?.settings as Record<string, unknown> | null)?.guests as
+        | Array<{ id: string; name: string }>
+        | undefined) ?? [];
+    return [
+      ...parts.map((p) => ({
+        memberId: p.memberId,
+        name: p.member?.fullName ?? '',
+        skill: p.member?.skillLevel ?? 3,
+      })),
+      ...guests.map((g) => ({ guestId: g.id, name: g.name, skill: 3 })),
+    ];
+  }
+
+  /** Dựng cột player cho 1 slot đội: MEMBER (id) hoặc KHÁCH (guestId + name). */
+  private slotCols(
+    prefix: 'player1' | 'player2',
+    slot?: { memberId?: string; guestId?: string; name: string },
+  ): Partial<Prisma.MinigameTeamUncheckedCreateInput> {
+    const idVal = slot?.memberId ?? null;
+    const guestVal = slot?.guestId ?? null;
+    const nameVal = slot?.guestId ? slot.name : null;
+    return prefix === 'player1'
+      ? { player1Id: idVal, player1GuestId: guestVal, player1Name: nameVal }
+      : { player2Id: idVal, player2GuestId: guestVal, player2Name: nameVal };
+  }
+
   async generateTeams(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
     if (
@@ -237,27 +281,18 @@ export class MinigameService {
         'Chế độ ghép thủ công — hãy tự tạo cặp trong dashboard, không dùng ghép tự động.',
       );
 
-    const participants = await this.prisma.minigameParticipant.findMany({
-      where: { minigameId: id },
-    });
-    if (participants.length < 2)
+    // Pool = thành viên + KHÁCH MỜI (khách là người chơi hạng nhất).
+    const pool = await this.getPlayerPool(id);
+    if (pool.length < 2)
       throw new BadRequestException('Cần ít nhất 2 người chơi');
 
     // Sắp thứ tự người chơi theo chế độ ghép:
     //  - BALANCED_SKILL_PAIRING: sắp theo skill giảm dần rồi xen kẽ mạnh↔yếu để
-    //    mỗi đôi = 1 mạnh + 1 yếu → cân bằng trình độ giữa các đội.
+    //    mỗi đôi = 1 mạnh + 1 yếu → cân bằng trình độ giữa các đội (khách skill=3).
     //  - RANDOM_PAIRING (mặc định): xáo trộn ngẫu nhiên.
-    let ordered = [...participants];
+    let ordered = [...pool];
     if (pairingMode === 'BALANCED_SKILL_PAIRING') {
-      const members = await this.prisma.member.findMany({
-        where: { id: { in: participants.map((p) => p.memberId) } },
-        select: { id: true, skillLevel: true },
-      });
-      const skillOf = new Map(members.map((m) => [m.id, m.skillLevel ?? 3]));
-      const sorted = [...participants].sort(
-        (a, b) =>
-          (skillOf.get(b.memberId) ?? 3) - (skillOf.get(a.memberId) ?? 3),
-      );
+      const sorted = [...pool].sort((a, b) => b.skill - a.skill);
       ordered = [];
       let lo = 0;
       let hi = sorted.length - 1;
@@ -271,18 +306,13 @@ export class MinigameService {
       ordered.sort(() => Math.random() - 0.5);
     }
 
-    const teams: Array<{
-      minigameId: string;
-      name: string;
-      player1Id: string;
-      player2Id?: string;
-    }> = [];
+    const teams: Prisma.MinigameTeamCreateManyInput[] = [];
     for (let i = 0; i < ordered.length; i += 2) {
       teams.push({
         minigameId: id,
         name: `Đôi ${Math.floor(i / 2) + 1}`,
-        player1Id: ordered[i].memberId,
-        player2Id: ordered[i + 1]?.memberId,
+        ...this.slotCols('player1', ordered[i]),
+        ...this.slotCols('player2', ordered[i + 1]),
       });
     }
 
@@ -366,10 +396,9 @@ export class MinigameService {
       throw new BadRequestException(
         'Chỉ áp dụng cho định dạng Đánh đôi ngẫu nhiên',
       );
-    const participants = await this.prisma.minigameParticipant.findMany({
-      where: { minigameId: id },
-    });
-    if (participants.length < 4)
+    // Pool = thành viên + KHÁCH MỜI.
+    const pool = await this.getPlayerPool(id);
+    if (pool.length < 4)
       throw new BadRequestException('Cần ít nhất 4 người chơi để bốc 1 trận đôi');
 
     const agg = await this.prisma.minigameTeam.aggregate({
@@ -378,7 +407,7 @@ export class MinigameService {
     });
     const nextRound = (agg._max.round ?? 0) + 1;
 
-    const shuffled = [...participants].sort(() => Math.random() - 0.5);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const matchCount = Math.floor(shuffled.length / 4);
     for (let i = 0; i < matchCount; i++) {
       const g = shuffled.slice(i * 4, i * 4 + 4);
@@ -387,8 +416,8 @@ export class MinigameService {
           minigameId: id,
           round: nextRound,
           name: `V${nextRound}-T${i + 1}A`,
-          player1Id: g[0].memberId,
-          player2Id: g[1].memberId,
+          ...this.slotCols('player1', g[0]),
+          ...this.slotCols('player2', g[1]),
         },
       });
       const teamB = await this.prisma.minigameTeam.create({
@@ -396,8 +425,8 @@ export class MinigameService {
           minigameId: id,
           round: nextRound,
           name: `V${nextRound}-T${i + 1}B`,
-          player1Id: g[2].memberId,
-          player2Id: g[3].memberId,
+          ...this.slotCols('player1', g[2]),
+          ...this.slotCols('player2', g[3]),
         },
       });
       await this.prisma.minigameMatch.create({
@@ -433,10 +462,8 @@ export class MinigameService {
       where: { minigameId: id, status: 'COMPLETED' },
       include: { teamA: true, teamB: true },
     });
-    const parts = await this.prisma.minigameParticipant.findMany({
-      where: { minigameId: id },
-      include: { member: { select: { id: true, fullName: true } } },
-    });
+    // Pool member + KHÁCH → tên hiển thị; key người chơi = memberId HOẶC guestId.
+    const pool = await this.getPlayerPool(id);
     type Stat = {
       memberId: string;
       name: string;
@@ -446,15 +473,17 @@ export class MinigameService {
       pointsAgainst: number;
     };
     const stat = new Map<string, Stat>();
-    for (const p of parts)
-      stat.set(p.memberId, {
-        memberId: p.memberId,
-        name: p.member.fullName,
+    for (const p of pool) {
+      const key = (p.memberId ?? p.guestId) as string;
+      stat.set(key, {
+        memberId: key,
+        name: p.name,
         played: 0,
         won: 0,
         pointsFor: 0,
         pointsAgainst: 0,
       });
+    }
     const ensure = (mid: string): Stat => {
       let s = stat.get(mid);
       if (!s) {
@@ -463,13 +492,22 @@ export class MinigameService {
       }
       return s;
     };
+    // Người chơi mỗi đội = member (playerNId) HOẶC khách (playerNGuestId).
+    const teamKeys = (t: {
+      player1Id: string | null;
+      player1GuestId: string | null;
+      player2Id: string | null;
+      player2GuestId: string | null;
+    } | null): string[] =>
+      t
+        ? ([
+            t.player1Id ?? t.player1GuestId,
+            t.player2Id ?? t.player2GuestId,
+          ].filter(Boolean) as string[])
+        : [];
     for (const m of matches) {
-      const aPlayers = [m.teamA?.player1Id, m.teamA?.player2Id].filter(
-        Boolean,
-      ) as string[];
-      const bPlayers = [m.teamB?.player1Id, m.teamB?.player2Id].filter(
-        Boolean,
-      ) as string[];
+      const aPlayers = teamKeys(m.teamA);
+      const bPlayers = teamKeys(m.teamB);
       const sa = m.scoreA ?? 0;
       const sb = m.scoreB ?? 0;
       const aWon = m.winnerId === m.teamAId;
