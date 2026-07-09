@@ -10,8 +10,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Gauge, ArrowLeft, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp,
+  Gauge, ArrowLeft, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp, Activity,
 } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import api from '../../../lib/api'
 import type { AiActionSummary } from '../../../hooks/useAiManager'
 import {
@@ -32,7 +33,8 @@ interface Snapshot {
   commonIncome?: number
   commonExpense?: number
 }
-interface WfRun { status: string }
+interface WfRun { status: string; startedAt?: string; createdAt?: string }
+interface AiRun { createdAt?: string }
 
 const vnd = (n?: number) => (typeof n === 'number' ? `${n.toLocaleString('vi-VN')}đ` : '—')
 const num = (n?: number) => (typeof n === 'number' ? n : '—')
@@ -48,19 +50,21 @@ export function KpiMonitorPage() {
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [aiSummary, setAiSummary] = useState<AiActionSummary | null>(null)
   const [runs, setRuns] = useState<WfRun[]>([])
+  const [actions, setActions] = useState<AiRun[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(false)
-    const [h, s, a, w] = await Promise.allSettled([
+    const [h, s, a, w, act] = await Promise.allSettled([
       api.get('/maika/health-score'),
       api.get('/maika/snapshot'),
       api.get('/ai/actions/summary'),
       api.get('/workflows/runs'),
+      api.get('/ai/actions?limit=200'),
     ])
-    if ([h, s, a, w].every(r => r.status === 'rejected')) {
+    if ([h, s, a, w, act].every(r => r.status === 'rejected')) {
       setError(true); setLoading(false); return
     }
     const val = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' ? (r.value.data?.data ?? r.value.data ?? null) : null
@@ -68,6 +72,7 @@ export function KpiMonitorPage() {
     setSnap(val(s))
     setAiSummary(val(a))
     setRuns((val(w) as WfRun[]) ?? [])
+    setActions((val(act) as AiRun[]) ?? [])
     setLoading(false)
   }, [])
 
@@ -79,6 +84,27 @@ export function KpiMonitorPage() {
 
   const breakdown = health?.breakdown ?? {}
   const healthTone = (health?.score ?? 0) >= 75 ? 'emerald' : (health?.score ?? 0) >= 50 ? 'amber' : 'red'
+
+  // Xu hướng 14 ngày: đếm workflow run + AI action theo NGÀY (bucket client-side từ dữ liệu thật).
+  const DAYS = 14
+  const trend = (() => {
+    const today0 = new Date(); today0.setHours(0, 0, 0, 0)
+    const buckets = Array.from({ length: DAYS }, (_, i) => {
+      const d = new Date(today0); d.setDate(d.getDate() - (DAYS - 1 - i))
+      return { key: d.toISOString().slice(0, 10), label: `${d.getDate()}/${d.getMonth() + 1}`, workflow: 0, ai: 0 }
+    })
+    const idx = new Map(buckets.map((b, i) => [b.key, i]))
+    for (const r of runs) {
+      const k = (r.startedAt ?? r.createdAt ?? '').slice(0, 10)
+      const i = idx.get(k); if (i != null) buckets[i].workflow++
+    }
+    for (const a of actions) {
+      const k = (a.createdAt ?? '').slice(0, 10)
+      const i = idx.get(k); if (i != null) buckets[i].ai++
+    }
+    return buckets
+  })()
+  const hasTrend = trend.some(b => b.workflow > 0 || b.ai > 0)
 
   return (
     <PageShell>
@@ -162,6 +188,29 @@ export function KpiMonitorPage() {
               <MetricCard label="AI chờ duyệt" value={num(aiSummary?.pendingApprovals)} icon={<Bot size={16} />} sub={`${num(aiSummary?.executedToday)} thực thi hôm nay`} />
               <MetricCard label="AI thất bại" value={num(aiSummary?.failedActions)} icon={<Bot size={16} />} negative={(aiSummary?.failedActions ?? 0) > 0} />
             </div>
+          </section>
+
+          {/* Xu hướng hoạt động 14 ngày */}
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <Activity size={16} className="text-slate-400" /> Xu Hướng Hoạt Động (14 ngày)
+            </h3>
+            {!hasTrend ? (
+              <p className="text-sm text-slate-400">Chưa đủ dữ liệu hoạt động để vẽ xu hướng.</p>
+            ) : (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trend} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="workflow" name="Workflow" fill="#6D5DFB" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="ai" name="Hành động AI" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </section>
 
           <p className="text-[11px] text-slate-400 px-1 flex items-center gap-1.5">
