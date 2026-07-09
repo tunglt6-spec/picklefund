@@ -82,6 +82,7 @@ export function SchedulerPage() {
   const [error, setError] = useState(false)
   const [partial, setPartial] = useState<string[]>([]) // nguồn lỗi cục bộ
   const [running, setRunning] = useState(false)
+  const [savingId, setSavingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -122,6 +123,20 @@ export function SchedulerPage() {
       toast.error(e?.response?.data?.message ?? 'Chạy scheduler thất bại')
     } finally {
       setRunning(false)
+    }
+  }
+
+  // Cập nhật 1 rule (bật/tắt hoặc đổi chu kỳ) qua PUT /workflows/rules/:id (endpoint sẵn có).
+  const saveRule = async (id: string, patch: Record<string, unknown>, okMsg: string) => {
+    setSavingId(id)
+    try {
+      await api.put(`/workflows/rules/${id}`, patch)
+      toast.success(okMsg)
+      await load()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Cập nhật lịch thất bại')
+    } finally {
+      setSavingId(null)
     }
   }
 
@@ -184,37 +199,57 @@ export function SchedulerPage() {
             />
           </div>
 
-          {/* Lịch định kỳ (workflow rules) */}
+          {/* Luật & lịch chạy (workflow rules) — chỉnh chu kỳ + bật/tắt trực tiếp */}
           <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <CalendarClock size={16} className="text-slate-400" /> Lịch Định Kỳ (Workflow)
+              <CalendarClock size={16} className="text-slate-400" /> Luật & Lịch Chạy
             </h3>
-            {scheduled.length === 0 ? (
+            {rules.length === 0 ? (
               <EmptyState
-                title="Chưa có lịch định kỳ"
-                description="Tạo workflow rule với chu kỳ Hàng ngày/tuần/tháng ở Workflow Studio để scheduler tự chạy."
+                title="Chưa có luật workflow"
+                description="Tạo workflow rule ở Workflow Studio, sau đó đặt chu kỳ (Hàng ngày/tuần/tháng) tại đây để scheduler tự chạy."
                 action={<ActionButton onClick={() => navigate('/admin/workflows')}>Tới Workflow Studio</ActionButton>}
               />
             ) : (
               <div className="divide-y divide-slate-50">
-                {scheduled.map(r => (
-                  <div key={r.id} className="flex items-center justify-between py-3">
-                    <div className="min-w-0">
+                {rules.map(r => (
+                  <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-slate-800 truncate">{r.name}</p>
                       <p className="text-[11px] text-slate-400">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-2.5 py-0.5 text-[11px] font-medium">
-                        {SCHEDULE_LABEL[r.scheduleType] ?? r.scheduleType}
-                      </span>
-                      <StatusBadge tone={r.enabled ? 'success' : 'neutral'}>
-                        {r.enabled ? 'Đang bật' : 'Tắt'}
-                      </StatusBadge>
+                      {/* Chỉnh chu kỳ */}
+                      <select
+                        value={r.scheduleType}
+                        disabled={savingId === r.id}
+                        onChange={e => saveRule(r.id, { scheduleType: e.target.value }, 'Đã đổi chu kỳ')}
+                        aria-label={`Chu kỳ của ${r.name}`}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-50"
+                      >
+                        {(['MANUAL', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map(v => (
+                          <option key={v} value={v}>{SCHEDULE_LABEL[v]}</option>
+                        ))}
+                      </select>
+                      {/* Bật/tắt */}
+                      <button
+                        type="button"
+                        disabled={savingId === r.id}
+                        onClick={() => saveRule(r.id, { enabled: !r.enabled }, r.enabled ? 'Đã tắt luật' : 'Đã bật luật')}
+                        aria-label={r.enabled ? `Tắt ${r.name}` : `Bật ${r.name}`}
+                        title={r.enabled ? 'Đang bật — bấm để tắt' : 'Đang tắt — bấm để bật'}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${r.enabled ? '[background:var(--pf-primary)]' : 'bg-slate-300'}`}
+                      >
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${r.enabled ? 'left-[22px]' : 'left-0.5'}`} />
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            <p className="mt-3 text-[11px] text-slate-400">
+              Chu kỳ <b>Thủ công</b> = chỉ chạy khi bấm "Chạy định kỳ ngay". Luật đã tắt sẽ không được scheduler dispatch.
+            </p>
           </section>
 
           {/* Cron hệ thống (cố định) */}
