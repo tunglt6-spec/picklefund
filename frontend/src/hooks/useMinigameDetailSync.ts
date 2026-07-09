@@ -10,7 +10,7 @@ function isLocalToken(token?: string | null) {
 
 export function useMinigameDetailSync(minigameId: string | undefined) {
   const { accessToken } = useAuthStore()
-  const { syncMinigameDetail, hydrateDoublesRoundsFromApi } = useMinigameStore()
+  const { syncMinigameDetail, hydrateDoublesRoundsFromApi, hydrateGroupStageFromApi } = useMinigameStore()
   const syncedRef = useRef<string | null>(null)
   const [nonce, setNonce] = useState(0)
 
@@ -81,8 +81,12 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
       if (mg.formatType === 'RANDOM_DOUBLES') {
         hydrateDoublesRoundsFromApi(m.id, m.teams ?? [], m.matches ?? [])
       }
+      // GROUP_STAGE: hydrate bảng (settings.groups) + đội-đơn + lịch (matches.groupId).
+      if (mg.formatType === 'GROUP_STAGE') {
+        hydrateGroupStageFromApi(m.id, m.settings ?? {}, m.teams ?? [], m.matches ?? [])
+      }
     }).catch(() => { /* keep local store */ })
-  }, [minigameId, accessToken, nonce, syncMinigameDetail, hydrateDoublesRoundsFromApi])
+  }, [minigameId, accessToken, nonce, syncMinigameDetail, hydrateDoublesRoundsFromApi, hydrateGroupStageFromApi])
 
   return { resync }
 }

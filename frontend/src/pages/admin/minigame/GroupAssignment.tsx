@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 
 export function GroupAssignment() {
   const { id } = useParams<{ id: string }>()
-  useMinigameDetailSync(id)
+  const { resync } = useMinigameDetailSync(id)
   const navigate = useNavigate()
   const {
     getMinigame, participants, groups, generateGroups,
@@ -45,12 +45,20 @@ export function GroupAssignment() {
     )
   }
 
+  // Payload lưu bảng lên server (memberKeys = memberId|guestId).
+  const groupsPayload = (mgId: string) =>
+    useMinigameStore.getState().groups
+      .filter(g => g.minigameId === mgId)
+      .sort((a, b) => a.groupOrder - b.groupOrder)
+      .map(g => ({ id: g.id, name: g.groupName, order: g.groupOrder, status: g.status, memberKeys: g.memberIds }))
+
   const handleAutoGenerate = async () => {
     generateGroups(id!)
     generateSchedule(id!)
     try {
       await api.post(`/minigames/${id}/generate-teams`)
       await api.post(`/minigames/${id}/generate-schedule`)
+      resync() // lấy bảng/đội/lịch chuẩn từ server (id thật) đè lên bản cục bộ
       toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Lưu bảng đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
@@ -62,6 +70,7 @@ export function GroupAssignment() {
     generateSchedule(id!)
     try {
       await api.post(`/minigames/${id}/generate-schedule`)
+      resync()
       toast.success('Đã khóa bảng đấu và cập nhật lịch thi đấu!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Lưu lịch thi đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
@@ -72,6 +81,7 @@ export function GroupAssignment() {
     generateSchedule(id!)
     try {
       await api.post(`/minigames/${id}/generate-schedule`)
+      resync()
       toast.success('Đã cập nhật lịch thi đấu!')
       navigate(`/minigames/${id}/schedule`)
     } catch (err: any) {
@@ -79,11 +89,19 @@ export function GroupAssignment() {
     }
   }
 
-  const handleMove = (memberId: string, targetGroupId: string) => {
+  const handleMove = async (memberId: string, targetGroupId: string) => {
     moveParticipant(id!, memberId, targetGroupId)
     generateSchedule(id!)
     setOpenMove(null)
-    toast.success('Đã chuyển thành viên và cập nhật lịch thi đấu!')
+    try {
+      // Lưu cách chia bảng mới rồi dựng lại lịch (chỉ khi CHƯA có kết quả — server tự bảo toàn).
+      await api.put(`/minigames/${id}/groups`, { groups: groupsPayload(id!) })
+      await api.post(`/minigames/${id}/generate-schedule`)
+      resync()
+      toast.success('Đã chuyển thành viên và cập nhật lịch thi đấu!')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Đã chuyển (cục bộ) — đồng bộ server thất bại')
+    }
   }
 
   const mobileHeader = isMobile ? (

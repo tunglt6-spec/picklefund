@@ -89,6 +89,22 @@ class UpdateMatchScoreDto {
   @IsInt() @Min(0) scoreB!: number;
 }
 
+class GroupDto {
+  @IsString() id!: string;
+  @IsString() @MaxLength(60) name!: string;
+  @IsInt() order!: number;
+  @IsOptional() @IsString() status?: string;
+  @IsArray() @ArrayMaxSize(400) @IsString({ each: true }) memberKeys!: string[];
+}
+
+class SaveGroupsDto {
+  @IsArray()
+  @ArrayMaxSize(64)
+  @ValidateNested({ each: true })
+  @Type(() => GroupDto)
+  groups!: GroupDto[];
+}
+
 @ApiTags('Minigame')
 @ApiBearerAuth()
 @Controller('minigames')
@@ -169,6 +185,20 @@ export class MinigameController {
     @CurrentUser() user: RequestUser,
   ) {
     return ok(await this.svc.generateSchedule(id, user.clubId));
+  }
+
+  // GROUP_STAGE: lưu lại cách chia bảng (sau khi kéo-chuyển người giữa các bảng).
+  @Put(':id/groups')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async saveGroups(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: SaveGroupsDto,
+  ) {
+    return ok(
+      await this.svc.saveGroups(id, user.clubId, body.groups),
+      'Đã lưu bảng đấu',
+    );
   }
 
   @Post(':id/draw-round')

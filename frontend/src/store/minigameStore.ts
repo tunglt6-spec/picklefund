@@ -966,6 +966,11 @@ interface MinigameStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   hydrateDoublesRoundsFromApi: (minigameId: string, apiTeams: any[], apiMatches: any[]) => void
 
+  // GROUP_STAGE: hydrate bảng (settings.groups) + đội-đơn (teams) + trận (matches, groupId)
+  // từ backend vào shape groups/matches (đấu đơn player1 vs player2).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  hydrateGroupStageFromApi: (minigameId: string, apiSettings: any, apiTeams: any[], apiMatches: any[]) => void
+
   // Fixed Doubles Round-Robin
   setTeamsFromApi: (minigameId: string, apiTeams: any[]) => void
   setTeamMatchesFromApi: (minigameId: string, apiMatches: any[]) => void
@@ -1851,6 +1856,56 @@ export const useMinigameStore = create<MinigameStore>()(
           rounds: [...s.rounds.filter(r => r.minigameId !== minigameId), ...rounds],
           doublesMatches: [...s.doublesMatches.filter(dm => dm.minigameId !== minigameId), ...doublesMatches],
           roundSitOuts: s.roundSitOuts.filter(so => so.minigameId !== minigameId),
+        }))
+      },
+
+      hydrateGroupStageFromApi: (minigameId, apiSettings, apiTeams, apiMatches) => {
+        // Bảng từ settings.groups (memberKeys = memberId|guestId).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const groupsRaw = (apiSettings?.groups ?? []) as any[]
+        const groups: MiniGameGroup[] = groupsRaw.map((g, i) => ({
+          id: g.id,
+          minigameId,
+          groupName: g.name ?? `Bảng ${String.fromCharCode(65 + i)}`,
+          groupOrder: g.order ?? i,
+          status: (g.status ?? 'ACTIVE') as MiniGameGroup['status'],
+          memberIds: Array.isArray(g.memberKeys) ? g.memberKeys : [],
+        }))
+        // teamId → người chơi (đội-đơn: slot player1 = member hoặc khách).
+        const teamInfo = new Map<string, { key: string; name: string }>()
+        for (const t of apiTeams ?? []) {
+          const key = t.player1?.id ?? t.player1GuestId ?? t.player1Id
+          const name = t.player1?.fullName ?? t.player1Name ?? t.name ?? ''
+          if (key) teamInfo.set(t.id, { key, name })
+        }
+        const matches: MiniGameMatch[] = (apiMatches ?? [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .filter((m: any) => !!m.groupId)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((m: any) => {
+            const a = teamInfo.get(m.teamAId)
+            const b = teamInfo.get(m.teamBId)
+            const status: MiniGameMatch['status'] =
+              m.status === 'COMPLETED' ? 'COMPLETED' : m.status === 'IN_PROGRESS' ? 'PLAYING' : 'PENDING'
+            const winnerId = m.winnerId === m.teamAId ? a?.key : m.winnerId === m.teamBId ? b?.key : undefined
+            return {
+              id: m.id,
+              minigameId,
+              groupId: m.groupId,
+              player1Id: a?.key ?? '',
+              player1Name: a?.name ?? '',
+              player2Id: b?.key ?? '',
+              player2Name: b?.name ?? '',
+              player1Score: m.scoreA ?? undefined,
+              player2Score: m.scoreB ?? undefined,
+              winnerId,
+              status,
+              round: m.round ?? 1,
+            }
+          })
+        set(s => ({
+          groups: [...s.groups.filter(g => g.minigameId !== minigameId), ...groups],
+          matches: [...s.matches.filter(m => m.minigameId !== minigameId), ...matches],
         }))
       },
 

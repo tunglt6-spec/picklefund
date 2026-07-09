@@ -7,6 +7,7 @@ import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
 import { ScoreEntryDrawer } from '../../../components/minigame/ScoreEntryDrawer'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
+import { useAuthStore } from '../../../store/authStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
@@ -349,19 +350,21 @@ export function MatchSchedule() {
   const { id } = useParams<{ id: string }>()
   useMinigameDetailSync(id)
   const navigate = useNavigate()
+  const { accessToken } = useAuthStore()
   const { getMinigame, matches, groups, generateSchedule } = useMinigameStore()
   const mg = getMinigame(id!)
   const myMatches = matches.filter(m => m.minigameId === id)
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
+  const isLocalToken = !!accessToken && (accessToken.startsWith('local-token-') || accessToken.startsWith('token-'))
 
-  // Self-heal: if groups already exist but no schedule was generated yet
-  // (e.g. minigames created before auto-schedule was wired in), generate it now.
-  // Only applies to GROUP_STAGE minigames — RANDOM_DOUBLES uses its own round/draw flow.
+  // Self-heal (CHỈ chế độ demo/local-token): bảng đã có nhưng chưa có lịch → dựng cục bộ.
+  // Với token thật, lịch là của server (hydrate qua useMinigameDetailSync) — KHÔNG dựng cục bộ
+  // (id trận cục bộ sẽ khác id server → chấm điểm 404). Người dùng bấm "Tạo Lịch" ở màn Chia Bảng.
   useEffect(() => {
-    if (id && mg?.formatType === 'GROUP_STAGE' && myGroups.length > 0 && myMatches.length === 0) {
+    if (isLocalToken && id && mg?.formatType === 'GROUP_STAGE' && myGroups.length > 0 && myMatches.length === 0) {
       generateSchedule(id)
     }
-  }, [id, mg?.formatType, myGroups.length, myMatches.length, generateSchedule])
+  }, [isLocalToken, id, mg?.formatType, myGroups.length, myMatches.length, generateSchedule])
 
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameMatch | null>(null)

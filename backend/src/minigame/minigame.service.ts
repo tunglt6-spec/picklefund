@@ -257,6 +257,9 @@ export class MinigameService {
 
   async generateTeams(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
+    // GROUP_STAGE (Vòng bảng): chia bảng thay vì ghép đôi.
+    if (mg.format === 'GROUP_STAGE')
+      return this.generateGroupStageTeams(id, clubId, mg);
     if (
       mg.format !== 'RANDOM_DOUBLES' &&
       mg.format !== 'FIXED_DOUBLES_ROUND_ROBIN'
@@ -322,7 +325,10 @@ export class MinigameService {
   }
 
   async generateSchedule(id: string, clubId: string) {
-    await this.assertOwnership(id, clubId);
+    const mg = await this.assertOwnership(id, clubId);
+    // GROUP_STAGE: vòng tròn TRONG TỪNG BẢNG (đấu đơn), khác circle-method toàn giải của doubles.
+    if (mg.format === 'GROUP_STAGE')
+      return this.generateGroupStageSchedule(id, clubId);
     // SCHEDULE LOCK: đã có lịch → KHÔNG sinh lại ngầm (lịch/kết quả cố định cả mùa).
     // Muốn tạo lại phải xoá lịch trước (DELETE /schedule) một cách tường minh.
     const existingMatches = await this.prisma.minigameMatch.count({
@@ -382,6 +388,211 @@ export class MinigameService {
 
     await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
     await this.prisma.minigameMatch.createMany({ data: matches });
+    return this.findOne(id, clubId);
+  }
+
+  /** Tên bảng hiển thị: Bảng A, Bảng B, … */
+  private groupLabel(i: number): string {
+    return `Bảng ${String.fromCharCode(65 + i)}`;
+  }
+
+  /** settings của minigame dưới dạng object an toàn (không phải array/null). */
+  private asSettings(v: Prisma.JsonValue | null | undefined): Record<string, unknown> {
+    return v && typeof v === 'object' && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : {};
+  }
+
+  /**
+   * GROUP_STAGE — CHIA BẢNG: pool (thành viên + KHÁCH MỜI) → N bảng cân đối theo groupSize.
+   * Mỗi người chơi = 1 "đội-đơn" (MinigameTeam chỉ player1) → tái dùng toàn bộ hạ tầng
+   * team/match/score/standings đã có. Bảng lưu vào settings.groups (memberKeys = memberId|guestId).
+   * Chặn chia lại nếu đã có lịch (giống doubles) — phải xoá lịch trước.
+   */
+  private async generateGroupStageTeams(
+    id: string,
+    clubId: string,
+    mg: { settings: Prisma.JsonValue | null },
+  ) {
+    const existingMatches = await this.prisma.minigameMatch.count({
+      where: { minigameId: id },
+    });
+    if (existingMatches > 0)
+      throw new BadRequestException(
+        'Đã có lịch thi đấu. Hãy xoá lịch trước khi chia lại bảng.',
+      );
+
+    const pool = await this.getPlayerPool(id);
+    if (pool.length < 2)
+      throw new BadRequestException('Cần ít nhất 2 người chơi để chia bảng');
+
+    const settings = this.asSettings(mg.settings);
+    const rawSize = Number(settings.groupSize);
+    const groupSize =
+      Number.isFinite(rawSize) && rawSize >= 2 ? Math.floor(rawSize) : 4;
+
+    // Xáo ngẫu nhiên rồi chia đều: numGroups = ceil(n/size); dư phân bổ vào các bảng đầu.
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const numGroups = Math.max(1, Math.ceil(shuffled.length / groupSize));
+    const base = Math.floor(shuffled.length / numGroups);
+    const extra = shuffled.length % numGroups;
+
+    const groups: Array<{
+      id: string;
+      name: string;
+      order: number;
+      status: string;
+      memberKeys: string[];
+    }> = [];
+    let offset = 0;
+    for (let i = 0; i < numGroups; i++) {
+      const size = base + (i < extra ? 1 : 0);
+      const slice = shuffled.slice(offset, offset + size);
+      offset += size;
+      groups.push({
+        id: `grp-${randomUUID()}`,
+        name: this.groupLabel(i),
+        order: i,
+        status: 'ACTIVE',
+        memberKeys: slice.map((p) => (p.memberId ?? p.guestId) as string),
+      });
+    }
+
+    // Đội-đơn cho từng người chơi (player1 = member|khách; player2 rỗng).
+    const teams: Prisma.MinigameTeamCreateManyInput[] = pool.map((p) => ({
+      minigameId: id,
+      name: p.name || 'Người chơi',
+      ...this.slotCols('player1', p),
+    }));
+
+    await this.prisma.minigameTeam.deleteMany({ where: { minigameId: id } });
+    await this.prisma.minigameTeam.createMany({ data: teams });
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...settings, groups } as Prisma.InputJsonValue },
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * GROUP_STAGE — SINH LỊCH: vòng tròn 1 lượt TRONG TỪNG BẢNG (circle method), mỗi trận
+   * là đấu ĐƠN (đội-đơn A vs đội-đơn B), gắn groupId. Idempotent: nếu đã có trận ĐÃ CHẤM
+   * → giữ nguyên (không xoá kết quả); nếu chỉ toàn trận chờ → dựng lại (an toàn gọi lặp).
+   */
+  private async generateGroupStageSchedule(id: string, clubId: string) {
+    const row = await this.prisma.minigame.findUnique({
+      where: { id },
+      select: { settings: true, status: true },
+    });
+    const settings = this.asSettings(row?.settings);
+    const groups =
+      (settings.groups as
+        | Array<{ id: string; memberKeys: string[] }>
+        | undefined) ?? [];
+    if (groups.length === 0)
+      throw new BadRequestException('Vui lòng chia bảng trước khi tạo lịch.');
+
+    // Giữ kết quả: nếu đã chấm điểm bất kỳ trận nào → không dựng lại.
+    const completed = await this.prisma.minigameMatch.count({
+      where: { minigameId: id, status: 'COMPLETED' },
+    });
+    if (completed > 0) return this.findOne(id, clubId);
+
+    const teams = await this.prisma.minigameTeam.findMany({
+      where: { minigameId: id },
+    });
+    if (teams.length === 0)
+      throw new BadRequestException('Chưa có đội. Hãy chia bảng trước.');
+    // playerKey (memberId|guestId) → teamId của đội-đơn.
+    const teamOf = new Map<string, string>();
+    for (const t of teams) {
+      const key = t.player1Id ?? t.player1GuestId;
+      if (key) teamOf.set(key, t.id);
+    }
+
+    const matches: Prisma.MinigameMatchCreateManyInput[] = [];
+    for (const g of groups) {
+      const ring: (string | null)[] = g.memberKeys
+        .map((k) => teamOf.get(k))
+        .filter((x): x is string => !!x);
+      if (ring.length < 2) continue;
+      if (ring.length % 2 === 1) ring.push(null); // BYE
+      const n = ring.length;
+      const rounds = n - 1;
+      const half = n / 2;
+      let cur = [...ring];
+      for (let r = 0; r < rounds; r++) {
+        let court = 0;
+        for (let i = 0; i < half; i++) {
+          const a = cur[i];
+          const b = cur[n - 1 - i];
+          if (a && b) {
+            court++;
+            matches.push({
+              minigameId: id,
+              teamAId: a,
+              teamBId: b,
+              groupId: g.id,
+              round: r + 1,
+              courtNo: court,
+            });
+          }
+        }
+        cur = [cur[0], ...cur.slice(2), cur[1]];
+      }
+    }
+
+    await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
+    await this.prisma.minigameTeam.updateMany({
+      where: { minigameId: id },
+      data: { wins: 0, losses: 0, points: 0 },
+    });
+    if (matches.length > 0)
+      await this.prisma.minigameMatch.createMany({ data: matches });
+    if (row?.status === 'DRAFT')
+      await this.prisma.minigame.update({
+        where: { id },
+        data: { status: 'ACTIVE', startedAt: new Date() },
+      });
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * GROUP_STAGE — LƯU BẢNG: cập nhật settings.groups (sau khi kéo-chuyển người giữa các bảng).
+   * Chỉ đổi memberKeys/tên bảng; đội-đơn giữ nguyên. Lịch dựng lại qua generate-schedule.
+   */
+  async saveGroups(
+    id: string,
+    clubId: string,
+    groups: Array<{
+      id: string;
+      name: string;
+      order: number;
+      status?: string;
+      memberKeys: string[];
+    }>,
+  ) {
+    await this.assertOwnership(id, clubId);
+    const row = await this.prisma.minigame.findUnique({
+      where: { id },
+      select: { settings: true },
+    });
+    const settings = this.asSettings(row?.settings);
+    await this.prisma.minigame.update({
+      where: { id },
+      data: {
+        settings: {
+          ...settings,
+          groups: groups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            order: g.order,
+            status: g.status ?? 'ACTIVE',
+            memberKeys: g.memberKeys,
+          })),
+        } as Prisma.InputJsonValue,
+      },
+    });
     return this.findOne(id, clubId);
   }
 

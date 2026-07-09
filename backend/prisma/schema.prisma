@@ -627,6 +627,8 @@ model MinigameMatch {
   minigameId String      @map("minigame_id")
   teamAId    String?     @map("team_a_id")
   teamBId    String?     @map("team_b_id")
+  // GROUP_STAGE: tag bảng (Minigame.settings.groups[].id). Null với các format khác.
+  groupId    String?     @map("group_id")
   scoreA     Int?        @map("score_a")
   scoreB     Int?        @map("score_b")
   winnerId   String?     @map("winner_id")
