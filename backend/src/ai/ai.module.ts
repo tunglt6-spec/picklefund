@@ -6,6 +6,8 @@ import { AiService } from './ai.service';
 import { AiController } from './ai.controller';
 import { OperationalAlertsService } from './maika/operational-alerts.service';
 import { OperationalAlertsController } from './operational-alerts.controller';
+import { DataQualityService } from './maika/data-quality.service';
+import { DataQualityController } from './data-quality.controller';
 import { AIConfigService } from './harness/ai-config.service';
 import { CircuitBreakerService } from './harness/circuit-breaker.service';
 import { RetryPolicyService } from './harness/retry-policy.service';
@@ -21,6 +23,7 @@ import { AIGatewayService } from './harness/ai-gateway.service';
   providers: [
     AiService,
     OperationalAlertsService,
+    DataQualityService,
     AIConfigService,
     CircuitBreakerService,
     RetryPolicyService,
@@ -30,7 +33,7 @@ import { AIGatewayService } from './harness/ai-gateway.service';
     AIRouterService,
     AIGatewayService,
   ],
-  controllers: [AiController, OperationalAlertsController],
+  controllers: [AiController, OperationalAlertsController, DataQualityController],
   exports: [AIGatewayService, TelemetryService, TokenAccountingService],
 })
 export class AiModule {}
