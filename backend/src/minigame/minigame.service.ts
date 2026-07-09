@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
-import { MinigameFormat } from '@prisma/client';
+import { MinigameFormat, Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()
@@ -73,6 +73,30 @@ export class MinigameService {
     return this.prisma.minigame.create({
       data: { clubId, createdById, ...dto },
     });
+  }
+
+  async update(
+    id: string,
+    clubId: string,
+    dto: { name?: string; scheduledAt?: Date; settings?: Record<string, unknown> },
+  ) {
+    await this.assertOwnership(id, clubId);
+    const data: Prisma.MinigameUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.scheduledAt !== undefined) data.scheduledAt = dto.scheduledAt;
+    if (dto.settings !== undefined) {
+      // MERGE settings — giữ guests/pairingMode hiện có, chỉ ghi đè key được gửi.
+      const cur = await this.prisma.minigame.findUnique({
+        where: { id },
+        select: { settings: true },
+      });
+      const curSettings = (cur?.settings as Record<string, unknown> | null) ?? {};
+      data.settings = {
+        ...curSettings,
+        ...dto.settings,
+      } as Prisma.InputJsonValue;
+    }
+    return this.prisma.minigame.update({ where: { id }, data });
   }
 
   async addParticipants(

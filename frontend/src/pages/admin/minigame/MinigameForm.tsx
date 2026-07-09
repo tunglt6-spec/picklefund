@@ -147,10 +147,12 @@ export function MinigameForm() {
 
     if (isEdit && id) {
       try {
+        // Minigame model chỉ có name/format/settings/scheduledAt (không có description/notes);
+        // format không đổi khi sửa (UI disabled) → chỉ gửi name + settings. settings được
+        // MERGE ở backend (giữ guests/pairingMode).
         await api.put(`/minigames/${id}`, {
-          name: form.name, description: form.description || undefined,
-          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
-          notes: form.notes || undefined,
+          name: form.name,
+          settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
         await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload })
         updateMinigame(id, {

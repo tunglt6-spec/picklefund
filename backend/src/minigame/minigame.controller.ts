@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Param,
@@ -46,6 +47,12 @@ class CreateMinigameDto {
     'FIXED_DOUBLES_ROUND_ROBIN',
   ])
   format!: MinigameFormat;
+  @IsOptional() @IsDateString() scheduledAt?: string;
+  @IsOptional() settings?: Record<string, unknown>;
+}
+
+class UpdateMinigameDto {
+  @IsOptional() @IsString() @MaxLength(100) name?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() settings?: Record<string, unknown>;
 }
@@ -110,6 +117,22 @@ export class MinigameController {
         ...body,
         scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
       }),
+    );
+  }
+
+  @Put(':id')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async update(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: UpdateMinigameDto,
+  ) {
+    return ok(
+      await this.svc.update(id, user.clubId, {
+        ...body,
+        scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
+      }),
+      'Đã cập nhật minigame',
     );
   }
 
