@@ -1,0 +1,174 @@
+/**
+ * KpiMonitorPage — AI Operations Center › KPI Monitor (Pha 5 Hermes v2).
+ * FE-only, nối endpoint SẴN CÓ (allSettled → graceful từng nguồn):
+ *   GET /maika/health-score       — điểm sức khỏe CLB + breakdown
+ *   GET /maika/snapshot           — thành viên & tài chính
+ *   GET /ai/actions/summary       — KPI AI (duyệt/thực thi/lỗi)
+ *   GET /workflows/runs           — KPI workflow (đếm theo trạng thái)
+ * KHÔNG bịa: chỉ render field có thật; nguồn lỗi → hiển thị "—".
+ */
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Gauge, ArrowLeft, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp,
+} from 'lucide-react'
+import api from '../../../lib/api'
+import type { AiActionSummary } from '../../../hooks/useAiManager'
+import {
+  PageShell, PageHeader, MetricCard, LoadingState, ErrorState, ActionButton,
+} from '../../../components/shared'
+
+interface HealthScore {
+  score: number
+  label?: string
+  breakdown?: Record<string, number>
+}
+interface Snapshot {
+  clubName?: string
+  totalMembers?: number
+  activeMembers?: number
+  unpaidCount?: number
+  totalAssets?: number
+  commonIncome?: number
+  commonExpense?: number
+}
+interface WfRun { status: string }
+
+const vnd = (n?: number) => (typeof n === 'number' ? `${n.toLocaleString('vi-VN')}đ` : '—')
+const num = (n?: number) => (typeof n === 'number' ? n : '—')
+
+const BREAKDOWN_LABEL: Record<string, string> = {
+  financial: 'Tài chính', engagement: 'Gắn kết', activity: 'Hoạt động (chuyên cần)',
+  goal: 'Mục tiêu', issue: 'Vấn đề',
+}
+
+export function KpiMonitorPage() {
+  const navigate = useNavigate()
+  const [health, setHealth] = useState<HealthScore | null>(null)
+  const [snap, setSnap] = useState<Snapshot | null>(null)
+  const [aiSummary, setAiSummary] = useState<AiActionSummary | null>(null)
+  const [runs, setRuns] = useState<WfRun[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    const [h, s, a, w] = await Promise.allSettled([
+      api.get('/maika/health-score'),
+      api.get('/maika/snapshot'),
+      api.get('/ai/actions/summary'),
+      api.get('/workflows/runs'),
+    ])
+    if ([h, s, a, w].every(r => r.status === 'rejected')) {
+      setError(true); setLoading(false); return
+    }
+    const val = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' ? (r.value.data?.data ?? r.value.data ?? null) : null
+    setHealth(val(h))
+    setSnap(val(s))
+    setAiSummary(val(a))
+    setRuns((val(w) as WfRun[]) ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { void load() }, [load])
+
+  const wfDone = runs.filter(r => r.status === 'COMPLETED').length
+  const wfFailed = runs.filter(r => r.status === 'FAILED').length
+  const wfWaiting = runs.filter(r => r.status === 'WAITING_APPROVAL').length
+
+  const breakdown = health?.breakdown ?? {}
+  const healthTone = (health?.score ?? 0) >= 75 ? 'emerald' : (health?.score ?? 0) >= 50 ? 'amber' : 'red'
+
+  return (
+    <PageShell>
+      <PageHeader
+        title="KPI Monitor"
+        subtitle="Chỉ số vận hành & sức khỏe CLB"
+        actions={
+          <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
+            AI Operations Center
+          </ActionButton>
+        }
+      />
+
+      {loading ? (
+        <LoadingState rows={5} />
+      ) : error ? (
+        <ErrorState onRetry={() => void load()} />
+      ) : (
+        <div className="flex flex-col gap-6">
+          {/* Health score */}
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <HeartPulse size={16} className="text-slate-400" /> Sức Khỏe CLB
+            </h3>
+            {!health ? (
+              <p className="text-sm text-slate-400">Không tải được điểm sức khỏe.</p>
+            ) : (
+              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className={`flex h-20 w-20 flex-col items-center justify-center rounded-2xl ${
+                    healthTone === 'emerald' ? 'bg-emerald-50' : healthTone === 'amber' ? 'bg-amber-50' : 'bg-red-50'
+                  }`}>
+                    <span className={`text-3xl font-bold ${
+                      healthTone === 'emerald' ? 'text-emerald-600' : healthTone === 'amber' ? 'text-amber-600' : 'text-red-600'
+                    }`}>{health.score}</span>
+                    <span className="text-[10px] text-slate-400">/100</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{health.label ?? '—'}</p>
+                    <p className="text-[11px] text-slate-400">Điểm tổng hợp</p>
+                  </div>
+                </div>
+                <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {Object.entries(breakdown).map(([k, v]) => (
+                    <div key={k} className="rounded-xl border border-slate-100 px-3 py-2">
+                      <p className="text-[11px] text-slate-400">{BREAKDOWN_LABEL[k] ?? k}</p>
+                      <p className="text-lg font-bold text-slate-800">{v}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Member KPI */}
+          <section>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Users size={13} /> Thành viên</p>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <MetricCard label="Đang hoạt động" value={num(snap?.activeMembers)} icon={<Users size={16} />} sub={`${num(snap?.totalMembers)} tổng`} />
+              <MetricCard label="Chưa đóng quỹ (kỳ mở)" value={num(snap?.unpaidCount)} icon={<Users size={16} />} negative={(snap?.unpaidCount ?? 0) > 0} />
+              <MetricCard label="Tỷ lệ hoạt động" value={snap?.totalMembers ? `${Math.round((snap.activeMembers ?? 0) / snap.totalMembers * 100)}%` : '—'} icon={<TrendingUp size={16} />} />
+            </div>
+          </section>
+
+          {/* Finance KPI */}
+          <section>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Wallet size={13} /> Tài chính</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} icon={<Wallet size={16} />} negative={(snap?.totalAssets ?? 0) < 0} />
+              <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} icon={<TrendingUp size={16} />} />
+              <MetricCard label="Chi (Quỹ Chính)" value={vnd(snap?.commonExpense)} icon={<Wallet size={16} />} />
+            </div>
+          </section>
+
+          {/* Workflow + AI KPI */}
+          <section>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Workflow size={13} /> Workflow & AI</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <MetricCard label="Workflow hoàn tất" value={wfDone} icon={<Workflow size={16} />} sub={`${runs.length} lượt chạy`} />
+              <MetricCard label="Workflow lỗi" value={wfFailed} icon={<Workflow size={16} />} negative={wfFailed > 0} sub={`${wfWaiting} chờ duyệt`} />
+              <MetricCard label="AI chờ duyệt" value={num(aiSummary?.pendingApprovals)} icon={<Bot size={16} />} sub={`${num(aiSummary?.executedToday)} thực thi hôm nay`} />
+              <MetricCard label="AI thất bại" value={num(aiSummary?.failedActions)} icon={<Bot size={16} />} negative={(aiSummary?.failedActions ?? 0) > 0} />
+            </div>
+          </section>
+
+          <p className="text-[11px] text-slate-400 px-1 flex items-center gap-1.5">
+            <Gauge size={12} /> Số liệu tài chính đọc từ Finance Engine (nguồn tài chính duy nhất) — read-only, không tự tính.
+          </p>
+        </div>
+      )}
+    </PageShell>
+  )
+}

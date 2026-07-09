@@ -36,7 +36,7 @@ function buildSections(isSuper: boolean): OpsSection[] {
     { key: 'scheduler', label: 'Scheduler', desc: 'Lịch cron & tác vụ định kỳ', icon: <CalendarClock size={18} />, to: '/admin/ai-scheduler', status: 'active' },
     { key: 'alert', label: 'Alert Center', desc: 'Cảnh báo vận hành & lỗi hệ thống', icon: <AlertTriangle size={18} />, to: '/admin/ai-alerts', status: 'active' },
     { key: 'monitor', label: 'Data Monitor', desc: 'Chất lượng & toàn vẹn dữ liệu', icon: <Database size={18} />, to: '/admin/ai-data-monitor', status: 'active' },
-    { key: 'kpi', label: 'KPI Monitor', desc: 'Chỉ số vận hành & sức khoẻ', icon: <Gauge size={18} />, to: null, status: 'soon' },
+    { key: 'kpi', label: 'KPI Monitor', desc: 'Chỉ số vận hành & sức khoẻ', icon: <Gauge size={18} />, to: '/admin/ai-kpi', status: 'active' },
     { key: 'audit', label: 'Audit Logs', desc: 'Nhật ký kiểm toán', icon: <ScrollText size={18} />, to: isSuper ? '/super/audit-logs' : null, status: isSuper ? 'active' : 'soon' },
   ]
 }
