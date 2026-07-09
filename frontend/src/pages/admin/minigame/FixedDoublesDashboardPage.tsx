@@ -689,30 +689,26 @@ export function FixedDoublesDashboardPage() {
   const handleAutoGenerateTeams = useCallback(async () => {
     if (!id) return
     try {
-      const res = await api.post(`/minigames/${id}/generate-teams`)
-      const mg = res.data?.data ?? res.data
-      setTeamsFromApi(id, mg.teams ?? [])
-      setTeamMatchesFromApi(id, mg.matches ?? [])
-      if (mg.status) updateMinigame(id, { status: mg.status })
+      await api.post(`/minigames/${id}/generate-teams`)
+      // Đồng bộ LẠI từ server (GET /minigames/:id) — nguồn chân lý duy nhất; tránh
+      // lệ thuộc shape response POST khiến store không cập nhật → kẹt DraftPanel.
+      await hydrateFromApi()
       toast.success('Đã ghép cặp đôi!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi ghép cặp')
     }
-  }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
+  }, [id, hydrateFromApi])
 
   const handleCreateSchedule = useCallback(async () => {
     if (!id) return
     try {
-      const res = await api.post(`/minigames/${id}/generate-schedule`)
-      const mg = res.data?.data ?? res.data
-      setTeamsFromApi(id, mg.teams ?? [])
-      setTeamMatchesFromApi(id, mg.matches ?? [])
-      if (mg.status) updateMinigame(id, { status: mg.status })
+      await api.post(`/minigames/${id}/generate-schedule`)
+      await hydrateFromApi()
       toast.success('Đã tạo lịch thi đấu!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi tạo lịch')
     }
-  }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
+  }, [id, hydrateFromApi])
 
   const handleDeleteTeam = useCallback(async (teamId: string) => {
     if (!id) return
