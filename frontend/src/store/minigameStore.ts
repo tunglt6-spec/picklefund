@@ -962,6 +962,10 @@ interface MinigameStore {
   getFairnessAlerts: (minigameId: string) => FairnessAlert[]
   getTournamentDashboard: (minigameId: string) => TournamentDashboardData | null
 
+  // RANDOM_DOUBLES: hydrate vòng/trận từ backend (persist) vào shape rounds/doublesMatches
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  hydrateDoublesRoundsFromApi: (minigameId: string, apiTeams: any[], apiMatches: any[]) => void
+
   // Fixed Doubles Round-Robin
   setTeamsFromApi: (minigameId: string, apiTeams: any[]) => void
   setTeamMatchesFromApi: (minigameId: string, apiMatches: any[]) => void
@@ -1784,6 +1788,57 @@ export const useMinigameStore = create<MinigameStore>()(
           }
         })
         set(s => ({ teamMatches: [...s.teamMatches.filter(m => m.minigameId !== minigameId), ...matches] }))
+      },
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      hydrateDoublesRoundsFromApi: (minigameId, apiTeams, apiMatches) => {
+        const parts = get().participants.filter(p => p.minigameId === minigameId)
+        const partOf = new Map(parts.map(p => [p.memberId, p]))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const teamMap = new Map<string, any>((apiTeams ?? []).map((t: any) => [t.id, t]))
+        const toPlayer = (mid?: string): DoublesPlayer | null => {
+          if (!mid) return null
+          const p = partOf.get(mid)
+          return { memberId: mid, memberName: p?.memberName ?? mid, skillLevel: p?.skillLevel }
+        }
+        const teamPlayers = (teamId?: string): DoublesPlayer[] => {
+          const t = teamId ? teamMap.get(teamId) : undefined
+          if (!t) return []
+          return [toPlayer(t.player1Id), toPlayer(t.player2Id)].filter(Boolean) as DoublesPlayer[]
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const byRound = new Map<number, any[]>()
+        for (const m of apiMatches ?? []) {
+          const r = m.round ?? 1
+          if (!byRound.has(r)) byRound.set(r, [])
+          byRound.get(r)!.push(m)
+        }
+        const rounds: MiniGameRound[] = []
+        const doublesMatches: MiniGameDoublesMatch[] = []
+        for (const [roundNumber, ms] of [...byRound.entries()].sort((a, b) => a[0] - b[0])) {
+          const roundId = `rnd-api-${minigameId}-${roundNumber}`
+          rounds.push({
+            id: roundId, minigameId, roundNumber, drawMode: 'RANDOM',
+            totalPlayers: ms.length * 4, totalMatches: ms.length, sitOutCount: 0,
+            status: ms.every(m => m.status === 'COMPLETED') ? 'COMPLETED' : 'ACTIVE',
+            createdAt: ms[0]?.createdAt ?? new Date().toISOString(),
+          })
+          ms.forEach((m, i) => {
+            doublesMatches.push({
+              id: m.id, minigameId, roundId, matchNumber: m.courtNo ?? i + 1,
+              team1: teamPlayers(m.teamAId), team2: teamPlayers(m.teamBId),
+              team1Score: m.scoreA ?? undefined, team2Score: m.scoreB ?? undefined,
+              winningTeam: m.winnerId === m.teamAId ? 1 : m.winnerId === m.teamBId ? 2 : undefined,
+              status: m.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING',
+              matchDate: m.playedAt ? String(m.playedAt).slice(0, 10) : undefined,
+            })
+          })
+        }
+        set(s => ({
+          rounds: [...s.rounds.filter(r => r.minigameId !== minigameId), ...rounds],
+          doublesMatches: [...s.doublesMatches.filter(dm => dm.minigameId !== minigameId), ...doublesMatches],
+          roundSitOuts: s.roundSitOuts.filter(so => so.minigameId !== minigameId),
+        }))
       },
 
       getTeams: (minigameId) => get().teams.filter(t => t.minigameId === minigameId),

@@ -14,10 +14,19 @@ import { QuickActionsPanel } from '../../../components/minigame/v2/QuickActionsP
 import { RecentActivitiesPanel } from '../../../components/minigame/v2/RecentActivitiesPanel'
 import { DrawRoundModal } from '../../../components/minigame/DrawRoundModal'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useAuthStore } from '../../../store/authStore'
+import api from '../../../lib/api'
+import toast from 'react-hot-toast'
 
-export function MinigameDashboardPage() {
+function isLocalToken(token?: string | null) {
+  return !token || token.startsWith('local-token-') || token.startsWith('token-')
+}
+
+export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const accessToken = useAuthStore(s => s.accessToken)
+  const backend = !isLocalToken(accessToken)
   const [scoreEntryMatchId, setScoreEntryMatchId] = useState<string | null>(null)
   const [score1, setScore1] = useState<number>(0)
   const [score2, setScore2] = useState<number>(0)
@@ -171,16 +180,39 @@ export function MinigameDashboardPage() {
     setScore2(0)
   }
 
-  const handleSaveScore = () => {
+  const handleSaveScore = async () => {
     if (scoreEntryMatchId) {
-      enterDoublesMatchResult(scoreEntryMatchId, score1, score2)
+      if (backend) {
+        try {
+          await api.patch(`/minigames/matches/${scoreEntryMatchId}/score`, { scoreA: score1, scoreB: score2 })
+          resync?.()
+        } catch (e: any) {
+          toast.error(e?.response?.data?.message ?? 'Lưu kết quả thất bại')
+        }
+      } else {
+        enterDoublesMatchResult(scoreEntryMatchId, score1, score2)
+      }
     }
     setScoreEntryMatchId(null)
   }
 
   const handleCloseModal = () => setScoreEntryMatchId(null)
 
-  const handleDrawRound = () => setIsDrawModalOpen(true)
+  // Đánh đôi ngẫu nhiên: backend bốc vòng mới (persist) rồi đồng bộ; local dùng modal mock.
+  const handleDrawRound = async () => {
+    if (backend) {
+      try {
+        const res = await api.post(`/minigames/${id}/draw-round`)
+        const d = res.data?.data
+        resync?.()
+        toast.success(d ? `Đã bốc vòng ${d.round} — ${d.matches} trận${d.sitOut ? `, ${d.sitOut} nghỉ` : ''}` : 'Đã bốc vòng mới')
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message ?? 'Bốc vòng thất bại')
+      }
+    } else {
+      setIsDrawModalOpen(true)
+    }
+  }
   const handleCompleteRound = () => {
     if (data.currentRound) lockRound(data.currentRound.id)
   }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMinigameStore } from '../store/minigameStore'
 import api from '../lib/api'
@@ -10,13 +10,20 @@ function isLocalToken(token?: string | null) {
 
 export function useMinigameDetailSync(minigameId: string | undefined) {
   const { accessToken } = useAuthStore()
-  const { syncMinigameDetail } = useMinigameStore()
+  const { syncMinigameDetail, hydrateDoublesRoundsFromApi } = useMinigameStore()
   const syncedRef = useRef<string | null>(null)
+  const [nonce, setNonce] = useState(0)
+
+  // Buộc đồng bộ lại từ backend (sau khi bốc vòng / nhập điểm).
+  const resync = useCallback(() => {
+    syncedRef.current = null
+    setNonce(n => n + 1)
+  }, [])
 
   useEffect(() => {
     if (!minigameId || !accessToken) return
     if (isLocalToken(accessToken)) return
-    const key = `${minigameId}:${accessToken}`
+    const key = `${minigameId}:${accessToken}:${nonce}`
     if (syncedRef.current === key) return
     syncedRef.current = key
 
@@ -69,6 +76,13 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
       }))
 
       syncMinigameDetail(mg, [...memberParticipants, ...guestParticipants])
+
+      // RANDOM_DOUBLES: hydrate vòng/trận từ backend (persist server) vào store.
+      if (mg.formatType === 'RANDOM_DOUBLES') {
+        hydrateDoublesRoundsFromApi(m.id, m.teams ?? [], m.matches ?? [])
+      }
     }).catch(() => { /* keep local store */ })
-  }, [minigameId, accessToken, syncMinigameDetail])
+  }, [minigameId, accessToken, nonce, syncMinigameDetail, hydrateDoublesRoundsFromApi])
+
+  return { resync }
 }
