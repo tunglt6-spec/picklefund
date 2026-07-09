@@ -23,21 +23,29 @@ interface OpsSection {
   icon: React.ReactNode
   to: string | null
   status: 'here' | 'active' | 'soon'
+  group: string
 }
+
+/** Thứ tự cụm hiển thị trong hub. */
+const GROUP_ORDER = ['Điều phối & Duyệt', 'Thông báo & Lịch', 'Giám sát', 'Tri thức & Nhật ký'] as const
 
 function buildSections(isSuper: boolean): OpsSection[] {
   return [
-    { key: 'hermes', label: 'Hermes (AI COO)', desc: 'Trung tâm điều phối — bạn đang ở đây', icon: <Bot size={18} />, to: null, status: 'here' },
-    { key: 'workflow', label: 'Workflow Studio', desc: 'Luật tự động hoá & lịch chạy', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active' },
-    { key: 'approval', label: 'Approval Center', desc: 'Hàng đợi duyệt hành động AI', icon: <ClipboardCheck size={18} />, to: '/admin/ai-approvals', status: 'active' },
-    { key: 'dispatch', label: 'AI Dispatch', desc: 'Nhật ký điều phối & thực thi (Mít Đặc)', icon: <Send size={18} />, to: '/admin/execution-log', status: 'active' },
-    { key: 'memory', label: 'Club Memory', desc: 'Kho tri thức của CLB', icon: <BookOpen size={18} />, to: '/admin/ai-manager/club-memory', status: 'active' },
-    { key: 'notif', label: 'Notification Center', desc: 'Hộp thông báo đa kênh', icon: <Bell size={18} />, to: '/notifications', status: 'active' },
-    { key: 'scheduler', label: 'Scheduler', desc: 'Lịch cron & tác vụ định kỳ', icon: <CalendarClock size={18} />, to: '/admin/ai-scheduler', status: 'active' },
-    { key: 'alert', label: 'Alert Center', desc: 'Cảnh báo vận hành & lỗi hệ thống', icon: <AlertTriangle size={18} />, to: '/admin/ai-alerts', status: 'active' },
-    { key: 'monitor', label: 'Data Monitor', desc: 'Chất lượng & toàn vẹn dữ liệu', icon: <Database size={18} />, to: '/admin/ai-data-monitor', status: 'active' },
-    { key: 'kpi', label: 'KPI Monitor', desc: 'Chỉ số vận hành & sức khoẻ', icon: <Gauge size={18} />, to: '/admin/ai-kpi', status: 'active' },
-    { key: 'audit', label: 'Audit Logs', desc: 'Nhật ký kiểm toán', icon: <ScrollText size={18} />, to: isSuper ? '/super/audit-logs' : '/admin/ai-audit-logs', status: 'active' },
+    // ── Điều phối & Duyệt ──
+    { key: 'hermes', label: 'Hermes (AI COO)', desc: 'Trung tâm điều phối — bạn đang ở đây', icon: <Bot size={18} />, to: null, status: 'here', group: 'Điều phối & Duyệt' },
+    { key: 'workflow', label: 'Workflow Studio', desc: 'Tạo & quản lý luật tự động hoá', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active', group: 'Điều phối & Duyệt' },
+    { key: 'approval', label: 'Approval Center', desc: 'Duyệt/từ chối hành động AI đề xuất', icon: <ClipboardCheck size={18} />, to: '/admin/ai-approvals', status: 'active', group: 'Điều phối & Duyệt' },
+    { key: 'dispatch', label: 'AI Dispatch', desc: 'Nhật ký thực thi của Mít Đặc', icon: <Send size={18} />, to: '/admin/execution-log', status: 'active', group: 'Điều phối & Duyệt' },
+    // ── Thông báo & Lịch ──
+    { key: 'notif', label: 'Notification Center', desc: 'Hộp thông báo đa kênh (in-app/email/Telegram)', icon: <Bell size={18} />, to: '/notifications', status: 'active', group: 'Thông báo & Lịch' },
+    { key: 'scheduler', label: 'Scheduler', desc: 'Lịch cron & tác vụ định kỳ', icon: <CalendarClock size={18} />, to: '/admin/ai-scheduler', status: 'active', group: 'Thông báo & Lịch' },
+    // ── Giám sát ──
+    { key: 'alert', label: 'Alert Center', desc: 'Cảnh báo vận hành & lỗi hệ thống', icon: <AlertTriangle size={18} />, to: '/admin/ai-alerts', status: 'active', group: 'Giám sát' },
+    { key: 'monitor', label: 'Data Monitor', desc: 'Chất lượng & toàn vẹn dữ liệu', icon: <Database size={18} />, to: '/admin/ai-data-monitor', status: 'active', group: 'Giám sát' },
+    { key: 'kpi', label: 'KPI Monitor', desc: 'Sức khoẻ CLB & chỉ số vận hành', icon: <Gauge size={18} />, to: '/admin/ai-kpi', status: 'active', group: 'Giám sát' },
+    // ── Tri thức & Nhật ký ──
+    { key: 'memory', label: 'Club Memory', desc: 'Kho tri thức nền của CLB', icon: <BookOpen size={18} />, to: '/admin/ai-manager/club-memory', status: 'active', group: 'Tri thức & Nhật ký' },
+    { key: 'audit', label: 'Audit Logs', desc: 'Nhật ký kiểm toán thao tác', icon: <ScrollText size={18} />, to: isSuper ? '/super/audit-logs' : '/admin/ai-audit-logs', status: 'active', group: 'Tri thức & Nhật ký' },
   ]
 }
 
@@ -81,6 +89,45 @@ const READ_ROUTE_MAP: Record<string, string> = {
 function resolveReadRoute(endpoint: string): string | null {
   const seg = endpoint.replace(/^\//, '').split('/')[0]
   return READ_ROUTE_MAP[seg] ?? null
+}
+
+function SectionCard({ s, onGo }: { s: OpsSection; onGo: (to: string) => void }) {
+  const clickable = s.status === 'active' && !!s.to
+  return (
+    <button
+      type="button"
+      disabled={!clickable}
+      onClick={() => clickable && onGo(s.to!)}
+      className={`group relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-all ${
+        s.status === 'here'
+          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
+          : clickable
+            ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] cursor-pointer'
+            : 'border-slate-100 bg-slate-50/60 cursor-default'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+          s.status === 'soon' ? 'bg-slate-100 text-slate-400' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+        }`}>
+          {s.icon}
+        </span>
+        {s.status === 'here' && (
+          <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
+        )}
+        {s.status === 'soon' && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Đang phát triển</span>
+        )}
+        {clickable && (
+          <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className={`text-sm font-semibold truncate ${s.status === 'soon' ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
+        <p className="text-[11px] text-slate-400 leading-snug">{s.desc}</p>
+      </div>
+    </button>
+  )
 }
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -186,47 +233,22 @@ export function AiManagerDashboard() {
       </div>
 
       <div className="px-4 sm:px-6 py-5 space-y-6">
-        {/* Hub điều hướng — gom 11 khu vực của AI Operations Center */}
+        {/* Hub điều hướng — 11 khu vực gom theo cụm chức năng */}
         <Card>
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {sections.map(s => {
-              const clickable = s.status === 'active' && s.to
+          <div className="space-y-5">
+            {GROUP_ORDER.map(group => {
+              const items = sections.filter(s => s.group === group)
+              if (items.length === 0) return null
               return (
-                <button
-                  key={s.key}
-                  type="button"
-                  disabled={!clickable}
-                  onClick={() => clickable && navigate(s.to!)}
-                  className={`group relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-all ${
-                    s.status === 'here'
-                      ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                      : clickable
-                        ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] cursor-pointer'
-                        : 'border-slate-100 bg-slate-50/60 cursor-default'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                      s.status === 'soon' ? 'bg-slate-100 text-slate-400' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                    }`}>
-                      {s.icon}
-                    </span>
-                    {s.status === 'here' && (
-                      <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
-                    )}
-                    {s.status === 'soon' && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Đang phát triển</span>
-                    )}
-                    {clickable && (
-                      <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
-                    )}
+                <div key={group}>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {items.map(s => (
+                      <SectionCard key={s.key} s={s} onGo={navigate} />
+                    ))}
                   </div>
-                  <div className="min-w-0">
-                    <p className={`text-sm font-semibold truncate ${s.status === 'soon' ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
-                    <p className="text-[11px] text-slate-400 leading-snug">{s.desc}</p>
-                  </div>
-                </button>
+                </div>
               )
             })}
           </div>
