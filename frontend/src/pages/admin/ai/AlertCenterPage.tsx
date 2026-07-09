@@ -51,6 +51,7 @@ export function AlertCenterPage() {
   const [failedRuns, setFailedRuns] = useState<FailedRun[]>([])
   const [failedActions, setFailedActions] = useState<FailedAction[]>([])
   const [partial, setPartial] = useState<string[]>([]) // tên nguồn lỗi (partial-failure)
+  const [level, setLevel] = useState<'all' | 'warning' | 'attention' | 'info'>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -92,6 +93,17 @@ export function AlertCenterPage() {
   const totalAlerts = opsAll.length + dataQuality.length + failedRuns.length + failedActions.length
   const highCount = opsAll.filter(s => s.level === 'warning').length + failedRuns.length + failedActions.length
 
+  // Lọc theo mức: áp cho tín hiệu ops/dataQuality; lỗi workflow/AI xem như mức "cao"
+  // (chỉ hiện khi lọc Tất cả hoặc Cảnh báo).
+  const flt = (items: IntelSignal[]) => (level === 'all' ? items : items.filter(s => s.level === level))
+  const showErrorSections = level === 'all' || level === 'warning'
+  const LEVEL_TABS: { id: typeof level; label: string }[] = [
+    { id: 'all', label: 'Tất cả' },
+    { id: 'warning', label: 'Cảnh báo' },
+    { id: 'attention', label: 'Chú ý' },
+    { id: 'info', label: 'Thông tin' },
+  ]
+
   const SignalList = ({ items }: { items: IntelSignal[] }) => (
     <div className="space-y-2">
       {[...items].sort((a, b) => severityRank(b.level) - severityRank(a.level)).map((s, i) => (
@@ -132,6 +144,21 @@ export function AlertCenterPage() {
             <MetricCard label="Lỗi AI / Thực thi" value={failedActions.length} icon={<Bot size={16} />} negative={failedActions.length > 0} />
           </div>
 
+          {/* Lọc theo mức */}
+          <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit overflow-x-auto">
+            {LEVEL_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setLevel(t.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                  level === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           {/* Thiếu dữ liệu một phần — KHÔNG khẳng định ổn định khi có nguồn lỗi */}
           {partial.length > 0 && (
             <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
@@ -150,9 +177,9 @@ export function AlertCenterPage() {
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
               <AlertTriangle size={16} className="text-slate-400" /> Cảnh Báo Vận Hành
             </h3>
-            {opsAll.length === 0 ? (
-              <p className="text-sm text-slate-400">Không có cảnh báo vận hành.</p>
-            ) : <SignalList items={opsAll} />}
+            {flt(opsAll).length === 0 ? (
+              <p className="text-sm text-slate-400">Không có cảnh báo vận hành{level !== 'all' ? ' ở mức này' : ''}.</p>
+            ) : <SignalList items={flt(opsAll)} />}
           </section>
 
           {/* Chất lượng dữ liệu */}
@@ -160,12 +187,13 @@ export function AlertCenterPage() {
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
               <Database size={16} className="text-slate-400" /> Chất Lượng Dữ Liệu
             </h3>
-            {dataQuality.length === 0 ? (
-              <p className="text-sm text-slate-400">Không có vấn đề chất lượng dữ liệu.</p>
-            ) : <SignalList items={dataQuality} />}
+            {flt(dataQuality).length === 0 ? (
+              <p className="text-sm text-slate-400">Không có vấn đề chất lượng dữ liệu{level !== 'all' ? ' ở mức này' : ''}.</p>
+            ) : <SignalList items={flt(dataQuality)} />}
           </section>
 
           {/* Lỗi Workflow */}
+          {showErrorSections && (
           <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
@@ -189,8 +217,10 @@ export function AlertCenterPage() {
               </div>
             )}
           </section>
+          )}
 
           {/* Lỗi AI / Thực thi */}
+          {showErrorSections && (
           <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
@@ -214,6 +244,7 @@ export function AlertCenterPage() {
               </div>
             )}
           </section>
+          )}
         </div>
       )}
     </PageShell>
