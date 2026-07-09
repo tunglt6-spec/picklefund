@@ -602,6 +602,7 @@ model MinigameTeam {
   name       String   @db.VarChar(100)
   player1Id  String   @map("player1_id")
   player2Id  String?  @map("player2_id")
+  round      Int?
   wins       Int      @default(0)
   losses     Int      @default(0)
   points     Int      @default(0)

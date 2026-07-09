@@ -148,6 +148,23 @@ export class MinigameController {
     return ok(await this.svc.generateSchedule(id, user.clubId));
   }
 
+  @Post(':id/draw-round')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async drawRound(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.drawRound(id, user.clubId), 'Đã bốc vòng mới');
+  }
+
+  @Get(':id/player-standings')
+  async playerStandings(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.getPlayerStandings(id, user.clubId));
+  }
+
   @Post(':id/teams')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async createTeam(

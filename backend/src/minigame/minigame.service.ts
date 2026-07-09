@@ -331,6 +331,147 @@ export class MinigameService {
     return this.findOne(id, clubId);
   }
 
+  /**
+   * RANDOM_DOUBLES: bốc 1 VÒNG mới — xáo người chơi, chia nhóm 4 → mỗi nhóm 1 trận
+   * 2v2 (2 đội tạm tag theo vòng). Dư <4 người nghỉ vòng. Mỗi lần gọi tạo vòng KẾ TIẾP
+   * (không đụng các vòng cũ). Persist server để đồng bộ đa thiết bị.
+   */
+  async drawRound(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.format !== 'RANDOM_DOUBLES')
+      throw new BadRequestException(
+        'Chỉ áp dụng cho định dạng Đánh đôi ngẫu nhiên',
+      );
+    const participants = await this.prisma.minigameParticipant.findMany({
+      where: { minigameId: id },
+    });
+    if (participants.length < 4)
+      throw new BadRequestException('Cần ít nhất 4 người chơi để bốc 1 trận đôi');
+
+    const agg = await this.prisma.minigameTeam.aggregate({
+      where: { minigameId: id },
+      _max: { round: true },
+    });
+    const nextRound = (agg._max.round ?? 0) + 1;
+
+    const shuffled = [...participants].sort(() => Math.random() - 0.5);
+    const matchCount = Math.floor(shuffled.length / 4);
+    for (let i = 0; i < matchCount; i++) {
+      const g = shuffled.slice(i * 4, i * 4 + 4);
+      const teamA = await this.prisma.minigameTeam.create({
+        data: {
+          minigameId: id,
+          round: nextRound,
+          name: `V${nextRound}-T${i + 1}A`,
+          player1Id: g[0].memberId,
+          player2Id: g[1].memberId,
+        },
+      });
+      const teamB = await this.prisma.minigameTeam.create({
+        data: {
+          minigameId: id,
+          round: nextRound,
+          name: `V${nextRound}-T${i + 1}B`,
+          player1Id: g[2].memberId,
+          player2Id: g[3].memberId,
+        },
+      });
+      await this.prisma.minigameMatch.create({
+        data: {
+          minigameId: id,
+          teamAId: teamA.id,
+          teamBId: teamB.id,
+          round: nextRound,
+          courtNo: i + 1,
+        },
+      });
+    }
+    if (mg.status === 'DRAFT') {
+      await this.prisma.minigame.update({
+        where: { id },
+        data: { status: 'ACTIVE', startedAt: mg.startedAt ?? new Date() },
+      });
+    }
+    return {
+      round: nextRound,
+      matches: matchCount,
+      sitOut: shuffled.length - matchCount * 4,
+    };
+  }
+
+  /**
+   * BXH cấp CÁ NHÂN (dùng cho RANDOM_DOUBLES): tính ĐỘNG từ các trận COMPLETED —
+   * mỗi người cộng theo đội mình ở từng vòng. Tránh double-count vì tính lại từ đầu.
+   */
+  async getPlayerStandings(id: string, clubId: string) {
+    await this.assertOwnership(id, clubId);
+    const matches = await this.prisma.minigameMatch.findMany({
+      where: { minigameId: id, status: 'COMPLETED' },
+      include: { teamA: true, teamB: true },
+    });
+    const parts = await this.prisma.minigameParticipant.findMany({
+      where: { minigameId: id },
+      include: { member: { select: { id: true, fullName: true } } },
+    });
+    type Stat = {
+      memberId: string;
+      name: string;
+      played: number;
+      won: number;
+      pointsFor: number;
+      pointsAgainst: number;
+    };
+    const stat = new Map<string, Stat>();
+    for (const p of parts)
+      stat.set(p.memberId, {
+        memberId: p.memberId,
+        name: p.member.fullName,
+        played: 0,
+        won: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+      });
+    const ensure = (mid: string): Stat => {
+      let s = stat.get(mid);
+      if (!s) {
+        s = { memberId: mid, name: mid, played: 0, won: 0, pointsFor: 0, pointsAgainst: 0 };
+        stat.set(mid, s);
+      }
+      return s;
+    };
+    for (const m of matches) {
+      const aPlayers = [m.teamA?.player1Id, m.teamA?.player2Id].filter(
+        Boolean,
+      ) as string[];
+      const bPlayers = [m.teamB?.player1Id, m.teamB?.player2Id].filter(
+        Boolean,
+      ) as string[];
+      const sa = m.scoreA ?? 0;
+      const sb = m.scoreB ?? 0;
+      const aWon = m.winnerId === m.teamAId;
+      const bWon = m.winnerId === m.teamBId;
+      for (const pid of aPlayers) {
+        const s = ensure(pid);
+        s.played++;
+        s.pointsFor += sa;
+        s.pointsAgainst += sb;
+        if (aWon) s.won++;
+      }
+      for (const pid of bPlayers) {
+        const s = ensure(pid);
+        s.played++;
+        s.pointsFor += sb;
+        s.pointsAgainst += sa;
+        if (bWon) s.won++;
+      }
+    }
+    return [...stat.values()]
+      .map((s) => ({ ...s, diff: s.pointsFor - s.pointsAgainst }))
+      .sort(
+        (a, b) => b.won - a.won || b.diff - a.diff || b.pointsFor - a.pointsFor,
+      );
+  }
+
   async startMinigame(id: string, clubId: string) {
     await this.assertOwnership(id, clubId);
     return this.prisma.minigame.update({
