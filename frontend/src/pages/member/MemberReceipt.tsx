@@ -9,6 +9,7 @@ import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { exportReceiptPDF } from '../../lib/export'
 
 /** 1 dòng breakdown cho card "kỳ hiện tại (tạm tính)". */
 function LiveRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
@@ -113,39 +114,37 @@ export function MemberReceipt() {
   const totalCost = hasReceipts ? displayReceipts.reduce((s, r) => s + n(r.totalCost), 0) : n(live?.totalCost)
   const netBalance = hasReceipts ? totalPaid - totalCost : n(live?.balance)
 
-  // Xuất PDF khổ A4 dọc: chụp printRef bằng html2canvas-pro (hỗ trợ màu oklch của Tailwind v4)
-  // rồi fit theo chiều RỘNG A4, tự chia trang nếu nội dung dài. KHÔNG dùng window.print
-  // (ẩn #root chứa printRef → trắng) và KHÔNG dùng khổ 9:16 của infographic (méo cho phiếu thu).
-  const handleExport = async () => {
-    const el = printRef.current
-    if (!el) { toast.error('Không có nội dung để xuất'); return }
-    try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import('html2canvas-pro'),
-        import('jspdf'),
-      ])
-      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false })
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const imgW = pageW
-      const imgH = (canvas.height / canvas.width) * pageW
-      const imgData = canvas.toDataURL('image/png', 1.0)
-      let heightLeft = imgH
-      let position = 0
-      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-      heightLeft -= pageH
-      while (heightLeft > 0) {
-        position = heightLeft - imgH // dời ảnh lên để hiện phần tiếp theo
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-        heightLeft -= pageH
-      }
-      pdf.save(`PhieuThu_${memberName.replace(/[^a-zA-Z0-9À-ỹ]/g, '_')}.pdf`)
-      toast.success('Đã xuất PDF phiếu thu')
-    } catch {
-      toast.error('Xuất PDF thất bại')
-    }
+  // ĐỒNG BỘ 1 PHIẾU THU: dùng CHUNG exportReceiptPDF với màn Tổng Quan (Dashboard) — cùng
+  // bố cục, cùng tên file. KHÔNG tự sinh phiếu thu riêng (chụp màn) nữa. Dữ liệu từ /member/me/finance.
+  const handleExport = () => {
+    const m = finance?.member
+    const p = finance?.period
+    if (!m || !p) { toast.error('Chưa có dữ liệu kỳ quỹ để xuất phiếu thu'); return }
+    const t = finance?.totals
+    exportReceiptPDF({
+      receiptNo: 1,
+      memberName,
+      loginName: user?.username ?? '',
+      periodName: p.name,
+      periodStartDate: p.startDate,
+      periodEndDate: p.endDate,
+      contributionAmount: p.contributionAmount,
+      clubName: 'CLB Pickleball',
+      clubLocation: '',
+      amountPaid: n(m.paidAmount),
+      paymentDate: finance?.contribution?.paymentDate ?? '',
+      attendedSessions: m.attendedSessions,
+      totalSessions: m.totalSessions,
+      totalCourtFee: t?.court ?? 0,
+      memberCountForSplit: t?.memberCount ?? 0,
+      courtCost: n(m.courtFee),
+      totalOtherFee: t?.living ?? 0,
+      livingCost: n(m.livingFee),
+      totalCost: n(m.totalCost),
+      balance: n(m.balance),
+      isConfirmed: finance?.contribution?.isConfirmed ?? false,
+    })
+    toast.success('Đã xuất Phiếu Thu PDF!')
   }
 
   // Tải ảnh QR (fetch blob → download; fallback mở tab mới nếu CORS chặn).
