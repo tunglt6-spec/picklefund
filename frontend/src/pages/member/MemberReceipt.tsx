@@ -9,6 +9,17 @@ import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { exportInfographicAsPdf } from '../../components/reports/infographic/infographic.utils'
+
+/** 1 dòng breakdown cho card "kỳ hiện tại (tạm tính)". */
+function LiveRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className={bold ? 'font-bold text-slate-800' : 'font-semibold text-slate-700'}>{value}</span>
+    </div>
+  )
+}
 
 interface PersonalReceipt {
   id: string
@@ -95,19 +106,29 @@ export function MemberReceipt() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayReceipts.length])
 
-  const totalPaid = displayReceipts.reduce((s, r) => s + n(r.amountPaid), 0)
-  const totalCost = displayReceipts.reduce((s, r) => s + n(r.totalCost), 0)
-  const netBalance = totalPaid - totalCost
+  // Khi CHƯA có phiếu thu chính thức (kỳ đang diễn ra) → hiển thị số liệu LIVE (tạm tính)
+  // từ /member/me/finance để member vẫn thấy đã đóng / chi phí / số dư hiện tại.
+  const live = finance?.member
+  const hasReceipts = displayReceipts.length > 0
+  const totalPaid = hasReceipts ? displayReceipts.reduce((s, r) => s + n(r.amountPaid), 0) : n(live?.paidAmount)
+  const totalCost = hasReceipts ? displayReceipts.reduce((s, r) => s + n(r.totalCost), 0) : n(live?.totalCost)
+  const netBalance = hasReceipts ? totalPaid - totalCost : n(live?.balance)
 
-  const handleExport = () => {
-    const style = document.createElement('style')
-    style.innerHTML = `@media print { body > *:not(#print-receipt) { display: none !important; } #print-receipt { display: block !important; } }`
-    document.head.appendChild(style)
+  // Xuất PDF bằng html2canvas + jsPDF (chụp đúng phần tử printRef). KHÔNG dùng window.print
+  // (cách cũ ẩn #root chứa printRef → PDF trắng).
+  const handleExport = async () => {
     const el = printRef.current
-    if (el) { el.id = 'print-receipt'; el.style.display = 'block' }
-    window.print()
-    document.head.removeChild(style)
-    if (el) el.removeAttribute('id')
+    if (!el) { toast.error('Không có nội dung để xuất'); return }
+    const hadId = el.id
+    el.id = 'member-receipt-export'
+    try {
+      await exportInfographicAsPdf('member-receipt-export', `PhieuThu_${memberName.replace(/[^a-zA-Z0-9À-ỹ]/g, '_')}.pdf`)
+      toast.success('Đã xuất PDF phiếu thu')
+    } catch {
+      toast.error('Xuất PDF thất bại')
+    } finally {
+      if (!hadId) el.removeAttribute('id')
+    }
   }
 
   // Tải ảnh QR (fetch blob → download; fallback mở tab mới nếu CORS chặn).
@@ -155,7 +176,7 @@ export function MemberReceipt() {
             <Download size={13} />Xuất PDF
           </button>
         </div>
-        <div className="px-4 pt-4 pb-6 space-y-4">
+        <div ref={printRef} className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -169,9 +190,30 @@ export function MemberReceipt() {
               </div>
             ))}
           </div>
+          {/* Kỳ hiện tại — số liệu LIVE (tạm tính) */}
+          {!hasReceipts && live && activePeriod && (
+            <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[14px] font-[700] text-slate-900">Kỳ hiện tại</span>
+                <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Tạm tính</span>
+              </div>
+              <div className="space-y-1">
+                <LiveRow label="Đã tham gia" value={`${live.attendedSessions}/${live.totalSessions} buổi`} />
+                <LiveRow label="Tiền sân" value={formatVND(n(live.courtFee))} />
+                <LiveRow label="Chi phí SH" value={formatVND(n(live.livingFee))} />
+                <LiveRow label="Tổng chi phí" value={formatVND(n(live.totalCost))} bold />
+                <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
+                <div className="flex justify-between pt-1 border-t border-slate-100">
+                  <span className="text-sm text-slate-500">Số dư</span>
+                  <BalanceBadge val={n(live.balance)} />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Receipt cards */}
           {displayReceipts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có phiếu thu nào</div>
+            <div className="text-center py-10 text-slate-400 text-[13px]">Chưa có phiếu thu chính thức — số liệu trên là tạm tính; phiếu thu tạo sau khi kỳ kết thúc.</div>
           ) : (
             <div className="space-y-2">
               {displayReceipts.map(r => {
@@ -358,12 +400,33 @@ export function MemberReceipt() {
           </div>
         </div>
 
+        {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
+        {!hasReceipts && live && activePeriod && (
+          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-800">Kỳ hiện tại · {activePeriod.name}</h3>
+              <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
+            </div>
+            <div className="space-y-1.5">
+              <LiveRow label="Đã tham gia" value={`${live.attendedSessions}/${live.totalSessions} buổi`} />
+              <LiveRow label="Tiền sân (phân bổ)" value={formatVND(n(live.courtFee))} />
+              <LiveRow label="Chi phí sinh hoạt" value={formatVND(n(live.livingFee))} />
+              <LiveRow label="Tổng chi phí" value={formatVND(n(live.totalCost))} bold />
+              <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
+              <div className="flex justify-between pt-1.5 border-t border-slate-100">
+                <span className="text-sm text-slate-500">Số dư</span>
+                <BalanceBadge val={n(live.balance)} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Receipt cards */}
         {displayReceipts.length === 0 ? (
           <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
             <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-500 font-medium">Chưa có phiếu thu nào</p>
-            <p className="text-xs text-slate-400 mt-1">Phiếu thu sẽ được tạo sau khi kỳ quỹ kết thúc</p>
+            <p className="text-sm text-slate-500 font-medium">Chưa có phiếu thu chính thức</p>
+            <p className="text-xs text-slate-400 mt-1">Số liệu bên trên là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
           </div>
         ) : (
           <div className="space-y-3">
