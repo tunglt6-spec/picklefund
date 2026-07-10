@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import type {
   ClubSnapshot,
   DailyBrief,
@@ -20,6 +21,7 @@ export class MaikaService {
     private prisma: PrismaService,
     private config: ConfigService,
     private hermes: HermesService,
+    private fundPeriods: FundPeriodsService,
   ) {
     const apiKey = this.config.get<string>('GOOGLE_API_KEY');
     if (apiKey) {
@@ -75,15 +77,40 @@ export class MaikaService {
     );
     const miniExp = expenses.filter((e) => e.fundSource === 'MINI');
 
-    const commonIncome = commonContribs.reduce(
-      (s, c) => s + Number(c.amount),
-      0,
-    );
-    const commonExpense = commonExp.reduce((s, e) => s + Number(e.amount), 0);
+    // Fallback tự tính (chỉ dùng khi CHƯA có kỳ đang mở — Finance Engine cần fundPeriodId).
+    let commonIncome = commonContribs.reduce((s, c) => s + Number(c.amount), 0);
+    let commonExpense = commonExp.reduce((s, e) => s + Number(e.amount), 0);
     const miniIncome = miniContribs.reduce((s, c) => s + Number(c.amount), 0);
     const miniExpense = miniExp.reduce((s, e) => s + Number(e.amount), 0);
-    const commonBalance = commonIncome - commonExpense;
-    const miniBalance = miniIncome - miniExpense;
+    let commonBalance = commonIncome - commonExpense;
+    let miniBalance = miniIncome - miniExpense;
+    // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ (KHÔNG cộng Quỹ Phụ). Fallback = Quỹ Chính.
+    let totalAssets = commonBalance;
+
+    // ── FINANCE ISOLATION: khi có kỳ đang mở, lấy số liệu TRỰC TIẾP từ Finance Engine
+    // (FundPeriodsService.summary — nguồn chân lý, đúng carry-forward + loại trừ Quỹ Phụ),
+    // KHÔNG tự tính. Nhất quán tuyệt đối với Dashboard/Reports và ai/maika/OperationalAlerts.
+    // Trước đây Maika tự cộng commonBalance(all-time)+miniBalance → lệch báo cáo + gộp nhầm Quỹ Phụ.
+    if (activePeriod) {
+      try {
+        const fin = await this.fundPeriods.summary(activePeriod.id, clubId);
+        commonIncome = Number(fin.totalIncome);
+        commonExpense = Number(fin.totalExpenses);
+        commonBalance = Number(fin.balance); // Quỹ Chính kỳ hiện tại = KPI "Số dư Quỹ Chính"
+        miniBalance = Number(fin.miniBalance); // Quỹ Phụ (độc lập)
+        const carry = Number(
+          (fin.carryForward as { balance?: unknown } | undefined)?.balance ?? 0,
+        );
+        totalAssets = Number(
+          (fin.clubAssets as { balance?: unknown } | undefined)?.balance ??
+            commonBalance + carry,
+        );
+      } catch (e) {
+        this.logger.warn(
+          `[Maika] Không lấy được số liệu Finance Engine cho kỳ ${activePeriod.id}, dùng số tự tính (fallback): ${String(e)}`,
+        );
+      }
+    }
 
     // Count unpaid members in active period
     let unpaidCount = 0;
@@ -112,7 +139,7 @@ export class MaikaService {
       unpaidCount,
       commonBalance,
       miniBalance,
-      totalAssets: commonBalance + miniBalance,
+      totalAssets,
       commonIncome,
       commonExpense,
       currentPeriodName: activePeriod?.name ?? null,
@@ -188,9 +215,9 @@ export class MaikaService {
 Dữ liệu CLB "${snap.clubName}" hôm nay ${today}:
 - Thành viên hoạt động: ${snap.activeMembers}/${snap.totalMembers}
 - Chưa đóng quỹ: ${snap.unpaidCount} người
-- Quỹ chung: ${snap.commonBalance.toLocaleString('vi-VN')}đ
-- Quỹ mini: ${snap.miniBalance.toLocaleString('vi-VN')}đ
-- Tổng tài sản: ${snap.totalAssets.toLocaleString('vi-VN')}đ
+- Quỹ Chính (kỳ hiện tại): ${snap.commonBalance.toLocaleString('vi-VN')}đ
+- Quỹ Phụ (độc lập): ${snap.miniBalance.toLocaleString('vi-VN')}đ
+- Tổng tài sản CLB (Quỹ Chính + chuyển kỳ): ${snap.totalAssets.toLocaleString('vi-VN')}đ
 - Kỳ hiện tại: ${snap.currentPeriodName ?? 'Chưa có kỳ'}
 - Điểm sức khỏe CLB: ${healthScore.score}/100
 
@@ -283,14 +310,23 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
   // ─── Anomaly Detection ────────────────────────────────────────────────────
 
   private computeAnomaliesFromSnap(
-    snap: Pick<ClubSnapshot, 'totalAssets' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
+    snap: Pick<ClubSnapshot, 'commonBalance' | 'miniBalance' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
   ): AnomalyResult['anomalies'] {
     const anomalies: AnomalyResult['anomalies'] = [];
-    if (snap.totalAssets < 0) {
+    // Quỹ Chính âm — số liệu Finance Engine, khớp KPI "Số dư Quỹ Chính" trên Dashboard.
+    if (snap.commonBalance < 0) {
       anomalies.push({
         type: 'fund_negative',
-        description: `Quỹ âm: ${snap.totalAssets.toLocaleString('vi-VN')}đ`,
+        description: `Quỹ Chính âm: ${snap.commonBalance.toLocaleString('vi-VN')}đ`,
         severity: 'HIGH',
+      });
+    }
+    // Quỹ Phụ (Mini) âm — cảnh báo RIÊNG, KHÔNG gộp vào Quỹ Chính (hai quỹ độc lập).
+    if (snap.miniBalance < 0) {
+      anomalies.push({
+        type: 'mini_fund_negative',
+        description: `Quỹ Phụ âm: ${snap.miniBalance.toLocaleString('vi-VN')}đ`,
+        severity: 'MEDIUM',
       });
     }
     if (snap.activeMembers > 0 && snap.unpaidCount / snap.activeMembers > 0.5) {
