@@ -112,7 +112,10 @@ export class MaikaService {
       unpaidCount,
       commonBalance,
       miniBalance,
-      totalAssets: commonBalance + miniBalance,
+      // Tổng tài sản CLB = Quỹ Chính; KHÔNG cộng Quỹ Phụ (Mini độc lập — nhất quán
+      // Dashboard/Reports & FinancialCalculatorService.clubAssets). Trước đây cộng gộp
+      // miniBalance → "Quỹ âm" lệch báo cáo.
+      totalAssets: commonBalance,
       commonIncome,
       commonExpense,
       currentPeriodName: activePeriod?.name ?? null,
@@ -188,9 +191,9 @@ export class MaikaService {
 Dữ liệu CLB "${snap.clubName}" hôm nay ${today}:
 - Thành viên hoạt động: ${snap.activeMembers}/${snap.totalMembers}
 - Chưa đóng quỹ: ${snap.unpaidCount} người
-- Quỹ chung: ${snap.commonBalance.toLocaleString('vi-VN')}đ
-- Quỹ mini: ${snap.miniBalance.toLocaleString('vi-VN')}đ
-- Tổng tài sản: ${snap.totalAssets.toLocaleString('vi-VN')}đ
+- Quỹ Chính: ${snap.commonBalance.toLocaleString('vi-VN')}đ
+- Quỹ Phụ (độc lập): ${snap.miniBalance.toLocaleString('vi-VN')}đ
+- Tổng tài sản CLB (không gồm Quỹ Phụ): ${snap.totalAssets.toLocaleString('vi-VN')}đ
 - Kỳ hiện tại: ${snap.currentPeriodName ?? 'Chưa có kỳ'}
 - Điểm sức khỏe CLB: ${healthScore.score}/100
 
@@ -283,14 +286,23 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
   // ─── Anomaly Detection ────────────────────────────────────────────────────
 
   private computeAnomaliesFromSnap(
-    snap: Pick<ClubSnapshot, 'totalAssets' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
+    snap: Pick<ClubSnapshot, 'commonBalance' | 'miniBalance' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
   ): AnomalyResult['anomalies'] {
     const anomalies: AnomalyResult['anomalies'] = [];
-    if (snap.totalAssets < 0) {
+    // Quỹ Chính âm — CHỈ xét Quỹ Chính (KHÔNG gộp Quỹ Phụ). Khớp báo cáo dashboard.
+    if (snap.commonBalance < 0) {
       anomalies.push({
         type: 'fund_negative',
-        description: `Quỹ âm: ${snap.totalAssets.toLocaleString('vi-VN')}đ`,
+        description: `Quỹ Chính âm: ${snap.commonBalance.toLocaleString('vi-VN')}đ`,
         severity: 'HIGH',
+      });
+    }
+    // Quỹ Phụ (Mini) âm — cảnh báo RIÊNG, hai quỹ độc lập, KHÔNG cộng gộp.
+    if (snap.miniBalance < 0) {
+      anomalies.push({
+        type: 'mini_fund_negative',
+        description: `Quỹ Phụ âm: ${snap.miniBalance.toLocaleString('vi-VN')}đ`,
+        severity: 'MEDIUM',
       });
     }
     if (snap.activeMembers > 0 && snap.unpaidCount / snap.activeMembers > 0.5) {
