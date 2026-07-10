@@ -85,7 +85,7 @@ export function mapToInfographicData(src: ReportSource): InfographicReportData {
 
 /* ── Export PNG ── */
 export async function exportInfographicAsPng(elementId: string, fileName: string): Promise<void> {
-  const { default: html2canvas } = await import('html2canvas')
+  const { default: html2canvas } = await import('html2canvas-pro')
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
 
@@ -109,7 +109,7 @@ export async function exportInfographicAsPng(elementId: string, fileName: string
 
 /* ── Export PDF ── */
 export async function exportInfographicAsPdf(elementId: string, fileName: string): Promise<void> {
-  const { default: html2canvas } = await import('html2canvas')
+  const { default: html2canvas } = await import('html2canvas-pro')
   const { default: jsPDF } = await import('jspdf')
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
@@ -145,7 +145,7 @@ export function canShare(): boolean {
 }
 
 export async function shareInfographic(elementId: string, title: string): Promise<void> {
-  const { default: html2canvas } = await import('html2canvas')
+  const { default: html2canvas } = await import('html2canvas-pro')
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
 
