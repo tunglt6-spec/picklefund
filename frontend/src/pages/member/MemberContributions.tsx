@@ -156,7 +156,7 @@ export function MemberContributions() {
   ]
 
   return (
-    <PageShell maxWidth={960}>
+    <PageShell maxWidth={1200}>
       <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName} />
 
       {/* KPI — MetricCard giống Admin */}

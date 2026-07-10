@@ -152,7 +152,7 @@ export function MemberAttendance() {
   const rateBar = rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'
 
   return (
-    <PageShell maxWidth={960}>
+    <PageShell maxWidth={1200}>
       <PageHeader
         title="Lịch Tham Gia"
         subtitle={activePeriod ? `${activePeriod.name} · ${myMember?.fullName ?? 'Thành viên'}` : 'Chưa có kỳ quỹ'}

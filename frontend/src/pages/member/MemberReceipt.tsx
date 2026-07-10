@@ -280,7 +280,7 @@ export function MemberReceipt() {
         }
       />
 
-      <div ref={printRef} className="pf-center-x w-full max-w-[800px] p-6 space-y-5">
+      <div ref={printRef} className="pf-center-x w-full max-w-[1000px] p-6 space-y-5">
 
         {/* QR Payment Banner — shown prominently when member has unpaid balance */}
         {(() => {

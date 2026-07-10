@@ -113,7 +113,7 @@ export function MemberNotifications() {
   }
 
   return (
-    <PageShell maxWidth={720}>
+    <PageShell maxWidth={900}>
       <PageHeader
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
