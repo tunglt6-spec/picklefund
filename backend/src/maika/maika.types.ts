@@ -4,13 +4,11 @@ export interface ClubSnapshot {
   activeMembers: number;
   totalMembers: number;
   unpaidCount: number;
-  // Số liệu tài chính lấy TRỰC TIẾP từ Finance Engine (FundPeriodsService.summary) khi có kỳ
-  // đang mở — KHÔNG tự tính (finance isolation). Mỗi field khớp đúng 1 KPI trên Dashboard/Reports:
-  commonBalance: number; // Quỹ Chính kỳ hiện tại — khớp KPI "Số dư Quỹ Chính"
-  miniBalance: number; // Quỹ Phụ (độc lập) — khớp KPI "Quỹ Phụ"
-  totalAssets: number; // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ (KHÔNG cộng Quỹ Phụ) — khớp "Tổng tài sản CLB"
-  commonIncome: number; // Tổng thu kỳ (Quỹ Chính)
-  commonExpense: number; // Tổng chi kỳ (Quỹ Chính)
+  commonBalance: number;
+  miniBalance: number;
+  totalAssets: number;
+  commonIncome: number;
+  commonExpense: number;
   currentPeriodName: string | null;
   currentPeriodSessions: number;
   recentAnomalies: AnomalyResult['anomalies'];
