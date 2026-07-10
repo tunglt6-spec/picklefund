@@ -202,7 +202,9 @@ export function Contributions() {
       }
       try {
         if (editTarget) {
-          const res = await api.put(`/contributions/${editTarget.id}`, payload)
+          // fundSource bất biến — DTO update KHÔNG nhận field này (forbidNonWhitelisted).
+          const { fundSource: _omitFs, ...updatePayload } = payload
+          const res = await api.put(`/contributions/${editTarget.id}`, updatePayload)
           const updated = res.data?.data
           setContributions(prev => prev.map(c => c.id === editTarget.id
             ? { ...c, ...updated, amount: Number(updated.amount), member } : c))
@@ -228,7 +230,9 @@ export function Contributions() {
       }
       try {
         if (editTarget) {
-          await api.put(`/contributions/${editTarget.id}`, payload)
+          // fundSource bất biến — DTO update KHÔNG nhận field này (forbidNonWhitelisted).
+          const { fundSource: _omitFs, ...updatePayload } = payload
+          await api.put(`/contributions/${editTarget.id}`, updatePayload)
           setContributions(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...payload, id: c.id } : c))
           toast.success('Đã cập nhật khoản thu Quỹ Phụ')
         } else {
