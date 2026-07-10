@@ -269,7 +269,7 @@ export function MemberReceipt() {
   )
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       <PageHeader
         title="Phiếu Thu Cá Nhân"
         subtitle={memberName}
@@ -280,7 +280,7 @@ export function MemberReceipt() {
         }
       />
 
-      <div ref={printRef} className="p-6 max-w-[800px] mx-auto space-y-5">
+      <div ref={printRef} className="pf-center-x w-full max-w-[800px] p-6 space-y-5">
 
         {/* QR Payment Banner — shown prominently when member has unpaid balance */}
         {(() => {

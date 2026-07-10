@@ -215,8 +215,8 @@ export function MemberLisaChat() {
           <RefreshCw size={13} />Làm mới
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-6 max-w-[760px] mx-auto w-full">{chatContent}</div>
-      <div className="bg-white border-t border-slate-100 p-4 max-w-[760px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-6 max-w-[760px] pf-center-x w-full">{chatContent}</div>
+      <div className="bg-white border-t border-slate-100 p-4 max-w-[760px] pf-center-x w-full">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <input value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa về tình trạng đóng quỹ, buổi tập, chi phí..."
