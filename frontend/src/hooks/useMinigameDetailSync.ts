@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMinigameStore } from '../store/minigameStore'
 import api from '../lib/api'
-import type { MiniGame, MiniGameParticipant } from '../types/minigame'
+import { normalizeMinigameStatus, type MiniGame, type MiniGameParticipant } from '../types/minigame'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -38,7 +38,7 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         description: m.description ?? undefined,
         startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
         endDate: m.endDate ?? undefined,
-        status: m.status ?? 'DRAFT',
+        status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,
         winPoints: m.settings?.winPoints ?? 3,

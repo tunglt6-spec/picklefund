@@ -20,7 +20,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useMinigameDelegate } from '../../../hooks/useMinigameDelegate'
-import type { MinigameStatus, MiniGame } from '../../../types/minigame'
+import { normalizeMinigameStatus, type MinigameStatus, type MiniGame } from '../../../types/minigame'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 import {
@@ -133,7 +133,7 @@ export function MinigameList() {
       const list: MiniGame[] = raw.map(m => ({
         id: m.id, clubId: m.clubId, name: m.name, description: m.description ?? undefined,
         startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
-        endDate: m.endDate ?? undefined, status: m.status ?? 'DRAFT',
+        endDate: m.endDate ?? undefined, status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4, allowDraw: m.settings?.allowDraw ?? false,
         winPoints: m.settings?.winPoints ?? 3, drawPoints: m.settings?.drawPoints ?? 1,
         lossPoints: m.settings?.lossPoints ?? 0, notes: m.notes ?? undefined,

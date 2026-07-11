@@ -10,7 +10,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { formatDate } from '../../../lib/utils'
 import api from '../../../lib/api'
-import type { MinigameStatus, MiniGame } from '../../../types/minigame'
+import { normalizeMinigameStatus, type MinigameStatus, type MiniGame } from '../../../types/minigame'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, EmptyState, LoadingState, ErrorState,
   type StatusTone,
@@ -46,7 +46,7 @@ export function MatchHistory() {
       const list: MiniGame[] = raw.map(m => ({
         id: m.id, clubId: m.clubId, name: m.name, description: m.description ?? undefined,
         startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
-        endDate: m.endDate ?? undefined, status: m.status ?? 'DRAFT',
+        endDate: m.endDate ?? undefined, status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4, allowDraw: m.settings?.allowDraw ?? false,
         winPoints: m.settings?.winPoints ?? 3, drawPoints: m.settings?.drawPoints ?? 1,
         lossPoints: m.settings?.lossPoints ?? 0, notes: m.notes ?? undefined,

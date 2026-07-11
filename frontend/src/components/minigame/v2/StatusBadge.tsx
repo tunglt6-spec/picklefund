@@ -1,13 +1,16 @@
 export type MinigameStatus =
   | 'DRAFT'
+  | 'ACTIVE'
   | 'GROUPED'
+  | 'PAIRED'
   | 'SCHEDULED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED';
 
 interface StatusBadgeProps {
-  status: MinigameStatus;
+  // string (không chỉ MinigameStatus) để KHÔNG BAO GIỜ crash nếu backend đổi/thêm status.
+  status: MinigameStatus | string;
 }
 
 interface StatusConfig {
@@ -17,13 +20,24 @@ interface StatusConfig {
   pulse?: boolean;
 }
 
-const STATUS_CONFIG: Record<MinigameStatus, StatusConfig> = {
+const STATUS_CONFIG: Record<string, StatusConfig> = {
   DRAFT: {
     label: 'Nháp',
     badgeClass: 'bg-slate-100 text-slate-600',
   },
+  // ACTIVE = status backend (Prisma) cho "đang diễn ra" — map hiển thị như IN_PROGRESS.
+  ACTIVE: {
+    label: 'Đang Diễn Ra',
+    badgeClass: 'bg-amber-100 text-amber-700',
+    dotClass: 'bg-amber-500',
+    pulse: true,
+  },
   GROUPED: {
     label: 'Đã Chia Bảng',
+    badgeClass: 'bg-sky-100 text-sky-700',
+  },
+  PAIRED: {
+    label: 'Đã Bốc Thăm',
     badgeClass: 'bg-sky-100 text-sky-700',
   },
   SCHEDULED: {
@@ -46,8 +60,14 @@ const STATUS_CONFIG: Record<MinigameStatus, StatusConfig> = {
   },
 };
 
+const FALLBACK_CONFIG: StatusConfig = {
+  label: 'Không rõ',
+  badgeClass: 'bg-slate-100 text-slate-600',
+};
+
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  // Fallback: status lạ (backend thêm/đổi) KHÔNG được ném lỗi → tránh màn trắng toàn dashboard.
+  const config = STATUS_CONFIG[status] ?? FALLBACK_CONFIG;
 
   return (
     <span

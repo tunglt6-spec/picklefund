@@ -32,6 +32,25 @@ export function isGuestId(memberId?: string | null): boolean {
   return !!memberId && memberId.startsWith('guest-')
 }
 
+const KNOWN_MINIGAME_STATUS: MinigameStatus[] = [
+  'DRAFT', 'GROUPED', 'PAIRED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED',
+]
+
+/**
+ * Chuẩn hoá status minigame từ backend về enum FE.
+ * Backend (Prisma MinigameStatus) = DRAFT | ACTIVE | COMPLETED | CANCELLED — KHÔNG có IN_PROGRESS;
+ * FE dùng IN_PROGRESS cho "đang diễn ra". Nếu KHÔNG map, status 'ACTIVE' lọt vào các Record<status>
+ * → undefined → StatusBadge crash (màn trắng) + đếm "đang diễn ra" sai. Map ACTIVE → IN_PROGRESS,
+ * status lạ → DRAFT (an toàn, không bao giờ trả undefined).
+ */
+export function normalizeMinigameStatus(raw?: string | null): MinigameStatus {
+  if (!raw) return 'DRAFT'
+  if (raw === 'ACTIVE') return 'IN_PROGRESS'
+  return KNOWN_MINIGAME_STATUS.includes(raw as MinigameStatus)
+    ? (raw as MinigameStatus)
+    : 'DRAFT'
+}
+
 export interface MiniGameParticipant {
   id: string
   minigameId: string

@@ -26,7 +26,8 @@ const SKILL_CONFIG: Record<SkillLevel, SkillConfig> = {
 };
 
 export function SkillBadge({ skill, size = 'sm' }: SkillBadgeProps) {
-  const config = SKILL_CONFIG[skill];
+  // Fallback: skill lạ/undefined KHÔNG được ném lỗi (tránh crash panel).
+  const config = SKILL_CONFIG[skill] ?? SKILL_CONFIG.TB;
   const paddingClass = size === 'xs' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-0.5 text-xs';
 
   return (
