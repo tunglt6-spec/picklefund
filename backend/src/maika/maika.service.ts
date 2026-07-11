@@ -46,12 +46,12 @@ export class MaikaService {
         }),
         this.prisma.fundContribution.findMany({
           where: { clubId, isConfirmed: true },
-          select: { amount: true, fundSource: true },
+          select: { amount: true, fundSource: true, fundPeriodId: true },
         }),
         this.prisma.livingExpense.findMany({
           // status approved/paid — nhất quán FinancialCalculatorService (chi pending/rejected KHÔNG tính vào quỹ)
           where: { clubId, status: { in: ['approved', 'paid'] } },
-          select: { amount: true, fundSource: true },
+          select: { amount: true, fundSource: true, fundPeriodId: true },
         }),
         this.prisma.attendanceSession.findMany({
           where: { clubId },
@@ -66,14 +66,22 @@ export class MaikaService {
     const activeMembers = members.filter((m) => m.status === 'active').length;
     const totalMembers = members.length;
 
-    const commonContribs = contributions.filter(
+    // Số dư quỹ theo KỲ ĐANG MỞ — khớp chính xác KPI Dashboard/Reports ("Số dư Quỹ Chính"
+    // / "Quỹ Phụ" đều là số của kỳ hiện tại, KHÔNG phải luỹ kế all-time). Khi chưa có kỳ mở
+    // thì tính all-time làm fallback.
+    const inScope = (fundPeriodId: string | null) =>
+      !activePeriod || fundPeriodId === activePeriod.id;
+    const scopedContribs = contributions.filter((c) => inScope(c.fundPeriodId));
+    const scopedExpenses = expenses.filter((e) => inScope(e.fundPeriodId));
+
+    const commonContribs = scopedContribs.filter(
       (c) => (c.fundSource ?? 'COMMON') === 'COMMON',
     );
-    const miniContribs = contributions.filter((c) => c.fundSource === 'MINI');
-    const commonExp = expenses.filter(
+    const miniContribs = scopedContribs.filter((c) => c.fundSource === 'MINI');
+    const commonExp = scopedExpenses.filter(
       (e) => (e.fundSource ?? 'COMMON') === 'COMMON',
     );
-    const miniExp = expenses.filter((e) => e.fundSource === 'MINI');
+    const miniExp = scopedExpenses.filter((e) => e.fundSource === 'MINI');
 
     const commonIncome = commonContribs.reduce(
       (s, c) => s + Number(c.amount),
@@ -191,16 +199,15 @@ export class MaikaService {
 Dữ liệu CLB "${snap.clubName}" hôm nay ${today}:
 - Thành viên hoạt động: ${snap.activeMembers}/${snap.totalMembers}
 - Chưa đóng quỹ: ${snap.unpaidCount} người
-- Quỹ Chính: ${snap.commonBalance.toLocaleString('vi-VN')}đ
+- Số dư Quỹ Chính (kỳ hiện tại): ${snap.commonBalance.toLocaleString('vi-VN')}đ
 - Quỹ Phụ (độc lập): ${snap.miniBalance.toLocaleString('vi-VN')}đ
-- Tổng tài sản CLB (không gồm Quỹ Phụ): ${snap.totalAssets.toLocaleString('vi-VN')}đ
 - Kỳ hiện tại: ${snap.currentPeriodName ?? 'Chưa có kỳ'}
 - Điểm sức khỏe CLB: ${healthScore.score}/100
 
 Viết Daily Brief ngắn gọn (3-4 câu), chuyên nghiệp, bằng tiếng Việt.
 Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.`;
 
-    const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Tổng tài sản ${snap.totalAssets.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`;
+    const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Số dư Quỹ Chính ${snap.commonBalance.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`;
 
     const summary = await this.askAI(prompt, fallback);
 

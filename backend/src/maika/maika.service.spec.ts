@@ -81,3 +81,71 @@ describe('MaikaService — anomaly tài chính (Quỹ Chính vs Quỹ Phụ)', (
     expect(anomalies.find((a) => a.type === 'mini_fund_negative')).toBeUndefined();
   });
 });
+
+/**
+ * getClubSnapshot: số dư quỹ phải theo KỲ ĐANG MỞ (khớp KPI Dashboard "Số dư Quỹ Chính"
+ * / "Quỹ Phụ" — đều là số kỳ hiện tại), KHÔNG luỹ kế all-time và KHÔNG gộp Quỹ Phụ.
+ */
+describe('MaikaService.getClubSnapshot — scope theo kỳ đang mở', () => {
+  const ACTIVE = 'P-ACTIVE';
+  const PREV = 'P-PREV';
+
+  const prisma = {
+    club: { findUnique: async () => ({ name: 'THE PING' }) },
+    member: {
+      findMany: async () => [
+        { id: 'm1', status: 'active' },
+        { id: 'm2', status: 'active' },
+      ],
+    },
+    fundContribution: {
+      findMany: async (args: {
+        select?: { memberId?: boolean };
+      }) => {
+        // Lần gọi đếm người đã đóng (select memberId) — trả 1 người đã đóng.
+        if (args?.select?.memberId) return [{ memberId: 'm1' }];
+        // Lần gọi snapshot: gồm cả kỳ trước (COMMON 1.000.000 — PHẢI bị loại) + kỳ hiện tại.
+        return [
+          { amount: 100_000, fundSource: 'COMMON', fundPeriodId: ACTIVE },
+          { amount: 1_000_000, fundSource: 'COMMON', fundPeriodId: PREV },
+          { amount: 50_000, fundSource: 'MINI', fundPeriodId: ACTIVE },
+        ];
+      },
+    },
+    livingExpense: {
+      findMany: async () => [
+        { amount: 300_000, fundSource: 'COMMON', fundPeriodId: ACTIVE },
+        { amount: 20_000, fundSource: 'COMMON', fundPeriodId: PREV }, // kỳ trước — loại
+        { amount: 80_000, fundSource: 'MINI', fundPeriodId: ACTIVE },
+      ],
+    },
+    attendanceSession: { findMany: async () => [{ fundPeriodId: ACTIVE }] },
+    fundPeriod: {
+      findFirst: async () => ({ id: ACTIVE, name: 'Kỳ Quý 3' }),
+    },
+  };
+
+  const service = new MaikaService(
+    prisma as never,
+    { get: () => undefined } as never,
+    null as never,
+  );
+
+  it('commonBalance/miniBalance chỉ tính kỳ đang mở, không gộp nhau', async () => {
+    const snap = await service.getClubSnapshot('club-1');
+    // Quỹ Chính kỳ hiện tại = 100.000 - 300.000 = -200.000 (KHÔNG gồm 1.000.000 kỳ trước)
+    expect(snap.commonBalance).toBe(-200_000);
+    // Quỹ Phụ kỳ hiện tại = 50.000 - 80.000 = -30.000 (độc lập)
+    expect(snap.miniBalance).toBe(-30_000);
+    // Tổng tài sản (Maika) = Quỹ Chính, KHÔNG cộng Quỹ Phụ
+    expect(snap.totalAssets).toBe(-200_000);
+    // Hai cảnh báo độc lập
+    expect(
+      snap.recentAnomalies.find((a) => a.type === 'fund_negative')?.description,
+    ).toContain('-200.000');
+    expect(
+      snap.recentAnomalies.find((a) => a.type === 'mini_fund_negative')
+        ?.description,
+    ).toContain('-30.000');
+  });
+});
