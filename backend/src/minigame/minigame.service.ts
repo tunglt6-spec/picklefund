@@ -255,6 +255,20 @@ export class MinigameService {
       : { player2Id: idVal, player2GuestId: guestVal, player2Name: nameVal };
   }
 
+  /**
+   * Fisher-Yates shuffle (bản sao mới, không đột biến input).
+   * KHÔNG dùng `arr.sort(() => Math.random() - 0.5)`: shuffle đó bị lệch và với mảng nhỏ
+   * V8 thường GIỮ NGUYÊN thứ tự → "Ghép Lại" bấm mà cặp không đổi.
+   */
+  private shuffle<T>(arr: readonly T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
   async generateTeams(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
     // GROUP_STAGE (Vòng bảng): chia bảng thay vì ghép đôi.
@@ -293,9 +307,11 @@ export class MinigameService {
     //  - BALANCED_SKILL_PAIRING: sắp theo skill giảm dần rồi xen kẽ mạnh↔yếu để
     //    mỗi đôi = 1 mạnh + 1 yếu → cân bằng trình độ giữa các đội (khách skill=3).
     //  - RANDOM_PAIRING (mặc định): xáo trộn ngẫu nhiên.
-    let ordered = [...pool];
+    let ordered: typeof pool;
     if (pairingMode === 'BALANCED_SKILL_PAIRING') {
-      const sorted = [...pool].sort((a, b) => b.skill - a.skill);
+      // Xáo trước RỒI mới sort skill giảm dần (Array.sort ổn định trong Node) → người CÙNG skill
+      // được xáo ngẫu nhiên ⇒ "Ghép Lại" cho cặp khác nhau mà vẫn cân bằng mạnh↔yếu.
+      const sorted = this.shuffle(pool).sort((a, b) => b.skill - a.skill);
       ordered = [];
       let lo = 0;
       let hi = sorted.length - 1;
@@ -306,7 +322,8 @@ export class MinigameService {
         hi--;
       }
     } else {
-      ordered.sort(() => Math.random() - 0.5);
+      // RANDOM_PAIRING (mặc định): xáo trộn NGẪU NHIÊN thật (Fisher-Yates).
+      ordered = this.shuffle(pool);
     }
 
     const teams: Prisma.MinigameTeamCreateManyInput[] = [];

@@ -216,6 +216,25 @@ describe('MinigameService', () => {
     });
   });
 
+  /* ── shuffle (Fisher-Yates) — nền tảng cho "Ghép Lại" đổi cặp ── */
+  describe('shuffle (Fisher-Yates)', () => {
+    it('giữ nguyên tập phần tử (là hoán vị) và không đột biến input', () => {
+      const input = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const out = (service as unknown as { shuffle: <T>(a: readonly T[]) => T[] }).shuffle(input);
+      expect(out).toHaveLength(input.length);
+      expect([...out].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      expect(input).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]); // input bất biến
+    });
+
+    it('ĐẢO thứ tự thật (khác input) — không bị kẹt như sort(()=>Math.random()-0.5)', () => {
+      const spy = jest.spyOn(Math, 'random').mockReturnValue(0);
+      const input = [0, 1, 2, 3, 4, 5];
+      const out = (service as unknown as { shuffle: <T>(a: readonly T[]) => T[] }).shuffle(input);
+      expect(out).not.toEqual(input);
+      spy.mockRestore();
+    });
+  });
+
   /* ── generateSchedule ── */
   describe('generateSchedule', () => {
     it('throws BadRequestException when fewer than 2 teams', async () => {
