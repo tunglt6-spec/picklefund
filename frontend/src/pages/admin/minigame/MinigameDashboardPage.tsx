@@ -72,8 +72,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       id: m.id,
       matchNumber: m.matchNumber,
       status: m.status === 'COMPLETED' ? 'COMPLETED' as const : 'PENDING_RESULT' as const,
-      team1: { player1Id: m.team1[0].memberId, player2Id: m.team1[1].memberId, player1: m.team1[0].memberName, player2: m.team1[1].memberName },
-      team2: { player1Id: m.team2[0].memberId, player2Id: m.team2[1].memberId, player1: m.team2[0].memberName, player2: m.team2[1].memberName },
+      // Optional-chaining: đội có thể chưa đủ 2 người (guest chưa resolve) — KHÔNG được crash trắng.
+      team1: { player1Id: m.team1[0]?.memberId ?? '', player2Id: m.team1[1]?.memberId ?? '', player1: m.team1[0]?.memberName ?? '—', player2: m.team1[1]?.memberName ?? '—' },
+      team2: { player1Id: m.team2[0]?.memberId ?? '', player2Id: m.team2[1]?.memberId ?? '', player1: m.team2[0]?.memberName ?? '—', player2: m.team2[1]?.memberName ?? '—' },
       score1: m.team1Score,
       score2: m.team2Score,
     })),
@@ -273,9 +274,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
 
-          {/* Primary CTA — mở rút thăm vòng mới (đánh đôi ngẫu nhiên) */}
+          {/* Primary CTA — bốc vòng mới. Backend → persist qua API + resync; local → modal. */}
           <button
-            onClick={() => setIsDrawModalOpen(true)}
+            onClick={handleDrawRound}
             className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
           >
             <Shuffle size={16} />
@@ -290,7 +291,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-1">
-            <GroupAssignmentPanel groups={groupCards} onDrawAgain={() => setIsDrawModalOpen(true)} />
+            <GroupAssignmentPanel groups={groupCards} onDrawAgain={handleDrawRound} />
           </div>
 
           <div className="lg:col-span-1">

@@ -45,10 +45,11 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
     enterScore(match.id, s1!, s2!, notes || undefined)
     try {
       await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1!, scoreB: s2! })
+      toast.success('Đã lưu kết quả trận đấu!')
     } catch {
+      // Không báo "đã lưu" khi server từ chối — tránh hiểu nhầm đã đồng bộ thành công.
       toast.error('Kết quả đã lưu cục bộ nhưng không thể đồng bộ lên server')
     }
-    toast.success('Đã lưu kết quả trận đấu!')
     onClose()
   }
 

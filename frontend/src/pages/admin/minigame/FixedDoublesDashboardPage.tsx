@@ -11,7 +11,7 @@ import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
-import { isGuestId } from '../../../types/minigame'
+import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 
@@ -680,7 +680,7 @@ export function FixedDoublesDashboardPage() {
       const mg = res.data?.data ?? res.data
       setTeamsFromApi(id, mg.teams ?? [])
       setTeamMatchesFromApi(id, mg.matches ?? [])
-      if (mg.status) updateMinigame(id, { status: mg.status })
+      if (mg.status) updateMinigame(id, { status: normalizeMinigameStatus(mg.status) })
     } catch { /* fallback to local store */ }
   }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
 

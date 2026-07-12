@@ -3,6 +3,8 @@ import { Minus, Plus } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { useMinigameStore } from '../../store/minigameStore'
+import api from '../../lib/api'
+import toast from 'react-hot-toast'
 import type { MiniGameDoublesMatch, MiniGame } from '../../types/minigame'
 
 interface Props {
@@ -47,9 +49,17 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
     return [...winners.map(p => `${p.memberName} +${wp}đ`), ...losers.map(p => `${p.memberName} +${lp}đ`)].join(' · ')
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (noDrawAllowed) return
+    // Cập nhật store local (optimistic) + PERSIST lên server. Trước đây chỉ lưu local
+    // → điểm trận đôi mất khi resync/reload trên phiên backend.
     enterDoublesMatchResult(match.id, s1, s2, note || undefined)
+    try {
+      await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1, scoreB: s2 })
+      toast.success('Đã lưu kết quả trận đấu!')
+    } catch {
+      toast.error('Kết quả đã lưu cục bộ nhưng không thể đồng bộ lên server')
+    }
     onClose()
   }
 

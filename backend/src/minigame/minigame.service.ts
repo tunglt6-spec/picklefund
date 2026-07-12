@@ -449,7 +449,7 @@ export class MinigameService {
       Number.isFinite(rawSize) && rawSize >= 2 ? Math.floor(rawSize) : 4;
 
     // Xáo ngẫu nhiên rồi chia đều: numGroups = ceil(n/size); dư phân bổ vào các bảng đầu.
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const shuffled = this.shuffle(pool);
     const numGroups = Math.max(1, Math.ceil(shuffled.length / groupSize));
     const base = Math.floor(shuffled.length / numGroups);
     const extra = shuffled.length % numGroups;
@@ -635,7 +635,7 @@ export class MinigameService {
     });
     const nextRound = (agg._max.round ?? 0) + 1;
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const shuffled = this.shuffle(pool);
     const matchCount = Math.floor(shuffled.length / 4);
     for (let i = 0; i < matchCount; i++) {
       const g = shuffled.slice(i * 4, i * 4 + 4);

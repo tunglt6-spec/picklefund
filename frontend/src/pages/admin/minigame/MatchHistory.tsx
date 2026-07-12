@@ -114,7 +114,7 @@ export function MatchHistory() {
                       <CalendarDays size={12} />{mg.endDate ? formatDate(mg.endDate) : mg.createdAt ? formatDate(mg.createdAt.slice(0, 10)) : '—'}
                     </p>
                   </div>
-                  <StatusBadge tone={STATUS_TONE[mg.status]}>{STATUS_LABEL[mg.status]}</StatusBadge>
+                  <StatusBadge tone={STATUS_TONE[mg.status] ?? 'neutral'}>{STATUS_LABEL[mg.status] ?? mg.status}</StatusBadge>
                 </div>
 
                 <div className="mt-3 flex items-center gap-4 text-xs [color:var(--pf-color-muted)]">
