@@ -1,0 +1,29 @@
+# CO-HOSTING OVERRIDE — giữ định tuyến cho AI Commerce (store.picklefund.uk).
+#
+# Vì sao file này tracked (được version): CI deploy chạy `git clean -fd` sẽ XOÁ mọi
+# file untracked, nên nếu để override untracked thì mỗi lần deploy nginx tái tạo sẽ
+# MẤT vhost + mạng của AI Commerce -> store.picklefund.uk rơi về 404. Tracked =>
+# `git clean` không xoá, `git reset --hard` khôi phục, `docker compose up` tự nạp.
+#
+# Nó thêm vào service `nginx`:
+#   - mount vhost AI Commerce (nằm ở repo ai-commerce trên VPS, cây thư mục khác);
+#   - tham gia mạng ngoài `commerce-net` (do stack ai-commerce tạo) để nginx gọi được
+#     ai-commerce-web / ai-commerce-api.
+#
+# LƯU Ý DEV LOCAL: đường dẫn /opt/ai-commerce/... và mạng commerce-net chỉ có trên VPS.
+# Khi chạy compose ở máy local, bỏ qua file này bằng: `docker compose -f docker-compose.yml up`.
+
+services:
+  nginx:
+    volumes:
+      - /opt/ai-commerce/deploy/nginx-commerce.conf:/etc/nginx/conf.d/commerce.conf:ro
+    networks:
+      - commerce-net
+
+networks:
+  # KHÔNG dùng external:true — nếu stack ai-commerce chưa chạy (commerce-net chưa tồn
+  # tại) thì `external:true` làm `compose up` FAIL và sập luôn PickleFund. Với `name:`
+  # cố định, PickleFund tự tạo nếu vắng và dùng chung nếu ai-commerce đã tạo.
+  commerce-net:
+    name: commerce-net
+    driver: bridge
