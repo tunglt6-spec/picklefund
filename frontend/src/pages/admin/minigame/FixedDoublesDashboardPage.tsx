@@ -10,7 +10,7 @@ import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
+import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
@@ -758,7 +758,12 @@ export function FixedDoublesDashboardPage() {
       const mg = res.data?.data ?? res.data
       setTeamsFromApi(id, mg.teams ?? [])
       setTeamMatchesFromApi(id, mg.matches ?? [])
-      if (mg.status) updateMinigame(id, { status: normalizeMinigameStatus(mg.status) })
+      // pairingMode nằm trong settings — hydrate lại tại đây để dashboard tự sửa dù store
+      // (nạp từ danh sách) có thể thiếu field → isManual đúng chế độ (THỦ CÔNG vs TỰ ĐỘNG).
+      const patch: Partial<MiniGame> = {}
+      if (mg.status) patch.status = normalizeMinigameStatus(mg.status)
+      if (mg.settings?.pairingMode) patch.pairingMode = mg.settings.pairingMode
+      if (Object.keys(patch).length) updateMinigame(id, patch)
     } catch { /* fallback to local store */ }
   }, [id, setTeamsFromApi, setTeamMatchesFromApi, updateMinigame])
 

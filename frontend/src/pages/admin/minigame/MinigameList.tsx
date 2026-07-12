@@ -139,6 +139,7 @@ export function MinigameList() {
         lossPoints: m.settings?.lossPoints ?? 0, notes: m.notes ?? undefined,
         createdBy: m.createdById ?? '', createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE', drawMode: m.settings?.drawMode ?? 'RANDOM',
+        pairingMode: m.settings?.pairingMode ?? undefined,
       }))
       setMinigamesFromApi(clubId, list)
       setLoadState('idle')
