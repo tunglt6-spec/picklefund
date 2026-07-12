@@ -783,6 +783,29 @@ export class MinigameService {
     if (!match || match.minigame.clubId !== clubId)
       throw new NotFoundException('Trận đấu không tồn tại');
 
+    // Điểm xếp hạng theo CẤU HÌNH minigame (settings), không hardcode 3/1/0 — khớp BXH hiển thị.
+    const s = this.asSettings(match.minigame.settings);
+    const winPoints = Number.isFinite(Number(s.winPoints))
+      ? Number(s.winPoints)
+      : 3;
+    const drawPoints = Number.isFinite(Number(s.drawPoints))
+      ? Number(s.drawPoints)
+      : 1;
+    const lossPoints = Number.isFinite(Number(s.lossPoints))
+      ? Number(s.lossPoints)
+      : 0;
+    const allowDraw = s.allowDraw === true;
+
+    // Guard hòa: không cho lưu kết quả hòa nếu minigame không cho phép (khớp guard phía UI).
+    if (scoreA === scoreB && !allowDraw)
+      throw new BadRequestException(
+        'Giải đấu này không cho phép kết quả hòa.',
+      );
+
+    // Điểm cộng cho mỗi đội theo kết quả (dùng chung cho cộng mới + đảo kết quả cũ).
+    const ptsFor = (won: boolean, draw: boolean) =>
+      won ? winPoints : draw ? drawPoints : lossPoints;
+
     const winnerId =
       scoreA > scoreB ? match.teamAId : scoreB > scoreA ? match.teamBId : null;
 
@@ -800,7 +823,7 @@ export class MinigameService {
           data: {
             wins: { decrement: oldAWin ? 1 : 0 },
             losses: { decrement: oldBWin ? 1 : 0 },
-            points: { decrement: oldAWin ? 3 : oldDraw ? 1 : 0 },
+            points: { decrement: ptsFor(oldAWin, oldDraw) },
           },
         });
       }
@@ -810,7 +833,7 @@ export class MinigameService {
           data: {
             wins: { decrement: oldBWin ? 1 : 0 },
             losses: { decrement: oldAWin ? 1 : 0 },
-            points: { decrement: oldBWin ? 3 : oldDraw ? 1 : 0 },
+            points: { decrement: ptsFor(oldBWin, oldDraw) },
           },
         });
       }
@@ -834,9 +857,7 @@ export class MinigameService {
         data: {
           wins: { increment: scoreA > scoreB ? 1 : 0 },
           losses: { increment: scoreA < scoreB ? 1 : 0 },
-          points: {
-            increment: scoreA > scoreB ? 3 : scoreA === scoreB ? 1 : 0,
-          },
+          points: { increment: ptsFor(scoreA > scoreB, scoreA === scoreB) },
         },
       });
     }
@@ -846,9 +867,7 @@ export class MinigameService {
         data: {
           wins: { increment: scoreB > scoreA ? 1 : 0 },
           losses: { increment: scoreB < scoreA ? 1 : 0 },
-          points: {
-            increment: scoreB > scoreA ? 3 : scoreA === scoreB ? 1 : 0,
-          },
+          points: { increment: ptsFor(scoreB > scoreA, scoreA === scoreB) },
         },
       });
     }

@@ -1976,27 +1976,33 @@ export const useMinigameStore = create<MinigameStore>()(
         const mgTeams = get().teams.filter(t => t.minigameId === minigameId)
         if (mgTeams.length < 2) { toast.error('Cần ít nhất 2 đội'); return }
         const n = mgTeams.length
-        // Circle method: fix index 0, rotate the rest
-        const indices = Array.from({ length: n }, (_, i) => i)
+        // Circle method CHUẨN: lẻ → thêm 1 suất NGHỈ (BYE) cho chẵn; đội gặp BYE nghỉ vòng đó.
+        // (Bản cũ xoay theo (k+round)%(n-1) sai với n lẻ: trùng vòng cuối + thiếu/dư cặp.)
+        const hasBye = n % 2 !== 0
+        const m = hasBye ? n + 1 : n // số suất (chẵn); suất BYE = index (m-1)
+        const rounds = m - 1
+        const half = m / 2
+        let arr = Array.from({ length: m }, (_, i) => i)
         const newMatches: MiniGameTeamMatch[] = []
-        const rounds = n % 2 === 0 ? n - 1 : n
         let matchCounter = 1
         for (let round = 0; round < rounds; round++) {
-          const rotated = [indices[0], ...indices.slice(1).map((_, k) => indices[1 + ((k + round) % (n - 1))])]
           let matchNum = 1
-          for (let i = 0; i < Math.floor(n / 2); i++) {
-            const t1 = mgTeams[rotated[i]]
-            const t2 = mgTeams[rotated[n - 1 - i]]
+          for (let i = 0; i < half; i++) {
+            const a = arr[i]
+            const b = arr[m - 1 - i]
+            if (hasBye && (a === m - 1 || b === m - 1)) continue // bỏ trận có suất NGHỈ
             newMatches.push({
               id: `tm-m-${minigameId}-${matchCounter++}`,
               minigameId,
               round: round + 1,
               matchNumber: matchNum++,
-              team1Id: t1.id,
-              team2Id: t2.id,
+              team1Id: mgTeams[a].id,
+              team2Id: mgTeams[b].id,
               status: 'PENDING',
             })
           }
+          // Xoay: giữ nguyên phần tử đầu, các suất còn lại quay 1 bước (arr[m-1] lên vị trí 1).
+          arr = [arr[0], arr[m - 1], ...arr.slice(1, m - 1)]
         }
         set(s => ({
           teamMatches: [...s.teamMatches.filter(m => m.minigameId !== minigameId), ...newMatches],

@@ -295,6 +295,67 @@ describe('MinigameService', () => {
     });
   });
 
+  /* ── updateMatchScore: điểm theo cấu hình + guard hòa ── */
+  describe('updateMatchScore', () => {
+    const matchWith = (settings: Record<string, unknown>) => ({
+      id: 'mt-1',
+      teamAId: 'A',
+      teamBId: 'B',
+      scoreA: null,
+      scoreB: null,
+      status: 'PENDING',
+      minigame: { clubId: 'club-1', settings },
+    });
+
+    it('từ chối hòa khi allowDraw không bật', async () => {
+      mockPrisma.minigameMatch.findUnique.mockResolvedValue(
+        matchWith({ allowDraw: false }),
+      );
+      await expect(
+        service.updateMatchScore('mt-1', 'club-1', 11, 11),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.minigameTeam.update).not.toHaveBeenCalled();
+    });
+
+    it('cho phép hòa khi allowDraw bật — cộng drawPoints cấu hình', async () => {
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce(matchWith({ allowDraw: true, drawPoints: 2 }))
+        .mockResolvedValue({ id: 'mt-1' });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+      await service.updateMatchScore('mt-1', 'club-1', 11, 11);
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'A' },
+          data: expect.objectContaining({ points: { increment: 2 } }),
+        }),
+      );
+    });
+
+    it('cộng điểm theo winPoints/lossPoints cấu hình (không hardcode 3/0)', async () => {
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce(
+          matchWith({ winPoints: 5, drawPoints: 2, lossPoints: 1 }),
+        )
+        .mockResolvedValue({ id: 'mt-1' });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+      await service.updateMatchScore('mt-1', 'club-1', 11, 5); // A thắng
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'A' },
+          data: expect.objectContaining({ points: { increment: 5 } }),
+        }),
+      );
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'B' },
+          data: expect.objectContaining({ points: { increment: 1 } }),
+        }),
+      );
+    });
+  });
+
   /* ── FIXED TEAM / SCHEDULE LOCK ── */
   describe('fixed team & schedule lock', () => {
     it('generateTeams rejects khi đã có matches (đội cố định)', async () => {
