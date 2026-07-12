@@ -49,6 +49,7 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE',
         drawMode: m.settings?.drawMode ?? 'RANDOM',
+        pairingMode: m.settings?.pairingMode ?? undefined,
       }
 
       // Member CLB thật (từ bảng minigame_participants)

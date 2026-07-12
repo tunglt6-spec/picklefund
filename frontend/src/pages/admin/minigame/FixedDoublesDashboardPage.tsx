@@ -10,7 +10,7 @@ import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
+import type { MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
@@ -658,6 +658,84 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
   )
 }
 
+// ── manual pairing panel (chế độ ✋ Thủ Công) ─────────────────────────────────
+// Trước đây chế độ MANUAL_PAIRING chọn được nhưng dashboard KHÔNG có cách tạo cặp
+// (chỉ có nút "Ghép Cặp Tự Động" bị backend chặn) → người dùng kẹt. Panel này cho chọn
+// 2 người chưa ghép → tạo cặp (POST /teams), lặp tới khi ghép hết rồi Tạo Lịch.
+function ManualPairPanel({ participants, teams, onCreateTeam, onDeleteTeam, onCreateSchedule }: {
+  participants: MiniGameParticipant[]
+  teams: MiniGameTeam[]
+  onCreateTeam: (p1: string, p2: string) => Promise<void>
+  onDeleteTeam: (teamId: string) => Promise<void>
+  onCreateSchedule: () => Promise<void>
+}) {
+  const [sel, setSel] = useState<string[]>([])
+  const [busy, setBusy] = useState(false)
+  const pairedIds = new Set(
+    teams.flatMap(t => [t.player1.memberId, t.player2.memberId]).filter(Boolean),
+  )
+  const unpaired = participants.filter(p => p.status === 'ACTIVE' && !pairedIds.has(p.memberId))
+  const toggle = (idv: string) =>
+    setSel(s => (s.includes(idv) ? s.filter(x => x !== idv) : s.length < 2 ? [...s, idv] : s))
+  const create = async () => {
+    if (sel.length !== 2 || busy) return
+    setBusy(true)
+    try { await onCreateTeam(sel[0], sel[1]); setSel([]) } finally { setBusy(false) }
+  }
+  const allPaired = unpaired.length === 0 && teams.length >= 2
+
+  return (
+    <div style={CARD} className="p-5 space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Users size={16} className="text-slate-400" />
+        <span className="font-bold text-slate-900">Ghép Cặp Thủ Công</span>
+        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">Chọn 2 người → Tạo cặp</span>
+      </div>
+
+      {teams.length > 0 && (
+        <div className="space-y-2">
+          {teams.map((t, i) => (
+            <div key={t.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-2.5">
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>{i + 1}</span>
+              <span className="flex-1 text-sm font-medium text-slate-800 truncate">{t.player1.memberName} &amp; {t.player2.memberName}</span>
+              <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-50" onClick={() => onDeleteTeam(t.id)}><Trash2 size={12} /></Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {unpaired.length > 0 ? (
+        <>
+          <p className="text-xs text-slate-500">Người chưa ghép ({unpaired.length}) — chọn đúng 2 người:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {unpaired.map(p => {
+              const active = sel.includes(p.memberId)
+              return (
+                <button key={p.id} onClick={() => toggle(p.memberId)}
+                  className={cn('flex items-center gap-2 rounded-xl px-3 py-2 border text-left transition-colors',
+                    active ? 'border-[color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                  <span className={cn('w-4 h-4 rounded-full border flex items-center justify-center text-[9px] shrink-0',
+                    active ? '[background:var(--pf-primary)] text-white border-transparent' : 'border-slate-300')}>{active ? '✓' : ''}</span>
+                  <span className="text-sm text-slate-800 truncate">{p.memberName}</span>
+                  {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[9px] font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
+                </button>
+              )
+            })}
+          </div>
+          <Button onClick={create} disabled={sel.length !== 2 || busy}><Plus size={13} /> Tạo Cặp ({sel.length}/2)</Button>
+        </>
+      ) : (
+        <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">✓ Đã ghép hết người chơi vào các cặp.</p>
+      )}
+
+      <div className="pt-2 border-t border-slate-100 flex justify-end">
+        <Button onClick={onCreateSchedule} disabled={!allPaired}><Calendar size={13} /> Tạo Lịch</Button>
+      </div>
+    </div>
+  )
+}
+
 // ── main page ──────────────────────────────────────────────────────────────────
 export function FixedDoublesDashboardPage() {
   const { id } = useParams<{ id: string }>()
@@ -665,7 +743,7 @@ export function FixedDoublesDashboardPage() {
   const {
     getMinigame, getTeams, getTeamStandings,
     getFixedDoublesDashboard, enterTeamMatchResult,
-    deleteTeamMatchResult,
+    deleteTeamMatchResult, participants,
     setTeamsFromApi, setTeamMatchesFromApi, updateMinigame,
   } = useMinigameStore()
 
@@ -698,6 +776,18 @@ export function FixedDoublesDashboardPage() {
       toast.error(e?.response?.data?.message ?? 'Lỗi ghép cặp')
     }
   }, [id, hydrateFromApi])
+
+  const handleCreateTeamManual = useCallback(async (player1Id: string, player2Id: string) => {
+    if (!id) return
+    try {
+      const teamCount = getTeams(id).length
+      await api.post(`/minigames/${id}/teams`, { name: `Đôi ${teamCount + 1}`, player1Id, player2Id })
+      await hydrateFromApi()
+      toast.success('Đã tạo cặp!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi tạo cặp')
+    }
+  }, [id, getTeams, hydrateFromApi])
 
   const handleCreateSchedule = useCallback(async () => {
     if (!id) return
@@ -774,6 +864,8 @@ export function FixedDoublesDashboardPage() {
   // luôn false → kẹt luồng đôi cố định.
   const hasTeams   = teams.length > 0
   const hasSchedule = schedule.length > 0
+  const isManual   = mg.pairingMode === 'MANUAL_PAIRING'
+  const mgParticipants = participants.filter(p => p.minigameId === id)
   const showSched  = hasSchedule
   const canEnter   = hasSchedule && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
 
@@ -873,9 +965,21 @@ export function FixedDoublesDashboardPage() {
           </div>
         )}
 
-        {/* phase-specific panels (suy từ dữ liệu) */}
-        {!hasTeams && <DraftPanel minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
-        {hasTeams && !hasSchedule && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
+        {/* phase-specific panels (suy từ dữ liệu). Chế độ THỦ CÔNG dùng panel ghép cặp riêng. */}
+        {!hasSchedule && (isManual ? (
+          <ManualPairPanel
+            participants={mgParticipants}
+            teams={teams}
+            onCreateTeam={handleCreateTeamManual}
+            onDeleteTeam={handleDeleteTeam}
+            onCreateSchedule={handleCreateSchedule}
+          />
+        ) : (
+          <>
+            {!hasTeams && <DraftPanel minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
+            {hasTeams && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
+          </>
+        ))}
 
         {/* main 12-col grid */}
         {showSched && (
