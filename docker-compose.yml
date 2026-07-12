@@ -33,9 +33,9 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    # Image built + pushed by CI (GHCR); VPS only pulls. IMAGE_TAG = commit SHA
+    # (set by the deploy step), falls back to :latest.
+    image: ghcr.io/tunglt6-spec/picklefund-backend:${IMAGE_TAG:-latest}
     container_name: picklefund-api
     env_file:
       - path: .env
@@ -49,9 +49,8 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    # VITE_API_URL is baked at image build time in CI (build job, =/api).
+    image: ghcr.io/tunglt6-spec/picklefund-frontend:${IMAGE_TAG:-latest}
     container_name: picklefund-app
     networks: [picklefund-net]
     restart: unless-stopped

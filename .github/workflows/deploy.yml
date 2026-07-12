@@ -1,8 +1,20 @@
 name: Deploy PickleFund
 
+# Pipeline: test -> build+push images to GHCR -> SSH deploy (VPS only pulls).
+# Building on GitHub runners removes the small-VPS OOM from `docker compose build`.
+# GHCR packages picklefund-backend / picklefund-frontend must be PUBLIC (VPS pulls
+# anonymously; a stored credential would make GHCR deny a public pull).
+
 on:
   push:
     branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}
 
 jobs:
   test:
@@ -19,12 +31,48 @@ jobs:
       - name: Run backend tests
         run: cd backend && npm test -- --passWithNoTests
 
-  deploy:
+  build:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to VPS
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_BASE }}/picklefund-backend:${{ github.sha }}
+            ${{ env.IMAGE_BASE }}/picklefund-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_URL=/api
+          tags: |
+            ${{ env.IMAGE_BASE }}/picklefund-frontend:${{ github.sha }}
+            ${{ env.IMAGE_BASE }}/picklefund-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS (pull prebuilt images)
         uses: appleboy/ssh-action@v1.0.3
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -35,7 +83,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          command_timeout: 30m
+          command_timeout: 15m
           envs: TELEGRAM_BOT_TOKEN,TELEGRAM_CHAT_ID,GIT_SHA
           script: |
             set -e
@@ -101,8 +149,13 @@ jobs:
             BACKUP_SIZE=$(du -sh "$BACKUP_FILE" | cut -f1)
             echo "Backup OK: $(basename "$BACKUP_FILE") ($BACKUP_SIZE)"
 
-            # ── 5. Build & restart ────────────────────────────────────
-            docker compose build --no-cache
+            # ── 5. Pull prebuilt images & restart (no compile on VPS) ─
+            # Images are PUBLIC on GHCR -> pull anonymously; a stale credential
+            # would make GHCR deny a public pull, so clear it first.
+            docker logout ghcr.io >/dev/null 2>&1 || true
+            export IMAGE_TAG="$GIT_SHA"
+            echo "Pulling images at IMAGE_TAG=$IMAGE_TAG"
+            docker compose pull backend frontend
             docker compose down --remove-orphans
             docker compose up -d
 
@@ -136,7 +189,7 @@ jobs:
               exit 0
             fi
 
-            # ── 8. Rollback ───────────────────────────────────────────
+            # ── 8. Rollback (re-pull previous image tag) ──────────────
             echo "Health check failed — initiating rollback to $PREVIOUS_COMMIT"
             send_telegram "$(printf '⚠️ PickleFund deploy failed, rolling back...\nFailed commit: %s\nRolling back to: %s' "$SHORT_SHA" "${PREVIOUS_COMMIT:0:7}")"
 
@@ -146,8 +199,11 @@ jobs:
               exit 1
             fi
 
-            git reset --hard "$PREVIOUS_COMMIT"
-            docker compose build --no-cache
+            export IMAGE_TAG="$PREVIOUS_COMMIT"
+            echo "Rolling back to IMAGE_TAG=$IMAGE_TAG"
+            # Previous image may already be local; pull is best-effort (it may not
+            # exist if the previous deploy predates GHCR — then rely on local image).
+            docker compose pull backend frontend || echo "(using local previous image if present)"
             docker compose down --remove-orphans
             docker compose up -d
             sleep 30
