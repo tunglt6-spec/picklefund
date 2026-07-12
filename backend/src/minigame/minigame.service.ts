@@ -159,24 +159,43 @@ export class MinigameService {
     dto: { name: string; player1Id: string; player2Id?: string },
   ) {
     await this.assertOwnership(id, clubId);
-    const playerIds = [
-      dto.player1Id,
-      ...(dto.player2Id ? [dto.player2Id] : []),
-    ];
-    const participants = await this.prisma.minigameParticipant.findMany({
-      where: { minigameId: id, memberId: { in: playerIds } },
+    // Player hợp lệ = THÀNH VIÊN tham gia (minigameParticipant) HOẶC KHÁCH MỜI (settings.guests).
+    // Khách lưu qua playerNGuestId + playerNName (giống đường ghép tự động — slotCols), KHÔNG phải
+    // member FK. Trước đây chỉ nhận member → ghép thủ công có khách bị chặn.
+    const parts = await this.prisma.minigameParticipant.findMany({
+      where: { minigameId: id },
       select: { memberId: true },
     });
-    if (participants.length !== playerIds.length)
+    const memberSet = new Set(parts.map((p) => p.memberId));
+    const mgRow = await this.prisma.minigame.findUnique({
+      where: { id },
+      select: { settings: true },
+    });
+    const guests =
+      (this.asSettings(mgRow?.settings).guests as
+        | Array<{ id: string; name: string }>
+        | undefined) ?? [];
+    const guestMap = new Map(guests.map((g) => [g.id, g.name]));
+
+    const resolveSlot = (pid: string) => {
+      const gname = guestMap.get(pid);
+      if (gname !== undefined) return { guestId: pid, name: gname };
+      if (memberSet.has(pid)) return { memberId: pid, name: '' };
+      return null;
+    };
+    const slot1 = resolveSlot(dto.player1Id);
+    const slot2 = dto.player2Id ? resolveSlot(dto.player2Id) : undefined;
+    if (!slot1 || (dto.player2Id && !slot2))
       throw new BadRequestException(
-        'Cầu thủ phải là thành viên tham gia giải đấu này',
+        'Cầu thủ phải là thành viên hoặc khách mời của giải đấu này',
       );
+
     return this.prisma.minigameTeam.create({
       data: {
         minigameId: id,
         name: dto.name,
-        player1Id: dto.player1Id,
-        player2Id: dto.player2Id,
+        ...this.slotCols('player1', slot1),
+        ...this.slotCols('player2', slot2 ?? undefined),
       },
       include: {
         player1: { select: { id: true, fullName: true } },

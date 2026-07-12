@@ -216,6 +216,53 @@ describe('MinigameService', () => {
     });
   });
 
+  /* ── createTeam: ghép thủ công member + KHÁCH mời ── */
+  describe('createTeam', () => {
+    it('tạo cặp member + khách mời (khách lưu qua GuestId/Name)', async () => {
+      mockPrisma.minigame.findUnique
+        .mockResolvedValueOnce(baseMg) // assertOwnership
+        .mockResolvedValueOnce({
+          settings: { guests: [{ id: 'guest-1', name: 'Khách A' }] },
+        }); // settings
+      mockPrisma.minigameParticipant.findMany.mockResolvedValue([
+        { memberId: 'm-1' },
+      ]);
+      mockPrisma.minigameTeam.create.mockResolvedValue({ id: 't-1' });
+      await service.createTeam('mg-1', 'club-1', {
+        name: 'Đôi 1',
+        player1Id: 'm-1',
+        player2Id: 'guest-1',
+      });
+      expect(mockPrisma.minigameTeam.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            player1Id: 'm-1',
+            player1GuestId: null,
+            player2Id: null,
+            player2GuestId: 'guest-1',
+            player2Name: 'Khách A',
+          }),
+        }),
+      );
+    });
+
+    it('từ chối player không phải thành viên/khách', async () => {
+      mockPrisma.minigame.findUnique
+        .mockResolvedValueOnce(baseMg)
+        .mockResolvedValueOnce({ settings: {} });
+      mockPrisma.minigameParticipant.findMany.mockResolvedValue([
+        { memberId: 'm-1' },
+      ]);
+      await expect(
+        service.createTeam('mg-1', 'club-1', {
+          name: 'x',
+          player1Id: 'm-1',
+          player2Id: 'ghost',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
   /* ── shuffle (Fisher-Yates) — nền tảng cho "Ghép Lại" đổi cặp ── */
   describe('shuffle (Fisher-Yates)', () => {
     it('giữ nguyên tập phần tử (là hoán vị) và không đột biến input', () => {
