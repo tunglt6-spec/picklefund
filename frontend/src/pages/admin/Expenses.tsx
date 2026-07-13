@@ -333,8 +333,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
   )
 }
 
-function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAttach }: {
-  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void; onAttach: () => void
+function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAttach, isMember }: {
+  exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void; onAttach: () => void; isMember?: boolean
 }) {
   const cfg = statusCfg[exp.status]
   const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
@@ -371,16 +371,18 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           <button onClick={onClose} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
             <ArrowLeft size={15} />Chi tiết khoản chi
           </button>
-          <div className="flex gap-2">
-            {exp.status === 'pending' && (
-              <>
-                <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
-                <Button size="sm" onClick={onReject} className="bg-red-500 hover:bg-red-600 text-white"><X size={13} />Từ chối</Button>
-              </>
-            )}
-            <Button size="sm" variant="outline" onClick={onEdit}><Pencil size={13} />Sửa</Button>
-            <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
-          </div>
+          {!isMember && (
+            <div className="flex gap-2">
+              {exp.status === 'pending' && (
+                <>
+                  <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
+                  <Button size="sm" onClick={onReject} className="bg-red-500 hover:bg-red-600 text-white"><X size={13} />Từ chối</Button>
+                </>
+              )}
+              <Button size="sm" variant="outline" onClick={onEdit}><Pencil size={13} />Sửa</Button>
+              <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
+            </div>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
@@ -413,12 +415,16 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
                       className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
                       <Eye size={12} />Xem
                     </a>
-                    <button onClick={onAttach} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700">
-                      <Paperclip size={12} />Đổi hóa đơn
-                    </button>
+                    {!isMember && (
+                      <button onClick={onAttach} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700">
+                        <Paperclip size={12} />Đổi hóa đơn
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
+            ) : isMember ? (
+              <p className="text-xs text-slate-400">Chưa có hóa đơn đính kèm</p>
             ) : (
               <button onClick={onAttach}
                 className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors">
@@ -435,6 +441,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
 /* ── Main page ── */
 export function Expenses() {
   const { user } = useAuthStore()
+  const isMember = user?.role === 'MEMBER_VIEW'
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
@@ -697,11 +704,13 @@ export function Expenses() {
                 className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
                 <Filter size={16} />
               </button>
-              <button onClick={() => setShowAdd(true)} aria-label="Thêm khoản chi"
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                style={{ background: 'var(--pf-primary)' }}>
-                <Plus size={18} />
-              </button>
+              {!isMember && (
+                <button onClick={() => setShowAdd(true)} aria-label="Thêm khoản chi"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                  style={{ background: 'var(--pf-primary)' }}>
+                  <Plus size={18} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -772,7 +781,7 @@ export function Expenses() {
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-slate-50">
-                {e.status === 'pending' && (
+                {!isMember && e.status === 'pending' && (
                   <>
                     <button onClick={() => handleApprove(e.id)}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-emerald-50 text-emerald-600 active:bg-emerald-100">
@@ -788,14 +797,18 @@ export function Expenses() {
                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-slate-50 text-slate-500 active:bg-slate-100 ml-auto">
                   <Eye size={12} />Chi tiết
                 </button>
-                <button onClick={() => setEditTarget(e)}
-                  className="p-1.5 text-slate-300 active:[color:var(--pf-primary)]">
-                  <Pencil size={13} />
-                </button>
-                <button onClick={() => setConfirmId(e.id)}
-                  className="p-1.5 text-slate-300 active:text-red-500">
-                  <Trash2 size={13} />
-                </button>
+                {!isMember && (
+                  <>
+                    <button onClick={() => setEditTarget(e)}
+                      className="p-1.5 text-slate-300 active:[color:var(--pf-primary)]">
+                      <Pencil size={13} />
+                    </button>
+                    <button onClick={() => setConfirmId(e.id)}
+                      className="p-1.5 text-slate-300 active:text-red-500">
+                      <Trash2 size={13} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -808,7 +821,7 @@ export function Expenses() {
             onApprove={() => handleApprove(detailExp.id)}
             onReject={() => handleReject(detailExp.id)}
             onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
-            onAttach={() => setReceiptTarget(detailExp)} />
+            onAttach={() => setReceiptTarget(detailExp)} isMember={isMember} />
         )}
         {receiptTarget && (
           <ReceiptUploadModal expenseId={receiptTarget.id} expenseLabel={receiptTarget.description}
@@ -848,10 +861,10 @@ export function Expenses() {
                   : 'Chưa có kỳ quỹ'}
               </span>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>
+            {!isMember && <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>}
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
             <Button variant="outline" size="sm" onClick={exportExcel}><Download size={13} />Xuất Excel</Button>
-            <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>
+            {!isMember && <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>}
           </div>
         </div>
       </div>
@@ -938,7 +951,7 @@ export function Expenses() {
                         </td>
                         <td>
                           <div className="flex items-center justify-center gap-1">
-                            {exp.status === 'pending' && (
+                            {!isMember && exp.status === 'pending' && (
                               <>
                                 <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
                                   className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
@@ -954,10 +967,12 @@ export function Expenses() {
                               className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
                               <Eye size={13} />
                             </button>
-                            <button onClick={() => setConfirmId(exp.id)} title="Xóa"
-                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
-                              <Trash2 size={13} />
-                            </button>
+                            {!isMember && (
+                              <button onClick={() => setConfirmId(exp.id)} title="Xóa"
+                                className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                                <Trash2 size={13} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1031,6 +1046,7 @@ export function Expenses() {
           onReject={() => handleReject(detailExp.id)}
           onEdit={() => { setEditTarget(detailExp); setDetailExp(null) }}
           onAttach={() => setReceiptTarget(detailExp)}
+          isMember={isMember}
         />
       )}
       {receiptTarget && (

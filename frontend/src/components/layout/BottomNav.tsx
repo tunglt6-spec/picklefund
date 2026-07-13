@@ -52,7 +52,13 @@ const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNo
     { label: 'Hoạt động tuần', icon: <Activity size={20} />, to: '/activity' },
     { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
     { label: 'Lịch sử thi đấu', icon: <History size={20} />, to: '/match-history' },
+    // Nhóm xem tài chính toàn CLB (CHỈ XEM)
     { label: 'Tài chính', icon: <Wallet size={20} />, to: '/finance-dashboard' },
+    { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },
+    { label: 'Thu quỹ', icon: <DollarSign size={20} />, to: '/contributions' },
+    { label: 'Chi phí', icon: <CreditCard size={20} />, to: '/expenses' },
+    { label: 'Báo cáo', icon: <BarChart3 size={20} />, to: '/reports' },
+    { label: 'Chấm điểm', icon: <Award size={20} />, to: '/scoring' },
   ],
 }
 

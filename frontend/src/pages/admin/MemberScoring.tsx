@@ -114,6 +114,9 @@ function apiMessage(err: unknown, fallback: string): string {
 export function MemberScoring() {
   const role = useAuthStore((s) => s.user?.role)
   const isAdmin = role === 'SUPER_ADMIN' || role === 'CLUB_ADMIN'
+  // MEMBER_VIEW: chỉ xem (read-only). Ẩn mọi control ghi ở lớp UX
+  // (backend đã chặn ghi: GET mở cho member, POST/PATCH/DELETE admin-only).
+  const isMember = role === 'MEMBER_VIEW'
 
   const months = useMemo(() => recentMonths(), [])
   const [month, setMonth] = useState<string>(currentMonth())
@@ -121,9 +124,9 @@ export function MemberScoring() {
 
   const tabs: TabItem[] = useMemo(() => {
     const list: TabItem[] = [{ key: 'scoreboard', label: 'Bảng điểm' }]
-    if (isAdmin) list.push({ key: 'rules', label: 'Thang điểm' })
+    if (isAdmin && !isMember) list.push({ key: 'rules', label: 'Thang điểm' })
     return list
-  }, [isAdmin])
+  }, [isAdmin, isMember])
 
   return (
     <PageShell>
@@ -145,9 +148,10 @@ export function MemberScoring() {
           months={months}
           onMonthChange={setMonth}
           isAdmin={isAdmin}
+          isMember={isMember}
         />
       ) : (
-        isAdmin && <RulesTab />
+        isAdmin && !isMember && <RulesTab />
       )}
     </PageShell>
   )
@@ -159,9 +163,10 @@ interface ScoreboardTabProps {
   months: string[]
   onMonthChange: (m: string) => void
   isAdmin: boolean
+  isMember: boolean
 }
 
-function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabProps) {
+function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: ScoreboardTabProps) {
   const [rows, setRows] = useState<PeriodRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -255,7 +260,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
           </select>
         </label>
 
-        {isAdmin && (
+        {isAdmin && !isMember && (
           <div className="flex flex-wrap items-center gap-2">
             <ActionButton
               icon={<Lock size={16} />}
@@ -337,6 +342,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin }: ScoreboardTabP
           memberId={detailMemberId}
           month={month}
           isAdmin={isAdmin}
+          isMember={isMember}
           onClose={() => setDetailMemberId(null)}
           onChanged={load}
         />
@@ -350,11 +356,12 @@ interface MemberDetailModalProps {
   memberId: string
   month: string
   isAdmin: boolean
+  isMember: boolean
   onClose: () => void
   onChanged: () => void
 }
 
-function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: MemberDetailModalProps) {
+function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChanged }: MemberDetailModalProps) {
   const [detail, setDetail] = useState<MemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -514,8 +521,8 @@ function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: Mem
           {/* Điều chỉnh thủ công */}
           <p className="text-sm font-semibold [color:var(--pf-text)]">Điều chỉnh thủ công</p>
 
-          {/* Form thêm event (chỉ admin) */}
-          {isAdmin && (
+          {/* Form thêm event (chỉ admin, ẩn với MEMBER_VIEW) */}
+          {isAdmin && !isMember && (
             showForm ? (
               <div className="flex flex-col gap-3 rounded-[16px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
                 <p className="text-sm font-semibold [color:var(--pf-text)]">Thêm sự kiện chấm điểm</p>
@@ -625,7 +632,7 @@ function MemberDetailModal({ memberId, month, isAdmin, onClose, onChanged }: Mem
                       {ev.delta >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                       {ev.delta > 0 ? '+' : ''}{ev.delta}
                     </span>
-                    {isAdmin && (
+                    {isAdmin && !isMember && (
                       <button
                         type="button"
                         onClick={() => setDeleteEventId(ev.id)}

@@ -34,7 +34,11 @@ export class MemberScopeGuard implements CanActivate {
   /** Route chính xác được phép (self-scope; không lộ thông tin member khác). */
   private static readonly ALLOW_EXACT = ['/personal-receipts/mine'];
 
-  /** Tiền tố route member được đọc (GET-only) — mở rộng portal: lịch/đăng ký/check-in/công nợ/tài chính/minigame. */
+  /**
+   * Tiền tố route member được đọc (GET-only) — mở rộng portal: lịch/đăng ký/check-in/công nợ/tài chính/minigame.
+   * '/scoring' + '/categories' bổ sung để member CHỈ XEM màn Chấm điểm & danh mục Chi Phí
+   * (mutation của 2 module này vẫn bị chặn: không phải GET + có @Roles admin/treasurer).
+   */
   private static readonly ALLOW_GET_PREFIXES = [
     '/attendance',
     '/fund-periods',
@@ -42,6 +46,8 @@ export class MemberScopeGuard implements CanActivate {
     '/expenses',
     '/members',
     '/clubs/me',
+    '/scoring',
+    '/categories',
   ];
 
   /** Minigame: cho qua mọi method — mutation do MinigameDelegateGuard siết (chỉ member được ủy quyền). */

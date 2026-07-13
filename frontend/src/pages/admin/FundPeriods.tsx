@@ -62,6 +62,7 @@ type Tab = 'list' | 'history' | 'highlights'
 
 export function FundPeriods() {
   const { user } = useAuthStore()
+  const isMember = user?.role === 'MEMBER_VIEW'
   const clubId = user?.clubId ?? ''
   const { getClubData, setFundPeriods: savePeriods, setContributions: saveContributions } = useClubDataStore()
   const clubData = getClubData(clubId)
@@ -224,11 +225,14 @@ export function FundPeriods() {
   const [copiedAcct, setCopiedAcct] = useState(false)
 
   useEffect(() => {
-    api.get('/system-settings').then(res => {
-      const d = res.data?.data ?? {}
-      if (d.bank_account_number && d.bank_account_name) setBankInfo(d as BankInfo)
-    }).catch(() => {})
-  }, [clubId])
+    // MEMBER_VIEW không có quyền đọc /system-settings (sẽ 403) → chỉ gọi khi KHÔNG phải member.
+    if (!isMember) {
+      api.get('/system-settings').then(res => {
+        const d = res.data?.data ?? {}
+        if (d.bank_account_number && d.bank_account_name) setBankInfo(d as BankInfo)
+      }).catch(() => {})
+    }
+  }, [clubId, isMember])
 
   useEffect(() => {
     if (!qrPeriodId && commonPeriods.length > 0) {
@@ -483,29 +487,33 @@ export function FundPeriods() {
                 title="QR thanh toán"
               ><QrCode size={16} /></button>
             )}
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
-              onClick={() => { resetImport(); setShowImport(true) }}
-              title="Nhập Excel"
-            ><Upload size={16} /></button>
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
-              onClick={() => setShowBulkImport(true)}
-              title="Nhập dữ liệu CLB mới"
-            ><FileSpreadsheet size={16} /></button>
-            <button
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
-              style={{ background: 'var(--pf-primary)' }}
-              onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
-            >
-              <Plus size={14} />Chung
-            </button>
-            <button
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-              onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
-            >
-              <Plus size={14} />Mini
-            </button>
+            {!isMember && (
+              <>
+                <button
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+                  onClick={() => { resetImport(); setShowImport(true) }}
+                  title="Nhập Excel"
+                ><Upload size={16} /></button>
+                <button
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+                  onClick={() => setShowBulkImport(true)}
+                  title="Nhập dữ liệu CLB mới"
+                ><FileSpreadsheet size={16} /></button>
+                <button
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
+                  style={{ background: 'var(--pf-primary)' }}
+                  onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
+                >
+                  <Plus size={14} />Chung
+                </button>
+                <button
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                  onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
+                >
+                  <Plus size={14} />Mini
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -591,26 +599,28 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-[13px] mb-3">
                       <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
-                        onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                      {p.status === 'draft' && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
-                      )}
-                      {p.status === 'active' && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
-                      )}
-                      {(p.status === 'closed' || p.status === 'finalized') && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
-                      )}
-                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                        onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                        onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
-                    </div>
+                    {!isMember && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                          onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
+                        {p.status === 'draft' && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
+                        )}
+                        {p.status === 'active' && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
+                        )}
+                        {(p.status === 'closed' || p.status === 'finalized') && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
+                        )}
+                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                          onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
+                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                          onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -637,26 +647,28 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-[13px] mb-3">
                       <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
-                        onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                      {p.status === 'draft' && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
-                      )}
-                      {p.status === 'active' && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
-                      )}
-                      {(p.status === 'closed' || p.status === 'finalized') && (
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
-                          onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
-                      )}
-                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                        onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                      <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                        onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
-                    </div>
+                    {!isMember && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                          onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
+                        {p.status === 'draft' && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
+                        )}
+                        {p.status === 'active' && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
+                        )}
+                        {(p.status === 'closed' || p.status === 'finalized') && (
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
+                            onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
+                        )}
+                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                          onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
+                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                          onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -807,7 +819,7 @@ export function FundPeriods() {
       <PageHeader
         title="Kỳ Quỹ"
         subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
-        actions={
+        actions={isMember ? undefined : (
           <div className="flex gap-2">
             <Button onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
               <Building2 size={14} />+ Tạo Quỹ Chính
@@ -816,7 +828,7 @@ export function FundPeriods() {
               <Wallet size={14} />+ Tạo Quỹ Phụ
             </Button>
           </div>
-        }
+        )}
       />
 
       <div className="flex flex-col gap-5">
@@ -852,6 +864,7 @@ export function FundPeriods() {
             memberCount={memberCount}
             contributions={contributions}
             prevBalance={prevChungBalance}
+            isMember={isMember}
             onEdit={() => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true))}
             onView={() => activePeriods.chung && setViewPeriod(activePeriods.chung)}
           />
@@ -863,6 +876,7 @@ export function FundPeriods() {
             memberCount={memberCount}
             contributions={contributions}
             miniMode
+            isMember={isMember}
             onEdit={() => (activePeriods.game ?? latestGamePeriod) ? openEdit((activePeriods.game ?? latestGamePeriod)!) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
             onView={() => { const p = activePeriods.game ?? latestGamePeriod; if (p) setViewPeriod(p) }}
           />
@@ -910,12 +924,16 @@ export function FundPeriods() {
                   </select>
                   <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { resetImport(); setShowImport(true) }}>
-                  <FileSpreadsheet size={13} />Nhập Excel
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowBulkImport(true)}>
-                  <Upload size={13} />Nhập dữ liệu CLB mới
-                </Button>
+                {!isMember && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => { resetImport(); setShowImport(true) }}>
+                      <FileSpreadsheet size={13} />Nhập Excel
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowBulkImport(true)}>
+                      <Upload size={13} />Nhập dữ liệu CLB mới
+                    </Button>
+                  </>
+                )}
               </div>
 
               {/* Table */}
@@ -981,30 +999,34 @@ export function FundPeriods() {
                                 <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:[color:var(--pf-primary)] transition-colors">
                                   <Eye size={14} />
                                 </button>
-                                <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
-                                  <Pencil size={14} />
-                                </button>
-                                {p.status === 'draft' && (
-                                  <button title="Bắt đầu kỳ quỹ" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-green-50 text-green-500 hover:text-green-700 transition-colors">
-                                    <Play size={14} />
-                                  </button>
+                                {!isMember && (
+                                  <>
+                                    <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
+                                      <Pencil size={14} />
+                                    </button>
+                                    {p.status === 'draft' && (
+                                      <button title="Bắt đầu kỳ quỹ" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-green-50 text-green-500 hover:text-green-700 transition-colors">
+                                        <Play size={14} />
+                                      </button>
+                                    )}
+                                    {p.status === 'active' && (
+                                      <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors">
+                                        <Lock size={14} />
+                                      </button>
+                                    )}
+                                    {(p.status === 'closed' || p.status === 'finalized') && (
+                                      <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors">
+                                        <LockOpen size={14} />
+                                      </button>
+                                    )}
+                                    <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] text-slate-500 hover:[color:var(--pf-primary)] transition-colors">
+                                      <FileText size={14} />
+                                    </button>
+                                    <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
                                 )}
-                                {p.status === 'active' && (
-                                  <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors">
-                                    <Lock size={14} />
-                                  </button>
-                                )}
-                                {(p.status === 'closed' || p.status === 'finalized') && (
-                                  <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors">
-                                    <LockOpen size={14} />
-                                  </button>
-                                )}
-                                <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] text-slate-500 hover:[color:var(--pf-primary)] transition-colors">
-                                  <FileText size={14} />
-                                </button>
-                                <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
-                                  <Trash2 size={14} />
-                                </button>
                               </div>
                             </td>
                           </tr>
@@ -1270,9 +1292,11 @@ export function FundPeriods() {
             )}
             <div className="pt-2 flex gap-2">
               <Button variant="outline" size="sm" className="flex-1" onClick={() => setViewPeriod(null)}>Đóng</Button>
-              <Button size="sm" className="flex-1" onClick={() => { openEdit(viewPeriod); setViewPeriod(null) }}>
-                <Pencil size={13} />Sửa
-              </Button>
+              {!isMember && (
+                <Button size="sm" className="flex-1" onClick={() => { openEdit(viewPeriod); setViewPeriod(null) }}>
+                  <Pencil size={13} />Sửa
+                </Button>
+              )}
             </div>
           </div>
         </Modal>
@@ -1823,11 +1847,11 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
   )
 }
 
-function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode, prevBalance = 0 }: {
+function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode, prevBalance = 0, isMember = false }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
   color: 'indigo' | 'violet'; memberCount: number
   contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
-  miniMode?: boolean; prevBalance?: number
+  miniMode?: boolean; prevBalance?: number; isMember?: boolean
 }) {
   const target = period ? (miniMode ? period.contributionAmount : period.contributionAmount * memberCount) : 0
   const miniCollected = miniMode
@@ -1879,9 +1903,11 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
             <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
               <Eye size={13} />Chi tiết
             </Button>
-            <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
-              <Pencil size={13} />Sửa quỹ
-            </Button>
+            {!isMember && (
+              <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+                <Pencil size={13} />Sửa quỹ
+              </Button>
+            )}
           </div>
         </>
       ) : miniMode && collected > 0 ? (
@@ -1896,12 +1922,12 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
           <div className="flex justify-between text-xs text-slate-500 mt-2 mb-4">
             <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
           </div>
-          <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>
+          {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
         </>
       ) : (
         <div className="py-4 text-center">
           <p className="text-xs text-slate-400 mb-3">Chưa có kỳ quỹ đang mở</p>
-          <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>
+          {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
         </div>
       )}
     </div>

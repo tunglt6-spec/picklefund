@@ -29,6 +29,7 @@ const BLANK_COMMON = {
 
 export function Contributions() {
   const { user } = useAuthStore()
+  const isMember = user?.role === 'MEMBER_VIEW'
   const clubId = user?.clubId ?? ''
   const { getClubData, setContributions: saveContributions, setFundPeriods } = useClubDataStore()
   const data = getClubData(clubId)
@@ -298,14 +299,16 @@ export function Contributions() {
                 </button>
               </>
             )}
-            <button
-              onClick={openCreate}
-              aria-label="Thêm khoản thu"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-              style={{ background: 'var(--pf-primary)' }}
-            >
-              <Plus size={18} />
-            </button>
+            {!isMember && (
+              <button
+                onClick={openCreate}
+                aria-label="Thêm khoản thu"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                style={{ background: 'var(--pf-primary)' }}
+              >
+                <Plus size={18} />
+              </button>
+            )}
           </div>
           </div>
           <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
@@ -357,7 +360,7 @@ export function Contributions() {
                   type="income"
                   fundSource={c.fundSource ?? 'COMMON'}
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                  actions={
+                  actions={isMember ? undefined : (
                     <>
                       <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
@@ -365,7 +368,7 @@ export function Contributions() {
                       <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
-                  }
+                  )}
                 />
               )
             })
@@ -386,7 +389,7 @@ export function Contributions() {
                   type="income"
                   fundSource="MINI"
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                  actions={
+                  actions={isMember ? undefined : (
                     <>
                       <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
@@ -394,7 +397,7 @@ export function Contributions() {
                       <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
-                  }
+                  )}
                 />
               )
             })
@@ -531,9 +534,11 @@ export function Contributions() {
               exportContribPDF(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)
               toast.success('Đã xuất PDF danh sách thu quỹ!')
             }}><FileText size={14} />PDF</Button>
-            <Button onClick={openCreate}>
-              <Plus size={15} />Ghi nhận thu
-            </Button>
+            {!isMember && (
+              <Button onClick={openCreate}>
+                <Plus size={15} />Ghi nhận thu
+              </Button>
+            )}
           </div>
         }
       />
@@ -601,8 +606,8 @@ export function Contributions() {
                     <th className="text-right">Số tiền</th>
                     <th className="text-center">Hình thức</th>
                     <th className="text-center">Trạng thái</th>
-                    <th className="text-center w-16">Xác nhận</th>
-                    <th className="text-center w-20">Thao tác</th>
+                    {!isMember && <th className="text-center w-16">Xác nhận</th>}
+                    {!isMember && <th className="text-center w-20">Thao tác</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -619,22 +624,26 @@ export function Contributions() {
                           ? <Badge variant="green" dot>Xác nhận</Badge>
                           : <Badge variant="yellow" dot>Chờ</Badge>}
                       </td>
-                      <td className="text-center">
-                        <button onClick={() => toggleConfirm(c.id)}
-                          className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
-                          {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                        </button>
-                      </td>
-                      <td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => openEdit(c)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
-                            title="Sửa"><Edit2 size={13} /></button>
-                          <button onClick={() => setDeleteId(c.id)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            title="Xóa"><Trash2 size={13} /></button>
-                        </div>
-                      </td>
+                      {!isMember && (
+                        <td className="text-center">
+                          <button onClick={() => toggleConfirm(c.id)}
+                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
+                            {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                          </button>
+                        </td>
+                      )}
+                      {!isMember && (
+                        <td className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => openEdit(c)}
+                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
+                              title="Sửa"><Edit2 size={13} /></button>
+                            <button onClick={() => setDeleteId(c.id)}
+                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              title="Xóa"><Trash2 size={13} /></button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -664,8 +673,8 @@ export function Contributions() {
                     <th className="text-right">Số tiền</th>
                     <th className="text-center">Hình thức</th>
                     <th className="text-center">Trạng thái</th>
-                    <th className="text-center w-16">Xác nhận</th>
-                    <th className="text-center w-20">Thao tác</th>
+                    {!isMember && <th className="text-center w-16">Xác nhận</th>}
+                    {!isMember && <th className="text-center w-20">Thao tác</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -685,22 +694,26 @@ export function Contributions() {
                           ? <Badge variant="green" dot>Xác nhận</Badge>
                           : <Badge variant="yellow" dot>Chờ</Badge>}
                       </td>
-                      <td className="text-center">
-                        <button onClick={() => toggleConfirm(c.id)}
-                          className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
-                          {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                        </button>
-                      </td>
-                      <td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => openEdit(c)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
-                            title="Sửa"><Edit2 size={13} /></button>
-                          <button onClick={() => setDeleteId(c.id)}
-                            className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            title="Xóa"><Trash2 size={13} /></button>
-                        </div>
-                      </td>
+                      {!isMember && (
+                        <td className="text-center">
+                          <button onClick={() => toggleConfirm(c.id)}
+                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
+                            {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                          </button>
+                        </td>
+                      )}
+                      {!isMember && (
+                        <td className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => openEdit(c)}
+                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
+                              title="Sửa"><Edit2 size={13} /></button>
+                            <button onClick={() => setDeleteId(c.id)}
+                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              title="Xóa"><Trash2 size={13} /></button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

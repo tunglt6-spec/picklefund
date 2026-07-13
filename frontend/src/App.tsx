@@ -150,13 +150,8 @@ export default function App() {
             {/* Club Admin */}
             <Route path="/dashboard" element={<ClubDashboard />} />
             <Route path="/members" element={<Members />} />
-            <Route path="/fund-periods" element={<FundPeriods />} />
-            <Route path="/contributions" element={<Contributions />} />
-            <Route path="/expenses" element={<Expenses />} />
             <Route path="/thu-chi" element={<ThuChiHub />} />
             <Route path="/attendance" element={<Attendance />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/scoring" element={<MemberScoring />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />
             <Route path="/billing" element={<Billing />} />
@@ -170,6 +165,15 @@ export default function App() {
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
+            </Route>
+            {/* Quản lý tài chính + chấm điểm — staff quản lý đầy đủ; MEMBER_VIEW CHỈ XEM (toàn CLB, read-only).
+                Nút Thêm/Sửa/Xóa/Duyệt/Chốt ẩn theo cờ isMember trong từng trang; backend chặn ghi song song. */}
+            <Route element={<RoleRoute allow={[...STAFF_ROLES, 'MEMBER_VIEW']} />}>
+            <Route path="/fund-periods" element={<FundPeriods />} />
+            <Route path="/contributions" element={<Contributions />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/scoring" element={<MemberScoring />} />
             </Route>
             {/* Onboarding tạo CLB mới — chỉ SUPER_ADMIN (nút vào chỉ hiện ở SuperClubs cho SUPER_ADMIN) */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN']} />}>

@@ -38,7 +38,7 @@ export class ScoringController {
 
   // ── Thang điểm ──────────────────────────────────────────────────────────
   @Get('rules')
-  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW')
   @ApiOperation({ summary: 'Danh sách quy tắc điểm của CLB' })
   async listRules(@CurrentUser() user: JwtUser) {
     return ok(await this.scoring.listRules(user.clubId as string));
@@ -74,7 +74,7 @@ export class ScoringController {
 
   // ── Bảng điểm ─────────────────────────────────────────────────────────────
   @Get('period')
-  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW')
   @ApiOperation({ summary: 'Bảng điểm tháng của mọi thành viên active' })
   async period(@Query('month') month: string, @CurrentUser() user: JwtUser) {
     return ok(
@@ -86,7 +86,7 @@ export class ScoringController {
   }
 
   @Get('member/:memberId')
-  @Roles('CLUB_ADMIN', 'CLUB_TREASURER')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW')
   @ApiOperation({ summary: 'Chi tiết điểm 1 thành viên trong tháng' })
   async memberDetail(
     @Param('memberId') memberId: string,

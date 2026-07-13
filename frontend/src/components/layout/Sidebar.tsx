@@ -81,7 +81,13 @@ const memberNav: NavItem[] = [
   { label: 'Hoạt động tuần', icon: <Activity size={18} />,      to: '/activity' },
   { label: 'Minigame',      icon: <Trophy size={18} />,          to: '/minigames' },
   { label: 'Lịch sử thi đấu', icon: <History size={18} />,       to: '/match-history' },
+  // Nhóm xem tài chính toàn CLB (CHỈ XEM — nút CRUD ẩn theo isMember trong từng trang)
   { label: 'Tài chính',     icon: <Wallet size={18} />,          to: '/finance-dashboard' },
+  { label: 'Kỳ Quỹ',       icon: <Calendar size={18} />,        to: '/fund-periods' },
+  { label: 'Thu Quỹ',      icon: <DollarSign size={18} />,      to: '/contributions' },
+  { label: 'Chi Phí',      icon: <CreditCard size={18} />,      to: '/expenses' },
+  { label: 'Báo Cáo',      icon: <BarChart3 size={18} />,       to: '/reports' },
+  { label: 'Chấm điểm',    icon: <Award size={18} />,           to: '/scoring' },
   { label: 'Lisa AI',        icon: <Sparkles size={18} />,        to: '/member/lisa' },
   { label: 'Thông báo',     icon: <Bell size={18} />,            to: '/member/notifications' },
 ]
