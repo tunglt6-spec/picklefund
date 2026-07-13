@@ -92,9 +92,26 @@ describe('ScoringController (clubId từ JWT)', () => {
       const roles = reflector.get<string[]>('roles', ctrl.createRule);
       expect(roles).toEqual(['CLUB_ADMIN']);
     });
-    it('listRules cho CLUB_ADMIN + CLUB_TREASURER', () => {
+    it('listRules mở cho CLUB_ADMIN + CLUB_TREASURER + MEMBER_VIEW (chỉ xem)', () => {
       const roles = reflector.get<string[]>('roles', ctrl.listRules);
-      expect(roles).toEqual(['CLUB_ADMIN', 'CLUB_TREASURER']);
+      expect(roles).toEqual(['CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW']);
+    });
+    it('period + memberDetail (GET) mở cho MEMBER_VIEW (chỉ xem)', () => {
+      expect(reflector.get<string[]>('roles', ctrl.period)).toEqual([
+        'CLUB_ADMIN',
+        'CLUB_TREASURER',
+        'MEMBER_VIEW',
+      ]);
+      expect(reflector.get<string[]>('roles', ctrl.memberDetail)).toEqual([
+        'CLUB_ADMIN',
+        'CLUB_TREASURER',
+        'MEMBER_VIEW',
+      ]);
+    });
+    it('route ghi (finalize/addEvent/removeEvent) KHÔNG mở cho MEMBER_VIEW', () => {
+      for (const h of [ctrl.finalize, ctrl.addEvent, ctrl.removeEvent]) {
+        expect(reflector.get<string[]>('roles', h)).not.toContain('MEMBER_VIEW');
+      }
     });
   });
 });
