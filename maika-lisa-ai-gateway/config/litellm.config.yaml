@@ -12,19 +12,36 @@ litellm_settings:
     - vietnamese-chat: ["claude-report", "ollama-local", "openrouter-backup"]
     - offline-local: ["qwen-vietnamese", "openrouter-backup"]
 model_list:
+  # Báo cáo/nghiệp vụ — A/B thử nghiệm có kiểm soát: ~90% Claude Sonnet 4.6 (baseline
+  # ổn định), ~10% Claude Sonnet 5 cho tác vụ khó để đo chi phí + tỉ lệ hoàn thành
+  # trước khi chuyển nhiều hơn (Sonnet 5 giá giới thiệu $2/$10 per MTok đến 31/08/2026).
+  # LƯU Ý: claude-3-5-sonnet đã retired 28/10/2025 — KHÔNG dùng lại.
   - model_name: report-primary
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
+      weight: 9
+  - model_name: report-primary
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      weight: 1
 
   - model_name: claude-report
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-latest
+      model: anthropic/claude-sonnet-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
+  # Route gọi TƯỜNG MINH Claude Sonnet 5 (benchmark/thử nghiệm thủ công tác vụ khó).
+  - model_name: claude-sonnet-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # gemini-1.5-pro thuộc dòng 1.5 đã bị Google rút — thay bằng model hiện hành.
   - model_name: gemini-report
     litellm_params:
-      model: gemini/gemini-1.5-pro
+      model: gemini/gemini-3.5-flash
       api_key: os.environ/GEMINI_API_KEY
 
   - model_name: code-primary
@@ -43,6 +60,18 @@ model_list:
       api_key: os.environ/QWEN_API_KEY
       api_base: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 
+  # Chat tiếng Việt thông thường — alias adapter gửi (modelForTask → 'vietnamese-chat').
+  # Trước đây THIẾU trong model_list nên chỉ dựa vào fallback; nay định nghĩa tường minh
+  # (primary = Qwen, khớp routing.rules.yaml). Fallback: claude-report → ollama-local → openrouter.
+  - model_name: vietnamese-chat
+    litellm_params:
+      model: openai/qwen-plus
+      api_key: os.environ/QWEN_API_KEY
+      api_base: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+
+  # ⚠ Ollama local (qwen2.5:7b ~5-8GB RAM): KHÔNG deploy được trên VPS 4GB hiện tại.
+  # Khi deploy trên máy đủ RAM mới bật; nếu deploy VPS nhỏ, bỏ 2 service ollama + gỡ
+  # 'ollama-local'/'offline-local' khỏi fallback (dùng cloud fallback thay thế).
   - model_name: offline-local
     litellm_params:
       model: ollama_chat/qwen2.5:7b
@@ -53,6 +82,8 @@ model_list:
       model: ollama_chat/qwen2.5:7b
       api_base: os.environ/OLLAMA_BASE_URL
 
+  # Lớp dự phòng cuối qua OpenRouter (giữ ổn định — chưa đổi kiến trúc lõi).
+  # LƯU Ý khi deploy: xác nhận id model còn phục vụ trên OpenRouter, nâng nếu cần.
   - model_name: openrouter-backup
     litellm_params:
       model: openrouter/anthropic/claude-3.5-sonnet

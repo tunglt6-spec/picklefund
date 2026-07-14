@@ -1,6 +1,9 @@
 services:
   litellm:
-    image: ghcr.io/berriai/litellm:main-latest
+    # Ghim phiên bản CỐ ĐỊNH (nhánh 1.92.x — hỗ trợ Claude Sonnet 5). KHÔNG dùng
+    # main-latest/main-stable trong production: main-stable đang bị loại bỏ (~01/09/2026)
+    # và latest có thể kéo thay đổi chưa kiểm thử. Nâng version = đổi tag ở đây.
+    image: ghcr.io/berriai/litellm:v1.92.0
     container_name: maika-lisa-litellm
     env_file:
       - path: .env
