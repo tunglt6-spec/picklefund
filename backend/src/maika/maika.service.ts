@@ -15,12 +15,17 @@ import type {
 export class MaikaService {
   private readonly logger = new Logger(MaikaService.name);
   private genAI: GoogleGenerativeAI | null = null;
+  /** Model Gemini (đổi qua env GEMINI_MODEL). Mặc định model hiện hành —
+   *  gemini-1.5-flash thuộc dòng 1.5 đã bị Google rút, không dùng lại. */
+  private readonly geminiModel: string;
 
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
     private hermes: HermesService,
   ) {
+    this.geminiModel =
+      this.config.get<string>('GEMINI_MODEL') ?? 'gemini-3.5-flash';
     const apiKey = this.config.get<string>('GOOGLE_API_KEY');
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
@@ -141,7 +146,7 @@ export class MaikaService {
     if (this.genAI) {
       try {
         const model = this.genAI.getGenerativeModel({
-          model: 'gemini-1.5-flash',
+          model: this.geminiModel,
         });
         const result = await model.generateContent(prompt);
         return result.response.text().trim();

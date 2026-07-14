@@ -23,12 +23,17 @@ QUY TẮC BẮT BUỘC — VI PHẠM LÀ SAI:
 export class LisaService {
   private readonly logger = new Logger(LisaService.name);
   private genAI: GoogleGenerativeAI | null = null;
+  /** Model Gemini Flash-Lite (đổi qua env GEMINI_MODEL_LITE). Mặc định model
+   *  hiện hành — gemini-2.0-flash-lite đã bị Google ngừng từ 01/06/2026. */
+  private readonly geminiModel: string;
 
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
     private hermes: HermesService,
   ) {
+    this.geminiModel =
+      this.config.get<string>('GEMINI_MODEL_LITE') ?? 'gemini-3.1-flash-lite';
     const apiKey = this.config.get<string>('GOOGLE_API_KEY');
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
@@ -50,7 +55,7 @@ export class LisaService {
     if (this.genAI) {
       try {
         const model = this.genAI.getGenerativeModel({
-          model: 'gemini-2.0-flash-lite',
+          model: this.geminiModel,
         });
         const result = await model.generateContent(fullPrompt);
         return result.response.text().trim();
