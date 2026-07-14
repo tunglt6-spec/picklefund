@@ -1,5 +1,47 @@
 # PickleFund — Release Notes
 
+## v2.2.0 — RBAC thành viên mở rộng, vá PWA & model AI (2026-07-14)
+
+Tập hợp cập nhật ngày 14/07/2026: mở rộng quyền xem cho thành viên, khắc phục sự cố
+kẹt cache PWA và **khôi phục trợ lý AI** (model Gemini cũ đã bị nhà cung cấp ngừng),
+cùng công tác chuẩn bị hạ tầng AI gateway và tài liệu kiến trúc.
+
+---
+
+### ✨ Tính năng
+
+- **Thành viên (MEMBER_VIEW) CHỈ XEM thêm 6 màn tài chính & chấm điểm (toàn CLB, read-only):**
+  Kỳ Quỹ, Thu Quỹ, Chi Phí, Dashboard tài chính, Báo Cáo, Chấm điểm. Thành viên xem
+  được số liệu toàn CLB nhưng **mọi nút Thêm/Sửa/Xóa/Duyệt/Chốt đều ẩn**. Bảo mật **2
+  lớp**: frontend ẩn thao tác ghi theo vai trò + backend chặn ghi bằng `@Roles`/guard
+  (chỉ mở GET cho thành viên). Áp dụng cho cả desktop và mobile.
+
+### 🐞 Sửa lỗi
+
+- **Trợ lý AI Lisa/Maika hoạt động trở lại:** Google đã ngừng `gemini-2.0-flash-lite`
+  (từ 01/06/2026) và dòng `gemini-1.5` — khiến Lisa/Maika gọi model đã tắt rồi phải rơi
+  xuống phương án dự phòng. Đã chuyển sang model hiện hành (`gemini-3.1-flash-lite` cho
+  Lisa, `gemini-3.5-flash` cho Maika) và **đưa model ra biến môi trường**
+  (`GEMINI_MODEL` / `GEMINI_MODEL_LITE`) để lần sau đổi model không phải build lại.
+- **Minigame — dashboard đôi cố định đúng chế độ THỦ CÔNG:** giữ `pairingMode` khi nạp
+  danh sách minigame để trang hiển thị đúng panel ghép cặp thủ công (không còn hiện nút
+  "Ghép Cặp Tự Động" gây lỗi).
+- **PWA không còn kẹt bản cũ:** đặt `no-cache` cho `registerSW.js` + `manifest` (bổ sung
+  cho `index.html`/`sw.js` đã có) ở nginx → client không bị Cloudflare/service worker
+  giữ lại bundle cũ sau khi deploy.
+
+### 🔧 Hạ tầng & Tài liệu
+
+- **AI Gateway (LiteLLM) — chuẩn bị, chưa kích hoạt:** ghim phiên bản LiteLLM cố định
+  `v1.92.0` (bỏ `main-latest`), thêm **Claude Sonnet 5** làm route thử nghiệm A/B có
+  kiểm soát (~10%), vá các model đã ngừng trong cấu hình gateway. Gateway vẫn **chưa
+  deploy** — sẽ nâng cấp khi có nhu cầu (vd dùng Claude cho báo cáo phức tạp).
+- **Tài liệu kiến trúc AI:** thêm `docs/AI_ARCHITECTURE.md` (mô tả kiến trúc AI **thực
+  tế đang chạy** — 3 lớp AI, model hiện dùng, phần nào LLM vs rule-based, cách đổi model)
+  và `ONBOARDING.md` cho người/agent mới.
+
+---
+
 ## v2.1.0 — Bản thương mại (2026-07-06)
 
 Nền tảng quản lý CLB thể thao (pickleball) đa CLB (multi-tenant): quỹ, thu chi,
