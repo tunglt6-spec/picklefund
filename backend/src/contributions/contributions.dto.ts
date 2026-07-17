@@ -1,6 +1,7 @@
 import {
   IsString,
   IsNumber,
+  IsBoolean,
   IsOptional,
   IsPositive,
   IsDateString,
@@ -53,6 +54,12 @@ export class CreateContributionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  // Quỹ Phụ (cá cược/tài trợ/phạt…) nhập là đã thu → ghi nhận luôn ở trạng thái
+  // đã xác nhận. Quỹ Chính không gửi field này → mặc định false (chờ xác nhận).
+  @IsOptional()
+  @IsBoolean()
+  isConfirmed?: boolean;
 }
 
 export class ImportRowDto {

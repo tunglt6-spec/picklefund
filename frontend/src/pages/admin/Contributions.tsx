@@ -19,7 +19,7 @@ import { PeriodSelector } from '../../components/ui/PeriodSelector'
 
 const BLANK_COMMON = {
   fundSource: 'COMMON' as FundSource,
-  memberId: '', amount: 1000000,
+  memberId: '', amount: 1000000 as number | '',
   paymentDate: new Date().toISOString().slice(0, 10),
   paymentMethod: 'bank_transfer', notes: '',
   // MINI
@@ -58,7 +58,7 @@ export function Contributions() {
   const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [bulkAll, setBulkAll] = useState(false)
-  const [form, setForm] = useState({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
+  const [form, setForm] = useState<typeof BLANK_COMMON>({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
 
   // Refresh contributions + periods when page mounts (in case data changed from another tab/session)
   useEffect(() => {
@@ -421,7 +421,7 @@ export function Contributions() {
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button key={fs} type="button"
-                    onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: fs === 'MINI' ? '' : (activePeriod?.contributionAmount ?? 1000000) }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
@@ -490,7 +490,7 @@ export function Contributions() {
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input required type="number" min={0} value={form.amount}
-                  onChange={e => setForm({ ...form, amount: Number(e.target.value) })} className="input-base" />
+                  onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
@@ -746,7 +746,7 @@ export function Contributions() {
                   <button
                     key={fs}
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: fs === 'MINI' ? '' : (activePeriod?.contributionAmount ?? 1000000) }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all text-left flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON'
