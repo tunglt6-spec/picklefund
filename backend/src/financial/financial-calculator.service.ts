@@ -102,8 +102,12 @@ export class FinancialCalculatorService {
         },
         _sum: { amount: true },
       }),
+      // Quỹ Phụ ĐỘC LẬP KỲ: khoản thu MINI không gắn fundPeriodId (form không chọn
+      // kỳ; service chỉ bắt buộc fundPeriodId cho COMMON). Vì vậy tính theo clubId
+      // toàn CLB, KHÔNG lọc fundPeriodId — nếu lọc sẽ luôn ra 0 (MINI có periodId=null).
+      // Khớp với contributions.service.getSummary + nhãn "Độc lập Quỹ Chính" trên báo cáo.
       this.prisma.fundContribution.aggregate({
-        where: { fundPeriodId, clubId, fundSource: 'MINI', isConfirmed: true },
+        where: { clubId, fundSource: 'MINI', isConfirmed: true },
         _sum: { amount: true },
       }),
       // Common Fund expenses phân loại theo allocationRule (canonical, KHÔNG dùng
@@ -120,9 +124,10 @@ export class FinancialCalculatorService {
         },
         _sum: { amount: true },
       }),
+      // Chi Quỹ Phụ cũng độc lập kỳ (không gắn fundPeriodId) — tính theo clubId toàn CLB
+      // để cân xứng với thu MINI ở trên.
       this.prisma.livingExpense.aggregate({
         where: {
-          fundPeriodId,
           clubId,
           fundSource: 'MINI',
           status: { in: ['approved', 'paid'] },
