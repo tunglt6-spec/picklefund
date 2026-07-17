@@ -960,12 +960,16 @@ export function FundPeriods() {
                     </thead>
                     <tbody>
                       {paginated.map(p => {
-                        const target = p.contributionAmount * memberCount
+                        // Kỳ Mini (Quỹ Phụ) ĐỘC LẬP KỲ: mục tiêu = mức đóng (KHÔNG × số TV),
+                        // đã thu = gộp mọi khoản MINI (fundPeriodId=null nên không lọc theo kỳ).
+                        // Nhất quán với card TỔNG QUỸ PHỤ (calcMini). Kỳ Chung: theo đầu người.
+                        const isMiniPeriod = (p.type ?? 'chung') === 'game'
+                        const target = isMiniPeriod ? p.contributionAmount : p.contributionAmount * memberCount
                         const collected = contributions
-                          .filter(c => c.fundPeriodId === p.id && c.isConfirmed)
+                          .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
                           .reduce((a, c) => a + c.amount, 0)
                         const remaining = Math.max(0, target - collected)
-                        const pct = target > 0 ? Math.round((collected / target) * 100) : 0
+                        const pct = target > 0 ? Math.round((collected / target) * 100) : (isMiniPeriod && collected > 0 ? 100 : 0)
                         const startMs = new Date(p.startDate).getTime()
                         const endMs = new Date(p.endDate).getTime()
                         const days = Math.round((endMs - startMs) / 86400000)
