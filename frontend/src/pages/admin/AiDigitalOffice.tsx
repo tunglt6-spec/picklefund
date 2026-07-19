@@ -233,8 +233,8 @@ export function AiDigitalOffice() {
                   <span
                     key={a.key}
                     title={`${a.name} · ${st.label}`}
-                    className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white"
-                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, background: st.color, boxShadow: `0 0 0 4px ${st.color}44` }}
+                    className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, background: st.color, boxShadow: `0 0 0 2px ${st.color}55` }}
                   />
                 )
               })}
