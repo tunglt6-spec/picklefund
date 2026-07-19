@@ -101,7 +101,7 @@ export function AiDigitalOffice() {
 
   useEffect(() => {
     void load()
-    const id = setInterval(() => void load(true), 30_000) // auto-refresh trạng thái thật
+    const id = setInterval(() => void load(true), 12_000) // auto-refresh gần real-time (trạng thái thật)
     return () => clearInterval(id)
   }, [load])
 
@@ -223,7 +223,7 @@ export function AiDigitalOffice() {
                 className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
               >
-                <span className="h-2 w-2 rounded-full" style={{ background: 'var(--pf-green)', boxShadow: '0 0 0 3px rgba(34,197,94,0.35)' }} />
+                <LiveDot color="var(--pf-green)" size={8} />
                 LIVE{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
               </div>
               {/* Chấm trạng thái THẬT tại vị trí mỗi agent (đè lên scene) */}
@@ -233,9 +233,11 @@ export function AiDigitalOffice() {
                   <span
                     key={a.key}
                     title={`${a.name} · ${st.label}`}
-                    className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, background: st.color, boxShadow: `0 0 0 2px ${st.color}55` }}
-                  />
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top }}
+                  >
+                    <LiveDot color={st.color} size={10} active={a.status !== 'offline'} ring={`${st.color}55`} />
+                  </span>
                 )
               })}
             </div>
@@ -402,6 +404,24 @@ export function AiDigitalOffice() {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+/** Đèn trạng thái nhấp nháy: chấm màu + vòng "ping" lan tỏa khi agent đang hoạt động. */
+function LiveDot({ color, size = 10, active = true, ring }: { color: string; size?: number; active?: boolean; ring?: string }) {
+  return (
+    <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
+      {active && (
+        <span
+          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-70"
+          style={{ background: color }}
+        />
+      )}
+      <span
+        className="relative inline-flex rounded-full"
+        style={{ width: size, height: size, background: color, boxShadow: ring ? `0 0 0 2px ${ring}` : undefined }}
+      />
+    </span>
+  )
+}
+
 function SectionTitle({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
   return (
     <div className="mb-1 flex items-center gap-2">
@@ -421,8 +441,8 @@ function AgentCard({ a }: { a: AgentView }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold [color:var(--pf-text)] truncate">{a.name}</h3>
-            <span className="ml-auto flex items-center gap-1 text-xs font-medium" style={{ color: st.color }}>
-              <span className="h-2 w-2 rounded-full" style={{ background: st.color }} />{st.label}
+            <span className="ml-auto flex items-center gap-1.5 text-xs font-medium" style={{ color: st.color }}>
+              <LiveDot color={st.color} size={8} active={a.status !== 'offline'} />{st.label}
             </span>
           </div>
           <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.role}</p>
