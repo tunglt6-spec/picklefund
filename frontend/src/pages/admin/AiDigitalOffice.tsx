@@ -240,7 +240,7 @@ export function AiDigitalOffice() {
                     className="absolute -translate-x-1/2 -translate-y-1/2"
                     style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top }}
                   >
-                    <LiveDot color={st.color} size={10} active={a.status !== 'offline'} ring={`${st.color}55`} />
+                    <LiveDot color={st.color} size={7} active={a.status !== 'offline'} />
                   </span>
                 )
               })}
