@@ -55,13 +55,17 @@ interface AgentView {
   count: number
 }
 
-/** Vị trí (% của office-scene.png 992×598) để overlay chấm trạng thái THẬT lên mỗi agent. */
+/**
+ * Vị trí (% của office-scene.png 992×598) để overlay chấm trạng thái THẬT lên mỗi agent.
+ * Toạ độ = TÂM chấm xanh sẵn trong bong bóng, dò chính xác từ pixel (centroid vùng green),
+ * không ước lượng — nên overlay trùng khít, không lệch.
+ */
 const SCENE_POS: Record<string, { left: string; top: string }> = {
-  MAIKA: { left: '40%', top: '13.5%' },
+  MAIKA: { left: '38.4%', top: '13.3%' },
   LISA: { left: '7%', top: '33%' },
-  HERMES: { left: '78%', top: '31.5%' },
-  MIT_DAT: { left: '7%', top: '70.5%' },
-  NOTIFICATION: { left: '78%', top: '70.5%' },
+  HERMES: { left: '79%', top: '31.2%' },
+  MIT_DAT: { left: '6.8%', top: '70.3%' },
+  NOTIFICATION: { left: '80.6%', top: '70.5%' },
 }
 
 const fmtLatency = (ms?: number) =>
@@ -233,14 +237,20 @@ export function AiDigitalOffice() {
               {/* Chấm trạng thái THẬT tại vị trí mỗi agent (đè lên scene) */}
               {agents.filter((a) => SCENE_POS[a.key]).map((a) => {
                 const st = STATUS_META[a.status]
+                const on = a.status !== 'offline'
+                // Kích thước CỐ ĐỊNH + absolute + translate(-50%) → tâm chấm đặt đúng
+                // toạ độ đã verify (khớp chấm sẵn trong bong bóng). inset-0 cho cả ping + chấm.
                 return (
                   <span
                     key={a.key}
                     title={`${a.name} · ${st.label}`}
-                    className="absolute -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top }}
+                    className="absolute block -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, width: 9, height: 9 }}
                   >
-                    <LiveDot color={st.color} size={7} active={a.status !== 'offline'} />
+                    {on && (
+                      <span className="absolute inset-0 animate-ping rounded-full opacity-50" style={{ background: st.color }} />
+                    )}
+                    <span className="absolute inset-0 rounded-full" style={{ background: st.color }} />
                   </span>
                 )
               })}
