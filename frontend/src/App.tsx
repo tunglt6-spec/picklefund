@@ -79,6 +79,7 @@ import { DataMonitorPage } from './pages/admin/ai/DataMonitorPage'
 import { KpiMonitorPage } from './pages/admin/ai/KpiMonitorPage'
 import { AuditLogViewer } from './pages/admin/ai/AuditLogViewer'
 import { ClubMemoryManager } from './pages/admin/ai/ClubMemoryManager'
+import { AiDigitalOffice } from './pages/admin/AiDigitalOffice'
 
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
 import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
@@ -198,6 +199,7 @@ export default function App() {
             </Route>
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
+            <Route path="/aido" element={<AiDigitalOffice />} />
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
             <Route path="/admin/ai-manager/club-memory" element={<ClubMemoryManager />} />
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />

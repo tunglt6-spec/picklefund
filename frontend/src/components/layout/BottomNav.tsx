@@ -5,7 +5,7 @@ import {
   CheckSquare, BarChart3, Building2, ScrollText,
   Receipt, ListOrdered, CreditCard, Bell,
   Menu, Settings, Trophy,
-  Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet, Award,
+  Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet, Award, Cpu,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import type { Role } from '../../types'
@@ -42,6 +42,7 @@ const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNo
     { label: 'Thông báo', icon: <Bell size={20} />, to: '/notifications' },
     { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
     { label: 'Chấm điểm', icon: <Award size={20} />, to: '/scoring' },
+    { label: 'AI Digital Office', icon: <Cpu size={20} />, to: '/aido' },
   ],
   MEMBER_VIEW: [
     { label: 'Đóng quỹ', icon: <DollarSign size={20} />, to: '/member/contributions' },
