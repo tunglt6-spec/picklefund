@@ -10,7 +10,18 @@ import { useAuthStore } from '../store/authStore'
  * tức thời. Trả về `connected` để UI hiển thị real-time/polling. Token hết hạn → reconnect
  * dùng token mới nhất từ store; nếu mất kết nối, polling (ở component) vẫn là fallback.
  */
-export function useAidoSocket(onUpdate: () => void): { connected: boolean } {
+export interface AidoUpdatePayload {
+  type?: 'ai-action' | 'agent-activity'
+  agent?: string
+  status?: string
+  task?: string
+  actionId?: string
+  at?: number
+}
+
+export function useAidoSocket(
+  onUpdate: (payload?: AidoUpdatePayload) => void,
+): { connected: boolean } {
   const cbRef = useRef(onUpdate)
   cbRef.current = onUpdate
   const [connected, setConnected] = useState(false)
@@ -43,7 +54,7 @@ export function useAidoSocket(onUpdate: () => void): { connected: boolean } {
     socket.on('connect', () => setConnected(true))
     socket.on('disconnect', () => setConnected(false))
     socket.on('connect_error', () => setConnected(false))
-    socket.on('aido:update', () => cbRef.current())
+    socket.on('aido:update', (payload: AidoUpdatePayload) => cbRef.current(payload))
 
     return () => {
       socket.disconnect()

@@ -81,14 +81,17 @@ export function AiDigitalOffice() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  // Trạng thái hoạt động THẬT của agent (busy khi đang xử lý) — từ /aido/agent-activity + WS.
+  const [activity, setActivity] = useState<Record<string, { status: string; task?: string }>>({})
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
-    const [s, h, r, c] = await Promise.allSettled([
+    const [s, h, r, c, a] = await Promise.allSettled([
       api.get('/ai/actions/summary'),
       api.get('/maika/health-score'),
       api.get('/workflows/runtime/status'),
       api.get('/notification-runtime/channels'),
+      api.get('/aido/agent-activity'),
     ])
     if ([s, h, r, c].every((x) => x.status === 'rejected')) {
       setError(true); setLoading(false); return
@@ -100,6 +103,7 @@ export function AiDigitalOffice() {
     setHealth(val(h))
     setRuntime(val(r))
     setChannels(val(c))
+    if (a.status === 'fulfilled') setActivity(val(a) ?? {})
     setUpdatedAt(new Date())
     setLoading(false)
   }, [])
@@ -110,8 +114,15 @@ export function AiDigitalOffice() {
     return () => clearInterval(id)
   }, [load])
 
-  // Real-time: WebSocket đẩy khi AI Action đổi trạng thái → refetch tức thời.
-  const { connected } = useAidoSocket(() => void load(true))
+  // Real-time: WS đẩy 'agent-activity' (agent busy/online) → cập nhật ngay; 'ai-action' → refetch.
+  const { connected } = useAidoSocket((payload) => {
+    if (payload?.type === 'agent-activity' && payload.agent) {
+      setActivity((prev) => ({ ...prev, [payload.agent!]: { status: payload.status ?? 'online', task: payload.task } }))
+      setUpdatedAt(new Date())
+    } else {
+      void load(true)
+    }
+  })
 
   // ── Số liệu tổng hợp (thật) ─────────────────────────────────────────────────
   const exec = summary?.executor
@@ -137,7 +148,7 @@ export function AiDigitalOffice() {
     const hermesOn = runtime?.enabled === true
     const emailReady = channels?.EMAIL?.available === true
     const mitStatus: AgentStatus = running > 0 ? 'busy' : 'online'
-    return [
+    const base: AgentView[] = [
       {
         key: 'MAIKA', name: 'Maika', role: 'Club Intelligence Manager', icon: <Bot size={20} />, accent: 'violet',
         status: 'online',
@@ -177,7 +188,14 @@ export function AiDigitalOffice() {
         count: 0,
       },
     ]
-  }, [runtime, channels, health, running, executedToday, countByAi])
+    // Override bằng hoạt động THẬT: agent đang xử lý (từ WS/endpoint) → busy + task cụ thể.
+    return base.map((a) => {
+      const act = activity[a.key]
+      return act?.status === 'busy'
+        ? { ...a, status: 'busy' as AgentStatus, task: act.task ?? a.task }
+        : a
+    })
+  }, [runtime, channels, health, running, executedToday, countByAi, activity])
 
   const statusCounts = useMemo(() => {
     const c: Record<AgentStatus, number> = { online: 0, busy: 0, waiting: 0, error: 0, offline: 0 }

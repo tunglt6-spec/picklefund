@@ -13,6 +13,7 @@ import { HermesWorkflowService } from './hermes-workflow.service';
 import { HermesSchedulerService } from './hermes-scheduler.service';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
+import { AgentActivityService } from '../aido/agent-activity.service';
 import {
   CreateWorkflowRuleDto,
   UpdateWorkflowRuleDto,
@@ -34,6 +35,7 @@ export class WorkflowsController {
   constructor(
     private svc: HermesWorkflowService,
     private scheduler: HermesSchedulerService,
+    private activity: AgentActivityService,
   ) {}
 
   @Get('rules')
@@ -142,7 +144,9 @@ export class WorkflowsController {
   })
   async runtimeRunNow(@CurrentUser() user: JwtUser) {
     return ok(
-      await this.scheduler.runNow(user.clubId, user.userId),
+      await this.activity.track(user.clubId, 'HERMES', 'Điều phối workflow', () =>
+        this.scheduler.runNow(user.clubId, user.userId),
+      ),
       'Đã run-now scheduler',
     );
   }
@@ -158,10 +162,12 @@ export class WorkflowsController {
     @CurrentUser() user: JwtUser,
   ) {
     return ok(
-      await this.svc.dispatchLive(user.clubId, triggerType, {
-        userId: user.userId,
-        clubId: user.clubId,
-      }),
+      await this.activity.track(user.clubId, 'HERMES', 'Điều phối workflow', () =>
+        this.svc.dispatchLive(user.clubId, triggerType, {
+          userId: user.userId,
+          clubId: user.clubId,
+        }),
+      ),
       'Đã chạy dispatch với dữ liệu thật',
     );
   }

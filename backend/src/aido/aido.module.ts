@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AidoGateway } from './aido.gateway';
+import { AidoController } from './aido.controller';
+import { AgentActivityService } from './agent-activity.service';
 
 /**
- * AidoModule — WebSocket real-time cho AIDO. Export AidoGateway để các module nghiệp vụ
- * (vd AiActionsModule) inject và gọi emitAgentUpdate() sau khi đổi trạng thái AI Action.
+ * AidoModule — WebSocket real-time + theo dõi hoạt động agent cho AIDO.
+ * Export AidoGateway (emit sự kiện) và AgentActivityService (mark busy/idle) để các module
+ * nghiệp vụ (AiActions, Maika, Lisa, Workflows) inject.
  */
 @Module({
   imports: [
@@ -18,7 +21,8 @@ import { AidoGateway } from './aido.gateway';
       }),
     }),
   ],
-  providers: [AidoGateway],
-  exports: [AidoGateway],
+  controllers: [AidoController],
+  providers: [AidoGateway, AgentActivityService],
+  exports: [AidoGateway, AgentActivityService],
 })
 export class AidoModule {}

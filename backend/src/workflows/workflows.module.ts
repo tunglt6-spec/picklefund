@@ -5,9 +5,10 @@ import { HermesEventPublisher } from './hermes-event.publisher';
 import { HermesSchedulerService } from './hermes-scheduler.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AiActionsModule } from '../ai-actions/ai-actions.module';
+import { AidoModule } from '../aido/aido.module';
 
 @Module({
-  imports: [PrismaModule, AiActionsModule],
+  imports: [PrismaModule, AiActionsModule, AidoModule],
   controllers: [WorkflowsController],
   providers: [
     HermesWorkflowService,

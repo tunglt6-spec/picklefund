@@ -3,12 +3,16 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { LisaService } from './lisa.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
+import { AgentActivityService } from '../aido/agent-activity.service';
 
 @ApiTags('Lisa AI')
 @ApiBearerAuth()
 @Controller('lisa')
 export class LisaController {
-  constructor(private svc: LisaService) {}
+  constructor(
+    private svc: LisaService,
+    private activity: AgentActivityService,
+  ) {}
 
   @Get('brief')
   async brief(@CurrentUser() user: any) {
@@ -32,7 +36,11 @@ export class LisaController {
           'Lisa chỉ hỗ trợ tài khoản thành viên. Vui lòng đăng nhập bằng tài khoản thành viên để sử dụng tính năng này.',
       });
     }
-    return ok(await this.svc.askLisa(user.memberId, body.question));
+    return ok(
+      await this.activity.track(user.clubId, 'LISA', 'Đang trả lời thành viên', () =>
+        this.svc.askLisa(user.memberId, body.question),
+      ),
+    );
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
