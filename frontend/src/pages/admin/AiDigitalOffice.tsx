@@ -25,6 +25,7 @@ import {
   LoadingState, ErrorState, type TabItem,
 } from '../../components/shared'
 import type { ModuleAccent } from '../../components/shared'
+import { useAidoSocket } from '../../hooks/useAidoSocket'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -101,9 +102,12 @@ export function AiDigitalOffice() {
 
   useEffect(() => {
     void load()
-    const id = setInterval(() => void load(true), 12_000) // auto-refresh gần real-time (trạng thái thật)
+    const id = setInterval(() => void load(true), 30_000) // fallback polling (WebSocket là kênh chính)
     return () => clearInterval(id)
   }, [load])
+
+  // Real-time: WebSocket đẩy khi AI Action đổi trạng thái → refetch tức thời.
+  const { connected } = useAidoSocket(() => void load(true))
 
   // ── Số liệu tổng hợp (thật) ─────────────────────────────────────────────────
   const exec = summary?.executor
@@ -223,8 +227,8 @@ export function AiDigitalOffice() {
                 className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
               >
-                <LiveDot color="var(--pf-green)" size={8} />
-                LIVE{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
+                <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
+                {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
               </div>
               {/* Chấm trạng thái THẬT tại vị trí mỗi agent (đè lên scene) */}
               {agents.filter((a) => SCENE_POS[a.key]).map((a) => {

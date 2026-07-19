@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MaikaCore } from '../ai/maika/maika.service';
 import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import { ACTION_EXECUTOR } from './action-executor';
+import { AidoGateway } from '../aido/aido.gateway';
 
 const prisma = {
   aiAction: {
@@ -78,6 +79,7 @@ describe('AiActionsService', () => {
         { provide: MaikaCore, useValue: maika },
         { provide: NotificationRuntimeService, useValue: notifications },
         { provide: ACTION_EXECUTOR, useValue: executor },
+        { provide: AidoGateway, useValue: { emitAgentUpdate: jest.fn() } },
       ],
     }).compile();
     service = mod.get(AiActionsService);

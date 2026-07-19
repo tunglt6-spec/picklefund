@@ -12,6 +12,7 @@ import { NotificationRuntimeService } from '../notification-runtime/notification
 import { AiActionRisk, AiActionStatus, Prisma } from '@prisma/client';
 import type { CreateAiActionDto } from './ai-actions.dto';
 import { ACTION_EXECUTOR, type ActionExecutor } from './action-executor';
+import { AidoGateway } from '../aido/aido.gateway';
 
 /** JWT actor — scope suy từ token, không nhận từ client. */
 export interface ActionActor {
@@ -51,7 +52,26 @@ export class AiActionsService {
     private maika: MaikaCore,
     private notifications: NotificationRuntimeService,
     @Inject(ACTION_EXECUTOR) private executor: ActionExecutor,
+    private aido: AidoGateway,
   ) {}
+
+  /**
+   * Đẩy real-time cập nhật AIDO qua WebSocket (FIRE-AND-FORGET). Chỉ báo "có thay đổi"
+   * + status (không đẩy payload nhạy cảm) → client refetch. KHÔNG throw về nghiệp vụ.
+   */
+  private notifyAido(clubId: string, status: string, actionId: string): void {
+    try {
+      this.aido.emitAgentUpdate(clubId, {
+        type: 'ai-action',
+        clubId,
+        actionId,
+        status,
+        at: Date.now(),
+      });
+    } catch {
+      /* fire-and-forget */
+    }
+  }
 
   /** Che các chuỗi giống secret (token/password/JWT/api-key/bearer) trong text hiển thị. */
   private redactSecrets(input: string): string {
@@ -303,6 +323,7 @@ export class AiActionsService {
       action.id,
       `${dto.requestedByAi} · ${dto.actionType} · ${dto.riskLevel}`,
     );
+    this.notifyAido(clubId, 'PENDING_APPROVAL', action.id);
     return this.findOne(action.id, clubId);
   }
 
@@ -360,6 +381,7 @@ export class AiActionsService {
       id,
       `Approve ${action.actionType}`,
     );
+    this.notifyAido(clubId, 'APPROVED', id);
     return this.findOne(id, clubId);
   }
 
@@ -393,6 +415,7 @@ export class AiActionsService {
       id,
       `Reject ${action.actionType}`,
     );
+    this.notifyAido(clubId, 'REJECTED', id);
     return this.findOne(id, clubId);
   }
 
@@ -420,6 +443,7 @@ export class AiActionsService {
       id,
       `Retry ${action.actionType}`,
     );
+    this.notifyAido(clubId, 'RETRY_PENDING', id);
     return this.findOne(id, clubId);
   }
 
@@ -471,6 +495,7 @@ export class AiActionsService {
         },
       });
     });
+    this.notifyAido(clubId, 'EXECUTING', id);
 
     // Đã acquire EXECUTING (atomic). Chạy executor NGOÀI transaction DB.
     try {
@@ -513,6 +538,7 @@ export class AiActionsService {
         id,
         `Executed ${action.actionType} (${duration}ms)`,
       );
+      this.notifyAido(clubId, 'EXECUTED', id);
       // Epic 8: action notification ĐÃ DUYỆT + ĐÃ THỰC THI → tạo NotificationJob
       // qua runtime (DRY_RUN/READY theo channel). Fire-and-forget — lỗi runtime
       // KHÔNG ảnh hưởng kết quả execute (đã EXECUTED, không rollback).
@@ -549,6 +575,7 @@ export class AiActionsService {
         id,
         `Failed ${action.actionType}`,
       );
+      this.notifyAido(clubId, 'FAILED', id);
     }
     return this.findOne(id, clubId);
   }

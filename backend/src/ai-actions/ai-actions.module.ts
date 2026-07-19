@@ -6,9 +6,10 @@ import { MaikaModule } from '../ai/maika/maika.module';
 import { NotificationRuntimeModule } from '../notification-runtime/notification-runtime.module';
 import { ACTION_EXECUTOR } from './action-executor';
 import { HermesActionExecutor } from './hermes-action-executor';
+import { AidoModule } from '../aido/aido.module';
 
 @Module({
-  imports: [PrismaModule, MaikaModule, NotificationRuntimeModule],
+  imports: [PrismaModule, MaikaModule, NotificationRuntimeModule, AidoModule],
   controllers: [AiActionsController],
   providers: [
     AiActionsService,
