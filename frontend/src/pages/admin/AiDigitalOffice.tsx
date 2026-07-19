@@ -16,10 +16,10 @@ import { useNavigate } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
-  LayoutGrid, ListChecks, BarChart3,
+  LayoutGrid, ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart,
 } from 'lucide-react'
 import api from '../../lib/api'
-import type { AiActionSummary } from '../../hooks/useAiManager'
+import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
 import {
   PageShell, PageHeader, MetricCard, ActionButton, ResponsiveTabs,
   LoadingState, ErrorState, type TabItem,
@@ -32,6 +32,34 @@ interface HealthScore { score?: number; interpretation?: string }
 interface RuntimeStatus { enabled?: boolean; interval?: number; lastTick?: string | null }
 interface ChannelState { available?: boolean; mode?: string }
 interface Channels { IN_APP?: ChannelState; EMAIL?: ChannelState; TELEGRAM?: ChannelState }
+interface WorkflowRun {
+  id: string
+  triggerType?: string
+  status?: string
+  createdAt?: string
+  startedAt?: string | null
+  completedAt?: string | null
+}
+
+/** Màu/nhãn mức rủi ro của hành động AI. */
+const RISK_META: Record<string, { label: string; color: string }> = {
+  low: { label: 'Thấp', color: 'var(--pf-green)' },
+  medium: { label: 'Trung bình', color: 'var(--pf-accent-amber, #F59E0B)' },
+  high: { label: 'Cao', color: '#FB923C' },
+  critical: { label: 'Nghiêm trọng', color: 'var(--pf-accent-rose, #EF4444)' },
+}
+/** Màu/nhãn trạng thái workflow run (Hermes). */
+const RUN_STATUS_META: Record<string, { label: string; color: string }> = {
+  COMPLETED: { label: 'Hoàn tất', color: 'var(--pf-green)' },
+  RUNNING: { label: 'Đang chạy', color: 'var(--pf-accent-sky, #3B82F6)' },
+  PENDING: { label: 'Chờ', color: 'var(--pf-accent-amber, #F59E0B)' },
+  FAILED: { label: 'Thất bại', color: 'var(--pf-accent-rose, #EF4444)' },
+  CANCELLED: { label: 'Đã hủy', color: 'var(--pf-color-muted, #94A3B8)' },
+}
+const riskMeta = (r?: string) =>
+  RISK_META[(r ?? '').toLowerCase()] ?? { label: r ?? '—', color: 'var(--pf-primary)' }
+const runMeta = (s?: string) =>
+  RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, #94A3B8)' }
 
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
 
@@ -83,15 +111,20 @@ export function AiDigitalOffice() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   // Trạng thái hoạt động THẬT của agent (busy khi đang xử lý) — từ /aido/agent-activity + WS.
   const [activity, setActivity] = useState<Record<string, { status: string; task?: string }>>({})
+  // Dữ liệu chi tiết cho Operations/Analytics (đều là endpoint THẬT sẵn có).
+  const [pendingList, setPendingList] = useState<AiActionListItem[]>([])
+  const [runs, setRuns] = useState<WorkflowRun[]>([])
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
-    const [s, h, r, c, a] = await Promise.allSettled([
+    const [s, h, r, c, a, pq, wr] = await Promise.allSettled([
       api.get('/ai/actions/summary'),
       api.get('/maika/health-score'),
       api.get('/workflows/runtime/status'),
       api.get('/notification-runtime/channels'),
       api.get('/aido/agent-activity'),
+      api.get('/ai/actions?status=PENDING_APPROVAL&limit=10'),
+      api.get('/workflows/runs'),
     ])
     if ([s, h, r, c].every((x) => x.status === 'rejected')) {
       setError(true); setLoading(false); return
@@ -104,6 +137,8 @@ export function AiDigitalOffice() {
     setRuntime(val(r))
     setChannels(val(c))
     if (a.status === 'fulfilled') setActivity(val(a) ?? {})
+    if (pq.status === 'fulfilled') setPendingList(val(pq) ?? [])
+    if (wr.status === 'fulfilled') setRuns(val(wr) ?? [])
     setUpdatedAt(new Date())
     setLoading(false)
   }, [])
@@ -342,9 +377,70 @@ export function AiDigitalOffice() {
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <SectionTitle icon={<ListChecks size={16} />} title="Hoạt động gần đây" sub="Từ AI Action Center" />
-              <div className="mt-3 space-y-2.5">
+            {/* Hàng đợi chờ duyệt — dữ liệu THẬT từ AI Action Center */}
+            <Panel icon={<Inbox size={16} />} title="Hàng đợi chờ duyệt" sub={`${pending} hành động`}>
+              {pendingList.length === 0 ? (
+                <p className="text-sm [color:var(--pf-color-muted)]">Không có hành động nào chờ duyệt.</p>
+              ) : (
+                <div className="space-y-2">
+                  {pendingList.slice(0, 8).map((p) => {
+                    const rk = riskMeta(p.riskLevel)
+                    return (
+                      <button key={p.id} onClick={() => navigate('/admin/ai-approvals')}
+                        className="flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                        <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold"
+                          style={{ background: `color-mix(in srgb, ${rk.color} 16%, transparent)`, color: rk.color }}>{rk.label}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium [color:var(--pf-text)] truncate">{p.title}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)] truncate">
+                            {p.requestedByAi} · {p.targetModule ?? '—'} · {new Date(p.createdAt).toLocaleString('vi-VN')}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                  {pending > Math.min(pendingList.length, 8) && (
+                    <button onClick={() => navigate('/admin/ai-approvals')}
+                      className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold [color:var(--pf-primary)]">
+                      Xem tất cả hàng đợi <ArrowRight size={13} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </Panel>
+
+            {/* Workflow runs gần đây — dữ liệu THẬT từ Hermes */}
+            <Panel icon={<GitBranch size={16} />} title="Workflow runs gần đây" sub="Hermes">
+              {runs.length === 0 ? (
+                <p className="text-sm [color:var(--pf-color-muted)]">Chưa có workflow run nào.</p>
+              ) : (
+                <div className="space-y-2">
+                  {runs.slice(0, 8).map((run) => {
+                    const rs = runMeta(run.status)
+                    return (
+                      <div key={run.id} className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: rs.color }} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm [color:var(--pf-text)] truncate">{run.triggerType ?? 'workflow'}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)]">
+                            {run.createdAt ? new Date(run.createdAt).toLocaleString('vi-VN') : '—'}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-xs font-semibold" style={{ color: rs.color }}>{rs.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+          </div>
+
+          {/* Hoạt động gần đây */}
+          <Panel icon={<ListChecks size={16} />} title="Hoạt động gần đây" sub="Từ AI Action Center">
+            {(summary?.recentActivities ?? []).length === 0 ? (
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có hoạt động.</p>
+            ) : (
+              <div className="grid gap-2.5 sm:grid-cols-2">
                 {(summary?.recentActivities ?? []).slice(0, 8).map((ev) => (
                   <div key={ev.id} className="flex items-start gap-2 text-sm">
                     <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />
@@ -354,31 +450,28 @@ export function AiDigitalOffice() {
                     </div>
                   </div>
                 ))}
-                {(summary?.recentActivities ?? []).length === 0 && (
-                  <p className="text-sm [color:var(--pf-color-muted)]">Chưa có hoạt động.</p>
-                )}
               </div>
-            </div>
+            )}
+          </Panel>
 
-            <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <SectionTitle icon={<ArrowRight size={16} />} title="Quản trị vận hành" sub="Mở màn chi tiết" />
-              <div className="mt-3 grid gap-2">
-                {[
-                  ['Nhật ký thực thi (Mít Đặc)', '/admin/execution-log'],
-                  ['Hàng đợi duyệt', '/admin/ai-approvals'],
-                  ['Workflows', '/admin/workflows'],
-                  ['Scheduler', '/admin/ai-scheduler'],
-                  ['Trung tâm cảnh báo', '/admin/ai-alerts'],
-                  ['AI Operations Center', '/admin/ai-manager'],
-                ].map(([label, to]) => (
-                  <button key={to} onClick={() => navigate(to)}
-                    className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)]">
-                    {label}<ArrowRight size={15} />
-                  </button>
-                ))}
-              </div>
+          {/* Điều hướng quản trị */}
+          <Panel icon={<ArrowRight size={16} />} title="Quản trị vận hành" sub="Mở màn chi tiết">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                ['Nhật ký thực thi (Mít Đặc)', '/admin/execution-log'],
+                ['Hàng đợi duyệt', '/admin/ai-approvals'],
+                ['Workflows', '/admin/workflows'],
+                ['Scheduler', '/admin/ai-scheduler'],
+                ['Trung tâm cảnh báo', '/admin/ai-alerts'],
+                ['AI Operations Center', '/admin/ai-manager'],
+              ].map(([label, to]) => (
+                <button key={to} onClick={() => navigate(to)}
+                  className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)]">
+                  {label}<ArrowRight size={15} />
+                </button>
+              ))}
             </div>
-          </div>
+          </Panel>
         </div>
       )}
 
@@ -392,9 +485,9 @@ export function AiDigitalOffice() {
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <SectionTitle icon={<BarChart3 size={16} />} title="Tác vụ theo Agent" />
-              <div className="mt-3 space-y-3">
+            {/* Tác vụ theo Agent */}
+            <Panel icon={<BarChart3 size={16} />} title="Tác vụ theo Agent" sub="Tổng số hành động">
+              <div className="space-y-3">
                 {agents.filter(a => a.key !== 'NOTIFICATION').map((a) => {
                   const max = Math.max(1, ...agents.map(x => x.count))
                   return (
@@ -410,11 +503,65 @@ export function AiDigitalOffice() {
                   )
                 })}
               </div>
-            </div>
+            </Panel>
 
-            <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <SectionTitle icon={<ArrowRight size={16} />} title="Phân tích chi tiết" sub="Mở màn chuyên sâu" />
-              <div className="mt-3 grid gap-2">
+            {/* Phân bố theo mức rủi ro — dữ liệu THẬT (actionsByRisk) */}
+            <Panel icon={<ShieldAlert size={16} />} title="Phân bố theo rủi ro" sub="Toàn bộ hành động">
+              {(summary?.actionsByRisk ?? []).length === 0 ? (
+                <p className="text-sm [color:var(--pf-color-muted)]">Chưa có dữ liệu.</p>
+              ) : (
+                <div className="space-y-3">
+                  {(summary?.actionsByRisk ?? []).map((rk) => {
+                    const meta = riskMeta(rk.risk)
+                    const max = Math.max(1, ...(summary?.actionsByRisk ?? []).map(x => x.count))
+                    return (
+                      <div key={rk.risk}>
+                        <div className="flex items-center justify-between text-sm [color:var(--pf-text)]">
+                          <span className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />{meta.label}
+                          </span>
+                          <span className="font-semibold tabular-nums">{rk.count}</span>
+                        </div>
+                        <div className="mt-1 h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${(rk.count / max) * 100}%`, background: meta.color }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* Tổng quan hành động (tích lũy) — dữ liệu THẬT từ summary */}
+            <Panel icon={<PieChart size={16} />} title="Tổng quan hành động" sub="Tích lũy">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Chờ duyệt', value: pending, color: 'var(--pf-accent-amber, #F59E0B)' },
+                  { label: 'Đã duyệt', value: summary?.approvedActions ?? 0, color: 'var(--pf-accent-sky, #3B82F6)' },
+                  { label: 'Từ chối', value: summary?.rejectedActions ?? 0, color: 'var(--pf-color-muted, #94A3B8)' },
+                  { label: 'Thất bại', value: failed, color: 'var(--pf-accent-rose, #EF4444)' },
+                ].map((it) => (
+                  <div key={it.label} className="rounded-xl border px-3 py-3 [border-color:var(--pf-border)]">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: it.color }} />
+                      <span className="text-xs [color:var(--pf-color-muted)]">{it.label}</span>
+                    </div>
+                    <p className="mt-1 text-2xl font-bold tabular-nums [color:var(--pf-text)]">{it.value}</p>
+                  </div>
+                ))}
+              </div>
+              {typeof summary?.averageApprovalTime === 'number' && summary.averageApprovalTime > 0 && (
+                <p className="mt-3 text-xs [color:var(--pf-color-muted)]">
+                  Thời gian duyệt trung bình: <span className="font-semibold [color:var(--pf-text)]">{fmtLatency(summary.averageApprovalTime)}</span>
+                </p>
+              )}
+            </Panel>
+
+            {/* Phân tích chi tiết */}
+            <Panel icon={<ArrowRight size={16} />} title="Phân tích chi tiết" sub="Mở màn chuyên sâu">
+              <div className="grid gap-2">
                 {[
                   ['KPI Monitor', '/admin/ai-kpi'],
                   ['Data Monitor', '/admin/ai-data-monitor'],
@@ -427,7 +574,7 @@ export function AiDigitalOffice() {
                   </button>
                 ))}
               </div>
-            </div>
+            </Panel>
           </div>
         </div>
       )}
@@ -451,6 +598,16 @@ function LiveDot({ color, size = 10, active = true, ring }: { color: string; siz
         style={{ width: size, height: size, background: color, boxShadow: ring ? `0 0 0 2px ${ring}` : undefined }}
       />
     </span>
+  )
+}
+
+/** Khung panel dùng chung: tiêu đề + nội dung, đồng bộ với style card AIDO. */
+function Panel({ icon, title, sub, children }: { icon: React.ReactNode; title: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+      <SectionTitle icon={icon} title={title} sub={sub} />
+      <div className="mt-3">{children}</div>
+    </div>
   )
 }
 
