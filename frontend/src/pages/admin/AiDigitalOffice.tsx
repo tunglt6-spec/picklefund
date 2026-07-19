@@ -54,6 +54,15 @@ interface AgentView {
   count: number
 }
 
+/** Vị trí (% của office-scene.png 992×598) để overlay chấm trạng thái THẬT lên mỗi agent. */
+const SCENE_POS: Record<string, { left: string; top: string }> = {
+  MAIKA: { left: '40%', top: '13.5%' },
+  LISA: { left: '7%', top: '33%' },
+  HERMES: { left: '78%', top: '31.5%' },
+  MIT_DAT: { left: '7%', top: '70.5%' },
+  NOTIFICATION: { left: '78%', top: '70.5%' },
+}
+
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
@@ -200,6 +209,41 @@ export function AiDigitalOffice() {
 
       {tab === 'office' && (
         <div className="space-y-5">
+          {/* Office scene (pixel-art) + overlay TRẠNG THÁI THẬT */}
+          <div>
+            <div className="relative mx-auto w-full max-w-[992px] overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+              <img
+                src="/aido/office-scene.png"
+                alt="AIDO — Văn phòng AI"
+                className="block w-full"
+                style={{ aspectRatio: '992 / 598' }}
+              />
+              {/* Badge LIVE */}
+              <div
+                className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+                style={{ background: 'rgba(17,24,39,0.72)' }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ background: 'var(--pf-green)', boxShadow: '0 0 0 3px rgba(34,197,94,0.35)' }} />
+                LIVE{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
+              </div>
+              {/* Chấm trạng thái THẬT tại vị trí mỗi agent (đè lên scene) */}
+              {agents.filter((a) => SCENE_POS[a.key]).map((a) => {
+                const st = STATUS_META[a.status]
+                return (
+                  <span
+                    key={a.key}
+                    title={`${a.name} · ${st.label}`}
+                    className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white"
+                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, background: st.color, boxShadow: `0 0 0 4px ${st.color}44` }}
+                  />
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
+              Sơ đồ Văn phòng AI · chấm sáng ở mỗi agent = trạng thái thật (suy ra từ hoạt động hệ thống)
+            </p>
+          </div>
+
           {/* Dashboard số liệu thật */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <MetricCard icon={<Activity size={18} />} accent="violet" label="Tác vụ hôm nay" value={executedToday} sub="Đã thực thi" />
