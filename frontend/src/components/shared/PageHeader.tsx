@@ -4,6 +4,7 @@
  */
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
+import { useEmbedded } from './ModuleTabs'
 
 interface PageHeaderProps {
   title: string
@@ -22,6 +23,31 @@ export function PageHeader({
   actions,
   className,
 }: PageHeaderProps) {
+  const embedded = useEmbedded()
+
+  // Trong module (embedded): module + tab đã định danh → BỎ h1 trùng, GIỮ phụ đề + actions.
+  if (embedded) {
+    if (!subtitle && !actions && !aside) return null
+    return (
+      <header
+        className={cn(
+          'mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between',
+          className,
+        )}
+      >
+        {subtitle ? (
+          <p className="text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
+          {actions}
+        </div>
+      </header>
+    )
+  }
+
   return (
     <header
       className={cn(

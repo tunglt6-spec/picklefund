@@ -12,6 +12,7 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
+import { useEmbedded } from '../../components/shared'
 import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
@@ -442,6 +443,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
 export function Expenses() {
   const { user } = useAuthStore()
   const isMember = user?.role === 'MEMBER_VIEW'
+  const embedded = useEmbedded() // trong module Tài chính: ẩn h1 "Chi Phí" trùng
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
@@ -840,7 +842,7 @@ export function Expenses() {
       <div className="bg-white border-b border-slate-100 px-6 py-4">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-base font-bold text-slate-900">Chi Phí</h1>
+            {!embedded && <h1 className="text-base font-bold text-slate-900">Chi Phí</h1>}
             <p className="text-xs text-slate-500 mt-0.5">
               {allPeriods.find(p => p.id === selectedPeriodId)?.name ?? 'Quản lý và theo dõi các khoản chi của CLB'}
             </p>

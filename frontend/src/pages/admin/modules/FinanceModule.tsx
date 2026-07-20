@@ -13,6 +13,7 @@ import { Reports } from '../Reports'
 export function FinanceModule() {
   return (
     <ModuleTabs
+      title="Tài chính"
       tabs={[
         { key: 'overview', label: 'Tổng quan', element: <FinanceDashboard /> },
         { key: 'periods', label: 'Kỳ Quỹ', element: <FundPeriods /> },
