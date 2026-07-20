@@ -295,6 +295,26 @@ export function AiDigitalOffice() {
                 className="block w-full"
                 style={{ aspectRatio: '992 / 598' }}
               />
+              {/* Dải sáng CAM "quét" chạy xuống → vòng lên, LIÊN TỤC — thể hiện agent đang làm
+                  việc. Thuần CSS (0 chi phí, không API). `multiply` làm vùng bong bóng ngả cam
+                  khi dải đi qua; chấm trạng thái (DOM, phía dưới) nằm TRÊN nên giữ nguyên màu. */}
+              <style>{`
+                @keyframes aido-scan { from { top: -34%; } to { top: 100%; } }
+                @media (prefers-reduced-motion: reduce) {
+                  .aido-scan-band { animation: none !important; opacity: .2; }
+                }
+              `}</style>
+              <div
+                aria-hidden
+                className="aido-scan-band pointer-events-none absolute inset-x-0 h-[32%]"
+                style={{
+                  top: '-34%',
+                  background:
+                    'linear-gradient(to bottom, transparent, rgba(245,158,11,0.55) 42%, rgba(251,146,60,0.6) 55%, transparent)',
+                  mixBlendMode: 'multiply',
+                  animation: 'aido-scan 4.2s ease-in-out infinite alternate',
+                }}
+              />
               {/* Badge LIVE */}
               <div
                 className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
