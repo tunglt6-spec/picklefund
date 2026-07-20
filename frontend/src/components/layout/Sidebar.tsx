@@ -202,9 +202,12 @@ export function Sidebar({ onClose }: SidebarProps) {
               'group relative flex items-center gap-2.5 rounded-2xl transition-all duration-200',
               item.desc ? 'px-2.5 py-2.5' : 'px-3 py-2.5',
               isActive
-                ? 'text-white [background:linear-gradient(135deg,#6D5DFB,#5B4BE8)] [box-shadow:0_10px_22px_-10px_rgba(109,93,251,0.7)]'
+                ? 'text-white'
                 : 'hover:-translate-y-px hover:[background:var(--pf-surface)] hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.4)]'
             )}
+            style={({ isActive }) => isActive
+              ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 10px 22px -10px rgba(109,93,251,0.7)' }
+              : undefined}
           >
             {({ isActive }) => (
               <>

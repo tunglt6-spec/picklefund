@@ -340,12 +340,18 @@ export function AiDigitalOffice() {
         <div className="space-y-5">
           {/* Office scene (pixel-art) + overlay TRẠNG THÁI THẬT */}
           <div>
-            <div className="relative mx-auto w-full max-w-[1280px] overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div
+              className="relative mx-auto overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+              style={{ width: 'fit-content', maxWidth: '100%' }}
+            >
               <img
                 src="/aido/office-scene.png"
                 alt="AIDO — Văn phòng AI"
-                className="block w-full"
-                style={{ aspectRatio: '992 / 598' }}
+                className="block"
+                /* Giới hạn CHIỀU CAO để scene không choán hết màn (thấy được dashboard dưới);
+                   co giãn theo cả cao & rộng, giữ tỉ lệ; container fit-content ôm đúng ảnh nên
+                   overlay (chấm/viền %) vẫn khớp. */
+                style={{ height: 'auto', width: 'auto', maxHeight: 'min(54vh, 600px)', maxWidth: 'min(100%, 1200px)' }}
               />
               {/* Viền "chạy" quanh TỪNG bong bóng agent (mỗi bong bóng 1 màu) — thể hiện đang
                   làm việc. Thuần CSS/SVG (0 chi phí, không API). Đoạn sáng chạy vòng quanh viền
