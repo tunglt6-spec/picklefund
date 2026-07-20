@@ -90,33 +90,17 @@ interface AgentView {
 }
 
 /**
- * Vị trí (% của office-scene.png 992×598) để overlay chấm trạng thái THẬT lên mỗi agent.
- * Toạ độ = TÂM chấm xanh sẵn trong bong bóng, dò chính xác từ pixel (centroid vùng green),
- * không ước lượng — nên overlay trùng khít, không lệch.
+ * Vị trí (% ngang) TÂM mỗi nhân vật trong banner office-banner.png (1837×802), dò CHÍNH XÁC
+ * từ pixel (màu tóc). Dùng để đặt thẻ agent DOM + chấm trạng thái ngay trên đầu nhân vật.
+ * Đầu nhân vật ~43% chiều cao ảnh. Mỗi agent 1 MÀU thương hiệu (viền chạy + header thẻ).
  */
-const SCENE_POS: Record<string, { left: string; top: string }> = {
-  MAIKA: { left: '38.4%', top: '13.3%' },
-  LISA: { left: '7%', top: '33%' },
-  HERMES: { left: '79%', top: '31.2%' },
-  MIT_DAT: { left: '6.8%', top: '70.3%' },
-  NOTIFICATION: { left: '80.6%', top: '70.5%' },
+const BANNER_POS: Record<string, { left: string; color: string; dur: string }> = {
+  LISA: { left: '11.8%', color: '#3B82F6', dur: '7.2s' },
+  MAIKA: { left: '32.1%', color: '#7C5CFC', dur: '6.4s' },
+  HERMES: { left: '50.2%', color: '#14B8A6', dur: '6.0s' },
+  MIT_DAT: { left: '67.9%', color: '#F59E0B', dur: '7.6s' },
+  NOTIFICATION: { left: '87%', color: '#EC4899', dur: '6.8s' },
 }
-
-/**
- * Viền "chạy" quanh TỪNG bong bóng agent — thể hiện đang làm việc. Toạ độ (px trong hệ
- * office-scene.png 992×598) dò CHÍNH XÁC từ pixel (mask trắng thân + mask bão hoà header),
- * không ước lượng → viền ôm khít bong bóng. Mỗi agent 1 MÀU riêng + lệch pha (dur/delay).
- * Vẽ bằng SVG viewBox 992×598 (cùng tỉ lệ ảnh) nên góc bo + độ dày viền không méo.
- */
-const BUBBLE_RING: {
-  key: string; x: number; y: number; w: number; h: number; color: string; dur: string; delay: string
-}[] = [
-  { key: 'MAIKA', x: 365, y: 13, w: 177, h: 141, color: '#7C5CFC', dur: '6.4s', delay: '0s' },
-  { key: 'LISA', x: 54, y: 130, w: 140, h: 137, color: '#3B82F6', dur: '7.2s', delay: '.4s' },
-  { key: 'HERMES', x: 768, y: 119, w: 161, h: 141, color: '#14B8A6', dur: '6.0s', delay: '.8s' },
-  { key: 'MIT_DAT', x: 52, y: 353, w: 144, h: 141, color: '#F59E0B', dur: '7.6s', delay: '.2s' },
-  { key: 'NOTIFICATION', x: 784, y: 354, w: 157, h: 141, color: '#EC4899', dur: '6.8s', delay: '.6s' },
-]
 
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
@@ -338,91 +322,82 @@ export function AiDigitalOffice() {
 
       {tab === 'office' && (
         <div className="space-y-5">
-          {/* Office scene (pixel-art) + overlay TRẠNG THÁI THẬT */}
+          {/* Office BANNER ngang (pixel-art) + phủ THẺ AGENT DOM trên mỗi nhân vật (mẫu v2.1) */}
           <div>
+            <style>{`
+              @property --aido-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+              @keyframes aido-spin { to { --aido-a: 360deg; } }
+              .aido-card { position: relative; }
+              .aido-card::before {
+                content: ''; position: absolute; inset: 0; border-radius: 14px; padding: 2px;
+                background: conic-gradient(from var(--aido-a), transparent 0 62%, var(--aido-c) 80%, transparent 92%);
+                -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                -webkit-mask-composite: xor; mask-composite: exclude;
+                animation: aido-spin var(--aido-dur, 6s) linear infinite; pointer-events: none;
+              }
+              @media (prefers-reduced-motion: reduce) { .aido-card::before { animation: none; } }
+            `}</style>
             <div
-              className="relative mx-auto overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
-              style={{ width: 'fit-content', maxWidth: '100%' }}
+              className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+              style={{ maxWidth: 1837 }}
             >
               <img
-                src="/aido/office-scene.png"
+                src="/aido/office-banner.png"
                 alt="AIDO — Văn phòng AI"
-                className="block"
-                /* Giới hạn CHIỀU CAO để scene không choán hết màn (thấy được dashboard dưới);
-                   co giãn theo cả cao & rộng, giữ tỉ lệ; container fit-content ôm đúng ảnh nên
-                   overlay (chấm/viền %) vẫn khớp. */
-                style={{ height: 'auto', width: 'auto', maxHeight: 'min(54vh, 600px)', maxWidth: 'min(100%, 1200px)' }}
+                className="block w-full"
+                style={{ aspectRatio: '1837 / 802' }}
               />
-              {/* Viền "chạy" quanh TỪNG bong bóng agent (mỗi bong bóng 1 màu) — thể hiện đang
-                  làm việc. Thuần CSS/SVG (0 chi phí, không API). Đoạn sáng chạy vòng quanh viền
-                  bo góc bằng stroke-dashoffset (pathLength=100), lệch pha nhau. Viền nền mờ luôn
-                  hiển thị khung màu. Chấm trạng thái (DOM) nằm TRÊN nên giữ nguyên. */}
-              <style>{`
-                @keyframes aido-run { to { stroke-dashoffset: -100; } }
-                @media (prefers-reduced-motion: reduce) {
-                  .aido-ring { animation: none !important; stroke-dasharray: none; }
-                }
-              `}</style>
-              <svg
-                aria-hidden
-                className="pointer-events-none absolute inset-0 h-full w-full"
-                viewBox="0 0 992 598"
-                preserveAspectRatio="none"
-                fill="none"
-              >
-                {BUBBLE_RING.map((r) => (
-                  <g key={r.key}>
-                    <rect
-                      x={r.x + 1} y={r.y + 1} width={r.w - 2} height={r.h - 2}
-                      rx={14} ry={14} fill="none"
-                      stroke={r.color} strokeOpacity={0.2} strokeWidth={2.5}
-                    />
-                    <rect
-                      x={r.x + 1} y={r.y + 1} width={r.w - 2} height={r.h - 2}
-                      rx={14} ry={14} fill="none"
-                      stroke={r.color} strokeWidth={3} strokeLinecap="round"
-                      pathLength={100} strokeDasharray="26 74"
-                      className="aido-ring"
-                      style={{
-                        animation: `aido-run ${r.dur} linear infinite`,
-                        animationDelay: r.delay,
-                        filter: `drop-shadow(0 0 3px ${r.color})`,
-                      }}
-                    />
-                  </g>
-                ))}
-              </svg>
-              {/* Badge LIVE */}
+
+              {/* Badge REAL-TIME */}
               <div
-                className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+                className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
               >
                 <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
                 {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
               </div>
-              {/* Chấm trạng thái THẬT tại vị trí mỗi agent (đè lên scene) */}
-              {agents.filter((a) => SCENE_POS[a.key]).map((a) => {
+
+              {/* Thẻ agent DOM — đặt NGAY TRÊN đầu mỗi nhân vật (đầu ~43% ⇒ bottom 57%) */}
+              {agents.filter((a) => BANNER_POS[a.key]).map((a) => {
+                const pos = BANNER_POS[a.key]
                 const st = STATUS_META[a.status]
-                const on = a.status !== 'offline'
-                // Kích thước CỐ ĐỊNH + absolute + translate(-50%) → tâm chấm đặt đúng
-                // toạ độ đã verify (khớp chấm sẵn trong bong bóng). inset-0 cho cả ping + chấm.
                 return (
-                  <span
+                  <div
                     key={a.key}
-                    title={`${a.name} · ${st.label}`}
-                    className="absolute block -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: SCENE_POS[a.key].left, top: SCENE_POS[a.key].top, width: 9, height: 9 }}
+                    className="absolute -translate-x-1/2"
+                    style={{ left: pos.left, bottom: '57%', width: 'clamp(104px, 15%, 208px)' }}
                   >
-                    {on && (
-                      <span className="absolute inset-0 animate-ping rounded-full opacity-50" style={{ background: st.color }} />
-                    )}
-                    <span className="absolute inset-0 rounded-full" style={{ background: st.color }} />
-                  </span>
+                    <div
+                      className="aido-card overflow-hidden rounded-[14px] border bg-white/95 shadow-lg backdrop-blur-sm [border-color:var(--pf-border)]"
+                      style={{ ['--aido-c' as string]: pos.color, ['--aido-dur' as string]: pos.dur }}
+                    >
+                      <div className="px-2 py-1" style={{ background: pos.color }}>
+                        <p className="truncate text-[11px] font-bold leading-tight text-white">{a.name}</p>
+                      </div>
+                      <div className="px-2 py-1.5">
+                        <p className="flex items-center gap-1 text-[10px] font-semibold leading-tight" style={{ color: st.color }}>
+                          <LiveDot color={st.color} size={6} active={a.status !== 'offline'} />
+                          <span className="truncate">{st.label}</span>
+                        </p>
+                        <ul className="mt-0.5 hidden space-y-px sm:block">
+                          {a.bullets.slice(0, 3).map((b) => (
+                            <li key={b} className="truncate text-[9px] leading-tight [color:var(--pf-color-muted)]">• {b}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    {/* mũi nhọn chỉ xuống nhân vật */}
+                    <div
+                      className="mx-auto h-0 w-0"
+                      style={{ borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `7px solid ${pos.color}` }}
+                    />
+                  </div>
                 )
               })}
             </div>
             <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
-              Sơ đồ Văn phòng AI · chấm sáng ở mỗi agent = trạng thái thật (suy ra từ hoạt động hệ thống)
+              Văn phòng AI · thẻ trên mỗi nhân vật = trạng thái thật · viền chạy = đang làm việc
             </p>
           </div>
 
