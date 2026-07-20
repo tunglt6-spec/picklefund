@@ -72,12 +72,13 @@ const runMeta = (s?: string) =>
  * màu). Dùng overlay SVG (viewBox 1832×602 ⇒ co giãn theo ảnh, responsive) vẽ VIỀN CHẠY
  * (comet) + RADAR ping quanh mỗi thẻ agent → thể hiện "đang làm việc". Mỗi agent 1 màu.
  */
-const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; color: string; dur: string; delay: string }[] = [
-  { key: 'MAIKA', x: 74, y: 80, w: 245, h: 242, color: '#6D5DFB', dur: '6.4s', delay: '0s' },
-  { key: 'LISA', x: 469, y: 80, w: 232, h: 242, color: '#2563EB', dur: '7.2s', delay: '.5s' },
-  { key: 'HERMES', x: 818, y: 80, w: 230, h: 242, color: '#059669', dur: '6.0s', delay: '1s' },
-  { key: 'MIT_DAT', x: 1189, y: 80, w: 246, h: 242, color: '#EA580C', dur: '7.6s', delay: '.3s' },
-  { key: 'NOTIFICATION', x: 1498, y: 80, w: 237, h: 242, color: '#C026D3', dur: '6.8s', delay: '.8s' },
+const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; dx: number; dy: number; color: string; dur: string; delay: string }[] = [
+  // dx/dy = TÂM chấm trạng thái xanh (dò từ pixel) → radar đặt đúng tâm chấm.
+  { key: 'MAIKA', x: 74, y: 80, w: 245, h: 242, dx: 103, dy: 181, color: '#6D5DFB', dur: '6.4s', delay: '0s' },
+  { key: 'LISA', x: 469, y: 80, w: 232, h: 242, dx: 498, dy: 181, color: '#2563EB', dur: '7.2s', delay: '.5s' },
+  { key: 'HERMES', x: 818, y: 80, w: 230, h: 242, dx: 844, dy: 182, color: '#059669', dur: '6.0s', delay: '1s' },
+  { key: 'MIT_DAT', x: 1189, y: 80, w: 246, h: 242, dx: 1216, dy: 181, color: '#EA580C', dur: '7.6s', delay: '.3s' },
+  { key: 'NOTIFICATION', x: 1498, y: 80, w: 237, h: 242, dx: 1528, dy: 181, color: '#C026D3', dur: '6.8s', delay: '.8s' },
 ]
 
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
@@ -355,7 +356,7 @@ export function AiDigitalOffice() {
                 {BANNER_CARD.map((c) => (
                   <g key={c.key}>
                     <circle
-                      cx={c.x + 34} cy={c.y + 108} r={6}
+                      cx={c.dx} cy={c.dy} r={6}
                       fill="none" stroke={c.color} strokeWidth={2.5}
                       className="aido-radar" style={{ animationDelay: c.delay }}
                     />
