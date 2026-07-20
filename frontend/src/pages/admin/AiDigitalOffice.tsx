@@ -67,6 +67,19 @@ const riskMeta = (r?: string) =>
 const runMeta = (s?: string) =>
   RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, #94A3B8)' }
 
+/**
+ * Khung THẺ (bbox px trong office-banner-v3.png 1832×602) dò CHÍNH XÁC từ pixel (dải header
+ * màu). Dùng overlay SVG (viewBox 1832×602 ⇒ co giãn theo ảnh, responsive) vẽ VIỀN CHẠY
+ * (comet) + RADAR ping quanh mỗi thẻ agent → thể hiện "đang làm việc". Mỗi agent 1 màu.
+ */
+const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; color: string; dur: string; delay: string }[] = [
+  { key: 'MAIKA', x: 74, y: 80, w: 245, h: 242, color: '#6D5DFB', dur: '6.4s', delay: '0s' },
+  { key: 'LISA', x: 469, y: 80, w: 232, h: 242, color: '#2563EB', dur: '7.2s', delay: '.5s' },
+  { key: 'HERMES', x: 818, y: 80, w: 230, h: 242, color: '#059669', dur: '6.0s', delay: '1s' },
+  { key: 'MIT_DAT', x: 1189, y: 80, w: 246, h: 242, color: '#EA580C', dur: '7.6s', delay: '.3s' },
+  { key: 'NOTIFICATION', x: 1498, y: 80, w: 237, h: 242, color: '#C026D3', dur: '6.8s', delay: '.8s' },
+]
+
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
 
 const STATUS_META: Record<AgentStatus, { label: string; color: string; dot: string }> = {
@@ -313,16 +326,50 @@ export function AiDigitalOffice() {
               đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
               Trạng thái THẬT hiển thị ở KPI + 3 panel + Đội ngũ AI bên dưới. */}
           <div>
+            <style>{`
+              @keyframes aido-run { to { stroke-dashoffset: -100; } }
+              @keyframes aido-radar { 0% { r: 5; opacity: .85; } 100% { r: 26; opacity: 0; } }
+              .aido-radar { animation: aido-radar 2.2s ease-out infinite; }
+              @media (prefers-reduced-motion: reduce) { .aido-run, .aido-radar { animation: none; } }
+            `}</style>
             <div
               className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
-              style={{ maxWidth: 1842 }}
+              style={{ maxWidth: 1832 }}
             >
               <img
-                src="/aido/office-banner-v2.png"
+                src="/aido/office-banner-v3.png"
                 alt="AIDO — Văn phòng AI"
                 className="block w-full"
-                style={{ aspectRatio: '1842 / 477' }}
+                style={{ aspectRatio: '1832 / 602' }}
               />
+
+              {/* Overlay VIỀN CHẠY (comet) + RADAR ping quanh mỗi thẻ — SVG viewBox co giãn theo
+                  ảnh nên responsive đồng bộ, không đè/cắt. Thể hiện agent ĐANG LÀM VIỆC. */}
+              <svg
+                aria-hidden
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox="0 0 1832 602"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                {BANNER_CARD.map((c) => (
+                  <g key={c.key}>
+                    <circle
+                      cx={c.x + 34} cy={c.y + 108} r={6}
+                      fill="none" stroke={c.color} strokeWidth={2.5}
+                      className="aido-radar" style={{ animationDelay: c.delay }}
+                    />
+                    <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
+                      fill="none" stroke={c.color} strokeOpacity={0.22} strokeWidth={2.5} />
+                    <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
+                      fill="none" stroke={c.color} strokeWidth={3.5} strokeLinecap="round"
+                      pathLength={100} strokeDasharray="26 74"
+                      className="aido-run"
+                      style={{ animation: `aido-run ${c.dur} linear infinite`, animationDelay: c.delay, filter: `drop-shadow(0 0 3px ${c.color})` }}
+                    />
+                  </g>
+                ))}
+              </svg>
 
               {/* Badge REAL-TIME */}
               <div
@@ -335,7 +382,7 @@ export function AiDigitalOffice() {
 
             </div>
             <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
-              Văn phòng AI · trạng thái THẬT hiển thị ở bảng số liệu &amp; đội ngũ AI bên dưới
+              Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · trạng thái THẬT ở bảng dưới
             </p>
           </div>
 
