@@ -184,6 +184,11 @@ jobs:
             # ── 7. Success ────────────────────────────────────────────
             if [ "$HEALTH_OK" = "true" ]; then
               BACKUP_NAME=$(basename "$BACKUP_FILE")
+              # Tự dọn ảnh cũ (>3 ngày) để tránh ĐẦY ĐĨA VPS 38G (chung với AICP) — giữ vài
+              # bản gần nhất cho rollback. Best-effort, không chặn deploy nếu lỗi.
+              echo "Pruning old images (keep last 72h)..."
+              docker image prune -af --filter "until=72h" >/dev/null 2>&1 || true
+              docker builder prune -f --filter "until=72h" >/dev/null 2>&1 || true
               send_telegram "$(printf '✅ PickleFund deploy success\nCommit: %s\nAPI: OK\nFrontend: OK\nBackup: %s' "$SHORT_SHA" "$BACKUP_NAME")"
               echo "Deployment successful."
               exit 0
