@@ -64,8 +64,8 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
         style={{ background: 'var(--pf-surface)' }}
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
-          {/* Mẫu v2.1 — tab gạch chân, chữ to rõ; active primary + gạch chân primary. */}
-          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}
+          <div className="flex flex-wrap gap-2 py-2.5">
             {tabs.map((t) => {
               const isActive = t.key === active
               return (
@@ -73,26 +73,24 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                   key={t.key}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition-colors',
+                    'whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
                     isActive
-                      ? '[color:var(--pf-primary)]'
-                      : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]',
+                      ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
+                      : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
                   )}
+                  style={isActive ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' } : undefined}
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {t.label}
                     {typeof t.badge === 'number' && t.badge > 0 && (
-                      <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      <span className={cn(
+                        'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                        isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white',
+                      )}>
                         {t.badge}
                       </span>
                     )}
                   </span>
-                  {isActive && (
-                    <span
-                      className="absolute inset-x-3 -bottom-px h-0.5 rounded-full"
-                      style={{ background: 'var(--pf-primary)' }}
-                    />
-                  )}
                 </button>
               )
             })}

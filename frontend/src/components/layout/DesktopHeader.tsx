@@ -4,7 +4,7 @@
  * AppLayout để MỌI màn đều có, đồng nhất. Ẩn trên mobile (đã có MobileHeader).
  */
 import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, Maximize2, Minimize2, LogOut, User } from 'lucide-react'
+import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -91,14 +91,20 @@ export function DesktopHeader() {
       <div className="relative ml-1" ref={ref}>
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex h-9 items-center gap-2 rounded-xl px-2 text-white transition-transform active:scale-95"
+          className="flex h-11 items-center gap-2.5 rounded-2xl py-1 pl-1.5 pr-2.5 text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}
           title={user.username ?? 'Tài khoản'}
         >
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 text-[11px] font-extrabold">
-            {avatarText.slice(0, 1)}
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/20 text-[13px] font-extrabold">
+            {(user.username ?? avatarText).slice(0, 2).toUpperCase()}
           </span>
-          <span className="max-w-[120px] truncate pr-1 text-xs font-bold">{avatarText}</span>
+          <div className="min-w-0 text-left leading-tight">
+            <p className="max-w-[150px] truncate text-[13px] font-bold">{user.username}</p>
+            <p className="max-w-[150px] truncate text-[10px] font-medium text-white/75">
+              {ROLE_LABEL[user.role] ?? user.role}{data.settings?.code ? ` · ${data.settings.code}` : ''}
+            </p>
+          </div>
+          <ChevronDown size={15} className="shrink-0 text-white/70" />
         </button>
 
         {open && (
