@@ -32,7 +32,7 @@ const demoAccounts: DemoAccount[] = SHOW_DEMO_ACCOUNTS ? [
 ] : []
 
 const routeByRole: Record<Role, string> = {
-  SUPER_ADMIN: '/super/dashboard', CLUB_ADMIN: '/dashboard',
+  SUPER_ADMIN: '/super/dashboard', CLUB_ADMIN: '/aido',
   CLUB_TREASURER: '/treasurer/dashboard', MEMBER_VIEW: '/member/dashboard',
 }
 

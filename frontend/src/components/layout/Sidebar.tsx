@@ -135,8 +135,6 @@ export function Sidebar({ onClose }: SidebarProps) {
     return item
   })
 
-  const initials = user.username?.slice(0, 2).toUpperCase() ?? 'U'
-
   // Lisa AI route theo role (super admin không có Lisa) — hiển thị nút Lisa nổi bật ở sidebar.
   const LISA_ROUTES: Partial<Record<Role, string>> = {
     CLUB_ADMIN: '/lisa', CLUB_TREASURER: '/lisa', MEMBER_VIEW: '/member/lisa',
@@ -251,10 +249,10 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* ── Lisa AI (nổi bật) — chuyển từ nút nổi vào sidebar, to & dễ thấy ── */}
       {lisaRoute && (
-        <div className="px-3 pb-2 pt-1">
+        <div className="px-3 pb-3 pt-1" style={{ borderTop: '1px solid var(--color-border-soft)' }}>
           <button
             onClick={() => { navigate(lisaRoute); onClose?.() }}
-            className="group flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all duration-200 hover:-translate-y-px"
+            className="group mt-3 flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all duration-200 hover:-translate-y-px"
             style={{ background: 'linear-gradient(135deg, var(--pf-primary-soft), #ffffff)', border: '1px solid var(--pf-primary-soft)' }}
           >
             <img
@@ -271,19 +269,6 @@ export function Sidebar({ onClose }: SidebarProps) {
           </button>
         </div>
       )}
-
-      {/* ── User profile (Đăng xuất đã có ở header trên cùng) ── */}
-      <div className="p-3" style={{ borderTop: '1px solid var(--color-border-soft)' }}>
-        <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] text-white text-xs font-bold select-none">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-800 truncate leading-tight">{user.username}</p>
-            <p className="text-[10px] truncate text-slate-400">{user.email ?? ''}</p>
-          </div>
-        </div>
-      </div>
     </aside>
   )
 }
