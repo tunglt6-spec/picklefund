@@ -22,7 +22,7 @@ import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
 import {
   PageShell, PageHeader, MetricCard, ActionButton, ResponsiveTabs,
-  LoadingState, ErrorState, type TabItem,
+  LoadingState, type TabItem,
 } from '../../components/shared'
 import type { ModuleAccent } from '../../components/shared'
 import { OfficeBanner } from '../../components/aido/OfficeBanner'
@@ -120,17 +120,28 @@ export function AiDigitalOffice() {
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
-    const [s, h, r, c, a, pq, wr, al] = await Promise.allSettled([
-      api.get('/ai/actions/summary'),
-      api.get('/maika/health-score'),
-      api.get('/workflows/runtime/status'),
-      api.get('/notification-runtime/channels'),
-      api.get('/aido/agent-activity'),
-      api.get('/ai/actions?status=PENDING_APPROVAL&limit=10'),
-      api.get('/workflows/runs'),
-      api.get('/ai/maika/operational-alerts'),
+    // Timeout mỗi request để nhịp trễ không "treo" cả màn; nguồn phụ hỏng vẫn hiển thị an toàn.
+    const fetchAll = () => Promise.allSettled([
+      api.get('/ai/actions/summary', { timeout: 12_000 }),
+      api.get('/maika/health-score', { timeout: 12_000 }),
+      api.get('/workflows/runtime/status', { timeout: 12_000 }),
+      api.get('/notification-runtime/channels', { timeout: 12_000 }),
+      api.get('/aido/agent-activity', { timeout: 12_000 }),
+      api.get('/ai/actions?status=PENDING_APPROVAL&limit=10', { timeout: 12_000 }),
+      api.get('/workflows/runs', { timeout: 12_000 }),
+      api.get('/ai/maika/operational-alerts', { timeout: 12_000 }),
     ])
-    if ([s, h, r, c].every((x) => x.status === 'rejected')) {
+    const coreDown = (rs: PromiseSettledResult<any>[]) =>
+      [rs[0], rs[1], rs[2], rs[3]].every((x) => x.status === 'rejected')
+    // 4 request cốt lõi cùng rớt thường là blip nhất thời (đua token/nghẽn nhịp) → thử lại 1 lần
+    // trước khi báo lỗi, để refresh không "chập chờn" ra ErrorState.
+    let settled = await fetchAll()
+    if (coreDown(settled)) {
+      await new Promise((r) => setTimeout(r, 900))
+      settled = await fetchAll()
+    }
+    const [s, h, r, c, a, pq, wr, al] = settled
+    if (coreDown(settled)) {
       setError(true); setLoading(false); return
     }
     const val = (x: PromiseSettledResult<any>) =>
@@ -153,6 +164,13 @@ export function AiDigitalOffice() {
     const id = setInterval(() => void load(true), 30_000) // fallback polling (WebSocket là kênh chính)
     return () => clearInterval(id)
   }, [load])
+
+  // Đang lỗi → tự thử lại nhanh (6s) để tự lành sau blip, không bắt user bấm "Thử lại".
+  useEffect(() => {
+    if (!error) return
+    const id = setTimeout(() => void load(true), 6_000)
+    return () => clearTimeout(id)
+  }, [error, load])
 
   // Real-time: WS đẩy 'presence' (nhịp nền, không refetch), 'agent-activity' (busy/online → cập
   // nhật ngay), còn lại ('ai-action') → refetch.
@@ -277,7 +295,24 @@ export function AiDigitalOffice() {
   ]
 
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
-  if (error) return <PageShell><ErrorState onRetry={() => void load()} /></PageShell>
+  // Lỗi tải dữ liệu vận hành → VẪN giữ Office View (banner không cần API) + báo lỗi gọn + thử
+  // lại, thay vì xoá trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
+  if (error) return (
+    <PageShell>
+      <PageHeader title="AIDO — AI Digital Office" subtitle="Văn phòng AI của câu lạc bộ" />
+      <div className="space-y-4">
+        <OfficeBanner caption="Viền chạy quanh thẻ = agent đang làm việc" />
+        <div
+          className="mx-auto flex w-full max-w-2xl flex-col items-center gap-2 rounded-2xl border p-5 text-center [border-color:var(--pf-border)]"
+          style={{ background: 'var(--pf-surface)' }}
+        >
+          <p className="text-sm font-medium [color:var(--pf-color)]">Không tải được dữ liệu vận hành</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Kết nối đang chập chờn — bảng số liệu tạm thời chưa hiện. Hệ thống sẽ tự thử lại.</p>
+          <ActionButton onClick={() => void load()}>Thử lại</ActionButton>
+        </div>
+      </div>
+    </PageShell>
+  )
 
   return (
     <PageShell>
