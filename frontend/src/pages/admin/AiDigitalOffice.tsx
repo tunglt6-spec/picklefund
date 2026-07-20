@@ -223,8 +223,11 @@ export function AiDigitalOffice() {
       },
       {
         key: 'HERMES', name: 'Hermes', role: 'Workflow Orchestrator', icon: <Workflow size={20} />, accent: 'blue',
-        status: hermesOn ? 'online' : 'offline',
-        task: `Điều phối workflow · scheduler ${hermesOn ? 'BẬT' : 'TẮT'}`,
+        // Hermes LUÔN sẵn sàng (chạy khi được gọi: run-now / dispatch / event). Timer scheduler
+        // BẬT/TẮT chỉ là chi tiết phụ — KHÔNG đồng nghĩa agent offline. Khi đang dispatch thật
+        // sẽ chuyển 'busy' qua cơ chế activity (override bên dưới).
+        status: 'online',
+        task: `Điều phối workflow · lịch tự động ${hermesOn ? 'BẬT' : 'TẮT (chạy thủ công)'}`,
         bullets: ['Workflow & Lịch', 'Thông báo', 'Approval Flow'],
         count: countByAi['HERMES'] ?? 0,
       },
