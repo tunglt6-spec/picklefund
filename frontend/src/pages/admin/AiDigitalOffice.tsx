@@ -337,33 +337,26 @@ export function AiDigitalOffice() {
               className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
               style={{ maxWidth: 1832 }}
             >
-              <img
-                src="/aido/office-banner-v3.png"
-                alt="AIDO — Văn phòng AI"
-                className="block w-full"
-                style={{ aspectRatio: '1832 / 602' }}
-              />
-
-              {/* Overlay VIỀN CHẠY (comet) + RADAR ping quanh mỗi thẻ — SVG viewBox co giãn theo
-                  ảnh nên responsive đồng bộ, không đè/cắt. Thể hiện agent ĐANG LÀM VIỆC. */}
+              {/* GIẢI PHÁP DỨT ĐIỂM: ẢNH nằm TRONG SVG (<image>) → ảnh + viền + radar chung MỘT
+                  hệ toạ độ viewBox ⇒ KHÔNG BAO GIỜ lệch, co giãn cùng nhau (responsive tuyệt đối). */}
               <svg
-                aria-hidden
-                className="pointer-events-none absolute inset-0 h-full w-full"
+                role="img"
+                aria-label="AIDO — Văn phòng AI"
+                className="block w-full"
                 viewBox="0 0 1832 602"
-                preserveAspectRatio="none"
+                preserveAspectRatio="xMidYMid meet"
                 fill="none"
               >
+                <image href="/aido/office-banner-v3.png" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
                 {BANNER_CARD.map((c) => (
                   <g key={c.key}>
-                    <circle
-                      cx={c.dx} cy={c.dy} r={6}
-                      fill="none" stroke={c.color} strokeWidth={2.5}
-                      className="aido-radar" style={{ animationDelay: c.delay }}
-                    />
-                    {/* Viền ĐẦY ĐỦ rõ quanh thẻ (luôn hiện) — đường viền chính, bao khít thẻ */}
+                    {/* radar ping — đúng tâm chấm trạng thái (dx/dy dò từ pixel) */}
+                    <circle cx={c.dx} cy={c.dy} r={6} fill="none" stroke={c.color} strokeWidth={2.5}
+                      className="aido-radar" style={{ animationDelay: c.delay }} />
+                    {/* viền đầy đủ bao khít thẻ */}
                     <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
                       fill="none" stroke={c.color} strokeOpacity={0.55} strokeWidth={3} />
-                    {/* Đoạn sáng chạy vòng (điểm nhấn "đang làm việc") */}
+                    {/* đoạn sáng chạy vòng (đang làm việc) */}
                     <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
                       fill="none" stroke={c.color} strokeWidth={4} strokeLinecap="round"
                       pathLength={100} strokeDasharray="24 76"
