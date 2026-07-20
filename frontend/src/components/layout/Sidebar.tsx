@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, DollarSign, CreditCard,
+  LayoutDashboard, Users,
   Settings, Building2,
   Bell, ScrollText, Receipt, ListOrdered,
   Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu,
@@ -44,13 +44,12 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 
+// UI Consolidation v2.1 — thủ quỹ: gom Nhập Thu/Nhập Chi/Sổ Quỹ → module "Sổ quỹ" (tab con).
 const treasurerNav: NavItem[] = [
-  { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/treasurer/dashboard' },
-  { label: 'Nhập Thu',  icon: <DollarSign size={18} />,      to: '/treasurer/income' },
-  { label: 'Nhập Chi',  icon: <CreditCard size={18} />,      to: '/treasurer/expense' },
-  { label: 'Sổ Quỹ',   icon: <ListOrdered size={18} />,     to: '/treasurer/ledger' },
-  { label: 'Chấm điểm', icon: <Award size={18} />,           to: '/scoring' },
-  { label: 'Nhắc Nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders' },
+  { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/treasurer/dashboard', desc: 'Số dư & sổ quỹ tổng hợp' },
+  { label: 'Sổ quỹ',   icon: <ListOrdered size={18} />,     to: '/treasurer/so-quy',   desc: 'Nhập thu · Nhập chi · Sổ quỹ' },
+  { label: 'Chấm điểm', icon: <Award size={18} />,           to: '/scoring',            desc: 'Chấm điểm thành viên' },
+  { label: 'Nhắc nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders', desc: 'Nhắc đóng quỹ & thông báo' },
 ]
 
 // UI Consolidation v2.1 — member (CHỈ XEM) gom thành 6 module dùng tab con (như admin).

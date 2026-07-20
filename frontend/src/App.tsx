@@ -47,6 +47,7 @@ import { TreasurerIncome } from './pages/treasurer/TreasurerIncome'
 import { TreasurerExpense } from './pages/treasurer/TreasurerExpense'
 import { TreasurerLedger } from './pages/treasurer/TreasurerLedger'
 import { TreasurerReminders } from './pages/treasurer/TreasurerReminders'
+import { TreasurerCashbookModule } from './pages/treasurer/modules/TreasurerCashbookModule'
 
 // Minigame pages
 import { MinigameList } from './pages/admin/minigame/MinigameList'
@@ -180,6 +181,8 @@ export default function App() {
             <Route path="/treasurer/income" element={<TreasurerIncome />} />
             <Route path="/treasurer/expense" element={<TreasurerExpense />} />
             <Route path="/treasurer/ledger" element={<TreasurerLedger />} />
+            {/* Module gom Sổ quỹ (v2.1) — tab con tái dùng Nhập thu/Nhập chi/Sổ quỹ */}
+            <Route path="/treasurer/so-quy" element={<TreasurerCashbookModule />} />
             <Route path="/treasurer/reminders" element={<TreasurerReminders />} />
 
             </Route>
