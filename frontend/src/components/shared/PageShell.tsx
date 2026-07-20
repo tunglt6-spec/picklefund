@@ -8,11 +8,15 @@ import { cn } from '../../lib/utils'
 interface PageShellProps {
   children: ReactNode
   className?: string
-  /** max-width container (mặc định 1440 cho commercial layout). */
+  /**
+   * max-width container. QUY ĐỊNH v2.1 (full viền): mặc định 1760 để lấp đầy khung nội dung
+   * trên màn hình phổ biến (laptop/FHD) — không để khoảng trống thừa; vẫn có trần để không
+   * kéo giãn vô hạn trên màn siêu rộng.
+   */
   maxWidth?: number
 }
 
-export function PageShell({ children, className, maxWidth = 1440 }: PageShellProps) {
+export function PageShell({ children, className, maxWidth = 1760 }: PageShellProps) {
   return (
     <div
       className="min-h-full w-full"

@@ -220,7 +220,7 @@ export function ScheduleCalendar() {
   const selHeading = `${FULL_WEEKDAYS[selDate.getDay()]}, ${selected.split('-').reverse().join('/')}`
 
   return (
-    <PageShell maxWidth={1240}>
+    <PageShell>
       <PageHeader
         title="Lịch sinh hoạt"
         subtitle="Quản lý lịch chơi và đăng ký của CLB"

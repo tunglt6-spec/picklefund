@@ -200,7 +200,7 @@ export function Attendance() {
     setAttendance(allPresent ? {} : Object.fromEntries(activeMemberList.map(m => [m.id, true])))
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell>
       <PageHeader
         title="Điểm Danh"
         subtitle={activePeriod ? activePeriod.name : 'Quản lý điểm danh từng buổi chơi'}

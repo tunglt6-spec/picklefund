@@ -25,7 +25,8 @@ export function ResponsiveTabs({
   return (
     <div
       className={cn(
-        'flex gap-1 overflow-x-auto no-scrollbar border-b border-[color:var(--pf-border)]',
+        // QUY ĐỊNH v2.1 — tab dạng NÚT to, dễ nhìn dễ bấm (pill; active nền primary sáng)
+        'flex gap-2 overflow-x-auto no-scrollbar',
         className,
       )}
     >
@@ -36,26 +37,23 @@ export function ResponsiveTabs({
             key={t.key}
             onClick={() => onChange(t.key)}
             className={cn(
-              'relative whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors',
+              'whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200',
               isActive
-                ? '[color:var(--pf-primary)]'
-                : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]',
+                ? 'text-white [background:var(--pf-primary)] [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.65)]'
+                : '[color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]',
             )}
           >
             <span className="inline-flex items-center gap-1.5">
               {t.label}
               {typeof t.badge === 'number' && t.badge > 0 && (
-                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">
+                <span className={cn(
+                  'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                  isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white',
+                )}>
                   {t.badge}
                 </span>
               )}
             </span>
-            {isActive && (
-              <span
-                className="absolute inset-x-2 -bottom-px h-0.5 rounded-full"
-                style={{ background: 'var(--pf-primary)' }}
-              />
-            )}
           </button>
         )
       })}

@@ -187,28 +187,30 @@ export function Sidebar({ onClose }: SidebarProps) {
         </div>
       </div>
 
-      {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+      {/* ── Navigation ──
+          QUY ĐỊNH v2.1 — nút to, PHÂN BỔ ĐỀU trên bar (justify-evenly), có HIỆU ỨNG SÁNG
+          (glow) khi hover. Nhiều mục (member) tự cuộn. */}
+      <nav className="flex flex-1 flex-col justify-evenly gap-1 overflow-y-auto px-3 py-4">
         {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             onClick={onClose}
             className={({ isActive }) => cn(
-              'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+              'group relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200',
               isActive
-                ? '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                ? '[color:var(--pf-primary)] [background:var(--pf-primary-soft)] [box-shadow:0_8px_20px_-10px_rgba(109,93,251,0.55)]'
+                : 'text-slate-500 hover:text-[color:var(--pf-primary)] hover:[background:var(--pf-surface)] hover:-translate-y-px hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.45)]'
             )}
           >
             {({ isActive }) => (
               <>
                 {/* Active accent bar */}
                 <span className={cn(
-                  'absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full transition-all',
+                  'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full transition-all',
                   isActive ? '[background:var(--pf-primary)] opacity-100' : 'opacity-0'
                 )} />
-                <span className={cn('shrink-0 transition-colors', isActive ? '[color:var(--pf-primary)]' : 'text-slate-400 group-hover:text-slate-600')}>
+                <span className={cn('shrink-0 transition-colors', isActive ? '[color:var(--pf-primary)]' : 'text-slate-400 group-hover:[color:var(--pf-primary)]')}>
                   {item.icon}
                 </span>
                 <span className="flex-1 leading-none">{item.label}</span>

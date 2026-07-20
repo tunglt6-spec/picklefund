@@ -815,7 +815,7 @@ export function FundPeriods() {
   }
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell>
       <PageHeader
         title="Kỳ Quỹ"
         subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"

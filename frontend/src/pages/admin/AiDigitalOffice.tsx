@@ -332,7 +332,7 @@ export function AiDigitalOffice() {
         <div className="space-y-5">
           {/* Office scene (pixel-art) + overlay TRẠNG THÁI THẬT */}
           <div>
-            <div className="relative mx-auto w-full max-w-[992px] overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div className="relative mx-auto w-full max-w-[1600px] overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               <img
                 src="/aido/office-scene.png"
                 alt="AIDO — Văn phòng AI"
