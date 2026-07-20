@@ -106,7 +106,8 @@ jobs:
             cd "$REPO_DIR"
 
             # ── 0. Dung lượng đĩa TRƯỚC deploy (theo dõi phình đĩa VPS 38G) ──
-            echo "Disk before: $(df -h / | awk 'NR==2{print $3\" used / \"$2\" (\"$5\")\"}')"
+            echo "=== Disk before deploy ==="; df -h /
+            echo "Backups dir: $(du -sh "$REPO_DIR"/backups 2>/dev/null | cut -f1) ($(ls -1 "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | wc -l) files)"
 
             # ── 1. Save previous commit for rollback ──────────────────
             PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
@@ -196,7 +197,8 @@ jobs:
               # không xoá nên phình đĩa dần). Best-effort, không chặn deploy.
               echo "Trimming old DB backups (keep last 14)..."
               ls -1t "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | tail -n +15 | xargs -r rm -f || true
-              echo "Disk after cleanup: $(df -h / | awk 'NR==2{print $3\" used / \"$2\" (\"$5\")\"}')"
+              echo "=== Disk after cleanup ==="; df -h /
+              echo "Backups dir: $(du -sh "$REPO_DIR"/backups 2>/dev/null | cut -f1) ($(ls -1 "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | wc -l) files)"
               send_telegram "$(printf '✅ PickleFund deploy success\nCommit: %s\nAPI: OK\nFrontend: OK\nBackup: %s' "$SHORT_SHA" "$BACKUP_NAME")"
               echo "Deployment successful."
               exit 0
