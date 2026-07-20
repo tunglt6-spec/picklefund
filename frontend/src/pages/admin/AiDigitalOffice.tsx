@@ -28,6 +28,7 @@ import type { ModuleAccent } from '../../components/shared'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
+import { buildNotifications } from '../../lib/notifications'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { WorkflowRules } from './workflows/WorkflowRules'
 import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
@@ -140,9 +141,10 @@ export function AiDigitalOffice() {
   // Cảnh báo vận hành THẬT (Maika) cho Office View.
   const [opsSignals, setOpsSignals] = useState<{ code?: string; level?: string; message?: string }[]>([])
 
-  // Lịch hôm nay — tái dùng client store (đã sync), giống ClubDashboard (không gọi thêm API).
+  // Lịch hôm nay + thông báo chưa đọc — tái dùng client store (đã sync), không gọi thêm API.
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const clubData = useClubDataStore((s) => s.getClubData(clubId))
+  const readNotifIds = useClubDataStore((s) => s.readNotifIds)
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -214,6 +216,12 @@ export function AiDigitalOffice() {
     for (const a of summary?.actionsByAi ?? []) m[a.ai] = a.count
     return m
   }, [summary])
+
+  // Thông báo chưa đọc (client store, giống MobileHeader).
+  const unreadNotif = useMemo(() => {
+    const ids = new Set<string>(readNotifIds[clubId] ?? [])
+    return buildNotifications(clubData).filter((n) => !ids.has(n.id)).length
+  }, [clubData, readNotifIds, clubId])
 
   // Lịch hôm nay (buổi chơi trong ngày) — từ client store, giống ClubDashboard.
   const todaySessions = useMemo(() => {
@@ -412,12 +420,13 @@ export function AiDigitalOffice() {
             </p>
           </div>
 
-          {/* Dashboard số liệu thật */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {/* Dashboard số liệu thật (5 thẻ như mẫu) */}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             <MetricCard icon={<Activity size={18} />} accent="violet" label="Tác vụ hôm nay" value={executedToday} sub="Đã thực thi" />
             <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={running} sub="Executor" />
             <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" value={pending} sub="Approval queue" />
             <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" value={failed} sub="Tổng" negative={failed > 0} />
+            <MetricCard icon={<Bell size={18} />} accent="teal" label="Thông báo chưa đọc" value={unreadNotif} sub="Chưa xem" />
           </div>
 
           {/* Trung tâm điều hành — 3 panel DỮ LIỆU THẬT (như mockup) */}

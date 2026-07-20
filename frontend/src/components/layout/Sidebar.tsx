@@ -20,26 +20,28 @@ interface NavItem {
   icon: React.ReactNode
   to: string
   badge?: number
+  /** Mô tả ngắn dưới tiêu đề (mẫu v2.1) — có desc ⇒ render thẻ số + tiêu đề + mô tả. */
+  desc?: string
 }
 
 // UI Consolidation v2.1 — cụm AI (AIDO/Operations/Workflows/Nhật ký AI) gộp về 1 mục "AIDO".
 const superAdminNav: NavItem[] = [
-  { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard' },
-  { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs' },
-  { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users' },
-  { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs' },
-  { label: 'AIDO',         icon: <Cpu size={18} />,             to: '/aido' },
-  { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings' },
+  { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard', desc: 'Bảng điều khiển hệ thống' },
+  { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs',     desc: 'Danh sách & chi tiết CLB' },
+  { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users',     desc: 'Tài khoản toàn hệ thống' },
+  { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs', desc: 'Nhật ký kiểm toán' },
+  { label: 'AIDO',         icon: <Cpu size={18} />,             to: '/aido',            desc: 'AI Digital Office' },
+  { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings',  desc: 'Cấu hình hệ thống' },
 ]
 
 // UI Consolidation v2.1 — 24 mục phẳng → 6 module, mỗi module dùng tab con (route giữ nguyên).
 const clubAdminBaseNav: NavItem[] = [
-  { label: 'AIDO',          icon: <Cpu size={18} />,          to: '/aido' },
-  { label: 'Thành viên',    icon: <Users size={18} />,        to: '/thanh-vien' },
-  { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh' },
-  { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong' },
-  { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau' },
-  { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong' },
+  { label: 'AIDO',          icon: <Cpu size={18} />,          to: '/aido',        desc: 'AI Digital Office' },
+  { label: 'Thành viên',    icon: <Users size={18} />,        to: '/thanh-vien',  desc: 'Quản lý thành viên & tài khoản' },
+  { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh',   desc: 'Quỹ · Thu · Chi · Công nợ · Báo cáo' },
+  { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong',   desc: 'Lịch · Đăng ký · Check-in · Điểm danh' },
+  { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Xếp lịch đấu · Lịch sử · Bảng điểm' },
+  { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 
 const treasurerNav: NavItem[] = [
@@ -187,34 +189,54 @@ export function Sidebar({ onClose }: SidebarProps) {
         </div>
       </div>
 
-      {/* ── Navigation ──
-          QUY ĐỊNH v2.1 — nút gọn, cách đều, có HIỆU ỨNG SÁNG (glow) khi hover. */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
-        {navItems.map(item => (
+      {/* ── Navigation ── (mẫu v2.1)
+          Có desc ⇒ THẺ: số thứ tự + icon + tiêu đề + mô tả; active nền tím gradient, chữ
+          trắng. Không desc ⇒ dòng gọn (member/treasurer nhiều mục). Glow khi hover. */}
+      <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-3">
+        {navItems.map((item, i) => (
           <NavLink
             key={item.to}
             to={item.to}
             onClick={onClose}
             className={({ isActive }) => cn(
-              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200',
+              'group relative flex items-center gap-2.5 rounded-2xl transition-all duration-200',
+              item.desc ? 'px-2.5 py-2.5' : 'px-3 py-2.5',
               isActive
-                ? '[color:var(--pf-primary)] [background:var(--pf-primary-soft)] [box-shadow:0_8px_20px_-10px_rgba(109,93,251,0.55)]'
-                : 'text-slate-500 hover:text-[color:var(--pf-primary)] hover:[background:var(--pf-surface)] hover:-translate-y-px hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.45)]'
+                ? 'text-white [background:linear-gradient(135deg,#6D5DFB,#5B4BE8)] [box-shadow:0_10px_22px_-10px_rgba(109,93,251,0.7)]'
+                : 'hover:-translate-y-px hover:[background:var(--pf-surface)] hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.4)]'
             )}
           >
             {({ isActive }) => (
               <>
-                {/* Active accent bar */}
-                <span className={cn(
-                  'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full transition-all',
-                  isActive ? '[background:var(--pf-primary)] opacity-100' : 'opacity-0'
-                )} />
-                <span className={cn('shrink-0 transition-colors', isActive ? '[color:var(--pf-primary)]' : 'text-slate-400 group-hover:[color:var(--pf-primary)]')}>
+                {/* Số thứ tự (chỉ thẻ có desc) */}
+                {item.desc && (
+                  <span className={cn(
+                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold',
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400 group-hover:[color:var(--pf-primary)]'
+                  )}>
+                    {i + 1}
+                  </span>
+                )}
+                {/* Icon */}
+                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400 group-hover:[color:var(--pf-primary)]')}>
                   {item.icon}
                 </span>
-                <span className="flex-1 leading-none">{item.label}</span>
+                {/* Tiêu đề + mô tả */}
+                <div className="min-w-0 flex-1">
+                  <p className={cn('truncate text-sm font-semibold leading-tight', isActive ? 'text-white' : 'text-slate-700')}>
+                    {item.label}
+                  </p>
+                  {item.desc && (
+                    <p className={cn('mt-0.5 truncate text-[11px] leading-tight', isActive ? 'text-white/70' : 'text-slate-400')}>
+                      {item.desc}
+                    </p>
+                  )}
+                </div>
                 {item.badge && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                  <span className={cn(
+                    'flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                    isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
+                  )}>
                     {item.badge}
                   </span>
                 )}
