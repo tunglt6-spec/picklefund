@@ -360,13 +360,15 @@ export function AiDigitalOffice() {
                       fill="none" stroke={c.color} strokeWidth={2.5}
                       className="aido-radar" style={{ animationDelay: c.delay }}
                     />
+                    {/* Viền ĐẦY ĐỦ rõ quanh thẻ (luôn hiện) — đường viền chính, bao khít thẻ */}
                     <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
-                      fill="none" stroke={c.color} strokeOpacity={0.22} strokeWidth={2.5} />
+                      fill="none" stroke={c.color} strokeOpacity={0.55} strokeWidth={3} />
+                    {/* Đoạn sáng chạy vòng (điểm nhấn "đang làm việc") */}
                     <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
-                      fill="none" stroke={c.color} strokeWidth={3.5} strokeLinecap="round"
-                      pathLength={100} strokeDasharray="26 74"
+                      fill="none" stroke={c.color} strokeWidth={4} strokeLinecap="round"
+                      pathLength={100} strokeDasharray="24 76"
                       className="aido-run"
-                      style={{ animation: `aido-run ${c.dur} linear infinite`, animationDelay: c.delay, filter: `drop-shadow(0 0 3px ${c.color})` }}
+                      style={{ animation: `aido-run ${c.dur} linear infinite`, animationDelay: c.delay, filter: `drop-shadow(0 0 4px ${c.color})` }}
                     />
                   </g>
                 ))}
