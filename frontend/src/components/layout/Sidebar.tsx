@@ -1,10 +1,10 @@
 import { useEffect, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
-  BarChart3, Settings, Building2,
+  LayoutDashboard, Users, DollarSign, CreditCard,
+  Settings, Building2,
   Bell, ScrollText, Receipt, ListOrdered,
-  Trophy, Sparkles, Activity, CalendarPlus, ClipboardCheck, CalendarDays, Wallet, Coins, History, Award, Cpu,
+  Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -53,27 +53,14 @@ const treasurerNav: NavItem[] = [
   { label: 'Nhắc Nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders' },
 ]
 
+// UI Consolidation v2.1 — member (CHỈ XEM) gom thành 6 module dùng tab con (như admin).
 const memberNav: NavItem[] = [
-  { label: 'Tổng Quan',     icon: <LayoutDashboard size={18} />, to: '/member/dashboard' },
-  { label: 'Phiếu Thu',     icon: <Receipt size={18} />,         to: '/member/receipt' },
-  { label: 'Lịch sử Đóng',  icon: <DollarSign size={18} />,     to: '/member/contributions' },
-  { label: 'Lịch Tham Gia', icon: <Calendar size={18} />,        to: '/member/attendance' },
-  { label: 'Công nợ',      icon: <Coins size={18} />,            to: '/debts' },
-  { label: 'Lịch sinh hoạt', icon: <CalendarDays size={18} />,  to: '/schedule' },
-  { label: 'Đăng ký buổi', icon: <CalendarPlus size={18} />,    to: '/session-registration' },
-  { label: 'Check-in',      icon: <ClipboardCheck size={18} />, to: '/check-in' },
-  { label: 'Hoạt động tuần', icon: <Activity size={18} />,      to: '/activity' },
-  { label: 'Minigame',      icon: <Trophy size={18} />,          to: '/minigames' },
-  { label: 'Lịch sử thi đấu', icon: <History size={18} />,       to: '/match-history' },
-  // Nhóm xem tài chính toàn CLB (CHỈ XEM — nút CRUD ẩn theo isMember trong từng trang)
-  { label: 'Tài chính',     icon: <Wallet size={18} />,          to: '/finance-dashboard' },
-  { label: 'Kỳ Quỹ',       icon: <Calendar size={18} />,        to: '/fund-periods' },
-  { label: 'Thu Quỹ',      icon: <DollarSign size={18} />,      to: '/contributions' },
-  { label: 'Chi Phí',      icon: <CreditCard size={18} />,      to: '/expenses' },
-  { label: 'Báo Cáo',      icon: <BarChart3 size={18} />,       to: '/reports' },
-  { label: 'Chấm điểm',    icon: <Award size={18} />,           to: '/scoring' },
-  { label: 'Lisa AI',        icon: <Sparkles size={18} />,        to: '/member/lisa' },
-  { label: 'Thông báo',     icon: <Bell size={18} />,            to: '/member/notifications' },
+  { label: 'Tổng quan',   icon: <LayoutDashboard size={18} />, to: '/member/dashboard',     desc: 'Hồ sơ & số dư của bạn' },
+  { label: 'Cá nhân',     icon: <Receipt size={18} />,         to: '/member/ca-nhan',       desc: 'Phiếu thu · Đóng quỹ · Tham gia · Công nợ' },
+  { label: 'Tài chính',   icon: <Wallet size={18} />,          to: '/member/tai-chinh',     desc: 'Quỹ · Thu · Chi · Báo cáo (xem)' },
+  { label: 'Hoạt động',   icon: <CalendarDays size={18} />,    to: '/member/hoat-dong',     desc: 'Lịch · Đăng ký · Check-in · Tuần' },
+  { label: 'Thi đấu',     icon: <Trophy size={18} />,          to: '/member/thi-dau',       desc: 'Minigame · Lịch sử · Bảng điểm' },
+  { label: 'Thông báo',   icon: <Bell size={18} />,            to: '/member/notifications', desc: 'Tin & nhắc nhở' },
 ]
 
 const navByRole: Record<Role, NavItem[]> = {

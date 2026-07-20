@@ -65,6 +65,12 @@ import { MemberNotifications } from './pages/member/MemberNotifications'
 import { MemberReceipt } from './pages/member/MemberReceipt'
 import { MemberLisaChat } from './pages/member/MemberLisaChat'
 
+// Member modules gom (UI Consolidation v2.1) — view-only, tái dùng màn đã có làm tab.
+import { MemberPersonalModule } from './pages/member/modules/MemberPersonalModule'
+import { MemberFinanceModule } from './pages/member/modules/MemberFinanceModule'
+import { MemberActivityModule } from './pages/member/modules/MemberActivityModule'
+import { MemberCompeteModule } from './pages/member/modules/MemberCompeteModule'
+
 // Member accounts + change password
 import { MemberAccounts } from './pages/admin/MemberAccounts'
 import { ChangePassword } from './pages/ChangePassword'
@@ -234,6 +240,11 @@ export default function App() {
             <Route path="/member/attendance" element={<MemberAttendance />} />
             <Route path="/member/lisa" element={<MemberLisaChat />} />
             <Route path="/member/notifications" element={<MemberNotifications />} />
+            {/* Member modules gom (v2.1) — tab con tái dùng màn cũ, view-only */}
+            <Route path="/member/ca-nhan" element={<MemberPersonalModule />} />
+            <Route path="/member/tai-chinh" element={<MemberFinanceModule />} />
+            <Route path="/member/hoat-dong" element={<MemberActivityModule />} />
+            <Route path="/member/thi-dau" element={<MemberCompeteModule />} />
             </Route>
           </Route>
 
