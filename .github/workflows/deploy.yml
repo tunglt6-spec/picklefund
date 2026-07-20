@@ -105,6 +105,9 @@ jobs:
 
             cd "$REPO_DIR"
 
+            # ── 0. Dung lượng đĩa TRƯỚC deploy (theo dõi phình đĩa VPS 38G) ──
+            echo "Disk before: $(df -h / | awk 'NR==2{print $3\" used / \"$2\" (\"$5\")\"}')"
+
             # ── 1. Save previous commit for rollback ──────────────────
             PREVIOUS_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
             echo "Previous commit: ${PREVIOUS_COMMIT:-none}"
@@ -189,6 +192,11 @@ jobs:
               echo "Pruning old images (keep last 72h)..."
               docker image prune -af --filter "until=72h" >/dev/null 2>&1 || true
               docker builder prune -f --filter "until=72h" >/dev/null 2>&1 || true
+              # Dọn backup DB cũ — giữ 14 bản gần nhất (mỗi deploy tạo 1 file ~3M, TRƯỚC ĐÂY
+              # không xoá nên phình đĩa dần). Best-effort, không chặn deploy.
+              echo "Trimming old DB backups (keep last 14)..."
+              ls -1t "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | tail -n +15 | xargs -r rm -f || true
+              echo "Disk after cleanup: $(df -h / | awk 'NR==2{print $3\" used / \"$2\" (\"$5\")\"}')"
               send_telegram "$(printf '✅ PickleFund deploy success\nCommit: %s\nAPI: OK\nFrontend: OK\nBackup: %s' "$SHORT_SHA" "$BACKUP_NAME")"
               echo "Deployment successful."
               exit 0
