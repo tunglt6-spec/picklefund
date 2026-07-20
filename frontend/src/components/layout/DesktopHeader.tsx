@@ -4,7 +4,7 @@
  * AppLayout để MỌI màn đều có, đồng nhất. Ẩn trên mobile (đã có MobileHeader).
  */
 import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown } from 'lucide-react'
+import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -70,6 +70,16 @@ export function DesktopHeader() {
 
   return (
     <header className="hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b bg-white px-6" style={{ borderColor: 'var(--pf-border)' }}>
+      {user.role === 'CLUB_ADMIN' && (
+        <button
+          onClick={() => navigate('/he-thong?tab=billing')}
+          className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-white transition-transform active:scale-95"
+          style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+          title="Nâng cấp gói"
+        >
+          <Zap size={15} /> Nâng cấp gói
+        </button>
+      )}
       <button onClick={() => navigate(searchRouteByRole[user.role] ?? '/')} className={iconBtn} title="Tìm kiếm" aria-label="Tìm kiếm">
         <Search size={17} />
       </button>
