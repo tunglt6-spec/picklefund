@@ -55,6 +55,7 @@ const treasurerNav: NavItem[] = [
 
 // UI Consolidation v2.1 — member (CHỈ XEM) gom thành 6 module dùng tab con (như admin).
 const memberNav: NavItem[] = [
+  { label: 'Văn phòng AI', icon: <Cpu size={18} />,            to: '/member/aido',          desc: 'Xem đội ngũ AI đang làm việc' },
   { label: 'Tổng quan',   icon: <LayoutDashboard size={18} />, to: '/member/dashboard',     desc: 'Hồ sơ & số dư của bạn' },
   { label: 'Cá nhân',     icon: <Receipt size={18} />,         to: '/member/ca-nhan',       desc: 'Phiếu thu · Đóng quỹ · Tham gia · Công nợ' },
   { label: 'Tài chính',   icon: <Wallet size={18} />,          to: '/member/tai-chinh',     desc: 'Quỹ · Thu · Chi · Báo cáo (xem)' },

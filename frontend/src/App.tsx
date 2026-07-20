@@ -64,6 +64,7 @@ import { MemberContributions } from './pages/member/MemberContributions'
 import { MemberNotifications } from './pages/member/MemberNotifications'
 import { MemberReceipt } from './pages/member/MemberReceipt'
 import { MemberLisaChat } from './pages/member/MemberLisaChat'
+import { MemberOffice } from './pages/member/MemberOffice'
 
 // Member modules gom (UI Consolidation v2.1) — view-only, tái dùng màn đã có làm tab.
 import { MemberPersonalModule } from './pages/member/modules/MemberPersonalModule'
@@ -245,6 +246,7 @@ export default function App() {
             <Route path="/member/tai-chinh" element={<MemberFinanceModule />} />
             <Route path="/member/hoat-dong" element={<MemberActivityModule />} />
             <Route path="/member/thi-dau" element={<MemberCompeteModule />} />
+            <Route path="/member/aido" element={<MemberOffice />} />
             </Route>
           </Route>
 

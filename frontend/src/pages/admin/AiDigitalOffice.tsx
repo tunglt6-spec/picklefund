@@ -25,6 +25,7 @@ import {
   LoadingState, ErrorState, type TabItem,
 } from '../../components/shared'
 import type { ModuleAccent } from '../../components/shared'
+import { OfficeBanner } from '../../components/aido/OfficeBanner'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
@@ -66,20 +67,6 @@ const riskMeta = (r?: string) =>
   RISK_META[(r ?? '').toLowerCase()] ?? { label: r ?? '—', color: 'var(--pf-primary)' }
 const runMeta = (s?: string) =>
   RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, #94A3B8)' }
-
-/**
- * Khung THẺ (bbox px trong office-banner-v3.png 1832×602) dò CHÍNH XÁC từ pixel (dải header
- * màu). Dùng overlay SVG (viewBox 1832×602 ⇒ co giãn theo ảnh, responsive) vẽ VIỀN CHẠY
- * (comet) + RADAR ping quanh mỗi thẻ agent → thể hiện "đang làm việc". Mỗi agent 1 màu.
- */
-const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; dx: number; dy: number; color: string; dur: string; delay: string }[] = [
-  // dx/dy = TÂM chấm trạng thái xanh (dò từ pixel) → radar đặt đúng tâm chấm.
-  { key: 'MAIKA', x: 74, y: 80, w: 245, h: 226, dx: 103, dy: 181, color: '#6D5DFB', dur: '6.4s', delay: '0s' },
-  { key: 'LISA', x: 469, y: 80, w: 232, h: 226, dx: 498, dy: 181, color: '#2563EB', dur: '7.2s', delay: '.5s' },
-  { key: 'HERMES', x: 818, y: 80, w: 230, h: 226, dx: 844, dy: 182, color: '#059669', dur: '6.0s', delay: '1s' },
-  { key: 'MIT_DAT', x: 1189, y: 80, w: 204, h: 226, dx: 1216, dy: 181, color: '#EA580C', dur: '7.6s', delay: '.3s' },
-  { key: 'NOTIFICATION', x: 1498, y: 80, w: 237, h: 227, dx: 1528, dy: 181, color: '#C026D3', dur: '6.8s', delay: '.8s' },
-]
 
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
 
@@ -326,48 +313,9 @@ export function AiDigitalOffice() {
           {/* Office BANNER — 1 ảnh hero tĩnh (thẻ agent vẽ sẵn trong ảnh). Chỉ scale w-full ⇒
               đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
               Trạng thái THẬT hiển thị ở KPI + 3 panel + Đội ngũ AI bên dưới. */}
-          <div>
-            <style>{`
-              @keyframes aido-run { to { stroke-dashoffset: -100; } }
-              @keyframes aido-radar { 0% { r: 5; opacity: .85; } 100% { r: 26; opacity: 0; } }
-              .aido-radar { animation: aido-radar 2.2s ease-out infinite; }
-              @media (prefers-reduced-motion: reduce) { .aido-run, .aido-radar { animation: none; } }
-            `}</style>
-            <div
-              className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
-              style={{ maxWidth: 1832 }}
-            >
-              {/* GIẢI PHÁP DỨT ĐIỂM: ẢNH nằm TRONG SVG (<image>) → ảnh + viền + radar chung MỘT
-                  hệ toạ độ viewBox ⇒ KHÔNG BAO GIỜ lệch, co giãn cùng nhau (responsive tuyệt đối). */}
-              <svg
-                role="img"
-                aria-label="AIDO — Văn phòng AI"
-                className="block w-full"
-                viewBox="0 0 1832 602"
-                preserveAspectRatio="xMidYMid meet"
-                fill="none"
-              >
-                <image href="/aido/office-banner-v3.png" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
-                {BANNER_CARD.map((c) => (
-                  <g key={c.key}>
-                    {/* radar ping — đúng tâm chấm trạng thái (dx/dy dò từ pixel) */}
-                    <circle cx={c.dx} cy={c.dy} r={6} fill="none" stroke={c.color} strokeWidth={2.5}
-                      className="aido-radar" style={{ animationDelay: c.delay }} />
-                    {/* viền đầy đủ bao khít thẻ */}
-                    <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
-                      fill="none" stroke={c.color} strokeOpacity={0.55} strokeWidth={3} />
-                    {/* đoạn sáng chạy vòng (đang làm việc) */}
-                    <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={16} ry={16}
-                      fill="none" stroke={c.color} strokeWidth={4} strokeLinecap="round"
-                      pathLength={100} strokeDasharray="24 76"
-                      className="aido-run"
-                      style={{ animation: `aido-run ${c.dur} linear infinite`, animationDelay: c.delay, filter: `drop-shadow(0 0 4px ${c.color})` }}
-                    />
-                  </g>
-                ))}
-              </svg>
-
-              {/* Badge REAL-TIME */}
+          <OfficeBanner
+            caption="Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · trạng thái THẬT ở bảng dưới"
+            badge={
               <div
                 className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
@@ -375,12 +323,8 @@ export function AiDigitalOffice() {
                 <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
                 {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
               </div>
-
-            </div>
-            <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
-              Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · trạng thái THẬT ở bảng dưới
-            </p>
-          </div>
+            }
+          />
 
           {/* Dashboard số liệu thật (5 thẻ như mẫu) */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
