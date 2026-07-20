@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
-import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { useApiSync } from '../../hooks/useApiSync'
@@ -54,9 +53,9 @@ export function AppLayout() {
         {/* Desktop header — tìm kiếm / chuông / toàn màn hình / avatar (mẫu v2.1) */}
         <DesktopHeader />
 
-        {/* Page content — extra bottom padding on mobile so bottom nav never covers content */}
-        <main className="flex-1 flex flex-col overflow-hidden md:pb-0" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' }}>
-          <div className="flex-1 overflow-y-auto md:pb-0">
+        {/* Page content — không còn bottom nav; chỉ chừa safe-area đáy */}
+        <main className="flex-1 flex flex-col overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="flex-1 overflow-y-auto">
             <Outlet />
           </div>
         </main>
@@ -68,7 +67,7 @@ export function AppLayout() {
             className="md:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
             style={{
               right: 14,
-              bottom: 'calc(68px + env(safe-area-inset-bottom))',
+              bottom: 'calc(16px + env(safe-area-inset-bottom))',
               width: 56,
               height: 56,
               borderRadius: 28,
@@ -81,11 +80,6 @@ export function AppLayout() {
             <img src="/lisa-avatar.jpg?v=2" alt="Lisa AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </button>
         )}
-
-        {/* Mobile bottom nav — 60px + safe area */}
-        <div className="md:hidden">
-          <BottomNav />
-        </div>
       </div>
     </div>
   )
