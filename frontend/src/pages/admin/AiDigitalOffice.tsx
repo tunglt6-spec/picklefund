@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
-  LayoutGrid, ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart,
+  LayoutGrid, ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
 } from 'lucide-react'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -26,6 +26,8 @@ import {
 } from '../../components/shared'
 import type { ModuleAccent } from '../../components/shared'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
+import { useClubDataStore } from '../../store/clubDataStore'
+import { useAuthStore } from '../../store/authStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { WorkflowRules } from './workflows/WorkflowRules'
 import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
@@ -135,10 +137,16 @@ export function AiDigitalOffice() {
   // Dữ liệu chi tiết cho Operations/Analytics (đều là endpoint THẬT sẵn có).
   const [pendingList, setPendingList] = useState<AiActionListItem[]>([])
   const [runs, setRuns] = useState<WorkflowRun[]>([])
+  // Cảnh báo vận hành THẬT (Maika) cho Office View.
+  const [opsSignals, setOpsSignals] = useState<{ code?: string; level?: string; message?: string }[]>([])
+
+  // Lịch hôm nay — tái dùng client store (đã sync), giống ClubDashboard (không gọi thêm API).
+  const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const clubData = useClubDataStore((s) => s.getClubData(clubId))
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
-    const [s, h, r, c, a, pq, wr] = await Promise.allSettled([
+    const [s, h, r, c, a, pq, wr, al] = await Promise.allSettled([
       api.get('/ai/actions/summary'),
       api.get('/maika/health-score'),
       api.get('/workflows/runtime/status'),
@@ -146,6 +154,7 @@ export function AiDigitalOffice() {
       api.get('/aido/agent-activity'),
       api.get('/ai/actions?status=PENDING_APPROVAL&limit=10'),
       api.get('/workflows/runs'),
+      api.get('/ai/maika/operational-alerts'),
     ])
     if ([s, h, r, c].every((x) => x.status === 'rejected')) {
       setError(true); setLoading(false); return
@@ -160,6 +169,7 @@ export function AiDigitalOffice() {
     if (a.status === 'fulfilled') setActivity(val(a) ?? {})
     if (pq.status === 'fulfilled') setPendingList(val(pq) ?? [])
     if (wr.status === 'fulfilled') setRuns(val(wr) ?? [])
+    if (al.status === 'fulfilled') setOpsSignals(val(al) ?? [])
     setUpdatedAt(new Date())
     setLoading(false)
   }, [])
@@ -204,6 +214,16 @@ export function AiDigitalOffice() {
     for (const a of summary?.actionsByAi ?? []) m[a.ai] = a.count
     return m
   }, [summary])
+
+  // Lịch hôm nay (buổi chơi trong ngày) — từ client store, giống ClubDashboard.
+  const todaySessions = useMemo(() => {
+    const d = new Date()
+    const p = (n: number) => String(n).padStart(2, '0')
+    const tk = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+    return (clubData.sessions ?? [])
+      .filter((s: any) => (s.sessionDate ?? '').slice(0, 10) === tk)
+      .sort((a: any, b: any) => (a.startTime ?? '').localeCompare(b.startTime ?? ''))
+  }, [clubData.sessions])
 
   // ── Suy ra 5 agent (từ dữ liệu thật) ────────────────────────────────────────
   const agents: AgentView[] = useMemo(() => {
@@ -398,6 +418,79 @@ export function AiDigitalOffice() {
             <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={running} sub="Executor" />
             <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" value={pending} sub="Approval queue" />
             <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" value={failed} sub="Tổng" negative={failed > 0} />
+          </div>
+
+          {/* Trung tâm điều hành — 3 panel DỮ LIỆU THẬT (như mockup) */}
+          <div className="grid gap-5 lg:grid-cols-3">
+            {/* Việc cần xử lý = hàng đợi duyệt AI */}
+            <Panel icon={<Inbox size={16} />} title="Việc cần xử lý" sub={`${pending} chờ duyệt`}>
+              {pendingList.length === 0 ? (
+                <p className="text-sm [color:var(--pf-color-muted)]">Không có việc cần xử lý.</p>
+              ) : (
+                <div className="space-y-2">
+                  {pendingList.slice(0, 5).map((p) => {
+                    const rk = riskMeta(p.riskLevel)
+                    return (
+                      <button key={p.id} onClick={() => navigate('/admin/ai-approvals')}
+                        className="flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                        <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold"
+                          style={{ background: `color-mix(in srgb, ${rk.color} 16%, transparent)`, color: rk.color }}>{rk.label}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium [color:var(--pf-text)]">{p.title}</p>
+                          <p className="truncate text-xs [color:var(--pf-color-muted)]">{p.requestedByAi} · {new Date(p.createdAt).toLocaleString('vi-VN')}</p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+
+            {/* Lịch hôm nay = buổi chơi trong ngày (client store) */}
+            <Panel icon={<CalendarDays size={16} />} title="Lịch hôm nay" sub="Buổi chơi trong ngày">
+              {todaySessions.length === 0 ? (
+                <p className="text-sm [color:var(--pf-color-muted)]">Hôm nay chưa có buổi chơi nào.</p>
+              ) : (
+                <div className="space-y-2">
+                  {todaySessions.slice(0, 5).map((s: any) => (
+                    <div key={s.id} className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Clock size={14} /></span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium [color:var(--pf-text)]">{[s.startTime, s.endTime].filter(Boolean).join(' – ') || 'Buổi chơi'}</p>
+                        <p className="truncate text-xs [color:var(--pf-color-muted)]">{s.courtName || 'Chưa rõ sân'}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{s._count?.attendanceRecords ?? 0} người</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {/* Cảnh báo & lưu ý = tín hiệu vận hành Maika */}
+            <Panel icon={<AlertTriangle size={16} />} title="Cảnh báo & lưu ý" sub="Tín hiệu vận hành">
+              {opsSignals.length === 0 ? (
+                <div className="flex items-start gap-2 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
+                  <ShieldCheck size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--pf-green)' }} />
+                  <p className="text-sm [color:var(--pf-text)]">Hệ thống AI ổn định · {failed === 0 ? 'không có lỗi tồn đọng' : `${failed} tác vụ lỗi cần xem`}.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {opsSignals.slice(0, 6).map((sig, i) => {
+                    const c = sig.level === 'warning'
+                      ? 'var(--pf-accent-rose, #EF4444)'
+                      : sig.level === 'attention'
+                        ? 'var(--pf-accent-amber, #F59E0B)'
+                        : 'var(--pf-accent-sky, #3B82F6)'
+                    return (
+                      <div key={sig.code ?? i} className="flex items-start gap-2 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: c }} />
+                        <p className="text-sm [color:var(--pf-text)]">{sig.message}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
           </div>
 
           <div className="grid gap-5 lg:grid-cols-3">
@@ -658,9 +751,18 @@ export function AiDigitalOffice() {
         </div>
       )}
 
-      {/* Gộp từ menu cũ — tái dùng nguyên màn (Pha sau sẽ đồng nhất header/khung). */}
-      {tab === 'workflows' && <WorkflowRules />}
-      {tab === 'ai-log' && <MitDacExecutionLog />}
+      {/* Gộp từ menu cũ — tái dùng nguyên màn. Huỷ padding PageShell (âm margin) để màn con
+          full-bleed, không bị đúp khung/lề. */}
+      {tab === 'workflows' && (
+        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
+          <WorkflowRules />
+        </div>
+      )}
+      {tab === 'ai-log' && (
+        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
+          <MitDacExecutionLog />
+        </div>
+      )}
     </PageShell>
   )
 }
