@@ -57,11 +57,11 @@ export function AppLayout() {
           </div>
         </main>
 
-        {/* Lisa AI floating button — mobile only, hide when already on Lisa page */}
+        {/* Lisa AI floating button — mọi kích thước (Lisa rời sidebar ở v2.1), ẩn khi đang ở trang Lisa */}
         {lisaRoute && !isOnLisa && (
           <button
             onClick={() => navigate(lisaRoute)}
-            className="md:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
+            className="fixed z-40 md:!bottom-6 active:scale-95 transition-transform shadow-xl"
             style={{
               right: 14,
               bottom: 'calc(68px + env(safe-area-inset-bottom))',

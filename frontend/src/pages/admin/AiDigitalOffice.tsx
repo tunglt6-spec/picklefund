@@ -26,6 +26,9 @@ import {
 } from '../../components/shared'
 import type { ModuleAccent } from '../../components/shared'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
+// Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
+import { WorkflowRules } from './workflows/WorkflowRules'
+import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -269,6 +272,8 @@ export function AiDigitalOffice() {
     { key: 'office', label: 'Office View' },
     { key: 'operations', label: 'Operations View', badge: pending },
     { key: 'analytics', label: 'Analytics View' },
+    { key: 'workflows', label: 'Workflows' },
+    { key: 'ai-log', label: 'Nhật ký AI' },
   ]
 
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
@@ -652,6 +657,10 @@ export function AiDigitalOffice() {
           </div>
         </div>
       )}
+
+      {/* Gộp từ menu cũ — tái dùng nguyên màn (Pha sau sẽ đồng nhất header/khung). */}
+      {tab === 'workflows' && <WorkflowRules />}
+      {tab === 'ai-log' && <MitDacExecutionLog />}
     </PageShell>
   )
 }

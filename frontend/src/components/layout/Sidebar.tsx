@@ -2,9 +2,9 @@ import { useEffect, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, DollarSign, CreditCard,
-  CheckSquare, BarChart3, Settings, LogOut, Building2,
+  BarChart3, Settings, LogOut, Building2,
   Bell, ScrollText, Receipt, ListOrdered, ChevronDown,
-  Zap, Star, Trophy, KeyRound, Sparkles, Bot, Workflow, Activity, Cog, CalendarPlus, ClipboardCheck, CalendarDays, Wallet, Coins, History, Award, Cpu,
+  Zap, Star, Trophy, Sparkles, Activity, CalendarPlus, ClipboardCheck, CalendarDays, Wallet, Coins, History, Award, Cpu,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -22,44 +22,24 @@ interface NavItem {
   badge?: number
 }
 
+// UI Consolidation v2.1 — cụm AI (AIDO/Operations/Workflows/Nhật ký AI) gộp về 1 mục "AIDO".
 const superAdminNav: NavItem[] = [
   { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard' },
   { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs' },
   { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users' },
   { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs' },
-  { label: 'AI Digital Office', icon: <Cpu size={18} />,        to: '/aido' },
-  { label: 'AI Operations Center', icon: <Bot size={18} />,     to: '/admin/ai-manager' },
-  { label: 'Workflows',    icon: <Workflow size={18} />,        to: '/admin/workflows' },
-  { label: 'Nhật ký AI',   icon: <Cog size={18} />,             to: '/admin/execution-log' },
+  { label: 'AIDO',         icon: <Cpu size={18} />,             to: '/aido' },
   { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings' },
 ]
 
+// UI Consolidation v2.1 — 24 mục phẳng → 6 module, mỗi module dùng tab con (route giữ nguyên).
 const clubAdminBaseNav: NavItem[] = [
-  { label: 'Tổng quan',   icon: <LayoutDashboard size={18} />, to: '/dashboard' },
-  { label: 'Thành viên',  icon: <Users size={18} />,           to: '/members' },
-  { label: 'Kỳ Quỹ',     icon: <Calendar size={18} />,        to: '/fund-periods' },
-  { label: 'Thu Quỹ',    icon: <DollarSign size={18} />,      to: '/contributions' },
-  { label: 'Chi Phí',    icon: <CreditCard size={18} />,      to: '/expenses' },
-  { label: 'Công nợ',    icon: <Coins size={18} />,           to: '/debts' },
-  { label: 'Lịch sinh hoạt', icon: <CalendarDays size={18} />, to: '/schedule' },
-  { label: 'Điểm Danh',  icon: <CheckSquare size={18} />,     to: '/attendance' },
-  { label: 'Đăng ký buổi', icon: <CalendarPlus size={18} />,  to: '/session-registration' },
-  { label: 'Check-in',    icon: <ClipboardCheck size={18} />, to: '/check-in' },
-  { label: 'Hoạt động tuần', icon: <Activity size={18} />,    to: '/activity' },
-  { label: 'Minigame',   icon: <Trophy size={18} />,           to: '/minigames' },
-  { label: 'Lịch sử thi đấu', icon: <History size={18} />,      to: '/match-history' },
-  { label: 'Dashboard tài chính', icon: <Wallet size={18} />, to: '/finance-dashboard' },
-  { label: 'Báo Cáo',   icon: <BarChart3 size={18} />,        to: '/reports' },
-  { label: 'Chấm điểm', icon: <Award size={18} />,            to: '/scoring' },
-  { label: 'Lisa AI',         icon: <Sparkles size={18} />,  to: '/lisa' },
-  { label: 'AI Digital Office', icon: <Cpu size={18} />,    to: '/aido' },
-  { label: 'AI Operations Center', icon: <Bot size={18} />,  to: '/admin/ai-manager' },
-  { label: 'Workflows',       icon: <Workflow size={18} />,  to: '/admin/workflows' },
-  { label: 'Nhật ký AI',      icon: <Cog size={18} />,       to: '/admin/execution-log' },
-  { label: 'Thông báo',       icon: <Bell size={18} />,      to: '/notifications' },
-  { label: 'TK Thành viên', icon: <KeyRound size={18} />,    to: '/member-accounts' },
-  { label: 'Gói dịch vụ',    icon: <Star size={18} />,       to: '/billing' },
-  { label: 'Cài đặt',       icon: <Settings size={18} />,    to: '/settings' },
+  { label: 'AIDO',          icon: <Cpu size={18} />,          to: '/aido' },
+  { label: 'Thành viên',    icon: <Users size={18} />,        to: '/thanh-vien' },
+  { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh' },
+  { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong' },
+  { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau' },
+  { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong' },
 ]
 
 const treasurerNav: NavItem[] = [
@@ -144,7 +124,8 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
 
-  const notifPath = user.role === 'MEMBER_VIEW' ? '/member/notifications' : '/notifications'
+  // Badge thông báo: member → mục thông báo riêng; admin → module Hệ thống (chứa tab Thông báo).
+  const notifPath = user.role === 'MEMBER_VIEW' ? '/member/notifications' : '/he-thong'
   const navItems: NavItem[] = navByRole[user.role].map(item => {
     if (item.to === notifPath && adminUnread > 0) {
       return { ...item, badge: adminUnread }

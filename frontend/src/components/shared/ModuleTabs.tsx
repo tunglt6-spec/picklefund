@@ -1,0 +1,87 @@
+/**
+ * ModuleTabs — shell mỏng gom nhiều màn ĐÃ CÓ thành tab con của một "module".
+ *
+ * Nguyên tắc (UI Consolidation v2.1): shell CHỈ là thanh tab + render thẳng page đã có
+ * bên dưới. KHÔNG bọc PageShell/PageHeader (mỗi page tự giữ khung + header của nó → không
+ * đúp), KHÔNG thêm scroll container (AppLayout đã có `overflow-y-auto`). Tab active lưu ở
+ * query `?tab=` nên deep-link + nút Back hoạt động; RBAC do từng page tự đọc `useAuthStore`
+ * nên giữ nguyên. Không đổi bất kỳ nghiệp vụ nào — chỉ tinh gọn điều hướng.
+ */
+import type { ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { cn } from '../../lib/utils'
+
+export interface ModuleTab {
+  key: string
+  label: string
+  badge?: number
+  element: ReactNode
+}
+
+interface ModuleTabsProps {
+  tabs: ModuleTab[]
+  /** Tab mặc định khi URL chưa có ?tab= (mặc định: tab đầu tiên). */
+  defaultKey?: string
+}
+
+export function ModuleTabs({ tabs, defaultKey }: ModuleTabsProps) {
+  const [params, setParams] = useSearchParams()
+  const fallback = defaultKey ?? tabs[0]?.key
+  const requested = params.get('tab')
+  const active = tabs.some((t) => t.key === requested) ? requested! : fallback
+  const current = tabs.find((t) => t.key === active) ?? tabs[0]
+
+  const select = (key: string) => {
+    const next = new URLSearchParams(params)
+    next.set('tab', key)
+    setParams(next)
+  }
+
+  return (
+    <div className="flex min-h-full w-full flex-col" style={{ background: 'var(--pf-bg)' }}>
+      {/* Thanh tab module — sticky trắng, full-bleed; nội dung tab căn cùng max-width page */}
+      <div
+        className="sticky top-0 z-20 shrink-0 border-b [border-color:var(--pf-border)]"
+        style={{ background: 'var(--pf-surface)' }}
+      >
+        <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1440 }}>
+          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+            {tabs.map((t) => {
+              const isActive = t.key === active
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => select(t.key)}
+                  className={cn(
+                    'relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition-colors',
+                    isActive
+                      ? '[color:var(--pf-primary)]'
+                      : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]',
+                  )}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {t.label}
+                    {typeof t.badge === 'number' && t.badge > 0 && (
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                        {t.badge}
+                      </span>
+                    )}
+                  </span>
+                  {isActive && (
+                    <span
+                      className="absolute inset-x-2 bottom-0 h-0.5 rounded-full"
+                      style={{ background: 'var(--pf-primary)' }}
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Nội dung tab = page ĐÃ CÓ (tự bọc PageShell/header của nó) */}
+      <div className="flex-1">{current?.element}</div>
+    </div>
+  )
+}

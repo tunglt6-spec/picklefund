@@ -84,6 +84,13 @@ import { AiDigitalOffice } from './pages/admin/AiDigitalOffice'
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
 import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
 
+// Module gom (UI Consolidation v2.1) — tái dùng màn đã có làm tab, không đổi nghiệp vụ.
+import { MembersModule } from './pages/admin/modules/MembersModule'
+import { FinanceModule } from './pages/admin/modules/FinanceModule'
+import { ActivityModule } from './pages/admin/modules/ActivityModule'
+import { CompeteModule } from './pages/admin/modules/CompeteModule'
+import { SystemModule } from './pages/admin/modules/SystemModule'
+
 const queryClient = new QueryClient()
 
 function ProtectedRoute({
@@ -121,7 +128,8 @@ function RootRedirect() {
   // Khách chưa đăng nhập → trang giới thiệu công khai (V2.2 commercial).
   if (!isAuthenticated) return <Landing />
   if (user?.role === 'SUPER_ADMIN') return <Navigate to="/super/dashboard" replace />
-  if (user?.role === 'CLUB_ADMIN') return <Navigate to="/dashboard" replace />
+  // CLUB_ADMIN vào thẳng AIDO (trung tâm điều hành) sau login — UI Consolidation v2.1.
+  if (user?.role === 'CLUB_ADMIN') return <Navigate to="/aido" replace />
   if (user?.role === 'CLUB_TREASURER') return <Navigate to="/treasurer/dashboard" replace />
   return <Navigate to="/member/dashboard" replace />
 }
@@ -200,6 +208,12 @@ export default function App() {
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
             <Route path="/aido" element={<AiDigitalOffice />} />
+            {/* Module gom (UI Consolidation v2.1) — tab con tái dùng màn cũ; route cũ vẫn giữ. */}
+            <Route path="/thanh-vien" element={<MembersModule />} />
+            <Route path="/tai-chinh" element={<FinanceModule />} />
+            <Route path="/hoat-dong" element={<ActivityModule />} />
+            <Route path="/thi-dau" element={<CompeteModule />} />
+            <Route path="/he-thong" element={<SystemModule />} />
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
             <Route path="/admin/ai-manager/club-memory" element={<ClubMemoryManager />} />
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />

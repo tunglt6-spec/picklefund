@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
-  CheckSquare, BarChart3, Building2, ScrollText,
+  BarChart3, Building2, ScrollText,
   Receipt, ListOrdered, CreditCard, Bell,
   Menu, Settings, Trophy,
   Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet, Award, Cpu,
@@ -12,11 +12,12 @@ import type { Role } from '../../types'
 
 interface NavItem { label: string; icon: React.ReactNode; to: string }
 
+// UI Consolidation v2.1 — 4 mục chính = 4/6 module; 2 module còn lại ở drawer "Thêm".
 const adminNav: NavItem[] = [
-  { label: 'Tổng quan',  icon: <LayoutDashboard size={22} />, to: '/dashboard' },
-  { label: 'Điểm danh',  icon: <CheckSquare size={22} />,     to: '/attendance' },
-  { label: 'Thu chi',    icon: <DollarSign size={22} />,       to: '/thu-chi' },
-  { label: 'Báo cáo',   icon: <BarChart3 size={22} />,        to: '/reports' },
+  { label: 'AIDO',       icon: <Cpu size={22} />,          to: '/aido' },
+  { label: 'Tài chính',  icon: <Wallet size={22} />,       to: '/tai-chinh' },
+  { label: 'Hoạt động',  icon: <CalendarDays size={22} />, to: '/hoat-dong' },
+  { label: 'Thi đấu',    icon: <Trophy size={22} />,       to: '/thi-dau' },
 ]
 
 const treasurerNav: NavItem[] = [
@@ -36,13 +37,8 @@ const memberNav: NavItem[] = [
 // Drawer "Thêm" — danh mục mở rộng theo role.
 const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNode; to: string }[]>> = {
   CLUB_ADMIN: [
-    { label: 'Thành viên', icon: <Users size={20} />, to: '/members' },
-    { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },
-    { label: 'Cài đặt', icon: <Settings size={20} />, to: '/settings' },
-    { label: 'Thông báo', icon: <Bell size={20} />, to: '/notifications' },
-    { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
-    { label: 'Chấm điểm', icon: <Award size={20} />, to: '/scoring' },
-    { label: 'AI Digital Office', icon: <Cpu size={20} />, to: '/aido' },
+    { label: 'Thành viên', icon: <Users size={20} />, to: '/thanh-vien' },
+    { label: 'Hệ thống', icon: <Settings size={20} />, to: '/he-thong' },
   ],
   MEMBER_VIEW: [
     { label: 'Đóng quỹ', icon: <DollarSign size={20} />, to: '/member/contributions' },
