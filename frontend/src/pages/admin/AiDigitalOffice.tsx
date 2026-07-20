@@ -96,6 +96,22 @@ const SCENE_POS: Record<string, { left: string; top: string }> = {
   NOTIFICATION: { left: '80.6%', top: '70.5%' },
 }
 
+/**
+ * Khung (bbox) của TỪNG bong bóng agent trong office-scene.png — dò CHÍNH XÁC từ pixel
+ * (mask trắng cho thân + mask bão hoà màu cho header), không ước lượng. Dùng để giới hạn
+ * dải sáng cam "quét" TRONG từng bong bóng. `delay` cho lệch pha → mỗi agent quét độc lập.
+ */
+const BUBBLE_BOX: Record<
+  string,
+  { left: string; top: string; width: string; height: string; delay: string }
+> = {
+  MAIKA: { left: '36.8%', top: '2.2%', width: '17.8%', height: '23.6%', delay: '0s' },
+  LISA: { left: '5.4%', top: '21.7%', width: '14.1%', height: '22.9%', delay: '.5s' },
+  HERMES: { left: '77.4%', top: '19.9%', width: '16.2%', height: '23.6%', delay: '1s' },
+  MIT_DAT: { left: '5.2%', top: '57.2%', width: '14.4%', height: '25.4%', delay: '.3s' },
+  NOTIFICATION: { left: '79%', top: '59.2%', width: '15.8%', height: '23.6%', delay: '.8s' },
+}
+
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
@@ -295,26 +311,37 @@ export function AiDigitalOffice() {
                 className="block w-full"
                 style={{ aspectRatio: '992 / 598' }}
               />
-              {/* Dải sáng CAM "quét" chạy xuống → vòng lên, LIÊN TỤC — thể hiện agent đang làm
-                  việc. Thuần CSS (0 chi phí, không API). `multiply` làm vùng bong bóng ngả cam
-                  khi dải đi qua; chấm trạng thái (DOM, phía dưới) nằm TRÊN nên giữ nguyên màu. */}
+              {/* Dải sáng CAM "quét" chạy xuống → vòng lên, LIÊN TỤC — TRONG TỪNG bong bóng
+                  agent. Thuần CSS (0 chi phí, không API). Mỗi bong bóng là 1 hộp cắt riêng
+                  (overflow-hidden theo bbox dò từ pixel); `multiply` làm thân trắng ngả cam khi
+                  dải qua, nét chữ tối giữ nguyên. Chấm trạng thái (DOM) nằm TRÊN nên giữ màu. */}
               <style>{`
-                @keyframes aido-scan { from { top: -34%; } to { top: 100%; } }
+                @keyframes aido-scan { from { top: -50%; } to { top: 105%; } }
                 @media (prefers-reduced-motion: reduce) {
-                  .aido-scan-band { animation: none !important; opacity: .2; }
+                  .aido-scan-band { animation: none !important; opacity: .18; }
                 }
               `}</style>
-              <div
-                aria-hidden
-                className="aido-scan-band pointer-events-none absolute inset-x-0 h-[32%]"
-                style={{
-                  top: '-34%',
-                  background:
-                    'linear-gradient(to bottom, transparent, rgba(245,158,11,0.55) 42%, rgba(251,146,60,0.6) 55%, transparent)',
-                  mixBlendMode: 'multiply',
-                  animation: 'aido-scan 4.2s ease-in-out infinite alternate',
-                }}
-              />
+              {Object.entries(BUBBLE_BOX).map(([key, b]) => (
+                <div
+                  key={key}
+                  aria-hidden
+                  className="pointer-events-none absolute overflow-hidden"
+                  style={{ left: b.left, top: b.top, width: b.width, height: b.height, borderRadius: 12 }}
+                >
+                  <div
+                    className="aido-scan-band absolute inset-x-0"
+                    style={{
+                      top: '-50%',
+                      height: '46%',
+                      background:
+                        'linear-gradient(to bottom, transparent, rgba(245,158,11,0.5) 45%, rgba(251,146,60,0.55) 55%, transparent)',
+                      mixBlendMode: 'multiply',
+                      animation: 'aido-scan 3.6s ease-in-out infinite alternate',
+                      animationDelay: b.delay,
+                    }}
+                  />
+                </div>
+              ))}
               {/* Badge LIVE */}
               <div
                 className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
