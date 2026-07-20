@@ -89,19 +89,6 @@ interface AgentView {
   count: number
 }
 
-/**
- * Vị trí (% ngang) TÂM mỗi nhân vật trong banner office-banner.png (1837×802), dò CHÍNH XÁC
- * từ pixel (màu tóc). Dùng để đặt thẻ agent DOM + chấm trạng thái ngay trên đầu nhân vật.
- * Đầu nhân vật ~43% chiều cao ảnh. Mỗi agent 1 MÀU thương hiệu (viền chạy + header thẻ).
- */
-const BANNER_POS: Record<string, { left: string; color: string; dur: string }> = {
-  LISA: { left: '11.8%', color: '#3B82F6', dur: '7.2s' },
-  MAIKA: { left: '32.1%', color: '#7C5CFC', dur: '6.4s' },
-  HERMES: { left: '50.2%', color: '#14B8A6', dur: '6.0s' },
-  MIT_DAT: { left: '67.9%', color: '#F59E0B', dur: '7.6s' },
-  NOTIFICATION: { left: '87%', color: '#EC4899', dur: '6.8s' },
-}
-
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
@@ -322,31 +309,19 @@ export function AiDigitalOffice() {
 
       {tab === 'office' && (
         <div className="space-y-5">
-          {/* Office BANNER ngang (pixel-art) + phủ THẺ AGENT DOM trên mỗi nhân vật (mẫu v2.1) */}
+          {/* Office BANNER — 1 ảnh hero tĩnh (thẻ agent vẽ sẵn trong ảnh). Chỉ scale w-full ⇒
+              đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
+              Trạng thái THẬT hiển thị ở KPI + 3 panel + Đội ngũ AI bên dưới. */}
           <div>
-            <style>{`
-              @property --aido-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-              @keyframes aido-spin { to { --aido-a: 360deg; } }
-              .aido-card { position: relative; }
-              .aido-card::before {
-                content: ''; position: absolute; inset: 0; border-radius: 14px; padding: 2px;
-                background: conic-gradient(from var(--aido-a), transparent 0 62%, var(--aido-c) 80%, transparent 92%);
-                -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-                mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-                -webkit-mask-composite: xor; mask-composite: exclude;
-                animation: aido-spin var(--aido-dur, 6s) linear infinite; pointer-events: none;
-              }
-              @media (prefers-reduced-motion: reduce) { .aido-card::before { animation: none; } }
-            `}</style>
             <div
               className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
-              style={{ maxWidth: 1837 }}
+              style={{ maxWidth: 1842 }}
             >
               <img
                 src="/aido/office-banner.png"
                 alt="AIDO — Văn phòng AI"
                 className="block w-full"
-                style={{ aspectRatio: '1837 / 540' }}
+                style={{ aspectRatio: '1842 / 477' }}
               />
 
               {/* Badge REAL-TIME */}
@@ -358,46 +333,9 @@ export function AiDigitalOffice() {
                 {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
               </div>
 
-              {/* Thẻ agent DOM — đặt NGAY TRÊN đầu mỗi nhân vật (đầu ~43% ⇒ bottom 57%) */}
-              {agents.filter((a) => BANNER_POS[a.key]).map((a) => {
-                const pos = BANNER_POS[a.key]
-                const st = STATUS_META[a.status]
-                return (
-                  <div
-                    key={a.key}
-                    className="absolute -translate-x-1/2"
-                    style={{ left: pos.left, bottom: '67%', width: 'clamp(104px, 15%, 208px)' }}
-                  >
-                    <div
-                      className="aido-card overflow-hidden rounded-[14px] border bg-white/95 shadow-lg backdrop-blur-sm [border-color:var(--pf-border)]"
-                      style={{ ['--aido-c' as string]: pos.color, ['--aido-dur' as string]: pos.dur }}
-                    >
-                      <div className="px-2 py-1" style={{ background: pos.color }}>
-                        <p className="truncate text-[11px] font-bold leading-tight text-white">{a.name}</p>
-                      </div>
-                      <div className="px-2 py-1.5">
-                        <p className="flex items-center gap-1 text-[10px] font-semibold leading-tight" style={{ color: st.color }}>
-                          <LiveDot color={st.color} size={6} active={a.status !== 'offline'} />
-                          <span className="truncate">{st.label}</span>
-                        </p>
-                        <ul className="mt-0.5 hidden space-y-px sm:block">
-                          {a.bullets.slice(0, 3).map((b) => (
-                            <li key={b} className="truncate text-[9px] leading-tight [color:var(--pf-color-muted)]">• {b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    {/* mũi nhọn chỉ xuống nhân vật */}
-                    <div
-                      className="mx-auto h-0 w-0"
-                      style={{ borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `7px solid ${pos.color}` }}
-                    />
-                  </div>
-                )
-              })}
             </div>
             <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
-              Văn phòng AI · thẻ trên mỗi nhân vật = trạng thái thật · viền chạy = đang làm việc
+              Văn phòng AI · trạng thái THẬT hiển thị ở bảng số liệu &amp; đội ngũ AI bên dưới
             </p>
           </div>
 
