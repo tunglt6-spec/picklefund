@@ -37,7 +37,7 @@ export function OfficeBanner({ badge, caption }: { badge?: ReactNode; caption?: 
           preserveAspectRatio="xMidYMid meet"
           fill="none"
         >
-          <image href="/aido/office-banner-v3.png" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
+          <image href="/aido-media/office-banner-v3.png" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
           {BANNER_CARD.map((c) => (
             <g key={c.key}>
               {/* radar ping — đúng tâm chấm trạng thái */}

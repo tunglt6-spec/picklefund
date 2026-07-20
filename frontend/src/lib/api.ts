@@ -5,6 +5,8 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  // Timeout mặc định: một nhịp trễ/treo không "đứng" cả màn (màn nặng có thể override).
+  timeout: 20_000,
 })
 
 let isRefreshing = false
@@ -32,7 +34,18 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
-    const original = err.config as AxiosRequestConfig & { _retry?: boolean }
+    const original = err.config as AxiosRequestConfig & { _retry?: boolean; _retriedGet?: boolean }
+
+    // Tự retry 1 lần cho GET khi lỗi TẠM THỜI (timeout/mất mạng/502/503/504) → chống "chập chờn"
+    // trên mọi màn (Dashboard, Báo cáo, ...). Chỉ GET (idempotent) nên an toàn.
+    const status = err.response?.status
+    const transient = !err.response || status === 502 || status === 503 || status === 504
+    const method = (original?.method ?? 'get').toLowerCase()
+    if (original && method === 'get' && transient && !original._retriedGet) {
+      original._retriedGet = true
+      await new Promise((r) => setTimeout(r, 600))
+      return api(original)
+    }
 
     if (err.response?.status !== 401 || original._retry) {
       return Promise.reject(err)
