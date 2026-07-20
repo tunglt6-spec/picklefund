@@ -346,7 +346,7 @@ export function AiDigitalOffice() {
                 src="/aido/office-banner.png"
                 alt="AIDO — Văn phòng AI"
                 className="block w-full"
-                style={{ aspectRatio: '1837 / 802' }}
+                style={{ aspectRatio: '1837 / 540' }}
               />
 
               {/* Badge REAL-TIME */}
@@ -366,7 +366,7 @@ export function AiDigitalOffice() {
                   <div
                     key={a.key}
                     className="absolute -translate-x-1/2"
-                    style={{ left: pos.left, bottom: '57%', width: 'clamp(104px, 15%, 208px)' }}
+                    style={{ left: pos.left, bottom: '67%', width: 'clamp(104px, 15%, 208px)' }}
                   >
                     <div
                       className="aido-card overflow-hidden rounded-[14px] border bg-white/95 shadow-lg backdrop-blur-sm [border-color:var(--pf-border)]"
