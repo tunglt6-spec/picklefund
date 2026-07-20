@@ -11,7 +11,7 @@ import { useAuthStore } from '../store/authStore'
  * dùng token mới nhất từ store; nếu mất kết nối, polling (ở component) vẫn là fallback.
  */
 export interface AidoUpdatePayload {
-  type?: 'ai-action' | 'agent-activity'
+  type?: 'ai-action' | 'agent-activity' | 'presence'
   agent?: string
   status?: string
   task?: string
@@ -55,6 +55,10 @@ export function useAidoSocket(
     socket.on('disconnect', () => setConnected(false))
     socket.on('connect_error', () => setConnected(false))
     socket.on('aido:update', (payload: AidoUpdatePayload) => cbRef.current(payload))
+    // Nhịp presence nền (Văn phòng AI đang sống) — chỉ báo "còn sống", KHÔNG refetch.
+    socket.on('aido:presence', (payload: { at?: number }) =>
+      cbRef.current({ type: 'presence', at: payload?.at }),
+    )
 
     return () => {
       socket.disconnect()

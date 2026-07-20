@@ -3,9 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { HermesSchedulerService } from './hermes-scheduler.service';
 import { HermesWorkflowService } from './hermes-workflow.service';
 import { AiActionsService } from '../ai-actions/ai-actions.service';
+import { AgentActivityService } from '../aido/agent-activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const prisma = { workflowRule: { findMany: jest.fn() } };
+
+// track() phải GỌI fn() để dispatchTrigger vẫn chạy (giữ nguyên hành vi kiểm thử).
+const activity = {
+  track: jest.fn(
+    (_clubId: unknown, _agent: unknown, _task: unknown, fn: () => unknown) =>
+      fn(),
+  ),
+};
 
 /** Tuple args + kết quả của dispatchTrigger — mock CÓ KIỂU, không unsafe-assignment. */
 type DispatchArgs = [
@@ -52,6 +61,7 @@ async function makeService(enabled = false): Promise<HermesSchedulerService> {
       HermesSchedulerService,
       { provide: PrismaService, useValue: prisma },
       { provide: HermesWorkflowService, useValue: hermes },
+      { provide: AgentActivityService, useValue: activity },
       { provide: ConfigService, useValue: config },
     ],
   }).compile();
@@ -343,6 +353,7 @@ describe('HermesSchedulerService (EPIC9)', () => {
           HermesWorkflowService, // engine THẬT
           { provide: PrismaService, useValue: enginePrisma },
           { provide: AiActionsService, useValue: aiActions },
+          { provide: AgentActivityService, useValue: activity },
           { provide: ConfigService, useValue: config },
         ],
       }).compile();

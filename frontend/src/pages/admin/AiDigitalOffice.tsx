@@ -111,6 +111,8 @@ export function AiDigitalOffice() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   // Trạng thái hoạt động THẬT của agent (busy khi đang xử lý) — từ /aido/agent-activity + WS.
   const [activity, setActivity] = useState<Record<string, { status: string; task?: string }>>({})
+  // Nhịp nền (heartbeat) — Văn phòng AI đang sống; cập nhật liên tục qua WS, KHÔNG gọi API.
+  const [beatAt, setBeatAt] = useState<number | null>(null)
   // Dữ liệu chi tiết cho Operations/Analytics (đều là endpoint THẬT sẵn có).
   const [pendingList, setPendingList] = useState<AiActionListItem[]>([])
   const [runs, setRuns] = useState<WorkflowRun[]>([])
@@ -149,15 +151,21 @@ export function AiDigitalOffice() {
     return () => clearInterval(id)
   }, [load])
 
-  // Real-time: WS đẩy 'agent-activity' (agent busy/online) → cập nhật ngay; 'ai-action' → refetch.
+  // Real-time: WS đẩy 'presence' (nhịp nền, không refetch), 'agent-activity' (busy/online → cập
+  // nhật ngay), còn lại ('ai-action') → refetch.
   const { connected } = useAidoSocket((payload) => {
-    if (payload?.type === 'agent-activity' && payload.agent) {
+    if (payload?.type === 'presence') {
+      setBeatAt(payload.at ?? Date.now())
+    } else if (payload?.type === 'agent-activity' && payload.agent) {
       setActivity((prev) => ({ ...prev, [payload.agent!]: { status: payload.status ?? 'online', task: payload.task } }))
       setUpdatedAt(new Date())
     } else {
       void load(true)
     }
   })
+
+  // "Sống" = có nhịp nền trong ~30s gần nhất (chứng minh backend AI đang chạy nền).
+  const alive = connected && beatAt != null && Date.now() - beatAt < 30_000
 
   // ── Số liệu tổng hợp (thật) ─────────────────────────────────────────────────
   const exec = summary?.executor
@@ -254,6 +262,14 @@ export function AiDigitalOffice() {
         subtitle="Văn phòng AI · Thấy trạng thái thật · Làm việc thật · Kết quả thật"
         actions={
           <div className="flex items-center gap-2">
+            <span
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium [border-color:var(--pf-border)]"
+              style={{ color: alive ? 'var(--pf-green)' : 'var(--pf-color-muted, #94A3B8)' }}
+              title={beatAt ? `Nhịp nền lúc ${new Date(beatAt).toLocaleTimeString('vi-VN')}` : 'Chưa nhận nhịp nền'}
+            >
+              <LiveDot color={alive ? 'var(--pf-green)' : 'var(--pf-color-muted, #94A3B8)'} size={7} active={alive} />
+              {alive ? 'AI nền: đang chạy' : 'AI nền: chờ…'}
+            </span>
             {updatedAt && (
               <span className="hidden sm:inline text-xs [color:var(--pf-color-muted)]">
                 Cập nhật {updatedAt.toLocaleTimeString('vi-VN')}

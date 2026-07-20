@@ -79,4 +79,19 @@ export class AidoGateway implements OnGatewayConnection {
       this.logger.warn(`emitAgentUpdate failed: ${String(e)}`);
     }
   }
+
+  /**
+   * Phát NHỊP presence toàn cục (Văn phòng AI đang sống) — broadcast cho MỌI client.
+   * Payload chỉ chứa mốc thời gian, KHÔNG kèm dữ liệu CLB nên an toàn tenant. Dùng để
+   * client biết backend AI còn hoạt động (badge REAL-TIME cập nhật liên tục dù không có
+   * thao tác). KHÔNG bao giờ throw.
+   */
+  emitPresence(payload: Record<string, unknown>): void {
+    try {
+      if (!this.server) return;
+      this.server.emit('aido:presence', payload);
+    } catch (e) {
+      this.logger.warn(`emitPresence failed: ${String(e)}`);
+    }
+  }
 }

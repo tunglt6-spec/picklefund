@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { AgentActivityService } from '../aido/agent-activity.service';
 import {
   HermesWorkflowService,
   type DispatchSummary,
@@ -49,6 +50,7 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private prisma: PrismaService,
     private hermes: HermesWorkflowService,
+    private activity: AgentActivityService,
     config: ConfigService,
   ) {
     this.enabled = config.get<string>('HERMES_SCHEDULER_ENABLED') === 'true';
@@ -138,16 +140,24 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
 
     for (const g of groups.values()) {
       if (!g.actorUserId) continue; // không có actor hợp lệ → bỏ qua an toàn
+      const actorUserId = g.actorUserId; // giữ narrowing trong closure track()
       const key = `SCHED:${g.triggerType}:${g.scheduleType}:${this.periodKey(g.scheduleType, now)}`;
       try {
         // POLISH-001: lọc đúng scheduleType — rule MANUAL cùng triggerType KHÔNG tự chạy.
-        const s: DispatchSummary = await this.hermes.dispatchTrigger(
+        // Đánh dấu Hermes 'busy' đúng lúc tick nền dispatch (hoạt động nền THẬT → AIDO thấy).
+        const s: DispatchSummary = await this.activity.track(
           g.clubId,
-          g.triggerType,
-          { userId: g.actorUserId, clubId: g.clubId },
-          { scheduled: true, scheduleType: g.scheduleType },
-          key,
-          { scheduleType: g.scheduleType },
+          'HERMES',
+          'Đang quét lịch tự động',
+          () =>
+            this.hermes.dispatchTrigger(
+              g.clubId,
+              g.triggerType,
+              { userId: actorUserId, clubId: g.clubId },
+              { scheduled: true, scheduleType: g.scheduleType },
+              key,
+              { scheduleType: g.scheduleType },
+            ),
         );
         if (s.skippedDuplicate) summary.skippedDuplicate += 1;
         else summary.dispatched += 1;
