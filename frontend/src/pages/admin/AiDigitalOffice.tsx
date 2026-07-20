@@ -97,20 +97,20 @@ const SCENE_POS: Record<string, { left: string; top: string }> = {
 }
 
 /**
- * Khung (bbox) của TỪNG bong bóng agent trong office-scene.png — dò CHÍNH XÁC từ pixel
- * (mask trắng cho thân + mask bão hoà màu cho header), không ước lượng. Dùng để giới hạn
- * dải sáng cam "quét" TRONG từng bong bóng. `delay` cho lệch pha → mỗi agent quét độc lập.
+ * Viền "chạy" quanh TỪNG bong bóng agent — thể hiện đang làm việc. Toạ độ (px trong hệ
+ * office-scene.png 992×598) dò CHÍNH XÁC từ pixel (mask trắng thân + mask bão hoà header),
+ * không ước lượng → viền ôm khít bong bóng. Mỗi agent 1 MÀU riêng + lệch pha (dur/delay).
+ * Vẽ bằng SVG viewBox 992×598 (cùng tỉ lệ ảnh) nên góc bo + độ dày viền không méo.
  */
-const BUBBLE_BOX: Record<
-  string,
-  { left: string; top: string; width: string; height: string; delay: string }
-> = {
-  MAIKA: { left: '36.8%', top: '2.2%', width: '17.8%', height: '23.6%', delay: '0s' },
-  LISA: { left: '5.4%', top: '21.7%', width: '14.1%', height: '22.9%', delay: '.5s' },
-  HERMES: { left: '77.4%', top: '19.9%', width: '16.2%', height: '23.6%', delay: '1s' },
-  MIT_DAT: { left: '5.2%', top: '57.2%', width: '14.4%', height: '25.4%', delay: '.3s' },
-  NOTIFICATION: { left: '79%', top: '59.2%', width: '15.8%', height: '23.6%', delay: '.8s' },
-}
+const BUBBLE_RING: {
+  key: string; x: number; y: number; w: number; h: number; color: string; dur: string; delay: string
+}[] = [
+  { key: 'MAIKA', x: 365, y: 13, w: 177, h: 141, color: '#7C5CFC', dur: '3.2s', delay: '0s' },
+  { key: 'LISA', x: 54, y: 130, w: 140, h: 137, color: '#3B82F6', dur: '3.6s', delay: '.4s' },
+  { key: 'HERMES', x: 768, y: 119, w: 161, h: 141, color: '#14B8A6', dur: '3.0s', delay: '.8s' },
+  { key: 'MIT_DAT', x: 52, y: 342, w: 143, h: 152, color: '#F59E0B', dur: '3.8s', delay: '.2s' },
+  { key: 'NOTIFICATION', x: 784, y: 354, w: 157, h: 141, color: '#EC4899', dur: '3.4s', delay: '.6s' },
+]
 
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
@@ -311,37 +311,45 @@ export function AiDigitalOffice() {
                 className="block w-full"
                 style={{ aspectRatio: '992 / 598' }}
               />
-              {/* Dải sáng CAM "quét" chạy xuống → vòng lên, LIÊN TỤC — TRONG TỪNG bong bóng
-                  agent. Thuần CSS (0 chi phí, không API). Mỗi bong bóng là 1 hộp cắt riêng
-                  (overflow-hidden theo bbox dò từ pixel); `multiply` làm thân trắng ngả cam khi
-                  dải qua, nét chữ tối giữ nguyên. Chấm trạng thái (DOM) nằm TRÊN nên giữ màu. */}
+              {/* Viền "chạy" quanh TỪNG bong bóng agent (mỗi bong bóng 1 màu) — thể hiện đang
+                  làm việc. Thuần CSS/SVG (0 chi phí, không API). Đoạn sáng chạy vòng quanh viền
+                  bo góc bằng stroke-dashoffset (pathLength=100), lệch pha nhau. Viền nền mờ luôn
+                  hiển thị khung màu. Chấm trạng thái (DOM) nằm TRÊN nên giữ nguyên. */}
               <style>{`
-                @keyframes aido-scan { from { top: -50%; } to { top: 105%; } }
+                @keyframes aido-run { to { stroke-dashoffset: -100; } }
                 @media (prefers-reduced-motion: reduce) {
-                  .aido-scan-band { animation: none !important; opacity: .18; }
+                  .aido-ring { animation: none !important; stroke-dasharray: none; }
                 }
               `}</style>
-              {Object.entries(BUBBLE_BOX).map(([key, b]) => (
-                <div
-                  key={key}
-                  aria-hidden
-                  className="pointer-events-none absolute overflow-hidden"
-                  style={{ left: b.left, top: b.top, width: b.width, height: b.height, borderRadius: 12 }}
-                >
-                  <div
-                    className="aido-scan-band absolute inset-x-0"
-                    style={{
-                      top: '-50%',
-                      height: '46%',
-                      background:
-                        'linear-gradient(to bottom, transparent, rgba(245,158,11,0.5) 45%, rgba(251,146,60,0.55) 55%, transparent)',
-                      mixBlendMode: 'multiply',
-                      animation: 'aido-scan 3.6s ease-in-out infinite alternate',
-                      animationDelay: b.delay,
-                    }}
-                  />
-                </div>
-              ))}
+              <svg
+                aria-hidden
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox="0 0 992 598"
+                preserveAspectRatio="none"
+                fill="none"
+              >
+                {BUBBLE_RING.map((r) => (
+                  <g key={r.key}>
+                    <rect
+                      x={r.x + 1} y={r.y + 1} width={r.w - 2} height={r.h - 2}
+                      rx={14} ry={14} fill="none"
+                      stroke={r.color} strokeOpacity={0.2} strokeWidth={2.5}
+                    />
+                    <rect
+                      x={r.x + 1} y={r.y + 1} width={r.w - 2} height={r.h - 2}
+                      rx={14} ry={14} fill="none"
+                      stroke={r.color} strokeWidth={3} strokeLinecap="round"
+                      pathLength={100} strokeDasharray="26 74"
+                      className="aido-ring"
+                      style={{
+                        animation: `aido-run ${r.dur} linear infinite`,
+                        animationDelay: r.delay,
+                        filter: `drop-shadow(0 0 3px ${r.color})`,
+                      }}
+                    />
+                  </g>
+                ))}
+              </svg>
               {/* Badge LIVE */}
               <div
                 className="absolute right-2 top-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
