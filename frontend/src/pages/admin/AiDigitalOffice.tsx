@@ -108,7 +108,7 @@ const BUBBLE_RING: {
   { key: 'MAIKA', x: 365, y: 13, w: 177, h: 141, color: '#7C5CFC', dur: '3.2s', delay: '0s' },
   { key: 'LISA', x: 54, y: 130, w: 140, h: 137, color: '#3B82F6', dur: '3.6s', delay: '.4s' },
   { key: 'HERMES', x: 768, y: 119, w: 161, h: 141, color: '#14B8A6', dur: '3.0s', delay: '.8s' },
-  { key: 'MIT_DAT', x: 52, y: 342, w: 143, h: 152, color: '#F59E0B', dur: '3.8s', delay: '.2s' },
+  { key: 'MIT_DAT', x: 52, y: 353, w: 144, h: 141, color: '#F59E0B', dur: '3.8s', delay: '.2s' },
   { key: 'NOTIFICATION', x: 784, y: 354, w: 157, h: 141, color: '#EC4899', dur: '3.4s', delay: '.6s' },
 ]
 
