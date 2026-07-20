@@ -33,7 +33,7 @@ const demoAccounts: DemoAccount[] = SHOW_DEMO_ACCOUNTS ? [
 
 const routeByRole: Record<Role, string> = {
   SUPER_ADMIN: '/super/dashboard', CLUB_ADMIN: '/aido',
-  CLUB_TREASURER: '/treasurer/dashboard', MEMBER_VIEW: '/member/dashboard',
+  CLUB_TREASURER: '/treasurer/dashboard', MEMBER_VIEW: '/member/aido',
 }
 
 // Khớp với số liệu ở Landing.tsx (trang public) — tránh 2 con số marketing khác nhau

@@ -138,7 +138,8 @@ function RootRedirect() {
   // CLUB_ADMIN vào thẳng AIDO (trung tâm điều hành) sau login — UI Consolidation v2.1.
   if (user?.role === 'CLUB_ADMIN') return <Navigate to="/aido" replace />
   if (user?.role === 'CLUB_TREASURER') return <Navigate to="/treasurer/dashboard" replace />
-  return <Navigate to="/member/dashboard" replace />
+  // MEMBER_VIEW vào thẳng Văn phòng AI (Office View) sau login — như CLUB_ADMIN.
+  return <Navigate to="/member/aido" replace />
 }
 
 export default function App() {
