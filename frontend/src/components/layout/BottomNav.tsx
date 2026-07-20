@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign,
   BarChart3, Building2, ScrollText,
   Receipt, ListOrdered, CreditCard, Bell,
-  Menu, Settings, Trophy,
+  Menu, Trophy,
   Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet, Award, Cpu,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
@@ -35,11 +35,8 @@ const memberNav: NavItem[] = [
 ]
 
 // Drawer "Thêm" — danh mục mở rộng theo role.
+// CLUB_ADMIN: BỎ drawer (trùng với menu ☰ sidebar đã đủ 6 module) → bottom nav chỉ 4 tab nhanh.
 const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNode; to: string }[]>> = {
-  CLUB_ADMIN: [
-    { label: 'Thành viên', icon: <Users size={20} />, to: '/thanh-vien' },
-    { label: 'Hệ thống', icon: <Settings size={20} />, to: '/he-thong' },
-  ],
   MEMBER_VIEW: [
     { label: 'Đóng quỹ', icon: <DollarSign size={20} />, to: '/member/contributions' },
     { label: 'Công nợ', icon: <Coins size={20} />, to: '/debts' },
