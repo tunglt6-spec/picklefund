@@ -318,7 +318,7 @@ export function AiDigitalOffice() {
               style={{ maxWidth: 1842 }}
             >
               <img
-                src="/aido/office-banner.png"
+                src="/aido/office-banner-v2.png"
                 alt="AIDO — Văn phòng AI"
                 className="block w-full"
                 style={{ aspectRatio: '1842 / 477' }}
