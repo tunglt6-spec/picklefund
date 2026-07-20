@@ -6,6 +6,8 @@
 import { ModuleTabs } from '../../../components/shared'
 import { Members } from '../Members'
 import { MemberAccounts } from '../MemberAccounts'
+import { RolesPermissions } from '../RolesPermissions'
+import { MemberActivity } from '../MemberActivity'
 
 export function MembersModule() {
   return (
@@ -14,6 +16,8 @@ export function MembersModule() {
       tabs={[
         { key: 'list', label: 'Danh sách thành viên', element: <Members /> },
         { key: 'accounts', label: 'Tài khoản', element: <MemberAccounts /> },
+        { key: 'roles', label: 'Vai trò & phân quyền', element: <RolesPermissions /> },
+        { key: 'activity', label: 'Lịch sử hoạt động', element: <MemberActivity /> },
       ]}
     />
   )
