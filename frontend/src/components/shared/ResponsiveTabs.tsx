@@ -37,10 +37,10 @@ export function ResponsiveTabs({
             key={t.key}
             onClick={() => onChange(t.key)}
             className={cn(
-              'whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+              'whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
               isActive
-                ? 'text-white [background:var(--pf-primary)] [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.65)]'
-                : '[color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]',
+                ? 'border-transparent text-white [background:var(--pf-primary)] [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.65)]'
+                : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
             )}
           >
             <span className="inline-flex items-center gap-1.5">

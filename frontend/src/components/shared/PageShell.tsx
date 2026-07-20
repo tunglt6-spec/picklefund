@@ -16,7 +16,7 @@ interface PageShellProps {
   maxWidth?: number
 }
 
-export function PageShell({ children, className, maxWidth = 1760 }: PageShellProps) {
+export function PageShell({ children, className, maxWidth = 1600 }: PageShellProps) {
   return (
     <div
       className="min-h-full w-full"

@@ -52,7 +52,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
     <div className="flex min-h-full w-full flex-col" style={{ background: 'var(--pf-bg)' }}>
       {/* Tiêu đề module (như mockup) — cuộn theo trang, tab bar dính bên dưới */}
       {title && (
-        <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1760 }}>
+        <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1600 }}>
           <h1 className="text-xl font-bold sm:text-2xl [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>
             {title}
           </h1>
@@ -63,7 +63,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
         className="sticky top-0 z-20 shrink-0 border-b [border-color:var(--pf-border)]"
         style={{ background: 'var(--pf-surface)' }}
       >
-        <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1760 }}>
+        <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* QUY ĐỊNH v2.1 — tab dạng NÚT to, dễ nhìn dễ bấm (pill; active nền primary sáng) */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-2.5">
             {tabs.map((t) => {
@@ -73,10 +73,10 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                   key={t.key}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+                    'whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
                     isActive
-                      ? 'text-white [background:var(--pf-primary)] [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.65)]'
-                      : '[color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]',
+                      ? 'border-transparent text-white [background:var(--pf-primary)] [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.65)]'
+                      : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
                   )}
                 >
                   <span className="inline-flex items-center gap-1.5">

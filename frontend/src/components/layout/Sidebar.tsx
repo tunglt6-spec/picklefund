@@ -188,16 +188,15 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* ── Navigation ──
-          QUY ĐỊNH v2.1 — nút to, PHÂN BỔ ĐỀU trên bar (justify-evenly), có HIỆU ỨNG SÁNG
-          (glow) khi hover. Nhiều mục (member) tự cuộn. */}
-      <nav className="flex flex-1 flex-col justify-evenly gap-1 overflow-y-auto px-3 py-4">
+          QUY ĐỊNH v2.1 — nút gọn, cách đều, có HIỆU ỨNG SÁNG (glow) khi hover. */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
         {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             onClick={onClose}
             className={({ isActive }) => cn(
-              'group relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200',
+              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200',
               isActive
                 ? '[color:var(--pf-primary)] [background:var(--pf-primary-soft)] [box-shadow:0_8px_20px_-10px_rgba(109,93,251,0.55)]'
                 : 'text-slate-500 hover:text-[color:var(--pf-primary)] hover:[background:var(--pf-surface)] hover:-translate-y-px hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.45)]'
