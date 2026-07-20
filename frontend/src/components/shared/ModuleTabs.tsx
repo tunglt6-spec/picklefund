@@ -65,7 +65,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}
-          <div className="flex flex-wrap gap-2 py-2.5">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-2.5">
             {tabs.map((t) => {
               const isActive = t.key === active
               return (
@@ -73,7 +73,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                   key={t.key}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+                    'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
                     isActive
                       ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
                       : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
