@@ -17,7 +17,23 @@ báo cáo, chấm điểm và trợ lý AI. Tài liệu này giúp người/agen
 ## Phân quyền (RBAC)
 - 4 role: `SUPER_ADMIN`, `CLUB_ADMIN`, `CLUB_TREASURER`, `MEMBER_VIEW` ("thành viên"). **Không có hệ thống permission** — thuần role.
 - Guard toàn cục: `JwtAuthGuard → TenantGuard → RolesGuard (@Roles) → MemberScopeGuard` (allowlist route cho MEMBER_VIEW).
-- Cho member xem thêm màn: sửa `MemberScopeGuard` allowlist + `@Roles` controller + FE (`App.tsx` route group, `Sidebar.tsx`/`BottomNav.tsx`, cờ `isMember`). Read-only ẩn nút CRUD theo `isMember`.
+- Cho member xem thêm màn: sửa `MemberScopeGuard` allowlist + `@Roles` controller + FE (`App.tsx` route group, `Sidebar.tsx`, cờ `isMember`). Read-only ẩn nút CRUD theo `isMember`.
+
+## Điều hướng — UI Consolidation v2.1
+Sidebar gom các màn lẻ thành **module dùng tab con** (không đổi nghiệp vụ — chỉ tinh gọn điều hướng). Mỗi vai trò vào thẳng "home" của mình sau login (`routeByRole` ở `Login.tsx` + `RootRedirect` ở `App.tsx`).
+
+| Vai trò | Home sau login | Sidebar |
+|---|---|---|
+| SUPER_ADMIN | `/super/dashboard` | Tổng quan · Quản lý CLB · Người dùng · Audit Logs · **AIDO** · Cài đặt |
+| CLUB_ADMIN | `/aido` | **AIDO** · Thành viên · Tài chính · Hoạt động CLB · Thi đấu · Hệ thống |
+| CLUB_TREASURER | `/treasurer/dashboard` | Tổng quan · **Sổ quỹ** (Nhập thu/Nhập chi/Sổ quỹ) · Chấm điểm · Nhắc nhở |
+| MEMBER_VIEW | `/member/aido` | **Văn phòng AI** · Tổng quan · Cá nhân · Tài chính · Hoạt động · Thi đấu · Thông báo |
+
+Cơ chế:
+- **`components/shared/ModuleTabs.tsx`** = shell tab MỎNG (không bọc `PageShell`): map `tabs[]` → render page đã có; tab active ở `?tab=` (`useSearchParams`). Truyền prop `title` ⇒ `EmbeddedContext` bật → page con dùng `useEmbedded()` **ẩn h1 trùng**, giữ phụ đề + nút thao tác.
+- Module shell đặt tại `pages/{admin,member,treasurer}/modules/*Module.tsx`, chỉ khai báo tabs + tái dùng màn cũ. **Route cũ giữ nguyên** (link nội bộ + deep-link + `minigames/:id` không gãy).
+- **Member CHỈ XEM**: các module member tái dùng màn admin nhưng RBAC ở route (`RoleRoute allow`) + cờ `isMember` ẩn CRUD + backend `MemberScopeGuard` chặn ghi. Member xem được **Office View AIDO** read-only qua `pages/member/MemberOffice.tsx` (banner dùng chung `components/aido/OfficeBanner.tsx`, KHÔNG gọi API quản trị).
+- **Chuẩn UI v2.1 bắt buộc**: sidebar = thẻ (số + icon + tiêu đề + mô tả, active gradient tím); tab trên cùng = nút pill to cuộn ngang; layout full-viewport. Không có BottomNav — mobile chỉ dùng ☰.
 
 ## Trợ lý AI 🤖
 **Xem chi tiết: [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md)** — đọc trước khi động vào code AI.
