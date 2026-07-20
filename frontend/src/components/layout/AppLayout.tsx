@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { MobileHeader } from './MobileHeader'
+import { DesktopHeader } from './DesktopHeader'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
 import { useApplyBranding } from '../../hooks/useApplyBranding'
@@ -49,6 +50,9 @@ export function AppLayout() {
         <div className="md:hidden">
           <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </div>
+
+        {/* Desktop header — tìm kiếm / chuông / toàn màn hình / avatar (mẫu v2.1) */}
+        <DesktopHeader />
 
         {/* Page content — extra bottom padding on mobile so bottom nav never covers content */}
         <main className="flex-1 flex flex-col overflow-hidden md:pb-0" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' }}>
