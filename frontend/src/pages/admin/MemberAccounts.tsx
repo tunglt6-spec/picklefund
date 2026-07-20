@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
+import { useEmbedded } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Button } from '../../components/ui/Button'
@@ -286,6 +287,7 @@ function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
 // ── Main Component ────────────────────────────────────────────────────────────
 export function MemberAccounts() {
   const { user } = useAuthStore()
+  const embedded = useEmbedded() // trong module Thành viên: ẩn h1 trùng
   const { getClubData } = useClubDataStore()
   const isMobile = useIsMobile()
   const clubData = getClubData(user?.clubId ?? '')
@@ -370,7 +372,7 @@ export function MemberAccounts() {
         <div className="bg-white border-b border-slate-100 px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-base font-bold text-slate-900">Tài khoản thành viên</h1>
+              {!embedded && <h1 className="text-base font-bold text-slate-900">Tài khoản thành viên</h1>}
               <p className="text-xs text-slate-500 mt-0.5">{accounts.length} tài khoản</p>
             </div>
             <div className="flex items-center gap-1.5">
@@ -468,7 +470,7 @@ export function MemberAccounts() {
       <div className="bg-white border-b border-[#E2E8F0] px-6 py-5">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-base font-bold text-[#0F172A]">Tài khoản thành viên</h1>
+            {!embedded && <h1 className="text-base font-bold text-[#0F172A]">Tài khoản thành viên</h1>}
             <p className="text-xs text-[#64748B] mt-0.5">
               Cấp quyền đăng nhập view-only cho thành viên CLB
             </p>

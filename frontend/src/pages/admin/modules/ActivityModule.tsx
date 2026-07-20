@@ -13,6 +13,7 @@ import { WeeklyActivity } from '../WeeklyActivity'
 export function ActivityModule() {
   return (
     <ModuleTabs
+      title="Hoạt động CLB"
       tabs={[
         { key: 'schedule', label: 'Lịch', element: <ScheduleCalendar /> },
         { key: 'registration', label: 'Đăng ký', element: <SessionRegistration /> },

@@ -10,6 +10,7 @@ import { MemberAccounts } from '../MemberAccounts'
 export function MembersModule() {
   return (
     <ModuleTabs
+      title="Thành viên"
       tabs={[
         { key: 'list', label: 'Danh sách thành viên', element: <Members /> },
         { key: 'accounts', label: 'Tài khoản', element: <MemberAccounts /> },

@@ -11,6 +11,7 @@ import { MemberScoring } from '../MemberScoring'
 export function CompeteModule() {
   return (
     <ModuleTabs
+      title="Thi đấu"
       tabs={[
         { key: 'schedule', label: 'Xếp lịch đấu', element: <MinigameList /> },
         { key: 'history', label: 'Lịch sử', element: <MatchHistory /> },
