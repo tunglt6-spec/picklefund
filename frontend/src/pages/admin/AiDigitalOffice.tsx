@@ -172,6 +172,21 @@ export function AiDigitalOffice() {
     return () => clearTimeout(id)
   }, [error, load])
 
+  // Quay lại app (chuyển tab/app khác rồi mở lại): mobile "đóng băng" request nền → lúc resume
+  // dữ liệu có thể lỗi/hết hạn. Tự TẢI LẠI ngay khi tab hiển thị lại / cửa sổ focus → không kẹt
+  // ở màn lỗi. (focus phủ cả trường hợp trình duyệt không bắn visibilitychange.)
+  useEffect(() => {
+    const onResume = () => {
+      if (document.visibilityState === 'visible') void load(true)
+    }
+    document.addEventListener('visibilitychange', onResume)
+    window.addEventListener('focus', onResume)
+    return () => {
+      document.removeEventListener('visibilitychange', onResume)
+      window.removeEventListener('focus', onResume)
+    }
+  }, [load])
+
   // Real-time: WS đẩy 'presence' (nhịp nền, không refetch), 'agent-activity' (busy/online → cập
   // nhật ngay), còn lại ('ai-action') → refetch.
   const { connected } = useAidoSocket((payload) => {
