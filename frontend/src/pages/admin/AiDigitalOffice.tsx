@@ -48,6 +48,15 @@ interface WorkflowRun {
   completedAt?: string | null
 }
 
+/** Kết quả công việc THẬT trong ngày của từng agent — /aido/agent-results. */
+interface AgentResults {
+  maika: { actionsToday: number; briefsToday: number }
+  lisa: { remindersToday: number }
+  hermes: { runsToday: number; waitingApproval: number; running: number; completedToday: number; failedToday: number }
+  mitDac: { executedToday: number; running: number; failedToday: number; averageExecutionMs: number }
+  notification: { sentToday: number; byChannel: { IN_APP: number; EMAIL: number; TELEGRAM: number }; failedToday: number }
+}
+
 /** Màu/nhãn mức rủi ro của hành động AI. */
 const RISK_META: Record<string, { label: string; color: string }> = {
   low: { label: 'Thấp', color: 'var(--pf-green)' },
@@ -112,6 +121,8 @@ export function AiDigitalOffice() {
   const [runs, setRuns] = useState<WorkflowRun[]>([])
   // Cảnh báo vận hành THẬT (Maika) cho Office View.
   const [opsSignals, setOpsSignals] = useState<{ code?: string; level?: string; message?: string }[]>([])
+  // Kết quả công việc THẬT trong ngày của từng agent (dải dưới banner) — /aido/agent-results.
+  const [results, setResults] = useState<AgentResults | null>(null)
 
   // Lịch hôm nay + thông báo chưa đọc — tái dùng client store (đã sync), không gọi thêm API.
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
@@ -129,6 +140,7 @@ export function AiDigitalOffice() {
       api.get('/ai/actions?status=PENDING_APPROVAL&limit=10', { timeout: 12_000 }),
       api.get('/workflows/runs', { timeout: 12_000 }),
       api.get('/ai/maika/operational-alerts', { timeout: 12_000 }),
+      api.get('/aido/agent-results', { timeout: 12_000 }),
     ])
     const coreDown = (rs: PromiseSettledResult<any>[]) =>
       [rs[0], rs[1], rs[2], rs[3]].every((x) => x.status === 'rejected')
@@ -139,7 +151,7 @@ export function AiDigitalOffice() {
       await new Promise((r) => setTimeout(r, 900))
       settled = await fetchAll()
     }
-    const [s, h, r, c, a, pq, wr, al] = settled
+    const [s, h, r, c, a, pq, wr, al, ar] = settled
     if (coreDown(settled)) {
       setError(true); setLoading(false); return
     }
@@ -154,6 +166,7 @@ export function AiDigitalOffice() {
     if (pq.status === 'fulfilled') setPendingList(val(pq) ?? [])
     if (wr.status === 'fulfilled') setRuns(val(wr) ?? [])
     if (al.status === 'fulfilled') setOpsSignals(val(al) ?? [])
+    if (ar.status === 'fulfilled') setResults(val(ar))
     setUpdatedAt(new Date())
     setLoading(false)
   }, [])
@@ -299,6 +312,59 @@ export function AiDigitalOffice() {
     return c
   }, [agents])
 
+  // ── Dải "Kết quả hôm nay" của 5 agent (dưới banner) — SỐ THẬT từ /aido/agent-results.
+  // Màu khớp banner (MAIKA violet · LISA blue · HERMES green · MIT_DAT orange · NOTIFICATION magenta).
+  // Maika: sức khỏe + cảnh báo lấy sẵn từ health/opsSignals (đã tải). Lisa: hiện chỉ đếm được nhắc
+  // nhở (hội thoại chưa lưu) — nêu trung thực.
+  const resultCards = useMemo(() => {
+    const r = results
+    return [
+      {
+        key: 'MAIKA', name: 'Maika', color: '#6D5DFB',
+        value: health?.score != null ? String(health.score) : '—',
+        unit: health?.score != null ? '/100' : '',
+        headline: 'Sức khỏe CLB',
+        details: [
+          `${opsSignals.length} cảnh báo / khuyến nghị`,
+          `${r?.maika.briefsToday ?? 0} báo cáo đã gửi · ${r?.maika.actionsToday ?? 0} đề xuất`,
+        ],
+      },
+      {
+        key: 'LISA', name: 'Lisa', color: '#2563EB',
+        value: String(r?.lisa.remindersToday ?? 0), unit: 'nhắc',
+        headline: 'Nhắc nhở gửi hôm nay',
+        details: ['Hỗ trợ thành viên & giải đáp', 'Sẵn sàng trực tuyến'],
+      },
+      {
+        key: 'HERMES', name: 'Hermes', color: '#059669',
+        value: String(r?.hermes.runsToday ?? 0), unit: 'workflow',
+        headline: 'Điều phối hôm nay',
+        details: [
+          `${r?.hermes.waitingApproval ?? 0} chờ duyệt · ${r?.hermes.completedToday ?? 0} hoàn tất`,
+          `${r?.hermes.failedToday ?? 0} lỗi`,
+        ],
+      },
+      {
+        key: 'MIT_DAT', name: 'Mít Đặc', color: '#EA580C',
+        value: String(r?.mitDac.executedToday ?? executedToday), unit: 'tác vụ',
+        headline: 'Đã thực thi hôm nay',
+        details: [
+          `${r?.mitDac.running ?? running} đang chạy · ${r?.mitDac.failedToday ?? 0} lỗi`,
+          `Thời gian TB ${fmtLatency(r?.mitDac.averageExecutionMs)}`,
+        ],
+      },
+      {
+        key: 'NOTIFICATION', name: 'Notification', color: '#C026D3',
+        value: String(r?.notification.sentToday ?? 0), unit: 'đã gửi',
+        headline: 'Thông báo gửi hôm nay',
+        details: [
+          `In-app ${r?.notification.byChannel.IN_APP ?? 0} · Email ${r?.notification.byChannel.EMAIL ?? 0}`,
+          `Telegram ${r?.notification.byChannel.TELEGRAM ?? 0} (thử) · ${r?.notification.failedToday ?? 0} lỗi`,
+        ],
+      },
+    ]
+  }, [results, health, opsSignals, executedToday, running])
+
   const tabs: TabItem[] = [
     { key: 'office', label: 'Office View' },
     { key: 'operations', label: 'Operations View', badge: pending },
@@ -373,6 +439,32 @@ export function AiDigitalOffice() {
               </div>
             }
           />
+
+          {/* Kết quả công việc THẬT hôm nay của từng agent — xếp thẳng dưới 5 nhân vật trên banner. */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold [color:var(--pf-text)]">Kết quả hôm nay của từng Agent</h3>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+              {resultCards.map((c) => (
+                <div
+                  key={c.key}
+                  className="rounded-2xl border p-3.5 [background:var(--pf-surface)]"
+                  style={{ borderColor: 'var(--pf-border)', borderTop: `3px solid ${c.color}` }}
+                >
+                  <span className="text-[13px] font-semibold" style={{ color: c.color }}>{c.name}</span>
+                  <p className="mt-1 text-2xl font-bold leading-none [color:var(--pf-text)]">
+                    {c.value}
+                    {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
+                  </p>
+                  <p className="mt-1 text-[11px] font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
+                  <div className="mt-2 space-y-0.5 border-t pt-2" style={{ borderColor: 'var(--pf-border)' }}>
+                    {c.details.map((d, i) => (
+                      <p key={i} className="text-[11px] leading-snug [color:var(--pf-color-muted)]">{d}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Dashboard số liệu thật (5 thẻ như mẫu) */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

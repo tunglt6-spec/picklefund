@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaModule } from '../prisma/prisma.module';
 import { AidoGateway } from './aido.gateway';
 import { AidoController } from './aido.controller';
 import { AgentActivityService } from './agent-activity.service';
+import { AgentResultsService } from './agent-results.service';
 
 /**
  * AidoModule — WebSocket real-time + theo dõi hoạt động agent cho AIDO.
@@ -13,6 +15,7 @@ import { AgentActivityService } from './agent-activity.service';
 @Module({
   imports: [
     ConfigModule,
+    PrismaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,7 +25,7 @@ import { AgentActivityService } from './agent-activity.service';
     }),
   ],
   controllers: [AidoController],
-  providers: [AidoGateway, AgentActivityService],
+  providers: [AidoGateway, AgentActivityService, AgentResultsService],
   exports: [AidoGateway, AgentActivityService],
 })
 export class AidoModule {}
