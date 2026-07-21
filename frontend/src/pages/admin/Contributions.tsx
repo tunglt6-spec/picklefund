@@ -110,6 +110,19 @@ export function Contributions() {
   )
   const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
 
+  // Phân trang bảng (client) — Quỹ Phụ có thể dài dần; Quỹ Chính theo kỳ (bounded). Chỉ hiện
+  // điều khiển trang khi vượt PAGE_SIZE. Bulk "chọn tất cả" vẫn áp cho toàn bộ (mọi trang).
+  const PAGE_SIZE = 12
+  const [commonPage, setCommonPage] = useState(1)
+  const [miniPage, setMiniPage] = useState(1)
+  const commonPages = Math.max(1, Math.ceil(commonContribs.length / PAGE_SIZE))
+  const miniPages = Math.max(1, Math.ceil(miniContribs.length / PAGE_SIZE))
+  useEffect(() => { if (commonPage > commonPages) setCommonPage(commonPages) }, [commonPage, commonPages])
+  useEffect(() => { if (miniPage > miniPages) setMiniPage(miniPages) }, [miniPage, miniPages])
+  useEffect(() => { setCommonPage(1) }, [selectedPeriodId])
+  const commonPageRows = commonContribs.slice((commonPage - 1) * PAGE_SIZE, commonPage * PAGE_SIZE)
+  const miniPageRows = miniContribs.slice((miniPage - 1) * PAGE_SIZE, miniPage * PAGE_SIZE)
+
   // Chọn & xóa nhiều khoản thu cùng lúc — dùng chung 1 vùng chọn cho cả 2 bảng (Quỹ Chính +
   // Quỹ Phụ), mỗi bảng có ô "chọn tất cả" riêng cho các dòng của bảng đó.
   const bulk = useBulkSelection([...commonContribs, ...miniContribs], c => c.id)
@@ -665,7 +678,7 @@ export function Contributions() {
                   </tr>
                 </thead>
                 <tbody>
-                  {commonContribs.map(c => (
+                  {commonPageRows.map(c => (
                     <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
                       {!isMember && (
                         <td className="text-center">
@@ -709,6 +722,15 @@ export function Contributions() {
               </table>
             </div>
           )}
+          {commonPages > 1 && (
+            <div className="flex items-center justify-end gap-2 px-1 text-xs text-slate-500">
+              <button disabled={commonPage <= 1} onClick={() => setCommonPage(p => Math.max(1, p - 1))}
+                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Trước</button>
+              <span>Trang {commonPage}/{commonPages}</span>
+              <button disabled={commonPage >= commonPages} onClick={() => setCommonPage(p => Math.min(commonPages, p + 1))}
+                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Sau</button>
+            </div>
+          )}
         </div>
 
         {/* MINI contributions table */}
@@ -742,7 +764,7 @@ export function Contributions() {
                   </tr>
                 </thead>
                 <tbody>
-                  {miniContribs.map(c => (
+                  {miniPageRows.map(c => (
                     <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
                       {!isMember && (
                         <td className="text-center">
@@ -787,6 +809,15 @@ export function Contributions() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {miniPages > 1 && (
+            <div className="flex items-center justify-end gap-2 px-1 text-xs text-slate-500">
+              <button disabled={miniPage <= 1} onClick={() => setMiniPage(p => Math.max(1, p - 1))}
+                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Trước</button>
+              <span>Trang {miniPage}/{miniPages}</span>
+              <button disabled={miniPage >= miniPages} onClick={() => setMiniPage(p => Math.min(miniPages, p + 1))}
+                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Sau</button>
             </div>
           )}
         </div>

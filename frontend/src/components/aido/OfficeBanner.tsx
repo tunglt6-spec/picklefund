@@ -6,7 +6,7 @@
  */
 import type { ReactNode } from 'react'
 
-/** Khung THẺ (bbox px trong office-banner-v3.png 1832×602) dò CHÍNH XÁC từ pixel.
+/** Khung THẺ (bbox px trong office-banner-v3.webp 1832×602) dò CHÍNH XÁC từ pixel.
  *  dx/dy = TÂM chấm trạng thái xanh → radar đặt đúng tâm chấm. Mỗi agent 1 màu. */
 const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; dx: number; dy: number; color: string; dur: string; delay: string }[] = [
   { key: 'MAIKA', x: 74, y: 80, w: 245, h: 226, dx: 103, dy: 181, color: '#6D5DFB', dur: '6.4s', delay: '0s' },
@@ -37,7 +37,7 @@ export function OfficeBanner({ badge, caption }: { badge?: ReactNode; caption?: 
           preserveAspectRatio="xMidYMid meet"
           fill="none"
         >
-          <image href="/aido-media/office-banner-v3.png" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
+          <image href="/aido-media/office-banner-v3.webp" x={0} y={0} width={1832} height={602} preserveAspectRatio="none" />
           {BANNER_CARD.map((c) => (
             <g key={c.key}>
               {/* radar ping — đúng tâm chấm trạng thái */}

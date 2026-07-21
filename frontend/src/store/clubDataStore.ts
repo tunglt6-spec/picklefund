@@ -108,7 +108,19 @@ export const useClubDataStore = create<ClubDataStore>()(
     }),
     {
       name: 'picklefund-club-data',
-      partialize: (state) => ({ dataByClub: state.dataByClub, readNotifIds: state.readNotifIds }),
+      // KHÔNG persist 2 mảng log giao dịch VÔ HẠN (contributions/expenses) để tránh phình
+      // localStorage (>5MB) + hydrate chậm với CLB nhiều dữ liệu. Chúng được nạp lại qua
+      // useApiSync mỗi lần vào app. Vẫn giữ members/fundPeriods/sessions/settings (nhỏ, hiển
+      // thị tức thì trước khi fetch xong).
+      partialize: (state) => ({
+        dataByClub: Object.fromEntries(
+          Object.entries(state.dataByClub).map(([cid, d]) => [
+            cid,
+            { ...d, contributions: [], expenses: [] },
+          ]),
+        ),
+        readNotifIds: state.readNotifIds,
+      }),
       merge: (persisted: unknown, current) => {
         const p = persisted as Partial<ClubDataStore> | null
         return {
