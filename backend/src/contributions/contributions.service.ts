@@ -35,20 +35,65 @@ export class ContributionsService {
     private calculator: FinancialCalculatorService,
   ) {}
 
+  /**
+   * Danh sách khoản thu. Backward-compatible:
+   * - KHÔNG truyền `opts.page` → trả MẢNG đầy đủ như cũ (useApiSync + các màn tổng hợp không đổi).
+   * - CÓ `opts.page` → trả `{ items, total, page, limit }` (phân trang server-side, opt-in).
+   * `isConfirmed`/`search` là filter bổ sung, chỉ áp khi được truyền.
+   */
   async findAll(
     clubId: string,
     fundPeriodId?: string,
     fundSource?: FundSource,
+    opts?: {
+      page?: number;
+      limit?: number;
+      isConfirmed?: boolean;
+      search?: string;
+    },
   ) {
-    return this.prisma.fundContribution.findMany({
-      where: {
-        clubId,
-        ...(fundPeriodId ? { fundPeriodId } : {}),
-        ...(fundSource ? { fundSource } : {}),
-      },
-      orderBy: { paymentDate: 'desc' },
-      include: { member: { select: { id: true, fullName: true } } },
-    });
+    const where: Record<string, unknown> = {
+      clubId,
+      ...(fundPeriodId ? { fundPeriodId } : {}),
+      ...(fundSource ? { fundSource } : {}),
+      ...(opts?.isConfirmed !== undefined
+        ? { isConfirmed: opts.isConfirmed }
+        : {}),
+      ...(opts?.search
+        ? {
+            OR: [
+              { notes: { contains: opts.search, mode: 'insensitive' } },
+              { payerName: { contains: opts.search, mode: 'insensitive' } },
+              {
+                member: {
+                  fullName: { contains: opts.search, mode: 'insensitive' },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+    const orderBy = { paymentDate: 'desc' as const };
+    const include = { member: { select: { id: true, fullName: true } } };
+
+    if (opts?.page) {
+      const page = Math.max(1, opts.page);
+      const limit = Math.min(200, Math.max(1, opts.limit ?? 20));
+      const skip = (page - 1) * limit;
+      const [items, total] = await Promise.all([
+        this.prisma.fundContribution.findMany({
+          where,
+          orderBy,
+          include,
+          skip,
+          take: limit,
+        }),
+        this.prisma.fundContribution.count({ where }),
+      ]);
+      return { items, total, page, limit };
+    }
+
+    return this.prisma.fundContribution.findMany({ where, orderBy, include });
   }
 
   async findOne(id: string, clubId: string) {

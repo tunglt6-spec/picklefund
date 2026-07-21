@@ -18,6 +18,7 @@ const mockPrisma = {
     delete: jest.fn(),
     aggregate: jest.fn(),
     groupBy: jest.fn(),
+    count: jest.fn(),
   },
   // FK ownership validation (assertFkOwnership)
   fundPeriod: { findFirst: jest.fn() },
@@ -292,6 +293,50 @@ describe('ExpensesService', () => {
       const call = mockPrisma.livingExpense.findMany.mock.calls[0][0];
       expect(call.where).not.toHaveProperty('fundPeriodId');
     });
+
+    it('returns a plain array (backward-compatible) when no page option', async () => {
+      mockPrisma.livingExpense.findMany.mockResolvedValue([baseExpense]);
+      const result = await service.findAll('club-1');
+      expect(Array.isArray(result)).toBe(true);
+      expect(mockPrisma.livingExpense.count).not.toHaveBeenCalled();
+      // Không có skip/take khi không phân trang
+      const call = mockPrisma.livingExpense.findMany.mock.calls[0][0];
+      expect(call).not.toHaveProperty('skip');
+      expect(call).not.toHaveProperty('take');
+    });
+
+    it('returns paginated shape { items, total, page, limit } when page provided', async () => {
+      mockPrisma.livingExpense.findMany.mockResolvedValue([baseExpense]);
+      mockPrisma.livingExpense.count.mockResolvedValue(42);
+      const result = await service.findAll('club-1', undefined, undefined, {
+        page: 2,
+        limit: 10,
+      });
+      expect(result).toEqual({ items: [baseExpense], total: 42, page: 2, limit: 10 });
+      const call = mockPrisma.livingExpense.findMany.mock.calls[0][0];
+      expect(call.skip).toBe(10); // (2-1)*10
+      expect(call.take).toBe(10);
+      expect(mockPrisma.livingExpense.count).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ clubId: 'club-1' }) }),
+      );
+    });
+
+    it('applies status + search filters in where clause', async () => {
+      mockPrisma.livingExpense.findMany.mockResolvedValue([baseExpense]);
+      mockPrisma.livingExpense.count.mockResolvedValue(1);
+      await service.findAll('club-1', undefined, undefined, {
+        page: 1,
+        status: 'approved',
+        search: 'sân',
+      });
+      const where = mockPrisma.livingExpense.findMany.mock.calls[0][0].where;
+      expect(where.status).toBe('approved');
+      expect(where.OR).toEqual(
+        expect.arrayContaining([
+          { description: { contains: 'sân', mode: 'insensitive' } },
+        ]),
+      );
+    });
   });
 
   describe('summary', () => {
@@ -332,6 +377,30 @@ describe('ExpensesService', () => {
           },
         }),
       );
+    });
+
+    it('returns statusCounts grouped by status (additive field)', async () => {
+      mockPrisma.livingExpense.aggregate.mockResolvedValue({
+        _sum: { amount: new Decimal(0) },
+        _count: 0,
+      });
+      // 1st groupBy = miniByType, 2nd groupBy = statusGroups
+      mockPrisma.livingExpense.groupBy
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { status: 'pending', _count: 3 },
+          { status: 'approved', _count: 5 },
+          { status: 'paid', _count: 2 },
+        ]);
+
+      const result = await service.summary('club-1');
+
+      expect(result.statusCounts).toEqual({
+        pending: 3,
+        approved: 5,
+        paid: 2,
+        rejected: 0,
+      });
     });
   });
 });

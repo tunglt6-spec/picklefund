@@ -49,9 +49,18 @@ export class ExpensesController implements OnModuleInit {
     @CurrentUser() user: any,
     @Query('fundPeriodId') fundPeriodId?: string,
     @Query('fundSource') fundSource?: FundSource,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
   ) {
     return ok(
-      await this.service.findAll(user.clubId, fundPeriodId, fundSource),
+      await this.service.findAll(user.clubId, fundPeriodId, fundSource, {
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+        status: status || undefined,
+        search: search || undefined,
+      }),
     );
   }
 

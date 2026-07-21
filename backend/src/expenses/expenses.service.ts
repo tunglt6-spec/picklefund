@@ -39,19 +39,51 @@ export class ExpensesService {
     private calculator: FinancialCalculatorService,
   ) {}
 
+  /**
+   * Danh sách khoản chi. Backward-compatible:
+   * - KHÔNG truyền `opts.page` → trả MẢNG đầy đủ như cũ (useApiSync + các màn tổng hợp không đổi).
+   * - CÓ `opts.page` → trả `{ items, total, page, limit }` (phân trang server-side, opt-in).
+   * `status`/`search` là filter bổ sung, chỉ áp khi được truyền.
+   */
   async findAll(
     clubId: string,
     fundPeriodId?: string,
     fundSource?: FundSource,
+    opts?: { page?: number; limit?: number; status?: string; search?: string },
   ) {
-    return this.prisma.livingExpense.findMany({
-      where: {
-        clubId,
-        ...(fundPeriodId ? { fundPeriodId } : {}),
-        ...(fundSource ? { fundSource } : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const where: Record<string, unknown> = {
+      clubId,
+      ...(fundPeriodId ? { fundPeriodId } : {}),
+      ...(fundSource ? { fundSource } : {}),
+      ...(opts?.status ? { status: opts.status } : {}),
+      ...(opts?.search
+        ? {
+            OR: [
+              { description: { contains: opts.search, mode: 'insensitive' } },
+              { receiverName: { contains: opts.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+    const orderBy = { createdAt: 'desc' as const };
+
+    if (opts?.page) {
+      const page = Math.max(1, opts.page);
+      const limit = Math.min(200, Math.max(1, opts.limit ?? 20));
+      const skip = (page - 1) * limit;
+      const [items, total] = await Promise.all([
+        this.prisma.livingExpense.findMany({
+          where,
+          orderBy,
+          skip,
+          take: limit,
+        }),
+        this.prisma.livingExpense.count({ where }),
+      ]);
+      return { items, total, page, limit };
+    }
+
+    return this.prisma.livingExpense.findMany({ where, orderBy });
   }
 
   async findOne(id: string, clubId: string) {
@@ -240,44 +272,66 @@ export class ExpensesService {
       'PRESENT_ONLY',
       'FUND_ONLY',
     ];
-    const [commonResults, miniTotal, miniByType] = await Promise.all([
-      Promise.all(
-        commonRules.map((rule) =>
-          this.prisma.livingExpense.aggregate({
-            where: {
-              clubId,
-              ...(fundPeriodId ? { fundPeriodId } : {}),
-              fundSource: 'COMMON',
-              allocationRule: rule,
-              // Nhất quán với Mini Fund: chỉ tính chi đã duyệt/đã chi vào tổng quỹ.
-              status: { in: ['approved', 'paid'] },
-            },
-            _sum: { amount: true },
-            _count: true,
-          }),
+    const [commonResults, miniTotal, miniByType, statusGroups] =
+      await Promise.all([
+        Promise.all(
+          commonRules.map((rule) =>
+            this.prisma.livingExpense.aggregate({
+              where: {
+                clubId,
+                ...(fundPeriodId ? { fundPeriodId } : {}),
+                fundSource: 'COMMON',
+                allocationRule: rule,
+                // Nhất quán với Mini Fund: chỉ tính chi đã duyệt/đã chi vào tổng quỹ.
+                status: { in: ['approved', 'paid'] },
+              },
+              _sum: { amount: true },
+              _count: true,
+            }),
+          ),
         ),
-      ),
-      this.prisma.livingExpense.aggregate({
-        where: {
-          clubId,
-          fundSource: 'MINI',
-          status: { in: ['approved', 'paid'] },
-        },
-        _sum: { amount: true },
-        _count: true,
-      }),
-      this.prisma.livingExpense.groupBy({
-        by: ['miniExpenseType'],
-        where: {
-          clubId,
-          fundSource: 'MINI',
-          status: { in: ['approved', 'paid'] },
-        },
-        _sum: { amount: true },
-      }),
-    ]);
+        this.prisma.livingExpense.aggregate({
+          where: {
+            clubId,
+            fundSource: 'MINI',
+            status: { in: ['approved', 'paid'] },
+          },
+          _sum: { amount: true },
+          _count: true,
+        }),
+        this.prisma.livingExpense.groupBy({
+          by: ['miniExpenseType'],
+          where: {
+            clubId,
+            fundSource: 'MINI',
+            status: { in: ['approved', 'paid'] },
+          },
+          _sum: { amount: true },
+        }),
+        // Đếm số khoản theo trạng thái (mọi nguồn quỹ) trong phạm vi kỳ — phục vụ tab
+        // trạng thái ở trang Chi mà không cần tải toàn bộ mảng.
+        this.prisma.livingExpense.groupBy({
+          by: ['status'],
+          where: {
+            clubId,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+          },
+          _count: true,
+        }),
+      ]);
+
+    const statusCounts = { pending: 0, approved: 0, paid: 0, rejected: 0 };
+    for (const g of statusGroups as Array<{
+      status?: string | null;
+      _count: number;
+    }>) {
+      if (g.status && g.status in statusCounts) {
+        statusCounts[g.status as keyof typeof statusCounts] = g._count;
+      }
+    }
 
     return {
+      statusCounts,
       common: Object.fromEntries(
         commonRules.map((rule, i) => [
           rule,

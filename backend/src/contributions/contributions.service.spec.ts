@@ -19,6 +19,7 @@ const mockPrisma = {
     createMany: jest.fn(),
     aggregate: jest.fn(),
     groupBy: jest.fn(),
+    count: jest.fn(),
   },
   fundPeriod: { findFirst: jest.fn() },
   member: { findMany: jest.fn(), findFirst: jest.fn() },
@@ -182,6 +183,58 @@ describe('ContributionsService', () => {
           where: { id: 'contrib-1', clubId: 'club-1' },
           data: { isConfirmed: true },
         }),
+      );
+    });
+  });
+
+  describe('findAll', () => {
+    it('returns a plain array (backward-compatible) when no page option', async () => {
+      mockPrisma.fundContribution.findMany.mockResolvedValue([baseContrib]);
+      const result = await service.findAll('club-1');
+      expect(Array.isArray(result)).toBe(true);
+      expect(mockPrisma.fundContribution.count).not.toHaveBeenCalled();
+      const call = mockPrisma.fundContribution.findMany.mock.calls[0][0];
+      expect(call).not.toHaveProperty('skip');
+      expect(call).not.toHaveProperty('take');
+      // vẫn include member như cũ
+      expect(call.include).toEqual({
+        member: { select: { id: true, fullName: true } },
+      });
+    });
+
+    it('returns paginated shape { items, total, page, limit } when page provided', async () => {
+      mockPrisma.fundContribution.findMany.mockResolvedValue([baseContrib]);
+      mockPrisma.fundContribution.count.mockResolvedValue(30);
+      const result = await service.findAll('club-1', undefined, undefined, {
+        page: 3,
+        limit: 5,
+      });
+      expect(result).toEqual({
+        items: [baseContrib],
+        total: 30,
+        page: 3,
+        limit: 5,
+      });
+      const call = mockPrisma.fundContribution.findMany.mock.calls[0][0];
+      expect(call.skip).toBe(10); // (3-1)*5
+      expect(call.take).toBe(5);
+    });
+
+    it('applies isConfirmed + search filters in where clause', async () => {
+      mockPrisma.fundContribution.findMany.mockResolvedValue([baseContrib]);
+      mockPrisma.fundContribution.count.mockResolvedValue(1);
+      await service.findAll('club-1', undefined, undefined, {
+        page: 1,
+        isConfirmed: true,
+        search: 'Nguyễn',
+      });
+      const where = mockPrisma.fundContribution.findMany.mock.calls[0][0].where;
+      expect(where.isConfirmed).toBe(true);
+      expect(where.OR).toEqual(
+        expect.arrayContaining([
+          { notes: { contains: 'Nguyễn', mode: 'insensitive' } },
+          { payerName: { contains: 'Nguyễn', mode: 'insensitive' } },
+        ]),
       );
     });
   });
