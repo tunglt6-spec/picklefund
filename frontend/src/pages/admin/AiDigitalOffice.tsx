@@ -94,7 +94,10 @@ const fmtLatency = (ms?: number) =>
 
 export function AiDigitalOffice() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<string>('office')
+  // Cho phép mở thẳng 1 tab qua URL (?tab=ops-center) — dùng khi bấm "Quay lại AI Operations Center".
+  const [tab, setTab] = useState<string>(
+    () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab') || 'office',
+  )
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null)

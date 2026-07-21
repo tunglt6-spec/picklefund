@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
@@ -25,6 +26,9 @@ export function AppLayout() {
 
   const lisaRoute = user ? LISA_ROUTES[user.role] : null
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
+  // Mở màn con từ hub AI Operations Center (card đính ?from=aido) → hiện thanh quay lại cố định,
+  // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
+  const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -56,6 +60,15 @@ export function AppLayout() {
         {/* Page content — không còn bottom nav; chỉ chừa safe-area đáy */}
         <main className="flex-1 flex flex-col overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex-1 overflow-y-auto">
+            {fromAido && (
+              <button
+                onClick={() => navigate('/aido?tab=ops-center')}
+                className="sticky top-0 z-30 flex w-full items-center gap-2 border-b px-4 py-2.5 text-sm font-semibold transition-colors sm:px-6"
+                style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)', borderColor: 'var(--pf-border)' }}
+              >
+                <ArrowLeft size={16} /> Quay lại AI Operations Center
+              </button>
+            )}
             <Outlet />
           </div>
         </main>

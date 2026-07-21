@@ -149,6 +149,8 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
 
 export function AiManagerDashboard() {
   const navigate = useNavigate()
+  // Mở màn con kèm cờ ?from=aido → màn đích hiện thanh "Quay lại AI Operations Center" (AppLayout).
+  const goHub = (to: string) => navigate(to.includes('?') ? `${to}&from=aido` : `${to}?from=aido`)
   const role = useAuthStore(s => s.user?.role)
   const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
@@ -245,7 +247,7 @@ export function AiManagerDashboard() {
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {items.map(s => (
-                      <SectionCard key={s.key} s={s} onGo={navigate} />
+                      <SectionCard key={s.key} s={s} onGo={goHub} />
                     ))}
                   </div>
                 </div>
