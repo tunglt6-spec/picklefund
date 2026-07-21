@@ -4,7 +4,10 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
+
+const mockCalculator = { invalidateClosingBalances: jest.fn() };
 
 const mockPrisma = {
   livingExpense: {
@@ -57,6 +60,7 @@ describe('ExpensesService', () => {
         ExpensesService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: HermesEventPublisher, useValue: mockEvents },
+        { provide: FinancialCalculatorService, useValue: mockCalculator },
       ],
     }).compile();
     service = module.get<ExpensesService>(ExpensesService);
@@ -187,6 +191,7 @@ describe('ExpensesService', () => {
           ExpensesService,
           { provide: PrismaService, useValue: mockPrisma },
           { provide: HermesEventPublisher, useValue: realPublisher },
+          { provide: FinancialCalculatorService, useValue: mockCalculator },
         ],
       }).compile();
       const svc = mod.get<ExpensesService>(ExpensesService);

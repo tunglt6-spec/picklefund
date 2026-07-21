@@ -434,7 +434,11 @@ describe('FundPeriodsService', () => {
   /* ── business event (EPIC7) ── */
   describe('updateStatus → business event (EPIC7)', () => {
     it('phát FUND_PERIOD_CLOSED khi chốt sổ (finalized)', async () => {
-      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      // findOne trả basePeriod; nhưng previousPeriod (query có where.startDate) → null (không
+      // có kỳ trước) để summary() lúc finalize không đệ quy vô hạn với mock.
+      mockPrisma.fundPeriod.findFirst.mockImplementation((args: any) =>
+        Promise.resolve(args?.where?.startDate ? null : basePeriod),
+      );
       mockPrisma.fundPeriod.update.mockResolvedValue({
         ...basePeriod,
         status: 'finalized',
@@ -453,7 +457,9 @@ describe('FundPeriodsService', () => {
     });
 
     it('KHÔNG phát event với status khác finalized', async () => {
-      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      mockPrisma.fundPeriod.findFirst.mockImplementation((args: any) =>
+        Promise.resolve(args?.where?.startDate ? null : basePeriod),
+      );
       mockPrisma.fundPeriod.update.mockResolvedValue({
         ...basePeriod,
         status: 'active',

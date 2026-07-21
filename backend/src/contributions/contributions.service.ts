@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import type { FundSource, MiniIncomeType } from '@prisma/client';
 import type { ImportContributionsDto } from './contributions.dto';
@@ -31,6 +32,7 @@ export class ContributionsService {
   constructor(
     private prisma: PrismaService,
     private events: HermesEventPublisher,
+    private calculator: FinancialCalculatorService,
   ) {}
 
   async findAll(
@@ -109,7 +111,7 @@ export class ContributionsService {
 
     await this.assertFkOwnership(clubId, dto);
 
-    return this.prisma.fundContribution.create({
+    const created = await this.prisma.fundContribution.create({
       data: {
         clubId,
         createdById: userId,
@@ -130,6 +132,8 @@ export class ContributionsService {
           : {}),
       },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return created;
   }
 
   async update(
@@ -145,7 +149,7 @@ export class ContributionsService {
       throw new BadRequestException('Số tiền phải lớn hơn 0');
     }
     await this.assertFkOwnership(clubId, dto);
-    return this.prisma.fundContribution.update({
+    const updated = await this.prisma.fundContribution.update({
       where: { id, clubId },
       data: {
         ...(dto.amount !== undefined
@@ -167,11 +171,17 @@ export class ContributionsService {
           : {}),
       },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return updated;
   }
 
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId);
-    return this.prisma.fundContribution.delete({ where: { id, clubId } });
+    const deleted = await this.prisma.fundContribution.delete({
+      where: { id, clubId },
+    });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return deleted;
   }
 
   async toggleConfirm(id: string, clubId: string) {
@@ -180,6 +190,7 @@ export class ContributionsService {
       where: { id, clubId },
       data: { isConfirmed: !c.isConfirmed },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
     // Epic 7: chỉ phát khi chuyển sang ĐÃ xác nhận (không phát khi bỏ xác nhận).
     if (updated.isConfirmed) {
       this.events.publish({
@@ -199,6 +210,7 @@ export class ContributionsService {
       where: { id: { in: ids }, clubId, isConfirmed: false },
       data: { isConfirmed: true },
     });
+    if (result.count > 0) await this.calculator.invalidateClosingBalances(clubId);
     // Epic 7: đọc actor fire-and-forget (không chặn response, không throw sau commit).
     if (result.count > 0) {
       void this.prisma.fundContribution
@@ -291,6 +303,7 @@ export class ContributionsService {
 
     if (toInsert.length > 0) {
       await this.prisma.fundContribution.createMany({ data: toInsert });
+      await this.calculator.invalidateClosingBalances(clubId);
     }
 
     return { imported: toInsert.length, total: dto.rows.length, errors };

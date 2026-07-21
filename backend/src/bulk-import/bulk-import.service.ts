@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
 import type {
   BulkImportDto,
@@ -21,7 +22,10 @@ const normalize = (s: string) => s.trim().toLowerCase();
  */
 @Injectable()
 export class BulkImportService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calculator: FinancialCalculatorService,
+  ) {}
 
   async import(
     clubId: string,
@@ -396,6 +400,8 @@ export class BulkImportService {
       }
     }
 
+    // Import có thể tạo nhiều thu/chi/kỳ → xóa cache số dư cuối kỳ 1 lần cuối.
+    await this.calculator.invalidateClosingBalances(clubId);
     return result;
   }
 

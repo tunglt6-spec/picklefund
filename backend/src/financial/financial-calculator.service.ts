@@ -65,6 +65,22 @@ export class FinancialCalculatorService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Xóa cache số dư cuối kỳ của TẤT CẢ kỳ trong CLB (đặt closingBalance=null). Gọi sau MỌI thay
+   * đổi thu/chi (create/update/delete/confirm/status) để summary() không dùng số dư cũ. An toàn
+   * over-invalidate (chỉ mất cache, summary tự tính lại đúng). Best-effort, không chặn nghiệp vụ.
+   */
+  async invalidateClosingBalances(clubId: string): Promise<void> {
+    try {
+      await this.prisma.fundPeriod.updateMany({
+        where: { clubId, closingBalance: { not: null } },
+        data: { closingBalance: null },
+      });
+    } catch {
+      /* cache invalidation không được làm hỏng giao dịch chính */
+    }
+  }
+
+  /**
    * Canonical financial calculation for a fund period.
    * Cost category theo LivingExpense.allocationRule (source of truth — CLB B32 baseline);
    * KHÔNG dùng AttendanceSession.courtFee (chỉ là reference).

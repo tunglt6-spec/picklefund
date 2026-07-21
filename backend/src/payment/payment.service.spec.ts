@@ -3,7 +3,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
+
+const mockCalculator = { invalidateClosingBalances: jest.fn() };
 
 const mockPrisma = {
   payment: {
@@ -55,6 +58,7 @@ describe('PaymentService', () => {
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: FinancialCalculatorService, useValue: mockCalculator },
       ],
     }).compile();
     service = module.get<PaymentService>(PaymentService);

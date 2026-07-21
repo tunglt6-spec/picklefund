@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import type {
   AllocationRule,
@@ -35,6 +36,7 @@ export class ExpensesService {
   constructor(
     private prisma: PrismaService,
     private events: HermesEventPublisher,
+    private calculator: FinancialCalculatorService,
   ) {}
 
   async findAll(
@@ -147,6 +149,7 @@ export class ExpensesService {
           : {}),
       },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
     // Epic 7: phát event SAU khi commit — fire-and-forget.
     this.events.publish({
       clubId,
@@ -168,7 +171,7 @@ export class ExpensesService {
     }
     const fundSource = dto.fundSource ?? existing.fundSource;
     await this.assertFkOwnership(clubId, dto);
-    return this.prisma.livingExpense.update({
+    const updated = await this.prisma.livingExpense.update({
       where: { id, clubId },
       data: {
         ...(dto.description !== undefined
@@ -204,6 +207,8 @@ export class ExpensesService {
             : (dto.allocationEnabled ?? existing.allocationEnabled),
       },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return updated;
   }
 
   async updateStatus(id: string, clubId: string, status: string) {
@@ -211,15 +216,21 @@ export class ExpensesService {
     if (!allowed.includes(status))
       throw new BadRequestException('Trạng thái không hợp lệ');
     await this.findOne(id, clubId);
-    return this.prisma.livingExpense.update({
+    const updated = await this.prisma.livingExpense.update({
       where: { id, clubId },
       data: { status },
     });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return updated;
   }
 
   async delete(id: string, clubId: string) {
     await this.findOne(id, clubId);
-    return this.prisma.livingExpense.delete({ where: { id, clubId } });
+    const deleted = await this.prisma.livingExpense.delete({
+      where: { id, clubId },
+    });
+    await this.calculator.invalidateClosingBalances(clubId);
+    return deleted;
   }
 
   async summary(clubId: string, fundPeriodId?: string) {

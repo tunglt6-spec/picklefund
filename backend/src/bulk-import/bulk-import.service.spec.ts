@@ -2,6 +2,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BulkImportService } from './bulk-import.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+
+const mockCalculator = { invalidateClosingBalances: jest.fn() };
 
 const mockPrisma = {
   member: {
@@ -42,6 +45,7 @@ describe('BulkImportService', () => {
       providers: [
         BulkImportService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: FinancialCalculatorService, useValue: mockCalculator },
       ],
     }).compile();
     service = module.get<BulkImportService>(BulkImportService);
@@ -299,9 +303,8 @@ describe('BulkImportService', () => {
     });
   });
 
-  it('không phát Hermes event / không phụ thuộc HermesEventPublisher (bulk backfill im lặng)', async () => {
-    // Nếu constructor cần thêm dependency nào khác ngoài PrismaService, TestingModule
-    // ở beforeEach sẽ throw khi compile — test này xác nhận module chỉ cần PrismaService.
+  it('không phát Hermes event (bulk backfill im lặng); deps = Prisma + FinancialCalculator', async () => {
+    // Constructor chỉ cần PrismaService + FinancialCalculatorService (invalidate cache số dư).
     expect(service).toBeInstanceOf(BulkImportService);
   });
 });

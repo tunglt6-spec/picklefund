@@ -169,6 +169,10 @@ model FundPeriod {
   /// thành viên live (chỉ kỳ đang thu mới nhất). Kỳ khác chốt cứng → xóa/thêm member KHÔNG
   /// làm lệch bill lịch sử. Xem members.service.remove + fund-periods snapshotPastPeriods.
   billedMemberCount  Int?             @map("billed_member_count")
+  /// Cache số dư cuối kỳ (clubAssets.balance) lưu lúc finalize → summary kỳ sau đọc thẳng,
+  /// bỏ đệ quy carryForward. CHỈ dùng khi != null; XÓA (=null) khi có bất kỳ ghi thu/chi nào
+  /// của CLB (invalidateClosingBalances) ⇒ không bao giờ stale. Xem fund-periods.summary().
+  closingBalance     Decimal?         @map("closing_balance") @db.Decimal(15, 2)
   createdById        String           @map("created_by")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")

@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 
 function buildVietQRUrl(params: {
   bankCode: string;
@@ -23,7 +24,10 @@ function buildVietQRUrl(params: {
 
 @Injectable()
 export class PaymentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calculator: FinancialCalculatorService,
+  ) {}
 
   async createQR(
     clubId: string,
@@ -107,6 +111,7 @@ export class PaymentService {
         where: { id: payment.referenceId, clubId, isConfirmed: false },
         data: { isConfirmed: true },
       }).catch(() => { /* non-fatal */ });
+      await this.calculator.invalidateClosingBalances(clubId);
     }
 
     return updated;

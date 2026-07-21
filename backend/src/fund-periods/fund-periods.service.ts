@@ -144,6 +144,7 @@ export class FundPeriodsService {
       const created = await this.prisma.fundPeriod.create({ data });
       // Kỳ mới thành "kỳ hiện tại" → chốt cứng kỳ-hiện-tại-cũ tại số member hiện tại.
       await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
+      await this.calculator.invalidateClosingBalances(clubId);
       return { ...created, copiedMembersCount: 0 };
     }
 
@@ -208,6 +209,7 @@ export class FundPeriodsService {
     });
     // Kỳ mới thành "kỳ hiện tại" → chốt cứng kỳ-hiện-tại-cũ tại số member hiện tại.
     await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
+    await this.calculator.invalidateClosingBalances(clubId);
     return result;
   }
 
@@ -275,6 +277,22 @@ export class FundPeriodsService {
     // Đổi trạng thái đổi "kỳ hiện tại" → chuẩn hóa sĩ số chốt (đóng kỳ = chốt cứng; mở lại =
     // đưa về live nếu thành kỳ hiện tại). Best-effort, không chặn luồng.
     await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
+    // Đổi trạng thái làm đổi chuỗi carryForward → xóa cache số dư cuối kỳ toàn CLB.
+    await this.calculator.invalidateClosingBalances(clubId);
+    // Finalize → LƯU số dư cuối kỳ (snapshot) để các kỳ sau đọc thẳng, bỏ đệ quy.
+    // Best-effort: lỗi tính toán KHÔNG được làm hỏng việc chốt sổ (status+event đã commit);
+    // closingBalance để null → summary tự tính lại (fallback) khi cần.
+    if (status === 'finalized') {
+      try {
+        const s = await this.summary(id, clubId);
+        await this.prisma.fundPeriod.update({
+          where: { id, clubId },
+          data: { closingBalance: s.clubAssets.balance },
+        });
+      } catch {
+        /* ignore — closingBalance sẽ được tính lại ở lần đọc summary sau */
+      }
+    }
     // Epic 7: kỳ quỹ chốt sổ → phát event SAU khi commit — fire-and-forget.
     if (status === 'finalized') {
       this.events.publish({
@@ -319,6 +337,8 @@ export class FundPeriodsService {
       // nhưng vẫn để prisma.fundPeriod.delete() ở cuối tự cuốn theo.
       this.prisma.fundPeriod.delete({ where: { id, clubId } }),
     ]);
+    // Xóa kỳ đổi chuỗi carryForward → xóa cache số dư cuối kỳ toàn CLB.
+    await this.calculator.invalidateClosingBalances(clubId);
     return { deleted: true };
   }
 
@@ -338,11 +358,12 @@ export class FundPeriodsService {
     const previousPeriod = await this.prisma.fundPeriod.findFirst({
       where: {
         clubId,
+        id: { not: id }, // phòng thủ: kỳ KHÔNG bao giờ là carryForward của chính nó
         startDate: { lt: fp.startDate },
         status: { in: ['closed', 'finalized'] },
       },
       orderBy: { startDate: 'desc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, closingBalance: true },
     });
 
     // carryForward = SỐ DƯ CUỐI kỳ trước (clubAssets.balance của kỳ đó — đã bao gồm
@@ -353,8 +374,13 @@ export class FundPeriodsService {
     // không khớp canonical (financial-calculator dùng tổng EQUAL+PRESENT_ONLY/ATTENDANCE+FUND_ONLY).
     let carryForwardBalance = 0;
     if (previousPeriod) {
-      const prevSummary = await this.summary(previousPeriod.id, clubId, cache);
-      carryForwardBalance = prevSummary.clubAssets.balance;
+      if (previousPeriod.closingBalance != null) {
+        // Số dư cuối kỳ trước ĐÃ CHỐT (cache) → đọc thẳng, KHÔNG đệ quy calculate().
+        carryForwardBalance = Number(previousPeriod.closingBalance);
+      } else {
+        const prevSummary = await this.summary(previousPeriod.id, clubId, cache);
+        carryForwardBalance = prevSummary.clubAssets.balance;
+      }
     }
 
     const result = await this.calculator.calculate(id, clubId, {
