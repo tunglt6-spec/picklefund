@@ -322,7 +322,16 @@ export class FundPeriodsService {
     return { deleted: true };
   }
 
-  async summary(id: string, clubId: string) {
+  // _cache: memo hóa TRONG 1 request — khi 1 request tính summary cho nhiều kỳ (Reports,
+  // alerts) hoặc chuỗi carryForward chạm lại 1 kỳ, không tính lại calculate() → tránh O(n²).
+  async summary(
+    id: string,
+    clubId: string,
+    _cache?: Map<string, any>,
+  ): Promise<any> {
+    const cache: Map<string, any> = _cache ?? new Map();
+    const cached = cache.get(id);
+    if (cached) return cached;
     const fp = await this.findOne(id, clubId);
 
     // Derive carryForward from most recent closed/finalized period before this one
@@ -344,7 +353,7 @@ export class FundPeriodsService {
     // không khớp canonical (financial-calculator dùng tổng EQUAL+PRESENT_ONLY/ATTENDANCE+FUND_ONLY).
     let carryForwardBalance = 0;
     if (previousPeriod) {
-      const prevSummary = await this.summary(previousPeriod.id, clubId);
+      const prevSummary = await this.summary(previousPeriod.id, clubId, cache);
       carryForwardBalance = prevSummary.clubAssets.balance;
     }
 
@@ -356,7 +365,7 @@ export class FundPeriodsService {
 
     const sessionCount = result.totalSessions;
 
-    return {
+    const out = {
       totalIncome: result.commonFund.totalIncome,
       totalExpenses: result.commonFund.totalExpense,
       courtExpenses: result.commonFund.totalCourt,
@@ -395,5 +404,7 @@ export class FundPeriodsService {
         contributionPaid: m.paidAmount > 0 && m.balance >= 0,
       })),
     };
+    cache.set(id, out);
+    return out;
   }
 }

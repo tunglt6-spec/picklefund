@@ -12,7 +12,7 @@
  *  - Member bill lấy từ fundSummary.members (backend calculator). KHÔNG tự tính phiếu thu.
  *  - Reports/PDF/Excel/Infographic dùng hàm/API export hiện có (không đổi contract).
  */
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -174,7 +174,7 @@ export function Reports() {
   const activeMemberCount = clubData.members.filter(m => m.status === 'active').length
 
   /* ── Member bill (backend calculator: fundSummary.members) — không tự tính phiếu thu ── */
-  const memberBillRows: MemberBillRow[] = (fs?.members ?? []).map(
+  const memberBillRows: MemberBillRow[] = useMemo(() => (fs?.members ?? []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (m: any) => ({
       memberName: m.memberName,
@@ -187,11 +187,11 @@ export function Reports() {
       totalCost: m.totalCost ?? 0,
       balance: m.balance ?? 0,
     }),
-  )
+  ), [fs])
 
   /* ── Charts = VISUALIZATION từ store (tiền lệ Dashboard UI-02) ── */
   const activePeriodType = activePeriod?.type ?? 'chung'
-  const periodBars = [...clubData.fundPeriods]
+  const periodBars = useMemo(() => [...clubData.fundPeriods]
     .filter(p => (p.type ?? 'chung') === activePeriodType)
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
     .slice(-6)
@@ -199,23 +199,26 @@ export function Reports() {
       ky: p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name,
       Thu: clubData.contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed && (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter)).reduce((a, c) => a + c.amount, 0),
       Chi: clubData.expenses.filter(e => e.fundPeriodId === p.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter)).reduce((a, e) => a + e.amount, 0),
-    }))
+    })),
+    [clubData.fundPeriods, clubData.contributions, clubData.expenses, activePeriodType, fundFilter])
 
-  const donutGroups: Record<string, number> = {}
-  for (const e of clubData.expenses.filter(e => e.fundPeriodId === activePeriod?.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter))) {
-    const key = (e.description ?? 'Khác').length > 20 ? e.description.slice(0, 20) + '…' : (e.description ?? 'Khác')
-    donutGroups[key] = (donutGroups[key] ?? 0) + e.amount
-  }
-  const costBreakdown = Object.entries(donutGroups).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
-  const costTotal = costBreakdown.reduce((s, d) => s + d.value, 0)
+  const { costBreakdown, costTotal } = useMemo(() => {
+    const groups: Record<string, number> = {}
+    for (const e of clubData.expenses.filter(e => e.fundPeriodId === activePeriod?.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter))) {
+      const key = (e.description ?? 'Khác').length > 20 ? e.description.slice(0, 20) + '…' : (e.description ?? 'Khác')
+      groups[key] = (groups[key] ?? 0) + e.amount
+    }
+    const breakdown = Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
+    return { costBreakdown: breakdown, costTotal: breakdown.reduce((s, d) => s + d.value, 0) }
+  }, [clubData.expenses, activePeriod?.id, fundFilter])
 
   const attSummary = clubData.memberAttendanceSummary ?? []
-  const attendanceRates = clubData.members.map(m => {
+  const attendanceRates = useMemo(() => clubData.members.map(m => {
     const s = attSummary.find(a => a.memberId === m.id)
     const total = s?.totalSessions ?? 0
     const attended = Math.min(s?.attendedSessions ?? 0, total)
     return { name: m.fullName?.split(' ').slice(-2).join(' ') ?? m.id, rate: total > 0 ? Math.round((attended / total) * 100) : 0 }
-  }).sort((a, b) => b.rate - a.rate)
+  }).sort((a, b) => b.rate - a.rate), [clubData.members, attSummary])
   const hasAttendanceData = attSummary.some(s => (s.totalSessions ?? 0) > 0)
 
   /* ── Export / Infographic (reuse hàm hiện có) ──
