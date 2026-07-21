@@ -189,28 +189,55 @@ export function Reports() {
     }),
   ), [fs])
 
-  /* ── Charts = VISUALIZATION từ store (tiền lệ Dashboard UI-02) ── */
+  /* ── Charts (Option 3): dữ liệu tổng hợp lấy từ BE để KHÔNG cần full-load thu/chi.
+   *  Client memo GIỮ làm fallback cho local-token/demo (không có backend) — real token dùng
+   *  state fetch từ endpoint nên Phase D cắt full-load vẫn đúng. ── */
   const activePeriodType = activePeriod?.type ?? 'chung'
-  const periodBars = useMemo(() => [...clubData.fundPeriods]
+  const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '…' : s)
+
+  const periodBarsLocal = useMemo(() => [...clubData.fundPeriods]
     .filter(p => (p.type ?? 'chung') === activePeriodType)
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
     .slice(-6)
     .map(p => ({
-      ky: p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name,
+      ky: truncate(p.name, 10),
       Thu: clubData.contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed && (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter)).reduce((a, c) => a + c.amount, 0),
       Chi: clubData.expenses.filter(e => e.fundPeriodId === p.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter)).reduce((a, e) => a + e.amount, 0),
     })),
     [clubData.fundPeriods, clubData.contributions, clubData.expenses, activePeriodType, fundFilter])
 
-  const { costBreakdown, costTotal } = useMemo(() => {
+  const costBreakdownLocal = useMemo(() => {
     const groups: Record<string, number> = {}
     for (const e of clubData.expenses.filter(e => e.fundPeriodId === activePeriod?.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter))) {
-      const key = (e.description ?? 'Khác').length > 20 ? e.description.slice(0, 20) + '…' : (e.description ?? 'Khác')
+      const key = truncate(e.description ?? 'Khác', 20)
       groups[key] = (groups[key] ?? 0) + e.amount
     }
-    const breakdown = Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
-    return { costBreakdown: breakdown, costTotal: breakdown.reduce((s, d) => s + d.value, 0) }
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
   }, [clubData.expenses, activePeriod?.id, fundFilter])
+
+  // Fetch tổng hợp từ BE (real token). Khớp ngữ nghĩa client: Thu=confirmed, Chi=mọi-status.
+  const [barsRemote, setBarsRemote] = useState<{ ky: string; Thu: number; Chi: number }[] | null>(null)
+  const [breakdownRemote, setBreakdownRemote] = useState<{ name: string; value: number }[] | null>(null)
+  useEffect(() => {
+    if (isLocalToken(accessToken) || !activePeriodType) { setBarsRemote(null); return }
+    let cancelled = false
+    api.get(`/fund-periods/trends?type=${activePeriodType}&limit=6&fundSource=${fundFilter}`)
+      .then(res => { if (!cancelled) setBarsRemote((res.data?.data ?? []).map((t: any) => ({ ky: truncate(t.name ?? '', 10), Thu: Number(t.thu ?? 0), Chi: Number(t.chi ?? 0) }))) })
+      .catch(() => { if (!cancelled) setBarsRemote(null) })
+    return () => { cancelled = true }
+  }, [accessToken, activePeriodType, fundFilter])
+  useEffect(() => {
+    if (isLocalToken(accessToken) || !activePeriod?.id) { setBreakdownRemote(null); return }
+    let cancelled = false
+    api.get(`/expenses/breakdown?fundPeriodId=${activePeriod.id}&fundSource=${fundFilter}&limit=6`)
+      .then(res => { if (!cancelled) setBreakdownRemote((res.data?.data ?? []).map((b: any) => ({ name: truncate(b.name ?? 'Khác', 20), value: Number(b.value ?? 0) }))) })
+      .catch(() => { if (!cancelled) setBreakdownRemote(null) })
+    return () => { cancelled = true }
+  }, [accessToken, activePeriod?.id, fundFilter])
+
+  const periodBars = barsRemote ?? periodBarsLocal
+  const costBreakdown = breakdownRemote ?? costBreakdownLocal
+  const costTotal = costBreakdown.reduce((s, d) => s + d.value, 0)
 
   const attSummary = clubData.memberAttendanceSummary ?? []
   const attendanceRates = useMemo(() => clubData.members.map(m => {
