@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Bell, LogOut, User, Menu } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import { useClubDataStore } from '../../store/clubDataStore'
 import { useBrandingStore } from '../../store/brandingStore'
-import { buildNotifications } from '../../lib/notifications'
+import { useNotifStore } from '../../store/notifStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 
 interface MobileHeaderProps {
@@ -18,14 +17,11 @@ const ROLE_LABEL: Record<string, string> = {
 
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   const { user, logout } = useAuthStore()
-  const { getClubData, readNotifIds } = useClubDataStore()
   const branding = useBrandingStore(s => s.branding)
   const navigate = useNavigate()
 
-  const clubId = user?.clubId ?? ''
-  const data = getClubData(clubId)
-  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
-  const unreadCount = buildNotifications(data).filter(n => !readIds.has(n.id)).length
+  // Chuông dùng CHUNG nguồn backend (notifStore) với trang Thông báo → đọc hết là về 0.
+  const unreadCount = useNotifStore((s) => s.unreadCount)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 

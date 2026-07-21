@@ -8,7 +8,7 @@ import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap } fr
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
-import { buildNotifications } from '../../lib/notifications'
+import { useNotifStore } from '../../store/notifStore'
 import { cn } from '../../lib/utils'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -32,7 +32,10 @@ const searchRouteByRole: Record<string, string> = {
 
 export function DesktopHeader() {
   const { user, logout } = useAuthStore()
-  const { getClubData, readNotifIds } = useClubDataStore()
+  const { getClubData } = useClubDataStore()
+  // Chuông dùng CHUNG nguồn với trang Thông báo + Sidebar (backend Hermes qua notifStore) → đọc
+  // hết trên trang (read-all) là chuông về 0. (Trước đây đếm buildNotifications client → lệch.)
+  const unread = useNotifStore((s) => s.unreadCount)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [isFull, setIsFull] = useState(false)
@@ -55,8 +58,6 @@ export function DesktopHeader() {
 
   const clubId = user.clubId ?? ''
   const data = getClubData(clubId)
-  const readIds = new Set<string>(readNotifIds[clubId] ?? [])
-  const unread = buildNotifications(data).filter((n) => !readIds.has(n.id)).length
 
   const code = data.settings?.code ?? data.settings?.name ?? user.username ?? 'CLB'
   const avatarText = String(code).replace(/\s+/g, '').slice(0, 3).toUpperCase() || 'CLB'
