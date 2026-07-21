@@ -71,24 +71,21 @@ export class DataQualityService {
       .filter((m) => !(m.phone ?? '').trim() && !(m.email ?? '').trim())
       .map((m) => m.fullName);
 
-    // ── Nhất quán: số kỳ Quỹ Chính (type=chung) đang mở — chuẩn là đúng 1 ──
-    const activeChung = await this.prisma.fundPeriod.count({
-      where: { clubId, status: 'active', type: 'chung' },
-    });
-
-    const totalPeriods = await this.prisma.fundPeriod.count({
-      where: { clubId },
-    });
-    const totalSessions = await this.prisma.attendanceSession.count({
-      where: { clubId },
-    });
-
     // ── Nhất quán: buổi tập QUÁ HẠN (trước hôm nay) mà vẫn ở trạng thái "scheduled" ──
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const staleSessions = await this.prisma.attendanceSession.count({
-      where: { clubId, status: 'scheduled', sessionDate: { lt: todayStart } },
-    });
+    // 4 count độc lập → gộp Promise.all (thay vì await tuần tự) để giảm latency.
+    const [activeChung, totalPeriods, totalSessions, staleSessions] =
+      await Promise.all([
+        this.prisma.fundPeriod.count({
+          where: { clubId, status: 'active', type: 'chung' },
+        }),
+        this.prisma.fundPeriod.count({ where: { clubId } }),
+        this.prisma.attendanceSession.count({ where: { clubId } }),
+        this.prisma.attendanceSession.count({
+          where: { clubId, status: 'scheduled', sessionDate: { lt: todayStart } },
+        }),
+      ]);
 
     const checks: DataQualityCheck[] = [
       {

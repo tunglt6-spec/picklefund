@@ -8,7 +8,7 @@ import { EmailService } from '../email/email.service';
 
 const mockPrisma = {
   user: { findMany: jest.fn(), findUnique: jest.fn() },
-  notificationPreference: { findUnique: jest.fn(), upsert: jest.fn() },
+  notificationPreference: { findUnique: jest.fn(), findMany: jest.fn().mockResolvedValue([]), upsert: jest.fn() },
   notification: {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -177,7 +177,7 @@ describe('HermesService', () => {
     /** Set up 1 recipient (admin) với pref channels cho trước; quota rộng; telegram đã link. */
     const setupPref = (channels: string[], extra: Record<string, unknown> = {}) => {
       mockPrisma.user.findMany.mockResolvedValue([baseUser]);
-      mockPrisma.notificationPreference.findUnique.mockResolvedValue({
+      const pref = {
         userId: 'user-1',
         channels,
         preferredChannel: channels[0] ?? 'IN_APP',
@@ -187,7 +187,10 @@ describe('HermesService', () => {
         maxDailyTelegram: 5,
         ...NO_QUIET,
         ...extra,
-      });
+      };
+      mockPrisma.notificationPreference.findUnique.mockResolvedValue(pref);
+      // dispatch() prefetch prefs qua findMany (thay findUnique trong vòng lặp).
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([pref]);
       mockPrisma.notification.create.mockResolvedValue(baseNotif);
       mockPrisma.user.findUnique.mockResolvedValue({ email: 'admin@test.vn' });
       mockPrisma.notification.count.mockResolvedValue(0);
@@ -328,6 +331,7 @@ describe('HermesService', () => {
     it('pref null (chưa có record) → mặc định IN_APP', async () => {
       mockPrisma.user.findMany.mockResolvedValue([baseUser]);
       mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([]); // chưa có record pref nào
       mockPrisma.notification.create.mockResolvedValue(baseNotif);
       await service.dispatch(HIGH_EVENT);
       expect(notifChannels()).toEqual(['IN_APP']);

@@ -550,28 +550,32 @@ export class ScoringService {
     finalizedById: string,
   ) {
     const scores = await this.getPeriodScores(clubId, periodMonth);
-    for (const s of scores) {
-      await this.prisma.memberScoreSnapshot.upsert({
-        where: {
-          memberId_periodMonth: { memberId: s.memberId, periodMonth },
-        },
-        create: {
-          clubId,
-          memberId: s.memberId,
-          periodMonth,
-          totalScore: s.total,
-          classification: s.classification,
-          finalizedById,
-          finalizedAt: new Date(),
-        },
-        update: {
-          totalScore: s.total,
-          classification: s.classification,
-          finalizedById,
-          finalizedAt: new Date(),
-        },
-      });
-    }
+    const finalizedAt = new Date();
+    // Gom N upsert vào 1 $transaction (thay vì N round-trip tuần tự) — cùng kết quả, nhanh hơn.
+    await this.prisma.$transaction(
+      scores.map((s) =>
+        this.prisma.memberScoreSnapshot.upsert({
+          where: {
+            memberId_periodMonth: { memberId: s.memberId, periodMonth },
+          },
+          create: {
+            clubId,
+            memberId: s.memberId,
+            periodMonth,
+            totalScore: s.total,
+            classification: s.classification,
+            finalizedById,
+            finalizedAt,
+          },
+          update: {
+            totalScore: s.total,
+            classification: s.classification,
+            finalizedById,
+            finalizedAt,
+          },
+        }),
+      ),
+    );
     return { finalized: scores.length };
   }
 

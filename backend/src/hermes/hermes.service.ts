@@ -32,13 +32,15 @@ export class HermesService {
       event.targetUserId,
     );
 
+    // Prefetch pref của TẤT CẢ recipient trong 1 query (thay N findUnique trong vòng lặp).
+    const prefRows = await this.prisma.notificationPreference.findMany({
+      where: { userId: { in: recipients } },
+    });
+    const prefMap = new Map(prefRows.map((p) => [p.userId, p]));
+
     let dispatched = 0;
     for (const userId of recipients) {
-      // Fetch pref MỘT LẦN cho user này (tránh N truy vấn lặp lại trong selectChannels/
-      // checkRateLimit/deliverExternal — vốn trước đây mỗi hàm tự findUnique riêng).
-      const pref = await this.prisma.notificationPreference.findUnique({
-        where: { userId },
-      });
+      const pref = prefMap.get(userId) ?? null;
       // Mỗi channel xử lý ĐỘC LẬP: 1 channel fail KHÔNG làm fail các channel còn lại.
       const channels = await this.selectChannels(pref, priority, userId);
       if (channels.length === 0) continue;

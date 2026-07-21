@@ -47,6 +47,10 @@ function createMockPrisma() {
       findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
     },
+    // $transaction(array) — chạy như Promise.all (finalizePeriod gom upsert vào 1 transaction).
+    $transaction: jest.fn((ops: unknown) =>
+      Array.isArray(ops) ? Promise.all(ops) : (ops as (p: unknown) => unknown)(undefined),
+    ),
   };
 }
 
