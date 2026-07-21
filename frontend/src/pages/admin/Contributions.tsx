@@ -16,6 +16,8 @@ import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
+import { BulkActionBar, RowCheckbox } from '../../components/shared'
+import { useBulkSelection } from '../../hooks/useBulkSelection'
 
 const BLANK_COMMON = {
   fundSource: 'COMMON' as FundSource,
@@ -107,6 +109,40 @@ export function Contributions() {
     (selectedPeriod ? c.fundPeriodId === selectedPeriod.id : true)
   )
   const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
+
+  // Chọn & xóa nhiều khoản thu cùng lúc — dùng chung 1 vùng chọn cho cả 2 bảng (Quỹ Chính +
+  // Quỹ Phụ), mỗi bảng có ô "chọn tất cả" riêng cho các dòng của bảng đó.
+  const bulk = useBulkSelection([...commonContribs, ...miniContribs], c => c.id)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const subsetAllSelected = (list: FundContribution[]) =>
+    list.length > 0 && list.every(c => bulk.selectedIds.has(c.id))
+  const toggleSubset = (list: FundContribution[]) => bulk.setSelectedIds(prev => {
+    const n = new Set(prev)
+    const all = list.length > 0 && list.every(c => n.has(c.id))
+    if (all) list.forEach(c => n.delete(c.id)); else list.forEach(c => n.add(c.id))
+    return n
+  })
+  const handleBulkDelete = async () => {
+    const ids = [...bulk.selectedIds]
+    if (ids.length === 0) return
+    if (!window.confirm(`Xóa ${ids.length} khoản thu đã chọn? Hành động này không thể hoàn tác.`)) return
+    setBulkDeleting(true)
+    try {
+      const results = await Promise.allSettled(ids.map(id => api.delete(`/contributions/${id}`)))
+      const okIds = ids.filter((_, i) => results[i].status === 'fulfilled')
+      if (okIds.length > 0) {
+        const okSet = new Set(okIds)
+        setContributions(prev => prev.filter(x => !okSet.has(x.id)))
+      }
+      bulk.clear()
+      const failed = ids.length - okIds.length
+      if (failed === 0) toast.success(`Đã xóa ${okIds.length} khoản thu`)
+      else if (okIds.length === 0) toast.error(`Không xóa được khoản thu nào (${failed} lỗi)`)
+      else toast.error(`Đã xóa ${okIds.length}, còn ${failed} khoản không xóa được`)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
 
   const confirmed = commonContribs.filter(c => c.isConfirmed)
   const unconfirmed = commonContribs.filter(c => !c.isConfirmed)
@@ -586,6 +622,19 @@ export function Contributions() {
           </div>
         </div>
 
+        {/* Thanh xóa hàng loạt (chung cho cả 2 bảng) */}
+        {!isMember && bulk.someSelected && (
+          <div className="rounded-xl overflow-hidden border border-red-100 shadow-[var(--shadow-card)]">
+            <BulkActionBar
+              count={bulk.selectedIds.size}
+              onClear={bulk.clear}
+              onDelete={handleBulkDelete}
+              deleting={bulkDeleting}
+              noun="khoản thu"
+            />
+          </div>
+        )}
+
         {/* COMMON contributions table */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -601,6 +650,11 @@ export function Contributions() {
               <table className="table-base">
                 <thead>
                   <tr>
+                    {!isMember && (
+                      <th className="w-10 text-center">
+                        <RowCheckbox label="Chọn tất cả khoản thu Quỹ Chính" checked={subsetAllSelected(commonContribs)} indeterminate={commonContribs.some(c => bulk.selectedIds.has(c.id)) && !subsetAllSelected(commonContribs)} onChange={() => toggleSubset(commonContribs)} />
+                      </th>
+                    )}
                     <th>Thành viên</th>
                     <th className="text-center">Ngày đóng</th>
                     <th className="text-right">Số tiền</th>
@@ -612,7 +666,12 @@ export function Contributions() {
                 </thead>
                 <tbody>
                   {commonContribs.map(c => (
-                    <tr key={c.id} className={!c.isConfirmed ? 'bg-amber-50/30' : ''}>
+                    <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
+                      {!isMember && (
+                        <td className="text-center">
+                          <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
+                        </td>
+                      )}
                       <td className="font-medium text-slate-900">{c.member?.fullName ?? c.memberId}</td>
                       <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
                       <td className="text-right font-semibold text-slate-900">{formatVND(c.amount)}</td>
@@ -667,6 +726,11 @@ export function Contributions() {
               <table className="table-base">
                 <thead>
                   <tr>
+                    {!isMember && (
+                      <th className="w-10 text-center">
+                        <RowCheckbox label="Chọn tất cả khoản thu Quỹ Phụ" checked={subsetAllSelected(miniContribs)} indeterminate={miniContribs.some(c => bulk.selectedIds.has(c.id)) && !subsetAllSelected(miniContribs)} onChange={() => toggleSubset(miniContribs)} />
+                      </th>
+                    )}
                     <th>Người nộp</th>
                     <th>Loại thu</th>
                     <th className="text-center">Ngày</th>
@@ -679,7 +743,12 @@ export function Contributions() {
                 </thead>
                 <tbody>
                   {miniContribs.map(c => (
-                    <tr key={c.id} className={!c.isConfirmed ? 'bg-amber-50/30' : ''}>
+                    <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
+                      {!isMember && (
+                        <td className="text-center">
+                          <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
+                        </td>
+                      )}
                       <td className="font-medium text-slate-900">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
                       <td>
                         <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>

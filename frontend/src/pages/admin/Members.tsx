@@ -26,7 +26,9 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   PageShell, PageHeader, MetricCard, FilterBar, DataTable, type Column,
   StatusBadge, type StatusTone, ActionButton, EmptyState, LoadingState, MobileCardList,
+  BulkActionBar, RowCheckbox,
 } from '../../components/shared'
+import { useBulkSelection } from '../../hooks/useBulkSelection'
 import { accentVars, type ModuleAccent } from '../../components/shared/tokens'
 
 /** Session demo/local (không gọi API thật) — đồng bộ với useApiSync. */
@@ -350,6 +352,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
 
 export function Members() {
   const { user, accessToken } = useAuthStore()
+  const isMember = user?.role === 'MEMBER_VIEW'
   const navigate = useNavigate()
   const clubId = user?.clubId ?? ''
   const { getClubData, setMembers: saveMembers } = useClubDataStore()
@@ -470,6 +473,31 @@ export function Members() {
   })
   const rows = filtered.map(toRow)
 
+  // Chọn & xóa nhiều thành viên cùng lúc (chọn tất cả áp cho toàn bộ kết quả lọc).
+  const bulk = useBulkSelection(filtered, (m) => m.id)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const handleBulkDelete = async () => {
+    const ids = [...bulk.selectedIds]
+    if (ids.length === 0) return
+    if (!window.confirm(`Xóa ${ids.length} thành viên đã chọn? Hành động này không thể hoàn tác.`)) return
+    setBulkDeleting(true)
+    try {
+      const results = await Promise.allSettled(ids.map((id) => api.delete(`/members/${id}`)))
+      const okIds = ids.filter((_, i) => results[i].status === 'fulfilled')
+      if (okIds.length > 0) {
+        const okSet = new Set(okIds)
+        setMembers((prev) => prev.filter((x) => !okSet.has(x.id)))
+      }
+      bulk.clear()
+      const failed = ids.length - okIds.length
+      if (failed === 0) toast.success(`Đã xóa ${okIds.length} thành viên`)
+      else if (okIds.length === 0) toast.error(`Không xóa được thành viên nào (${failed} lỗi)`)
+      else toast.error(`Đã xóa ${okIds.length}, còn ${failed} thành viên không xóa được`)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   /* ── KPI (dữ liệu thật) ── */
   const totalMembers = members.length
   const activeCount = members.filter(m => m.status === 'active').length
@@ -560,6 +588,27 @@ export function Members() {
 
   /* ── DataTable columns (desktop) ── */
   const columns: Column<MemberRow>[] = [
+    ...(!isMember ? [{
+      key: '_select',
+      align: 'center' as const,
+      header: (
+        <RowCheckbox
+          label="Chọn tất cả thành viên"
+          checked={bulk.allSelected}
+          indeterminate={bulk.someSelected && !bulk.allSelected}
+          onChange={bulk.toggleAll}
+        />
+      ),
+      render: (r: MemberRow) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <RowCheckbox
+            label={`Chọn ${r.member.fullName}`}
+            checked={bulk.selectedIds.has(r.member.id)}
+            onChange={() => bulk.toggleOne(r.member.id)}
+          />
+        </div>
+      ),
+    }] : []),
     {
       key: 'name', header: 'Thành viên',
       render: (r) => (
@@ -744,6 +793,15 @@ export function Members() {
           </div>
         ) : (
           <>
+            {!isMember && (
+              <BulkActionBar
+                count={bulk.selectedIds.size}
+                onClear={bulk.clear}
+                onDelete={handleBulkDelete}
+                deleting={bulkDeleting}
+                noun="thành viên"
+              />
+            )}
             <DataTable columns={columns} rows={rows} rowKey={(r) => r.member.id} onRowClick={(r) => setDetailId(r.member.id)} />
             <div className="flex items-center justify-between border-t px-4 py-3 text-xs border-[color:var(--pf-border-soft)] [color:var(--pf-color-muted)]">
               <span>Hiển thị {rows.length} / {members.length} thành viên</span>

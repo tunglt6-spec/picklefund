@@ -12,7 +12,8 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
-import { useEmbedded } from '../../components/shared'
+import { useEmbedded, BulkActionBar, RowCheckbox } from '../../components/shared'
+import { useBulkSelection } from '../../hooks/useBulkSelection'
 import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
@@ -549,6 +550,33 @@ export function Expenses() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  // Chọn & xóa nhiều khoản chi cùng lúc (chọn tất cả áp cho toàn bộ kết quả lọc).
+  const bulk = useBulkSelection(filtered, (e) => e.id)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  useEffect(() => { if (page > totalPages) setPage(totalPages) }, [page, totalPages])
+
+  const handleBulkDelete = async () => {
+    const ids = [...bulk.selectedIds]
+    if (ids.length === 0) return
+    if (!confirm(`Xóa ${ids.length} khoản chi đã chọn? Hành động này không thể hoàn tác.`)) return
+    setBulkDeleting(true)
+    try {
+      const results = await Promise.allSettled(ids.map((id) => api.delete(`/expenses/${id}`)))
+      const okIds = ids.filter((_, i) => results[i].status === 'fulfilled')
+      if (okIds.length > 0) {
+        const okSet = new Set(okIds)
+        save(clubData.expenses.filter((e) => !okSet.has(e.id)))
+      }
+      bulk.clear()
+      const failed = ids.length - okIds.length
+      if (failed === 0) toast.success(`Đã xóa ${okIds.length} khoản chi`)
+      else if (okIds.length === 0) toast.error(`Không xóa được khoản chi nào (${failed} lỗi)`)
+      else toast.error(`Đã xóa ${okIds.length}, còn ${failed} khoản không xóa được`)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   const commonExpenses = richExpenses.filter(e =>
     (e.fundSource ?? 'COMMON') === 'COMMON' &&
     (!selectedPeriodId || e.fundPeriodId === selectedPeriodId)
@@ -909,6 +937,17 @@ export function Expenses() {
             </div>
           </div>
 
+          {/* Thanh xóa hàng loạt */}
+          {!isMember && (
+            <BulkActionBar
+              count={bulk.selectedIds.size}
+              onClear={bulk.clear}
+              onDelete={handleBulkDelete}
+              deleting={bulkDeleting}
+              noun="khoản chi"
+            />
+          )}
+
           {/* Table */}
           {paginated.length === 0 ? (
             <div className="py-16 text-center">
@@ -920,6 +959,16 @@ export function Expenses() {
               <table className="table-base">
                 <thead>
                   <tr>
+                    {!isMember && (
+                      <th className="w-10 text-center">
+                        <RowCheckbox
+                          label="Chọn tất cả khoản chi"
+                          checked={bulk.allSelected}
+                          indeterminate={bulk.someSelected && !bulk.allSelected}
+                          onChange={bulk.toggleAll}
+                        />
+                      </th>
+                    )}
                     <th>Mã chi</th>
                     <th>Nội dung</th>
                     <th className="text-center">Nguồn quỹ</th>
@@ -935,7 +984,16 @@ export function Expenses() {
                     const cfg = statusCfg[exp.status]
                     const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
                     return (
-                      <tr key={exp.id}>
+                      <tr key={exp.id} className={bulk.selectedIds.has(exp.id) ? 'bg-red-50/50' : undefined}>
+                        {!isMember && (
+                          <td className="text-center">
+                            <RowCheckbox
+                              label={`Chọn khoản chi ${exp.code}`}
+                              checked={bulk.selectedIds.has(exp.id)}
+                              onChange={() => bulk.toggleOne(exp.id)}
+                            />
+                          </td>
+                        )}
                         <td className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</td>
                         <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
                         <td className="text-center">

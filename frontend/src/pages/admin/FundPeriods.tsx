@@ -145,6 +145,9 @@ export function FundPeriods() {
   const [filterStatus, setFilterStatus] = useState<'' | FundPeriodStatus>('')
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
+  // Chọn nhiều kỳ quỹ để xóa hàng loạt (chỉ admin/thủ quỹ — member không có checkbox).
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   // Import Excel state
   type ImportRow = { memberName: string; amount: number; paymentDate: string; notes: string }
@@ -367,6 +370,15 @@ export function FundPeriods() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  // Chọn tất cả áp dụng cho TOÀN BỘ kết quả lọc (mọi trang) — tiện xóa cả nhóm đã lọc.
+  const allFilteredSelected = filtered.length > 0 && filtered.every(p => selectedIds.has(p.id))
+  const someSelected = selectedIds.size > 0
+  const toggleAllFiltered = () =>
+    setSelectedIds(allFilteredSelected ? new Set() : new Set(filtered.map(p => p.id)))
+
+  // Nếu xóa làm trang hiện tại vượt quá số trang → lùi về trang cuối hợp lệ.
+  useEffect(() => { if (page > totalPages) setPage(totalPages) }, [page, totalPages])
+
   // Recent transactions
   const recentTx = useMemo(() => {
     return [...contributions]
@@ -424,9 +436,40 @@ export function FundPeriods() {
     try {
       await api.delete(`/fund-periods/${p.id}`)
       setPeriods(prev => prev.filter(x => x.id !== p.id))
+      setSelectedIds(prev => { const n = new Set(prev); n.delete(p.id); return n })
       toast.success('Đã xóa kỳ quỹ')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Xóa kỳ quỹ thất bại')
+    }
+  }
+
+  // ─── Chọn & xóa nhiều kỳ quỹ cùng lúc ───────────────────────────────────────
+  const toggleOne = (id: string) =>
+    setSelectedIds(prev => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id); else n.add(id)
+      return n
+    })
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds]
+    if (ids.length === 0) return
+    if (!confirm(`Xóa ${ids.length} kỳ quỹ đã chọn? Hành động này không thể hoàn tác.`)) return
+    setBulkDeleting(true)
+    try {
+      const results = await Promise.allSettled(ids.map(id => api.delete(`/fund-periods/${id}`)))
+      const okIds = ids.filter((_, i) => results[i].status === 'fulfilled')
+      if (okIds.length > 0) {
+        const okSet = new Set(okIds)
+        setPeriods(prev => prev.filter(x => !okSet.has(x.id)))
+      }
+      setSelectedIds(new Set())
+      const failed = ids.length - okIds.length
+      if (failed === 0) toast.success(`Đã xóa ${okIds.length} kỳ quỹ`)
+      else if (okIds.length === 0) toast.error(`Không xóa được kỳ quỹ nào (${failed} lỗi — có thể do đã phát sinh giao dịch)`)
+      else toast.error(`Đã xóa ${okIds.length}, còn ${failed} kỳ không xóa được (có thể đã phát sinh giao dịch)`)
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -936,6 +979,24 @@ export function FundPeriods() {
                 )}
               </div>
 
+              {/* Thanh thao tác hàng loạt — chỉ hiện khi có chọn (admin/thủ quỹ) */}
+              {!isMember && someSelected && (
+                <div className="flex items-center justify-between gap-3 px-5 py-2.5 bg-red-50 border-b border-red-100">
+                  <span className="text-sm font-medium text-red-700">Đã chọn {selectedIds.size} kỳ quỹ</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedIds(new Set())}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    >Bỏ chọn</button>
+                    <button
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                    ><Trash2 size={14} />{bulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} kỳ đã chọn`}</button>
+                  </div>
+                </div>
+              )}
+
               {/* Table */}
               {paginated.length === 0 ? (
                 <div className="py-16 text-center">
@@ -947,6 +1008,18 @@ export function FundPeriods() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 text-xs text-slate-500 bg-slate-50">
+                        {!isMember && (
+                          <th className="w-10 px-4 py-3">
+                            <input
+                              type="checkbox"
+                              aria-label="Chọn tất cả kỳ quỹ"
+                              className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
+                              checked={allFilteredSelected}
+                              ref={el => { if (el) el.indeterminate = someSelected && !allFilteredSelected }}
+                              onChange={toggleAllFiltered}
+                            />
+                          </th>
+                        )}
                         <th className="text-left px-5 py-3 font-semibold">Tên kỳ quỹ</th>
                         <th className="text-left px-4 py-3 font-semibold">Loại quỹ</th>
                         <th className="text-left px-4 py-3 font-semibold">Thời gian</th>
@@ -975,7 +1048,18 @@ export function FundPeriods() {
                         const days = Math.round((endMs - startMs) / 86400000)
                         const pType = p.type ?? 'chung'
                         return (
-                          <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                          <tr key={p.id} className={`border-b border-slate-50 transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:bg-slate-50/60'}`}>
+                            {!isMember && (
+                              <td className="px-4 py-3.5">
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Chọn kỳ quỹ ${p.name}`}
+                                  className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
+                                  checked={selectedIds.has(p.id)}
+                                  onChange={() => toggleOne(p.id)}
+                                />
+                              </td>
+                            )}
                             <td className="px-5 py-3.5 font-medium text-slate-900">{p.name}</td>
                             <td className="px-4 py-3.5">
                               {pType === 'game'
