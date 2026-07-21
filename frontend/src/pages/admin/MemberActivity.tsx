@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react'
 import { Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatVND, cn } from '../../lib/utils'
 import { PageShell, PageHeader, MetricCard, EmptyState } from '../../components/shared'
 
@@ -16,7 +17,8 @@ export function MemberActivity() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const data = useClubDataStore((s) => s.getClubData(clubId))
   const members = data.members ?? []
-  const contributions = data.contributions ?? []
+  // Option 3: self-fetch cục bộ (không đọc global store).
+  const { data: contributions } = useClubContributions(clubId)
   const attSummary = data.memberAttendanceSummary ?? []
 
   const [q, setQ] = useState('')

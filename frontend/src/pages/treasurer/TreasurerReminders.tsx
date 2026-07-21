@@ -3,6 +3,7 @@ import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
@@ -15,13 +16,15 @@ export function TreasurerReminders() {
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
+  // Option 3: self-fetch cục bộ (không đọc global store) — tái dùng nguyên vẹn phép tính client.
+  const { data: contributions } = useClubContributions(clubId)
 
   const activePeriod = getActiveChungPeriod(data.fundPeriods)
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set())
   const [sendingAll, setSendingAll] = useState(false)
 
-  const commonContribs = data.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
 
   // Members who haven't paid (no confirmed COMMON contribution in active period)
   const unpaidMembers = data.members

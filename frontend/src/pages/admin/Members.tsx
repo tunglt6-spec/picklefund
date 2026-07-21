@@ -16,6 +16,7 @@ import {
   ClipboardList, Eye, CircleUserRound, AlertTriangle, RefreshCw,
 } from 'lucide-react'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import type { Member } from '../../types'
 import { formatDate, formatVND, getActiveChungPeriod, isChungPeriod } from '../../lib/utils'
@@ -358,6 +359,8 @@ export function Members() {
   const { getClubData, setMembers: saveMembers } = useClubDataStore()
   const clubData = getClubData(clubId)
   const members = clubData.members
+  // Option 3: self-fetch cục bộ (không đọc global store) — cột "đóng góp" + lịch sử theo TV.
+  const { data: contributions } = useClubContributions(clubId)
   const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
   const isMobile = useIsMobile()
 
@@ -437,7 +440,7 @@ export function Members() {
     attendanceByMember.set(s.memberId, { attended: s.attendedSessions, total: s.totalSessions })
 
   const contribByMember = new Map<string, { amount: number; paymentDate: string }[]>()
-  for (const c of clubData.contributions ?? []) {
+  for (const c of contributions) {
     if (c.fundSource !== 'COMMON' || !c.memberId) continue
     const arr = contribByMember.get(c.memberId) ?? []
     arr.push({ amount: c.amount, paymentDate: c.paymentDate })
@@ -446,7 +449,7 @@ export function Members() {
 
   const paidThisPeriod = new Set<string>()
   if (currentPeriod)
-    for (const c of clubData.contributions ?? [])
+    for (const c of contributions)
       if (c.fundSource === 'COMMON' && c.fundPeriodId === currentPeriod.id && c.memberId) paidThisPeriod.add(c.memberId)
 
   const toRow = (m: Member): MemberRow => {

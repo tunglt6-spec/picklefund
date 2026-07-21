@@ -6,6 +6,7 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { PageShell, PageHeader, DataTable, MobileCardList, StatusBadge, ActionButton, type Column } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
+import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
 import * as XLSX from 'xlsx'
@@ -24,11 +25,14 @@ export function TreasurerDashboard() {
   const { user } = useAuthStore()
   const { getClubData } = useClubDataStore()
   const clubData = getClubData(user?.clubId ?? '')
+  // Option 3: self-fetch cục bộ (không đọc global store) — tái dùng nguyên vẹn phép tính client.
+  const { data: contributions } = useClubContributions(user?.clubId ?? '')
+  const { data: expenses, setData: setExpenses } = useClubExpenses(user?.clubId ?? '')
 
-  const commonContribs = clubData.contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
-  const miniContribs   = clubData.contributions.filter(c => c.fundSource === 'MINI')
-  const commonExpenses = clubData.expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
-  const miniExpenses   = clubData.expenses.filter(e => e.fundSource === 'MINI')
+  const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const miniContribs   = contributions.filter(c => c.fundSource === 'MINI')
+  const commonExpenses = expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+  const miniExpenses   = expenses.filter(e => e.fundSource === 'MINI')
 
   const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const commonExpTotal = commonExpenses.reduce((a, e) => a + e.amount, 0)
@@ -38,7 +42,7 @@ export function TreasurerDashboard() {
   const balance = commonIncome - commonExpTotal
   const miniBalance = miniIncome - miniExpTotal
   const unpaid = commonContribs.filter(c => !c.isConfirmed)
-  const noReceipt = clubData.expenses.filter(e => !e.receiptUrl)
+  const noReceipt = expenses.filter(e => !e.receiptUrl)
   const pendingCount = unpaid.length
 
   const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
@@ -76,12 +80,10 @@ export function TreasurerDashboard() {
 
   const [reminding, setReminding] = useState<string | null>(null)
   const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
-  const { patchExpense } = useClubDataStore()
-
   const handleReceiptSuccess = useCallback((expenseId: string, receiptUrl: string) => {
-    patchExpense(user?.clubId ?? '', expenseId, { receiptUrl })
+    setExpenses(prev => prev.map(e => e.id === expenseId ? { ...e, receiptUrl } : e))
     setReceiptModal(null)
-  }, [user?.clubId, patchExpense])
+  }, [setExpenses])
 
   const sendReminder = useCallback(async (contributionId: string, targetUserId: string | undefined, name: string) => {
     if (!targetUserId) { toast.error(`${name} chưa có tài khoản để nhắc`); return }
@@ -98,7 +100,7 @@ export function TreasurerDashboard() {
 
   const ledger = useMemo<LedgerRow[]>(() => {
     const rows: Omit<LedgerRow, 'balance'>[] = [
-      ...clubData.contributions
+      ...contributions
         .filter(c => c.isConfirmed)
         .map(c => ({
           id: c.id,
@@ -109,7 +111,7 @@ export function TreasurerDashboard() {
             : `Thu Quỹ Chính — ${c.member?.fullName ?? c.memberId ?? ''}`,
           amount: c.amount,
         })),
-      ...clubData.expenses.map(e => ({
+      ...expenses.map(e => ({
         id: e.id,
         date: e.expenseDate,
         type: 'expense' as const,
@@ -124,7 +126,7 @@ export function TreasurerDashboard() {
       runningBalance += r.type === 'income' ? r.amount : -r.amount
       return { ...r, balance: runningBalance }
     })
-  }, [clubData.contributions, clubData.expenses])
+  }, [contributions, expenses])
 
   const exportLedger = useCallback(() => {
     if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }

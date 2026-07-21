@@ -16,6 +16,7 @@ import { Modal } from '../../components/ui/Modal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
 import { BulkImportModal } from '../../components/admin/BulkImportModal'
 import toast from 'react-hot-toast'
@@ -64,9 +65,13 @@ export function FundPeriods() {
   const { user } = useAuthStore()
   const isMember = user?.role === 'MEMBER_VIEW'
   const clubId = user?.clubId ?? ''
-  const { getClubData, setFundPeriods: savePeriods, setContributions: saveContributions } = useClubDataStore()
+  const { getClubData, setFundPeriods: savePeriods } = useClubDataStore()
   const clubData = getClubData(clubId)
-  const { fundPeriods: periods, contributions, members, expenses } = clubData
+  const { fundPeriods: periods, members } = clubData
+
+  // Option 3: tự tải contributions vào state CỤC BỘ (không đọc global store) → khi Phase D cắt
+  // full-load trong useApiSync, màn này vẫn đúng số (tái dùng nguyên vẹn mọi phép tính client).
+  const { data: contributions, reload: loadContributions } = useClubContributions(clubId)
 
   const setPeriods = (fn: (prev: FundPeriod[]) => FundPeriod[]) =>
     savePeriods(clubId, fn(getClubData(clubId).fundPeriods))
@@ -209,8 +214,7 @@ export function FundPeriods() {
       const result = res.data?.data as { imported: number; total: number; errors: ImportError[] }
       setImportResult(result)
       if (result.imported > 0) {
-        const updated = await api.get('/contributions')
-        saveContributions(clubId, updated.data?.data ?? [])
+        loadContributions()
         toast.success(`Đã nhập ${result.imported}/${result.total} khoản đóng quỹ`)
       }
     } catch (err: any) {
@@ -339,7 +343,7 @@ export function FundPeriods() {
     }
 
     return { chung: calcChung(), game: calcMini() }
-  }, [periods, contributions, expenses, memberCount])
+  }, [periods, contributions, memberCount])
 
   // Current fund: active or preparing (draft), sorted newest first
   const activePeriods = useMemo(() => ({

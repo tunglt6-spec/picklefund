@@ -4,6 +4,7 @@ import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportLedgerExcel, exportLedgerPDF } from '../../lib/export'
@@ -24,6 +25,9 @@ export function TreasurerLedger() {
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
+  // Option 3: self-fetch cục bộ (không đọc global store) — tái dùng nguyên vẹn phép tính client.
+  const { data: contributions } = useClubContributions(clubId)
+  const { data: expenses } = useClubExpenses(clubId)
 
   const activePeriod = getActiveChungPeriod(data.fundPeriods)
 
@@ -33,7 +37,7 @@ export function TreasurerLedger() {
   // Build chronological ledger from real store data
   const rows: LedgerRow[] = useMemo(() => {
     const periodId = activePeriod?.id
-    const incomes: LedgerRow[] = data.contributions
+    const incomes: LedgerRow[] = contributions
       .filter(c => !periodId || c.fundPeriodId === periodId || c.fundSource === 'MINI')
       .map(c => ({
         id: c.id,
@@ -44,7 +48,7 @@ export function TreasurerLedger() {
           : `${c.member?.fullName ?? 'Thành viên'} đóng quỹ${activePeriod ? ` ${activePeriod.name}` : ''}`,
         amount: c.amount,
       }))
-    const expenses: LedgerRow[] = data.expenses
+    const expenseRows: LedgerRow[] = expenses
       .filter(e => !periodId || e.fundPeriodId === periodId || e.fundSource === 'MINI')
       .map(e => ({
         id: e.id,
@@ -55,8 +59,8 @@ export function TreasurerLedger() {
           : e.description,
         amount: -e.amount,
       }))
-    return [...incomes, ...expenses].sort((a, b) => a.date.localeCompare(b.date))
-  }, [data.contributions, data.expenses, activePeriod])
+    return [...incomes, ...expenseRows].sort((a, b) => a.date.localeCompare(b.date))
+  }, [contributions, expenses, activePeriod])
 
   // Running balance
   const rowsWithBalance = useMemo(() => {

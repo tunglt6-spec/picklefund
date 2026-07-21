@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Users, AlertCircle, Clock, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import {
@@ -42,7 +43,9 @@ export function Debts() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const accessToken = useAuthStore((s) => s.accessToken)
   const data = useClubDataStore((s) => s.getClubData(clubId))
-  const { members, contributions, fundPeriods } = data
+  const { members, fundPeriods } = data
+  // Option 3: self-fetch cục bộ (không đọc global store) — suy trạng thái đóng theo từng TV.
+  const { data: contributions } = useClubContributions(clubId)
 
   const activePeriod = useMemo(
     () => getActiveChungPeriod(fundPeriods) ?? null,

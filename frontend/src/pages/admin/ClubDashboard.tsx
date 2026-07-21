@@ -10,6 +10,7 @@ import {
   Users, UserCheck, UserX, TrendingUp, CalendarDays, Activity, Plus, Clock, DollarSign,
 } from 'lucide-react'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND } from '../../lib/utils'
 import {
@@ -27,7 +28,9 @@ export function ClubDashboard() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
-  const { members, sessions, contributions, memberAttendanceSummary } = data
+  const { members, sessions, memberAttendanceSummary } = data
+  // Option 3: self-fetch cục bộ (không đọc global store) — danh sách hoạt động gần đây.
+  const { data: contributions } = useClubContributions(clubId)
 
   const stats = useMemo(() => {
     const activeMembers = members.filter((m) => m.status === 'active').length
