@@ -99,6 +99,8 @@ const fmtLatency = (ms?: number) =>
 export function AiDigitalOffice() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<string>('office')
+  // Sub-tab trong "AI Operations Center": Tổng quan (hub) · Workflows · Nhật ký AI.
+  const [opsCenterTab, setOpsCenterTab] = useState<'overview' | 'workflows' | 'ai-log'>('overview')
   // Sub-tab trong "Nhật ký AI": Mít Đặc (thực thi) · Maika (phân tích) · Lisa (hỏi–đáp).
   const [aiLogTab, setAiLogTab] = useState<'mitdac' | 'maika' | 'lisa'>('mitdac')
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
@@ -359,8 +361,6 @@ export function AiDigitalOffice() {
     { key: 'office', label: 'Office View' },
     { key: 'operations', label: 'Operations View', badge: pending },
     { key: 'analytics', label: 'Analytics View' },
-    { key: 'workflows', label: 'Workflows' },
-    { key: 'ai-log', label: 'Nhật ký AI' },
     { key: 'ops-center', label: 'AI Operations Center' },
   ]
 
@@ -691,32 +691,22 @@ export function AiDigitalOffice() {
         </div>
       )}
 
-      {/* Gộp từ menu cũ — tái dùng nguyên màn. Huỷ padding PageShell (âm margin) để màn con
-          full-bleed, không bị đúp khung/lề. */}
-      {tab === 'workflows' && (
-        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
-          <WorkflowRules />
-        </div>
-      )}
+      {/* AI Operations Center — gồm Tổng quan (hub) + 2 màn con Workflows & Nhật ký AI (sub-tab).
+          Màn con tái dùng nguyên (full-bleed ngang bằng -mx để hết đúp lề). */}
       {tab === 'ops-center' && (
-        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
-          <AiManagerDashboard />
-        </div>
-      )}
-      {tab === 'ai-log' && (
-        <div>
-          <div className="mb-1 flex flex-wrap gap-2">
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             {([
-              { key: 'mitdac', label: 'Mít Đặc · thực thi' },
-              { key: 'maika', label: 'Maika · phân tích' },
-              { key: 'lisa', label: 'Lisa · hỏi–đáp' },
+              { key: 'overview', label: 'Tổng quan' },
+              { key: 'workflows', label: 'Workflows' },
+              { key: 'ai-log', label: 'Nhật ký AI' },
             ] as const).map((t) => (
               <button
                 key={t.key}
-                onClick={() => setAiLogTab(t.key)}
-                className="rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
+                onClick={() => setOpsCenterTab(t.key)}
+                className="rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors"
                 style={
-                  aiLogTab === t.key
+                  opsCenterTab === t.key
                     ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)' }
                     : { background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }
                 }
@@ -725,11 +715,46 @@ export function AiDigitalOffice() {
               </button>
             ))}
           </div>
-          <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
-            {aiLogTab === 'mitdac' && <MitDacExecutionLog />}
-            {aiLogTab === 'maika' && <MaikaInsightsLog />}
-            {aiLogTab === 'lisa' && <LisaMessagesLog />}
-          </div>
+
+          {opsCenterTab === 'overview' && (
+            <div className="-mx-4 sm:-mx-6">
+              <AiManagerDashboard />
+            </div>
+          )}
+          {opsCenterTab === 'workflows' && (
+            <div className="-mx-4 sm:-mx-6">
+              <WorkflowRules />
+            </div>
+          )}
+          {opsCenterTab === 'ai-log' && (
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: 'mitdac', label: 'Mít Đặc · thực thi' },
+                  { key: 'maika', label: 'Maika · phân tích' },
+                  { key: 'lisa', label: 'Lisa · hỏi–đáp' },
+                ] as const).map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setAiLogTab(t.key)}
+                    className="rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors"
+                    style={
+                      aiLogTab === t.key
+                        ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)', borderColor: 'var(--pf-primary)' }
+                        : { background: 'transparent', color: 'var(--pf-primary)', borderColor: 'var(--pf-border)' }
+                    }
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="-mx-4 sm:-mx-6">
+                {aiLogTab === 'mitdac' && <MitDacExecutionLog />}
+                {aiLogTab === 'maika' && <MaikaInsightsLog />}
+                {aiLogTab === 'lisa' && <LisaMessagesLog />}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </PageShell>
