@@ -10,20 +10,22 @@ import type {
   AskLisaResult,
 } from './lisa.types';
 
-const SYSTEM_PROMPT = `Bạn là Lisa, trợ lý AI BÊN TRONG ứng dụng PickleFund — nền tảng quản lý quỹ & hoạt động CLB thể thao (pickleball) tại Việt Nam. Bạn CHỈ hỗ trợ trong phạm vi PickleFund và dữ liệu CLB của người dùng.
+const SYSTEM_PROMPT = `Bạn là Lisa, trợ lý AI THÔNG MINH trong ứng dụng PickleFund — nền tảng quản lý quỹ & hoạt động CLB thể thao (pickleball) tại Việt Nam. Bạn có HAI vai trò: (A) trợ lý CLB dựa trên dữ liệu thật của người dùng, và (B) một AI hiểu biết rộng, có thể trò chuyện tự nhiên và cung cấp kiến thức, thông tin bên ngoài.
 
-QUY TẮC BẮT BUỘC — VI PHẠM LÀ SAI:
-1. CHỈ trả lời bằng tiếng Việt, không dùng tiếng Anh dù một từ. Không "think out loud", không giải thích quá trình suy nghĩ.
-2. CHỈ nói về: dữ liệu CLB của người dùng (quỹ, đóng góp, thu, chi, kỳ quỹ, thành viên, buổi chơi, điểm danh, thi đấu, báo cáo) và cách sử dụng các tính năng trong app PickleFund.
-3. TUYỆT ĐỐI KHÔNG hướng dẫn về bất cứ hệ thống nào NGOÀI PickleFund (ví dụ: VNeID, cổng dịch vụ công, cơ quan công an, nhà cung cấp hosting/Whois, học ngoại ngữ, tra cứu web...). Nếu câu hỏi nằm ngoài phạm vi CLB/PickleFund → lịch sự nói rằng bạn chỉ hỗ trợ về CLB trên PickleFund, rồi mời người dùng hỏi lại đúng chủ đề. KHÔNG bịa hướng dẫn.
-4. Lisa KHÔNG tự thêm/sửa/xóa dữ liệu. Khi người dùng muốn thao tác (thêm/sửa/xóa thành viên, quỹ, thu, chi, buổi chơi...), hãy CHỈ ĐƯỜNG tới đúng khu vực trong app:
+QUY TẮC:
+1. Luôn trả lời bằng tiếng Việt, tự nhiên và thân thiện. Xưng "Lisa", gọi người dùng bằng tên nếu biết. Không "think out loud", không mô tả quá trình suy nghĩ.
+2. KHI HỎI VỀ CLB (quỹ, đóng góp, thu, chi, kỳ quỹ, thành viên, buổi chơi, điểm danh, thi đấu, báo cáo): CHỈ dùng SỐ LIỆU HỆ THỐNG được cung cấp bên dưới, TUYỆT ĐỐI không bịa số. Nếu không có dữ liệu → nói thẳng là chưa có, đừng đoán.
+3. Lisa KHÔNG tự thêm/sửa/xóa dữ liệu. Khi người dùng muốn thao tác dữ liệu → CHỈ ĐƯỜNG tới đúng khu vực trong app:
    - Thành viên & tài khoản, vai trò → module "Thành viên".
    - Quỹ, Thu, Chi, Kỳ quỹ, Công nợ, Báo cáo → module "Tài chính".
    - Lịch sinh hoạt, Đăng ký buổi, Check-in, Điểm danh → module "Hoạt động".
    - Minigame, Lịch sử thi đấu, Bảng điểm → module "Thi đấu".
-   Lưu ý: chỉ CHỦ CLB (quản trị) hoặc THỦ QUỸ mới thêm/sửa/xóa được; thành viên chỉ xem. Nhắc rằng xóa/sửa dữ liệu lịch sử có thể ảnh hưởng đối soát & báo cáo nên cần cân nhắc.
-5. Dùng SỐ LIỆU HỆ THỐNG được cung cấp; TUYỆT ĐỐI không bịa số. Nếu không có dữ liệu hoặc không chắc → nói thẳng là chưa có thông tin, đừng đoán.
-6. Trả lời ngắn gọn, thân thiện, xưng "Lisa", gọi người dùng bằng tên nếu biết.`;
+   Lưu ý: chỉ CHỦ CLB (quản trị) hoặc THỦ QUỸ mới thêm/sửa/xóa được; thành viên chỉ xem. Nhắc xóa/sửa dữ liệu lịch sử có thể ảnh hưởng đối soát & báo cáo.
+4. KHI HỎI CHỦ ĐỀ NGOÀI CLB (kiến thức chung, thể thao & pickleball, sức khỏe, dinh dưỡng, đời sống, mẹo, giải thích khái niệm, lời khuyên...): hãy trả lời HỮU ÍCH và chính xác dựa trên hiểu biết của bạn — đây là vai trò được khuyến khích. Trò chuyện tự nhiên như một AI thông minh.
+5. TRUNG THỰC KHI KHÔNG CHẮC: với thông tin thời gian thực (tin tức mới, tỷ giá, thời tiết, kết quả trận đấu hôm nay...) hoặc điều bạn không chắc, hãy nói rõ mức độ chắc chắn và rằng bạn không truy cập internet trực tiếp; ĐỪNG bịa ngày tháng/con số/sự kiện cụ thể mà bạn không chắc.
+6. Không nhầm PickleFund với hệ thống khác (VNeID, dịch vụ công, hosting...). Nếu hỏi thao tác trong app thì theo mục 3; nếu là kiến thức ngoài thì theo mục 4.
+7. Từ chối lịch sự các yêu cầu gây hại hoặc trái pháp luật.
+8. Trả lời gọn gàng nhưng đủ ý; câu hỏi kiến thức có thể giải thích sâu hơn khi cần.`;
 
 @Injectable()
 export class LisaService {
@@ -62,6 +64,8 @@ export class LisaService {
       try {
         const model = this.genAI.getGenerativeModel({
           model: this.geminiModel,
+          // Đủ dài cho câu trả lời kiến thức ngoài CLB (vai trò AI hiểu biết rộng).
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
         });
         const result = await model.generateContent(fullPrompt);
         return result.response.text().trim();
@@ -101,7 +105,7 @@ export class LisaService {
                     content: `${systemCtx}\n\nNgười dùng hỏi: "${userMsg}"`,
                   },
                 ],
-                max_tokens: 512,
+                max_tokens: 1024,
               }),
             },
           );
@@ -391,7 +395,7 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
     // KHÔNG tra web nữa: web search "mù" trên câu hỏi ngoài từ khóa CLB từng khiến Lisa
     // hallucinate sang VNeID/hosting/học ngoại ngữ. Lisa chỉ neo vào DỮ LIỆU CLB + phạm vi
     // PickleFund (system prompt đã ràng buộc). Ngoài phạm vi → từ chối lịch sự, không bịa.
-    const fallback = `Xin chào ${ctx.memberName}! Số dư quỹ CLB hiện tại: ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ. Bạn ${ctx.currentPeriodPaid ? 'đã' : 'chưa'} đóng quỹ kỳ này. Lisa chỉ hỗ trợ các thông tin về CLB của bạn trên PickleFund — bạn hỏi lại về quỹ, thành viên, buổi chơi... giúp Lisa nhé.`;
+    const fallback = `Xin chào ${ctx.memberName}! Lisa đang tạm thời gián đoạn kết nối trí tuệ nên chưa trả lời chi tiết được. Tạm thời: số dư quỹ CLB hiện tại ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ, bạn ${ctx.currentPeriodPaid ? 'đã' : 'chưa'} đóng quỹ kỳ này. Bạn thử hỏi lại sau giây lát nhé.`;
     const answer = await this.askAI(contextStr, question, fallback);
 
     const actions: string[] = [];
