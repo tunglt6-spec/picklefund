@@ -23,7 +23,6 @@ export function mapContribution(c: any): FundContribution {
     miniIncomeType: c.miniIncomeType ?? undefined,
     payerName: c.payerName ?? undefined,
     createdAt: c.createdAt ?? '',
-    createdBy: c.createdById ?? '',
   }
 }
 
