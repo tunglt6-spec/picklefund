@@ -47,6 +47,8 @@ model Club {
   scoringRules         ScoringRule[]
   memberScoreEvents    MemberScoreEvent[]
   memberScoreSnapshots MemberScoreSnapshot[]
+  maikaInsights        MaikaInsight[]
+  lisaMessages         LisaMessage[]
 
   @@map("clubs")
 }
@@ -1041,4 +1043,40 @@ model MemberScoreSnapshot {
   @@unique([memberId, periodMonth])
   @@index([clubId, periodMonth])
   @@map("member_score_snapshots")
+}
+
+/// Insight/kết quả phân tích của Maika (daily brief, weekly report, anomaly, health score) —
+/// LƯU lại để AIDO khoe "Maika phân tích được VIỆC GÌ" (trước đây chỉ chạy runtime, không lưu).
+model MaikaInsight {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  type      String   @db.VarChar(30) // daily_brief | weekly_report | anomaly | health_score
+  title     String   @db.VarChar(200)
+  content   String
+  severity  String?  @db.VarChar(20) // info | attention | warning
+  score     Int? // điểm sức khỏe nếu có
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, createdAt])
+  @@index([clubId, type])
+  @@map("maika_insights")
+}
+
+/// Hội thoại Q&A của Lisa (member hỏi — Lisa trả lời) — LƯU lại để AIDO đếm "Lisa trả lời bao
+/// nhiêu lượt" + xem gần đây (trước đây hội thoại in-memory volatile, không lưu).
+model LisaMessage {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  memberId  String?  @map("member_id")
+  question  String
+  answer    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId, createdAt])
+  @@map("lisa_messages")
 }

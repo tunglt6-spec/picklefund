@@ -49,8 +49,8 @@ interface WorkflowRun {
 
 /** Kết quả công việc THẬT trong ngày của từng agent — /aido/agent-results. */
 interface AgentResults {
-  maika: { actionsToday: number; briefsToday: number }
-  lisa: { remindersToday: number }
+  maika: { actionsToday: number; briefsToday: number; insightsToday: number; recentInsights: { type: string; title: string; createdAt: string }[] }
+  lisa: { remindersToday: number; answeredToday: number }
   hermes: { runsToday: number; waitingApproval: number; running: number; completedToday: number; failedToday: number }
   mitDac: { executedToday: number; running: number; failedToday: number; averageExecutionMs: number }
   notification: { sentToday: number; byChannel: { IN_APP: number; EMAIL: number; TELEGRAM: number }; failedToday: number }
@@ -305,15 +305,20 @@ export function AiDigitalOffice() {
         unit: health?.score != null ? '/100' : '',
         headline: 'Sức khỏe CLB',
         details: [
-          `${opsSignals.length} cảnh báo / khuyến nghị`,
-          `${r?.maika.briefsToday ?? 0} báo cáo đã gửi · ${r?.maika.actionsToday ?? 0} đề xuất`,
+          `${opsSignals.length} cảnh báo · ${r?.maika.insightsToday ?? 0} phân tích hôm nay`,
+          r?.maika.recentInsights?.[0]
+            ? `Gần nhất: ${r.maika.recentInsights[0].title}`
+            : `${r?.maika.briefsToday ?? 0} báo cáo · ${r?.maika.actionsToday ?? 0} đề xuất`,
         ],
       },
       {
         key: 'LISA', name: 'Lisa', color: '#2563EB',
-        value: String(r?.lisa.remindersToday ?? 0), unit: 'nhắc',
-        headline: 'Nhắc nhở gửi hôm nay',
-        details: ['Hỗ trợ thành viên & giải đáp', 'Sẵn sàng trực tuyến'],
+        value: String(r?.lisa.answeredToday ?? 0), unit: 'lượt',
+        headline: 'Lisa trả lời hôm nay',
+        details: [
+          `${r?.lisa.remindersToday ?? 0} nhắc nhở đã gửi`,
+          'Hỗ trợ thành viên & giải đáp',
+        ],
       },
       {
         key: 'HERMES', name: 'Hermes', color: '#059669',

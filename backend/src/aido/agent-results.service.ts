@@ -23,8 +23,8 @@ export class AgentResultsService {
 
   private empty() {
     return {
-      maika: { actionsToday: 0, briefsToday: 0 },
-      lisa: { remindersToday: 0 },
+      maika: { actionsToday: 0, briefsToday: 0, insightsToday: 0, recentInsights: [] as Array<{ type: string; title: string; createdAt: Date }> },
+      lisa: { remindersToday: 0, answeredToday: 0 },
       hermes: {
         runsToday: 0,
         waitingApproval: 0,
@@ -62,6 +62,9 @@ export class AgentResultsService {
       execRows,
       notifSent,
       notifFailed,
+      maikaInsightsToday,
+      maikaRecentInsights,
+      lisaAnsweredToday,
     ] = await Promise.all([
       this.prisma.aiAction.count({
         where: {
@@ -108,6 +111,19 @@ export class AgentResultsService {
       this.prisma.notification.count({
         where: { clubId, status: 'FAILED', createdAt: { gte: todayStart } },
       }),
+      // Phase 2: insight Maika + hội thoại Lisa (bảng mới).
+      this.prisma.maikaInsight.count({
+        where: { clubId, createdAt: { gte: todayStart } },
+      }),
+      this.prisma.maikaInsight.findMany({
+        where: { clubId },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: { type: true, title: true, createdAt: true },
+      }),
+      this.prisma.lisaMessage.count({
+        where: { clubId, createdAt: { gte: todayStart } },
+      }),
     ]);
 
     const hermesCount = (s: string) =>
@@ -122,8 +138,13 @@ export class AgentResultsService {
       notifSent.find((x) => x.channel === c)?._count._all ?? 0;
 
     return {
-      maika: { actionsToday: maikaActions, briefsToday: maikaBriefs },
-      lisa: { remindersToday: lisaReminders },
+      maika: {
+        actionsToday: maikaActions,
+        briefsToday: maikaBriefs,
+        insightsToday: maikaInsightsToday,
+        recentInsights: maikaRecentInsights,
+      },
+      lisa: { remindersToday: lisaReminders, answeredToday: lisaAnsweredToday },
       hermes: {
         runsToday: hermesByStatus.reduce((a, x) => a + x._count._all, 0),
         waitingApproval: hermesCount('WAITING_APPROVAL'),

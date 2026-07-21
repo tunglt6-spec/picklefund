@@ -195,6 +195,34 @@ export class MaikaService {
 
   // ─── Daily Brief ──────────────────────────────────────────────────────────
 
+  /**
+   * Lưu insight của Maika vào DB (Phase 2) — best-effort: lỗi lưu KHÔNG được làm hỏng việc sinh
+   * báo cáo / dispatch. Phục vụ AIDO khoe "Maika phân tích được VIỆC GÌ".
+   */
+  private async saveInsight(
+    clubId: string,
+    type: 'daily_brief' | 'weekly_report' | 'anomaly' | 'health_score',
+    title: string,
+    content: string,
+    opts?: { severity?: string; score?: number; metadata?: any },
+  ) {
+    try {
+      await this.prisma.maikaInsight.create({
+        data: {
+          clubId,
+          type,
+          title: title.slice(0, 200),
+          content,
+          severity: opts?.severity,
+          score: opts?.score,
+          metadata: opts?.metadata,
+        },
+      });
+    } catch {
+      /* ignore — không chặn luồng sinh báo cáo */
+    }
+  }
+
   async generateDailyBrief(clubId: string): Promise<DailyBrief> {
     const snap = await this.getClubSnapshot(clubId);
     const today = new Date().toLocaleDateString('vi-VN');
@@ -245,6 +273,11 @@ Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.
       },
     });
 
+    await this.saveInsight(clubId, 'daily_brief', `Daily Brief — ${today}`, summary, {
+      score: healthScore.score,
+      metadata: { unpaidCount: snap.unpaidCount },
+    });
+
     return brief;
   }
 
@@ -290,6 +323,10 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
       priority: 'LOW',
       title: `Maika Weekly Report — Tuần ${weekOf}`,
       body: summary,
+    });
+
+    await this.saveInsight(clubId, 'weekly_report', `Weekly Report — Tuần ${weekOf}`, summary, {
+      metadata: { activeMembers: snap.activeMembers, balance: snap.commonBalance },
     });
 
     return report;
@@ -357,6 +394,17 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
           .join('\n'),
         metadata: { anomalies },
       });
+
+      await this.saveInsight(
+        clubId,
+        'anomaly',
+        `Phát hiện ${anomalies.length} bất thường`,
+        anomalies.map((a) => `[${a.severity}] ${a.description}`).join('\n'),
+        {
+          severity: topAnomaly.severity === 'HIGH' ? 'warning' : 'attention',
+          metadata: { anomalies },
+        },
+      );
     }
 
     return { found: anomalies.length > 0, anomalies };

@@ -38,7 +38,7 @@ export class LisaController {
     }
     return ok(
       await this.activity.track(user.clubId, 'LISA', 'Đang trả lời thành viên', () =>
-        this.svc.askLisa(user.memberId, body.question),
+        this.svc.askLisa(user.memberId, body.question, user.clubId),
       ),
     );
   }

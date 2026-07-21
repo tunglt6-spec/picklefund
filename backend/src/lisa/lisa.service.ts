@@ -392,7 +392,11 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
 
   // ─── Ask Lisa (AI Q&A) ────────────────────────────────────────────────────
 
-  async askLisa(memberId: string, question: string): Promise<AskLisaResult> {
+  async askLisa(
+    memberId: string,
+    question: string,
+    clubId?: string,
+  ): Promise<AskLisaResult> {
     const ctx = await this.getMemberContext(memberId);
     const contextStr = this.buildContextString(ctx);
 
@@ -406,6 +410,22 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
     if (!ctx.currentPeriodPaid) actions.push('Đóng quỹ kỳ hiện tại');
     if (ctx.sessionsAttended < ctx.totalSessions * 0.5)
       actions.push('Đăng ký tham gia buổi chơi tiếp theo');
+
+    // Phase 2: lưu hội thoại Q&A (best-effort) để AIDO đếm "Lisa trả lời bao nhiêu lượt".
+    if (clubId) {
+      try {
+        await this.prisma.lisaMessage.create({
+          data: {
+            clubId,
+            memberId,
+            question: question.slice(0, 2000),
+            answer,
+          },
+        });
+      } catch {
+        /* ignore — không chặn luồng trả lời */
+      }
+    }
 
     return { question, answer, suggestedActions: actions };
   }
