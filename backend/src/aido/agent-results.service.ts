@@ -169,4 +169,54 @@ export class AgentResultsService {
       },
     };
   }
+
+  /** Danh sách insight Maika (đọc toàn văn) — Nhật ký AI. */
+  async listMaikaInsights(clubId: string, limit = 50) {
+    if (!clubId) return [];
+    return this.prisma.maikaInsight.findMany({
+      where: { clubId },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(200, Math.max(1, limit)),
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        content: true,
+        severity: true,
+        score: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  /** Lịch sử hỏi–đáp của Lisa (kèm tên thành viên) — Nhật ký AI. */
+  async listLisaMessages(clubId: string, limit = 50) {
+    if (!clubId) return [];
+    const rows = await this.prisma.lisaMessage.findMany({
+      where: { clubId },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(200, Math.max(1, limit)),
+      select: {
+        id: true,
+        memberId: true,
+        question: true,
+        answer: true,
+        createdAt: true,
+      },
+    });
+    const memberIds = [
+      ...new Set(rows.map((r) => r.memberId).filter((m): m is string => !!m)),
+    ];
+    const members = memberIds.length
+      ? await this.prisma.member.findMany({
+          where: { id: { in: memberIds } },
+          select: { id: true, fullName: true },
+        })
+      : [];
+    const nameMap = new Map(members.map((m) => [m.id, m.fullName]));
+    return rows.map((r) => ({
+      ...r,
+      memberName: r.memberId ? (nameMap.get(r.memberId) ?? null) : null,
+    }));
+  }
 }

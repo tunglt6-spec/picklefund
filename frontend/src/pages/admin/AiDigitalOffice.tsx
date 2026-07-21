@@ -32,6 +32,8 @@ import { useAuthStore } from '../../store/authStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { WorkflowRules } from './workflows/WorkflowRules'
 import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
+import { MaikaInsightsLog } from './ai/MaikaInsightsLog'
+import { LisaMessagesLog } from './ai/LisaMessagesLog'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -96,6 +98,8 @@ const fmtLatency = (ms?: number) =>
 export function AiDigitalOffice() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<string>('office')
+  // Sub-tab trong "Nhật ký AI": Mít Đặc (thực thi) · Maika (phân tích) · Lisa (hỏi–đáp).
+  const [aiLogTab, setAiLogTab] = useState<'mitdac' | 'maika' | 'lisa'>('mitdac')
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null)
@@ -728,8 +732,32 @@ export function AiDigitalOffice() {
         </div>
       )}
       {tab === 'ai-log' && (
-        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
-          <MitDacExecutionLog />
+        <div>
+          <div className="mb-1 flex flex-wrap gap-2">
+            {([
+              { key: 'mitdac', label: 'Mít Đặc · thực thi' },
+              { key: 'maika', label: 'Maika · phân tích' },
+              { key: 'lisa', label: 'Lisa · hỏi–đáp' },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setAiLogTab(t.key)}
+                className="rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors"
+                style={
+                  aiLogTab === t.key
+                    ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)' }
+                    : { background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }
+                }
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
+            {aiLogTab === 'mitdac' && <MitDacExecutionLog />}
+            {aiLogTab === 'maika' && <MaikaInsightsLog />}
+            {aiLogTab === 'lisa' && <LisaMessagesLog />}
+          </div>
         </div>
       )}
     </PageShell>

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
@@ -28,5 +28,33 @@ export class AidoController {
   @ApiOperation({ summary: 'Kết quả công việc THẬT trong ngày của từng agent (theo CLB)' })
   async getAgentResults(@CurrentUser() user: JwtUser) {
     return ok(await this.results.getResults(user.clubId ?? ''));
+  }
+
+  @Get('maika-insights')
+  @ApiOperation({ summary: 'Danh sách insight Maika (đọc toàn văn) — Nhật ký AI' })
+  async getMaikaInsights(
+    @CurrentUser() user: JwtUser,
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.results.listMaikaInsights(
+        user.clubId ?? '',
+        limit ? Number(limit) : undefined,
+      ),
+    );
+  }
+
+  @Get('lisa-messages')
+  @ApiOperation({ summary: 'Lịch sử hỏi–đáp của Lisa — Nhật ký AI' })
+  async getLisaMessages(
+    @CurrentUser() user: JwtUser,
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.results.listLisaMessages(
+        user.clubId ?? '',
+        limit ? Number(limit) : undefined,
+      ),
+    );
   }
 }
