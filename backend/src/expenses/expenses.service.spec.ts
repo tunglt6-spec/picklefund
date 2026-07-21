@@ -379,6 +379,23 @@ describe('ExpensesService', () => {
       );
     });
 
+    it('returns missingReceiptCount (count receiptUrl null)', async () => {
+      mockPrisma.livingExpense.aggregate.mockResolvedValue({
+        _sum: { amount: new Decimal(0) },
+        _count: 0,
+      });
+      mockPrisma.livingExpense.groupBy.mockResolvedValue([]);
+      mockPrisma.livingExpense.count.mockResolvedValue(7);
+
+      const result = await service.summary('club-1');
+      expect(result.missingReceiptCount).toBe(7);
+      expect(mockPrisma.livingExpense.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ clubId: 'club-1', receiptUrl: null }),
+        }),
+      );
+    });
+
     it('returns statusCounts grouped by status (additive field)', async () => {
       mockPrisma.livingExpense.aggregate.mockResolvedValue({
         _sum: { amount: new Decimal(0) },
@@ -401,6 +418,26 @@ describe('ExpensesService', () => {
         paid: 2,
         rejected: 0,
       });
+    });
+  });
+
+  describe('breakdown', () => {
+    it('nhóm theo description, sort giảm dần, cắt top-N', async () => {
+      mockPrisma.livingExpense.groupBy.mockResolvedValue([
+        { description: 'Tiền sân', _sum: { amount: new Decimal(300) }, _count: 2 },
+        { description: 'Nước uống', _sum: { amount: new Decimal(900) }, _count: 5 },
+      ]);
+      const result = await service.breakdown('club-1', 'period-1', 'ALL', 6);
+      expect(result).toEqual([
+        { name: 'Nước uống', value: 900, count: 5 },
+        { name: 'Tiền sân', value: 300, count: 2 },
+      ]);
+      expect(mockPrisma.livingExpense.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          by: ['description'],
+          where: expect.objectContaining({ clubId: 'club-1', fundPeriodId: 'period-1' }),
+        }),
+      );
     });
   });
 });

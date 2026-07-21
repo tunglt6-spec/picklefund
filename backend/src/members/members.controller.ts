@@ -33,6 +33,15 @@ export class MembersController {
     return ok(await this.members.aiRating(user.clubId ?? ''));
   }
 
+  // Tài chính theo từng thành viên (Option 3) — đặt TRƯỚC ':id'.
+  @Get('finance')
+  async finance(
+    @CurrentUser() user: any,
+    @Query('fundPeriodId') fundPeriodId?: string,
+  ) {
+    return ok(await this.members.finance(user.clubId, fundPeriodId));
+  }
+
   @Post()
   @Roles('CLUB_ADMIN')
   async create(@CurrentUser() user: any, @Body() body: CreateMemberDto) {
@@ -45,6 +54,22 @@ export class MembersController {
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.members.findOne(id, user.clubId));
+  }
+
+  // Lịch sử đóng góp của 1 thành viên (Option 3).
+  @Get(':id/contributions')
+  async memberContributions(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.members.memberContributions(
+        id,
+        user.clubId,
+        limit ? Number(limit) : undefined,
+      ),
+    );
   }
 
   @Put(':id')

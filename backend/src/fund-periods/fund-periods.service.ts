@@ -433,4 +433,209 @@ export class FundPeriodsService {
     cache.set(id, out);
     return out;
   }
+
+  /**
+   * Chuỗi Thu/Chi N kỳ gần nhất (bar chart) — thay phép lọc mảng client ở Reports/ThuChiHub.
+   * Thu = contributions ĐÃ xác nhận theo kỳ; Chi = expenses MỌI status theo kỳ (khớp client hiện tại).
+   * `fundSource` 'ALL' = cả 2 quỹ. MINI có fundPeriodId=null nên không lọt vào kỳ nào (giữ nguyên).
+   */
+  async trends(
+    clubId: string,
+    type = 'chung',
+    limit = 6,
+    fundSource: 'ALL' | 'COMMON' | 'MINI' = 'ALL',
+  ) {
+    const periods = await this.prisma.fundPeriod.findMany({
+      where: { clubId, type },
+      orderBy: { startDate: 'asc' },
+      select: { id: true, name: true, startDate: true },
+    });
+    const recent = periods.slice(-Math.max(1, limit));
+    const ids = recent.map((p) => p.id);
+    if (ids.length === 0) return [];
+    const fsFilter = fundSource !== 'ALL' ? { fundSource } : {};
+    const [thuGroups, chiGroups] = await Promise.all([
+      this.prisma.fundContribution.groupBy({
+        by: ['fundPeriodId'],
+        where: {
+          clubId,
+          fundPeriodId: { in: ids },
+          isConfirmed: true,
+          ...fsFilter,
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.livingExpense.groupBy({
+        by: ['fundPeriodId'],
+        where: { clubId, fundPeriodId: { in: ids }, ...fsFilter },
+        _sum: { amount: true },
+      }),
+    ]);
+    const thuMap = new Map(
+      thuGroups.map((g) => [g.fundPeriodId, Number(g._sum.amount ?? 0)]),
+    );
+    const chiMap = new Map(
+      chiGroups.map((g) => [g.fundPeriodId, Number(g._sum.amount ?? 0)]),
+    );
+    return recent.map((p) => ({
+      periodId: p.id,
+      name: p.name,
+      startDate: p.startDate,
+      thu: thuMap.get(p.id) ?? 0,
+      chi: chiMap.get(p.id) ?? 0,
+    }));
+  }
+
+  /**
+   * Top người đóng góp + giao dịch lớn nhất của 1 kỳ (contributions ĐÃ xác nhận) —
+   * thay phép group/sort mảng client ở FundPeriods HighlightsTab.
+   */
+  async highlights(id: string, clubId: string, limit = 5) {
+    await this.findOne(id, clubId); // đảm bảo kỳ thuộc CLB
+    const [topGroups, txs] = await Promise.all([
+      this.prisma.fundContribution.groupBy({
+        by: ['memberId'],
+        where: {
+          clubId,
+          fundPeriodId: id,
+          isConfirmed: true,
+          fundSource: 'COMMON',
+          memberId: { not: null },
+        },
+        _sum: { amount: true },
+        _count: true,
+        orderBy: { _sum: { amount: 'desc' } },
+        take: Math.max(1, limit),
+      }),
+      this.prisma.fundContribution.findMany({
+        where: { clubId, fundPeriodId: id, isConfirmed: true },
+        orderBy: { amount: 'desc' },
+        take: Math.max(1, limit),
+        include: { member: { select: { fullName: true } } },
+      }),
+    ]);
+    const memberIds = topGroups
+      .map((g) => g.memberId)
+      .filter((m): m is string => !!m);
+    const members = memberIds.length
+      ? await this.prisma.member.findMany({
+          where: { id: { in: memberIds } },
+          select: { id: true, fullName: true },
+        })
+      : [];
+    const nameMap = new Map(members.map((m) => [m.id, m.fullName]));
+    return {
+      topContributors: topGroups.map((g) => ({
+        memberId: g.memberId,
+        name: g.memberId ? (nameMap.get(g.memberId) ?? '') : '',
+        total: Number(g._sum.amount ?? 0),
+        count: g._count,
+      })),
+      topTransactions: txs.map((t) => ({
+        id: t.id,
+        date: t.paymentDate,
+        name: t.member?.fullName ?? t.payerName ?? '',
+        amount: Number(t.amount),
+        fundSource: t.fundSource,
+      })),
+    };
+  }
+
+  /**
+   * Sổ quỹ hợp nhất Thu+Chi (thay phép dựng ledger client ở TreasurerDashboard/TreasurerLedger).
+   * Thu = contributions ĐÃ xác nhận; Chi = expenses MỌI status (khớp client hiện tại).
+   * Không truyền fundPeriodId → toàn CLB (all-time). Có → theo kỳ. `fundSource` 'ALL' = cả 2 quỹ.
+   * Running-balance do FE cộng dồn từ rows (đã sort ngày tăng dần).
+   */
+  async ledger(
+    clubId: string,
+    fundPeriodId?: string,
+    fundSource: 'ALL' | 'COMMON' | 'MINI' = 'ALL',
+  ) {
+    const fsFilter = fundSource !== 'ALL' ? { fundSource } : {};
+    const [contribs, expenses, unpaidCount, missingReceiptCount] =
+      await Promise.all([
+        this.prisma.fundContribution.findMany({
+          where: {
+            clubId,
+            isConfirmed: true,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+            ...fsFilter,
+          },
+          select: {
+            id: true,
+            paymentDate: true,
+            amount: true,
+            fundSource: true,
+            payerName: true,
+            member: { select: { fullName: true } },
+          },
+        }),
+        this.prisma.livingExpense.findMany({
+          where: {
+            clubId,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+            ...fsFilter,
+          },
+          select: {
+            id: true,
+            expenseDate: true,
+            amount: true,
+            fundSource: true,
+            description: true,
+          },
+        }),
+        this.prisma.fundContribution.count({
+          where: {
+            clubId,
+            fundSource: 'COMMON',
+            isConfirmed: false,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+          },
+        }),
+        this.prisma.livingExpense.count({
+          where: {
+            clubId,
+            receiptUrl: null,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+          },
+        }),
+      ]);
+
+    const incomeRows = contribs.map((c) => ({
+      id: c.id,
+      date: c.paymentDate,
+      type: 'income' as const,
+      fundSource: c.fundSource,
+      memberName: c.member?.fullName ?? null,
+      payerName: c.payerName ?? null,
+      description: null as string | null,
+      amount: Number(c.amount),
+    }));
+    const expenseRows = expenses.map((e) => ({
+      id: e.id,
+      date: e.expenseDate,
+      type: 'expense' as const,
+      fundSource: e.fundSource,
+      memberName: null,
+      payerName: null,
+      description: e.description,
+      amount: Number(e.amount),
+    }));
+    const rows = [...incomeRows, ...expenseRows].sort(
+      (a, b) => a.date.getTime() - b.date.getTime(),
+    );
+
+    const kpi = { commonIncome: 0, commonExpense: 0, miniIncome: 0, miniExpense: 0 };
+    for (const r of incomeRows) {
+      if (r.fundSource === 'MINI') kpi.miniIncome += r.amount;
+      else kpi.commonIncome += r.amount;
+    }
+    for (const r of expenseRows) {
+      if (r.fundSource === 'MINI') kpi.miniExpense += r.amount;
+      else kpi.commonExpense += r.amount;
+    }
+
+    return { rows, kpi, unpaidCount, missingReceiptCount };
+  }
 }

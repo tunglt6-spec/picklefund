@@ -81,6 +81,24 @@ export class ExpensesController implements OnModuleInit {
     return ok(await this.service.summary(user.clubId, fundPeriodId));
   }
 
+  // Đặt TRƯỚC ':id' để không bị route param nuốt.
+  @Get('breakdown')
+  async breakdown(
+    @CurrentUser() user: any,
+    @Query('fundPeriodId') fundPeriodId?: string,
+    @Query('fundSource') fundSource?: FundSource | 'ALL',
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.service.breakdown(
+        user.clubId,
+        fundPeriodId,
+        fundSource,
+        limit ? Number(limit) : undefined,
+      ),
+    );
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.service.findOne(id, user.clubId));

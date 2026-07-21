@@ -50,6 +50,36 @@ export class FundPeriodsController {
     );
   }
 
+  // Chuỗi Thu/Chi N kỳ gần nhất (Option 3) — đặt TRƯỚC ':id'.
+  @Get('trends')
+  async trends(
+    @CurrentUser() user: any,
+    @Query('type') type?: string,
+    @Query('limit') limit?: string,
+    @Query('fundSource') fundSource?: 'ALL' | 'COMMON' | 'MINI',
+  ) {
+    return ok(
+      await this.service.trends(
+        user.clubId,
+        type ?? 'chung',
+        limit ? Number(limit) : undefined,
+        fundSource ?? 'ALL',
+      ),
+    );
+  }
+
+  // Sổ quỹ hợp nhất Thu+Chi (Option 3) — đặt TRƯỚC ':id'.
+  @Get('ledger')
+  async ledger(
+    @CurrentUser() user: any,
+    @Query('fundPeriodId') fundPeriodId?: string,
+    @Query('fundSource') fundSource?: 'ALL' | 'COMMON' | 'MINI',
+  ) {
+    return ok(
+      await this.service.ledger(user.clubId, fundPeriodId, fundSource ?? 'ALL'),
+    );
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.service.findOne(id, user.clubId));
@@ -84,5 +114,21 @@ export class FundPeriodsController {
   @Get(':id/summary')
   async summary(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.service.summary(id, user.clubId));
+  }
+
+  // Top người đóng + giao dịch lớn nhất của kỳ (Option 3).
+  @Get(':id/highlights')
+  async highlights(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Query('limit') limit?: string,
+  ) {
+    return ok(
+      await this.service.highlights(
+        id,
+        user.clubId,
+        limit ? Number(limit) : undefined,
+      ),
+    );
   }
 }

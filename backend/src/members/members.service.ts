@@ -100,6 +100,125 @@ export class MembersService {
     });
   }
 
+  /**
+   * Tài chính theo TỪNG thành viên (Option 3) — thay phép group `clubData.contributions` client
+   * ở Members/Debts/Reminders. Trả mỗi member:
+   *  - totalPaidAllTime: tổng đã đóng Quỹ Chính ĐÃ xác nhận (toàn thời gian).
+   *  - periodStatus (khi có fundPeriodId): 'confirmed' (đã nộp & xác nhận) / 'pending' (đã nộp,
+   *    chưa xác nhận) / 'unpaid' (chưa có bản ghi). Ưu tiên confirmed > pending.
+   *  - periodPaid: số tiền đã nộp trong kỳ (confirmed nếu có, không thì pending).
+   */
+  async finance(clubId: string, fundPeriodId?: string) {
+    const [members, allTime, periodConfirmed, periodPending] = await Promise.all([
+      this.prisma.member.findMany({
+        where: { clubId, isDeleted: false },
+        select: { id: true },
+      }),
+      this.prisma.fundContribution.groupBy({
+        by: ['memberId'],
+        where: {
+          clubId,
+          fundSource: 'COMMON',
+          isConfirmed: true,
+          memberId: { not: null },
+        },
+        _sum: { amount: true },
+      }),
+      fundPeriodId
+        ? this.prisma.fundContribution.groupBy({
+            by: ['memberId'],
+            where: {
+              clubId,
+              fundPeriodId,
+              fundSource: 'COMMON',
+              isConfirmed: true,
+              memberId: { not: null },
+            },
+            _sum: { amount: true },
+          })
+        : Promise.resolve([]),
+      fundPeriodId
+        ? this.prisma.fundContribution.groupBy({
+            by: ['memberId'],
+            where: {
+              clubId,
+              fundPeriodId,
+              fundSource: 'COMMON',
+              isConfirmed: false,
+              memberId: { not: null },
+            },
+            _sum: { amount: true },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const toMap = (
+      groups: Array<{ memberId: string | null; _sum: { amount: unknown } }>,
+    ) =>
+      new Map<string, number>(
+        groups
+          .filter((g): g is { memberId: string; _sum: { amount: unknown } } =>
+            !!g.memberId,
+          )
+          .map((g) => [g.memberId, Number(g._sum.amount ?? 0)] as [string, number]),
+      );
+    const allTimeMap = toMap(allTime);
+    const confMap = toMap(periodConfirmed);
+    const pendMap = toMap(periodPending);
+
+    return members.map((m) => {
+      let periodStatus: 'confirmed' | 'pending' | 'unpaid' = 'unpaid';
+      let periodPaid = 0;
+      if (fundPeriodId) {
+        if (confMap.has(m.id)) {
+          periodStatus = 'confirmed';
+          periodPaid = confMap.get(m.id) ?? 0;
+        } else if (pendMap.has(m.id)) {
+          periodStatus = 'pending';
+          periodPaid = pendMap.get(m.id) ?? 0;
+        }
+      }
+      return {
+        memberId: m.id,
+        totalPaidAllTime: allTimeMap.get(m.id) ?? 0,
+        periodStatus,
+        periodPaid,
+      };
+    });
+  }
+
+  /**
+   * Lịch sử đóng góp của 1 thành viên (Option 3) — thay phép lọc mảng client ở MemberActivity.
+   * totalPaid = tổng ĐÃ xác nhận; items = N bản ghi gần nhất (mọi trạng thái) kèm tên kỳ.
+   */
+  async memberContributions(memberId: string, clubId: string, limit = 20) {
+    await this.findOne(memberId, clubId); // đảm bảo member thuộc CLB
+    const [rows, totalAgg] = await Promise.all([
+      this.prisma.fundContribution.findMany({
+        where: { clubId, memberId },
+        orderBy: { paymentDate: 'desc' },
+        take: Math.max(1, Math.min(200, limit)),
+        include: { fundPeriod: { select: { name: true } } },
+      }),
+      this.prisma.fundContribution.aggregate({
+        where: { clubId, memberId, isConfirmed: true },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      totalPaid: Number(totalAgg._sum.amount ?? 0),
+      items: rows.map((c) => ({
+        id: c.id,
+        amount: Number(c.amount),
+        paymentDate: c.paymentDate,
+        paymentMethod: c.paymentMethod,
+        fundSource: c.fundSource,
+        isConfirmed: c.isConfirmed,
+        periodName: c.fundPeriod?.name ?? null,
+      })),
+    };
+  }
+
   async summary(memberId: string, fundPeriodId: string, clubId: string) {
     const [attended, contributions] = await Promise.all([
       this.prisma.attendanceRecord.count({

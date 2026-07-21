@@ -265,6 +265,36 @@ export class ExpensesService {
     return deleted;
   }
 
+  /**
+   * Cost breakdown theo `description` (top-N) — thay phép group client ở Reports/ThuChiHub.
+   * Gộp MỌI status (khớp Reports `costBreakdown` hiện tại). `fundSource` 'ALL' hoặc bỏ trống = cả 2 quỹ.
+   */
+  async breakdown(
+    clubId: string,
+    fundPeriodId?: string,
+    fundSource?: FundSource | 'ALL',
+    limit = 6,
+  ) {
+    const groups = await this.prisma.livingExpense.groupBy({
+      by: ['description'],
+      where: {
+        clubId,
+        ...(fundPeriodId ? { fundPeriodId } : {}),
+        ...(fundSource && fundSource !== 'ALL' ? { fundSource } : {}),
+      },
+      _sum: { amount: true },
+      _count: true,
+    });
+    return groups
+      .map((g) => ({
+        name: g.description,
+        value: Number(g._sum.amount ?? 0),
+        count: g._count,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, Math.max(1, limit));
+  }
+
   async summary(clubId: string, fundPeriodId?: string) {
     const commonRules: AllocationRule[] = [
       'ATTENDANCE',
@@ -272,7 +302,7 @@ export class ExpensesService {
       'PRESENT_ONLY',
       'FUND_ONLY',
     ];
-    const [commonResults, miniTotal, miniByType, statusGroups] =
+    const [commonResults, miniTotal, miniByType, statusGroups, missingReceiptCount] =
       await Promise.all([
         Promise.all(
           commonRules.map((rule) =>
@@ -318,6 +348,15 @@ export class ExpensesService {
           },
           _count: true,
         }),
+        // Đếm khoản chi thiếu hóa đơn (receiptUrl null) trong phạm vi kỳ — thay phép
+        // `expenses.filter(e=>!e.receiptUrl)` client ở TreasurerDashboard.
+        this.prisma.livingExpense.count({
+          where: {
+            clubId,
+            ...(fundPeriodId ? { fundPeriodId } : {}),
+            receiptUrl: null,
+          },
+        }),
       ]);
 
     const statusCounts = { pending: 0, approved: 0, paid: 0, rejected: 0 };
@@ -332,6 +371,7 @@ export class ExpensesService {
 
     return {
       statusCounts,
+      missingReceiptCount,
       common: Object.fromEntries(
         commonRules.map((rule, i) => [
           rule,

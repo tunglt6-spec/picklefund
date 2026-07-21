@@ -19,7 +19,11 @@ const mockPrisma = {
   fundPeriod: { findFirst: jest.fn() },
   attendanceSession: { findMany: jest.fn() },
   attendanceRecord: { groupBy: jest.fn() },
-  fundContribution: { findMany: jest.fn() },
+  fundContribution: {
+    findMany: jest.fn(),
+    groupBy: jest.fn(),
+    aggregate: jest.fn(),
+  },
   minigame: { findMany: jest.fn() },
   minigameParticipant: { findMany: jest.fn() },
 };
@@ -229,6 +233,79 @@ describe('MembersService', () => {
       mockPrisma.member.findMany.mockResolvedValue([]);
       const res = await service.aiRating('club-1');
       expect(res).toEqual({ average: null, rated: 0, total: 0 });
+    });
+  });
+
+  /* ── Option 3: finance / memberContributions ── */
+  describe('finance', () => {
+    it('gộp tổng đã đóng + trạng thái kỳ theo từng member (confirmed > pending > unpaid)', async () => {
+      mockPrisma.member.findMany.mockResolvedValue([
+        { id: 'm1' },
+        { id: 'm2' },
+        { id: 'm3' },
+      ]);
+      mockPrisma.fundContribution.groupBy
+        // allTime (confirmed COMMON)
+        .mockResolvedValueOnce([
+          { memberId: 'm1', _sum: { amount: 1000 } },
+          { memberId: 'm2', _sum: { amount: 500 } },
+        ])
+        // periodConfirmed
+        .mockResolvedValueOnce([{ memberId: 'm1', _sum: { amount: 300 } }])
+        // periodPending
+        .mockResolvedValueOnce([{ memberId: 'm2', _sum: { amount: 200 } }]);
+
+      const result = await service.finance('club-1', 'period-1');
+      expect(result).toEqual([
+        { memberId: 'm1', totalPaidAllTime: 1000, periodStatus: 'confirmed', periodPaid: 300 },
+        { memberId: 'm2', totalPaidAllTime: 500, periodStatus: 'pending', periodPaid: 200 },
+        { memberId: 'm3', totalPaidAllTime: 0, periodStatus: 'unpaid', periodPaid: 0 },
+      ]);
+    });
+
+    it('không có fundPeriodId → mọi member periodStatus=unpaid, chỉ tính tổng all-time', async () => {
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'm1' }]);
+      mockPrisma.fundContribution.groupBy.mockResolvedValueOnce([
+        { memberId: 'm1', _sum: { amount: 700 } },
+      ]);
+      const result = await service.finance('club-1');
+      expect(result).toEqual([
+        { memberId: 'm1', totalPaidAllTime: 700, periodStatus: 'unpaid', periodPaid: 0 },
+      ]);
+      expect(mockPrisma.fundContribution.groupBy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('memberContributions', () => {
+    it('trả totalPaid (confirmed) + items gần nhất kèm tên kỳ', async () => {
+      mockPrisma.member.findFirst.mockResolvedValue(baseMember);
+      mockPrisma.fundContribution.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          amount: 300,
+          paymentDate: new Date('2026-02-01'),
+          paymentMethod: 'bank_transfer',
+          fundSource: 'COMMON',
+          isConfirmed: true,
+          fundPeriod: { name: 'Q1 2026' },
+        },
+      ]);
+      mockPrisma.fundContribution.aggregate.mockResolvedValue({
+        _sum: { amount: 300 },
+      });
+
+      const result = await service.memberContributions('mem-1', 'club-1', 20);
+      expect(result.totalPaid).toBe(300);
+      expect(result.items[0]).toEqual(
+        expect.objectContaining({ id: 'c1', amount: 300, periodName: 'Q1 2026' }),
+      );
+    });
+
+    it('member khác CLB → NotFoundException', async () => {
+      mockPrisma.member.findFirst.mockResolvedValue(null);
+      await expect(
+        service.memberContributions('mem-1', 'club-other'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

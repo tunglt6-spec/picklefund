@@ -19,11 +19,15 @@ const mockPrisma = {
   fundContribution: {
     aggregate: jest.fn(),
     groupBy: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
     deleteMany: jest.fn(),
   },
   livingExpense: {
     aggregate: jest.fn(),
     groupBy: jest.fn().mockResolvedValue([]),
+    findMany: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
     deleteMany: jest.fn(),
   },
   attendanceSession: {
@@ -467,6 +471,108 @@ describe('FundPeriodsService', () => {
 
       await service.updateStatus('period-1', 'club-1', 'active');
       expect(mockEvents.publish).not.toHaveBeenCalled();
+    });
+  });
+
+  /* ── Option 3: trends / highlights / ledger ── */
+  describe('trends', () => {
+    it('gộp thu (confirmed) & chi (mọi status) theo N kỳ gần nhất', async () => {
+      mockPrisma.fundPeriod.findMany.mockResolvedValue([
+        { id: 'p1', name: 'Q1', startDate: new Date('2026-01-01') },
+        { id: 'p2', name: 'Q2', startDate: new Date('2026-04-01') },
+      ]);
+      mockPrisma.fundContribution.groupBy.mockResolvedValue([
+        { fundPeriodId: 'p1', _sum: { amount: new Decimal(1000) } },
+      ]);
+      mockPrisma.livingExpense.groupBy.mockResolvedValueOnce([
+        { fundPeriodId: 'p2', _sum: { amount: new Decimal(300) } },
+      ]);
+
+      const result = await service.trends('club-1', 'chung', 6, 'ALL');
+      expect(result).toEqual([
+        { periodId: 'p1', name: 'Q1', startDate: new Date('2026-01-01'), thu: 1000, chi: 0 },
+        { periodId: 'p2', name: 'Q2', startDate: new Date('2026-04-01'), thu: 0, chi: 300 },
+      ]);
+      // contributions groupBy chỉ tính isConfirmed
+      expect(mockPrisma.fundContribution.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isConfirmed: true }),
+        }),
+      );
+    });
+
+    it('trả [] khi CLB chưa có kỳ nào', async () => {
+      mockPrisma.fundPeriod.findMany.mockResolvedValue([]);
+      const result = await service.trends('club-1');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('highlights', () => {
+    it('trả topContributors (sum desc) + topTransactions (amount desc)', async () => {
+      mockPrisma.fundPeriod.findFirst.mockResolvedValue(basePeriod);
+      mockPrisma.fundContribution.groupBy.mockResolvedValue([
+        { memberId: 'm1', _sum: { amount: new Decimal(900) }, _count: 3 },
+      ]);
+      mockPrisma.fundContribution.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          paymentDate: new Date('2026-02-01'),
+          amount: new Decimal(500),
+          fundSource: 'COMMON',
+          payerName: null,
+          member: { fullName: 'Nguyễn A' },
+        },
+      ]);
+      mockPrisma.member.findMany.mockResolvedValue([
+        { id: 'm1', fullName: 'Nguyễn A' },
+      ]);
+
+      const result = await service.highlights('period-1', 'club-1', 5);
+      expect(result.topContributors).toEqual([
+        { memberId: 'm1', name: 'Nguyễn A', total: 900, count: 3 },
+      ]);
+      expect(result.topTransactions[0]).toEqual(
+        expect.objectContaining({ id: 'c1', name: 'Nguyễn A', amount: 500 }),
+      );
+    });
+  });
+
+  describe('ledger', () => {
+    it('merge thu (confirmed) + chi (mọi status), sort ngày tăng dần, kpi theo nguồn quỹ', async () => {
+      mockPrisma.fundContribution.findMany.mockResolvedValue([
+        {
+          id: 'c1',
+          paymentDate: new Date('2026-02-10'),
+          amount: new Decimal(500),
+          fundSource: 'COMMON',
+          payerName: null,
+          member: { fullName: 'A' },
+        },
+      ]);
+      mockPrisma.livingExpense.findMany.mockResolvedValue([
+        {
+          id: 'e1',
+          expenseDate: new Date('2026-01-05'),
+          amount: new Decimal(200),
+          fundSource: 'COMMON',
+          description: 'Tiền sân',
+        },
+      ]);
+      mockPrisma.fundContribution.count.mockResolvedValue(2);
+      mockPrisma.livingExpense.count.mockResolvedValue(1);
+
+      const result = await service.ledger('club-1');
+      // sort tăng dần theo ngày → chi (01/05) trước thu (02/10)
+      expect(result.rows.map((r: any) => r.id)).toEqual(['e1', 'c1']);
+      expect(result.kpi).toEqual({
+        commonIncome: 500,
+        commonExpense: 200,
+        miniIncome: 0,
+        miniExpense: 0,
+      });
+      expect(result.unpaidCount).toBe(2);
+      expect(result.missingReceiptCount).toBe(1);
     });
   });
 });
