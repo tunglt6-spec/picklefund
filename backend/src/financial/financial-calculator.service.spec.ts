@@ -29,6 +29,7 @@ function buildPrismaMock() {
     },
     fundPeriod: {
       findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue({ billedMemberCount: null }),
     },
     livingExpense: {
       aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 } }), // MINI

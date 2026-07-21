@@ -74,6 +74,7 @@ export function useApiSync() {
             type: p.type ?? 'chung',
             finalizedAt: p.finalizedAt ?? undefined,
             createdBy: p.createdById ?? '',
+            billedMemberCount: p.billedMemberCount ?? undefined,
           }))
           setFundPeriods(clubId, periods)
         }

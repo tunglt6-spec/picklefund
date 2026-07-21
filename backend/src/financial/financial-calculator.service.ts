@@ -49,6 +49,8 @@ export interface FinancialSummary {
   totalSessions: number;
   totalAttendance: number;
   costPerAttendance: number;
+  /** Sĩ số dùng để chia phí sân/người (billedMemberCount đã chốt, hoặc số live nếu null). */
+  memberCount: number;
   members: MemberFinancialSummary[];
 }
 
@@ -92,6 +94,7 @@ export class FinancialCalculatorService {
       miniExpenseAgg,
       sessions,
       members,
+      period,
     ] = await Promise.all([
       this.prisma.fundContribution.aggregate({
         where: {
@@ -144,6 +147,11 @@ export class FinancialCalculatorService {
         },
       }),
       this.prisma.member.findMany({ where: { clubId, isDeleted: false } }),
+      // Sĩ số tính phí đã chốt của kỳ (null ⇒ dùng số member live bên dưới).
+      this.prisma.fundPeriod.findUnique({
+        where: { id: fundPeriodId },
+        select: { billedMemberCount: true },
+      }),
     ]);
 
     // Phân loại chi phí Common Fund theo allocationRule (canonical — CLB B32 baseline):
@@ -201,7 +209,10 @@ export class FinancialCalculatorService {
       ),
     );
 
-    const memberCount = members.length;
+    // Sĩ số chia phí = billedMemberCount ĐÃ CHỐT của kỳ (nếu có), nếu không thì số member
+    // live. ⇒ kỳ đã chốt: xóa/thêm member KHÔNG đổi phần chia người còn lại (đối soát ổn định).
+    // DANH SÁCH bill vẫn lặp theo member live (isDeleted:false) → TV đã xóa tự ẩn khỏi bill.
+    const memberCount = period?.billedMemberCount ?? members.length;
     const memberSummaries: MemberFinancialSummary[] = members.map((m) => {
       const attended = attendedMap[m.id] ?? 0;
       const paidAmount = paidMap[m.id] ?? 0;
@@ -240,6 +251,7 @@ export class FinancialCalculatorService {
     const commonBalance = totalCommonIncome - totalCommonExpense;
 
     return {
+      memberCount,
       commonFund: {
         totalIncome: totalCommonIncome,
         totalExpense: totalCommonExpense,

@@ -10,10 +10,11 @@ const mockPrisma = {
   fundPeriod: {
     findMany: jest.fn(),
     findFirst: jest.fn(),
+    findUnique: jest.fn().mockResolvedValue({ billedMemberCount: null }),
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
-    updateMany: jest.fn(),
+    updateMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   fundContribution: {
     aggregate: jest.fn(),
@@ -36,6 +37,7 @@ const mockPrisma = {
   },
   member: {
     findMany: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   },
   personalReceipt: {
     upsert: jest.fn(),

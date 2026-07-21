@@ -307,14 +307,16 @@ export function FundPeriods() {
     // COMMON: only active (Đang mở) periods — exclude draft and closed
     const calcChung = () => {
       const fps = periods.filter(p => (p.type ?? 'chung') === 'chung' && p.status === 'active')
-      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * memberCount, 0)
+      // Sĩ số tính phí theo TỪNG kỳ (đã chốt từ backend ?? số live) → xóa/thêm member không đổi
+      // target kỳ cũ; chỉ kỳ hiện tại (chưa chốt) theo danh sách hiện tại.
+      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * (p.billedMemberCount ?? memberCount), 0)
       const periodIds = new Set(fps.map(p => p.id))
       const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && periodIds.has(c.fundPeriodId ?? ''))
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const primaryActive = fps.filter(p => p.status === 'active').sort((a, b) => b.startDate.localeCompare(a.startDate))[0]
       const unpaidCount = primaryActive
-        ? memberCount - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
+        ? (primaryActive.billedMemberCount ?? memberCount) - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
         : 0
       const txCount = relevant.length
 
@@ -504,6 +506,7 @@ export function FundPeriods() {
         type: fp.type ?? 'chung',
         finalizedAt: fp.finalizedAt ?? undefined,
         createdBy: fp.createdById ?? '',
+        billedMemberCount: fp.billedMemberCount ?? undefined,
       }))
       savePeriods(clubId, updated)
       toast.success(`Kỳ "${p.name}" → ${labels[newStatus] ?? newStatus}`)
@@ -904,7 +907,7 @@ export function FundPeriods() {
             icon={<Building2 size={16} className="[color:var(--pf-primary)]" />}
             period={activePeriods.chung}
             color="indigo"
-            memberCount={memberCount}
+            memberCount={activePeriods.chung?.billedMemberCount ?? memberCount}
             contributions={contributions}
             prevBalance={prevChungBalance}
             isMember={isMember}
@@ -1037,7 +1040,7 @@ export function FundPeriods() {
                         // đã thu = gộp mọi khoản MINI (fundPeriodId=null nên không lọc theo kỳ).
                         // Nhất quán với card TỔNG QUỸ PHỤ (calcMini). Kỳ Chung: theo đầu người.
                         const isMiniPeriod = (p.type ?? 'chung') === 'game'
-                        const target = isMiniPeriod ? p.contributionAmount : p.contributionAmount * memberCount
+                        const target = isMiniPeriod ? p.contributionAmount : p.contributionAmount * (p.billedMemberCount ?? memberCount)
                         const collected = contributions
                           .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
                           .reduce((a, c) => a + c.amount, 0)

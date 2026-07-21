@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 
 @Injectable()
 export class MembersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private fundPeriods: FundPeriodsService,
+  ) {}
 
   async findAll(clubId: string, search?: string) {
     return this.prisma.member.findMany({
@@ -58,6 +62,12 @@ export class MembersService {
         );
       }
     }
+    // Chốt cứng các kỳ cũ tại sĩ số TRƯỚC khi thêm (để thêm member không phồng bill kỳ cũ);
+    // kỳ hiện tại (null) sẽ tự tính theo N+1.
+    const preCount = await this.prisma.member.count({
+      where: { clubId, isDeleted: false },
+    });
+    await this.fundPeriods.snapshotPastPeriods(clubId, preCount);
     return this.prisma.member.create({
       data: { ...dto, clubId, joinDate: new Date(dto.joinDate) },
     });
@@ -77,6 +87,13 @@ export class MembersService {
 
   async remove(id: string, clubId: string) {
     await this.findOne(id, clubId);
+    // "Chốt kỳ quỹ tại thời điểm xóa": chốt cứng các kỳ cũ tại sĩ số HIỆN TẠI (CÒN tính người
+    // sắp xóa) → phần chia phí của người còn lại ở kỳ cũ KHÔNG đổi (đối soát ổn định). Kỳ hiện
+    // tại (null) tự về N-1. Tiền người bị xóa đã đóng vẫn nằm trong tổng thu (soft-delete).
+    const preCount = await this.prisma.member.count({
+      where: { clubId, isDeleted: false },
+    });
+    await this.fundPeriods.snapshotPastPeriods(clubId, preCount);
     return this.prisma.member.update({
       where: { id, clubId },
       data: { isDeleted: true, status: 'left' },

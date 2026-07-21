@@ -17,6 +17,41 @@ export class FundPeriodsService {
     private events: HermesEventPublisher,
   ) {}
 
+  private liveMemberCount(clubId: string) {
+    return this.prisma.member.count({ where: { clubId, isDeleted: false } });
+  }
+
+  /**
+   * Chuẩn hóa "sĩ số tính phí" (billedMemberCount): kỳ đang thu MỚI NHẤT (active 'chung',
+   * startDate lớn nhất) dùng số live (=null → theo danh sách thành viên); MỌI kỳ 'chung' khác
+   * còn null → CHỐT CỨNG = countToFreeze. Gọi khi thêm/xóa member (countToFreeze = số member
+   * TRƯỚC thay đổi) và khi tạo kỳ/đổi trạng thái (countToFreeze = số hiện tại) → thao tác roster
+   * KHÔNG làm lệch bill các kỳ đã chốt. Xem [[plan]] "chốt kỳ quỹ tại thời điểm xóa".
+   */
+  async snapshotPastPeriods(clubId: string, countToFreeze: number) {
+    const current = await this.prisma.fundPeriod.findFirst({
+      where: { clubId, type: 'chung', status: 'active' },
+      orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+      select: { id: true },
+    });
+    await this.prisma.fundPeriod.updateMany({
+      where: {
+        clubId,
+        type: 'chung',
+        billedMemberCount: null,
+        ...(current ? { id: { not: current.id } } : {}),
+      },
+      data: { billedMemberCount: countToFreeze },
+    });
+    // Kỳ hiện tại phải dùng số live (null) để theo danh sách thành viên.
+    if (current) {
+      await this.prisma.fundPeriod.updateMany({
+        where: { id: current.id, billedMemberCount: { not: null } },
+        data: { billedMemberCount: null },
+      });
+    }
+  }
+
   async findAll(clubId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -47,13 +82,21 @@ export class FundPeriodsService {
         data: { status: 'closed' },
       }),
     ]);
-    return this.prisma.fundPeriod.findMany({
-      where: { clubId },
-      orderBy: { startDate: 'desc' },
-      include: {
-        _count: { select: { attendanceSessions: true, contributions: true } },
-      },
-    });
+    const [rows, liveCount] = await Promise.all([
+      this.prisma.fundPeriod.findMany({
+        where: { clubId },
+        orderBy: { startDate: 'desc' },
+        include: {
+          _count: { select: { attendanceSessions: true, contributions: true } },
+        },
+      }),
+      this.liveMemberCount(clubId),
+    ]);
+    // billedMemberCount HIỆU DỤNG cho FE: đã chốt → dùng số chốt; null → số live (kỳ hiện tại).
+    return rows.map((r) => ({
+      ...r,
+      billedMemberCount: r.billedMemberCount ?? liveCount,
+    }));
   }
 
   async findOne(id: string, clubId: string) {
@@ -99,12 +142,14 @@ export class FundPeriodsService {
 
     if (!copyMembersFromPreviousPeriod) {
       const created = await this.prisma.fundPeriod.create({ data });
+      // Kỳ mới thành "kỳ hiện tại" → chốt cứng kỳ-hiện-tại-cũ tại số member hiện tại.
+      await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
       return { ...created, copiedMembersCount: 0 };
     }
 
     // FUND-IMPL-01: tạo kỳ quỹ + copy roster thành viên từ kỳ gần nhất CÙNG LOẠI
     // trong 1 transaction — copy lỗi phải rollback luôn kỳ quỹ mới (không partial data).
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const created = await tx.fundPeriod.create({ data });
 
       const previousPeriod = await tx.fundPeriod.findFirst({
@@ -161,6 +206,9 @@ export class FundPeriodsService {
 
       return { ...created, copiedMembersCount: count };
     });
+    // Kỳ mới thành "kỳ hiện tại" → chốt cứng kỳ-hiện-tại-cũ tại số member hiện tại.
+    await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
+    return result;
   }
 
   /** FUND-IMPL-01: thông tin kỳ quỹ gần nhất CÙNG LOẠI để hiển thị preview copy-member
@@ -224,6 +272,9 @@ export class FundPeriodsService {
       where: { id, clubId },
       data: updates,
     });
+    // Đổi trạng thái đổi "kỳ hiện tại" → chuẩn hóa sĩ số chốt (đóng kỳ = chốt cứng; mở lại =
+    // đưa về live nếu thành kỳ hiện tại). Best-effort, không chặn luồng.
+    await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
     // Epic 7: kỳ quỹ chốt sổ → phát event SAU khi commit — fire-and-forget.
     if (status === 'finalized') {
       this.events.publish({
@@ -317,6 +368,8 @@ export class FundPeriodsService {
       totalSessions: sessionCount,
       totalAttendance: result.totalAttendance,
       costPerAttendance: result.costPerAttendance,
+      // Sĩ số tính phí đã chốt của kỳ (billedMemberCount ?? live) — FE dùng cho target/tiến độ.
+      memberCount: result.memberCount,
       unpaidCount: result.members.filter((m) => m.status === 'UNPAID').length,
       negativeBalanceCount: result.members.filter((m) => m.balance < 0).length,
       lowAttendanceCount: result.members.filter(

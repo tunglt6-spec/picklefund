@@ -106,6 +106,8 @@ export interface FundPeriod {
   notes?: string
   finalizedAt?: string
   createdBy: string
+  /** Sĩ số tính phí HIỆU DỤNG của kỳ (đã chốt ?? live) — backend trả về, dùng cho target/tiến độ. */
+  billedMemberCount?: number
 }
 
 export interface AttendanceSession {

@@ -3,6 +3,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
+
+const mockFundPeriods = { snapshotPastPeriods: jest.fn() };
 
 const mockPrisma = {
   member: {
@@ -45,6 +48,7 @@ describe('MembersService', () => {
       providers: [
         MembersService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: FundPeriodsService, useValue: mockFundPeriods },
       ],
     }).compile();
 
@@ -71,12 +75,15 @@ describe('MembersService', () => {
       expect(mockPrisma.member.create).toHaveBeenCalled();
     });
 
-    it('PRO → không giới hạn, không cần đếm', async () => {
+    it('PRO → không giới hạn (không chặn tạo)', async () => {
       mockPrisma.club.findUnique.mockResolvedValue({ plan: 'PRO' });
+      mockPrisma.member.count.mockResolvedValue(0);
       mockPrisma.member.create.mockResolvedValue(baseMember);
       await service.create('club-1', dto);
-      expect(mockPrisma.member.count).not.toHaveBeenCalled();
+      // Gói PRO không enforce giới hạn → tạo thành công. (member.count vẫn có thể được gọi để
+      // tính preCount cho snapshotPastPeriods — không còn assert not-called.)
       expect(mockPrisma.member.create).toHaveBeenCalled();
+      expect(mockFundPeriods.snapshotPastPeriods).toHaveBeenCalled();
     });
   });
 
