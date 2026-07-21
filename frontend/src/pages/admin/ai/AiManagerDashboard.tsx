@@ -35,7 +35,7 @@ function buildSections(isSuper: boolean): OpsSection[] {
     { key: 'hermes', label: 'Hermes (AI COO)', desc: 'Trung tâm điều phối — bạn đang ở đây', icon: <Bot size={18} />, to: null, status: 'here', group: 'Điều phối & Duyệt' },
     { key: 'workflow', label: 'Workflow Studio', desc: 'Tạo & quản lý luật tự động hoá', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active', group: 'Điều phối & Duyệt' },
     { key: 'approval', label: 'Approval Center', desc: 'Duyệt/từ chối hành động AI đề xuất', icon: <ClipboardCheck size={18} />, to: '/admin/ai-approvals', status: 'active', group: 'Điều phối & Duyệt' },
-    { key: 'dispatch', label: 'AI Dispatch', desc: 'Nhật ký thực thi của Mít Đặc', icon: <Send size={18} />, to: '/admin/execution-log', status: 'active', group: 'Điều phối & Duyệt' },
+    { key: 'dispatch', label: 'Nhật ký AI', desc: 'Mít Đặc thực thi · Maika phân tích · Lisa hỏi–đáp', icon: <Send size={18} />, to: '/admin/ai-log', status: 'active', group: 'Điều phối & Duyệt' },
     // ── Thông báo & Lịch ──
     { key: 'notif', label: 'Notification Center', desc: 'Hộp thông báo đa kênh (in-app/email/Telegram)', icon: <Bell size={18} />, to: '/notifications', status: 'active', group: 'Thông báo & Lịch' },
     { key: 'scheduler', label: 'Scheduler', desc: 'Lịch cron & tác vụ định kỳ', icon: <CalendarClock size={18} />, to: '/admin/ai-scheduler', status: 'active', group: 'Thông báo & Lịch' },

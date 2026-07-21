@@ -30,10 +30,6 @@ import { useAidoSocket } from '../../hooks/useAidoSocket'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
-import { WorkflowRules } from './workflows/WorkflowRules'
-import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
-import { MaikaInsightsLog } from './ai/MaikaInsightsLog'
-import { LisaMessagesLog } from './ai/LisaMessagesLog'
 import { AiManagerDashboard } from './ai/AiManagerDashboard'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
@@ -99,10 +95,6 @@ const fmtLatency = (ms?: number) =>
 export function AiDigitalOffice() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<string>('office')
-  // Sub-tab trong "AI Operations Center": Tổng quan (hub) · Workflows · Nhật ký AI.
-  const [opsCenterTab, setOpsCenterTab] = useState<'overview' | 'workflows' | 'ai-log'>('overview')
-  // Sub-tab trong "Nhật ký AI": Mít Đặc (thực thi) · Maika (phân tích) · Lisa (hỏi–đáp).
-  const [aiLogTab, setAiLogTab] = useState<'mitdac' | 'maika' | 'lisa'>('mitdac')
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null)
@@ -691,70 +683,11 @@ export function AiDigitalOffice() {
         </div>
       )}
 
-      {/* AI Operations Center — gồm Tổng quan (hub) + 2 màn con Workflows & Nhật ký AI (sub-tab).
-          Màn con tái dùng nguyên (full-bleed ngang bằng -mx để hết đúp lề). */}
+      {/* AI Operations Center — hub đầy đủ (Workflows, Nhật ký AI, Duyệt, Scheduler, Cảnh báo,
+          KPI, Data, Audit... đều là card trong hub). Full-bleed để hết đúp lề. */}
       {tab === 'ops-center' && (
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            {([
-              { key: 'overview', label: 'Tổng quan' },
-              { key: 'workflows', label: 'Workflows' },
-              { key: 'ai-log', label: 'Nhật ký AI' },
-            ] as const).map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setOpsCenterTab(t.key)}
-                className="rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors"
-                style={
-                  opsCenterTab === t.key
-                    ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)' }
-                    : { background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }
-                }
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {opsCenterTab === 'overview' && (
-            <div className="-mx-4 sm:-mx-6">
-              <AiManagerDashboard />
-            </div>
-          )}
-          {opsCenterTab === 'workflows' && (
-            <div className="-mx-4 sm:-mx-6">
-              <WorkflowRules />
-            </div>
-          )}
-          {opsCenterTab === 'ai-log' && (
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { key: 'mitdac', label: 'Mít Đặc · thực thi' },
-                  { key: 'maika', label: 'Maika · phân tích' },
-                  { key: 'lisa', label: 'Lisa · hỏi–đáp' },
-                ] as const).map((t) => (
-                  <button
-                    key={t.key}
-                    onClick={() => setAiLogTab(t.key)}
-                    className="rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors"
-                    style={
-                      aiLogTab === t.key
-                        ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)', borderColor: 'var(--pf-primary)' }
-                        : { background: 'transparent', color: 'var(--pf-primary)', borderColor: 'var(--pf-border)' }
-                    }
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              <div className="-mx-4 sm:-mx-6">
-                {aiLogTab === 'mitdac' && <MitDacExecutionLog />}
-                {aiLogTab === 'maika' && <MaikaInsightsLog />}
-                {aiLogTab === 'lisa' && <LisaMessagesLog />}
-              </div>
-            </div>
-          )}
+        <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
+          <AiManagerDashboard />
         </div>
       )}
     </PageShell>

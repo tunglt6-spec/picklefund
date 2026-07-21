@@ -89,6 +89,7 @@ const ChangePassword = lz(() => import('./pages/ChangePassword'), 'ChangePasswor
 const AiManagerDashboard = lz(() => import('./pages/admin/ai/AiManagerDashboard'), 'AiManagerDashboard')
 const AiApprovalInbox = lz(() => import('./pages/admin/ai/AiApprovalInbox'), 'AiApprovalInbox')
 const MitDacExecutionLog = lz(() => import('./pages/admin/ai/MitDacExecutionLog'), 'MitDacExecutionLog')
+const AiLogPage = lz(() => import('./pages/admin/ai/AiLogPage'), 'AiLogPage')
 const SchedulerPage = lz(() => import('./pages/admin/ai/SchedulerPage'), 'SchedulerPage')
 const AlertCenterPage = lz(() => import('./pages/admin/ai/AlertCenterPage'), 'AlertCenterPage')
 const DataMonitorPage = lz(() => import('./pages/admin/ai/DataMonitorPage'), 'DataMonitorPage')
@@ -239,6 +240,7 @@ export default function App() {
             <Route path="/admin/ai-approvals" element={<AiApprovalInbox />} />
             <Route path="/admin/workflows" element={<WorkflowRules />} />
             <Route path="/admin/execution-log" element={<MitDacExecutionLog />} />
+            <Route path="/admin/ai-log" element={<AiLogPage />} />
             <Route path="/admin/ai-scheduler" element={<SchedulerPage />} />
             <Route path="/admin/ai-alerts" element={<AlertCenterPage />} />
             <Route path="/admin/ai-data-monitor" element={<DataMonitorPage />} />
