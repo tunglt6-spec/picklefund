@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarClock, Power, Repeat, Clock, Play, Bot, Sparkles, ArrowLeft } from 'lucide-react'
+import { CalendarClock, Power, Repeat, Clock, Play, Bot, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import {
@@ -148,9 +148,6 @@ export function SchedulerPage() {
         subtitle="Lịch cron & tác vụ định kỳ của Hermes AI COO"
         actions={
           <div className="flex items-center gap-2">
-            <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
-              AI Operations Center
-            </ActionButton>
             {scheduled.length > 0 && (
               <ActionButton icon={<Play size={15} />} onClick={handleRunNow} disabled={running}>
                 {running ? 'Đang chạy…' : 'Chạy định kỳ ngay'}

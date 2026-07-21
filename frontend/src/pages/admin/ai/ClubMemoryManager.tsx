@@ -4,8 +4,7 @@
  * xem organization-intelligence.service.ts. Lisa/Hermes CHƯA đọc (việc sau, nếu cần).
  */
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Pencil, Trash2, BookOpen } from 'lucide-react'
+import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import { useIsMobile } from '../../../hooks/useIsMobile'
@@ -46,7 +45,6 @@ const emptyForm = { type: 'POLICY' as MemoryType, title: '', content: '', tagsTe
 type FormData = typeof emptyForm
 
 export function ClubMemoryManager() {
-  const navigate = useNavigate()
   const isMobile = useIsMobile()
   const [items, setItems] = useState<ClubMemory[]>([])
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
@@ -172,12 +170,7 @@ export function ClubMemoryManager() {
         title="Club Memory"
         subtitle="Tri thức nền của CLB — nguồn tham chiếu chung cho AI (Maika)"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/admin/ai-manager')}>
-              <ArrowLeft size={14} />Quay lại AI Operations Center
-            </Button>
-            <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
-          </div>
+          <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
         }
       />
 

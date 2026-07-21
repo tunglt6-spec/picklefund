@@ -7,13 +7,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Database, ArrowLeft, ArrowRight, Users, CalendarDays, CalendarClock, ShieldAlert,
+  Database, ArrowRight, Users, CalendarDays, CalendarClock, ShieldAlert,
   CheckCircle2, AlertTriangle, AlertCircle,
 } from 'lucide-react'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState,
-  ActionButton, type StatusTone,
+  type StatusTone,
 } from '../../../components/shared'
 
 type DqLevel = 'ok' | 'attention' | 'warning'
@@ -70,11 +70,6 @@ export function DataMonitorPage() {
       <PageHeader
         title="Data Monitor"
         subtitle="Giám sát chất lượng & toàn vẹn dữ liệu CLB"
-        actions={
-          <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
-            AI Operations Center
-          </ActionButton>
-        }
       />
 
       {loading ? (

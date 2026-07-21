@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
-  ArrowLeft, Inbox, Info, Check, X, RotateCcw, ShieldCheck,
+  Inbox, Info, Check, X, RotateCcw, ShieldCheck,
   Play, AlertTriangle, ChevronRight, Bot, RefreshCw, Zap,
 } from 'lucide-react'
 import {
@@ -42,7 +41,6 @@ function fmtTime(iso: string): string {
 }
 
 export function AiApprovalInbox() {
-  const navigate = useNavigate()
   const { policies, pending, executable, loading, availability, refetch } = useAiManager()
 
   // Detail drawer
@@ -112,13 +110,7 @@ export function AiApprovalInbox() {
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
-        <button
-          onClick={() => navigate('/admin/ai-manager')}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
-        >
-          <ArrowLeft size={14} /> AI Operations Center
-        </button>
-        <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Inbox size={20} className="[color:var(--pf-primary)]" />

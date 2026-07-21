@@ -8,15 +8,14 @@
  * KHÔNG bịa: chỉ render field có thật; nguồn lỗi → hiển thị "—".
  */
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
-  Gauge, ArrowLeft, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp, Activity,
+  Gauge, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp, Activity,
 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import api from '../../../lib/api'
 import type { AiActionSummary } from '../../../hooks/useAiManager'
 import {
-  PageShell, PageHeader, MetricCard, LoadingState, ErrorState, ActionButton,
+  PageShell, PageHeader, MetricCard, LoadingState, ErrorState,
 } from '../../../components/shared'
 
 interface HealthScore {
@@ -45,7 +44,6 @@ const BREAKDOWN_LABEL: Record<string, string> = {
 }
 
 export function KpiMonitorPage() {
-  const navigate = useNavigate()
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [snap, setSnap] = useState<Snapshot | null>(null)
   const [aiSummary, setAiSummary] = useState<AiActionSummary | null>(null)
@@ -111,11 +109,6 @@ export function KpiMonitorPage() {
       <PageHeader
         title="KPI Monitor"
         subtitle="Chỉ số vận hành & sức khỏe CLB"
-        actions={
-          <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
-            AI Operations Center
-          </ActionButton>
-        }
       />
 
       {loading ? (

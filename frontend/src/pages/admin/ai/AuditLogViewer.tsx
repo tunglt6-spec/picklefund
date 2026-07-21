@@ -4,12 +4,11 @@
  * ở backend (client không override). Chỉ log của CLB mình. V2.2 shared-kit + trạng thái.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ScrollText, ArrowLeft, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState,
-  ActionButton, type StatusTone,
+  type StatusTone,
 } from '../../../components/shared'
 
 interface AuditLog {
@@ -34,7 +33,6 @@ function fmt(iso: string): string {
 }
 
 export function AuditLogViewer() {
-  const navigate = useNavigate()
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [search, setSearch] = useState('')
   const [action, setAction] = useState('Tất cả')
@@ -77,11 +75,6 @@ export function AuditLogViewer() {
       <PageHeader
         title="Audit Logs"
         subtitle="Nhật ký kiểm toán — các thao tác trong CLB của bạn"
-        actions={
-          <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
-            AI Operations Center
-          </ActionButton>
-        }
       />
 
       <div className="flex flex-col gap-4">

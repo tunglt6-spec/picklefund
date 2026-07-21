@@ -10,13 +10,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AlertTriangle, ArrowLeft, ShieldAlert, Database, Workflow, Bot, CheckCircle2,
+  AlertTriangle, ShieldAlert, Database, Workflow, Bot, CheckCircle2,
 } from 'lucide-react'
 import api from '../../../lib/api'
 import type { IntelSignal, SignalLevel } from '../../../hooks/useAiManager'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState,
-  ActionButton, type StatusTone,
+  type StatusTone,
 } from '../../../components/shared'
 
 interface FailedRun { id: string; triggerType: string; status: string; startedAt?: string; createdAt?: string }
@@ -123,11 +123,6 @@ export function AlertCenterPage() {
       <PageHeader
         title="Alert Center"
         subtitle="Cảnh báo vận hành, chất lượng dữ liệu & lỗi hệ thống"
-        actions={
-          <ActionButton variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => navigate('/admin/ai-manager')}>
-            AI Operations Center
-          </ActionButton>
-        }
       />
 
       {loading ? (
