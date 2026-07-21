@@ -29,7 +29,7 @@ import { OfficeBanner } from '../../components/aido/OfficeBanner'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { buildNotifications } from '../../lib/notifications'
+import { useNotifStore } from '../../store/notifStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { WorkflowRules } from './workflows/WorkflowRules'
 import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
@@ -116,7 +116,6 @@ export function AiDigitalOffice() {
   // Lịch hôm nay + thông báo chưa đọc — tái dùng client store (đã sync), không gọi thêm API.
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const clubData = useClubDataStore((s) => s.getClubData(clubId))
-  const readNotifIds = useClubDataStore((s) => s.readNotifIds)
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -222,11 +221,10 @@ export function AiDigitalOffice() {
     return m
   }, [summary])
 
-  // Thông báo chưa đọc (client store, giống MobileHeader).
-  const unreadNotif = useMemo(() => {
-    const ids = new Set<string>(readNotifIds[clubId] ?? [])
-    return buildNotifications(clubData).filter((n) => !ids.has(n.id)).length
-  }, [clubData, readNotifIds, clubId])
+  // Thông báo chưa đọc — dùng CHUNG nguồn backend (notifStore) với chuông header + trang Thông
+  // báo (Sidebar nạp, read-all reset). Trước đây đếm buildNotifications client → lệch (đọc hết
+  // trên trang mà thẻ vẫn báo chưa đọc).
+  const unreadNotif = useNotifStore((s) => s.unreadCount)
 
   // Lịch hôm nay (buổi chơi trong ngày) — từ client store, giống ClubDashboard.
   const todaySessions = useMemo(() => {
