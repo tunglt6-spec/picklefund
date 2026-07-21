@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
-  LayoutGrid, ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
+  ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
 } from 'lucide-react'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -29,7 +29,6 @@ import { OfficeBanner } from '../../components/aido/OfficeBanner'
 import { useAidoSocket } from '../../hooks/useAidoSocket'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import { useNotifStore } from '../../store/notifStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { WorkflowRules } from './workflows/WorkflowRules'
 import { MitDacExecutionLog } from './ai/MitDacExecutionLog'
@@ -78,14 +77,6 @@ const runMeta = (s?: string) =>
   RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, #94A3B8)' }
 
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
-
-const STATUS_META: Record<AgentStatus, { label: string; color: string; dot: string }> = {
-  online: { label: 'Hoạt động', color: 'var(--pf-green)', dot: '🟢' },
-  busy: { label: 'Đang xử lý', color: 'var(--pf-accent-amber, #F59E0B)', dot: '🟡' },
-  waiting: { label: 'Đang chờ', color: 'var(--pf-accent-sky, #3B82F6)', dot: '🔵' },
-  error: { label: 'Lỗi', color: 'var(--pf-accent-rose, #EF4444)', dot: '🔴' },
-  offline: { label: 'Ngoài tuyến', color: 'var(--pf-color-muted, #94A3B8)', dot: '⚫' },
-}
 
 interface AgentView {
   key: string
@@ -234,11 +225,6 @@ export function AiDigitalOffice() {
     return m
   }, [summary])
 
-  // Thông báo chưa đọc — dùng CHUNG nguồn backend (notifStore) với chuông header + trang Thông
-  // báo (Sidebar nạp, read-all reset). Trước đây đếm buildNotifications client → lệch (đọc hết
-  // trên trang mà thẻ vẫn báo chưa đọc).
-  const unreadNotif = useNotifStore((s) => s.unreadCount)
-
   // Lịch hôm nay (buổi chơi trong ngày) — từ client store, giống ClubDashboard.
   const todaySessions = useMemo(() => {
     const d = new Date()
@@ -305,12 +291,6 @@ export function AiDigitalOffice() {
         : a
     })
   }, [runtime, channels, health, running, executedToday, countByAi, activity])
-
-  const statusCounts = useMemo(() => {
-    const c: Record<AgentStatus, number> = { online: 0, busy: 0, waiting: 0, error: 0, offline: 0 }
-    for (const a of agents) c[a.status]++
-    return c
-  }, [agents])
 
   // ── Dải "Kết quả hôm nay" của 5 agent (dưới banner) — SỐ THẬT từ /aido/agent-results.
   // Màu khớp banner (MAIKA violet · LISA blue · HERMES green · MIT_DAT orange · NOTIFICATION magenta).
@@ -447,16 +427,20 @@ export function AiDigitalOffice() {
               {resultCards.map((c) => (
                 <div
                   key={c.key}
-                  className="rounded-2xl border p-3.5 [background:var(--pf-surface)]"
-                  style={{ borderColor: 'var(--pf-border)', borderTop: `3px solid ${c.color}` }}
+                  className="rounded-2xl border p-3.5"
+                  style={{
+                    background: `color-mix(in srgb, ${c.color} 7%, var(--pf-surface))`,
+                    borderColor: `color-mix(in srgb, ${c.color} 22%, var(--pf-border))`,
+                    borderTop: `3px solid ${c.color}`,
+                  }}
                 >
                   <span className="text-[13px] font-semibold" style={{ color: c.color }}>{c.name}</span>
-                  <p className="mt-1 text-2xl font-bold leading-none [color:var(--pf-text)]">
+                  <p className="mt-1 text-2xl font-bold leading-none" style={{ color: c.color }}>
                     {c.value}
                     {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
                   </p>
                   <p className="mt-1 text-[11px] font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
-                  <div className="mt-2 space-y-0.5 border-t pt-2" style={{ borderColor: 'var(--pf-border)' }}>
+                  <div className="mt-2 space-y-0.5 border-t pt-2" style={{ borderColor: `color-mix(in srgb, ${c.color} 15%, var(--pf-border))` }}>
                     {c.details.map((d, i) => (
                       <p key={i} className="text-[11px] leading-snug [color:var(--pf-color-muted)]">{d}</p>
                     ))}
@@ -466,41 +450,10 @@ export function AiDigitalOffice() {
             </div>
           </div>
 
-          {/* Dashboard số liệu thật (5 thẻ như mẫu) */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <MetricCard icon={<Activity size={18} />} accent="violet" label="Tác vụ hôm nay" value={executedToday} sub="Đã thực thi" />
-            <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={running} sub="Executor" />
-            <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" value={pending} sub="Approval queue" />
-            <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" value={failed} sub="Tổng" negative={failed > 0} />
-            <MetricCard icon={<Bell size={18} />} accent="teal" label="Thông báo chưa đọc" value={unreadNotif} sub="Chưa xem" />
-          </div>
-
-          {/* Trung tâm điều hành — 3 panel DỮ LIỆU THẬT (như mockup) */}
-          <div className="grid gap-5 lg:grid-cols-3">
-            {/* Việc cần xử lý = hàng đợi duyệt AI */}
-            <Panel icon={<Inbox size={16} />} title="Việc cần xử lý" sub={`${pending} chờ duyệt`}>
-              {pendingList.length === 0 ? (
-                <p className="text-sm [color:var(--pf-color-muted)]">Không có việc cần xử lý.</p>
-              ) : (
-                <div className="space-y-2">
-                  {pendingList.slice(0, 5).map((p) => {
-                    const rk = riskMeta(p.riskLevel)
-                    return (
-                      <button key={p.id} onClick={() => navigate('/admin/ai-approvals')}
-                        className="flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
-                        <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold"
-                          style={{ background: `color-mix(in srgb, ${rk.color} 16%, transparent)`, color: rk.color }}>{rk.label}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium [color:var(--pf-text)]">{p.title}</p>
-                          <p className="truncate text-xs [color:var(--pf-color-muted)]">{p.requestedByAi} · {new Date(p.createdAt).toLocaleString('vi-VN')}</p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </Panel>
-
+          {/* Trung tâm điều hành — giữ "Lịch hôm nay" + "Cảnh báo & lưu ý" (KHÔNG trùng Operations
+              Center). Dải KPI + hàng đợi duyệt + Đội ngũ/Trạng thái/Luồng đã bỏ khỏi Office View
+              (trùng lặp) — xem đầy đủ ở tab Operations/Analytics + /admin/ai-manager. */}
+          <div className="grid gap-5 lg:grid-cols-2">
             {/* Lịch hôm nay = buổi chơi trong ngày (client store) */}
             <Panel icon={<CalendarDays size={16} />} title="Lịch hôm nay" sub="Buổi chơi trong ngày">
               {todaySessions.length === 0 ? (
@@ -546,50 +499,6 @@ export function AiDigitalOffice() {
                 </div>
               )}
             </Panel>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-3">
-            {/* Agent grid */}
-            <div className="lg:col-span-2">
-              <SectionTitle icon={<LayoutGrid size={16} />} title="Đội ngũ AI" sub="5 agent · trạng thái suy ra từ dữ liệu thật" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                {agents.map((a) => <AgentCard key={a.key} a={a} />)}
-              </div>
-            </div>
-
-            {/* Status panel */}
-            <div className="space-y-5">
-              <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-                <SectionTitle icon={<ShieldCheck size={16} />} title="Trạng thái Agent" />
-                <div className="space-y-2.5 mt-3">
-                  {(Object.keys(STATUS_META) as AgentStatus[]).map((s) => (
-                    <div key={s} className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-sm [color:var(--pf-text)]">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: STATUS_META[s].color }} />
-                        {STATUS_META[s].label}
-                      </span>
-                      <span className="text-sm font-semibold tabular-nums [color:var(--pf-color-muted)]">{statusCounts[s]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Collaboration flow */}
-              <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-                <SectionTitle icon={<Workflow size={16} />} title="Luồng phối hợp AI" />
-                <div className="mt-3 flex flex-col gap-1.5">
-                  {['Lisa · nhận yêu cầu', 'Hermes · tạo workflow', 'Approval · duyệt', 'Mít Đặc · thực thi', 'Notification · gửi kết quả'].map((step, i, arr) => (
-                    <div key={step}>
-                      <div className="flex items-center gap-2 text-sm [color:var(--pf-text)]">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{i + 1}</span>
-                        {step}
-                      </div>
-                      {i < arr.length - 1 && <div className="ml-3 h-2 w-px [background:var(--pf-border)]" />}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -861,28 +770,3 @@ function SectionTitle({ icon, title, sub }: { icon: React.ReactNode; title: stri
   )
 }
 
-function AgentCard({ a }: { a: AgentView }) {
-  const st = STATUS_META[a.status]
-  return (
-    <div className="rounded-[20px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-      <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{a.icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold [color:var(--pf-text)] truncate">{a.name}</h3>
-            <span className="ml-auto flex items-center gap-1.5 text-xs font-medium" style={{ color: st.color }}>
-              <LiveDot color={st.color} size={8} active={a.status !== 'offline'} />{st.label}
-            </span>
-          </div>
-          <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.role}</p>
-          <p className="mt-1.5 text-xs font-medium [color:var(--pf-text)]">{a.task}</p>
-          <ul className="mt-1 space-y-0.5">
-            {a.bullets.map((b) => (
-              <li key={b} className="text-xs [color:var(--pf-color-muted)]">• {b}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  )
-}
