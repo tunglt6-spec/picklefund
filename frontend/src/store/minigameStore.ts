@@ -1784,14 +1784,17 @@ export const useMinigameStore = create<MinigameStore>()(
       },
 
       setTeamMatchesFromApi: (minigameId, apiMatches) => {
-        const roundCounters = new Map<number, number>()
+        const roundCounters = new Map<string, number>()
         const matches: MiniGameTeamMatch[] = apiMatches.map(m => {
-          const n = (roundCounters.get(m.round) ?? 0) + 1
-          roundCounters.set(m.round, n)
+          const leg = m.leg ?? 1
+          const key = `${leg}-${m.round}`
+          const n = (roundCounters.get(key) ?? 0) + 1
+          roundCounters.set(key, n)
           return {
             id: m.id,
             minigameId,
             round: m.round,
+            leg,
             matchNumber: n,
             team1Id: m.teamAId,
             team2Id: m.teamBId,

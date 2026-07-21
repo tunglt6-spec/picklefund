@@ -312,6 +312,49 @@ describe('MinigameService', () => {
       });
       const callArg = mockPrisma.minigameMatch.createMany.mock.calls[0][0];
       expect(callArg.data).toHaveLength(6);
+      // 1 lượt ⇒ tất cả leg = 1
+      expect(callArg.data.every((m: { leg: number }) => m.leg === 1)).toBe(true);
+    });
+
+    it('creates DOUBLE round-robin (lượt đi & về) = 2×C(n,2) matches, leg 1 & 2, đội đổi sân', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([
+        { id: 't-1' },
+        { id: 't-2' },
+        { id: 't-3' },
+        { id: 't-4' },
+      ]);
+      mockPrisma.minigameMatch.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count: 12 });
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg);
+      await service.generateSchedule('mg-1', 'club-1', true);
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data as Array<{
+        teamAId: string;
+        teamBId: string;
+        round: number;
+        leg: number;
+      }>;
+      // 4 đội = 2×C(4,2) = 12 trận; leg1=6, leg2=6
+      expect(data).toHaveLength(12);
+      expect(data.filter((m) => m.leg === 1)).toHaveLength(6);
+      expect(data.filter((m) => m.leg === 2)).toHaveLength(6);
+      // Lượt về: cùng cặp nhưng đổi teamA/teamB (đổi sân). Cặp {a,b} không đổi qua 2 lượt.
+      const key = (m: { teamAId: string; teamBId: string }) =>
+        [m.teamAId, m.teamBId].sort().join('-');
+      const legPairs = (leg: number) => data.filter((m) => m.leg === leg).map(key).sort();
+      expect(legPairs(1)).toEqual(legPairs(2)); // cùng tập cặp đội ⇒ đôi cố định cả 2 lượt
+      // Có ít nhất 1 trận lượt về đảo thứ tự so với lượt đi
+      const leg1Ordered = data.filter((m) => m.leg === 1).map((m) => `${m.teamAId}>${m.teamBId}`);
+      const leg2Ordered = data.filter((m) => m.leg === 2).map((m) => `${m.teamAId}>${m.teamBId}`);
+      expect(leg2Ordered.some((o) => !leg1Ordered.includes(o))).toBe(true);
+      // Ghi nhớ thể thức vào settings
+      expect(mockPrisma.minigame.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            settings: expect.objectContaining({ doubleRoundRobin: true }),
+          }),
+        }),
+      );
     });
   });
 

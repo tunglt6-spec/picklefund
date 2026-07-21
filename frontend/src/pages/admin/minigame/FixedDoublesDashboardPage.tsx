@@ -749,6 +749,7 @@ export function FixedDoublesDashboardPage() {
 
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [showScheduleChoice, setShowScheduleChoice] = useState(false)
   const isMobile = useIsMobile()
 
   const hydrateFromApi = useCallback(async () => {
@@ -794,12 +795,18 @@ export function FixedDoublesDashboardPage() {
     }
   }, [id, getTeams, hydrateFromApi])
 
+  // Bấm "Tạo Lịch" → mở lựa chọn thể thức (1 lượt / lượt đi & về) trước khi sinh lịch.
   const handleCreateSchedule = useCallback(async () => {
+    setShowScheduleChoice(true)
+  }, [])
+
+  const doCreateSchedule = useCallback(async (doubleRoundRobin: boolean) => {
     if (!id) return
+    setShowScheduleChoice(false)
     try {
-      await api.post(`/minigames/${id}/generate-schedule`)
+      await api.post(`/minigames/${id}/generate-schedule`, { doubleRoundRobin })
       await hydrateFromApi()
-      toast.success('Đã tạo lịch thi đấu!')
+      toast.success(doubleRoundRobin ? 'Đã tạo lịch lượt đi & lượt về!' : 'Đã tạo lịch thi đấu!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi tạo lịch')
     }
@@ -855,6 +862,11 @@ export function FixedDoublesDashboardPage() {
   const kpi         = dashboard?.kpi
   const schedule    = dashboard?.schedule ?? []
   const rounds      = Array.from(new Set(schedule.map(m => m.round))).sort((a, b) => a - b)
+  // Lượt đi/lượt về: nhóm theo leg (1=đi, 2=về). Nhiều leg ⇒ hiện 2 mục.
+  const legs        = Array.from(new Set(schedule.map(m => m.leg ?? 1))).sort((a, b) => a - b)
+  const isDoubleLeg = legs.length > 1
+  const roundsOfLeg = (leg: number) =>
+    Array.from(new Set(schedule.filter(m => (m.leg ?? 1) === leg).map(m => m.round))).sort((a, b) => a - b)
 
   const getTeamInfo = (tid: string): TeamInfo => {
     const t = teams.find(t => t.id === tid)
@@ -1012,17 +1024,44 @@ export function FixedDoublesDashboardPage() {
                 </div>
               </div>
 
-              {rounds.map(r => (
-                <RoundCard
-                  key={r}
-                  round={r}
-                  matches={schedule.filter(m => m.round === r)}
-                  getTeamInfo={getTeamInfo}
-                  canEnter={canEnter}
-                  onEnterScore={setScoreModal}
-                  onDelete={id => setDeleteConfirm(id)}
-                />
-              ))}
+              {isDoubleLeg ? (
+                legs.map(leg => (
+                  <div key={`leg-${leg}`} className="space-y-3">
+                    <div className="flex items-center gap-2 px-1 pt-1">
+                      <span className="text-[12px] font-extrabold uppercase tracking-wide" style={{ color: T.brand }}>
+                        {leg === 1 ? '↗ Lượt đi' : '↘ Lượt về'}
+                      </span>
+                      <span className="text-[11px]" style={{ color: T.txt2 }}>
+                        {schedule.filter(m => (m.leg ?? 1) === leg && m.status === 'COMPLETED').length}/{schedule.filter(m => (m.leg ?? 1) === leg).length} trận
+                      </span>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                    {roundsOfLeg(leg).map(r => (
+                      <RoundCard
+                        key={`${leg}-${r}`}
+                        round={r}
+                        matches={schedule.filter(m => (m.leg ?? 1) === leg && m.round === r)}
+                        getTeamInfo={getTeamInfo}
+                        canEnter={canEnter}
+                        onEnterScore={setScoreModal}
+                        onDelete={id => setDeleteConfirm(id)}
+                      />
+                    ))}
+                  </div>
+                ))
+              ) : (
+                rounds.map(r => (
+                  <RoundCard
+                    key={r}
+                    round={r}
+                    matches={schedule.filter(m => m.round === r)}
+                    getTeamInfo={getTeamInfo}
+                    canEnter={canEnter}
+                    onEnterScore={setScoreModal}
+                    onDelete={id => setDeleteConfirm(id)}
+                  />
+                ))
+              )}
 
               {rounds.length === 0 && (
                 <div style={CARD} className="py-14 text-center text-slate-400">
@@ -1067,6 +1106,39 @@ export function FixedDoublesDashboardPage() {
           onSave={(s1, s2) => handleSaveScore(scoreModal.id, s1, s2)}
           onClose={() => setScoreModal(null)}
         />
+      )}
+
+      {/* ── chọn thể thức sinh lịch: 1 lượt / lượt đi & về ── */}
+      {showScheduleChoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(15,23,42,0.6)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar size={18} style={{ color: T.brand }} />
+              <p className="font-bold text-slate-900">Tạo lịch thi đấu</p>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">Chọn thể thức vòng tròn. Đội/đôi giữ CỐ ĐỊNH ở mọi lượt.</p>
+            <div className="space-y-2.5">
+              <button onClick={() => doCreateSchedule(false)}
+                className="w-full text-left px-4 py-3 rounded-xl border hover:bg-slate-50 transition-colors"
+                style={{ borderColor: T.border }}>
+                <div className="font-semibold text-slate-900 text-sm">1 lượt (vòng tròn)</div>
+                <div className="text-[12px] text-slate-500">Mỗi cặp đội gặp nhau 1 lần.</div>
+              </button>
+              <button onClick={() => doCreateSchedule(true)}
+                className="w-full text-left px-4 py-3 rounded-xl border-2 transition-colors"
+                style={{ borderColor: T.brand, background: `${T.brand}0d` }}>
+                <div className="font-semibold text-sm" style={{ color: T.brand }}>Lượt đi &amp; lượt về</div>
+                <div className="text-[12px] text-slate-500">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
+              </button>
+            </div>
+            <button onClick={() => setShowScheduleChoice(false)}
+              className="mt-4 w-full py-2 rounded-xl border text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              style={{ borderColor: T.border }}>
+              Hủy
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ── delete confirm ── */}

@@ -25,6 +25,8 @@ export interface MiniGame {
   formatType: MinigameFormatType
   drawMode: DrawMode
   pairingMode?: PairingMode
+  /** FIXED_DOUBLES_ROUND_ROBIN: đã sinh lịch lượt đi & lượt về (double round-robin). */
+  doubleRoundRobin?: boolean
 }
 
 /** Player key của khách mời dùng prefix `guest-`. Dùng chung để nhận diện + hiển thị badge "Khách". */
@@ -292,6 +294,8 @@ export interface MiniGameTeamMatch {
   id: string
   minigameId: string
   round: number
+  /** Lượt đấu: 1 = lượt đi, 2 = lượt về (double round-robin). Mặc định 1 (đọc kèm `?? 1`). */
+  leg?: number
   matchNumber: number
   team1Id: string
   team2Id: string

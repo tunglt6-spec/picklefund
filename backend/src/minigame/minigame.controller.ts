@@ -16,6 +16,7 @@ import {
   IsEnum,
   IsArray,
   IsInt,
+  IsBoolean,
   IsDateString,
   Min,
   MaxLength,
@@ -87,6 +88,11 @@ class AddParticipantsDto {
 class UpdateMatchScoreDto {
   @IsInt() @Min(0) scoreA!: number;
   @IsInt() @Min(0) scoreB!: number;
+}
+
+class GenerateScheduleDto {
+  // true = sinh lịch LƯỢT ĐI & LƯỢT VỀ (double round-robin); mặc định 1 lượt.
+  @IsOptional() @IsBoolean() doubleRoundRobin?: boolean;
 }
 
 class GroupDto {
@@ -183,8 +189,11 @@ export class MinigameController {
   async generateSchedule(
     @Param('id') id: string,
     @CurrentUser() user: RequestUser,
+    @Body() body: GenerateScheduleDto,
   ) {
-    return ok(await this.svc.generateSchedule(id, user.clubId));
+    return ok(
+      await this.svc.generateSchedule(id, user.clubId, !!body?.doubleRoundRobin),
+    );
   }
 
   // GROUP_STAGE: lưu lại cách chia bảng (sau khi kéo-chuyển người giữa các bảng).

@@ -637,6 +637,8 @@ model MinigameMatch {
   scoreB     Int?        @map("score_b")
   winnerId   String?     @map("winner_id")
   round      Int         @default(1)
+  /// Lượt đấu: 1 = lượt đi, 2 = lượt về (double round-robin). round đánh lại 1..N mỗi lượt.
+  leg        Int         @default(1)
   courtNo    Int?        @map("court_no")
   status     MatchStatus @default(PENDING)
   playedAt   DateTime?   @map("played_at")

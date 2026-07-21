@@ -48,7 +48,7 @@ export class MinigameService {
             teamA: { select: { id: true, name: true } },
             teamB: { select: { id: true, name: true } },
           },
-          orderBy: [{ round: 'asc' }, { createdAt: 'asc' }],
+          orderBy: [{ leg: 'asc' }, { round: 'asc' }, { createdAt: 'asc' }],
         },
         participants: {
           include: { member: { select: { id: true, fullName: true } } },
@@ -360,7 +360,11 @@ export class MinigameService {
     return this.findOne(id, clubId);
   }
 
-  async generateSchedule(id: string, clubId: string) {
+  async generateSchedule(
+    id: string,
+    clubId: string,
+    doubleRoundRobin = false,
+  ) {
     const mg = await this.assertOwnership(id, clubId);
     // GROUP_STAGE: vòng tròn TRONG TỪNG BẢNG (đấu đơn), khác circle-method toàn giải của doubles.
     if (mg.format === 'GROUP_STAGE')
@@ -397,33 +401,50 @@ export class MinigameService {
       teamAId: string;
       teamBId: string;
       round: number;
+      leg: number;
       courtNo: number;
     }> = [];
-    // Cố định slot[0], xoay các slot còn lại qua từng vòng.
-    let arr = [...slots];
-    for (let round = 0; round < rounds; round++) {
-      let courtNo = 0;
-      for (let i = 0; i < half; i++) {
-        const a = arr[i];
-        const b = arr[n - 1 - i];
-        // a hoặc b = null ⇒ đội còn lại NGHỈ vòng (BYE) — không tạo trận.
-        if (a !== null && b !== null) {
-          courtNo++;
-          matches.push({
-            minigameId: id,
-            teamAId: a,
-            teamBId: b,
-            round: round + 1,
-            courtNo,
-          });
+    // Sinh 1 lượt bằng circle method. swap=true ⇒ đội đổi vị trí Đội 1/Đội 2 (lượt về).
+    // Đội CỐ ĐỊNH: chỉ ref teamId, cùng slots cho cả 2 lượt ⇒ đôi giữ nguyên suốt giải.
+    const buildLeg = (leg: number, swap: boolean) => {
+      let arr = [...slots]; // cố định slot[0], xoay các slot còn lại qua từng vòng
+      for (let round = 0; round < rounds; round++) {
+        let courtNo = 0;
+        for (let i = 0; i < half; i++) {
+          const a = arr[i];
+          const b = arr[n - 1 - i];
+          // a hoặc b = null ⇒ đội còn lại NGHỈ vòng (BYE) — không tạo trận.
+          if (a !== null && b !== null) {
+            courtNo++;
+            matches.push({
+              minigameId: id,
+              teamAId: swap ? b : a,
+              teamBId: swap ? a : b,
+              round: round + 1, // round đánh lại 1..N mỗi lượt
+              leg,
+              courtNo,
+            });
+          }
         }
+        // Xoay: giữ arr[0], đưa arr[1] về cuối.
+        arr = [arr[0], ...arr.slice(2), arr[1]];
       }
-      // Xoay: giữ arr[0], đưa arr[1] về cuối.
-      arr = [arr[0], ...arr.slice(2), arr[1]];
-    }
+    };
+
+    buildLeg(1, false); // Lượt đi
+    if (doubleRoundRobin) buildLeg(2, true); // Lượt về (đổi sân)
 
     await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
     await this.prisma.minigameMatch.createMany({ data: matches });
+    // Ghi nhớ lựa chọn thể thức vào settings để dashboard hiển thị đúng lượt đi/về.
+    const prevSettings =
+      mg.settings && typeof mg.settings === 'object'
+        ? (mg.settings as Record<string, unknown>)
+        : {};
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...prevSettings, doubleRoundRobin } },
+    });
     return this.findOne(id, clubId);
   }
 
