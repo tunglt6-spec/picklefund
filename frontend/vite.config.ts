@@ -30,17 +30,47 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // Bundle chính ~2.8MB > mặc định 2MiB; nâng để precache đủ cho offline.
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // Precache JS/CSS/HTML/icon nhỏ; KHÔNG precache ảnh nội dung lớn (aido-media/*) —
+        // để runtime-cache (CacheFirst) tải khi cần, tránh phình gói cài PWA.
+        globPatterns: ['**/*.{js,css,html,ico,woff2}', 'favicon*.png', 'icons/**'],
+        globIgnores: ['**/aido-media/**', '**/lisa-avatar.*', '**/logo-picklefund*'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        runtimeCaching: [
+          {
+            // Ảnh (banner AIDO, avatar, logo, ảnh nội dung) — cache khi dùng.
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'pf-images',
+              expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 3600 },
+            },
+          },
+        ],
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        // Tách vendor lớn thành chunk riêng → cache tốt, giảm parse bundle chính.
+        // Dạng HÀM (rolldown-vite chỉ nhận ManualChunksFunction). xlsx/jspdf/html2canvas-pro
+        // KHÔNG gom ở đây — đã dynamic import (lib/export.ts, infographic.utils.ts) nên tự tách lazy.
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('recharts') || id.includes('/d3-') || id.includes('victory-vendor')) return 'vendor-charts'
+          if (id.includes('framer-motion')) return 'vendor-motion'
+          if (id.includes('socket.io') || id.includes('engine.io')) return 'vendor-socket'
+          if (id.includes('react-router') || id.includes('react-dom') || /node_modules\/react\//.test(id)) return 'vendor-react'
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       // Backend dùng global prefix `/api` (setGlobalPrefix('api')), nên KHÔNG strip

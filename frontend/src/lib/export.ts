@@ -1,6 +1,5 @@
-﻿import * as XLSX from 'xlsx'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+﻿// xlsx / jspdf / html2canvas-pro được DYNAMIC import trong từng hàm export (chỉ tải khi bấm
+// nút Xuất) → loại ~700-800KB khỏi bundle khởi động. html2canvas-pro thay html2canvas (gộp 1 lib).
 
 /* ─── EPIC10C: branding cho PDF/export ───
  * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
@@ -59,6 +58,10 @@ const BASE_CSS = `
 `
 
 async function downloadPDF(sections: string[], filename: string) {
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+    import('jspdf'),
+    import('html2canvas-pro'),
+  ])
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageW = 210
   const pageH = 297
@@ -135,10 +138,12 @@ async function downloadPDF(sections: string[], filename: string) {
 /* ════════════════════════════════════════
    EXCEL
 ════════════════════════════════════════ */
-export function exportExcel(
+export async function exportExcel(
   filename: string,
   sheets: { name: string; headers: string[]; rows: (string | number)[][] }[]
 ) {
+  const mod = await import('xlsx')
+  const XLSX = ((mod as unknown as { default?: typeof mod }).default ?? mod)
   const wb = XLSX.utils.book_new()
   for (const sheet of sheets) {
     const data = [sheet.headers, ...sheet.rows]

@@ -3,101 +3,109 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
 import { AppLayout } from './components/layout/AppLayout'
-import { Login } from './pages/Login'
-import { NotFound } from './pages/NotFound'
+import { lazy, Suspense, type ComponentType } from 'react'
+
+// Route-level code-splitting: mỗi trang là 1 chunk lazy (giảm bundle khởi động ~50%).
+// Helper nạp NAMED export thành default cho React.lazy. Trang render trong <Suspense> (dưới).
+function lz(loader: () => Promise<Record<string, unknown>>, name: string) {
+  return lazy(async () => ({ default: (await loader())[name] as ComponentType }))
+}
+
+const Login = lz(() => import('./pages/Login'), 'Login')
+const NotFound = lz(() => import('./pages/NotFound'), 'NotFound')
 
 // Public (V2.2 commercial)
-import { Landing } from './pages/public/Landing'
-import { Pricing } from './pages/public/Pricing'
-import { DemoSelector } from './pages/public/DemoSelector'
+const Landing = lz(() => import('./pages/public/Landing'), 'Landing')
+const Pricing = lz(() => import('./pages/public/Pricing'), 'Pricing')
+const DemoSelector = lz(() => import('./pages/public/DemoSelector'), 'DemoSelector')
 
 // Super Admin pages
-import { SuperDashboard } from './pages/super/SuperDashboard'
-import { SuperClubs } from './pages/super/SuperClubs'
-import { Onboarding } from './pages/super/Onboarding'
-import { SuperClubDetail } from './pages/super/SuperClubDetail'
-import { SuperUsers } from './pages/super/SuperUsers'
-import { AuditLogs } from './pages/super/AuditLogs'
-import { SuperSettings } from './pages/super/SuperSettings'
+const SuperDashboard = lz(() => import('./pages/super/SuperDashboard'), 'SuperDashboard')
+const SuperClubs = lz(() => import('./pages/super/SuperClubs'), 'SuperClubs')
+const Onboarding = lz(() => import('./pages/super/Onboarding'), 'Onboarding')
+const SuperClubDetail = lz(() => import('./pages/super/SuperClubDetail'), 'SuperClubDetail')
+const SuperUsers = lz(() => import('./pages/super/SuperUsers'), 'SuperUsers')
+const AuditLogs = lz(() => import('./pages/super/AuditLogs'), 'AuditLogs')
+const SuperSettings = lz(() => import('./pages/super/SuperSettings'), 'SuperSettings')
 
 // Club Admin pages
-import { ClubDashboard } from './pages/admin/ClubDashboard'
-import { LisaChat } from './pages/admin/LisaChat'
-import { Billing } from './pages/admin/Billing'
-import { Members } from './pages/admin/Members'
-import { FundPeriods } from './pages/admin/FundPeriods'
-import { Contributions } from './pages/admin/Contributions'
-import { Expenses } from './pages/admin/Expenses'
-import { Debts } from './pages/admin/Debts'
-import { ThuChiHub } from './pages/admin/ThuChiHub'
-import { Attendance } from './pages/admin/Attendance'
-import { WeeklyActivity } from './pages/admin/WeeklyActivity'
-import { SessionRegistration } from './pages/admin/SessionRegistration'
-import { CheckIn } from './pages/admin/CheckIn'
-import { ScheduleCalendar } from './pages/admin/ScheduleCalendar'
-import { FinanceDashboard } from './pages/admin/FinanceDashboard'
-import { Reports } from './pages/admin/Reports'
-import { MemberScoring } from './pages/admin/MemberScoring'
-import { Settings } from './pages/admin/Settings'
-import { Notifications } from './pages/admin/Notifications'
+const ClubDashboard = lz(() => import('./pages/admin/ClubDashboard'), 'ClubDashboard')
+const LisaChat = lz(() => import('./pages/admin/LisaChat'), 'LisaChat')
+const Billing = lz(() => import('./pages/admin/Billing'), 'Billing')
+const Members = lz(() => import('./pages/admin/Members'), 'Members')
+const FundPeriods = lz(() => import('./pages/admin/FundPeriods'), 'FundPeriods')
+const Contributions = lz(() => import('./pages/admin/Contributions'), 'Contributions')
+const Expenses = lz(() => import('./pages/admin/Expenses'), 'Expenses')
+const Debts = lz(() => import('./pages/admin/Debts'), 'Debts')
+const ThuChiHub = lz(() => import('./pages/admin/ThuChiHub'), 'ThuChiHub')
+const Attendance = lz(() => import('./pages/admin/Attendance'), 'Attendance')
+const WeeklyActivity = lz(() => import('./pages/admin/WeeklyActivity'), 'WeeklyActivity')
+const SessionRegistration = lz(() => import('./pages/admin/SessionRegistration'), 'SessionRegistration')
+const CheckIn = lz(() => import('./pages/admin/CheckIn'), 'CheckIn')
+const ScheduleCalendar = lz(() => import('./pages/admin/ScheduleCalendar'), 'ScheduleCalendar')
+const FinanceDashboard = lz(() => import('./pages/admin/FinanceDashboard'), 'FinanceDashboard')
+const Reports = lz(() => import('./pages/admin/Reports'), 'Reports')
+const MemberScoring = lz(() => import('./pages/admin/MemberScoring'), 'MemberScoring')
+const Settings = lz(() => import('./pages/admin/Settings'), 'Settings')
+const Notifications = lz(() => import('./pages/admin/Notifications'), 'Notifications')
 
 // Treasurer pages
-import { TreasurerDashboard } from './pages/treasurer/TreasurerDashboard'
-import { TreasurerIncome } from './pages/treasurer/TreasurerIncome'
-import { TreasurerExpense } from './pages/treasurer/TreasurerExpense'
-import { TreasurerLedger } from './pages/treasurer/TreasurerLedger'
-import { TreasurerReminders } from './pages/treasurer/TreasurerReminders'
-import { TreasurerCashbookModule } from './pages/treasurer/modules/TreasurerCashbookModule'
+const TreasurerDashboard = lz(() => import('./pages/treasurer/TreasurerDashboard'), 'TreasurerDashboard')
+const TreasurerIncome = lz(() => import('./pages/treasurer/TreasurerIncome'), 'TreasurerIncome')
+const TreasurerExpense = lz(() => import('./pages/treasurer/TreasurerExpense'), 'TreasurerExpense')
+const TreasurerLedger = lz(() => import('./pages/treasurer/TreasurerLedger'), 'TreasurerLedger')
+const TreasurerReminders = lz(() => import('./pages/treasurer/TreasurerReminders'), 'TreasurerReminders')
+const TreasurerCashbookModule = lz(() => import('./pages/treasurer/modules/TreasurerCashbookModule'), 'TreasurerCashbookModule')
 
 // Minigame pages
-import { MinigameList } from './pages/admin/minigame/MinigameList'
-import { MinigameForm } from './pages/admin/minigame/MinigameForm'
-import { MinigameDashboard } from './pages/admin/minigame/MinigameDashboard'
-import { GroupAssignment } from './pages/admin/minigame/GroupAssignment'
-import { MatchSchedule } from './pages/admin/minigame/MatchSchedule'
-import { StandingsPage } from './pages/admin/minigame/StandingsPage'
-import { MatchHistory } from './pages/admin/minigame/MatchHistory'
+const MinigameList = lz(() => import('./pages/admin/minigame/MinigameList'), 'MinigameList')
+const MinigameForm = lz(() => import('./pages/admin/minigame/MinigameForm'), 'MinigameForm')
+const MinigameDashboard = lz(() => import('./pages/admin/minigame/MinigameDashboard'), 'MinigameDashboard')
+const GroupAssignment = lz(() => import('./pages/admin/minigame/GroupAssignment'), 'GroupAssignment')
+const MatchSchedule = lz(() => import('./pages/admin/minigame/MatchSchedule'), 'MatchSchedule')
+const StandingsPage = lz(() => import('./pages/admin/minigame/StandingsPage'), 'StandingsPage')
+const MatchHistory = lz(() => import('./pages/admin/minigame/MatchHistory'), 'MatchHistory')
 
 // Member pages
-import { MemberDashboard } from './pages/member/MemberDashboard'
-import { MemberAttendance } from './pages/member/MemberAttendance'
-import { MemberContributions } from './pages/member/MemberContributions'
-import { MemberNotifications } from './pages/member/MemberNotifications'
-import { MemberReceipt } from './pages/member/MemberReceipt'
-import { MemberLisaChat } from './pages/member/MemberLisaChat'
-import { MemberOffice } from './pages/member/MemberOffice'
+const MemberDashboard = lz(() => import('./pages/member/MemberDashboard'), 'MemberDashboard')
+const MemberAttendance = lz(() => import('./pages/member/MemberAttendance'), 'MemberAttendance')
+const MemberContributions = lz(() => import('./pages/member/MemberContributions'), 'MemberContributions')
+const MemberNotifications = lz(() => import('./pages/member/MemberNotifications'), 'MemberNotifications')
+const MemberReceipt = lz(() => import('./pages/member/MemberReceipt'), 'MemberReceipt')
+const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'MemberLisaChat')
+const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
 
 // Member modules gom (UI Consolidation v2.1) — view-only, tái dùng màn đã có làm tab.
-import { MemberPersonalModule } from './pages/member/modules/MemberPersonalModule'
-import { MemberFinanceModule } from './pages/member/modules/MemberFinanceModule'
-import { MemberActivityModule } from './pages/member/modules/MemberActivityModule'
-import { MemberCompeteModule } from './pages/member/modules/MemberCompeteModule'
+const MemberPersonalModule = lz(() => import('./pages/member/modules/MemberPersonalModule'), 'MemberPersonalModule')
+const MemberFinanceModule = lz(() => import('./pages/member/modules/MemberFinanceModule'), 'MemberFinanceModule')
+const MemberActivityModule = lz(() => import('./pages/member/modules/MemberActivityModule'), 'MemberActivityModule')
+const MemberCompeteModule = lz(() => import('./pages/member/modules/MemberCompeteModule'), 'MemberCompeteModule')
 
 // Member accounts + change password
-import { MemberAccounts } from './pages/admin/MemberAccounts'
-import { ChangePassword } from './pages/ChangePassword'
+const MemberAccounts = lz(() => import('./pages/admin/MemberAccounts'), 'MemberAccounts')
+const ChangePassword = lz(() => import('./pages/ChangePassword'), 'ChangePassword')
 
 // AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN
-import { AiManagerDashboard } from './pages/admin/ai/AiManagerDashboard'
-import { AiApprovalInbox } from './pages/admin/ai/AiApprovalInbox'
-import { MitDacExecutionLog } from './pages/admin/ai/MitDacExecutionLog'
-import { SchedulerPage } from './pages/admin/ai/SchedulerPage'
-import { AlertCenterPage } from './pages/admin/ai/AlertCenterPage'
-import { DataMonitorPage } from './pages/admin/ai/DataMonitorPage'
-import { KpiMonitorPage } from './pages/admin/ai/KpiMonitorPage'
-import { AuditLogViewer } from './pages/admin/ai/AuditLogViewer'
-import { ClubMemoryManager } from './pages/admin/ai/ClubMemoryManager'
-import { AiDigitalOffice } from './pages/admin/AiDigitalOffice'
+const AiManagerDashboard = lz(() => import('./pages/admin/ai/AiManagerDashboard'), 'AiManagerDashboard')
+const AiApprovalInbox = lz(() => import('./pages/admin/ai/AiApprovalInbox'), 'AiApprovalInbox')
+const MitDacExecutionLog = lz(() => import('./pages/admin/ai/MitDacExecutionLog'), 'MitDacExecutionLog')
+const SchedulerPage = lz(() => import('./pages/admin/ai/SchedulerPage'), 'SchedulerPage')
+const AlertCenterPage = lz(() => import('./pages/admin/ai/AlertCenterPage'), 'AlertCenterPage')
+const DataMonitorPage = lz(() => import('./pages/admin/ai/DataMonitorPage'), 'DataMonitorPage')
+const KpiMonitorPage = lz(() => import('./pages/admin/ai/KpiMonitorPage'), 'KpiMonitorPage')
+const AuditLogViewer = lz(() => import('./pages/admin/ai/AuditLogViewer'), 'AuditLogViewer')
+const ClubMemoryManager = lz(() => import('./pages/admin/ai/ClubMemoryManager'), 'ClubMemoryManager')
+const AiDigitalOffice = lz(() => import('./pages/admin/AiDigitalOffice'), 'AiDigitalOffice')
 
 // Hermes Workflows (Epic 5) — chỉ SUPER_ADMIN / CLUB_ADMIN
-import { WorkflowRules } from './pages/admin/workflows/WorkflowRules'
+const WorkflowRules = lz(() => import('./pages/admin/workflows/WorkflowRules'), 'WorkflowRules')
 
 // Module gom (UI Consolidation v2.1) — tái dùng màn đã có làm tab, không đổi nghiệp vụ.
-import { MembersModule } from './pages/admin/modules/MembersModule'
-import { FinanceModule } from './pages/admin/modules/FinanceModule'
-import { ActivityModule } from './pages/admin/modules/ActivityModule'
-import { CompeteModule } from './pages/admin/modules/CompeteModule'
-import { SystemModule } from './pages/admin/modules/SystemModule'
+const MembersModule = lz(() => import('./pages/admin/modules/MembersModule'), 'MembersModule')
+const FinanceModule = lz(() => import('./pages/admin/modules/FinanceModule'), 'FinanceModule')
+const ActivityModule = lz(() => import('./pages/admin/modules/ActivityModule'), 'ActivityModule')
+const CompeteModule = lz(() => import('./pages/admin/modules/CompeteModule'), 'CompeteModule')
+const SystemModule = lz(() => import('./pages/admin/modules/SystemModule'), 'SystemModule')
 
 const queryClient = new QueryClient()
 
@@ -147,6 +155,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Đang tải…</div>}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/pricing" element={<Pricing />} />
@@ -256,6 +265,7 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
       </BrowserRouter>
     </QueryClientProvider>

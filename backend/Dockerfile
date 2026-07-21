@@ -5,6 +5,9 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 RUN npm run build
+# Loại devDependencies khỏi node_modules production rồi generate lại client vào cây đã prune
+# (giữ prisma CLI vì đã chuyển sang dependencies → `migrate deploy` runtime vẫn chạy). Giảm image.
+RUN npm prune --omit=dev && npx prisma generate
 
 FROM node:20-alpine AS runner
 ENV NODE_ENV=production

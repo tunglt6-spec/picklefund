@@ -182,6 +182,8 @@ model FundPeriod {
   periodMembers      FundPeriodMember[]
 
   @@index([clubId])
+  @@index([clubId, type, status], map: "idx_fp_club_type_status")
+  @@index([clubId, startDate], map: "idx_fp_club_start")
   @@map("fund_periods")
 }
 
@@ -241,6 +243,7 @@ model AttendanceSession {
   expenses          LivingExpense[]
 
   @@index([clubId, fundPeriodId])
+  @@index([clubId, sessionDate], map: "idx_as_club_session_date")
   @@map("attendance_sessions")
 }
 
@@ -324,6 +327,7 @@ model FundContribution {
   @@index([clubId, fundPeriodId])
   @@index([clubId, memberId])
   @@index([clubId, isConfirmed])
+  @@index([clubId, fundSource, isConfirmed], map: "idx_fc_club_fundsrc_confirmed")
   @@map("fund_contributions")
 }
 
@@ -398,6 +402,9 @@ model LivingExpense {
   createdBy         User               @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
 
   @@index([clubId, fundPeriodId])
+  @@index([clubId, fundSource, status], map: "idx_le_club_fundsrc_status")
+  @@index([attendanceSessionId], map: "idx_le_att_session")
+  @@index([clubId, expenseDate], map: "idx_le_club_expdate")
   @@map("living_expenses")
 }
 
@@ -623,6 +630,7 @@ model MinigameTeam {
   matchesAsA MinigameMatch[] @relation("MatchTeamA")
   matchesAsB MinigameMatch[] @relation("MatchTeamB")
 
+  @@index([minigameId], map: "idx_mt_minigame")
   @@map("minigame_teams")
 }
 
@@ -648,6 +656,7 @@ model MinigameMatch {
   teamA    MinigameTeam? @relation("MatchTeamA", fields: [teamAId], references: [id])
   teamB    MinigameTeam? @relation("MatchTeamB", fields: [teamBId], references: [id])
 
+  @@index([minigameId, status], map: "idx_mm_minigame_status")
   @@map("minigame_matches")
 }
 
