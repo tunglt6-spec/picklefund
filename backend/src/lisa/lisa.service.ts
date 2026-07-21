@@ -10,14 +10,20 @@ import type {
   AskLisaResult,
 } from './lisa.types';
 
-const SYSTEM_PROMPT = `Bạn là Lisa, trợ lý AI của ứng dụng PickleFund — nền tảng quản lý quỹ CLB pickleball Việt Nam.
+const SYSTEM_PROMPT = `Bạn là Lisa, trợ lý AI BÊN TRONG ứng dụng PickleFund — nền tảng quản lý quỹ & hoạt động CLB thể thao (pickleball) tại Việt Nam. Bạn CHỈ hỗ trợ trong phạm vi PickleFund và dữ liệu CLB của người dùng.
 
 QUY TẮC BẮT BUỘC — VI PHẠM LÀ SAI:
-1. CHỈ trả lời bằng tiếng Việt. Tuyệt đối không dùng tiếng Anh dù chỉ một từ.
-2. Không "think out loud", không giải thích quá trình suy nghĩ, không dịch nguồn.
-3. Nếu dữ liệu đầu vào (web search, hệ thống) bằng tiếng Anh → tự dịch và tổng hợp thành câu trả lời tiếng Việt.
-4. Trả lời ngắn gọn, thân thiện. Xưng "Lisa", gọi người dùng bằng tên nếu biết.
-5. Dùng dữ liệu hệ thống khi có. Không bịa số liệu.`;
+1. CHỈ trả lời bằng tiếng Việt, không dùng tiếng Anh dù một từ. Không "think out loud", không giải thích quá trình suy nghĩ.
+2. CHỈ nói về: dữ liệu CLB của người dùng (quỹ, đóng góp, thu, chi, kỳ quỹ, thành viên, buổi chơi, điểm danh, thi đấu, báo cáo) và cách sử dụng các tính năng trong app PickleFund.
+3. TUYỆT ĐỐI KHÔNG hướng dẫn về bất cứ hệ thống nào NGOÀI PickleFund (ví dụ: VNeID, cổng dịch vụ công, cơ quan công an, nhà cung cấp hosting/Whois, học ngoại ngữ, tra cứu web...). Nếu câu hỏi nằm ngoài phạm vi CLB/PickleFund → lịch sự nói rằng bạn chỉ hỗ trợ về CLB trên PickleFund, rồi mời người dùng hỏi lại đúng chủ đề. KHÔNG bịa hướng dẫn.
+4. Lisa KHÔNG tự thêm/sửa/xóa dữ liệu. Khi người dùng muốn thao tác (thêm/sửa/xóa thành viên, quỹ, thu, chi, buổi chơi...), hãy CHỈ ĐƯỜNG tới đúng khu vực trong app:
+   - Thành viên & tài khoản, vai trò → module "Thành viên".
+   - Quỹ, Thu, Chi, Kỳ quỹ, Công nợ, Báo cáo → module "Tài chính".
+   - Lịch sinh hoạt, Đăng ký buổi, Check-in, Điểm danh → module "Hoạt động".
+   - Minigame, Lịch sử thi đấu, Bảng điểm → module "Thi đấu".
+   Lưu ý: chỉ CHỦ CLB (quản trị) hoặc THỦ QUỸ mới thêm/sửa/xóa được; thành viên chỉ xem. Nhắc rằng xóa/sửa dữ liệu lịch sử có thể ảnh hưởng đối soát & báo cáo nên cần cân nhắc.
+5. Dùng SỐ LIỆU HỆ THỐNG được cung cấp; TUYỆT ĐỐI không bịa số. Nếu không có dữ liệu hoặc không chắc → nói thẳng là chưa có thông tin, đừng đoán.
+6. Trả lời ngắn gọn, thân thiện, xưng "Lisa", gọi người dùng bằng tên nếu biết.`;
 
 @Injectable()
 export class LisaService {
@@ -118,48 +124,6 @@ export class LisaService {
     }
 
     return fallback;
-  }
-
-  // ─── Web search (DuckDuckGo instant answers) ─────────────────────────────
-
-  private async webSearch(query: string): Promise<string | null> {
-    try {
-      const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&kl=vn-vi`;
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-          Accept: 'text/html,application/xhtml+xml',
-          'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.5',
-        },
-      });
-      if (!res.ok) {
-        this.logger.warn(`[Lisa] DuckDuckGo search error ${res.status}`);
-        return null;
-      }
-      const html = await res.text();
-      const snippets: string[] = [];
-      // Extract result__snippet spans from DDG HTML
-      const re = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(html)) !== null && snippets.length < 4) {
-        const text = m[1]
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        if (text.length > 20) snippets.push(text);
-      }
-      if (snippets.length > 0) {
-        this.logger.log(
-          `[Lisa] Web search "${query}" → ${snippets.length} snippets`,
-        );
-        return snippets.join('\n---\n');
-      }
-      return null;
-    } catch (err: any) {
-      this.logger.warn(`[Lisa] webSearch error: ${err.message}`);
-      return null;
-    }
   }
 
   // ─── Member context ───────────────────────────────────────────────────────
@@ -424,39 +388,11 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
     const ctx = await this.getMemberContext(memberId);
     const contextStr = this.buildContextString(ctx);
 
-    // Detect if question is about general knowledge (not club-specific)
-    const clubKeywords = [
-      'quỹ',
-      'đóng',
-      'tiền',
-      'buổi',
-      'tham gia',
-      'thành viên',
-      'clb',
-      'câu lạc bộ',
-      'kỳ',
-      'phí',
-      'sân',
-      'chi',
-    ];
-    const isClubQuestion = clubKeywords.some((k) =>
-      question.toLowerCase().includes(k),
-    );
-
-    let webContext = '';
-    if (!isClubQuestion) {
-      const searchResult = await this.webSearch(question);
-      if (searchResult) {
-        webContext = `\n=== TÌM KIẾM INTERNET ===\n${searchResult}`;
-      }
-    }
-
-    const fallback = `Xin chào ${ctx.memberName}! Số dư quỹ CLB hiện tại: ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ. Bạn ${ctx.currentPeriodPaid ? 'đã' : 'chưa'} đóng quỹ kỳ này. Để biết thêm chi tiết về câu hỏi của bạn, vui lòng liên hệ quản trị viên CLB.`;
-    const answer = await this.askAI(
-      contextStr + webContext,
-      question,
-      fallback,
-    );
+    // KHÔNG tra web nữa: web search "mù" trên câu hỏi ngoài từ khóa CLB từng khiến Lisa
+    // hallucinate sang VNeID/hosting/học ngoại ngữ. Lisa chỉ neo vào DỮ LIỆU CLB + phạm vi
+    // PickleFund (system prompt đã ràng buộc). Ngoài phạm vi → từ chối lịch sự, không bịa.
+    const fallback = `Xin chào ${ctx.memberName}! Số dư quỹ CLB hiện tại: ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ. Bạn ${ctx.currentPeriodPaid ? 'đã' : 'chưa'} đóng quỹ kỳ này. Lisa chỉ hỗ trợ các thông tin về CLB của bạn trên PickleFund — bạn hỏi lại về quỹ, thành viên, buổi chơi... giúp Lisa nhé.`;
+    const answer = await this.askAI(contextStr, question, fallback);
 
     const actions: string[] = [];
     if (!ctx.currentPeriodPaid) actions.push('Đóng quỹ kỳ hiện tại');
