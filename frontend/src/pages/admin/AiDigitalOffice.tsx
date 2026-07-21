@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
-  ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
+  ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays, LayoutGrid,
 } from 'lucide-react'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -599,24 +599,8 @@ export function AiDigitalOffice() {
             )}
           </Panel>
 
-          {/* Điều hướng quản trị */}
-          <Panel icon={<ArrowRight size={16} />} title="Quản trị vận hành" sub="Mở màn chi tiết">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                ['Nhật ký thực thi (Mít Đặc)', '/admin/execution-log'],
-                ['Hàng đợi duyệt', '/admin/ai-approvals'],
-                ['Workflows', '/admin/workflows'],
-                ['Scheduler', '/admin/ai-scheduler'],
-                ['Trung tâm cảnh báo', '/admin/ai-alerts'],
-                ['AI Operations Center', '/admin/ai-manager'],
-              ].map(([label, to]) => (
-                <button key={to} onClick={() => navigate(to)}
-                  className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)]">
-                  {label}<ArrowRight size={15} />
-                </button>
-              ))}
-            </div>
-          </Panel>
+          {/* Điều hướng quản trị — 1 khu vực dùng chung, đã bỏ trùng (Workflows/Mít Đặc là tab). */}
+          <AdminLinks />
         </div>
       )}
 
@@ -704,22 +688,8 @@ export function AiDigitalOffice() {
               )}
             </Panel>
 
-            {/* Phân tích chi tiết */}
-            <Panel icon={<ArrowRight size={16} />} title="Phân tích chi tiết" sub="Mở màn chuyên sâu">
-              <div className="grid gap-2">
-                {[
-                  ['KPI Monitor', '/admin/ai-kpi'],
-                  ['Data Monitor', '/admin/ai-data-monitor'],
-                  ['Nhật ký AI', '/admin/execution-log'],
-                  ['Audit Logs', '/admin/ai-audit-logs'],
-                ].map(([label, to]) => (
-                  <button key={to} onClick={() => navigate(to)}
-                    className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)]">
-                    {label}<ArrowRight size={15} />
-                  </button>
-                ))}
-              </div>
-            </Panel>
+            {/* Điều hướng quản trị — dùng chung 1 khu vực với Operations (đã gộp, bỏ trùng). */}
+            <AdminLinks />
           </div>
         </div>
       )}
@@ -800,6 +770,48 @@ function SectionTitle({ icon, title, sub }: { icon: React.ReactNode; title: stri
       <h2 className="text-sm font-bold [color:var(--pf-text)]">{title}</h2>
       {sub && <span className="text-xs [color:var(--pf-color-muted)]">· {sub}</span>}
     </div>
+  )
+}
+
+/**
+ * AdminLinks — 1 khu vực DUY NHẤT truy cập nhanh các màn quản trị AI chi tiết (dùng chung cho
+ * Operations + Analytics, thay 2 panel link cũ bị trùng). Đã BỎ link trùng với tab AIDO
+ * (Workflows, Nhật ký AI/Mít Đặc). Lưới auto-fit → co giãn gọn mọi bề rộng.
+ */
+const ADMIN_LINKS: { label: string; to: string; icon: React.ReactNode }[] = [
+  { label: 'Hàng đợi duyệt', to: '/admin/ai-approvals', icon: <Inbox size={16} /> },
+  { label: 'Scheduler', to: '/admin/ai-scheduler', icon: <CalendarDays size={16} /> },
+  { label: 'Trung tâm cảnh báo', to: '/admin/ai-alerts', icon: <AlertTriangle size={16} /> },
+  { label: 'KPI Monitor', to: '/admin/ai-kpi', icon: <Gauge size={16} /> },
+  { label: 'Data Monitor', to: '/admin/ai-data-monitor', icon: <BarChart3 size={16} /> },
+  { label: 'Audit Logs', to: '/admin/ai-audit-logs', icon: <ShieldCheck size={16} /> },
+]
+function AdminLinks() {
+  const navigate = useNavigate()
+  return (
+    <Panel icon={<LayoutGrid size={16} />} title="Trung tâm quản trị AI" sub="Mở màn chi tiết">
+      <button
+        onClick={() => navigate('/admin/ai-manager')}
+        className="mb-2 flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        style={{ background: 'var(--pf-primary)' }}
+      >
+        <span className="flex items-center gap-2"><LayoutGrid size={16} />AI Operations Center · tất cả màn quản trị</span>
+        <ArrowRight size={16} />
+      </button>
+      <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+        {ADMIN_LINKS.map((l) => (
+          <button
+            key={l.to}
+            onClick={() => navigate(l.to)}
+            className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)]"
+          >
+            <span className="[color:var(--pf-primary)]">{l.icon}</span>
+            <span className="flex-1 text-left">{l.label}</span>
+            <ArrowRight size={14} />
+          </button>
+        ))}
+      </div>
+    </Panel>
   )
 }
 
