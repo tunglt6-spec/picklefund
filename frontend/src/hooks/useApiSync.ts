@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useClubDataStore } from '../store/clubDataStore'
 import api from '../lib/api'
-import type { Member, FundPeriod, FundContribution, LivingExpense, AttendanceSession } from '../types'
+import type { Member, FundPeriod, AttendanceSession } from '../types'
 import type { MemberAttendanceSummary } from '../store/clubDataStore'
 
 function isLocalToken(token?: string | null) {
@@ -15,7 +15,7 @@ function toNum(v: string | number | null | undefined): number {
 
 export function useApiSync() {
   const { user, accessToken, isAuthenticated } = useAuthStore()
-  const { setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings } = useClubDataStore()
+  const { setMembers, setFundPeriods, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings } = useClubDataStore()
   // Boolean ref — persists across renders but resets on component unmount (logout/remount).
   // Prevents silent-refresh token rotation from re-triggering a wipe-and-replace sync mid-session.
   const syncedRef = useRef(false)
@@ -31,11 +31,12 @@ export function useApiSync() {
 
     const load = async () => {
       try {
-        const [membersRes, periodsRes, contribsRes, expensesRes, sessionsRes, mySessionsRes, memberSummaryRes, clubRes] = await Promise.allSettled([
+        // Option 3 (Phase D): KHÔNG còn tải toàn bộ /contributions + /expenses lúc vào app —
+        // đây là nguồn payload tăng vô hạn. Mỗi màn tài chính tự nạp khi mở (useFinanceData) hoặc
+        // dùng endpoint tổng hợp (Reports). Giảm payload thật cho MỌI lần vào app.
+        const [membersRes, periodsRes, sessionsRes, mySessionsRes, memberSummaryRes, clubRes] = await Promise.allSettled([
           api.get(`/members?clubId=${clubId}`),
           api.get(`/fund-periods?clubId=${clubId}`),
-          api.get(`/contributions?clubId=${clubId}`),
-          api.get(`/expenses?clubId=${clubId}`),
           api.get(`/attendance?clubId=${clubId}`),
           api.get('/attendance/my-sessions'),
           api.get('/attendance/member-summary'),
@@ -77,50 +78,6 @@ export function useApiSync() {
             billedMemberCount: p.billedMemberCount ?? undefined,
           }))
           setFundPeriods(clubId, periods)
-        }
-
-        if (contribsRes.status === 'fulfilled') {
-          const raw = contribsRes.value.data?.data ?? []
-          const contributions: FundContribution[] = raw.map((c: any) => ({
-            id: c.id,
-            clubId: c.clubId,
-            fundSource: c.fundSource ?? 'COMMON',
-            fundPeriodId: c.fundPeriodId ?? undefined,
-            memberId: c.memberId ?? undefined,
-            member: c.member ? { id: c.memberId, fullName: c.member.fullName } as Member : undefined,
-            amount: toNum(c.amount),
-            paymentDate: c.paymentDate?.slice(0, 10) ?? '',
-            paymentMethod: c.paymentMethod ?? 'bank_transfer',
-            isConfirmed: c.isConfirmed ?? false,
-            notes: c.notes ?? undefined,
-            miniIncomeType: c.miniIncomeType ?? undefined,
-            payerName: c.payerName ?? undefined,
-            createdAt: c.createdAt ?? '',
-            createdBy: c.createdById ?? '',
-          }))
-          setContributions(clubId, contributions)
-        }
-
-        if (expensesRes.status === 'fulfilled') {
-          const raw = expensesRes.value.data?.data ?? []
-          const expenses: LivingExpense[] = raw.map((e: any) => ({
-            id: e.id,
-            clubId: e.clubId,
-            fundSource: e.fundSource ?? 'COMMON',
-            fundPeriodId: e.fundPeriodId ?? undefined,
-            description: e.description,
-            amount: toNum(e.amount),
-            allocationRule: e.allocationRule ?? 'FUND_ONLY',
-            allocationEnabled: e.allocationEnabled ?? true,
-            expenseDate: e.expenseDate?.slice(0, 10) ?? '',
-            receiptUrl: e.receiptUrl ?? undefined,
-            miniExpenseType: e.miniExpenseType ?? undefined,
-            receiverName: e.receiverName ?? undefined,
-            status: (e.status ?? 'pending') as import('../types').ExpenseStatus,
-            createdAt: e.createdAt ?? '',
-            createdBy: e.createdById ?? '',
-          }))
-          setExpenses(clubId, expenses)
         }
 
         if (mySessionsRes.status === 'fulfilled') {
@@ -182,5 +139,5 @@ export function useApiSync() {
     }
 
     load()
-  }, [isAuthenticated, user?.clubId, user?.role, accessToken, setMembers, setFundPeriods, setContributions, setExpenses, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
+  }, [isAuthenticated, user?.clubId, user?.role, accessToken, setMembers, setFundPeriods, setSessions, setMyAttendedSessionIds, setMemberAttendanceSummary, setClubSettings])
 }

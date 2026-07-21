@@ -201,7 +201,7 @@ export function TreasurerDashboard() {
           <KpiCard title="Thu Quỹ Chính" value={commonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
           <KpiCard title="Chi Quỹ Chính" value={commonExpTotal} isCurrency icon={<CreditCard size={18} />} color="orange" />
           <KpiCard title="Số Dư Q.Chính" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
-          <KpiCard title="Khoản Chi" value={`${clubData.expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
+          <KpiCard title="Khoản Chi" value={`${expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
