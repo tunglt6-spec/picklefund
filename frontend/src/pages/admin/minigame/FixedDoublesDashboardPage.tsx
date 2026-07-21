@@ -786,8 +786,13 @@ export function FixedDoublesDashboardPage() {
   const handleCreateTeamManual = useCallback(async (player1Id: string, player2Id: string) => {
     if (!id) return
     try {
-      const teamCount = getTeams(id).length
-      await api.post(`/minigames/${id}/teams`, { name: `Đôi ${teamCount + 1}`, player1Id, player2Id })
+      // Đặt tên theo SỐ LỚN NHẤT hiện có + 1 (không dùng count → tránh trùng khi đã xóa đội giữa chừng).
+      const existing = getTeams(id)
+      const maxNum = existing.reduce((m, t) => {
+        const n = parseInt(String(t.name).replace(/\D/g, ''), 10)
+        return Number.isFinite(n) && n > m ? n : m
+      }, 0)
+      await api.post(`/minigames/${id}/teams`, { name: `Đôi ${maxNum + 1}`, player1Id, player2Id })
       await hydrateFromApi()
       toast.success('Đã tạo cặp!')
     } catch (e: any) {

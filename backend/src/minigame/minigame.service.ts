@@ -190,10 +190,25 @@ export class MinigameService {
         'Cầu thủ phải là thành viên hoặc khách mời của giải đấu này',
       );
 
+    // Chống TRÙNG TÊN đội (vd FE đặt "Đôi N" theo count → xóa đội giữa chừng rồi thêm gây trùng):
+    // nếu tên đã tồn tại trong giải → tự đổi sang "Đôi <max+1>" (số lớn nhất hiện có +1).
+    const existingTeams = await this.prisma.minigameTeam.findMany({
+      where: { minigameId: id },
+      select: { name: true },
+    });
+    let teamName = dto.name;
+    if (existingTeams.some((t) => t.name === teamName)) {
+      const maxNum = existingTeams.reduce((m, t) => {
+        const n = parseInt(String(t.name).replace(/\D/g, ''), 10);
+        return Number.isFinite(n) && n > m ? n : m;
+      }, 0);
+      teamName = `Đôi ${maxNum + 1}`;
+    }
+
     return this.prisma.minigameTeam.create({
       data: {
         minigameId: id,
-        name: dto.name,
+        name: teamName,
         ...this.slotCols('player1', slot1),
         ...this.slotCols('player2', slot2 ?? undefined),
       },
@@ -386,6 +401,21 @@ export class MinigameService {
     if (teams.length === 0)
       throw new BadRequestException('Vui lòng tạo đội trước khi sinh lịch.');
     if (teams.length < 2) throw new BadRequestException('Cần ít nhất 2 đội');
+
+    // Đánh SỐ LẠI tên đội "Đôi 1..N" theo thứ tự tạo → sửa dứt điểm tên TRÙNG/nhảy số do
+    // xóa-thêm đội trước đó (bug FE đặt tên theo count). Chỉ chạm đội có tên dạng "Đôi <số>"
+    // (không đụng tên tự đặt) và chỉ update khi khác → tránh ghi thừa.
+    await Promise.all(
+      teams.map((t, i) => {
+        const desired = `Đôi ${i + 1}`;
+        return /^Đôi\s+\d+$/.test(t.name) && t.name !== desired
+          ? this.prisma.minigameTeam.update({
+              where: { id: t.id },
+              data: { name: desired },
+            })
+          : Promise.resolve();
+      }),
+    );
 
     // Round-robin CIRCLE METHOD (mỗi đội gặp nhau đúng 1 lần, không đội nào đá 2 trận/vòng):
     //  - Số đội chẵn: rounds = n-1, mỗi vòng n/2 trận.

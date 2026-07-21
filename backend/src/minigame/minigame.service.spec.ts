@@ -227,6 +227,7 @@ describe('MinigameService', () => {
       mockPrisma.minigameParticipant.findMany.mockResolvedValue([
         { memberId: 'm-1' },
       ]);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([]); // dedupe tên đội
       mockPrisma.minigameTeam.create.mockResolvedValue({ id: 't-1' });
       await service.createTeam('mg-1', 'club-1', {
         name: 'Đôi 1',
