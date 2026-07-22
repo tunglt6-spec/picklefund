@@ -24,6 +24,21 @@ export class AidoController {
     return ok(this.activity.getStatus(user.clubId ?? ''));
   }
 
+  /**
+   * Văn phòng AI cho MỌI vai trong CLB (kể cả MEMBER_VIEW) — READ-ONLY, chỉ số liệu
+   * tổng hợp không nhạy cảm (hoạt động agent + kết quả hôm nay). Mở method-level để
+   * member đồng bộ Office View với admin mà KHÔNG mở các endpoint quản trị khác
+   * (nhớ allowlist '/aido/member-office' trong MemberScopeGuard).
+   */
+  @Get('member-office')
+  @Roles('SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW')
+  @ApiOperation({ summary: 'Văn phòng AI (read-only cho thành viên): hoạt động + kết quả hôm nay' })
+  async getMemberOffice(@CurrentUser() user: JwtUser) {
+    const clubId = user.clubId ?? '';
+    const results = await this.results.getResults(clubId);
+    return ok({ activity: this.activity.getStatus(clubId), results });
+  }
+
   @Get('agent-results')
   @ApiOperation({ summary: 'Kết quả công việc THẬT trong ngày của từng agent (theo CLB)' })
   async getAgentResults(@CurrentUser() user: JwtUser) {

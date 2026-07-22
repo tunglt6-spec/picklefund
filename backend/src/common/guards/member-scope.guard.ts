@@ -32,7 +32,12 @@ export class MemberScopeGuard implements CanActivate {
   ];
 
   /** Route chính xác được phép (self-scope; không lộ thông tin member khác). */
-  private static readonly ALLOW_EXACT = ['/personal-receipts/mine'];
+  private static readonly ALLOW_EXACT = [
+    '/personal-receipts/mine',
+    // Văn phòng AI read-only cho member (đồng bộ Office View với admin AIDO):
+    // chỉ số liệu tổng hợp hoạt động/kết quả agent, KHÔNG lộ endpoint quản trị /aido khác.
+    '/aido/member-office',
+  ];
 
   /**
    * Tiền tố route member được đọc (GET-only) — mở rộng portal: lịch/đăng ký/check-in/công nợ/tài chính/minigame.
