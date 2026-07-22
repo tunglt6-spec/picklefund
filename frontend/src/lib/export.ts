@@ -4,18 +4,55 @@
 /* ─── EPIC10C: branding cho PDF/export ───
  * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
  * Bỏ trống → fallback PickleFund. */
-let exportBranding = { displayName: 'PickleFund', pdfFooter: 'PickleFund' }
+let exportBranding = {
+  displayName: 'PickleFund',
+  pdfFooter: 'PickleFund',
+  logoUrl: null as string | null,
+}
 export function setExportBranding(b: {
   displayName?: string | null
   pdfFooter?: string | null
+  logoUrl?: string | null
 }) {
   exportBranding = {
     displayName: b.displayName ? b.displayName : 'PickleFund',
     pdfFooter: b.pdfFooter ? b.pdfFooter : 'PickleFund',
+    logoUrl: b.logoUrl ?? null,
   }
 }
 const brandName = () => exportBranding.displayName
 const brandFooter = () => exportBranding.pdfFooter
+
+/* ── Logo CLB cho PDF vector: tải 1 lần / URL → dataURL + kích thước gốc.
+   Best-effort: lỗi mạng/CORS/ảnh hỏng → trả null, PDF vẫn xuất bình thường không logo. ── */
+let brandLogoCache: { url: string; logo: { dataUrl: string; w: number; h: number } | null } | null = null
+async function loadBrandLogo(): Promise<{ dataUrl: string; w: number; h: number } | null> {
+  const url = exportBranding.logoUrl
+  if (!url) return null
+  if (brandLogoCache && brandLogoCache.url === url) return brandLogoCache.logo
+  try {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('logo fetch failed')
+    const blob = await res.blob()
+    if (!/^image\/(png|jpe?g)$/i.test(blob.type)) throw new Error('logo format not supported')
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const fr = new FileReader()
+      fr.onload = () => resolve(fr.result as string)
+      fr.onerror = reject
+      fr.readAsDataURL(blob)
+    })
+    const dims = await new Promise<{ w: number; h: number }>((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
+      img.onerror = reject
+      img.src = dataUrl
+    })
+    brandLogoCache = { url, logo: { dataUrl, w: dims.w, h: dims.h } }
+  } catch {
+    brandLogoCache = { url, logo: null }
+  }
+  return brandLogoCache.logo
+}
 
 /* ─── helpers ─── */
 function formatVND(n: number) {
@@ -540,16 +577,17 @@ export async function exportReportsPDF(data: ReportSummary, memberBills?: Member
   // PDF VECTOR (jsPDF vẽ trực tiếp, KHÔNG html2canvas): mẫu báo cáo chuẩn DÙNG CHUNG
   // mọi CLB — toạ độ mm cố định, chữ vector sắc nét → mọi máy/lần xuất giống hệt nhau,
   // chấm dứt chuỗi lỗi renderer (cắt dòng / trôi số / giãn thẻ) của cách chụp DOM.
-  const [{ default: jsPDF }, fonts, { buildQuyReportPDF }] = await Promise.all([
+  const [{ default: jsPDF }, fonts, { buildQuyReportPDF }, logo] = await Promise.all([
     import('jspdf'),
     loadVnFonts(),
     import('./pdf-report-core.js'),
+    loadBrandLogo(),
   ])
   const now = new Date()
   const doc = buildQuyReportPDF({
     jsPDF,
     fonts,
-    branding: { name: brandName(), footer: brandFooter() },
+    branding: { name: brandName(), footer: brandFooter(), logo },
     summary: {
       clubName: data.clubName,
       periodName: data.periodName,
@@ -582,71 +620,34 @@ export interface MiniIncomeReceiptData {
   clubLocation?: string
 }
 
-export function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
-  const no = String(data.receiptNo ?? 1).padStart(4, '0')
-  downloadPDF([`
-    <style>
-      .mi-wrap { font-family:'Segoe UI',Arial,sans-serif; }
-      .mi-head { background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; border-radius:10px 10px 0 0; padding:16px 22px 12px; display:flex; justify-content:space-between; align-items:flex-start; }
-      .mi-title { font-size:18px; font-weight:800; }
-      .mi-sub   { font-size:11px; opacity:.85; margin-top:3px; }
-      .mi-no    { text-align:right; font-size:16px; font-weight:700; }
-      .mi-date  { font-size:10px; opacity:.8; margin-top:2px; }
-      .mi-body  { border:1.5px solid #e2e8f0; border-top:none; padding:18px 22px; }
-      .mi-field { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; }
-      .mi-fk    { font-size:12px; color:#64748b; }
-      .mi-fv    { font-size:12px; font-weight:600; color:#1e293b; }
-      .mi-fv.accent { color:#7c3aed; }
-      .mi-amount { margin-top:14px; background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; border-radius:9px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
-      .mi-al    { font-size:11px; opacity:.85; font-weight:600; }
-      .mi-av    { font-size:28px; font-weight:800; }
-      .mi-sig   { border:1.5px solid #e2e8f0; border-top:none; display:grid; grid-template-columns:1fr 1fr; }
-      .mi-scol  { padding:14px 18px; text-align:center; }
-      .mi-scol + .mi-scol { border-left:1.5px solid #e2e8f0; }
-      .mi-stit  { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
-      .mi-sline { border-bottom:1.5px dashed #cbd5e1; margin:24px 10px 5px; }
-      .mi-sname { font-size:11px; font-weight:600; color:#1e293b; }
-      .mi-foot  { border:1.5px solid #e2e8f0; border-top:none; border-radius:0 0 9px 9px; padding:10px 18px; display:flex; justify-content:space-between; background:#f8fafc; font-size:10px; color:#94a3b8; }
-    </style>
-    <div class="mi-wrap">
-      <div class="mi-head">
-        <div>
-          <div class="mi-title">🎮 Phiếu Thu Quỹ Phụ</div>
-          <div class="mi-sub">${data.clubName}</div>
-        </div>
-        <div>
-          <div class="mi-no">No. ${no}</div>
-          <div class="mi-date">Ngày in: ${today()}</div>
-        </div>
-      </div>
-      <div class="mi-body">
-        <div class="mi-field"><span class="mi-fk">Người nộp</span><span class="mi-fv">${data.payerName}</span></div>
-        <div class="mi-field"><span class="mi-fk">Loại thu</span><span class="mi-fv accent">${data.incomeType}</span></div>
-        <div class="mi-field"><span class="mi-fk">Ngày nộp</span><span class="mi-fv">${data.paymentDate}</span></div>
-        ${data.notes ? `<div class="mi-field"><span class="mi-fk">Ghi chú</span><span class="mi-fv">${data.notes}</span></div>` : ''}
-        <div class="mi-amount">
-          <div class="mi-al">Số Tiền Thu Quỹ Phụ</div>
-          <div class="mi-av">${formatVND(data.amount)}</div>
-        </div>
-      </div>
-      <div class="mi-sig">
-        <div class="mi-scol">
-          <div class="mi-stit">Thủ Quỹ Xác Nhận</div>
-          <div class="mi-sline"></div>
-          <div class="mi-sname">(Ký và ghi rõ họ tên)</div>
-        </div>
-        <div class="mi-scol">
-          <div class="mi-stit">Người Nộp</div>
-          <div class="mi-sline"></div>
-          <div class="mi-sname">${data.payerName}</div>
-        </div>
-      </div>
-      <div class="mi-foot">
-        <span>Phiếu Thu Quỹ Phụ – không tính vào công nợ thành viên Quỹ Chính</span>
-        <span>${data.clubLocation ?? 'Hà Nội'}, ngày ${today()}</span>
-      </div>
-    </div>
-  `], `Phieu_Thu_Mini_${data.payerName.replace(/\s/g, '_')}`)
+export async function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
+  // PDF VECTOR (đồng bộ mẫu báo cáo chuẩn efdf7612): toạ độ mm cố định + font nhúng
+  // → phiếu in ra giống hệt trên mọi máy; kèm logo CLB nếu CLB có đặt branding.
+  const [{ default: jsPDF }, fonts, { buildMiniReceiptPDF }, logo] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+    loadBrandLogo(),
+  ])
+  const now = new Date()
+  const doc = buildMiniReceiptPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter(), logo },
+    receipt: {
+      receiptNo: data.receiptNo,
+      payerName: data.payerName,
+      incomeType: data.incomeType,
+      amount: data.amount,
+      paymentDate: data.paymentDate,
+      notes: data.notes,
+      clubName: data.clubName,
+      clubLocation: data.clubLocation,
+      printedDateText: now.toLocaleDateString('vi-VN'),
+      printedAtText: now.toLocaleString('vi-VN'),
+    },
+  })
+  return savePdfDoc(doc, `Phieu_Thu_QuyPhu_${data.payerName.replace(/\s/g, '_')}`)
 }
 
 /* ════════════════════════════════════════

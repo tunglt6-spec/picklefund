@@ -20,10 +20,12 @@ export function useApplyBranding() {
   }, [user?.clubId, load])
 
   useEffect(() => {
-    // EPIC10C: đẩy branding vào PDF/export (header displayName, footer pdfFooter).
+    // EPIC10C: đẩy branding vào PDF/export (header displayName, footer pdfFooter,
+    // logo CLB cho header PDF vector — bỏ trống thì PDF không vẽ logo).
     setExportBranding({
       displayName: branding.displayName,
       pdfFooter: branding.pdfFooter,
+      logoUrl: branding.logoUrl,
     })
 
     const root = document.documentElement

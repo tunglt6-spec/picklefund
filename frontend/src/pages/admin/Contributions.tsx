@@ -11,7 +11,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
-import { exportContribExcel, exportContribPDF } from '../../lib/export'
+import { exportContribExcel, exportContribPDF, exportMiniIncomeReceiptPDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
@@ -185,6 +185,25 @@ export function Contributions() {
       payerName: c.payerName ?? '',
     })
     setShowCreate(true)
+  }
+
+  /** Xuất Phiếu Thu Quỹ Phụ (PDF vector, kèm logo CLB nếu có branding). */
+  const exportMiniReceipt = (c: FundContribution) => {
+    // Số phiếu ổn định theo thời gian nộp (khoản cũ nhất = No.0001).
+    const ordered = [...miniContribs].sort((a, b) =>
+      (a.paymentDate ?? '').localeCompare(b.paymentDate ?? '')
+      || (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
+    const receiptNo = ordered.findIndex(x => x.id === c.id) + 1
+    void exportMiniIncomeReceiptPDF({
+      receiptNo: receiptNo > 0 ? receiptNo : undefined,
+      payerName: c.payerName ?? members.find(m => m.id === c.memberId)?.fullName ?? 'Không rõ',
+      incomeType: MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER'],
+      amount: c.amount,
+      paymentDate: formatDate(c.paymentDate),
+      notes: c.notes || undefined,
+      clubName: (data.settings?.name as string | undefined) ?? 'CLB Pickleball',
+    }).then(() => toast.success('Đã xuất Phiếu Thu Quỹ Phụ!'))
+      .catch(() => toast.error('Không thể xuất phiếu thu. Vui lòng thử lại.'))
   }
 
   const toggleConfirm = async (id: string) => {
@@ -443,6 +462,7 @@ export function Contributions() {
                       <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
+                      <button onClick={() => exportMiniReceipt(c)} className="text-slate-400 active:text-violet-600 p-1.5" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
                       <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
@@ -796,6 +816,9 @@ export function Contributions() {
                       {!isMember && (
                         <td className="text-center">
                           <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => exportMiniReceipt(c)}
+                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors"
+                              title="Xuất phiếu thu"><FileText size={13} /></button>
                             <button onClick={() => openEdit(c)}
                               className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
                               title="Sửa"><Edit2 size={13} /></button>

@@ -27,9 +27,19 @@ export interface QuyReportRow {
   balance: number
 }
 
+export interface PdfLogo {
+  /** data:image/png|jpeg;base64,... */
+  dataUrl: string
+  /** Kích thước gốc (px) để giữ tỉ lệ khi vẽ */
+  w: number
+  h: number
+}
+
 export interface QuyReportBranding {
   name: string
   footer: string
+  /** Logo CLB (tùy chọn) — vẽ chip trắng ở header */
+  logo?: PdfLogo | null
 }
 
 export function buildQuyReportPDF(opts: {
@@ -38,6 +48,28 @@ export function buildQuyReportPDF(opts: {
   fonts: { regular: string; bold: string }
   summary: QuyReportSummary
   rows: QuyReportRow[]
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
+
+export interface MiniReceiptInput {
+  receiptNo?: number
+  payerName: string
+  incomeType: string
+  amount: number
+  paymentDate: string
+  notes?: string
+  clubName: string
+  clubLocation?: string
+  printedDateText: string
+  printedAtText: string
+}
+
+export function buildMiniReceiptPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  receipt: MiniReceiptInput
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any

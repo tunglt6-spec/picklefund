@@ -80,6 +80,29 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
   }
   const rrect = (x, y, w, h, r, mode) => doc.roundedRect(x, y, w, h, r, r, mode)
 
+  /* Logo CLB (tùy chọn): chip trắng bo góc + ảnh fit-contain, đặt bên trái header.
+     branding.logo = { dataUrl, w, h } (w/h = kích thước gốc để giữ tỉ lệ). */
+  const drawLogoChip = (x, y, size) => {
+    const logo = branding.logo
+    if (!logo || !logo.dataUrl) return 0
+    try {
+      setFill(C.white)
+      rrect(x, y, size, size, 1.8, 'F')
+      const pad = 1.4
+      const box = size - pad * 2
+      const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
+      let iw = box
+      let ih = box
+      if (ratio > 1) ih = box / ratio
+      else iw = box * ratio
+      const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
+      doc.addImage(logo.dataUrl, fmt, x + pad + (box - iw) / 2, y + pad + (box - ih) / 2, iw, ih)
+      return size // bề rộng đã chiếm → chữ dịch phải
+    } catch {
+      return 0 // ảnh hỏng/không hỗ trợ → bỏ logo, header vẫn nguyên vẹn
+    }
+  }
+
   /* Header band của MỌI trang (đậm trang 1, gọn trang bill) */
   const drawHeader = (title, subRight1, subRight2, big) => {
     const h = big ? 30 : 18
@@ -88,14 +111,18 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     // dải nhấn brand sáng hơn ở đáy band
     setFill(C.indigo)
     doc.rect(MARGIN, MARGIN + h - 1.6, CONTENT_W, 1.6, 'F')
+    // logo CLB (nếu có) — chip vuông giữa band, chữ dịch sang phải
+    const logoSize = big ? 18 : 11
+    const logoW = drawLogoChip(MARGIN + 6, MARGIN + (h - logoSize) / 2 - 0.8, logoSize)
+    const textX = MARGIN + 7 + (logoW ? logoW + 4 : 0)
     font('bold', big ? 7 : 6.5, C.white)
     doc.setTextColor(255, 255, 255)
     // brand nhỏ phía trên
-    doc.text((branding.name || 'PickleFund').toUpperCase(), MARGIN + 7, MARGIN + (big ? 8 : 6.5))
+    doc.text((branding.name || 'PickleFund').toUpperCase(), textX, MARGIN + (big ? 8 : 6.5))
     font('bold', big ? 16.5 : 12, C.white)
-    doc.text(title, MARGIN + 7, MARGIN + (big ? 16.5 : 12.5))
+    doc.text(title, textX, MARGIN + (big ? 16.5 : 12.5))
     font('normal', big ? 9 : 7.5, C.white)
-    doc.text(`${summary.clubName} · ${summary.periodName}`, MARGIN + 7, MARGIN + (big ? 23.5 : 16))
+    doc.text(`${summary.clubName} · ${summary.periodName}`, textX, MARGIN + (big ? 23.5 : 16))
     font('normal', 7.5, C.white)
     if (subRight1) doc.text(subRight1, PAGE_W - MARGIN - 7, MARGIN + (big ? 10 : 8), { align: 'right' })
     if (subRight2) doc.text(subRight2, PAGE_W - MARGIN - 7, MARGIN + (big ? 15 : 12.5), { align: 'right' })
@@ -384,6 +411,147 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     doc.setPage(p)
     drawFooter(p, totalPages)
   }
+
+  return doc
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHIẾU THU QUỸ PHỤ — vector, theme tím (Quỹ Phụ độc lập Quỹ Chính)
+   receipt = { receiptNo?, payerName, incomeType, amount, paymentDate,
+               notes?, clubName, clubLocation?, printedDateText, printedAtText }
+═══════════════════════════════════════════════════════════════════ */
+const V = {
+  violet: [124, 58, 237], // #7C3AED
+  violetLight: [167, 139, 250], // #A78BFA
+  violetSoft: [245, 243, 255], // #F5F3FF
+}
+
+export function buildMiniReceiptPDF({ jsPDF, fonts, receipt, branding }) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  doc.addFileToVFS('BeVietnamPro-Regular.ttf', fonts.regular)
+  doc.addFileToVFS('BeVietnamPro-Bold.ttf', fonts.bold)
+  doc.addFont('BeVietnamPro-Regular.ttf', 'BVP', 'normal')
+  doc.addFont('BeVietnamPro-Bold.ttf', 'BVP', 'bold')
+
+  const setFill = (c) => doc.setFillColor(c[0], c[1], c[2])
+  const setDraw = (c) => doc.setDrawColor(c[0], c[1], c[2])
+  const setText = (c) => doc.setTextColor(c[0], c[1], c[2])
+  const font = (style, size, color) => {
+    doc.setFont('BVP', style)
+    doc.setFontSize(size)
+    if (color) setText(color)
+  }
+  const rrect = (x, y, w, h, r, mode) => doc.roundedRect(x, y, w, h, r, r, mode)
+  const no = String(receipt.receiptNo ?? 1).padStart(4, '0')
+
+  /* Header band tím */
+  const headH = 26
+  setFill(V.violet)
+  rrect(MARGIN, MARGIN, CONTENT_W, headH, 2.5, 'F')
+  setFill(V.violetLight)
+  doc.rect(MARGIN, MARGIN + headH - 1.6, CONTENT_W, 1.6, 'F')
+  // logo CLB (nếu có)
+  let textX = MARGIN + 7
+  const logo = branding.logo
+  if (logo && logo.dataUrl) {
+    try {
+      setFill([255, 255, 255])
+      rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+      const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
+      let iw = 13.2
+      let ih = 13.2
+      if (ratio > 1) ih = 13.2 / ratio
+      else iw = 13.2 * ratio
+      const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
+      doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + 1.4 + (13.2 - iw) / 2, MARGIN + 5 + 1.4 + (13.2 - ih) / 2, iw, ih)
+      textX = MARGIN + 6 + 16 + 4
+    } catch { /* logo hỏng → bỏ qua */ }
+  }
+  font('bold', 7, [255, 255, 255])
+  doc.text((branding.name || 'PickleFund').toUpperCase(), textX, MARGIN + 8)
+  font('bold', 15, [255, 255, 255])
+  doc.text('PHIẾU THU QUỸ PHỤ', textX, MARGIN + 15.5)
+  font('normal', 8.5, [255, 255, 255])
+  doc.text(receipt.clubName, textX, MARGIN + 21.5)
+  font('bold', 13, [255, 255, 255])
+  doc.text(`No. ${no}`, PAGE_W - MARGIN - 7, MARGIN + 11, { align: 'right' })
+  font('normal', 7.5, [255, 255, 255])
+  doc.text(`Ngày in: ${receipt.printedDateText}`, PAGE_W - MARGIN - 7, MARGIN + 16.5, { align: 'right' })
+
+  /* Khung thông tin */
+  let y = MARGIN + headH + 6
+  const fields = [
+    ['Người nộp', receipt.payerName, C.textDark],
+    ['Loại thu', receipt.incomeType, V.violet],
+    ['Ngày nộp', receipt.paymentDate, C.textDark],
+  ]
+  if (receipt.notes) fields.push(['Ghi chú', receipt.notes, C.textDark])
+  const boxH = fields.length * 10 + 6
+  setFill(C.white)
+  setDraw(C.border)
+  doc.setLineWidth(0.35)
+  rrect(MARGIN, y, CONTENT_W, boxH, 2, 'FD')
+  fields.forEach(([label, value, color], i) => {
+    const rowY = y + 4 + i * 10
+    font('normal', 9, C.gray)
+    doc.text(label, MARGIN + 7, rowY + 5)
+    font('bold', 9.5, color)
+    doc.text(String(value), PAGE_W - MARGIN - 7, rowY + 5, { align: 'right' })
+    if (i < fields.length - 1) {
+      setDraw(C.lineSoft)
+      doc.setLineWidth(0.2)
+      doc.line(MARGIN + 7, rowY + 8.6, PAGE_W - MARGIN - 7, rowY + 8.6)
+    }
+  })
+  y += boxH + 5
+
+  /* Băng số tiền */
+  setFill(V.violet)
+  rrect(MARGIN, y, CONTENT_W, 20, 2, 'F')
+  font('bold', 8.5, [255, 255, 255])
+  doc.text('SỐ TIỀN THU QUỸ PHỤ', MARGIN + 7, y + 12)
+  font('bold', 19, [255, 255, 255])
+  doc.text(vnd(receipt.amount), PAGE_W - MARGIN - 7, y + 13.5, { align: 'right' })
+  y += 25
+
+  /* Khối chữ ký 2 cột */
+  const sigH = 34
+  setFill(C.white)
+  setDraw(C.border)
+  doc.setLineWidth(0.35)
+  rrect(MARGIN, y, CONTENT_W, sigH, 2, 'FD')
+  doc.line(PAGE_W / 2, y, PAGE_W / 2, y + sigH)
+  const sigCol = (cx, title, name) => {
+    font('bold', 7, C.gray)
+    doc.text(title, cx, y + 7, { align: 'center' })
+    setDraw(C.grayLight)
+    doc.setLineWidth(0.3)
+    doc.setLineDashPattern([1.4, 1.4], 0)
+    doc.line(cx - 26, y + 24, cx + 26, y + 24)
+    doc.setLineDashPattern([], 0)
+    font('normal', 8, C.textDark)
+    doc.text(name, cx, y + 29.5, { align: 'center' })
+  }
+  sigCol(MARGIN + CONTENT_W / 4, 'THỦ QUỸ XÁC NHẬN', '(Ký và ghi rõ họ tên)')
+  sigCol(MARGIN + (CONTENT_W * 3) / 4, 'NGƯỜI NỘP', receipt.payerName)
+  y += sigH + 5
+
+  /* Ghi chú chân phiếu */
+  setFill(V.violetSoft)
+  setDraw(C.border)
+  rrect(MARGIN, y, CONTENT_W, 11, 2, 'FD')
+  font('normal', 7, C.gray)
+  doc.text('Phiếu Thu Quỹ Phụ – không tính vào công nợ thành viên Quỹ Chính', MARGIN + 7, y + 6.8)
+  doc.text(`${receipt.clubLocation || 'Hà Nội'}, ngày ${receipt.printedDateText}`, PAGE_W - MARGIN - 7, y + 6.8, { align: 'right' })
+
+  /* Footer tài liệu */
+  const fy = PAGE_H - MARGIN - 4
+  setDraw(C.lineSoft)
+  doc.setLineWidth(0.3)
+  doc.line(MARGIN, fy - 3, PAGE_W - MARGIN, fy - 3)
+  font('normal', 6.5, C.grayLight)
+  doc.text(`${branding.footer || 'PickleFund'} · ${receipt.clubName} · Xuất lúc ${receipt.printedAtText}`, MARGIN, fy)
+  doc.text('Trang 1 / 1', PAGE_W - MARGIN, fy, { align: 'right' })
 
   return doc
 }
