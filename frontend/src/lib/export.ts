@@ -605,10 +605,10 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
 
   const BILL_CSS = `
     <style>
-      .bp-layout { display:flex; flex-direction:column; height:954px; }
+      .bp-layout { min-height:954px; }
       .bp-head { background:linear-gradient(135deg,#4f46e5,#818cf8); color:#fff;
                  border-radius:10px 10px 0 0; padding:13px 18px 11px;
-                 display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+                 display:flex; justify-content:space-between; align-items:center; }
       .bp-head-left h1 { font-size:15px; font-weight:800; letter-spacing:-.2px; }
       .bp-head-left p  { font-size:10px; opacity:.82; margin-top:2px; }
       .bp-head-right   { text-align:right; font-size:10px; opacity:.78; line-height:1.6; }
@@ -619,33 +619,32 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
                  display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; }
       /* ── card ── */
       .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden; }
-      .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; flex-shrink:0; }
+      .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; }
       .bc-name { font-size:13px; font-weight:800; line-height:1.3; }
-      .bc-meta { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
-      .bc-meta-lft { font-size:10px; opacity:.88; }
       .bc-badge { background:rgba(255,255,255,.22); border-radius:20px; padding:2px 8px;
                   font-size:9px; font-weight:700; white-space:nowrap; }
-      .bc-bar  { padding:8px 13px 0; flex-shrink:0; }
-      .bc-bar-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+      .bc-bar  { padding:8px 13px 0; }
       .bc-bar-lk  { font-size:9px; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
       .bc-bar-lv  { font-size:13px; font-weight:800; color:#4338ca; }
-      .bc-bar-track { background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden; }
+      .bc-bar-track { background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden; margin-top:3px; }
       .bc-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; }
       .bc-bar-pct   { font-size:9px; color:#94a3b8; margin-top:2px; text-align:right; }
-      .bc-rows  { padding:7px 13px 0; }
-      .bc-row   { display:flex; justify-content:space-between; align-items:center;
-                  padding:4px 0; border-bottom:1px solid #f1f5f9; }
-      .bc-row.last { border-bottom:none; border-top:1.5px dashed #e2e8f0; margin-top:2px; padding-top:5px; }
-      .bc-rk    { font-size:10px; color:#64748b; }
-      .bc-rk em { font-size:9px; color:#94a3b8; font-style:normal; }
-      .bc-rv    { font-size:11px; font-weight:700; white-space:nowrap; }
-      .bc-rv.g  { color:#16a34a; }
-      .bc-rv.v  { color:#6D5DFB; }
-      .bc-rv.c  { color:#0891b2; }
-      .bc-rv.o  { color:#ea580c; }
-      .bc-rv.b  { color:#1e293b; }
-      .bc-bal   { margin:7px 13px 10px; border-radius:7px; padding:8px 12px;
-                  display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+      /* label/value 2 cột dùng TABLE — html2canvas-pro render đúng (flex-in-grid bị lỗi) */
+      .bcmeta { width:100%; border-collapse:collapse; }
+      .bc-head .bcmeta { margin-top:4px; }
+      .bcmeta td { border:none !important; padding:0 !important; background:transparent !important; vertical-align:middle; }
+      .bcmeta td.r { text-align:right; }
+      /* bảng chi phí (Đã nộp / Chi phí sân / Sinh hoạt / Tổng) */
+      .bcx { width:100%; border-collapse:collapse; }
+      .bcx td { padding:5px 13px !important; border-bottom:1px solid #f1f5f9 !important; border-top:none !important;
+                background:transparent !important; font-size:10px; color:#64748b; vertical-align:middle; }
+      .bcx td em { font-size:9px; color:#94a3b8; font-style:normal; }
+      .bcx td.val { text-align:right; font-size:11px; font-weight:700; color:#1e293b; white-space:nowrap; }
+      .bcx td.val.g { color:#16a34a; } .bcx td.val.v { color:#6D5DFB; }
+      .bcx td.val.c { color:#0891b2; } .bcx td.val.o { color:#ea580c; }
+      .bcx tr.tot td { border-bottom:none !important; border-top:1.5px dashed #e2e8f0 !important;
+                       color:#1e293b; font-weight:700; }
+      .bc-bal   { margin:7px 13px 10px; border-radius:7px; padding:8px 12px; }
       .bc-bal.pos { background:#f0fdf4; border:1.5px solid #bbf7d0; }
       .bc-bal.neg { background:#fef2f2; border:1.5px solid #fecaca; }
       .bc-bal-lbl { font-size:10px; font-weight:700; }
@@ -661,47 +660,39 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
   const makeBillCard = (m: MemberBillRow) => {
     const rate  = m.totalSessions > 0 ? Math.round((m.attendedSessions / m.totalSessions) * 100) : 0
     const isPos = m.balance >= 0
+    // Bố cục dùng TABLE (không dùng flex/grid trong card) — html2canvas-pro render table ĐÚNG
+    // (giống phần Báo cáo tài chính), tránh lỗi cắt dòng/thiếu giá trị của flex-column-in-grid.
     return `
     <div class="bc">
       <div class="bc-head">
         <div class="bc-name">${m.memberName}</div>
-        <div class="bc-meta">
-          <span class="bc-meta-lft">${m.attendedSessions}/${m.totalSessions} buổi tham gia</span>
-          <span class="bc-badge">${m.contributionPaid ? '✓ Đã đóng quỹ' : '✗ Chưa đóng quỹ'}</span>
-        </div>
+        <table class="bcmeta"><tr>
+          <td class="l" style="opacity:.88;font-size:10px;">${m.attendedSessions}/${m.totalSessions} buổi tham gia</td>
+          <td class="r"><span class="bc-badge">${m.contributionPaid ? '✓ Đã đóng quỹ' : '✗ Chưa đóng quỹ'}</span></td>
+        </tr></table>
       </div>
       <div class="bc-bar">
-        <div class="bc-bar-top">
-          <span class="bc-bar-lk">Tỷ lệ tham gia</span>
-          <span class="bc-bar-lv">${m.attendedSessions} / ${m.totalSessions} buổi</span>
-        </div>
+        <table class="bcmeta"><tr>
+          <td class="l bc-bar-lk">Tỷ lệ tham gia</td>
+          <td class="r bc-bar-lv">${m.attendedSessions} / ${m.totalSessions} buổi</td>
+        </tr></table>
         <div class="bc-bar-track"><div class="bc-bar-fill" style="width:${rate}%"></div></div>
         <div class="bc-bar-pct">${rate}% số buổi trong kỳ</div>
       </div>
-      <div class="bc-rows">
-        <div class="bc-row">
-          <span class="bc-rk">Đã nộp quỹ</span>
-          <span class="bc-rv g">${formatVND(m.amountPaid)}</span>
-        </div>
-        <div class="bc-row">
-          <span class="bc-rk">Chi phí sân <em>(chia đều)</em></span>
-          <span class="bc-rv v">${formatVND(m.courtCost)}</span>
-        </div>
-        <div class="bc-row">
-          <span class="bc-rk">Sinh hoạt <em>(${m.attendedSessions} buổi tham gia)</em></span>
-          <span class="bc-rv c">${formatVND(m.livingCost)}</span>
-        </div>
-        <div class="bc-row last">
-          <span class="bc-rk bc-rv b">Tổng chi phí</span>
-          <span class="bc-rv o">${formatVND(m.totalCost)}</span>
-        </div>
-      </div>
+      <table class="bcx">
+        <tr><td>Đã nộp quỹ</td><td class="val g">${formatVND(m.amountPaid)}</td></tr>
+        <tr><td>Chi phí sân <em>(${m.attendedSessions} buổi)</em></td><td class="val v">${formatVND(m.courtCost)}</td></tr>
+        <tr><td>Sinh hoạt <em>(chia đều)</em></td><td class="val c">${formatVND(m.livingCost)}</td></tr>
+        <tr class="tot"><td>Tổng chi phí</td><td class="val o">${formatVND(m.totalCost)}</td></tr>
+      </table>
       <div class="bc-bal ${isPos ? 'pos' : 'neg'}">
-        <div>
-          <div class="bc-bal-lbl ${isPos ? 'pos' : 'neg'}">${isPos ? 'Số dư của bạn' : 'Cần nộp thêm'}</div>
-          <div class="bc-bal-sub">${isPos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung'}</div>
-        </div>
-        <div class="bc-bal-val ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${formatVND(m.balance)}</div>
+        <table class="bcmeta"><tr>
+          <td class="l">
+            <div class="bc-bal-lbl ${isPos ? 'pos' : 'neg'}">${isPos ? 'Số dư của bạn' : 'Cần nộp thêm'}</div>
+            <div class="bc-bal-sub">${isPos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung'}</div>
+          </td>
+          <td class="r"><span class="bc-bal-val ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${formatVND(m.balance)}</span></td>
+        </tr></table>
       </div>
     </div>`
   }
