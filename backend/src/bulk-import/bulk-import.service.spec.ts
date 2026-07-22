@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BulkImportService } from './bulk-import.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 
 const mockCalculator = { invalidateClosingBalances: jest.fn() };
 
@@ -46,6 +47,7 @@ describe('BulkImportService', () => {
         BulkImportService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: FinancialCalculatorService, useValue: mockCalculator },
+        { provide: FundPeriodsService, useValue: { snapshotPastPeriods: jest.fn() } },
       ],
     }).compile();
     service = module.get<BulkImportService>(BulkImportService);

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
 import type {
   BulkImportDto,
@@ -25,6 +26,7 @@ export class BulkImportService {
   constructor(
     private prisma: PrismaService,
     private calculator: FinancialCalculatorService,
+    private fundPeriods: FundPeriodsService,
   ) {}
 
   async import(
@@ -58,6 +60,19 @@ export class BulkImportService {
       });
       const limit = club ? PLAN_MEMBER_LIMIT[club.plan] : null;
       let memberCount = existingMembers.length;
+
+      // Nếu có thành viên MỚI sẽ được tạo → chốt cứng sĩ số các kỳ cũ tại số HIỆN TẠI trước khi
+      // thêm (giống members.service.create) để thêm TV KHÔNG làm lệch bill các kỳ đã có. CLB mới
+      // backfill (chưa có kỳ 'chung') → no-op.
+      const willAddNew = dto.members.some(
+        (m) => !memberMap.has(normalize(m.fullName)),
+      );
+      if (willAddNew) {
+        await this.fundPeriods.snapshotPastPeriods(
+          clubId,
+          existingMembers.length,
+        );
+      }
 
       for (let i = 0; i < dto.members.length; i++) {
         const row = dto.members[i];

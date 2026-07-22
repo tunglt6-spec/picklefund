@@ -589,19 +589,23 @@ export class FundPeriodsService {
             description: true,
           },
         }),
-        this.prisma.fundContribution.count({
-          where: {
-            clubId,
-            fundSource: 'COMMON',
-            isConfirmed: false,
-            ...(fundPeriodId ? { fundPeriodId } : {}),
-          },
-        }),
+        // unpaidCount là khái niệm của Quỹ Chính (COMMON) → khi lọc riêng MINI thì = 0.
+        fundSource === 'MINI'
+          ? Promise.resolve(0)
+          : this.prisma.fundContribution.count({
+              where: {
+                clubId,
+                fundSource: 'COMMON',
+                isConfirmed: false,
+                ...(fundPeriodId ? { fundPeriodId } : {}),
+              },
+            }),
         this.prisma.livingExpense.count({
           where: {
             clubId,
             receiptUrl: null,
             ...(fundPeriodId ? { fundPeriodId } : {}),
+            ...fsFilter, // thiếu hoá đơn theo đúng nguồn quỹ đang lọc
           },
         }),
       ]);

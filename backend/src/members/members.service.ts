@@ -219,26 +219,6 @@ export class MembersService {
     };
   }
 
-  async summary(memberId: string, fundPeriodId: string, clubId: string) {
-    const [attended, contributions] = await Promise.all([
-      this.prisma.attendanceRecord.count({
-        where: {
-          memberId,
-          status: 'PRESENT',
-          attendanceSession: { fundPeriodId },
-        },
-      }),
-      this.prisma.fundContribution.aggregate({
-        where: { memberId, fundPeriodId, clubId },
-        _sum: { amount: true },
-      }),
-    ]);
-    return {
-      attendedSessions: attended,
-      amountPaid: Number(contributions._sum.amount ?? 0),
-    };
-  }
-
   /**
    * AI Rating (điểm HOẠT ĐỘNG) trung bình 0–100 — compute-on-read, KHÔNG đổi schema.
    * Mỗi thành viên = trung bình CÓ TRỌNG SỐ các thành phần CÓ dữ liệu:
