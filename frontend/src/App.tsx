@@ -26,12 +26,17 @@ function reloadForFreshChunks() {
 }
 function lz(loader: () => Promise<Record<string, unknown>>, name: string) {
   return lazy(() => {
-    const timeout = new Promise<Record<string, unknown>>((_, reject) =>
-      setTimeout(() => reject(new Error('CHUNK_TIMEOUT')), 20_000),
-    )
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timeout = new Promise<Record<string, unknown>>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('CHUNK_TIMEOUT')), 20_000)
+    })
     return Promise.race([loader(), timeout])
-      .then((mod) => ({ default: mod[name] as ComponentType }))
+      .then((mod) => {
+        clearTimeout(timer)
+        return { default: mod[name] as ComponentType }
+      })
       .catch((err) => {
+        clearTimeout(timer)
         reloadForFreshChunks()
         throw err
       })

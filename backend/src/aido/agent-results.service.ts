@@ -209,7 +209,7 @@ export class AgentResultsService {
     ];
     const members = memberIds.length
       ? await this.prisma.member.findMany({
-          where: { id: { in: memberIds } },
+          where: { clubId, id: { in: memberIds } },
           select: { id: true, fullName: true },
         })
       : [];

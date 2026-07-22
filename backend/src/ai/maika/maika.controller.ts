@@ -6,7 +6,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MaikaCore } from './maika.service';
-import { CurrentUser, type JwtUser } from '../../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 import { UnderstandDto } from './maika.dto';
 import { PreviewWorkflowDto } from './workflow-planning.dto';
@@ -16,6 +16,7 @@ import { ApprovalRequestDto } from './approval-request.dto';
 
 @ApiTags('AI Maika Core')
 @ApiBearerAuth()
+@Roles('SUPER_ADMIN', 'CLUB_ADMIN')
 @Controller('ai/maika')
 export class MaikaController {
   constructor(private readonly maika: MaikaCore) {}

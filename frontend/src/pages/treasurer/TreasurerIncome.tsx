@@ -400,7 +400,7 @@ export function TreasurerIncome() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
-                <input required type="number" min={0} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
+                <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
               </div>
               <div>
@@ -693,7 +693,7 @@ export function TreasurerIncome() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-              <input required type="number" min={0} value={form.amount}
+              <input required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
             </div>

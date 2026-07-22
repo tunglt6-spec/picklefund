@@ -250,7 +250,7 @@ export class FundPeriodsService {
       : fp.endDate;
     if (effectiveEnd <= effectiveStart)
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
-    return this.prisma.fundPeriod.update({
+    const updated = await this.prisma.fundPeriod.update({
       where: { id, clubId },
       data: {
         ...safeDto,
@@ -264,6 +264,10 @@ export class FundPeriodsService {
           : {}),
       },
     });
+    // Sửa startDate/endDate/type/mức đóng có thể đảo thứ tự chuỗi carryForward → xóa cache số dư
+    // cuối kỳ toàn CLB (tránh clubAssets stale ở các kỳ đã finalize). Xem summary().
+    await this.calculator.invalidateClosingBalances(clubId);
+    return updated;
   }
 
   async updateStatus(id: string, clubId: string, status: FundPeriodStatus) {
@@ -519,7 +523,7 @@ export class FundPeriodsService {
       .filter((m): m is string => !!m);
     const members = memberIds.length
       ? await this.prisma.member.findMany({
-          where: { id: { in: memberIds } },
+          where: { clubId, id: { in: memberIds } },
           select: { id: true, fullName: true },
         })
       : [];

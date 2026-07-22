@@ -21,6 +21,7 @@ import {
   PieChart, Pie, Cell,
 } from 'recharts'
 import { useClubDataStore } from '../../store/clubDataStore'
+import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -164,7 +165,10 @@ export function ThuChiHub() {
   const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const clubData = useClubDataStore(s => s.getClubData(clubId))
-  const { contributions, expenses, members, fundPeriods } = clubData
+  const { members, fundPeriods } = clubData
+  // Option 3: thu/chi tự nạp cục bộ (useApiSync không còn full-load) — nếu đọc store sẽ RỖNG.
+  const { data: contributions } = useClubContributions(clubId)
+  const { data: expenses } = useClubExpenses(clubId)
 
   const currentPeriod = getActiveChungPeriod(fundPeriods)
     ?? fundPeriods.find(p => (p.type ?? 'chung') === 'chung')

@@ -538,7 +538,7 @@ export function Contributions() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-                <input required type="number" min={0} value={form.amount}
+                <input required type="number" min={1} value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
               </div>
               <div>
@@ -920,8 +920,8 @@ export function Contributions() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-              <input required type="number" min={0} value={form.amount}
-                onChange={e => setForm({ ...form, amount: Number(e.target.value) })} className="input-base" />
+              <input required type="number" min={1} value={form.amount}
+                onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
