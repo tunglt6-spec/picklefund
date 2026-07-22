@@ -103,6 +103,9 @@ async function downloadPDF(sections: string[], filename: string) {
     let firstChunk = true
 
     while (offsetY < canvas.height) {
+      // Lát đuôi < 2% chiều cao trang = rìa làm tròn pixel (không phải nội dung thật)
+      // → bỏ, tránh sinh thêm 1 trang gần-trắng làm lệch phân trang bill.
+      if (!firstChunk && canvas.height - offsetY < chunkCanvasH * 0.02) break
       const sliceH = Math.min(chunkCanvasH, canvas.height - offsetY)
       const slice = document.createElement('canvas')
       slice.width = canvas.width
@@ -625,10 +628,13 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; align-items:start; }
       .bp-foot { flex-shrink:0; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:10px;
                  display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; }
-      /* ── card ── */
-      .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden; }
+      /* ── card ──
+         height CỐ ĐỊNH 266px (đo thật từ render chuẩn): mọi thẻ cao bằng nhau tăm tắp,
+         renderer có "nở" chữ thế nào cũng KHÔNG kéo giãn thẻ được → 6 thẻ LUÔN vừa 1 trang A4. */
+      .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden; height:266px; }
       .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; }
-      .bc-name { font-size:13px; font-weight:800; line-height:1.3; }
+      .bc-name { font-size:13px; font-weight:800; line-height:1.3;
+                 white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .bc-badge { background:rgba(255,255,255,.22); border-radius:20px; padding:2px 8px;
                   font-size:9px; font-weight:700; white-space:nowrap; }
       .bc-bar  { padding:8px 13px 0; }
