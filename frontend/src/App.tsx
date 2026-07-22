@@ -7,8 +7,35 @@ import { lazy, Suspense, type ComponentType } from 'react'
 
 // Route-level code-splitting: mỗi trang là 1 chunk lazy (giảm bundle khởi động ~50%).
 // Helper nạp NAMED export thành default cho React.lazy. Trang render trong <Suspense> (dưới).
+//
+// CHỐNG "loading treo" sau deploy (đặc biệt mobile/PWA): SW mới (skipWaiting+clientsClaim+
+// cleanupOutdatedCaches) kích hoạt giữa phiên → XOÁ precache cũ trong khi trang vẫn chạy bản cũ →
+// chunk lazy cũ 404/treo → Suspense "Đang tải…" đứng mãi. Xử lý: đặt timeout cho import + khi lỗi
+// (404/treo) TỰ RELOAD 1 lần (throttle sessionStorage tránh loop) để lấy index+chunk mới.
+function reloadForFreshChunks() {
+  try {
+    const KEY = 'pf_chunk_reload_at'
+    const last = Number(sessionStorage.getItem(KEY) || '0')
+    if (Date.now() - last > 12_000) {
+      sessionStorage.setItem(KEY, String(Date.now()))
+      window.location.reload()
+    }
+  } catch {
+    /* sessionStorage chặn (private mode…) → bỏ qua */
+  }
+}
 function lz(loader: () => Promise<Record<string, unknown>>, name: string) {
-  return lazy(async () => ({ default: (await loader())[name] as ComponentType }))
+  return lazy(() => {
+    const timeout = new Promise<Record<string, unknown>>((_, reject) =>
+      setTimeout(() => reject(new Error('CHUNK_TIMEOUT')), 20_000),
+    )
+    return Promise.race([loader(), timeout])
+      .then((mod) => ({ default: mod[name] as ComponentType }))
+      .catch((err) => {
+        reloadForFreshChunks()
+        throw err
+      })
+  })
 }
 
 const Login = lz(() => import('./pages/Login'), 'Login')
