@@ -93,6 +93,8 @@ export class MemoryController {
     const existing = await this.memory.load(id);
     if (!existing) throw new ForbiddenException('Memory không tồn tại');
     this.assertAccess(user, existing);
+    // Sửa bộ nhớ dùng chung CLB → chỉ admin.
+    if (existing.ownerType === MemoryOwnerType.CLUB) this.assertClubAdmin(user);
     const updated = await this.memory.update(id, {
       content: dto.content,
       tags: dto.tags,
@@ -106,7 +108,11 @@ export class MemoryController {
   @ApiOperation({ summary: 'Xoá memory theo id' })
   async remove(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     const existing = await this.memory.load(id);
-    if (existing) this.assertAccess(user, existing);
+    // Không tồn tại → trả deleted:false, KHÔNG gọi delete (tránh bỏ qua assertAccess).
+    if (!existing) return ok({ deleted: false });
+    this.assertAccess(user, existing);
+    // Xoá bộ nhớ dùng chung CLB → chỉ admin.
+    if (existing.ownerType === MemoryOwnerType.CLUB) this.assertClubAdmin(user);
     return ok({ deleted: await this.memory.delete(id) });
   }
 
@@ -123,6 +129,9 @@ export class MemoryController {
       case MemoryOwnerType.CLUB:
         if (!user.clubId)
           throw new BadRequestException('Tài khoản chưa gắn CLB');
+        // CLUB memory là bộ nhớ DÙNG CHUNG toàn CLB → chỉ admin được tạo,
+        // tránh CLUB_TREASURER ghi bộ nhớ chung ảnh hưởng cả CLB.
+        this.assertClubAdmin(user);
         return user.clubId;
       case MemoryOwnerType.SESSION:
         if (!dto.sessionId)
@@ -177,6 +186,14 @@ export class MemoryController {
       query.ownerType = MemoryOwnerType.USER;
       query.ownerId = user.userId;
     }
+  }
+
+  /** CLUB memory dùng chung → chỉ SUPER_ADMIN / CLUB_ADMIN được ghi (create/update/delete). */
+  private assertClubAdmin(user: JwtUser): void {
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'CLUB_ADMIN')
+      throw new ForbiddenException(
+        'Chỉ quản trị CLB được thay đổi bộ nhớ dùng chung',
+      );
   }
 
   private assertAccess(user: JwtUser, obj: MemoryObject): void {

@@ -9,7 +9,7 @@ import { VectorIndexService } from './vector-index.service';
 import { VectorObservabilityService } from './vector-observability.service';
 import { RetrievalQuery } from '../retrieval/retrieval.types';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
-import { CurrentUser, type JwtUser } from '../../common/decorators';
+import { CurrentUser, Roles, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
 
 @ApiTags('AI Hybrid Retrieval')
@@ -50,6 +50,9 @@ export class HybridRetrievalController {
   }
 
   @Post('reindex')
+  // Reindex là thao tác NẶNG (rebuild toàn bộ vector index của CLB) → chỉ admin,
+  // tránh CLUB_TREASURER kích hoạt lặp gây tốn tài nguyên/chi phí embedding.
+  @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   @ApiOperation({
     summary:
       'Rebuild vector index từ Memory Objects (derived, side-effect → POST)',
@@ -61,6 +64,8 @@ export class HybridRetrievalController {
   }
 
   @Get('metrics')
+  // Metrics tổng hợp toàn nền tảng (không PII) → chỉ admin xem, không mở cho mọi vai.
+  @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   @ApiOperation({ summary: 'Vector/embedding observability metrics (no PII)' })
   metrics() {
     return ok(this.obs.snapshot());

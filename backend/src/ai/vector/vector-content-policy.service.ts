@@ -108,20 +108,27 @@ export class VectorContentPolicyService {
     };
   }
 
-  /** Redact email → phone → long-id (thứ tự để phone không bị nuốt bởi long-id). */
+  /**
+   * Redact email → phone → long-id (thứ tự để phone không bị nuốt bởi long-id).
+   * Dùng replace-rồi-so-sánh thay vì .test(): các regex có cờ /g, gọi .test() sẽ
+   * để lại lastIndex trạng thái (footgun) — nguy hiểm trong một control redact PII.
+   */
   private redact(text: string, reasons: string[]): string {
     let out = text;
-    if (EMAIL_RE.test(out)) {
+    const afterEmail = out.replace(EMAIL_RE, '[redacted-email]');
+    if (afterEmail !== out) {
       reasons.push('email');
-      out = out.replace(EMAIL_RE, '[redacted-email]');
+      out = afterEmail;
     }
-    if (PHONE_RE.test(out)) {
+    const afterPhone = out.replace(PHONE_RE, '[redacted-phone]');
+    if (afterPhone !== out) {
       reasons.push('phone');
-      out = out.replace(PHONE_RE, '[redacted-phone]');
+      out = afterPhone;
     }
-    if (LONG_ID_RE.test(out)) {
+    const afterId = out.replace(LONG_ID_RE, '[redacted-id]');
+    if (afterId !== out) {
       reasons.push('id-number');
-      out = out.replace(LONG_ID_RE, '[redacted-id]');
+      out = afterId;
     }
     return out;
   }
