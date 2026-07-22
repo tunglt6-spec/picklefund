@@ -19,23 +19,11 @@ interface AgentResults {
   mitDac: { executedToday: number; running: number; failedToday: number; averageExecutionMs: number }
   notification: { sentToday: number; byChannel: { IN_APP: number; EMAIL: number; TELEGRAM: number }; failedToday: number }
 }
-type AgentActivity = Record<string, { status?: string; task?: string } | undefined>
-
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
-/** Đội ngũ AI — key khớp agent-activity; màu khớp banner (đồng bộ admin). */
-const TEAM = [
-  { key: 'MAIKA', name: 'Maika', role: 'Quản gia AI · tổng hợp sức khỏe CLB', color: '#6D5DFB' },
-  { key: 'LISA', name: 'Lisa', role: 'Trợ lý hỏi đáp nhanh', color: '#2563EB' },
-  { key: 'HERMES', name: 'Hermes', role: 'Điều phối vận hành (COO)', color: '#059669' },
-  { key: 'MIT_DAT', name: 'Mít Đặc', role: 'Thực thi tác vụ tự động', color: '#EA580C' },
-  { key: 'NOTIFICATION', name: 'Thông báo', role: 'Gửi tin & nhắc nhở', color: '#C026D3' },
-]
-
 export function MemberOffice() {
   const [results, setResults] = useState<AgentResults | null>(null)
-  const [activity, setActivity] = useState<AgentActivity>({})
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [error, setError] = useState(false)
   const loadingRef = useRef(false)
@@ -47,7 +35,6 @@ export function MemberOffice() {
       const res = await api.get('/aido/member-office', { timeout: 12_000 })
       const data = res.data?.data ?? {}
       setResults(data.results ?? null)
-      setActivity(data.activity ?? {})
       setUpdatedAt(new Date())
       setError(false)
     } catch {
@@ -190,34 +177,6 @@ export function MemberOffice() {
           </div>
         )}
 
-        {/* Đội ngũ AI — trạng thái sống từ agent-activity (busy = đang làm việc). */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {TEAM.map((a) => {
-            const act = activity[a.key]
-            const busy = act?.status === 'busy'
-            return (
-              <div
-                key={a.key}
-                className="rounded-2xl border p-4 [background:var(--pf-surface)]"
-                style={{ borderColor: busy ? `color-mix(in srgb, ${a.color} 45%, var(--pf-border))` : 'var(--pf-border)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-block h-2.5 w-2.5 rounded-full ${busy ? 'animate-pulse' : ''}`}
-                    style={{ background: a.color }}
-                  />
-                  <span className="font-semibold [color:var(--pf-color)]">{a.name}</span>
-                  {busy && (
-                    <span className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: `color-mix(in srgb, ${a.color} 12%, transparent)`, color: a.color }}>
-                      Đang làm việc
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-xs [color:var(--pf-color-muted)]">{busy && act?.task ? act.task : a.role}</p>
-              </div>
-            )
-          })}
-        </div>
       </div>
     </PageShell>
   )
