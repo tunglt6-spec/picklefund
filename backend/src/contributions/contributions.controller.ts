@@ -19,6 +19,7 @@ import {
   UpdateContributionDto,
   ImportContributionsDto,
 } from './contributions.dto';
+import { intQuery } from '../common/query';
 
 @ApiTags('Contributions')
 @ApiBearerAuth()
@@ -39,7 +40,7 @@ export class ContributionsController {
     return ok(
       await this.service.findAll(user.clubId, fundPeriodId, fundSource, {
         page: page ? Number(page) : undefined,
-        limit: limit ? Number(limit) : undefined,
+        limit: intQuery(limit),
         isConfirmed:
           isConfirmed === undefined || isConfirmed === ''
             ? undefined

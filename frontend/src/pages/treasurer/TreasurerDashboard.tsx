@@ -36,7 +36,8 @@ export function TreasurerDashboard() {
 
   const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const commonExpTotal = commonExpenses.reduce((a, e) => a + e.amount, 0)
-  const miniIncome     = miniContribs.reduce((a, c) => a + c.amount, 0)
+  // Thu MINI chỉ tính ĐÃ xác nhận — khớp financial-calculator + màn Báo cáo (audit M5).
+  const miniIncome     = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const miniExpTotal   = miniExpenses.reduce((a, e) => a + e.amount, 0)
 
   const balance = commonIncome - commonExpTotal

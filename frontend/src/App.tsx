@@ -17,7 +17,10 @@ function reloadForFreshChunks() {
   try {
     const KEY = 'pf_chunk_reload_at'
     const last = Number(sessionStorage.getItem(KEY) || '0')
-    if (Date.now() - last > 12_000) {
+    // Throttle 65s PHẢI DÀI HƠN chu kỳ "chunk treo" (timeout 20s + thời gian load trang):
+    // nếu ngắn hơn (12s cũ), mạng treo lặp sẽ thành vòng reload vô hạn ~20s/lần (audit FE-H1).
+    // Lần treo thứ 2 trong 65s → KHÔNG reload nữa → lỗi nổi lên ErrorBoundary (có nút thoát).
+    if (Date.now() - last > 65_000) {
       sessionStorage.setItem(KEY, String(Date.now()))
       window.location.reload()
     }

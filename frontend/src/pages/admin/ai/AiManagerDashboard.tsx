@@ -217,14 +217,14 @@ export function AiManagerDashboard() {
           </div>
           <div className="flex gap-2 shrink-0 w-full md:w-auto">
             <button
-              onClick={() => navigate('/admin/ai-manager/club-memory')}
+              onClick={() => navigate('/admin/ai-manager/club-memory?from=aido')}
               className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               <BookOpen size={16} />
               Club Memory
             </button>
             <button
-              onClick={() => navigate('/admin/ai-approvals')}
+              onClick={() => navigate('/admin/ai-approvals?from=aido')}
               className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)]"
             >
               <Inbox size={16} />
@@ -416,7 +416,7 @@ export function AiManagerDashboard() {
                       <p className="text-xs text-slate-600 mt-1">{s.message}</p>
                       {s.code === 'DQ_NO_CLUB_MEMORY' && (
                         <button
-                          onClick={() => navigate('/admin/ai-manager/club-memory')}
+                          onClick={() => navigate('/admin/ai-manager/club-memory?from=aido')}
                           className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold ${st.text} hover:underline`}
                         >
                           Bổ sung ngay <ChevronRight size={12} />

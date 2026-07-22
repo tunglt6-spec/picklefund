@@ -8,10 +8,11 @@
  * CÁCH HOẠT ĐỘNG:
  *  - Bọc quanh <Routes>. Khi 1 màn ném lỗi → thay vì trắng màn, hiện thông báo + nút "Tải lại trang".
  *  - Nếu lỗi là do tải chunk (thường do Service Worker/bundle cũ sau deploy) → TỰ tải lại 1 lần
- *    (chặn lặp bằng sessionStorage 12s) để lấy bản mới; trong lúc chờ hiện "Đang cập nhật…".
+ *    (chặn lặp bằng sessionStorage 65s) để lấy bản mới; trong lúc chờ hiện "Đang cập nhật…"
+ *    kèm nút thoát sau 4 giây (không kẹt cứng nếu auto-reload không xảy ra).
  *  - Tự reset khi người dùng ĐỔI route (đổi `resetKey`) → không kẹt màn lỗi khi chuyển trang.
  */
-import { Component, type ReactNode } from 'react'
+import { Component, useEffect, useState, type ReactNode } from 'react'
 
 /** Nhận diện lỗi tải chunk lazy (import động thất bại/treo) — phân biệt với lỗi logic thường. */
 function laLoiTaiChunk(err: unknown): boolean {
@@ -21,12 +22,16 @@ function laLoiTaiChunk(err: unknown): boolean {
   )
 }
 
-/** Tự tải lại 1 lần (throttle 12s) — dùng chung khoá với helper lz trong App.tsx. */
+/**
+ * Tự tải lại 1 lần — dùng chung khoá + cửa sổ throttle 65s với helper lz trong App.tsx.
+ * 65s PHẢI DÀI HƠN chu kỳ "chunk treo" (timeout 20s + thời gian load) — nếu ngắn hơn,
+ * mạng treo lặp sẽ thành vòng reload vô hạn (audit FE-H1).
+ */
 function taiLaiLayBanMoi() {
   try {
     const KEY = 'pf_chunk_reload_at'
     const last = Number(sessionStorage.getItem(KEY) || '0')
-    if (Date.now() - last > 12_000) {
+    if (Date.now() - last > 65_000) {
       sessionStorage.setItem(KEY, String(Date.now()))
       window.location.reload()
     }
@@ -68,13 +73,15 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.coLoi) return this.props.children
 
-    // Lỗi chunk: đang tự tải lại → chỉ hiện thông báo chờ, không hiện nút (tránh nháy màn lỗi).
+    // Lỗi chunk: thường tự tải lại ngay. NHƯNG nếu auto-reload không xảy ra (bị throttle
+    // sau lần reload trước / sessionStorage bị chặn / deploy hỏng thật) thì KHÔNG được kẹt
+    // cứng — hiện nút thoát sau 4 giây (audit FE-H2; PWA standalone không có nút refresh).
     if (this.state.laChunk) {
       return (
         <ManHinhLoi
           tieuDe="Đang cập nhật phiên bản mới…"
-          moTa="Ứng dụng đang tải lại để lấy bản mới nhất. Vui lòng chờ một chút."
-          hienNut={false}
+          moTa="Ứng dụng đang tải lại để lấy bản mới nhất. Nếu chờ lâu, hãy bấm Tải lại trang."
+          hienNut="tre"
         />
       )
     }
@@ -89,7 +96,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-/** Màn thông báo lỗi thân thiện (tiếng Việt) — dùng token màu chung của app, tự hợp light/dark. */
+/**
+ * Màn thông báo lỗi thân thiện (tiếng Việt) — dùng token màu chung của app, tự hợp light/dark.
+ * hienNut: true = hiện nút ngay; 'tre' = hiện sau 4 giây (chờ auto-reload trước, không kẹt cứng).
+ */
 function ManHinhLoi({
   tieuDe,
   moTa,
@@ -97,8 +107,14 @@ function ManHinhLoi({
 }: {
   tieuDe: string
   moTa: string
-  hienNut: boolean
+  hienNut: boolean | 'tre'
 }) {
+  const [hien, setHien] = useState(hienNut === true)
+  useEffect(() => {
+    if (hienNut !== 'tre') return
+    const t = setTimeout(() => setHien(true), 4_000)
+    return () => clearTimeout(t)
+  }, [hienNut])
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center"
@@ -114,7 +130,7 @@ function ManHinhLoi({
       <p className="max-w-sm text-sm" style={{ color: 'var(--pf-color-muted, #64748b)' }}>
         {moTa}
       </p>
-      {hienNut && (
+      {hien && (
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => window.location.reload()}

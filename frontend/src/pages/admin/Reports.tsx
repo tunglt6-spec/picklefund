@@ -170,6 +170,9 @@ export function Reports() {
   const kCarry = num(fs?.carryForward?.balance)
   const kAttendance = num(fs?.totalAttendance)
   const kUnpaid = num(fs?.unpaidCount)
+  // Sĩ số TÍNH PHÍ của kỳ (billedMemberCount đã chốt ?? live) — dùng cho export để header
+  // "N thành viên" khớp với mẫu số chia phí trong bill (audit M3).
+  const kMemberCount = num(fs?.memberCount)
   // Số thành viên hoạt động = đếm danh sách (không phải công thức tài chính)
   const activeMemberCount = clubData.members.filter(m => m.status === 'active').length
 
@@ -262,7 +265,8 @@ export function Reports() {
   const buildExportSummary = () => ({
     periodName, clubName,
     totalIncome: kIncome as number, totalExpense: kExpense as number, balance: kCommonBalance as number,
-    memberCount: activeMemberCount, sessionCount: kSessions as number,
+    // Sĩ số tính phí backend (khớp mẫu số chia phí bill); fallback đếm active khi BE cũ chưa expose.
+    memberCount: kMemberCount ?? activeMemberCount, sessionCount: kSessions as number,
     confirmedCount: memberBillRows.filter(r => r.contributionPaid).length,
   })
   // Rows đầy đủ cho export/infographic — chỉ dùng khi officialReady (kSessions là số thật, không phải 0 giả).

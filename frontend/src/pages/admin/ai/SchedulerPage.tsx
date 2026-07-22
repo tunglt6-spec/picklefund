@@ -205,7 +205,7 @@ export function SchedulerPage() {
               <EmptyState
                 title="Chưa có luật workflow"
                 description="Tạo workflow rule ở Workflow Studio, sau đó đặt chu kỳ (Hàng ngày/tuần/tháng) tại đây để scheduler tự chạy."
-                action={<ActionButton onClick={() => navigate('/admin/workflows')}>Tới Workflow Studio</ActionButton>}
+                action={<ActionButton onClick={() => navigate('/admin/workflows?from=aido')}>Tới Workflow Studio</ActionButton>}
               />
             ) : (
               <div className="divide-y divide-slate-50">

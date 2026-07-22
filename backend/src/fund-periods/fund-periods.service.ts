@@ -39,6 +39,9 @@ export class FundPeriodsService {
         clubId,
         type: 'chung',
         billedMemberCount: null,
+        // KHÔNG chốt kỳ TƯƠNG LAI (chưa tới startDate): kỳ đó rồi sẽ thành "kỳ hiện tại",
+        // phải giữ null (sĩ số live) — nếu chốt sớm, lúc kích hoạt sẽ chia phí theo sĩ số cũ.
+        startDate: { lte: new Date() },
         ...(current ? { id: { not: current.id } } : {}),
       },
       data: { billedMemberCount: countToFreeze },
@@ -56,7 +59,7 @@ export class FundPeriodsService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     // Auto-transition: draft → active when startDate arrived; active → closed when endDate passed
-    await this.prisma.$transaction([
+    const transitions = await this.prisma.$transaction([
       // Future period that was incorrectly set to active → revert to draft
       this.prisma.fundPeriod.updateMany({
         where: { clubId, status: 'active', startDate: { gt: today } },
@@ -82,6 +85,14 @@ export class FundPeriodsService {
         data: { status: 'closed' },
       }),
     ]);
+    // Có kỳ vừa tự chuyển trạng thái → (a) chuẩn hóa sĩ số chốt: kỳ VỪA ACTIVE phải về
+    // null (sĩ số live — kể cả nếu từng bị chốt nhầm khi còn là draft tương lai), kỳ vừa
+    // đóng được chốt cứng; (b) đổi status đổi chuỗi carryForward → xóa cache số dư cuối kỳ
+    // (không thì clubAssets các kỳ sau đọc cache cũ tới lần ghi thu/chi kế tiếp).
+    if (transitions.some((t) => t.count > 0)) {
+      await this.snapshotPastPeriods(clubId, await this.liveMemberCount(clubId));
+      await this.calculator.invalidateClosingBalances(clubId);
+    }
     const [rows, liveCount] = await Promise.all([
       this.prisma.fundPeriod.findMany({
         where: { clubId },

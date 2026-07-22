@@ -4,6 +4,7 @@ import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { AgentActivityService } from './agent-activity.service';
 import { AgentResultsService } from './agent-results.service';
+import { intQuery } from '../common/query';
 
 /**
  * AidoController — API phụ trợ cho AI Digital Office. Trạng thái hoạt động agent (lần load đầu;
@@ -54,7 +55,7 @@ export class AidoController {
     return ok(
       await this.results.listMaikaInsights(
         user.clubId ?? '',
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
       ),
     );
   }
@@ -68,7 +69,7 @@ export class AidoController {
     return ok(
       await this.results.listLisaMessages(
         user.clubId ?? '',
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
       ),
     );
   }

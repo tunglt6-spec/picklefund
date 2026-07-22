@@ -19,6 +19,7 @@ import {
   UpdateFundPeriodDto,
   UpdateFundPeriodStatusDto,
 } from './fund-periods.dto';
+import { intQuery } from '../common/query';
 
 @SkipThrottle()
 @ApiTags('Fund Periods')
@@ -62,7 +63,7 @@ export class FundPeriodsController {
       await this.service.trends(
         user.clubId,
         type ?? 'chung',
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
         fundSource ?? 'ALL',
       ),
     );
@@ -127,7 +128,7 @@ export class FundPeriodsController {
       await this.service.highlights(
         id,
         user.clubId,
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
       ),
     );
   }

@@ -11,6 +11,7 @@ import { RetrievalQuery } from '../retrieval/retrieval.types';
 import { ClubMemoryType } from '../club-memory/club-memory.types';
 import { CurrentUser, Roles, type JwtUser } from '../../common/decorators';
 import { ok } from '../../common/response';
+import { intQuery } from '../../common/query';
 
 @ApiTags('AI Hybrid Retrieval')
 @ApiBearerAuth()
@@ -44,7 +45,7 @@ export class HybridRetrievalController {
             .filter(Boolean)
         : undefined,
       type,
-      topK: topK ? Number(topK) : undefined,
+      topK: intQuery(topK),
     };
     return ok(await this.hybrid.retrieve(clubId, query));
   }

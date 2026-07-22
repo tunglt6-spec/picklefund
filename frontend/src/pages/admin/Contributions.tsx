@@ -490,7 +490,7 @@ export function Contributions() {
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button key={fs} type="button"
-                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: fs === 'MINI' ? '' : (activePeriod?.contributionAmount ?? 1000000) }))}
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: '' }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
@@ -869,7 +869,7 @@ export function Contributions() {
                   <button
                     key={fs}
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: fs === 'MINI' ? '' : (activePeriod?.contributionAmount ?? 1000000) }))}
+                    onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: '' }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all text-left flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON'

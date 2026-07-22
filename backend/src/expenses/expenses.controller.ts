@@ -23,6 +23,7 @@ import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 import type { FundSource } from '@prisma/client';
 import { CreateExpenseDto, UpdateExpenseDto } from './expenses.dto';
+import { intQuery } from '../common/query';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads', 'receipts');
 
@@ -57,7 +58,7 @@ export class ExpensesController implements OnModuleInit {
     return ok(
       await this.service.findAll(user.clubId, fundPeriodId, fundSource, {
         page: page ? Number(page) : undefined,
-        limit: limit ? Number(limit) : undefined,
+        limit: intQuery(limit),
         status: status || undefined,
         search: search || undefined,
       }),
@@ -94,7 +95,7 @@ export class ExpensesController implements OnModuleInit {
         user.clubId,
         fundPeriodId,
         fundSource,
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
       ),
     );
   }

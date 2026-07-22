@@ -14,6 +14,7 @@ import { MembersService } from './members.service';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { CreateMemberDto, UpdateMemberDto } from './members.dto';
+import { intQuery } from '../common/query';
 
 @SkipThrottle()
 @ApiTags('Members')
@@ -67,7 +68,7 @@ export class MembersController {
       await this.members.memberContributions(
         id,
         user.clubId,
-        limit ? Number(limit) : undefined,
+        intQuery(limit),
       ),
     );
   }

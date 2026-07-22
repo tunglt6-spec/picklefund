@@ -535,7 +535,7 @@ export function AiDigitalOffice() {
                   {pendingList.slice(0, 8).map((p) => {
                     const rk = riskMeta(p.riskLevel)
                     return (
-                      <button key={p.id} onClick={() => navigate('/admin/ai-approvals')}
+                      <button key={p.id} onClick={() => navigate('/admin/ai-approvals?from=aido')}
                         className="flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
                         <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold"
                           style={{ background: `color-mix(in srgb, ${rk.color} 16%, transparent)`, color: rk.color }}>{rk.label}</span>
@@ -549,7 +549,7 @@ export function AiDigitalOffice() {
                     )
                   })}
                   {pending > Math.min(pendingList.length, 8) && (
-                    <button onClick={() => navigate('/admin/ai-approvals')}
+                    <button onClick={() => navigate('/admin/ai-approvals?from=aido')}
                       className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold [color:var(--pf-primary)]">
                       Xem tất cả hàng đợi <ArrowRight size={13} />
                     </button>
