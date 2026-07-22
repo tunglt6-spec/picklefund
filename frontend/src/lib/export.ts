@@ -612,13 +612,13 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bp-head-left h1 { font-size:15px; font-weight:800; letter-spacing:-.2px; }
       .bp-head-left p  { font-size:10px; opacity:.82; margin-top:2px; }
       .bp-head-right   { text-align:right; font-size:10px; opacity:.78; line-height:1.6; }
-      .bp-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(3,1fr);
-                 gap:10px; margin-top:10px; flex:1; min-height:0; }
+      /* Card tự cao theo nội dung (align-items:start) — KHÔNG ép 3 hàng 1fr + overflow:hidden nữa
+         (html2canvas render sai flex → cắt mất Sinh hoạt/Tổng/Số dư). 6 card vẫn vừa 1 trang. */
+      .bp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; align-items:start; }
       .bp-foot { flex-shrink:0; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:10px;
                  display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; }
       /* ── card ── */
-      .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden;
-            display:flex; flex-direction:column; }
+      .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden; }
       .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; flex-shrink:0; }
       .bc-name { font-size:13px; font-weight:800; line-height:1.3; }
       .bc-meta { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
@@ -632,7 +632,7 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bc-bar-track { background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden; }
       .bc-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; }
       .bc-bar-pct   { font-size:9px; color:#94a3b8; margin-top:2px; text-align:right; }
-      .bc-rows  { padding:7px 13px 0; flex:1; }
+      .bc-rows  { padding:7px 13px 0; }
       .bc-row   { display:flex; justify-content:space-between; align-items:center;
                   padding:4px 0; border-bottom:1px solid #f1f5f9; }
       .bc-row.last { border-bottom:none; border-top:1.5px dashed #e2e8f0; margin-top:2px; padding-top:5px; }
@@ -684,11 +684,11 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
           <span class="bc-rv g">${formatVND(m.amountPaid)}</span>
         </div>
         <div class="bc-row">
-          <span class="bc-rk">Chi phí sân <em>(${m.attendedSessions} buổi)</em></span>
+          <span class="bc-rk">Chi phí sân <em>(chia đều)</em></span>
           <span class="bc-rv v">${formatVND(m.courtCost)}</span>
         </div>
         <div class="bc-row">
-          <span class="bc-rk">Sinh hoạt <em>(chia đều)</em></span>
+          <span class="bc-rk">Sinh hoạt <em>(${m.attendedSessions} buổi tham gia)</em></span>
           <span class="bc-rv c">${formatVND(m.livingCost)}</span>
         </div>
         <div class="bc-row last">
