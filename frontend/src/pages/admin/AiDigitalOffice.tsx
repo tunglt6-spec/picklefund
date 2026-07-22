@@ -98,6 +98,13 @@ export function AiDigitalOffice() {
   const [tab, setTab] = useState<string>(
     () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab') || 'office',
   )
+  // Sau khi đã đọc ?tab để mở đúng tab (deep-link từ nút back), XOÁ query khỏi URL → mọi lần
+  // refresh/login sau đó về MÀN HÌNH CHÍNH = Office View (không dính lại AI Operations Center).
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('tab=')) {
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [])
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null)
