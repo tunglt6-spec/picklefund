@@ -77,6 +77,14 @@ async function downloadPDF(sections: string[], filename: string) {
     container.innerHTML = `<style>${BASE_CSS}</style><div class="page">${sections[i]}</div>`
     document.body.appendChild(container)
 
+    // Chờ web font tải xong TRƯỚC khi html2canvas chụp. Nếu chụp lúc font chưa sẵn sàng,
+    // chữ được đo bằng font dự phòng → nhãn (vd "Sinh hoạt (chia đều)") có thể xuống dòng/đo
+    // sai → ô giá trị bị "nhảy lệch" lên giữa thẻ bill (lỗi không ổn định, lúc đúng lúc sai).
+    // document.fonts.ready giúp kết quả render ỔN ĐỊNH mọi lần xuất.
+    if (document.fonts?.ready) {
+      try { await document.fonts.ready } catch { /* trình duyệt cũ không hỗ trợ → bỏ qua */ }
+    }
+
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     const pageEl = container.querySelector('.page') as HTMLElement
@@ -637,7 +645,8 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       /* bảng chi phí (Đã nộp / Chi phí sân / Sinh hoạt / Tổng) */
       .bcx { width:100%; border-collapse:collapse; }
       .bcx td { padding:5px 13px !important; border-bottom:1px solid #f1f5f9 !important; border-top:none !important;
-                background:transparent !important; font-size:10px; color:#64748b; vertical-align:middle; }
+                background:transparent !important; font-size:10px; color:#64748b; vertical-align:middle;
+                white-space:nowrap; }
       .bcx td em { font-size:9px; color:#94a3b8; font-style:normal; }
       .bcx td.val { text-align:right; font-size:11px; font-weight:700; color:#1e293b; white-space:nowrap; }
       .bcx td.val.g { color:#16a34a; } .bcx td.val.v { color:#6D5DFB; }
