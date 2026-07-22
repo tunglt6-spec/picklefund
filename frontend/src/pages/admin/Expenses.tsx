@@ -97,7 +97,9 @@ const emptyForm = {
   fundSource: 'COMMON' as FundSource,
   fundPeriodId: '',
   description: '', amount: '', expenseDate: new Date().toISOString().slice(0, 10),
-  allocationRule: 'ATTENDANCE' as AllocationRule, notes: '',
+  // Mặc định "Đều nhau": chi phí sân (khoản chi chính) chia đều cho mọi TV theo quy ước CLB.
+  // Chi sinh hoạt (nước/ăn uống/bóng) khi nhập cần đổi tay sang "Theo số buổi tham gia".
+  allocationRule: 'EQUAL' as AllocationRule, notes: '',
   miniExpenseType: 'GAME_REWARD' as MiniExpenseType,
   receiverName: '',
   categoryId: '',

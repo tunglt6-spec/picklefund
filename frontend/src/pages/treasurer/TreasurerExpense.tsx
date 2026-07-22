@@ -23,7 +23,8 @@ const RULES: { value: AllocationRule; label: string; desc: string }[] = [
 const BLANK = {
   description: '',
   amount: '',
-  allocationRule: 'ATTENDANCE' as AllocationRule,
+  // Mặc định "Đều nhau" (chia đều) — khớp quy ước chi phí sân CLB; sinh hoạt đổi tay sang "Theo lượt".
+  allocationRule: 'EQUAL' as AllocationRule,
   expenseDate: new Date().toISOString().slice(0, 10),
   fundPeriodId: '',
 }
