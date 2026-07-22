@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
 import { AppLayout } from './components/layout/AppLayout'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { lazy, Suspense, type ComponentType } from 'react'
 
 // Route-level code-splitting: mỗi trang là 1 chunk lazy (giảm bundle khởi động ~50%).
@@ -188,6 +189,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        {/* ErrorBoundary bọc toàn bộ route: 1 màn lỗi → hiện thông báo + nút "Tải lại", KHÔNG trắng
+            cả app; lỗi tải chunk sau deploy → tự tải lại lấy bản mới. */}
+        <ErrorBoundary>
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Đang tải…</div>}>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -300,6 +304,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
         <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
       </BrowserRouter>
     </QueryClientProvider>
