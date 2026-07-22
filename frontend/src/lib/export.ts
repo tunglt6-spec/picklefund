@@ -642,17 +642,18 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
       .bc-head .bcmeta { margin-top:4px; }
       .bcmeta td { border:none !important; padding:0 !important; background:transparent !important; vertical-align:middle; }
       .bcmeta td.r { text-align:right; }
-      /* bảng chi phí (Đã nộp / Chi phí sân / Sinh hoạt / Tổng) */
-      .bcx { width:100%; border-collapse:collapse; }
-      .bcx td { padding:5px 13px !important; border-bottom:1px solid #f1f5f9 !important; border-top:none !important;
-                background:transparent !important; font-size:10px; color:#64748b; vertical-align:middle;
-                white-space:nowrap; }
-      .bcx td em { font-size:9px; color:#94a3b8; font-style:normal; }
-      .bcx td.val { text-align:right; font-size:11px; font-weight:700; color:#1e293b; white-space:nowrap; }
-      .bcx td.val.g { color:#16a34a; } .bcx td.val.v { color:#6D5DFB; }
-      .bcx td.val.c { color:#0891b2; } .bcx td.val.o { color:#ea580c; }
-      .bcx tr.tot td { border-bottom:none !important; border-top:1.5px dashed #e2e8f0 !important;
-                       color:#1e293b; font-weight:700; }
+      /* Dòng chi phí (Đã nộp / Chi phí sân / Sinh hoạt / Tổng) — DÙNG FLOAT, KHÔNG dùng table.
+         html2canvas-pro render ô table + vertical-align KHÔNG ổn định (ô bị giãn cao → số trôi lên
+         giữa thẻ, lỗi ngẫu nhiên theo máy). Float thì mỗi dòng cao đúng 1 dòng, số luôn nằm phải,
+         không thể trôi. overflow:hidden để dòng tự bao float. */
+      .bcx-row { overflow:hidden; padding:5px 13px; border-bottom:1px solid #f1f5f9; }
+      .bcx-row .lbl { float:left; font-size:10px; color:#64748b; white-space:nowrap; }
+      .bcx-row .lbl em { font-size:9px; color:#94a3b8; font-style:normal; }
+      .bcx-row .val { float:right; font-size:11px; font-weight:700; color:#1e293b; white-space:nowrap; }
+      .bcx-row .val.g { color:#16a34a; } .bcx-row .val.v { color:#6D5DFB; }
+      .bcx-row .val.c { color:#0891b2; } .bcx-row .val.o { color:#ea580c; }
+      .bcx-row.tot { border-bottom:none; border-top:1.5px dashed #e2e8f0; }
+      .bcx-row.tot .lbl, .bcx-row.tot .val { color:#1e293b; font-weight:700; }
       .bc-bal   { margin:7px 13px 10px; border-radius:7px; padding:8px 12px; }
       .bc-bal.pos { background:#f0fdf4; border:1.5px solid #bbf7d0; }
       .bc-bal.neg { background:#fef2f2; border:1.5px solid #fecaca; }
@@ -688,12 +689,12 @@ export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRo
         <div class="bc-bar-track"><div class="bc-bar-fill" style="width:${rate}%"></div></div>
         <div class="bc-bar-pct">${rate}% số buổi trong kỳ</div>
       </div>
-      <table class="bcx">
-        <tr><td>Đã nộp quỹ</td><td class="val g">${formatVND(m.amountPaid)}</td></tr>
-        <tr><td>Chi phí sân <em>(${m.attendedSessions} buổi)</em></td><td class="val v">${formatVND(m.courtCost)}</td></tr>
-        <tr><td>Sinh hoạt <em>(chia đều)</em></td><td class="val c">${formatVND(m.livingCost)}</td></tr>
-        <tr class="tot"><td>Tổng chi phí</td><td class="val o">${formatVND(m.totalCost)}</td></tr>
-      </table>
+      <div class="bcx">
+        <div class="bcx-row"><span class="lbl">Đã nộp quỹ</span><span class="val g">${formatVND(m.amountPaid)}</span></div>
+        <div class="bcx-row"><span class="lbl">Chi phí sân <em>(${m.attendedSessions} buổi)</em></span><span class="val v">${formatVND(m.courtCost)}</span></div>
+        <div class="bcx-row"><span class="lbl">Sinh hoạt <em>(chia đều)</em></span><span class="val c">${formatVND(m.livingCost)}</span></div>
+        <div class="bcx-row tot"><span class="lbl">Tổng chi phí</span><span class="val o">${formatVND(m.totalCost)}</span></div>
+      </div>
       <div class="bc-bal ${isPos ? 'pos' : 'neg'}">
         <table class="bcmeta"><tr>
           <td class="l">
