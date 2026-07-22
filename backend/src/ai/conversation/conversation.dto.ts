@@ -1,11 +1,6 @@
-import {
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { MessageRole } from './conversation.types';
+import { IsBoundedMetadata } from '../../common/validators/bounded-metadata.validator';
 
 export class CreateConversationDto {
   @IsOptional()
@@ -28,6 +23,6 @@ export class AppendMessageDto {
   content: string;
 
   @IsOptional()
-  @IsObject()
+  @IsBoundedMetadata()
   metadata?: Record<string, unknown>;
 }

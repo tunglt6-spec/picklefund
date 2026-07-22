@@ -2,7 +2,6 @@ import {
   IsArray,
   IsEnum,
   IsInt,
-  IsObject,
   IsOptional,
   IsString,
   MaxLength,
@@ -13,6 +12,7 @@ import {
   MemoryOwnerType,
   MemoryType,
 } from './memory.types';
+import { IsBoundedMetadata } from '../../common/validators/bounded-metadata.validator';
 
 export class CreateMemoryDto {
   @IsEnum(MemoryType)
@@ -42,7 +42,7 @@ export class CreateMemoryDto {
   ttl?: number;
 
   @IsOptional()
-  @IsObject()
+  @IsBoundedMetadata()
   metadata?: Record<string, unknown>;
 }
 
@@ -63,6 +63,6 @@ export class UpdateMemoryDto {
   ttl?: number;
 
   @IsOptional()
-  @IsObject()
+  @IsBoundedMetadata()
   metadata?: Record<string, unknown>;
 }
