@@ -21,7 +21,7 @@ import { useBulkSelection } from '../../hooks/useBulkSelection'
 
 const BLANK_COMMON = {
   fundSource: 'COMMON' as FundSource,
-  memberId: '', amount: 1000000 as number | '',
+  memberId: '', amount: '' as number | '',
   paymentDate: new Date().toISOString().slice(0, 10),
   paymentMethod: 'bank_transfer', notes: '',
   // MINI
@@ -60,7 +60,7 @@ export function Contributions() {
   const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [bulkAll, setBulkAll] = useState(false)
-  const [form, setForm] = useState<typeof BLANK_COMMON>({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
+  const [form, setForm] = useState<typeof BLANK_COMMON>({ ...BLANK_COMMON, amount: '' })
 
   // Refresh contributions + periods when page mounts (in case data changed from another tab/session)
   useEffect(() => {
@@ -165,7 +165,7 @@ export function Contributions() {
   const openCreate = () => {
     const pid = activePeriod?.id ?? ''
     setFormPeriodId(pid)
-    setForm({ ...BLANK_COMMON, amount: activePeriod?.contributionAmount ?? 1000000 })
+    setForm({ ...BLANK_COMMON, amount: '' })
     setEditTarget(null)
     setBulkAll(false)
     setShowCreate(true)
