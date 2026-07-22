@@ -122,11 +122,18 @@ async function downloadPDF(sections: string[], filename: string) {
     }
   }
 
+  return savePdfDoc(pdf, filename)
+}
+
+/** Lưu 1 tài liệu jsPDF: hộp thoại "Lưu file" nếu có, fallback tải về Downloads. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function savePdfDoc(pdf: any, filename: string) {
   const suggestedName = `${filename}_${today().replace(/\//g, '-')}.pdf`
 
   // File System Access API — mở hộp thoại "Lưu file" để người dùng chọn thư mục
   if ('showSaveFilePicker' in window) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handle = await (window as any).showSaveFilePicker({
         suggestedName,
         types: [{ description: 'PDF Document', accept: { 'application/pdf': ['.pdf'] } }],
@@ -136,6 +143,7 @@ async function downloadPDF(sections: string[], filename: string) {
       await writable.write(blob)
       await writable.close()
       return
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // Người dùng bấm Cancel → không làm gì
       if (e?.name === 'AbortError') return
@@ -498,258 +506,66 @@ export interface MemberBillRow {
   balance: number
 }
 
-export function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRow[]) {
-  const expensePct = data.totalIncome > 0 ? Math.round((data.totalExpense / data.totalIncome) * 100) : 0
-  const confirmedPct = data.memberCount > 0 ? Math.round((data.confirmedCount / data.memberCount) * 100) : 0
-  const barW = Math.round((data.totalExpense / (data.totalIncome || 1)) * 100)
-
-  // ── Trang 1: Tổng quan ──────────────────────────────────────────
-  const summarySection = `
-    <style>
-      .rp-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; border-radius:10px 10px 0 0; padding:18px 24px 14px; }
-      .rp-head h1 { font-size:18px; font-weight:800; letter-spacing:-.2px; }
-      .rp-head p  { font-size:11px; opacity:.85; margin-top:3px; }
-      .rp-head-meta { display:flex; justify-content:space-between; margin-top:8px; font-size:10px; opacity:.7; }
-      .rp-kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
-      .rp-kpi-card { border:1.5px solid #e2e8f0; border-radius:9px; padding:12px 14px; }
-      .rp-kpi-label { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.8px; }
-      .rp-kpi-val   { font-size:20px; font-weight:800; margin-top:4px; color:#1e293b; }
-      .rp-kpi-val.green { color:#16a34a; }
-      .rp-kpi-val.red   { color:#ef4444; }
-      .rp-kpi-val.blue  { color:#6D5DFB; }
-      .rp-kpi-sub { font-size:9px; color:#94a3b8; margin-top:2px; }
-      .rp-bar-wrap { margin-top:14px; border:1.5px solid #e2e8f0; border-radius:9px; padding:12px 16px; }
-      .rp-bar-title { font-size:10px; font-weight:700; color:#475569; margin-bottom:8px; }
-      .rp-bar-track { background:#f1f5f9; border-radius:99px; height:10px; overflow:hidden; }
-      .rp-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; transition:width .3s; }
-      .rp-bar-labels { display:flex; justify-content:space-between; margin-top:5px; font-size:9px; color:#64748b; }
-      .rp-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-      .rp-stat  { border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
-      .rp-stat-label { font-size:11px; color:#475569; }
-      .rp-stat-val   { font-size:13px; font-weight:700; color:#1e293b; }
-      .rp-member-section { margin-top:14px; }
-      .rp-section-title { font-size:9px; font-weight:700; color:#6D5DFB; text-transform:uppercase; letter-spacing:1px; padding-bottom:6px; border-bottom:2px solid #eef2ff; margin-bottom:8px; }
-      .rp-mtable { width:100%; border-collapse:collapse; font-size:11px; }
-      .rp-mtable th { background:#6D5DFB; color:#fff; padding:7px 10px; text-align:left; font-size:10px; font-weight:600; }
-      .rp-mtable th.r { text-align:right; }
-      .rp-mtable td { padding:6px 10px; border-bottom:1px solid #f1f5f9; }
-      .rp-mtable td.r { text-align:right; }
-      .rp-mtable tr:nth-child(even) td { background:#f8fafc; }
-      .rp-foot { margin-top:16px; text-align:center; font-size:9px; color:#94a3b8; border-top:1px solid #f1f5f9; padding-top:10px; }
-    </style>
-
-    <div class="rp-head">
-      <h1>${brandName()} · Báo Cáo Tài Chính</h1>
-      <p>${data.clubName} · ${data.periodName}</p>
-      <div class="rp-head-meta">
-        <span>${data.memberCount} thành viên · ${data.sessionCount} buổi tập · ${data.confirmedCount} đã đóng quỹ (${confirmedPct}%)</span>
-        <span>Xuất ngày ${today()}</span>
-      </div>
-    </div>
-
-    <div class="rp-kpi">
-      <div class="rp-kpi-card">
-        <div class="rp-kpi-label">Tổng Thu</div>
-        <div class="rp-kpi-val green">${formatVND(data.totalIncome)}</div>
-        <div class="rp-kpi-sub">${data.confirmedCount}/${data.memberCount} thành viên đóng</div>
-      </div>
-      <div class="rp-kpi-card">
-        <div class="rp-kpi-label">Tổng Chi</div>
-        <div class="rp-kpi-val red">${formatVND(data.totalExpense)}</div>
-        <div class="rp-kpi-sub">Tỷ lệ chi / thu: ${expensePct}%</div>
-      </div>
-      <div class="rp-kpi-card" style="background:#eef2ff;border-color:#c7d2fe;">
-        <div class="rp-kpi-label" style="color:#6D5DFB;">Số Dư Quỹ</div>
-        <div class="rp-kpi-val blue">${formatVND(data.balance)}</div>
-        <div class="rp-kpi-sub">${data.balance >= 0 ? 'Quỹ còn dư' : 'Quỹ âm – cần bổ sung'}</div>
-      </div>
-    </div>
-
-    <div class="rp-bar-wrap">
-      <div class="rp-bar-title">Tỷ lệ Chi / Thu</div>
-      <div class="rp-bar-track"><div class="rp-bar-fill" style="width:${Math.min(barW, 100)}%"></div></div>
-      <div class="rp-bar-labels"><span>Thu: ${formatVND(data.totalIncome)}</span><span>Chi: ${formatVND(data.totalExpense)} (${expensePct}%)</span></div>
-    </div>
-
-    <div class="rp-stats">
-      <div class="rp-stat"><span class="rp-stat-label">Tổng số thành viên</span><span class="rp-stat-val">${data.memberCount} người</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Số buổi tập</span><span class="rp-stat-val">${data.sessionCount} buổi</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Đã đóng quỹ</span><span class="rp-stat-val" style="color:#16a34a">${data.confirmedCount} / ${data.memberCount}</span></div>
-      <div class="rp-stat"><span class="rp-stat-label">Chưa đóng quỹ</span><span class="rp-stat-val" style="color:#ef4444">${data.memberCount - data.confirmedCount} người</span></div>
-    </div>
-
-    ${memberBills && memberBills.length > 0 ? `
-    <div class="rp-member-section">
-      <div class="rp-section-title">Chi Tiết Từng Thành Viên</div>
-      <table class="rp-mtable">
-        <thead><tr>
-          <th>#</th><th>Thành viên</th><th class="r">Buổi TG</th><th class="r">Trạng thái</th>
-          <th class="r">Chi phí sân</th><th class="r">Sinh hoạt</th><th class="r">Tổng chi</th><th class="r">Số dư</th>
-        </tr></thead>
-        <tbody>
-          ${memberBills.map((m, i) => `
-          <tr>
-            <td style="color:#94a3b8;font-size:10px;">${i + 1}</td>
-            <td style="font-weight:600;">${m.memberName}</td>
-            <td class="r" style="color:#6D5DFB;font-weight:600;">${m.attendedSessions}/${m.totalSessions}</td>
-            <td class="r"><span style="color:${m.contributionPaid ? '#16a34a' : '#ef4444'};font-weight:600;">${m.contributionPaid ? '✓ Đã đóng' : '✗ Chưa đóng'}</span></td>
-            <td class="r">${formatVND(m.courtCost)}</td>
-            <td class="r">${formatVND(m.livingCost)}</td>
-            <td class="r" style="font-weight:600;">${formatVND(m.totalCost)}</td>
-            <td class="r" style="font-weight:700;color:${m.balance >= 0 ? '#16a34a' : '#ef4444'};">${m.balance >= 0 ? '+' : ''}${formatVND(m.balance)}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>` : ''}
-
-    <div class="rp-foot">${brandFooter()} · ${data.clubName} · Xuất lúc ${todayFull()}</div>
-  `
-
-  // ── Trang 2+: Bill card – cố định 6 thành viên/trang (2 cột × 3 hàng) ──
-  //
-  // downloadPDF đã wrap mỗi section trong <div class="page"> (BASE_CSS: width:754px, padding:28px 32px)
-  // → content area: 690px wide, ~1010px tall (A4 96dpi trừ padding)
-  // → header ~62px + footer ~27px + 2 gaps 10px = 109px overhead
-  // → mỗi card được ~(1010-109-10)/3 = ~297px high
-  //
-  // KHÔNG bọc thêm <div class="page"> ở đây để tránh double-wrap.
-
-  const BILL_CSS = `
-    <style>
-      .bp-layout { min-height:954px; }
-      .bp-head { background:linear-gradient(135deg,#4f46e5,#818cf8); color:#fff;
-                 border-radius:10px 10px 0 0; padding:13px 18px 11px;
-                 display:flex; justify-content:space-between; align-items:center; }
-      .bp-head-left h1 { font-size:15px; font-weight:800; letter-spacing:-.2px; }
-      .bp-head-left p  { font-size:10px; opacity:.82; margin-top:2px; }
-      .bp-head-right   { text-align:right; font-size:10px; opacity:.78; line-height:1.6; }
-      /* Card tự cao theo nội dung (align-items:start) — KHÔNG ép 3 hàng 1fr + overflow:hidden nữa
-         (html2canvas render sai flex → cắt mất Sinh hoạt/Tổng/Số dư). 6 card vẫn vừa 1 trang. */
-      .bp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; align-items:start; }
-      .bp-foot { flex-shrink:0; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:10px;
-                 display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; }
-      /* ── card ──
-         height CỐ ĐỊNH 266px (đo thật từ render chuẩn): mọi thẻ cao bằng nhau tăm tắp,
-         renderer có "nở" chữ thế nào cũng KHÔNG kéo giãn thẻ được → 6 thẻ LUÔN vừa 1 trang A4. */
-      .bc { border:1.5px solid #e2e8f0; border-radius:9px; overflow:hidden; height:266px; }
-      .bc-head { background:linear-gradient(135deg,#6D5DFB,#818cf8); color:#fff; padding:10px 13px 9px; }
-      .bc-name { font-size:13px; font-weight:800; line-height:1.3;
-                 white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .bc-badge { background:rgba(255,255,255,.22); border-radius:20px; padding:2px 8px;
-                  font-size:9px; font-weight:700; white-space:nowrap; }
-      .bc-bar  { padding:8px 13px 0; }
-      .bc-bar-lk  { font-size:9px; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-      .bc-bar-lv  { font-size:13px; font-weight:800; color:#4338ca; }
-      .bc-bar-track { background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden; margin-top:3px; }
-      .bc-bar-fill  { background:linear-gradient(90deg,#6D5DFB,#818cf8); height:100%; border-radius:99px; }
-      .bc-bar-pct   { font-size:9px; color:#94a3b8; margin-top:2px; text-align:right; }
-      /* label/value 2 cột dùng TABLE — html2canvas-pro render đúng (flex-in-grid bị lỗi) */
-      .bcmeta { width:100%; border-collapse:collapse; }
-      .bc-head .bcmeta { margin-top:4px; }
-      .bcmeta td { border:none !important; padding:0 !important; background:transparent !important; vertical-align:middle; }
-      .bcmeta td.r { text-align:right; }
-      /* Dòng chi phí (Đã nộp / Chi phí sân / Sinh hoạt / Tổng) — DÙNG FLOAT, KHÔNG dùng table.
-         html2canvas-pro render ô table + vertical-align KHÔNG ổn định (ô bị giãn cao → số trôi lên
-         giữa thẻ, lỗi ngẫu nhiên theo máy). Float thì mỗi dòng cao đúng 1 dòng, số luôn nằm phải,
-         không thể trôi. overflow:hidden để dòng tự bao float. */
-      .bcx-row { overflow:hidden; padding:5px 13px; border-bottom:1px solid #f1f5f9; }
-      .bcx-row .lbl { float:left; font-size:10px; color:#64748b; white-space:nowrap; }
-      .bcx-row .lbl em { font-size:9px; color:#94a3b8; font-style:normal; }
-      .bcx-row .val { float:right; font-size:11px; font-weight:700; color:#1e293b; white-space:nowrap; }
-      .bcx-row .val.g { color:#16a34a; } .bcx-row .val.v { color:#6D5DFB; }
-      .bcx-row .val.c { color:#0891b2; } .bcx-row .val.o { color:#ea580c; }
-      .bcx-row.tot { border-bottom:none; border-top:1.5px dashed #e2e8f0; }
-      .bcx-row.tot .lbl, .bcx-row.tot .val { color:#1e293b; font-weight:700; }
-      .bc-bal   { margin:7px 13px 10px; border-radius:7px; padding:8px 12px; }
-      .bc-bal.pos { background:#f0fdf4; border:1.5px solid #bbf7d0; }
-      .bc-bal.neg { background:#fef2f2; border:1.5px solid #fecaca; }
-      .bc-bal-lbl { font-size:10px; font-weight:700; }
-      .bc-bal-lbl.pos { color:#16a34a; }
-      .bc-bal-lbl.neg { color:#ef4444; }
-      .bc-bal-sub { font-size:9px; color:#94a3b8; margin-top:1px; }
-      .bc-bal-val { font-size:17px; font-weight:900; line-height:1; white-space:nowrap; }
-      .bc-bal-val.pos { color:#16a34a; }
-      .bc-bal-val.neg { color:#ef4444; }
-    </style>
-  `
-
-  const makeBillCard = (m: MemberBillRow) => {
-    const rate  = m.totalSessions > 0 ? Math.round((m.attendedSessions / m.totalSessions) * 100) : 0
-    const isPos = m.balance >= 0
-    // Bố cục dùng TABLE (không dùng flex/grid trong card) — html2canvas-pro render table ĐÚNG
-    // (giống phần Báo cáo tài chính), tránh lỗi cắt dòng/thiếu giá trị của flex-column-in-grid.
-    return `
-    <div class="bc">
-      <div class="bc-head">
-        <div class="bc-name">${m.memberName}</div>
-        <table class="bcmeta"><tr>
-          <td class="l" style="opacity:.88;font-size:10px;">${m.attendedSessions}/${m.totalSessions} buổi tham gia</td>
-          <td class="r"><span class="bc-badge">${m.contributionPaid ? '✓ Đã đóng quỹ' : '✗ Chưa đóng quỹ'}</span></td>
-        </tr></table>
-      </div>
-      <div class="bc-bar">
-        <table class="bcmeta"><tr>
-          <td class="l bc-bar-lk">Tỷ lệ tham gia</td>
-          <td class="r bc-bar-lv">${m.attendedSessions} / ${m.totalSessions} buổi</td>
-        </tr></table>
-        <div class="bc-bar-track"><div class="bc-bar-fill" style="width:${rate}%"></div></div>
-        <div class="bc-bar-pct">${rate}% số buổi trong kỳ</div>
-      </div>
-      <div class="bcx">
-        <div class="bcx-row"><span class="lbl">Đã nộp quỹ</span><span class="val g">${formatVND(m.amountPaid)}</span></div>
-        <div class="bcx-row"><span class="lbl">Chi phí sân <em>(${m.attendedSessions} buổi)</em></span><span class="val v">${formatVND(m.courtCost)}</span></div>
-        <div class="bcx-row"><span class="lbl">Sinh hoạt <em>(chia đều)</em></span><span class="val c">${formatVND(m.livingCost)}</span></div>
-        <div class="bcx-row tot"><span class="lbl">Tổng chi phí</span><span class="val o">${formatVND(m.totalCost)}</span></div>
-      </div>
-      <div class="bc-bal ${isPos ? 'pos' : 'neg'}">
-        <table class="bcmeta"><tr>
-          <td class="l">
-            <div class="bc-bal-lbl ${isPos ? 'pos' : 'neg'}">${isPos ? 'Số dư của bạn' : 'Cần nộp thêm'}</div>
-            <div class="bc-bal-sub">${isPos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung'}</div>
-          </td>
-          <td class="r"><span class="bc-bal-val ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${formatVND(m.balance)}</span></td>
-        </tr></table>
-      </div>
-    </div>`
+/* ── Font Việt cho PDF vector (Be Vietnam Pro, tải 1 lần rồi cache module) ── */
+let vnFontsPromise: Promise<{ regular: string; bold: string }> | null = null
+function loadVnFonts() {
+  if (!vnFontsPromise) {
+    vnFontsPromise = (async () => {
+      const toB64 = (buf: ArrayBuffer) => {
+        const bytes = new Uint8Array(buf)
+        let bin = ''
+        for (let i = 0; i < bytes.length; i += 0x8000) {
+          bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+        }
+        return btoa(bin)
+      }
+      const fetchFont = async (url: string) => {
+        const r = await fetch(url)
+        if (!r.ok) throw new Error(`Không tải được font ${url}`)
+        return toB64(await r.arrayBuffer())
+      }
+      const [regular, bold] = await Promise.all([
+        fetchFont('/fonts/BeVietnamPro-Regular.ttf'),
+        fetchFont('/fonts/BeVietnamPro-Bold.ttf'),
+      ])
+      return { regular, bold }
+    })()
+    // Lỗi mạng → reset để lần xuất sau thử tải lại (không kẹt promise rejected).
+    vnFontsPromise.catch(() => { vnFontsPromise = null })
   }
+  return vnFontsPromise
+}
 
-  // Chia thành từng trang 6 người — KHÔNG bọc <div class="page">, downloadPDF tự xử lý
-  const billSections: string[] = []
-  if (memberBills && memberBills.length > 0) {
-    const total    = memberBills.length
-    const totalPgs = Math.ceil(total / 6)
-    for (let start = 0; start < total; start += 6) {
-      const chunk   = memberBills.slice(start, start + 6)
-      const pageNum = Math.floor(start / 6) + 1
-      billSections.push(`
-        ${BILL_CSS}
-        <div class="bp-layout">
-          <div class="bp-head">
-            <div class="bp-head-left">
-              <h1>${brandName()} · Bill Chi Tiết Thành Viên</h1>
-              <p>${data.clubName} · ${data.periodName}</p>
-            </div>
-            <div class="bp-head-right">
-              <div>Trang ${pageNum} / ${totalPgs}</div>
-              <div>${chunk.length} thành viên · Xuất ngày ${today()}</div>
-            </div>
-          </div>
-          <div class="bp-grid">
-            ${chunk.map(m => makeBillCard(m)).join('')}
-          </div>
-          <div class="bp-foot">
-            <span>${brandFooter()} · ${data.clubName}</span>
-            <span>Thành viên ${start + 1}–${Math.min(start + 6, total)} / ${total} · Xuất lúc ${todayFull()}</span>
-          </div>
-        </div>
-      `)
-    }
-  }
-
-  const sections = [summarySection, ...billSections]
-  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '')
-  // Tên file rõ ràng: BaoCao_Quy_<club>_<period> (downloadPDF thêm _<ngày>.pdf)
-  return downloadPDF(sections, `BaoCao_Quy_${slug(data.clubName)}_${slug(data.periodName)}`)
+export async function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRow[]) {
+  // PDF VECTOR (jsPDF vẽ trực tiếp, KHÔNG html2canvas): mẫu báo cáo chuẩn DÙNG CHUNG
+  // mọi CLB — toạ độ mm cố định, chữ vector sắc nét → mọi máy/lần xuất giống hệt nhau,
+  // chấm dứt chuỗi lỗi renderer (cắt dòng / trôi số / giãn thẻ) của cách chụp DOM.
+  const [{ default: jsPDF }, fonts, { buildQuyReportPDF }] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+  ])
+  const now = new Date()
+  const doc = buildQuyReportPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter() },
+    summary: {
+      clubName: data.clubName,
+      periodName: data.periodName,
+      totalIncome: data.totalIncome,
+      totalExpense: data.totalExpense,
+      balance: data.balance,
+      memberCount: data.memberCount,
+      sessionCount: data.sessionCount,
+      confirmedCount: data.confirmedCount,
+      exportedDateText: now.toLocaleDateString('vi-VN'),
+      exportedAtText: now.toLocaleString('vi-VN'),
+    },
+    rows: memberBills ?? [],
+  })
+  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  return savePdfDoc(doc, `BaoCao_Quy_${slug(data.clubName)}_${slug(data.periodName)}`)
 }
 
 /* ════════════════════════════════════════
