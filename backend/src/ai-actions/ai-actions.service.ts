@@ -405,6 +405,7 @@ export class AiActionsService {
       select: { id: true },
     });
     if (open.length === 0) return 0;
+    let resolved = 0;
     for (const a of open) {
       // updateMany có điều kiện status để không đè action vừa được duyệt song song.
       const res = await this.prisma.aiAction.updateMany({
@@ -412,6 +413,7 @@ export class AiActionsService {
         data: { status: 'EXPIRED' as never },
       });
       if (res.count === 1) {
+        resolved += 1; // chỉ đếm action THỰC SỰ được đóng (bỏ action bị duyệt chen giữa)
         await this.addEvent(
           a.id,
           clubId,
@@ -421,7 +423,7 @@ export class AiActionsService {
         this.notifyAido(clubId, 'EXPIRED', a.id);
       }
     }
-    return open.length;
+    return resolved;
   }
 
   /**

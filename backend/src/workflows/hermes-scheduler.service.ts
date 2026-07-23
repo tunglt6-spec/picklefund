@@ -143,6 +143,15 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
       const actorUserId = g.actorUserId; // giữ narrowing trong closure track()
       const key = `SCHED:${g.triggerType}:${g.scheduleType}:${this.periodKey(g.scheduleType, now)}`;
       try {
+        // Dựng NGỮ CẢNH DỮ LIỆU THẬT cho scheduled dispatch (giống đường "Chạy dữ liệu thật")
+        // → rule scheduled (vd WEEKLY_CLUB_HEALTH_REPORT) khớp điều kiện thực tế, không dùng
+        // context tĩnh. Lỗi build context KHÔNG chặn tick — fallback context tối thiểu.
+        let liveCtx: Record<string, unknown> = {};
+        try {
+          liveCtx = await this.hermes.buildLiveContext(g.clubId, g.triggerType);
+        } catch (ctxErr) {
+          this.logSafe(`buildLiveContext ${g.triggerType}@${g.clubId}`, ctxErr);
+        }
         // POLISH-001: lọc đúng scheduleType — rule MANUAL cùng triggerType KHÔNG tự chạy.
         // Đánh dấu Hermes 'busy' đúng lúc tick nền dispatch (hoạt động nền THẬT → AIDO thấy).
         const s: DispatchSummary = await this.activity.track(
@@ -154,7 +163,7 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
               g.clubId,
               g.triggerType,
               { userId: actorUserId, clubId: g.clubId },
-              { scheduled: true, scheduleType: g.scheduleType },
+              { ...liveCtx, scheduled: true, scheduleType: g.scheduleType },
               key,
               { scheduleType: g.scheduleType },
             ),
