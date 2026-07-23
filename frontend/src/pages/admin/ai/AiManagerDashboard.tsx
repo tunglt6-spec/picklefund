@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Bot, ShieldCheck, Activity, AlertTriangle, Inbox, ClipboardList,
-  CheckCircle2, XCircle, Clock, Zap, Info, ChevronRight, BookOpen,
+  CheckCircle2, Zap, Info, ChevronRight, BookOpen,
   Workflow, ClipboardCheck, Send, Bell, CalendarClock, Database, Gauge,
   ScrollText, LayoutGrid, ToggleRight, ToggleLeft, Copy, Timer, RefreshCw,
 } from 'lucide-react'
@@ -241,19 +241,6 @@ export function AiManagerDashboard() {
     ...opsSignals,
     ...(intel?.attentionSignals ?? []),
     ...(intel?.dataQualitySignals ?? []),
-  ]
-
-  const fmtDuration = (s: number): string =>
-    !s ? '—' : s < 60 ? `${s}s` : `${Math.round(s / 60)}m`
-
-  // KPI hàng đợi duyệt — DỮ LIỆU DB THẬT (0 khi chưa có action, không giả lập).
-  const queueKpis: { label: string; value: string | number; icon: React.ReactNode }[] = [
-    { label: 'Chờ duyệt', value: summary?.pendingApprovals ?? 0, icon: <Inbox size={16} /> },
-    { label: 'Đã duyệt', value: summary?.approvedActions ?? 0, icon: <CheckCircle2 size={16} /> },
-    { label: 'Từ chối', value: summary?.rejectedActions ?? 0, icon: <XCircle size={16} /> },
-    { label: 'Thất bại', value: summary?.failedActions ?? 0, icon: <AlertTriangle size={16} /> },
-    { label: 'Thực thi hôm nay', value: summary?.executedToday ?? 0, icon: <Zap size={16} /> },
-    { label: 'TG duyệt TB', value: fmtDuration(summary?.averageApprovalTime ?? 0), icon: <Clock size={16} /> },
   ]
 
   // Sức khoẻ & Runtime AI — tín hiệu THẬT từ availability + executor (luôn có, không cần Club Memory).
@@ -648,24 +635,6 @@ export function AiManagerDashboard() {
             </div>
           )}
         </Card>
-
-        {/* KPI cards — hàng đợi duyệt (dữ liệu DB thật /ai/actions/summary) */}
-        <div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {queueKpis.map(k => (
-              <div key={k.label} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide leading-tight">{k.label}</span>
-                  <span className="[color:var(--pf-primary)]">{k.icon}</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-800">{availability.actions ? k.value : '—'}</p>
-                {!availability.actions && (
-                  <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Không tải được</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Panels */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
