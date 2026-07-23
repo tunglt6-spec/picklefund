@@ -27,6 +27,17 @@ export class CreateWorkflowRuleDto {
   @MaxLength(60)
   triggerType: string;
 
+  /** Phase 1 dedup: phạm vi nghiệp vụ. Bỏ trống = rule club-wide (canonical). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  scopeKey?: string;
+
+  /** Xác nhận tạo bản mới dù đã có rule cùng (clubId+triggerType+scopeKey). Mặc định chặn. */
+  @IsOptional()
+  @IsBoolean()
+  allowDuplicate?: boolean;
+
   @IsOptional()
   @IsObject()
   conditionsJson?: Record<string, unknown>;

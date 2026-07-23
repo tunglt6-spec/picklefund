@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiActionsService } from '../ai-actions/ai-actions.service';
@@ -159,11 +160,33 @@ export class HermesWorkflowService {
     dto: CreateWorkflowRuleDto,
   ) {
     const clubId = this.requireClub(clubIdRaw);
+    const scopeKey = dto.scopeKey?.trim() ? dto.scopeKey.trim() : null;
+
+    // Phase 1 — chống tạo Rule TRÙNG khi bấm template nhiều lần: nếu đã có rule cùng
+    // (clubId + triggerType + scopeKey) mà người dùng KHÔNG xác nhận tạo biến thể →
+    // trả 409 kèm id rule hiện có để FE mở rule đó thay vì tạo bản trùng.
+    if (!dto.allowDuplicate) {
+      const existing = await this.prisma.workflowRule.findFirst({
+        where: { clubId, triggerType: dto.triggerType, scopeKey },
+        orderBy: [{ createdAt: 'asc' }],
+        select: { id: true, name: true },
+      });
+      if (existing) {
+        throw new ConflictException({
+          code: 'RULE_EXISTS',
+          message: 'Rule cùng loại đã tồn tại cho CLB này.',
+          existingRuleId: existing.id,
+          existingRuleName: existing.name,
+        });
+      }
+    }
+
     const rule = await this.prisma.workflowRule.create({
       data: {
         clubId,
         name: dto.name,
         triggerType: dto.triggerType,
+        scopeKey,
         conditionsJson: (dto.conditionsJson ??
           undefined) as Prisma.InputJsonValue,
         actionsJson: (dto.actionsJson ?? undefined) as Prisma.InputJsonValue,

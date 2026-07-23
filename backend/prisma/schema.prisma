@@ -858,6 +858,10 @@ model WorkflowRule {
   clubId         String   @map("club_id")
   name           String   @db.VarChar(200)
   triggerType    String   @map("trigger_type") @db.VarChar(60)
+  // Phase 1 (dedup rule trùng): phạm vi nghiệp vụ của rule. NULL = rule club-wide (canonical
+  // duy nhất cho clubId+triggerType). Biến thể theo phạm vi khác (vd fundPeriod/session) dùng
+  // scopeKey khác. Khoá chống trùng khi tạo từ template: clubId + triggerType + scopeKey.
+  scopeKey       String?  @map("scope_key") @db.VarChar(120)
   conditionsJson Json?    @map("conditions_json")
   actionsJson    Json?    @map("actions_json")
   enabled        Boolean  @default(true)
@@ -873,6 +877,7 @@ model WorkflowRule {
 
   @@index([clubId, enabled])
   @@index([clubId, triggerType])
+  @@index([clubId, triggerType, scopeKey])
   @@map("workflow_rules")
 }
 

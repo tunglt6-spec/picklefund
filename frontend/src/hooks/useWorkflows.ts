@@ -77,14 +77,37 @@ export function useWorkflows() {
   return { rules, runs, templates, loading, available, refetch }
 }
 
-export async function createRuleFromTemplate(tpl: WorkflowTemplate): Promise<void> {
+export interface RuleExistsInfo {
+  existingRuleId: string
+  existingRuleName: string
+}
+
+/** Tạo rule từ template. allowDuplicate=false (mặc định) → BE trả 409 nếu đã có rule trùng. */
+export async function createRuleFromTemplate(
+  tpl: WorkflowTemplate,
+  allowDuplicate = false,
+): Promise<void> {
   await api.post('/workflows/rules', {
     name: tpl.name,
     triggerType: tpl.triggerType,
     conditionsJson: tpl.conditionsJson,
     actionsJson: tpl.actionsJson,
     enabled: true,
+    allowDuplicate,
   })
+}
+
+/** Nhận diện lỗi 409 "rule đã tồn tại" → trả thông tin rule hiện có (để mở), hoặc null. */
+export function parseRuleExists(err: unknown): RuleExistsInfo | null {
+  const e = err as { response?: { status?: number; data?: Record<string, unknown> } }
+  const d = e?.response?.data
+  if (e?.response?.status === 409 && d?.code === 'RULE_EXISTS') {
+    return {
+      existingRuleId: String(d.existingRuleId ?? ''),
+      existingRuleName: String(d.existingRuleName ?? ''),
+    }
+  }
+  return null
 }
 export async function setRuleEnabled(id: string, enabled: boolean): Promise<void> {
   await api.put(`/workflows/rules/${id}`, { enabled })

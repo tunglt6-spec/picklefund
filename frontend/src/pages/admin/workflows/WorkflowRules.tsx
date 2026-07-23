@@ -4,6 +4,7 @@ import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Data
 import {
   useWorkflows,
   createRuleFromTemplate,
+  parseRuleExists,
   setRuleEnabled,
   deleteWorkflowRule,
   testTriggerRule,
@@ -13,6 +14,7 @@ import {
   type DispatchSummary,
   type DispatchLiveResult,
   type WorkflowRunStatus,
+  type WorkflowTemplate,
 } from '../../../hooks/useWorkflows'
 
 const RUN_STATUS_STYLE: Record<WorkflowRunStatus, string> = {
@@ -34,6 +36,8 @@ export function WorkflowRules() {
   const [busy, setBusy] = useState(false)
   const [dispatchResult, setDispatchResult] = useState<DispatchSummary | null>(null)
   const [liveResult, setLiveResult] = useState<DispatchLiveResult | null>(null)
+  // Phase 1: rule trùng — khi BE trả 409, hỏi mở rule hiện có hay tạo bản mới.
+  const [dup, setDup] = useState<{ template: WorkflowTemplate; existingRuleId: string; existingRuleName: string } | null>(null)
 
   async function run(fn: () => Promise<unknown>, okMsg: string) {
     setBusy(true)
@@ -45,6 +49,37 @@ export function WorkflowRules() {
       toast.error('Thao tác thất bại (kiểm tra quyền hoặc trạng thái).')
     } finally {
       setBusy(false)
+    }
+  }
+
+  /** Tạo rule từ template — nếu trùng (409) thì mở hộp lựa chọn thay vì tạo bản trùng. */
+  async function createTemplate(t: WorkflowTemplate, allowDuplicate = false) {
+    setBusy(true)
+    try {
+      await createRuleFromTemplate(t, allowDuplicate)
+      toast.success(`Đã tạo rule: ${t.name}`)
+      setDup(null)
+      refetch()
+    } catch (err) {
+      const exists = parseRuleExists(err)
+      if (exists && !allowDuplicate) {
+        setDup({ template: t, existingRuleId: exists.existingRuleId, existingRuleName: exists.existingRuleName })
+      } else {
+        toast.error('Tạo rule thất bại (kiểm tra quyền hoặc trạng thái).')
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** Cuộn tới + làm nổi rule hiện có (khi người dùng chọn "Mở rule hiện có"). */
+  function openExistingRule(id: string) {
+    setDup(null)
+    const el = document.getElementById(`wf-rule-${id}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('ring-2', '[--tw-ring-color:var(--pf-primary)]')
+      setTimeout(() => el.classList.remove('ring-2', '[--tw-ring-color:var(--pf-primary)]'), 2200)
     }
   }
 
@@ -98,7 +133,7 @@ export function WorkflowRules() {
               templates.map((t) => (
                 <button
                   key={t.key}
-                  onClick={() => void run(() => createRuleFromTemplate(t), `Đã tạo rule: ${t.name}`)}
+                  onClick={() => void createTemplate(t)}
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-xl [background:var(--pf-primary)] px-3 py-2 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
                 >
@@ -107,6 +142,35 @@ export function WorkflowRules() {
               ))
             )}
           </div>
+
+          {/* Rule trùng: mở rule hiện có (khuyến nghị) hoặc tạo bản mới có xác nhận */}
+          {dup && (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-amber-800">
+                    Rule “{dup.existingRuleName || dup.template.name}” đã tồn tại cho CLB này.
+                  </p>
+                  <p className="text-[11px] text-amber-700 mt-0.5">Chọn mở rule hiện có để chỉnh sửa, hoặc vẫn tạo một bản mới (biến thể).</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button onClick={() => openExistingRule(dup.existingRuleId)}
+                      className="inline-flex items-center gap-1.5 rounded-lg [background:var(--pf-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)]">
+                      Mở rule hiện có
+                    </button>
+                    <button onClick={() => void createTemplate(dup.template, true)} disabled={busy}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">
+                      Vẫn tạo bản mới
+                    </button>
+                    <button onClick={() => setDup(null)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                      Huỷ
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dispatch theo Trigger (Epic 6 + Live data) */}
@@ -196,7 +260,7 @@ export function WorkflowRules() {
           ) : (
             <div className="space-y-2">
               {rules.map((r) => (
-                <div key={r.id} className="rounded-xl border border-slate-100 p-3">
+                <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-slate-100 p-3 transition-shadow">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-800">{r.name}</p>

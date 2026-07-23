@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import {
   HermesWorkflowService,
@@ -57,6 +58,9 @@ describe('HermesWorkflowService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    // clearAllMocks KHÔNG xoá implementation → đặt lại default để dedup-guard (findFirst)
+    // không rò rỉ giá trị truthy giữa các test; test cần rule tồn tại tự set lại.
+    prisma.workflowRule.findFirst.mockResolvedValue(null);
     prisma.workflowRule.findMany.mockResolvedValue([]);
     prisma.workflowRun.findMany.mockResolvedValue([]);
     aiActions.create.mockResolvedValue({ id: 'act-1' });
@@ -119,6 +123,56 @@ describe('HermesWorkflowService', () => {
       });
       expect(prisma.workflowRule.create).toHaveBeenCalledWith(
         expect.objectContaining({ data }),
+      );
+    });
+
+    // ── Phase 1: chống tạo Rule TRÙNG (dedup theo clubId + triggerType + scopeKey) ──
+    it('createRule CHẶN khi đã có rule trùng (409), KHÔNG tạo bản mới', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue({ id: 'canon', name: 'Debt' });
+      await expect(
+        service.createRule('club-1', 'u1', {
+          name: 'Debt',
+          triggerType: 'DEBT_ESCALATION',
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(prisma.workflowRule.create).not.toHaveBeenCalled();
+      // dedup query đúng scope canonical (scopeKey null)
+      expect(prisma.workflowRule.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clubId: 'club-1', triggerType: 'DEBT_ESCALATION', scopeKey: null },
+        }),
+      );
+    });
+
+    it('createRule allowDuplicate=true → BỎ QUA dedup, tạo biến thể', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue({ id: 'canon', name: 'Debt' });
+      prisma.workflowRule.create.mockResolvedValue({ id: 'r2' });
+      await service.createRule('club-1', 'u1', {
+        name: 'Debt v2',
+        triggerType: 'DEBT_ESCALATION',
+        allowDuplicate: true,
+      });
+      expect(prisma.workflowRule.findFirst).not.toHaveBeenCalled();
+      expect(prisma.workflowRule.create).toHaveBeenCalled();
+    });
+
+    it('createRule scopeKey KHÁC → không coi là trùng, vẫn tạo', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue(null); // không có rule cùng scope
+      prisma.workflowRule.create.mockResolvedValue({ id: 'r3' });
+      await service.createRule('club-1', 'u1', {
+        name: 'Debt kỳ Q3',
+        triggerType: 'DEBT_ESCALATION',
+        scopeKey: 'fundPeriod:q3',
+      });
+      expect(prisma.workflowRule.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clubId: 'club-1', triggerType: 'DEBT_ESCALATION', scopeKey: 'fundPeriod:q3' },
+        }),
+      );
+      expect(prisma.workflowRule.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ scopeKey: 'fundPeriod:q3' }),
+        }),
       );
     });
 
