@@ -58,6 +58,15 @@ export class HermesActionExecutor implements ActionExecutor {
         return this.executePaymentDueReminder(action);
       case 'workflow:MISSING_FINANCE_DOCUMENT':
         return this.executeMissingFinanceDocument(action);
+      // ── Phase 3 — lô Hoạt động CLB ──
+      case 'workflow:LOW_SESSION_REGISTRATION':
+        return this.executeLowSessionRegistration(action);
+      case 'workflow:ATTENDANCE_NOT_CLOSED':
+        return this.executeAttendanceNotClosed(action);
+      case 'workflow:SESSION_CAPACITY_RISK':
+        return this.executeSessionCapacityRisk(action);
+      case 'workflow:LOW_MEMBER_ATTENDANCE':
+        return this.executeLowMemberAttendance(action);
       default:
         return Promise.resolve({
           ok: true,
@@ -530,6 +539,222 @@ export class HermesActionExecutor implements ActionExecutor {
     );
     return this.liveResult(
       `Thiếu chứng từ: ${missing} khoản chi. Đã nhắc ${recipients.length} quản trị [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 3: LOW_SESSION_REGISTRATION ----------
+
+  /** Nhắc thành viên CHƯA đăng ký buổi sắp tới (hôm nay/mai) đăng ký tham gia. */
+  private async executeLowSessionRegistration(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const horizon = new Date(today);
+    horizon.setDate(horizon.getDate() + 1);
+    const session = await this.prisma.attendanceSession.findFirst({
+      where: {
+        clubId,
+        status: 'scheduled',
+        sessionDate: { gte: today, lte: horizon },
+      },
+      orderBy: { sessionDate: 'asc' },
+      select: { id: true, sessionDate: true, startTime: true, courtName: true },
+    });
+    if (!session) {
+      return this.liveResult('Không có buổi sắp tới cần nhắc đăng ký.');
+    }
+    const [all, regs] = await Promise.all([
+      this.activeMembers(clubId),
+      this.prisma.sessionRegistration.findMany({
+        where: { clubId, attendanceSessionId: session.id },
+        select: { memberId: true },
+      }),
+    ]);
+    const registered = new Set(regs.map((r) => r.memberId));
+    const recipients = all.filter((r) => !registered.has(r.memberId));
+    const channels = this.resolveChannels(action.requestPayload);
+    const dateStr = this.fmtDate(session.sessionDate);
+    const court = session.courtName ? ` tại ${session.courtName}` : '';
+    const title = action.title || 'Buổi sắp tới ít người đăng ký';
+    const body =
+      action.summary ||
+      `Buổi ngày ${dateStr}${court} đang ít người đăng ký. Nếu tham gia được, bạn đăng ký sớm nhé.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `LOW_SESSION_REGISTRATION ${action.id}: notReg=${recipients.length} date=${dateStr} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Nhắc đăng ký buổi ${dateStr}: ${recipients.length} thành viên chưa đăng ký. Đã gửi [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 3: ATTENDANCE_NOT_CLOSED ----------
+
+  /** Nhắc quản trị chốt điểm danh các buổi đã qua nhưng chưa chốt (KHÔNG tự chốt). */
+  private async executeAttendanceNotClosed(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    const notClosed = await this.prisma.attendanceSession.count({
+      where: { clubId, status: 'scheduled', sessionDate: { lt: cutoff } },
+    });
+    if (notClosed === 0) {
+      return this.liveResult('Không còn buổi nào chưa chốt điểm danh.');
+    }
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Nhắc chốt điểm danh';
+    const body =
+      action.summary ||
+      `Có ${notClosed} buổi đã qua nhưng chưa chốt điểm danh. Vui lòng vào chốt để tính quỹ chính xác.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `ATTENDANCE_NOT_CLOSED ${action.id}: notClosed=${notClosed} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Chưa chốt điểm danh: ${notClosed} buổi. Đã nhắc ${recipients.length} quản trị [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 3: SESSION_CAPACITY_RISK ----------
+
+  /** Cảnh báo quản trị buổi sắp tới đông nhất (KHÔNG tự đổi buổi/loại người). */
+  private async executeSessionCapacityRisk(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sessions = await this.prisma.attendanceSession.findMany({
+      where: { clubId, status: 'scheduled', sessionDate: { gte: today } },
+      select: {
+        id: true,
+        sessionDate: true,
+        courtName: true,
+        _count: { select: { registrations: true } },
+      },
+      orderBy: { sessionDate: 'asc' },
+      take: 30,
+    });
+    let top: {
+      count: number;
+      date: Date;
+      court: string | null;
+    } | null = null;
+    for (const s of sessions) {
+      const c = s._count.registrations;
+      if (!top || c > top.count) {
+        top = { count: c, date: s.sessionDate, court: s.courtName };
+      }
+    }
+    if (!top) return this.liveResult('Không có buổi sắp tới để đánh giá.');
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const dateStr = this.fmtDate(top.date);
+    const court = top.court ? ` tại ${top.court}` : '';
+    const title = action.title || 'Buổi sắp tới quá đông';
+    const body =
+      action.summary ||
+      `Buổi ngày ${dateStr}${court} đang có ${top.count} người đăng ký — cân nhắc tăng sân/đổi giờ/giới hạn.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `SESSION_CAPACITY_RISK ${action.id}: max=${top.count} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Cảnh báo quá đông (${top.count} đăng ký, ${dateStr}) tới ${recipients.length} quản trị [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 3: LOW_MEMBER_ATTENDANCE ----------
+
+  /** Hỏi thăm thành viên chuyên cần thấp (< 50%) trong kỳ active (điểm danh THỰC TẾ). */
+  private async executeLowMemberAttendance(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const period = await this.prisma.fundPeriod.findFirst({
+      where: { clubId, status: 'active', type: 'chung' },
+      orderBy: { startDate: 'desc' },
+      select: { id: true },
+    });
+    if (!period) return this.liveResult('Không có kỳ active để đánh giá.');
+    const sessions = await this.prisma.attendanceSession.findMany({
+      where: { clubId, fundPeriodId: period.id, status: 'completed' },
+      select: { id: true },
+    });
+    const totalCompleted = sessions.length;
+    if (totalCompleted < 3) {
+      return this.liveResult('Chưa đủ buổi đã chốt để đánh giá chuyên cần.');
+    }
+    const [members, present] = await Promise.all([
+      this.prisma.member.findMany({
+        where: { clubId, isDeleted: false, status: 'active' },
+        select: {
+          id: true,
+          userId: true,
+          email: true,
+          user: { select: { email: true } },
+        },
+      }),
+      this.prisma.attendanceRecord.groupBy({
+        by: ['memberId'],
+        where: {
+          clubId,
+          status: 'PRESENT',
+          attendanceSessionId: { in: sessions.map((s) => s.id) },
+        },
+        _count: { _all: true },
+      }),
+    ]);
+    const presentMap = new Map<string, number>(
+      present.map((p) => [p.memberId, p._count._all]),
+    );
+    const recipients = members
+      .filter((m) => (presentMap.get(m.id) ?? 0) / totalCompleted < 0.5)
+      .map((m) => this.toRecipient(m));
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Câu lạc bộ nhớ bạn!';
+    const body =
+      action.summary ||
+      'Gần đây bạn tham gia hơi ít buổi. CLB mong gặp lại bạn ở các buổi tới nhé — có gì cần hỗ trợ cứ nhắn CLB.';
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `LOW_MEMBER_ATTENDANCE ${action.id}: low=${recipients.length}/${members.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Hỏi thăm ${recipients.length} thành viên chuyên cần thấp. Đã gửi [${this.countsStr(counts)}].`,
     );
   }
 }

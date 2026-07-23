@@ -29,6 +29,11 @@ export const SUPPORTED_TRIGGER_TYPES = [
   'FUND_BALANCE_RISK',
   'PAYMENT_DUE_REMINDER',
   'MISSING_FINANCE_DOCUMENT',
+  // Phase 3 (lô Hoạt động CLB).
+  'LOW_SESSION_REGISTRATION',
+  'ATTENDANCE_NOT_CLOSED',
+  'SESSION_CAPACITY_RISK',
+  'LOW_MEMBER_ATTENDANCE',
   // Business events (Epic 7) — publish bởi HermesEventPublisher sau transaction thành công.
   'ATTENDANCE_COMPLETED',
   'CONTRIBUTION_CONFIRMED',
@@ -552,6 +557,112 @@ export class HermesWorkflowService {
         },
       });
       return { missingDocCount, dedupScope: 'docs' };
+    }
+    // ── Phase 3 (lô Hoạt động CLB) — dữ liệu thật ──
+    if (triggerType === 'LOW_SESSION_REGISTRATION') {
+      // Buổi sắp diễn ra (hôm nay/ngày mai, chưa hủy/chưa qua) có ít người đăng ký.
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const horizon = new Date(today);
+      horizon.setDate(horizon.getDate() + 1);
+      const session = await this.prisma.attendanceSession.findFirst({
+        where: {
+          clubId,
+          status: 'scheduled',
+          sessionDate: { gte: today, lte: horizon },
+        },
+        orderBy: { sessionDate: 'asc' },
+        select: { id: true },
+      });
+      if (!session) return { hasUpcomingSoon: false, registeredCount: 0 };
+      const registeredCount = await this.prisma.sessionRegistration.count({
+        where: { clubId, attendanceSessionId: session.id },
+      });
+      return {
+        hasUpcomingSoon: true,
+        sessionId: session.id,
+        registeredCount,
+        dedupScope: session.id,
+      };
+    }
+    if (triggerType === 'ATTENDANCE_NOT_CLOSED') {
+      // Buổi đã qua ngày nhưng còn 'scheduled' (chưa chốt = chưa completed/cancelled).
+      const cutoff = new Date();
+      cutoff.setHours(0, 0, 0, 0);
+      const notClosedCount = await this.prisma.attendanceSession.count({
+        where: { clubId, status: 'scheduled', sessionDate: { lt: cutoff } },
+      });
+      return { notClosedCount, dedupScope: 'attendance' };
+    }
+    if (triggerType === 'SESSION_CAPACITY_RISK') {
+      // Buổi sắp tới có SỐ ĐĂNG KÝ cao nhất (ngưỡng sức chứa nằm ở conditionsJson của rule).
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sessions = await this.prisma.attendanceSession.findMany({
+        where: { clubId, status: 'scheduled', sessionDate: { gte: today } },
+        select: { id: true, _count: { select: { registrations: true } } },
+        orderBy: { sessionDate: 'asc' },
+        take: 30,
+      });
+      let top: { id: string; count: number } | null = null;
+      for (const s of sessions) {
+        const c = s._count.registrations;
+        if (!top || c > top.count) top = { id: s.id, count: c };
+      }
+      if (!top) return { hasUpcoming: false, registeredCount: 0 };
+      return {
+        hasUpcoming: true,
+        sessionId: top.id,
+        registeredCount: top.count,
+        dedupScope: top.id,
+      };
+    }
+    if (triggerType === 'LOW_MEMBER_ATTENDANCE') {
+      // Chuyên cần thấp trong kỳ active: đủ buổi ĐÃ CHỐT (completed) mới đánh giá; dùng
+      // điểm danh THỰC TẾ (PRESENT), KHÔNG dùng đăng ký. Ngưỡng mặc định < 50%.
+      const period = await this.prisma.fundPeriod.findFirst({
+        where: { clubId, status: 'active', type: 'chung' },
+        orderBy: { startDate: 'desc' },
+        select: { id: true },
+      });
+      if (!period) return { hasActivePeriod: false, lowAttendanceCount: 0 };
+      const sessions = await this.prisma.attendanceSession.findMany({
+        where: { clubId, fundPeriodId: period.id, status: 'completed' },
+        select: { id: true },
+      });
+      const totalCompleted = sessions.length;
+      if (totalCompleted < 3) {
+        return { hasActivePeriod: true, totalCompleted, lowAttendanceCount: 0 };
+      }
+      const [members, present] = await Promise.all([
+        this.prisma.member.findMany({
+          where: { clubId, isDeleted: false, status: 'active' },
+          select: { id: true },
+        }),
+        this.prisma.attendanceRecord.groupBy({
+          by: ['memberId'],
+          where: {
+            clubId,
+            status: 'PRESENT',
+            attendanceSessionId: { in: sessions.map((s) => s.id) },
+          },
+          _count: { _all: true },
+        }),
+      ]);
+      const presentMap = new Map<string, number>(
+        present.map((p) => [p.memberId, p._count._all]),
+      );
+      let lowAttendanceCount = 0;
+      for (const m of members) {
+        const rate = (presentMap.get(m.id) ?? 0) / totalCompleted;
+        if (rate < 0.5) lowAttendanceCount += 1;
+      }
+      return {
+        hasActivePeriod: true,
+        totalCompleted,
+        lowAttendanceCount,
+        dedupScope: period.id,
+      };
     }
     return {};
   }

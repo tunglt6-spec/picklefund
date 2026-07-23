@@ -132,6 +132,11 @@ export const DISPATCH_TRIGGER_TYPES = [
   'FUND_BALANCE_RISK',
   'PAYMENT_DUE_REMINDER',
   'MISSING_FINANCE_DOCUMENT',
+  // Phase 3 — lô Hoạt động CLB
+  'LOW_SESSION_REGISTRATION',
+  'ATTENDANCE_NOT_CLOSED',
+  'SESSION_CAPACITY_RISK',
+  'LOW_MEMBER_ATTENDANCE',
 ] as const
 
 /** Tóm tắt dispatch sanitized từ backend — chỉ số đếm, không context/payload. */

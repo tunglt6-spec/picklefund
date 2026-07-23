@@ -112,4 +112,81 @@ export const WORKFLOW_TEMPLATES = [
       },
     ],
   },
+  // ── Phase 3 — lô Hoạt động CLB ──
+  {
+    key: 'low-session-registration',
+    name: 'Buổi chơi ít người đăng ký',
+    triggerType: 'LOW_SESSION_REGISTRATION',
+    conditionsJson: {
+      all: [
+        { field: 'hasUpcomingSoon', op: 'eq', value: true },
+        { field: 'registeredCount', op: 'lte', value: 3 },
+      ],
+    },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'attendance',
+        riskLevel: 'LOW',
+        title: 'Buổi sắp tới ít người đăng ký',
+        summary:
+          'Buổi sắp diễn ra đang ít người đăng ký — nhắc thành viên đăng ký (chờ duyệt, không gửi trực tiếp).',
+        cooldownMinutes: 720,
+      },
+    ],
+  },
+  {
+    key: 'attendance-not-closed',
+    name: 'Chưa chốt điểm danh',
+    triggerType: 'ATTENDANCE_NOT_CLOSED',
+    conditionsJson: { all: [{ field: 'notClosedCount', op: 'gte', value: 1 }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'attendance',
+        riskLevel: 'LOW',
+        title: 'Nhắc chốt điểm danh',
+        summary:
+          'Có buổi đã qua nhưng chưa chốt điểm danh — nhắc người phụ trách chốt (chờ duyệt; không tự suy đoán/tự chốt).',
+      },
+    ],
+  },
+  {
+    key: 'session-capacity-risk',
+    name: 'Buổi chơi quá đông hoặc vượt sức chứa',
+    triggerType: 'SESSION_CAPACITY_RISK',
+    conditionsJson: {
+      all: [
+        { field: 'hasUpcoming', op: 'eq', value: true },
+        { field: 'registeredCount', op: 'gt', value: 16 },
+      ],
+    },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'attendance',
+        riskLevel: 'MEDIUM',
+        title: 'Buổi sắp tới quá đông',
+        summary:
+          'Buổi sắp tới vượt sức chứa cấu hình — cảnh báo quản trị cân nhắc phương án (chờ duyệt; Mít Đặc không tự đổi buổi).',
+      },
+    ],
+  },
+  {
+    key: 'low-member-attendance',
+    name: 'Thành viên có chuyên cần thấp',
+    triggerType: 'LOW_MEMBER_ATTENDANCE',
+    conditionsJson: { all: [{ field: 'lowAttendanceCount', op: 'gte', value: 1 }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'attendance',
+        riskLevel: 'LOW',
+        title: 'Chăm sóc thành viên chuyên cần thấp',
+        summary:
+          'Có thành viên tham dự thấp trong kỳ — hỏi thăm/hỗ trợ (chờ duyệt, không gửi trực tiếp).',
+        cooldownMinutes: 4320,
+      },
+    ],
+  },
 ] as const;

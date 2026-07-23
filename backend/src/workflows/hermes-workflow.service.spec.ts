@@ -27,10 +27,12 @@ const prisma = {
     update: jest.fn(),
   },
   fundPeriod: { findFirst: jest.fn(), count: jest.fn() },
-  member: { count: jest.fn() },
+  member: { count: jest.fn(), findMany: jest.fn() },
   fundContribution: { findMany: jest.fn(), aggregate: jest.fn() },
   livingExpense: { aggregate: jest.fn(), count: jest.fn() },
-  attendanceSession: { count: jest.fn() },
+  attendanceSession: { count: jest.fn(), findFirst: jest.fn(), findMany: jest.fn() },
+  sessionRegistration: { count: jest.fn() },
+  attendanceRecord: { groupBy: jest.fn() },
 };
 
 const aiActions = {
@@ -526,6 +528,71 @@ describe('HermesWorkflowService', () => {
       prisma.livingExpense.count.mockResolvedValue(3);
       const ctx = await service.buildLiveContext('club-1', 'MISSING_FINANCE_DOCUMENT');
       expect(ctx).toEqual({ missingDocCount: 3, dedupScope: 'docs' });
+    });
+
+    // ── Phase 3 — lô Hoạt động CLB ──
+    it('LOW_SESSION_REGISTRATION: buổi sắp tới + đếm đăng ký + dedupScope=sessionId', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue({ id: 's1' });
+      prisma.sessionRegistration.count.mockResolvedValue(2);
+      const ctx = await service.buildLiveContext('club-1', 'LOW_SESSION_REGISTRATION');
+      expect(ctx).toEqual({
+        hasUpcomingSoon: true,
+        sessionId: 's1',
+        registeredCount: 2,
+        dedupScope: 's1',
+      });
+    });
+
+    it('LOW_SESSION_REGISTRATION: không có buổi sắp tới → hasUpcomingSoon false', async () => {
+      prisma.attendanceSession.findFirst.mockResolvedValue(null);
+      const ctx = await service.buildLiveContext('club-1', 'LOW_SESSION_REGISTRATION');
+      expect(ctx).toEqual({ hasUpcomingSoon: false, registeredCount: 0 });
+    });
+
+    it('ATTENDANCE_NOT_CLOSED: đếm buổi đã qua chưa chốt + dedupScope attendance', async () => {
+      prisma.attendanceSession.count.mockResolvedValue(2);
+      const ctx = await service.buildLiveContext('club-1', 'ATTENDANCE_NOT_CLOSED');
+      expect(ctx).toEqual({ notClosedCount: 2, dedupScope: 'attendance' });
+    });
+
+    it('SESSION_CAPACITY_RISK: lấy buổi đăng ký cao nhất + dedupScope=sessionId', async () => {
+      prisma.attendanceSession.findMany.mockResolvedValue([
+        { id: 'sa', _count: { registrations: 5 } },
+        { id: 'sb', _count: { registrations: 18 } },
+        { id: 'sc', _count: { registrations: 12 } },
+      ]);
+      const ctx = await service.buildLiveContext('club-1', 'SESSION_CAPACITY_RISK');
+      expect(ctx).toEqual({
+        hasUpcoming: true,
+        sessionId: 'sb',
+        registeredCount: 18,
+        dedupScope: 'sb',
+      });
+    });
+
+    it('LOW_MEMBER_ATTENDANCE: đếm TV < 50% dựa điểm danh thực tế + dedupScope=periodId', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-7' });
+      prisma.attendanceSession.findMany.mockResolvedValue([
+        { id: 's1' }, { id: 's2' }, { id: 's3' }, { id: 's4' },
+      ]); // 4 buổi đã chốt
+      prisma.member.findMany.mockResolvedValue([{ id: 'm1' }, { id: 'm2' }, { id: 'm3' }]);
+      prisma.attendanceRecord.groupBy.mockResolvedValue([
+        { memberId: 'm1', _count: { _all: 4 } }, // 100%
+        { memberId: 'm2', _count: { _all: 1 } }, // 25% → thấp
+        // m3: 0 buổi → thấp
+      ]);
+      const ctx = (await service.buildLiveContext('club-1', 'LOW_MEMBER_ATTENDANCE')) as Record<string, unknown>;
+      expect(ctx.hasActivePeriod).toBe(true);
+      expect(ctx.totalCompleted).toBe(4);
+      expect(ctx.lowAttendanceCount).toBe(2); // m2 + m3
+      expect(ctx.dedupScope).toBe('fp-7');
+    });
+
+    it('LOW_MEMBER_ATTENDANCE: chưa đủ buổi (<3) → lowAttendanceCount 0', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-7' });
+      prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }, { id: 's2' }]);
+      const ctx = await service.buildLiveContext('club-1', 'LOW_MEMBER_ATTENDANCE');
+      expect(ctx).toEqual({ hasActivePeriod: true, totalCompleted: 2, lowAttendanceCount: 0 });
     });
   });
 

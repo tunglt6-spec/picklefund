@@ -31,13 +31,25 @@ describe('HermesActionExecutor', () => {
   const memberFindMany = jest.fn();
   const fundContributionFindMany = jest.fn();
   const attendanceSessionFindFirst = jest.fn();
+  const attendanceSessionCount = jest.fn();
+  const attendanceSessionFindMany = jest.fn();
+  const sessionRegistrationFindMany = jest.fn();
+  const attendanceRecordGroupBy = jest.fn();
+  const userFindMany = jest.fn();
   const dispatch = jest.fn();
 
   const prisma = {
     fundPeriod: { findFirst: fundPeriodFindFirst },
     member: { findMany: memberFindMany },
     fundContribution: { findMany: fundContributionFindMany },
-    attendanceSession: { findFirst: attendanceSessionFindFirst },
+    attendanceSession: {
+      findFirst: attendanceSessionFindFirst,
+      count: attendanceSessionCount,
+      findMany: attendanceSessionFindMany,
+    },
+    sessionRegistration: { findMany: sessionRegistrationFindMany },
+    attendanceRecord: { groupBy: attendanceRecordGroupBy },
+    user: { findMany: userFindMany },
   } as unknown as PrismaService;
   const notifications = {
     dispatch,
@@ -221,5 +233,65 @@ describe('HermesActionExecutor', () => {
     );
     expect(dispatch).not.toHaveBeenCalled();
     expect(res.mode).toBe('no-op');
+  });
+
+  // ---------- Phase 3 ----------
+  it('ATTENDANCE_NOT_CLOSED: nhắc QUẢN TRỊ (không mutation), không đụng member', async () => {
+    attendanceSessionCount.mockResolvedValue(2);
+    userFindMany.mockResolvedValue([
+      { id: 'admin1', email: 'admin@real.vn' },
+      { id: 'trea1', email: 'trea@real.vn' },
+    ]);
+    const res = await executor.execute(
+      baseAction({ actionType: 'workflow:ATTENDANCE_NOT_CLOSED', title: 'Nhắc chốt điểm danh' }),
+    );
+    // Gửi IN_APP tới tài khoản quản trị
+    expect(dispatch).toHaveBeenCalledTimes(2);
+    expect(dispatch).toHaveBeenCalledWith(
+      'club-1',
+      expect.objectContaining({ targetType: 'USER', targetId: 'admin1' }),
+    );
+    // NOTIFICATION-ONLY: không gọi update/close attendance
+    expect(userFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          clubId: 'club-1',
+          role: { in: ['CLUB_ADMIN', 'CLUB_TREASURER'] },
+        }),
+      }),
+    );
+    expect(res.mode).toBe('live');
+  });
+
+  it('ATTENDANCE_NOT_CLOSED: không còn buổi chưa chốt → không gửi', async () => {
+    attendanceSessionCount.mockResolvedValue(0);
+    const res = await executor.execute(
+      baseAction({ actionType: 'workflow:ATTENDANCE_NOT_CLOSED' }),
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(res.mode).toBe('live');
+  });
+
+  it('LOW_SESSION_REGISTRATION: chỉ nhắc thành viên CHƯA đăng ký buổi sắp tới', async () => {
+    attendanceSessionFindFirst.mockResolvedValue({
+      id: 's1',
+      sessionDate: new Date('2026-08-01'),
+      startTime: '18:00',
+      courtName: 'Sân A',
+    });
+    memberFindMany.mockResolvedValue([
+      mkMember('m1', 'u1', 'm1@real.vn'),
+      mkMember('m2', 'u2', 'm2@real.vn'), // đã đăng ký
+      mkMember('m3', 'u3', 'm3@real.vn'),
+    ]);
+    sessionRegistrationFindMany.mockResolvedValue([{ memberId: 'm2' }]);
+    const res = await executor.execute(
+      baseAction({ actionType: 'workflow:LOW_SESSION_REGISTRATION', title: 'Nhắc đăng ký' }),
+    );
+    // m1 + m3 (chưa đăng ký) nhận; m2 (đã đăng ký) KHÔNG
+    expect(dispatch).toHaveBeenCalledTimes(2);
+    const targets = dispatch.mock.calls.map((c) => (c[1] as { targetId: string }).targetId).sort();
+    expect(targets).toEqual(['u1', 'u3']);
+    expect(res.mode).toBe('live');
   });
 });
