@@ -31,6 +31,11 @@ export class CreateExpenseDto {
   @IsEnum(['ATTENDANCE', 'EQUAL', 'PRESENT_ONLY', 'FUND_ONLY'])
   allocationRule?: AllocationRule;
 
+  /** Loại chi (luật Quỹ): COURT = tiền thuê sân (luôn chia đều) / LIVING = sinh hoạt. */
+  @IsOptional()
+  @IsEnum(['COURT', 'LIVING'])
+  costType?: 'COURT' | 'LIVING';
+
   @IsOptional()
   @IsBoolean()
   allocationEnabled?: boolean;
@@ -94,6 +99,11 @@ export class UpdateExpenseDto {
   @IsOptional()
   @IsEnum(['ATTENDANCE', 'EQUAL', 'PRESENT_ONLY', 'FUND_ONLY'])
   allocationRule?: AllocationRule;
+
+  /** Loại chi (luật Quỹ): COURT = tiền thuê sân (luôn chia đều) / LIVING = sinh hoạt. */
+  @IsOptional()
+  @IsEnum(['COURT', 'LIVING'])
+  costType?: 'COURT' | 'LIVING';
 
   @IsOptional()
   @IsBoolean()

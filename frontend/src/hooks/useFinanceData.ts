@@ -35,6 +35,7 @@ export function mapExpense(e: any): LivingExpense {
     description: e.description ?? '',
     amount: Number(e.amount ?? 0),
     allocationRule: e.allocationRule ?? 'FUND_ONLY',
+    costType: e.costType ?? 'LIVING',
     allocationEnabled: e.allocationEnabled ?? true,
     expenseDate: e.expenseDate?.slice(0, 10) ?? '',
     receiptUrl: e.receiptUrl ?? undefined,

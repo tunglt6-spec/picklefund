@@ -8,6 +8,8 @@ export type MemberStatus = 'active' | 'inactive' | 'left'
 export type SessionStatus = 'scheduled' | 'completed' | 'cancelled'
 export type AttendanceStatus = 'PRESENT' | 'ABSENT'
 export type AllocationRule = 'ATTENDANCE' | 'EQUAL' | 'PRESENT_ONLY' | 'FUND_ONLY'
+/** Loại chi (luật Quỹ): COURT = tiền thuê sân (luôn chia đều) / LIVING = sinh hoạt. */
+export type CostType = 'COURT' | 'LIVING'
 
 export type FundSource = 'COMMON' | 'MINI'
 export type MiniIncomeType = 'BETTING' | 'SPONSORSHIP' | 'PENALTY' | 'DONATION' | 'OTHER'
@@ -166,6 +168,8 @@ export interface LivingExpense {
   attendanceSessionId?: string
   categoryId?: string
   allocationRule: AllocationRule
+  /** Loại chi (luật Quỹ) — COURT luôn chia đều; LIVING chia đều hoặc theo người/buổi. */
+  costType?: CostType
   allocationEnabled: boolean
   // MINI
   miniExpenseType?: MiniExpenseType

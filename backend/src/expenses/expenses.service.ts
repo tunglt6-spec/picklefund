@@ -19,6 +19,8 @@ export interface CreateExpenseDto {
   fundPeriodId?: string;
   attendanceSessionId?: string;
   allocationRule?: AllocationRule;
+  /** Loại chi (luật Quỹ): COURT = tiền thuê sân (luôn chia đều) / LIVING = sinh hoạt. */
+  costType?: 'COURT' | 'LIVING';
   categoryId?: string;
   // MINI fields
   miniExpenseType?: MiniExpenseType;
@@ -160,7 +162,11 @@ export class ExpensesService {
         allocationRule:
           fundSource === 'MINI'
             ? 'FUND_ONLY'
-            : (dto.allocationRule ?? 'FUND_ONLY'),
+            : dto.costType === 'COURT'
+              ? 'EQUAL' // luật Quỹ: tiền thuê sân LUÔN chia đều
+              : (dto.allocationRule ?? 'FUND_ONLY'),
+        // Loại chi (luật Quỹ): COURT = tiền sân / LIVING = sinh hoạt. MINI không phân bổ → LIVING.
+        costType: fundSource === 'MINI' ? 'LIVING' : (dto.costType ?? 'LIVING'),
         description: dto.description,
         amount: new Decimal(dto.amount),
         expenseDate: dto.expenseDate ? new Date(dto.expenseDate) : new Date(),
@@ -221,9 +227,16 @@ export class ExpensesService {
           ? { attendanceSessionId: dto.attendanceSessionId }
           : {}),
         ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
-        ...(dto.allocationRule && fundSource === 'COMMON'
-          ? { allocationRule: dto.allocationRule }
+        // costType COURT → ép chia đều (luật Quỹ), bỏ qua allocationRule client gửi lên.
+        ...(dto.costType && fundSource === 'COMMON'
+          ? { costType: dto.costType }
           : {}),
+        ...(fundSource === 'COMMON' &&
+        (dto.costType ?? existing.costType) === 'COURT'
+          ? { allocationRule: 'EQUAL' as const }
+          : dto.allocationRule && fundSource === 'COMMON'
+            ? { allocationRule: dto.allocationRule }
+            : {}),
         ...(dto.miniExpenseType !== undefined
           ? { miniExpenseType: dto.miniExpenseType }
           : {}),

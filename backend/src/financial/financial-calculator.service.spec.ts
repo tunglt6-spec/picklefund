@@ -110,9 +110,9 @@ describe('FinancialCalculatorService — allocationRule canonical', () => {
       _sum: { courtFee: 9_999_999 },
     });
     prisma.livingExpense.groupBy.mockResolvedValue([
-      { allocationRule: 'EQUAL', _sum: { amount: COURT_TOTAL } },
-      { allocationRule: 'ATTENDANCE', _sum: { amount: LIVING_TOTAL } },
-      { allocationRule: 'FUND_ONLY', _sum: { amount: FUND_ONLY_TOTAL } },
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: COURT_TOTAL } },
+      { costType: 'LIVING', allocationRule: 'ATTENDANCE', _sum: { amount: LIVING_TOTAL } },
+      { costType: 'LIVING', allocationRule: 'FUND_ONLY', _sum: { amount: FUND_ONLY_TOTAL } },
     ]);
     prisma.livingExpense.aggregate.mockResolvedValue({
       _sum: { amount: 0 },
@@ -195,7 +195,7 @@ describe('FinancialCalculatorService — B32-style (no living expense)', () => {
       return Promise.resolve({ _sum: { amount: 0 } });
     });
     prisma.livingExpense.groupBy.mockResolvedValue([
-      { allocationRule: 'EQUAL', _sum: { amount: 400_000 } },
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: 400_000 } },
     ]);
     prisma.attendanceSession.findMany.mockResolvedValue([
       { id: 's1', _count: { attendanceRecords: 4 } },
@@ -246,8 +246,8 @@ describe('FinancialCalculatorService — THE PING-style (living not in court)', 
     });
     // court=EQUAL 300k; sinh hoạt=PRESENT_ONLY 600k (bug cũ sẽ gộp vào court)
     prisma.livingExpense.groupBy.mockResolvedValue([
-      { allocationRule: 'EQUAL', _sum: { amount: 300_000 } },
-      { allocationRule: 'PRESENT_ONLY', _sum: { amount: 600_000 } },
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: 300_000 } },
+      { costType: 'LIVING', allocationRule: 'PRESENT_ONLY', _sum: { amount: 600_000 } },
     ]);
     prisma.attendanceSession.findMany.mockResolvedValue([
       { id: 's1', _count: { attendanceRecords: 4 } },
@@ -268,6 +268,24 @@ describe('FinancialCalculatorService — THE PING-style (living not in court)', 
     for (const m of result.members) {
       expect(m.courtFee).toBe(75_000); // 300,000 / 4 (đều)
       expect(m.livingFee).toBe(150_000); // 600,000 * (1/4 attendance)
+    }
+  });
+
+  // Luật Quỹ (case B32 23/7/2026): SINH HOẠT cũng có thể CHIA ĐỀU — phải vào cột
+  // Sinh hoạt (không gộp vào Chi phí sân như proxy allocationRule cũ), và tổng
+  // mỗi người KHÔNG đổi so với gộp chung chia đều.
+  it('Case 7 (luật Quỹ): sinh hoạt chia đều vào cột Sinh hoạt, tổng/người không đổi', async () => {
+    prisma.livingExpense.groupBy.mockResolvedValue([
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: 2_000_000 } },
+      { costType: 'LIVING', allocationRule: 'EQUAL', _sum: { amount: 545_000 } },
+    ]);
+    const result = await service.calculate('fp-ping', 'club-ping');
+    expect(result.commonFund.totalCourt).toBe(2_000_000);
+    expect(result.commonFund.totalLiving).toBe(545_000); // KHÔNG còn 0 như bug cũ
+    for (const m of result.members) {
+      expect(m.courtFee).toBe(500_000); // 2.000.000 / 4 (luôn chia đều)
+      expect(m.livingFee).toBe(136_250); // 545.000 / 4 (sinh hoạt chia đều)
+      expect(m.totalCost).toBe(636_250); // = (2.000.000+545.000)/4 — tổng không đổi
     }
   });
 });
@@ -291,7 +309,7 @@ describe('FinancialCalculatorService — fund separation (Q3)', () => {
       return Promise.resolve({ _sum: { amount: 700_000 } }); // mini income
     });
     prisma.livingExpense.groupBy.mockResolvedValue([
-      { allocationRule: 'EQUAL', _sum: { amount: 560_000 } }, // common expense
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: 560_000 } }, // common expense
     ]);
     prisma.livingExpense.aggregate.mockResolvedValue({
       _sum: { amount: 0 }, // mini expense
@@ -354,7 +372,7 @@ describe('FinancialCalculatorService — carryForward (Q3 with previous period)'
       return Promise.resolve({ _sum: { amount: 700_000 } });
     });
     prisma.livingExpense.groupBy.mockResolvedValue([
-      { allocationRule: 'EQUAL', _sum: { amount: 560_000 } },
+      { costType: 'COURT', allocationRule: 'EQUAL', _sum: { amount: 560_000 } },
     ]);
     prisma.livingExpense.aggregate.mockResolvedValue({
       _sum: { amount: 0 },

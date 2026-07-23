@@ -402,6 +402,13 @@ export class BulkImportService {
               fundPeriodId: periodId,
               allocationEnabled: true,
               allocationRule: row.allocationRule ?? 'EQUAL',
+              // Loại chi (luật Quỹ) — heuristic giống migration backfill: khoản chia đều có
+              // chữ "sân" trong mô tả = tiền thuê sân; còn lại = sinh hoạt.
+              costType:
+                (row.allocationRule ?? 'EQUAL') === 'EQUAL' &&
+                /sân/i.test(row.description ?? '')
+                  ? 'COURT'
+                  : 'LIVING',
               status: row.status ?? 'pending',
               description: row.description,
               amount: new Decimal(row.amount),

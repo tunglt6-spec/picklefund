@@ -14,7 +14,7 @@ import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
 import { useEmbedded, BulkActionBar, RowCheckbox } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
-import type { AllocationRule, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
+import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import api from '../../lib/api'
@@ -97,8 +97,9 @@ const emptyForm = {
   fundSource: 'COMMON' as FundSource,
   fundPeriodId: '',
   description: '', amount: '', expenseDate: new Date().toISOString().slice(0, 10),
-  // Mặc định "Đều nhau": chi phí sân (khoản chi chính) chia đều cho mọi TV theo quy ước CLB.
-  // Chi sinh hoạt (nước/ăn uống/bóng) khi nhập cần đổi tay sang "Theo số buổi tham gia".
+  // Luật Quỹ: mặc định "Tiền thuê sân" (khoản chi chính) — LUÔN chia đều.
+  // Chọn "Chi phí sinh hoạt" thì được chọn cách chia (đều / theo người tham gia).
+  costType: 'COURT' as CostType,
   allocationRule: 'EQUAL' as AllocationRule, notes: '',
   miniExpenseType: 'GAME_REWARD' as MiniExpenseType,
   receiverName: '',
@@ -123,6 +124,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
       description: editExpense!.description,
       amount: String(editExpense!.amount),
       expenseDate: editExpense!.expenseDate,
+      costType: ((editExpense as any).costType ?? 'LIVING') as CostType,
       allocationRule: (editExpense as any).allocationRule ?? 'ATTENDANCE',
       notes: (editExpense as any).notes ?? '',
       miniExpenseType: (editExpense as any).miniExpenseType ?? 'GAME_REWARD',
@@ -226,17 +228,42 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                 </div>
               </div>
             ) : (
-              <div>
-                <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Users size={11} />Quy tắc phân bổ <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
-                </p>
-                <select value={form.allocationRule}
-                  onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
-                  {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+              <div className="space-y-3">
+                {/* Loại chi phí (luật Quỹ): sân LUÔN chia đều; sinh hoạt được chọn cách chia */}
+                <div>
+                  <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <Users size={11} />Loại chi phí <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([['COURT', 'Tiền thuê sân'], ['LIVING', 'Chi phí sinh hoạt']] as [CostType, string][]).map(([k, v]) => (
+                      <button key={k} type="button"
+                        onClick={() => setForm({ ...form, costType: k, ...(k === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${form.costType === k
+                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                          : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {form.costType === 'COURT' ? (
+                  <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
+                    Tiền thuê sân luôn <b>chia đều</b> cho tất cả thành viên (luật Quỹ).
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      Cách chia sinh hoạt <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
+                    </p>
+                    <select value={form.allocationRule}
+                      onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
+                      {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
+                        <option key={k} value={k}>{v}</option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -360,6 +387,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           { label: 'Người nhận', value: receiverName || '—' },
         ]
       : [
+          { label: 'Loại chi phí', value: exp.costType === 'COURT' ? 'Tiền thuê sân' : 'Chi phí sinh hoạt' },
           { label: 'Quy tắc phân bổ', value: ruleLabels[exp.allocationRule] },
         ]
     ),
@@ -475,7 +503,7 @@ export function Expenses() {
       setExpenses(clubId, raw.map((e: any) => ({
         id: e.id, clubId: e.clubId, fundPeriodId: e.fundPeriodId ?? undefined,
         fundSource: e.fundSource ?? 'COMMON', description: e.description ?? '',
-        amount: Number(e.amount), allocationRule: e.allocationRule ?? 'EQUAL',
+        amount: Number(e.amount), allocationRule: e.allocationRule ?? 'EQUAL', costType: e.costType ?? 'LIVING',
         expenseDate: e.expenseDate?.slice(0, 10) ?? '',
         receiptUrl: e.receiptUrl ?? undefined, notes: e.notes ?? undefined,
         status: e.status ?? 'pending',
@@ -605,6 +633,7 @@ export function Expenses() {
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
       allocationRule: isMini ? 'FUND_ONLY' : form.allocationRule,
+      costType: isMini ? undefined : form.costType,
       allocationEnabled: !isMini,
       miniExpenseType: isMini ? form.miniExpenseType : undefined,
       receiverName: isMini && form.receiverName ? form.receiverName : undefined,
@@ -643,6 +672,7 @@ export function Expenses() {
       amount: Number(form.amount),
       expenseDate: form.expenseDate,
       allocationRule: form.fundSource === 'MINI' ? 'FUND_ONLY' : form.allocationRule,
+      costType: form.fundSource === 'MINI' ? undefined : form.costType,
       notes: form.notes,
       miniExpenseType: form.fundSource === 'MINI' ? form.miniExpenseType : undefined,
       receiverName: form.fundSource === 'MINI' && form.receiverName ? form.receiverName : undefined,
@@ -1007,7 +1037,7 @@ export function Expenses() {
                         <td className="text-right font-semibold text-slate-900">{formatVND(exp.amount)}</td>
                         <td className="text-slate-600 text-xs">{isMini
                           ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Phụ')
-                          : ruleLabels[exp.allocationRule]}</td>
+                          : `${exp.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleLabels[exp.allocationRule]}`}</td>
                         <td className="text-center">
                           <Badge variant={cfg.variant} dot>{cfg.label}</Badge>
                         </td>

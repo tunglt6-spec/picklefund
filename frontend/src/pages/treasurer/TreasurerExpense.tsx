@@ -9,7 +9,7 @@ import { Modal } from '../../components/ui/Modal'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import type { AllocationRule, LivingExpense } from '../../types'
+import type { AllocationRule, CostType, LivingExpense } from '../../types'
 import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -23,7 +23,8 @@ const RULES: { value: AllocationRule; label: string; desc: string }[] = [
 const BLANK = {
   description: '',
   amount: '',
-  // Mặc định "Đều nhau" (chia đều) — khớp quy ước chi phí sân CLB; sinh hoạt đổi tay sang "Theo lượt".
+  // Luật Quỹ: mặc định "Tiền thuê sân" — LUÔN chia đều; chọn "Sinh hoạt" mới được chọn cách chia.
+  costType: 'COURT' as CostType,
   allocationRule: 'EQUAL' as AllocationRule,
   expenseDate: new Date().toISOString().slice(0, 10),
   fundPeriodId: '',
@@ -56,6 +57,7 @@ export function TreasurerExpense() {
         id: e.id, clubId: e.clubId, fundPeriodId: e.fundPeriodId ?? undefined,
         description: e.description ?? '', amount: Number(e.amount),
         allocationRule: e.allocationRule ?? 'EQUAL',
+        costType: e.costType ?? 'LIVING',
         expenseDate: e.expenseDate?.slice(0, 10) ?? '',
         receiptUrl: e.receiptUrl ?? undefined, notes: e.notes ?? undefined,
         createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
@@ -77,6 +79,7 @@ export function TreasurerExpense() {
     setForm({
       description: e.description,
       amount: String(e.amount),
+      costType: (e.costType ?? 'LIVING') as CostType,
       allocationRule: e.allocationRule,
       expenseDate: e.expenseDate,
       fundPeriodId: e.fundPeriodId ?? '',
@@ -88,7 +91,7 @@ export function TreasurerExpense() {
     e.preventDefault()
     if (isSaving) return
     setIsSaving(true)
-    const payload = { fundSource: 'COMMON' as const, fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
+    const payload = { fundSource: 'COMMON' as const, fundPeriodId: form.fundPeriodId || undefined, description: form.description, amount: Number(form.amount), costType: form.costType, allocationRule: form.allocationRule, allocationEnabled: true, expenseDate: form.expenseDate }
     try {
       if (editTarget) {
         const res = await api.put(`/expenses/${editTarget.id}`, payload)
@@ -384,7 +387,24 @@ export function TreasurerExpense() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">Quy tắc phân bổ</label>
+            <label className="block text-xs font-medium text-slate-700 mb-2">Loại chi phí</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([['COURT', 'Tiền thuê sân'], ['LIVING', 'Chi phí sinh hoạt']] as [CostType, string][]).map(([k, v]) => (
+                <button key={k} type="button"
+                  onClick={() => setForm({ ...form, costType: k, ...(k === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium ${form.costType === k ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+          {form.costType === 'COURT' ? (
+            <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
+              Tiền thuê sân luôn <b>chia đều</b> cho tất cả thành viên (luật Quỹ).
+            </div>
+          ) : (
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-2">Cách chia sinh hoạt</label>
             <div className="space-y-2">
               {RULES.map(r => (
                 <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -398,6 +418,7 @@ export function TreasurerExpense() {
               ))}
             </div>
           </div>
+          )}
         </form>
       </Modal>
 

@@ -82,12 +82,12 @@ export class FinancialCalculatorService {
 
   /**
    * Canonical financial calculation for a fund period.
-   * Cost category theo LivingExpense.allocationRule (source of truth — CLB B32 baseline);
+   * LOẠI CHI theo LivingExpense.costType (luật Quỹ — tách khỏi CÁCH CHIA allocationRule);
    * KHÔNG dùng AttendanceSession.courtFee (chỉ là reference).
-   * - CHI PHÍ SÂN  = SUM(LivingExpense COMMON WHERE allocationRule='EQUAL')
-   *                  → chia đều /memberCount cho mọi thành viên.
-   * - SINH HOẠT    = SUM(LivingExpense COMMON WHERE allocationRule IN ('PRESENT_ONLY','ATTENDANCE'))
-   *                  → chia theo attendance: (attended / totalAttendance) * total.
+   * - CHI PHÍ SÂN  = SUM(COMMON WHERE costType='COURT') → LUÔN chia đều /memberCount (luật Quỹ).
+   * - SINH HOẠT    = SUM(COMMON WHERE costType='LIVING', rule != FUND_ONLY), phân bổ theo TỪNG khoản:
+   *     + rule EQUAL                     → chia đều /memberCount.
+   *     + rule PRESENT_ONLY | ATTENDANCE → chia theo attendance: (attended/totalAttendance) * tổng.
    * - FUND_ONLY    = quỹ-only: tính vào tổng chi Common Fund, KHÔNG phân bổ vào bill thành viên.
    * - totalExpense (Common) = court + living + fundOnly.
    * - Income = confirmed contributions only.
@@ -129,12 +129,12 @@ export class FinancialCalculatorService {
         where: { clubId, fundSource: 'MINI', isConfirmed: true },
         _sum: { amount: true },
       }),
-      // Common Fund expenses phân loại theo allocationRule (canonical, KHÔNG dùng
-      // AttendanceSession.courtFee — session.courtFee chỉ là reference).
+      // Common Fund expenses phân loại theo costType (LOẠI CHI) × allocationRule (CÁCH CHIA).
+      // KHÔNG dùng AttendanceSession.courtFee — session.courtFee chỉ là reference.
       // status filter approved/paid: nhất quán với Mini Fund + workflow duyệt chi trên UI
       // (Expenses.tsx có approve/reject) — chi pending/rejected KHÔNG được tính vào quỹ.
       this.prisma.livingExpense.groupBy({
-        by: ['allocationRule'],
+        by: ['costType', 'allocationRule'],
         where: {
           fundPeriodId,
           clubId,
@@ -170,17 +170,29 @@ export class FinancialCalculatorService {
       }),
     ]);
 
-    // Phân loại chi phí Common Fund theo allocationRule (canonical — CLB B32 baseline):
-    //  - CHI PHÍ SÂN  = EQUAL                       → chia đều /memberCount
-    //  - SINH HOẠT    = PRESENT_ONLY | ATTENDANCE   → chia theo attendance
-    //  - FUND_ONLY    = quỹ-only, KHÔNG phân bổ vào bill thành viên; vẫn tính tổng chi quỹ
-    const ruleSum = (rules: string[]) =>
-      commonExpenseByRule
-        .filter((r) => rules.includes(r.allocationRule))
-        .reduce((s, r) => s + Number(r._sum.amount ?? 0), 0);
-    const totalCourt = ruleSum(['EQUAL']);
-    const totalLiving = ruleSum(['PRESENT_ONLY', 'ATTENDANCE']);
-    const fundOnlyExpense = ruleSum(['FUND_ONLY']);
+    // Phân loại chi phí Common Fund theo LOẠI CHI (costType) × CÁCH CHIA (allocationRule):
+    //  - CHI PHÍ SÂN (COURT)     → LUÔN chia đều /memberCount (luật Quỹ)
+    //  - SINH HOẠT (LIVING):
+    //      + EQUAL                    → chia đều /memberCount
+    //      + PRESENT_ONLY|ATTENDANCE  → chia theo attendance
+    //  - FUND_ONLY = quỹ-only, KHÔNG phân bổ vào bill thành viên; vẫn tính tổng chi quỹ
+    type ExpGroup = { costType: string; allocationRule: string; _sum: { amount: unknown } };
+    const groups = commonExpenseByRule as unknown as ExpGroup[];
+    const sumWhere = (pred: (r: ExpGroup) => boolean) =>
+      groups.filter(pred).reduce((s, r) => s + Number(r._sum.amount ?? 0), 0);
+    const totalCourt = sumWhere(
+      (r) => r.costType === 'COURT' && r.allocationRule !== 'FUND_ONLY',
+    );
+    const livingEqual = sumWhere(
+      (r) => r.costType === 'LIVING' && r.allocationRule === 'EQUAL',
+    );
+    const livingByAttendance = sumWhere(
+      (r) =>
+        r.costType === 'LIVING' &&
+        (r.allocationRule === 'PRESENT_ONLY' || r.allocationRule === 'ATTENDANCE'),
+    );
+    const totalLiving = livingEqual + livingByAttendance;
+    const fundOnlyExpense = sumWhere((r) => r.allocationRule === 'FUND_ONLY');
     const totalCommonExpense = totalCourt + totalLiving + fundOnlyExpense;
     const totalCommonIncome = Number(commonIncomeAgg._sum.amount ?? 0);
     const totalMiniIncome = Number(miniIncomeAgg._sum.amount ?? 0);
@@ -232,14 +244,15 @@ export class FinancialCalculatorService {
     const memberSummaries: MemberFinancialSummary[] = members.map((m) => {
       const attended = attendedMap[m.id] ?? 0;
       const paidAmount = paidMap[m.id] ?? 0;
-      // CHI PHÍ SÂN (EQUAL): chia đều cho mọi thành viên theo memberCount.
+      // CHI PHÍ SÂN (COURT): LUÔN chia đều cho mọi thành viên theo memberCount (luật Quỹ).
       const courtFee =
         memberCount > 0 ? Math.round(totalCourt / memberCount) : 0;
-      // SINH HOẠT (PRESENT_ONLY | ATTENDANCE): chia theo số buổi tham dự.
+      // SINH HOẠT (LIVING): phần chia đều + phần theo số buổi tham dự (tùy từng khoản).
       const livingFee =
-        totalAttendance > 0
-          ? Math.round((attended / totalAttendance) * totalLiving)
-          : 0;
+        (memberCount > 0 ? Math.round(livingEqual / memberCount) : 0) +
+        (totalAttendance > 0
+          ? Math.round((attended / totalAttendance) * livingByAttendance)
+          : 0);
       // FUND_ONLY KHÔNG phân bổ vào bill thành viên.
       const totalCost = courtFee + livingFee;
       const balance = paidAmount - totalCost;

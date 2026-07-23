@@ -394,6 +394,7 @@ model LivingExpense {
   amount              Decimal          @db.Decimal(15, 2)
   description         String
   allocationRule      AllocationRule   @default(FUND_ONLY) @map("allocation_rule")
+  costType            CostType         @default(LIVING) @map("cost_type")
   expenseDate         DateTime         @map("expense_date") @db.Date
   receiptUrl          String?          @map("receipt_url")
   createdById         String           @map("created_by")
@@ -419,6 +420,15 @@ enum AllocationRule {
   EQUAL
   PRESENT_ONLY
   FUND_ONLY
+}
+
+/// Loại chi phí (luật Quỹ): COURT = tiền thuê sân (LUÔN chia đều);
+/// LIVING = sinh hoạt (nước/ăn uống/bóng...) — chia đều HOẶC theo người tham gia tùy khoản.
+/// Tách "loại chi" khỏi "cách chia" (allocationRule) — trước đây suy loại từ rule nên
+/// sinh hoạt chia đều bị gộp nhầm vào cột chi phí sân.
+enum CostType {
+  COURT
+  LIVING
 }
 
 // ============================================================
