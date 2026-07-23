@@ -130,9 +130,10 @@ export class WorkflowsController {
   }
 
   @Post('runtime/scheduler')
+  @Roles('SUPER_ADMIN') // CÔNG TẮC HỆ THỐNG (ảnh hưởng MỌI CLB) → chỉ SUPER_ADMIN được bật/tắt.
   @ApiOperation({
     summary:
-      'Bật/tắt timer Scheduler (CÔNG TẮC HỆ THỐNG, lưu bền) — timer bật quét rule định kỳ của MỌI CLB.',
+      'Bật/tắt timer Scheduler (CÔNG TẮC HỆ THỐNG, lưu bền, chỉ SUPER_ADMIN) — timer bật quét rule định kỳ của MỌI CLB.',
   })
   async setScheduler(@Body() dto: SchedulerToggleDto) {
     return ok(

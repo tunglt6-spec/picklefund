@@ -17,6 +17,7 @@ import {
   PageShell, PageHeader, MetricCard, StatusBadge, EmptyState, LoadingState, ErrorState,
   ActionButton, type StatusTone,
 } from '../../../components/shared'
+import { useAuthStore } from '../../../store/authStore'
 
 interface SchedulerStatus {
   enabled: boolean
@@ -75,6 +76,7 @@ function fmt(iso?: string): string {
 
 export function SchedulerPage() {
   const navigate = useNavigate()
+  const isSuperAdmin = useAuthStore(s => s.user?.role === 'SUPER_ADMIN')
   const [status, setStatus] = useState<SchedulerStatus | null>(null)
   const [rules, setRules] = useState<WorkflowRule[]>([])
   const [runs, setRuns] = useState<SchedRun[]>([])
@@ -171,14 +173,17 @@ export function SchedulerPage() {
         subtitle="Lịch cron & tác vụ định kỳ của Hermes AI COO"
         actions={
           <div className="flex items-center gap-2">
-            <ActionButton
-              icon={<Power size={15} />}
-              variant={status?.enabled ? 'ghost' : 'primary'}
-              onClick={handleToggleTimer}
-              disabled={toggling || loading}
-            >
-              {toggling ? 'Đang đổi…' : status?.enabled ? 'Tắt timer' : 'Bật timer'}
-            </ActionButton>
+            {/* Công tắc hệ thống (ảnh hưởng MỌI CLB) → chỉ SUPER_ADMIN thấy nút bật/tắt. */}
+            {isSuperAdmin && (
+              <ActionButton
+                icon={<Power size={15} />}
+                variant={status?.enabled ? 'ghost' : 'primary'}
+                onClick={handleToggleTimer}
+                disabled={toggling || loading}
+              >
+                {toggling ? 'Đang đổi…' : status?.enabled ? 'Tắt timer' : 'Bật timer'}
+              </ActionButton>
+            )}
             {scheduled.length > 0 && (
               <ActionButton icon={<Play size={15} />} onClick={handleRunNow} disabled={running}>
                 {running ? 'Đang chạy…' : 'Chạy định kỳ ngay'}
