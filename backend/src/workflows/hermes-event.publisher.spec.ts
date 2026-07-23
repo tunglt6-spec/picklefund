@@ -146,7 +146,7 @@ describe('HermesEventPublisher (EPIC7)', () => {
       const actArg: unknown = expect.objectContaining({
         requestedByAi: 'HERMES',
       });
-      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', actArg);
+      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', actArg, undefined);
     });
 
     it('idempotencyKey đã dùng → không tạo run/action mới (dispatch trùng bị skip)', async () => {

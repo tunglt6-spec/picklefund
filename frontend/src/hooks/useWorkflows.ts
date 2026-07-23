@@ -128,6 +128,10 @@ export const DISPATCH_TRIGGER_TYPES = [
   'DEBT_ESCALATION',
   'EVENT_REMINDER',
   'REPORT_DISPATCH',
+  // Phase 2 — lô Tài chính
+  'FUND_BALANCE_RISK',
+  'PAYMENT_DUE_REMINDER',
+  'MISSING_FINANCE_DOCUMENT',
 ] as const
 
 /** Tóm tắt dispatch sanitized từ backend — chỉ số đếm, không context/payload. */
@@ -137,6 +141,8 @@ export interface DispatchSummary {
   matchedRules: number
   createdRuns: number
   createdActions: number
+  skippedActions?: number
+  autoResolvedActions?: number
   failedRuns: number
   skippedDuplicate: boolean
 }

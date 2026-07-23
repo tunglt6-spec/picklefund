@@ -28,11 +28,15 @@ const prisma = {
   },
   fundPeriod: { findFirst: jest.fn(), count: jest.fn() },
   member: { count: jest.fn() },
-  fundContribution: { findMany: jest.fn() },
+  fundContribution: { findMany: jest.fn(), aggregate: jest.fn() },
+  livingExpense: { aggregate: jest.fn(), count: jest.fn() },
   attendanceSession: { count: jest.fn() },
 };
 
-const aiActions = { create: jest.fn().mockResolvedValue({ id: 'act-1' }) };
+const aiActions = {
+  create: jest.fn().mockResolvedValue({ id: 'act-1' }),
+  resolveByDedupKey: jest.fn().mockResolvedValue(0),
+};
 
 const ACTOR: WorkflowActor = { userId: 'u1', clubId: 'club-1' };
 
@@ -220,7 +224,7 @@ describe('HermesWorkflowService', () => {
       const createArg: unknown = expect.objectContaining({
         requestedByAi: 'HERMES',
       });
-      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', createArg);
+      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', createArg, undefined);
       expect(run).toMatchObject({ status: 'WAITING_APPROVAL' });
     });
 
@@ -354,7 +358,7 @@ describe('HermesWorkflowService', () => {
       const hermesArg: unknown = expect.objectContaining({
         requestedByAi: 'HERMES',
       });
-      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', hermesArg);
+      expect(aiActions.create).toHaveBeenCalledWith('club-1', 'u1', hermesArg, undefined);
     });
 
     it('options.scheduleType (POLISH Epic9) → query lọc thêm scheduleType', async () => {
@@ -407,15 +411,7 @@ describe('HermesWorkflowService', () => {
         { unpaidCount: 9, secretNote: 'TOP_SECRET_VALUE' },
       );
       expect(Object.keys(s).sort()).toEqual(
-        [
-          'createdActions',
-          'createdRuns',
-          'failedRuns',
-          'matchedRules',
-          'skippedDuplicate',
-          'totalRules',
-          'triggerType',
-        ].sort(),
+        ['autoResolvedActions','createdActions','createdRuns','failedRuns','matchedRules','skippedActions','skippedDuplicate','totalRules','triggerType'].sort(),
       );
       expect(JSON.stringify(s)).not.toContain('TOP_SECRET_VALUE');
     });
@@ -490,6 +486,84 @@ describe('HermesWorkflowService', () => {
       prisma.fundPeriod.count.mockResolvedValue(2);
       const ctx = await service.buildLiveContext('club-1', 'REPORT_DISPATCH');
       expect(ctx).toEqual({ periodFinalized: true, finalizedCount: 2 });
+    });
+
+    // ── Phase 2 — lô Tài chính: buildLiveContext dữ liệu thật ──
+    it('FUND_BALANCE_RISK: số dư âm → balanceNegative true + dedupScope fund', async () => {
+      prisma.fundContribution.aggregate.mockResolvedValue({ _sum: { amount: 1_000_000 } });
+      prisma.livingExpense.aggregate.mockResolvedValue({ _sum: { amount: 1_500_000 } });
+      const ctx = await service.buildLiveContext('club-1', 'FUND_BALANCE_RISK');
+      expect(ctx).toEqual({ fundBalance: -500_000, balanceNegative: true, dedupScope: 'fund' });
+    });
+
+    it('FUND_BALANCE_RISK: số dư dương → balanceNegative false', async () => {
+      prisma.fundContribution.aggregate.mockResolvedValue({ _sum: { amount: 2_000_000 } });
+      prisma.livingExpense.aggregate.mockResolvedValue({ _sum: { amount: 500_000 } });
+      const ctx = await service.buildLiveContext('club-1', 'FUND_BALANCE_RISK');
+      expect(ctx).toMatchObject({ fundBalance: 1_500_000, balanceNegative: false });
+    });
+
+    it('PAYMENT_DUE_REMINDER: kỳ active + chưa đóng → unpaidCount + beforeDue + dedupScope=periodId', async () => {
+      const due = new Date(Date.now() + 3 * 86_400_000);
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-9', endDate: due });
+      prisma.member.count.mockResolvedValue(8);
+      prisma.fundContribution.findMany.mockResolvedValue([{ memberId: 'm1' }, { memberId: 'm2' }]);
+      const ctx = (await service.buildLiveContext('club-1', 'PAYMENT_DUE_REMINDER')) as Record<string, unknown>;
+      expect(ctx.hasActivePeriod).toBe(true);
+      expect(ctx.unpaidCount).toBe(6);
+      expect(ctx.beforeDue).toBe(true);
+      expect(ctx.dedupScope).toBe('fp-9');
+      expect(ctx.daysUntilDue as number).toBeGreaterThanOrEqual(2);
+    });
+
+    it('PAYMENT_DUE_REMINDER: không có kỳ active → hasActivePeriod false', async () => {
+      prisma.fundPeriod.findFirst.mockResolvedValue(null);
+      const ctx = await service.buildLiveContext('club-1', 'PAYMENT_DUE_REMINDER');
+      expect(ctx).toEqual({ hasActivePeriod: false, unpaidCount: 0 });
+    });
+
+    it('MISSING_FINANCE_DOCUMENT: đếm khoản chi thiếu chứng từ + dedupScope docs', async () => {
+      prisma.livingExpense.count.mockResolvedValue(3);
+      const ctx = await service.buildLiveContext('club-1', 'MISSING_FINANCE_DOCUMENT');
+      expect(ctx).toEqual({ missingDocCount: 3, dedupScope: 'docs' });
+    });
+  });
+
+  // ── Phase 2 — dedup/auto-resolve trong engine ──
+  describe('Phase 2 dedup + auto-resolve', () => {
+    const FIN_RULE = {
+      id: 'rf', clubId: 'club-1', triggerType: 'FUND_BALANCE_RISK', name: 'Quỹ âm', enabled: true,
+      conditionsJson: { all: [{ field: 'balanceNegative', op: 'eq', value: true }] },
+      actionsJson: [{ type: 'CREATE_AI_ACTION', targetModule: 'finance', riskLevel: 'HIGH', title: 'Rà soát quỹ âm' }],
+    };
+
+    it('khớp → create nhận dedup key FUND_BALANCE_RISK:fund', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue(FIN_RULE);
+      await service.testTrigger('rf', 'club-1', ACTOR, { balanceNegative: true, dedupScope: 'fund' });
+      expect(aiActions.create).toHaveBeenCalledWith(
+        'club-1', 'u1', expect.objectContaining({ actionType: 'workflow:FUND_BALANCE_RISK' }),
+        { key: 'FUND_BALANCE_RISK:fund', cooldownMinutes: undefined },
+      );
+    });
+
+    it('create trả skipped → đếm skippedActionCount, KHÔNG WAITING_APPROVAL', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue(FIN_RULE);
+      aiActions.create.mockResolvedValueOnce({ skipped: 'SKIPPED_DUPLICATE', dedupKey: 'x', existingActionId: 'a0' });
+      const run = await service.testTrigger('rf', 'club-1', ACTOR, { balanceNegative: true, dedupScope: 'fund' });
+      expect(run).toMatchObject({ status: 'COMPLETED' });
+      const res = (run.resultJson ?? {}) as { skippedActionCount?: number; createdActionIds?: string[] };
+      expect(res.skippedActionCount).toBe(1);
+      expect(res.createdActionIds).toEqual([]);
+    });
+
+    it('KHÔNG khớp + có dedupScope → auto-resolve theo dedupKey', async () => {
+      prisma.workflowRule.findFirst.mockResolvedValue(FIN_RULE);
+      aiActions.resolveByDedupKey.mockResolvedValueOnce(2);
+      const run = await service.testTrigger('rf', 'club-1', ACTOR, { balanceNegative: false, dedupScope: 'fund' });
+      expect(aiActions.resolveByDedupKey).toHaveBeenCalledWith('club-1', 'FUND_BALANCE_RISK:fund');
+      expect(aiActions.create).not.toHaveBeenCalled();
+      const res = (run.resultJson ?? {}) as { autoResolvedCount?: number };
+      expect(res.autoResolvedCount).toBe(2);
     });
   });
 

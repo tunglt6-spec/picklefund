@@ -160,6 +160,83 @@ describe('AiActionsService', () => {
     });
   });
 
+  // ── Phase 2: dedup / cooldown / auto-resolve ──
+  describe('create dedup + cooldown', () => {
+    const dto = {
+      requestedByAi: 'HERMES',
+      actionType: 'workflow:FUND_BALANCE_RISK',
+      riskLevel: 'HIGH',
+      title: 'Rà soát quỹ âm',
+    } as never;
+
+    it('đang có action MỞ cùng dedupKey → SKIPPED_DUPLICATE, KHÔNG tạo mới', async () => {
+      prisma.aiAction.findFirst.mockResolvedValueOnce({ id: 'open-1' });
+      const res = await service.create('club-1', 'u1', dto, {
+        key: 'FUND_BALANCE_RISK:fund',
+      });
+      expect(res).toMatchObject({
+        skipped: 'SKIPPED_DUPLICATE',
+        existingActionId: 'open-1',
+      });
+      expect(prisma.aiAction.create).not.toHaveBeenCalled();
+    });
+
+    it('trong cooldown (đã tạo gần đây) → SKIPPED_COOLDOWN, KHÔNG tạo mới', async () => {
+      prisma.aiAction.findFirst
+        .mockResolvedValueOnce(null) // không có action mở
+        .mockResolvedValueOnce({ id: 'recent-1' }); // có action trong cooldown
+      const res = await service.create('club-1', 'u1', dto, {
+        key: 'PAYMENT_DUE_REMINDER:fp-1',
+        cooldownMinutes: 1200,
+      });
+      expect(res).toMatchObject({
+        skipped: 'SKIPPED_COOLDOWN',
+        existingActionId: 'recent-1',
+      });
+      expect(prisma.aiAction.create).not.toHaveBeenCalled();
+    });
+
+    it('không trùng + hết cooldown → TẠO action kèm dedupKey', async () => {
+      prisma.aiAction.findFirst
+        .mockResolvedValueOnce(null) // open check
+        .mockResolvedValueOnce(null) // cooldown check
+        .mockResolvedValueOnce({ id: 'a9', status: 'PENDING_APPROVAL', events: [] }); // findOne
+      prisma.aiAction.create.mockResolvedValue({ id: 'a9' });
+      await service.create('club-1', 'u1', dto, {
+        key: 'FUND_BALANCE_RISK:fund',
+        cooldownMinutes: 60,
+      });
+      expect(prisma.aiAction.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ dedupKey: 'FUND_BALANCE_RISK:fund' }),
+        }),
+      );
+    });
+  });
+
+  describe('resolveByDedupKey (auto-resolve)', () => {
+    it('đóng action PENDING cùng dedupKey → EXPIRED + ghi sự kiện', async () => {
+      prisma.aiAction.findMany.mockResolvedValue([{ id: 'a1' }, { id: 'a2' }]);
+      prisma.aiAction.updateMany.mockResolvedValue({ count: 1 });
+      const n = await service.resolveByDedupKey('club-1', 'FUND_BALANCE_RISK:fund');
+      expect(n).toBe(2);
+      expect(prisma.aiAction.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ clubId: 'club-1', status: 'PENDING_APPROVAL' }),
+          data: { status: 'EXPIRED' },
+        }),
+      );
+      expect(prisma.aiActionEvent.create).toHaveBeenCalled();
+    });
+
+    it('không có action mở → trả 0, không update', async () => {
+      prisma.aiAction.findMany.mockResolvedValue([]);
+      const n = await service.resolveByDedupKey('club-1', 'X:y');
+      expect(n).toBe(0);
+      expect(prisma.aiAction.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
   describe('findOne payload sanitization', () => {
     it('KHÔNG trả requestPayload thô; trả payloadSummary (tên trường + count + size)', async () => {
       prisma.aiAction.findFirst.mockResolvedValue({

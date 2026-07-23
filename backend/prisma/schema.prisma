@@ -812,6 +812,9 @@ model AiAction {
   executorStartedAt  DateTime?      @map("executor_started_at")
   executorFinishedAt DateTime?      @map("executor_finished_at")
   executionDuration  Int?           @map("execution_duration")
+  // AIDO Workflow Rules (Phase 2): khoá chống trùng/cooldown/auto-resolve của AI Action do
+  // workflow rule tạo — dạng `<triggerType>:<dedupScope>`. NULL = action không quản lý dedup.
+  dedupKey           String?        @map("dedup_key") @db.VarChar(160)
   createdById        String?        @map("created_by")
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
@@ -822,6 +825,7 @@ model AiAction {
   @@index([clubId, status])
   @@index([clubId, requestedByAi])
   @@index([clubId, riskLevel])
+  @@index([clubId, dedupKey, status])
   @@map("ai_actions")
 }
 

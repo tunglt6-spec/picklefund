@@ -56,4 +56,60 @@ export const WORKFLOW_TEMPLATES = [
       },
     ],
   },
+  // ── Phase 2 — lô Tài chính ──
+  {
+    key: 'fund-balance-risk',
+    name: 'Cảnh báo quỹ âm hoặc sắp âm',
+    triggerType: 'FUND_BALANCE_RISK',
+    conditionsJson: { all: [{ field: 'balanceNegative', op: 'eq', value: true }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'finance',
+        riskLevel: 'HIGH',
+        title: 'Rà soát quỹ âm',
+        summary:
+          'Số dư Quỹ Chính đang âm — tạo yêu cầu rà soát + thông báo quản trị (chờ duyệt, không tự đổi số liệu).',
+      },
+    ],
+  },
+  {
+    key: 'payment-due-reminder',
+    name: 'Nhắc đóng quỹ trước hạn',
+    triggerType: 'PAYMENT_DUE_REMINDER',
+    conditionsJson: {
+      all: [
+        { field: 'unpaidCount', op: 'gte', value: 1 },
+        { field: 'beforeDue', op: 'eq', value: true },
+        { field: 'daysUntilDue', op: 'lte', value: 7 },
+      ],
+    },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'contributions',
+        riskLevel: 'LOW',
+        title: 'Nhắc đóng quỹ trước hạn',
+        summary:
+          'Nhắc thành viên chưa đóng khi sắp đến hạn (chờ duyệt, không gửi trực tiếp). Quá hạn sẽ do Nhắc nợ (Debt Escalation) lo.',
+        cooldownMinutes: 1200,
+      },
+    ],
+  },
+  {
+    key: 'missing-finance-document',
+    name: 'Thiếu hóa đơn hoặc chứng từ',
+    triggerType: 'MISSING_FINANCE_DOCUMENT',
+    conditionsJson: { all: [{ field: 'missingDocCount', op: 'gte', value: 1 }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'expenses',
+        riskLevel: 'MEDIUM',
+        title: 'Bổ sung chứng từ chi',
+        summary:
+          'Có khoản chi đã duyệt/đã chi nhưng thiếu chứng từ — nhắc người phụ trách bổ sung (chờ duyệt).',
+      },
+    ],
+  },
 ] as const;

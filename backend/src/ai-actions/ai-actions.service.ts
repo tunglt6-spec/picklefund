@@ -43,6 +43,29 @@ export interface ListFilters {
   limit?: number;
 }
 
+/** Trạng thái "đang mở" của AI Action (còn hiệu lực) — dùng cho dedup + auto-resolve. */
+export const OPEN_ACTION_STATUSES: AiActionStatus[] = [
+  'PENDING_APPROVAL',
+  'APPROVED',
+  'EXECUTING',
+  'RETRY_PENDING',
+];
+
+/** Dedup/cooldown cho AI Action do workflow rule tạo (Phase 2). */
+export interface CreateDedupOptions {
+  /** Khoá dedup ổn định `<triggerType>:<scope>`. Bỏ trống = không quản lý dedup. */
+  key: string;
+  /** Cooldown (phút): trong cửa sổ này không tạo lại action cùng key dù đã đóng. */
+  cooldownMinutes?: number;
+}
+
+/** Kết quả create khi bị bỏ qua do trùng/cooldown (KHÔNG tạo action mới). */
+export interface CreateSkippedResult {
+  skipped: 'SKIPPED_DUPLICATE' | 'SKIPPED_COOLDOWN';
+  dedupKey: string;
+  existingActionId: string | null;
+}
+
 @Injectable()
 export class AiActionsService {
   private readonly logger = new Logger(AiActionsService.name);
@@ -274,8 +297,49 @@ export class AiActionsService {
     clubIdRaw: string | null,
     userId: string,
     dto: CreateAiActionDto,
-  ) {
+    dedup?: CreateDedupOptions,
+  ): Promise<
+    Awaited<ReturnType<AiActionsService['findOne']>> | CreateSkippedResult
+  > {
     const clubId = this.requireClub(clubIdRaw);
+
+    // ── Dedup + cooldown (Phase 2) — chỉ khi caller cung cấp dedup key ──
+    if (dedup?.key) {
+      // 1) Đang có action MỞ cùng key → bỏ qua (SKIPPED_DUPLICATE), không tạo trùng.
+      const open = await this.prisma.aiAction.findFirst({
+        where: {
+          clubId,
+          dedupKey: dedup.key,
+          status: { in: OPEN_ACTION_STATUSES },
+        },
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (open) {
+        return {
+          skipped: 'SKIPPED_DUPLICATE',
+          dedupKey: dedup.key,
+          existingActionId: open.id,
+        };
+      }
+      // 2) Cooldown: đã tạo action cùng key trong cửa sổ (dù đã đóng) → bỏ qua.
+      if (dedup.cooldownMinutes && dedup.cooldownMinutes > 0) {
+        const since = new Date(Date.now() - dedup.cooldownMinutes * 60_000);
+        const recent = await this.prisma.aiAction.findFirst({
+          where: { clubId, dedupKey: dedup.key, createdAt: { gte: since } },
+          select: { id: true },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (recent) {
+          return {
+            skipped: 'SKIPPED_COOLDOWN',
+            dedupKey: dedup.key,
+            existingActionId: recent.id,
+          };
+        }
+      }
+    }
+
     const policy =
       this.maika
         .listApprovalPolicies()
@@ -299,6 +363,7 @@ export class AiActionsService {
         approvalRequired,
         approvalPolicy: (policy ??
           undefined) as unknown as Prisma.InputJsonValue,
+        dedupKey: dedup?.key ?? null,
         createdById: userId,
       },
     });
@@ -325,6 +390,38 @@ export class AiActionsService {
     );
     this.notifyAido(clubId, 'PENDING_APPROVAL', action.id);
     return this.findOne(action.id, clubId);
+  }
+
+  /**
+   * Auto-resolve (Phase 2): đóng các AI Action ĐANG MỞ theo dedupKey khi nguyên nhân không
+   * còn (rule không khớp nữa). Chỉ đóng action CHỜ DUYỆT (chưa ai duyệt/đang chạy — không
+   * đụng action đã APPROVED/EXECUTING để không huỷ việc đang xử lý). Set EXPIRED + ghi sự kiện.
+   * Tenant-scope theo clubId. Trả số action đã đóng.
+   */
+  async resolveByDedupKey(clubId: string, dedupKey: string): Promise<number> {
+    if (!clubId || !dedupKey) return 0;
+    const open = await this.prisma.aiAction.findMany({
+      where: { clubId, dedupKey, status: 'PENDING_APPROVAL' },
+      select: { id: true },
+    });
+    if (open.length === 0) return 0;
+    for (const a of open) {
+      // updateMany có điều kiện status để không đè action vừa được duyệt song song.
+      const res = await this.prisma.aiAction.updateMany({
+        where: { id: a.id, clubId, status: 'PENDING_APPROVAL' },
+        data: { status: 'EXPIRED' as never },
+      });
+      if (res.count === 1) {
+        await this.addEvent(
+          a.id,
+          clubId,
+          'AUTO_RESOLVED',
+          'Tự đóng: điều kiện rule không còn khớp (nguyên nhân đã hết).',
+        );
+        this.notifyAido(clubId, 'EXPIRED', a.id);
+      }
+    }
+    return open.length;
   }
 
   /**

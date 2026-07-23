@@ -25,6 +25,10 @@ export const SUPPORTED_TRIGGER_TYPES = [
   'DEBT_ESCALATION',
   'EVENT_REMINDER',
   'REPORT_DISPATCH',
+  // AIDO Workflow Rules Expansion — Phase 2 (lô Tài chính).
+  'FUND_BALANCE_RISK',
+  'PAYMENT_DUE_REMINDER',
+  'MISSING_FINANCE_DOCUMENT',
   // Business events (Epic 7) — publish bởi HermesEventPublisher sau transaction thành công.
   'ATTENDANCE_COMPLETED',
   'CONTRIBUTION_CONFIRMED',
@@ -41,6 +45,9 @@ export interface DispatchSummary {
   matchedRules: number;
   createdRuns: number;
   createdActions: number;
+  // Phase 2: AI Action bị bỏ qua do trùng/cooldown (không tạo mới); action tự đóng do auto-resolve.
+  skippedActions: number;
+  autoResolvedActions: number;
   failedRuns: number;
   skippedDuplicate: boolean;
 }
@@ -62,6 +69,8 @@ interface WfAction {
   title?: string;
   summary?: string;
   requestPayload?: Record<string, unknown>;
+  /** Phase 2: cooldown (phút) cho AI Action nhắc — không tạo lại cùng dedup key trong cửa sổ. */
+  cooldownMinutes?: number;
 }
 
 const VALID_RISK: AiActionRisk[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -343,6 +352,8 @@ export class HermesWorkflowService {
       matchedRules: 0,
       createdRuns: 0,
       createdActions: 0,
+      skippedActions: 0,
+      autoResolvedActions: 0,
       failedRuns: 0,
       skippedDuplicate: false,
     };
@@ -387,7 +398,11 @@ export class HermesWorkflowService {
         const res = (run.resultJson ?? {}) as {
           matched?: boolean;
           createdActionIds?: string[];
+          skippedActionCount?: number;
+          autoResolvedCount?: number;
         };
+        summary.skippedActions += res.skippedActionCount ?? 0;
+        summary.autoResolvedActions += res.autoResolvedCount ?? 0;
         if (res.matched === true) {
           summary.matchedRules += 1;
           summary.createdActions += res.createdActionIds?.length ?? 0;
@@ -460,6 +475,84 @@ export class HermesWorkflowService {
       });
       return { periodFinalized: finalizedCount > 0, finalizedCount };
     }
+    // ── Phase 2 (lô Tài chính) — dữ liệu thật, KHÔNG suy diễn ──
+    if (triggerType === 'FUND_BALANCE_RISK') {
+      // Số dư Quỹ Chính toàn thời gian = clubAssets (Σ thu COMMON đã xác nhận − Σ chi COMMON
+      // approved/paid). Bao gồm carryForward vì cộng dồn mọi kỳ; KHÔNG cộng Quỹ Phụ (MINI).
+      const [incomeAgg, expenseAgg] = await Promise.all([
+        this.prisma.fundContribution.aggregate({
+          where: { clubId, fundSource: 'COMMON', isConfirmed: true },
+          _sum: { amount: true },
+        }),
+        this.prisma.livingExpense.aggregate({
+          where: {
+            clubId,
+            fundSource: 'COMMON',
+            status: { in: ['approved', 'paid'] },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+      const fundBalance =
+        Number(incomeAgg._sum.amount ?? 0) - Number(expenseAgg._sum.amount ?? 0);
+      return {
+        fundBalance,
+        balanceNegative: fundBalance < 0,
+        dedupScope: 'fund', // 1 cảnh báo quỹ đang mở / CLB (số dư là mức toàn CLB)
+      };
+    }
+    if (triggerType === 'PAYMENT_DUE_REMINDER') {
+      // Nhắc TRƯỚC hạn: kỳ chung đang mở, còn thành viên chưa đóng, còn ngày tới hạn (endDate kỳ).
+      const period = await this.prisma.fundPeriod.findFirst({
+        where: { clubId, status: 'active', type: 'chung' },
+        orderBy: { startDate: 'desc' },
+        select: { id: true, endDate: true },
+      });
+      if (!period) return { hasActivePeriod: false, unpaidCount: 0 };
+      const [memberCount, paidRows] = await Promise.all([
+        this.prisma.member.count({ where: { clubId, isDeleted: false } }),
+        this.prisma.fundContribution.findMany({
+          where: {
+            clubId,
+            fundPeriodId: period.id,
+            fundSource: 'COMMON',
+            isConfirmed: true,
+            memberId: { not: null },
+          },
+          select: { memberId: true },
+          distinct: ['memberId'],
+        }),
+      ]);
+      const unpaidCount = Math.max(0, memberCount - paidRows.length);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(period.endDate);
+      due.setHours(0, 0, 0, 0);
+      const daysUntilDue = Math.round(
+        (due.getTime() - today.getTime()) / 86_400_000,
+      );
+      return {
+        hasActivePeriod: true,
+        unpaidCount,
+        daysUntilDue,
+        beforeDue: daysUntilDue >= 0, // >=0: trước/đến hạn (quá hạn → DEBT_ESCALATION lo)
+        dedupScope: period.id,
+      };
+    }
+    if (triggerType === 'MISSING_FINANCE_DOCUMENT') {
+      // Chi Quỹ Chính đã duyệt/đã chi, tồn tại quá 3 ngày nhưng CHƯA có chứng từ (receiptUrl null).
+      const cutoff = new Date(Date.now() - 3 * 86_400_000);
+      const missingDocCount = await this.prisma.livingExpense.count({
+        where: {
+          clubId,
+          fundSource: 'COMMON',
+          status: { in: ['approved', 'paid'] },
+          receiptUrl: null,
+          createdAt: { lte: cutoff },
+        },
+      });
+      return { missingDocCount, dedupScope: 'docs' };
+    }
     return {};
   }
 
@@ -523,12 +616,27 @@ export class HermesWorkflowService {
 
     try {
       const matched = this.evaluateConditions(rule.conditionsJson, context);
+      // Phase 2: dedupScope do buildLiveContext cung cấp (nếu có) → khoá dedup ổn định.
+      const dedupScope =
+        typeof context.dedupScope === 'string' ? context.dedupScope : null;
+      const dedupKey = dedupScope
+        ? `${rule.triggerType}:${dedupScope}`
+        : null;
+
       if (!matched) {
+        // Auto-resolve: nguyên nhân không còn → đóng AI Action chờ duyệt cùng dedupKey.
+        let autoResolvedCount = 0;
+        if (dedupKey) {
+          autoResolvedCount = await this.aiActions.resolveByDedupKey(
+            clubId,
+            dedupKey,
+          );
+        }
         return await this.prisma.workflowRun.update({
           where: { id: run.id },
           data: {
             status: 'COMPLETED',
-            resultJson: { matched: false, createdActionIds: [] },
+            resultJson: { matched: false, createdActionIds: [], autoResolvedCount },
             completedAt: new Date(),
           },
         });
@@ -538,23 +646,36 @@ export class HermesWorkflowService {
         ? (rule.actionsJson as unknown[])
         : [];
       const createdActionIds: string[] = [];
+      let skippedActionCount = 0;
       for (const raw of actions) {
         const a = (raw ?? {}) as WfAction;
         if (a.type !== 'CREATE_AI_ACTION') continue; // chỉ tạo AiAction; type khác bỏ qua (an toàn)
-        const created = await this.aiActions.create(clubId, actor.userId, {
-          requestedByAi: 'HERMES',
-          actionType: a.title
-            ? `workflow:${rule.triggerType}`
-            : 'workflow-action',
-          targetModule: a.targetModule,
-          targetEntityType: a.targetEntityType,
-          targetEntityId: a.targetEntityId,
-          riskLevel: this.normalizeRisk(a.riskLevel),
-          title: a.title ?? rule.name,
-          summary: a.summary,
-          requestPayload: a.requestPayload,
-        });
-        createdActionIds.push(created.id);
+        const created = await this.aiActions.create(
+          clubId,
+          actor.userId,
+          {
+            requestedByAi: 'HERMES',
+            actionType: a.title
+              ? `workflow:${rule.triggerType}`
+              : 'workflow-action',
+            targetModule: a.targetModule,
+            targetEntityType: a.targetEntityType,
+            targetEntityId: a.targetEntityId,
+            riskLevel: this.normalizeRisk(a.riskLevel),
+            title: a.title ?? rule.name,
+            summary: a.summary,
+            requestPayload: a.requestPayload,
+          },
+          // Chỉ bật dedup/cooldown khi rule cung cấp dedupScope (rule Phase 2).
+          dedupKey
+            ? { key: dedupKey, cooldownMinutes: a.cooldownMinutes }
+            : undefined,
+        );
+        if ('skipped' in created) {
+          skippedActionCount += 1; // trùng/cooldown → không tạo mới
+        } else {
+          createdActionIds.push(created.id);
+        }
       }
 
       return await this.prisma.workflowRun.update({
@@ -567,6 +688,7 @@ export class HermesWorkflowService {
             matched: true,
             createdActionIds,
             actionCount: createdActionIds.length,
+            skippedActionCount,
           },
           completedAt: new Date(),
         },

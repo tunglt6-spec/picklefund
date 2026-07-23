@@ -51,6 +51,13 @@ export class HermesActionExecutor implements ActionExecutor {
         return this.executeEventReminder(action);
       case 'workflow:REPORT_DISPATCH':
         return this.executeReportDispatch(action);
+      // ── Phase 2 — lô Tài chính ──
+      case 'workflow:FUND_BALANCE_RISK':
+        return this.executeFundBalanceRisk(action);
+      case 'workflow:PAYMENT_DUE_REMINDER':
+        return this.executePaymentDueReminder(action);
+      case 'workflow:MISSING_FINANCE_DOCUMENT':
+        return this.executeMissingFinanceDocument(action);
       default:
         return Promise.resolve({
           ok: true,
@@ -172,6 +179,32 @@ export class HermesActionExecutor implements ActionExecutor {
   /** dd/m/yyyy theo UTC (cột @db.Date lưu ngày trần — tránh lệch múi giờ). */
   private fmtDate(d: Date): string {
     return `${d.getUTCDate()}/${d.getUTCMonth() + 1}/${d.getUTCFullYear()}`;
+  }
+
+  /** "1.234.567 đ" — deterministic, không phụ thuộc ICU. */
+  private fmtMoney(n: number): string {
+    const neg = n < 0;
+    const s = String(Math.round(Math.abs(n))).replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      '.',
+    );
+    return `${neg ? '-' : ''}${s} đ`;
+  }
+
+  /**
+   * Người nhận là QUẢN TRỊ CLB (CLUB_ADMIN/CLUB_TREASURER) — cho cảnh báo nội bộ (quỹ âm,
+   * thiếu chứng từ). IN_APP tới tài khoản; memberId chỉ là placeholder (kênh IN_APP dùng userId).
+   */
+  private async adminRecipients(clubId: string): Promise<Recipient[]> {
+    const admins = await this.prisma.user.findMany({
+      where: { clubId, role: { in: ['CLUB_ADMIN', 'CLUB_TREASURER'] } },
+      select: { id: true, email: true },
+    });
+    return admins.map((u) => ({
+      memberId: u.id,
+      userId: u.id,
+      email: u.email ?? null,
+    }));
   }
 
   private liveResult(message: string): Record<string, unknown> {
@@ -345,6 +378,158 @@ export class HermesActionExecutor implements ActionExecutor {
     );
     return this.liveResult(
       `Gửi báo cáo kỳ "${period.name}": ${recipients.length} thành viên. Đã gửi [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 2: FUND_BALANCE_RISK ----------
+
+  /** Cảnh báo quỹ âm tới quản trị (đọc lại số dư thật; số dư đã dương → không gửi). */
+  private async executeFundBalanceRisk(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const [incomeAgg, expenseAgg] = await Promise.all([
+      this.prisma.fundContribution.aggregate({
+        where: { clubId, fundSource: 'COMMON', isConfirmed: true },
+        _sum: { amount: true },
+      }),
+      this.prisma.livingExpense.aggregate({
+        where: {
+          clubId,
+          fundSource: 'COMMON',
+          status: { in: ['approved', 'paid'] },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+    const balance =
+      Number(incomeAgg._sum.amount ?? 0) - Number(expenseAgg._sum.amount ?? 0);
+    if (balance >= 0) {
+      return this.liveResult('Số dư Quỹ Chính không còn âm — không cần cảnh báo.');
+    }
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Cảnh báo quỹ âm';
+    const body =
+      action.summary ||
+      `Số dư Quỹ Chính đang âm (${this.fmtMoney(balance)}). Vui lòng rà soát thu/chi và bổ sung quỹ.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `FUND_BALANCE_RISK ${action.id}: balance<0 admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Cảnh báo quỹ âm (${this.fmtMoney(balance)}) tới ${recipients.length} quản trị. Đã gửi [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 2: PAYMENT_DUE_REMINDER ----------
+
+  /** Nhắc TRƯỚC hạn tới member chưa đóng kỳ active (khác Debt = sau hạn). */
+  private async executePaymentDueReminder(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const period = await this.prisma.fundPeriod.findFirst({
+      where: { clubId, status: 'active', type: 'chung' },
+      orderBy: { startDate: 'desc' },
+      select: { id: true, name: true, endDate: true },
+    });
+    if (!period) {
+      return this.liveResult('Không có kỳ quỹ đang mở — không có ai để nhắc.');
+    }
+    const [members, paidRows] = await Promise.all([
+      this.prisma.member.findMany({
+        where: { clubId, status: 'active', isDeleted: false },
+        select: {
+          id: true,
+          userId: true,
+          email: true,
+          user: { select: { email: true } },
+        },
+      }),
+      this.prisma.fundContribution.findMany({
+        where: {
+          clubId,
+          fundPeriodId: period.id,
+          fundSource: 'COMMON',
+          isConfirmed: true,
+          memberId: { not: null },
+        },
+        select: { memberId: true },
+        distinct: ['memberId'],
+      }),
+    ]);
+    const paid = new Set(paidRows.map((r) => r.memberId));
+    const recipients = members
+      .filter((m) => !paid.has(m.id))
+      .map((m) => this.toRecipient(m));
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Nhắc đóng quỹ trước hạn';
+    const body =
+      action.summary ||
+      `Sắp đến hạn đóng quỹ kỳ "${period.name}" (${this.fmtDate(period.endDate)}). Bạn vui lòng đóng trước hạn nhé.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `PAYMENT_DUE_REMINDER ${action.id}: unpaid=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Nhắc trước hạn kỳ "${period.name}": ${recipients.length} thành viên chưa đóng. Đã gửi [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 2: MISSING_FINANCE_DOCUMENT ----------
+
+  /** Nhắc quản trị bổ sung chứng từ cho khoản chi đã duyệt/đã chi còn thiếu. */
+  private async executeMissingFinanceDocument(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const cutoff = new Date(Date.now() - 3 * 86_400_000);
+    const missing = await this.prisma.livingExpense.count({
+      where: {
+        clubId,
+        fundSource: 'COMMON',
+        status: { in: ['approved', 'paid'] },
+        receiptUrl: null,
+        createdAt: { lte: cutoff },
+      },
+    });
+    if (missing === 0) {
+      return this.liveResult('Không còn khoản chi nào thiếu chứng từ.');
+    }
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Bổ sung chứng từ chi';
+    const body =
+      action.summary ||
+      `Có ${missing} khoản chi đã duyệt nhưng thiếu hóa đơn/chứng từ. Vui lòng bổ sung để hoàn thiện hồ sơ.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `MISSING_FINANCE_DOCUMENT ${action.id}: missing=${missing} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Thiếu chứng từ: ${missing} khoản chi. Đã nhắc ${recipients.length} quản trị [${this.countsStr(counts)}].`,
     );
   }
 }
