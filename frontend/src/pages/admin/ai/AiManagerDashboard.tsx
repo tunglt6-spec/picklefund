@@ -70,6 +70,16 @@ const RISK_STYLE: Record<string, string> = {
   critical: 'bg-red-100 text-red-700',
 }
 
+// Tông màu NHẸ theo NHÓM chức năng cho card Khu vực vận hành (phương án 1 đã duyệt) —
+// đồng bộ ngôn ngữ tint + viền trên với hàng KPI. Chỉ light theme.
+interface GroupTone { bg: string; border: string; bar: string; chip: string; fg: string }
+const GROUP_TONE: Record<string, GroupTone> = {
+  'Điều phối & Duyệt': { bg: '#F5F3FF', border: '#EDE9FE', bar: '#6D5DFB', chip: '#EDE9FE', fg: '#6D5DFB' },
+  'Thông báo & Lịch': { bg: '#EFF6FF', border: '#DBEAFE', bar: '#2563EB', chip: '#DBEAFE', fg: '#2563EB' },
+  'Giám sát': { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', chip: '#FEF3C7', fg: '#D97706' },
+  'Tri thức & Nhật ký': { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', chip: '#D1FAE5', fg: '#059669' },
+}
+
 // Nhãn tiếng Việt cho loại Club Memory (map đúng category schema thật, không bịa "Daily Brief").
 const MEMORY_LABEL: Record<string, string> = {
   KNOWLEDGE: 'Kiến thức',
@@ -100,61 +110,65 @@ const fmtTime = (iso: string | null): string =>
 // ── Card khu vực vận hành (dashboard hoá): icon + tên + mô tả + số liệu runtime THẬT ──
 interface CardMetric { label: string; value: string | number }
 function SectionCard({
-  s, onGo, metrics, badge, progress,
+  s, onGo, metrics, badge, progress, palette,
 }: {
   s: OpsSection
   onGo: (to: string) => void
   metrics?: CardMetric[]
   badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null
   progress?: number | null
+  palette: GroupTone
 }) {
   const clickable = s.status === 'active' && !!s.to
+  const soon = s.status === 'soon'
   const badgeCls =
     badge?.tone === 'ok' ? 'bg-emerald-50 text-emerald-700'
       : badge?.tone === 'warn' ? 'bg-amber-50 text-amber-700'
         : 'bg-slate-100 text-slate-500'
+  // 'soon' (chưa dùng hiện tại) → xám mờ; còn lại tô theo tông NHÓM (tint + viền trên + icon chip).
+  const cardStyle: React.CSSProperties = soon
+    ? { background: '#F8FAFC', borderColor: '#E2E8F0', borderTop: '3px solid #E2E8F0' }
+    : { background: palette.bg, borderColor: palette.border, borderTop: `3px solid ${palette.bar}` }
   return (
     <button
       type="button"
       disabled={!clickable}
       onClick={() => clickable && onGo(s.to!)}
+      style={cardStyle}
       className={`group relative flex flex-col gap-2.5 rounded-xl border p-4 text-left transition-all ${
-        s.status === 'here'
-          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-          : clickable
-            ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:shadow-sm cursor-pointer'
-            : 'border-slate-100 bg-slate-50/60 cursor-default'
-      }`}
+        clickable ? 'hover:shadow-sm cursor-pointer' : 'cursor-default'
+      } ${s.status === 'here' ? 'ring-1 ring-inset' : ''}`}
     >
       <div className="flex items-center justify-between">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-          s.status === 'soon' ? 'bg-slate-100 text-slate-400' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-        }`}>
+        <span
+          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          style={soon ? { background: '#F1F5F9', color: '#94A3B8' } : { background: palette.chip, color: palette.fg }}
+        >
           {s.icon}
         </span>
         <div className="flex items-center gap-1.5">
           {s.status === 'here' && (
-            <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ background: palette.bar }}>Đang xem</span>
           )}
           {badge && (
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeCls}`}>{badge.text}</span>
           )}
           {clickable && (
-            <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
+            <ChevronRight size={15} className="text-slate-300" />
           )}
         </div>
       </div>
       <div className="min-w-0">
-        <p className={`text-sm font-semibold truncate ${s.status === 'soon' ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
+        <p className={`text-sm font-semibold truncate ${soon ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
         <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.desc}</p>
       </div>
       {typeof progress === 'number' && (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full [background:var(--pf-primary)]" style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+        <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: palette.chip }}>
+          <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, progress))}%`, background: palette.bar }} />
         </div>
       )}
       {metrics && metrics.length > 0 && (
-        <div className="mt-0.5 grid grid-cols-3 gap-x-2 gap-y-2 border-t border-slate-100 pt-2.5">
+        <div className="mt-0.5 grid grid-cols-3 gap-x-2 gap-y-2 border-t pt-2.5" style={{ borderColor: palette.border }}>
           {metrics.map((m) => (
             <div key={m.label} className="min-w-0">
               <p className="text-[15px] font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
@@ -554,7 +568,7 @@ export function AiManagerDashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {items.map(s => {
                       const extra = metricsFor(s.key)
-                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} progress={extra.progress} />
+                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} progress={extra.progress} palette={GROUP_TONE[group]} />
                     })}
                   </div>
                 </div>
