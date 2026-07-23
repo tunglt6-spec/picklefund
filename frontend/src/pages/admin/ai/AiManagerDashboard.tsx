@@ -122,13 +122,12 @@ const fmtTime = (iso: string | null): string =>
 // ── Card khu vực vận hành (dashboard hoá): icon + tên + mô tả + số liệu runtime THẬT ──
 interface CardMetric { label: string; value: string | number }
 function SectionCard({
-  s, onGo, metrics, badge, progress, palette,
+  s, onGo, metrics, badge, palette,
 }: {
   s: OpsSection
   onGo: (to: string) => void
   metrics?: CardMetric[]
   badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null
-  progress?: number | null
   palette: GroupTone
 }) {
   const clickable = s.status === 'active' && !!s.to
@@ -174,15 +173,10 @@ function SectionCard({
         <p className={`text-sm font-semibold truncate ${soon ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
         <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.desc}</p>
       </div>
-      {typeof progress === 'number' && (
-        <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: palette.chip }}>
-          <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, progress))}%`, background: palette.bar }} />
-        </div>
-      )}
       {metrics && metrics.length > 0 && (
-        <div className="mt-0.5 grid grid-cols-3 gap-x-2 gap-y-2 border-t pt-2.5" style={{ borderColor: palette.border }}>
+        <div className="mt-auto grid grid-cols-3 gap-1.5">
           {metrics.map((m) => (
-            <div key={m.label} className="min-w-0">
+            <div key={m.label} className="rounded-lg px-1 py-1.5 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-surface))` }}>
               <p className="text-[15px] font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
               <p className="mt-1 text-[10px] leading-tight text-slate-400 truncate">{m.label}</p>
             </div>
@@ -268,13 +262,12 @@ export function AiManagerDashboard() {
 
   // ── Số liệu runtime nhúng vào từng card (từ runtime-summary + 3 endpoint tái dùng) ──
   const m = rt.summary?.modules
-  const metricsFor = (key: string): { metrics?: CardMetric[]; badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null; progress?: number | null } => {
+  const metricsFor = (key: string): { metrics?: CardMetric[]; badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null } => {
     if (!rt.summary) return {}
     switch (key) {
       case 'hermes': {
         const h = m!.hermes
         return {
-          progress: h.workflowToday > 0 ? Math.round((h.completedToday / h.workflowToday) * 100) : 0,
           metrics: [
             { label: 'Workflow', value: h.workflowToday },
             { label: 'Running', value: h.running },
@@ -547,7 +540,7 @@ export function AiManagerDashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {items.map(s => {
                       const extra = metricsFor(s.key)
-                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} progress={extra.progress} palette={GROUP_TONE[group]} />
+                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} palette={GROUP_TONE[group]} />
                     })}
                   </div>
                 </div>
@@ -720,15 +713,18 @@ export function AiManagerDashboard() {
               <p className="text-sm text-slate-400">Đang tải…</p>
             ) : (
               <div className="space-y-2.5">
-                {runtimeHealth.map((h, i) => (
-                  <div key={`rt-${i}`} className="flex items-start justify-between gap-2">
-                    <span className="flex min-w-0 items-start gap-2">
-                      <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${HEALTH_DOT[h.tone]}`} />
-                      <span className="text-xs font-medium text-slate-700">{h.label}</span>
-                    </span>
-                    <span className="text-right text-[11px] text-slate-500">{h.detail}</span>
-                  </div>
-                ))}
+                {/* Lưới 2×2 ô trạng thái — canh đều theo tọa độ (đồng bộ style Đội ngũ AI). */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {runtimeHealth.map((h, i) => (
+                    <div key={`rt-${i}`} className="rounded-lg border border-slate-100 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${HEALTH_DOT[h.tone]}`} />
+                        <span className="text-xs font-medium text-slate-700 truncate">{h.label}</span>
+                      </div>
+                      <p className="mt-0.5 pl-3.5 text-[11px] text-slate-500 truncate">{h.detail}</p>
+                    </div>
+                  ))}
+                </div>
                 {(intel?.healthSignals ?? []).map((s, i) => (
                   <div key={`hs-${i}`} className="flex items-start gap-2 border-t border-slate-50 pt-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
