@@ -80,6 +80,15 @@ const GROUP_TONE: Record<string, GroupTone> = {
   'Tri thức & Nhật ký': { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', chip: '#D1FAE5', fg: '#059669' },
 }
 
+// Màu nhận diện 5 agent — ĐỒNG BỘ với Office View ("Kết quả hôm nay của từng Agent").
+const AGENT_COLOR: Record<string, string> = {
+  maika: '#6D5DFB',
+  lisa: '#2563EB',
+  hermes: '#059669',
+  'mit-dac': '#EA580C',
+  notification: '#C026D3',
+}
+
 // Nhãn tiếng Việt cho loại Club Memory (map đúng category schema thật, không bịa "Daily Brief").
 const MEMORY_LABEL: Record<string, string> = {
   KNOWLEDGE: 'Kiến thức',
@@ -602,11 +611,21 @@ export function AiManagerDashboard() {
             <p className="text-sm text-slate-400">Không có agent nào ở bộ lọc này.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-              {roster.map(t => (
-                <div key={t.key} className="rounded-xl border border-slate-100 p-4 flex flex-col gap-2.5">
+              {roster.map(t => {
+                const color = AGENT_COLOR[t.key] ?? 'var(--pf-primary)'
+                return (
+                <div
+                  key={t.key}
+                  className="rounded-xl border p-4 flex flex-col gap-2.5"
+                  style={{
+                    background: `color-mix(in srgb, ${color} 7%, var(--pf-surface))`,
+                    borderColor: `color-mix(in srgb, ${color} 22%, var(--pf-border))`,
+                    borderTop: `3px solid ${color}`,
+                  }}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
-                      <Bot size={16} className="[color:var(--pf-primary)]" />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
+                      <Bot size={16} />
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -614,13 +633,13 @@ export function AiManagerDashboard() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-800">{t.name}</p>
+                    <p className="text-sm font-bold" style={{ color }}>{t.name}</p>
                     <p className="text-xs text-slate-500 leading-snug line-clamp-2">{t.role}</p>
                   </div>
                   {t.stats ? (
                     <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                       {t.stats.map(s => (
-                        <div key={s.l} className="rounded-lg bg-slate-50 py-1.5">
+                        <div key={s.l} className="rounded-lg py-1.5" style={{ background: `color-mix(in srgb, ${color} 8%, var(--pf-surface))` }}>
                           <p className="text-sm font-bold text-slate-700 tabular-nums">{s.v}</p>
                           <p className="text-[10px] text-slate-400 leading-tight">{s.l}</p>
                         </div>
@@ -635,7 +654,8 @@ export function AiManagerDashboard() {
                   )}
                   <p className="text-[10px] text-slate-400">{t.foot}</p>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </Card>
