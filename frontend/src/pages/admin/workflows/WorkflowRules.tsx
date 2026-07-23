@@ -120,6 +120,13 @@ export function WorkflowRules() {
     completed: runs.filter((r) => r.status === 'COMPLETED').length,
     failed: runs.filter((r) => r.status === 'FAILED').length,
   }
+  // Palette tint value-based (đồng bộ nguyên tắc màu KPI toàn app).
+  const WF_KPI_TONE = {
+    success: { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', fg: '#059669' },
+    warning: { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', fg: '#D97706' },
+    danger: { bg: '#FEF2F2', border: '#FEE2E2', bar: '#EF4444', fg: '#EF4444' },
+    neutral: { bg: '#F8FAFC', border: '#E2E8F0', bar: '#94A3B8', fg: '#64748B' },
+  } as const
   const templateGroups = groupByCategory(templates, (t) => t.triggerType)
   const ruleGroups = groupByCategory(rules, (r) => r.triggerType)
 
@@ -163,20 +170,27 @@ export function WorkflowRules() {
           </div>
         )}
 
-        {/* KPI runtime (Mục XII) — chỉ số thật từ rules + runs */}
+        {/* KPI runtime (Mục XII) — chỉ số thật từ rules + runs; tô màu value-based (nguyên tắc chung) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {[
-            { label: 'Rule đang bật', value: kpi.enabled, color: 'text-emerald-600' },
-            { label: 'Rule đang tắt', value: kpi.disabled, color: 'text-slate-500' },
-            { label: 'Chờ duyệt', value: kpi.waiting, color: 'text-amber-600' },
-            { label: 'Hoàn tất', value: kpi.completed, color: '[color:var(--pf-primary)]' },
-            { label: 'Lỗi', value: kpi.failed, color: 'text-red-600' },
-          ].map((k) => (
-            <div key={k.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3">
-              <p className={`text-2xl font-bold tabular-nums ${k.color}`}>{k.value}</p>
-              <p className="text-[11px] font-medium text-slate-400 mt-0.5">{k.label}</p>
-            </div>
-          ))}
+          {([
+            { label: 'Rule đang bật', value: kpi.enabled, tone: kpi.enabled > 0 ? 'success' : 'neutral' },
+            { label: 'Rule đang tắt', value: kpi.disabled, tone: 'neutral' },
+            { label: 'Chờ duyệt', value: kpi.waiting, tone: kpi.waiting > 0 ? 'warning' : 'success' },
+            { label: 'Hoàn tất', value: kpi.completed, tone: 'success' },
+            { label: 'Lỗi', value: kpi.failed, tone: kpi.failed > 0 ? 'danger' : 'success' },
+          ] as const).map((k) => {
+            const c = WF_KPI_TONE[k.tone]
+            return (
+              <div
+                key={k.label}
+                className="rounded-2xl border shadow-sm px-4 py-3"
+                style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+              >
+                <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
+                <p className="text-[11px] font-medium text-slate-400 mt-0.5">{k.label}</p>
+              </div>
+            )
+          })}
         </div>
 
         {/* Create from template — nhóm theo module */}

@@ -156,9 +156,9 @@ export function KpiMonitorPage() {
           <section>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Users size={13} /> Thành viên</p>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              <MetricCard label="Đang hoạt động" value={num(snap?.activeMembers)} icon={<Users size={16} />} sub={`${num(snap?.totalMembers)} tổng`} />
-              <MetricCard label="Chưa đóng quỹ (kỳ mở)" value={num(snap?.unpaidCount)} icon={<Users size={16} />} negative={(snap?.unpaidCount ?? 0) > 0} />
-              <MetricCard label="Tỷ lệ hoạt động" value={snap?.totalMembers ? `${Math.round((snap.activeMembers ?? 0) / snap.totalMembers * 100)}%` : '—'} icon={<TrendingUp size={16} />} />
+              <MetricCard label="Đang hoạt động" value={num(snap?.activeMembers)} icon={<Users size={16} />} sub={`${num(snap?.totalMembers)} tổng`} tone="info" />
+              <MetricCard label="Chưa đóng quỹ (kỳ mở)" value={num(snap?.unpaidCount)} icon={<Users size={16} />} tone={(snap?.unpaidCount ?? 0) > 0 ? 'warning' : 'success'} />
+              <MetricCard label="Tỷ lệ hoạt động" value={snap?.totalMembers ? `${Math.round((snap.activeMembers ?? 0) / snap.totalMembers * 100)}%` : '—'} icon={<TrendingUp size={16} />} tone="info" />
             </div>
           </section>
 
@@ -166,9 +166,9 @@ export function KpiMonitorPage() {
           <section>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Wallet size={13} /> Tài chính</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} icon={<Wallet size={16} />} negative={(snap?.totalAssets ?? 0) < 0} />
-              <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} icon={<TrendingUp size={16} />} />
-              <MetricCard label="Chi (Quỹ Chính)" value={vnd(snap?.commonExpense)} icon={<Wallet size={16} />} />
+              <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} icon={<Wallet size={16} />} tone={(snap?.totalAssets ?? 0) < 0 ? 'danger' : 'success'} />
+              <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} icon={<TrendingUp size={16} />} tone="success" />
+              <MetricCard label="Chi (Quỹ Chính)" value={vnd(snap?.commonExpense)} icon={<Wallet size={16} />} tone="info" />
             </div>
           </section>
 
@@ -176,10 +176,10 @@ export function KpiMonitorPage() {
           <section>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Workflow size={13} /> Workflow & AI</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <MetricCard label="Workflow hoàn tất" value={wfDone} icon={<Workflow size={16} />} sub={`${runs.length} lượt chạy`} />
-              <MetricCard label="Workflow lỗi" value={wfFailed} icon={<Workflow size={16} />} negative={wfFailed > 0} sub={`${wfWaiting} chờ duyệt`} />
-              <MetricCard label="AI chờ duyệt" value={num(aiSummary?.pendingApprovals)} icon={<Bot size={16} />} sub={`${num(aiSummary?.executedToday)} thực thi hôm nay`} />
-              <MetricCard label="AI thất bại" value={num(aiSummary?.failedActions)} icon={<Bot size={16} />} negative={(aiSummary?.failedActions ?? 0) > 0} />
+              <MetricCard label="Workflow hoàn tất" value={wfDone} icon={<Workflow size={16} />} sub={`${runs.length} lượt chạy`} tone="success" />
+              <MetricCard label="Workflow lỗi" value={wfFailed} icon={<Workflow size={16} />} tone={wfFailed > 0 ? 'danger' : 'success'} sub={`${wfWaiting} chờ duyệt`} />
+              <MetricCard label="AI chờ duyệt" value={num(aiSummary?.pendingApprovals)} icon={<Bot size={16} />} sub={`${num(aiSummary?.executedToday)} thực thi hôm nay`} tone={(aiSummary?.pendingApprovals ?? 0) > 0 ? 'warning' : 'info'} />
+              <MetricCard label="AI thất bại" value={num(aiSummary?.failedActions)} icon={<Bot size={16} />} tone={(aiSummary?.failedActions ?? 0) > 0 ? 'danger' : 'success'} />
             </div>
           </section>
 

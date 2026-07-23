@@ -75,8 +75,8 @@ export function MaikaInsightsLog() {
       ) : (
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <MetricCard accent="violet" icon={<FileText size={18} />} label="Báo cáo" value={briefs} />
-            <MetricCard accent="amber" icon={<AlertTriangle size={18} />} label="Cảnh báo bất thường" value={anomalies} />
+            <MetricCard icon={<FileText size={18} />} label="Báo cáo" value={briefs} tone="brand" />
+            <MetricCard icon={<AlertTriangle size={18} />} label="Cảnh báo bất thường" value={anomalies} tone={anomalies > 0 ? 'warning' : 'success'} />
           </div>
 
           <div className="flex flex-col gap-3">

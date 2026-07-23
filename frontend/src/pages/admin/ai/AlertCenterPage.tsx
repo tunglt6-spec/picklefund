@@ -133,10 +133,10 @@ export function AlertCenterPage() {
         <div className="flex flex-col gap-6">
           {/* KPI */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard label="Tổng cảnh báo" value={totalAlerts} icon={<AlertTriangle size={16} />} />
-            <MetricCard label="Mức cao" value={highCount} icon={<ShieldAlert size={16} />} negative={highCount > 0} />
-            <MetricCard label="Lỗi Workflow" value={failedRuns.length} icon={<Workflow size={16} />} negative={failedRuns.length > 0} />
-            <MetricCard label="Lỗi AI / Thực thi" value={failedActions.length} icon={<Bot size={16} />} negative={failedActions.length > 0} />
+            <MetricCard label="Tổng cảnh báo" value={totalAlerts} icon={<AlertTriangle size={16} />} tone={totalAlerts > 0 ? 'warning' : 'success'} />
+            <MetricCard label="Mức cao" value={highCount} icon={<ShieldAlert size={16} />} tone={highCount > 0 ? 'danger' : 'success'} />
+            <MetricCard label="Lỗi Workflow" value={failedRuns.length} icon={<Workflow size={16} />} tone={failedRuns.length > 0 ? 'danger' : 'success'} />
+            <MetricCard label="Lỗi AI / Thực thi" value={failedActions.length} icon={<Bot size={16} />} tone={failedActions.length > 0 ? 'danger' : 'success'} />
           </div>
 
           {/* Lọc theo mức */}

@@ -76,9 +76,9 @@ export function MitDacExecutionLog() {
       ) : (
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
-            <MetricCard accent="green" icon={<CheckCircle2 size={18} />} label="Đã thực thi" value={executed} />
-            <MetricCard accent="rose" icon={<XCircle size={18} />} label="Thất bại" value={failed} negative={failed > 0} />
-            <MetricCard accent="amber" icon={<RotateCcw size={18} />} label="Chờ chạy lại" value={pending} />
+            <MetricCard icon={<CheckCircle2 size={18} />} label="Đã thực thi" value={executed} tone="success" />
+            <MetricCard icon={<XCircle size={18} />} label="Thất bại" value={failed} tone={failed > 0 ? 'danger' : 'success'} />
+            <MetricCard icon={<RotateCcw size={18} />} label="Chờ chạy lại" value={pending} tone={pending > 0 ? 'warning' : 'success'} />
           </div>
 
           <div className="flex flex-col gap-2">

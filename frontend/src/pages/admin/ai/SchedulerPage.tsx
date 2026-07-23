@@ -176,23 +176,27 @@ export function SchedulerPage() {
               value={status?.enabled ? 'BẬT' : 'TẮT'}
               icon={<Power size={16} />}
               sub={status?.enabled ? 'Tự động chạy định kỳ' : 'Chỉ chạy thủ công (run-now)'}
+              tone={status?.enabled ? 'success' : 'neutral'}
             />
             <MetricCard
               label="Chu kỳ tick"
               value={status ? `${Math.round((status.intervalMs ?? 0) / 1000)}s` : '—'}
               icon={<Repeat size={16} />}
+              tone="info"
             />
             <MetricCard
               label="Tick gần nhất"
               value={lt ? fmt(lt.tickedAt) : '—'}
               icon={<Clock size={16} />}
               sub={lt ? `${lt.dispatched} dispatch · ${lt.skippedDuplicate} trùng · ${lt.failedGroups} lỗi` : 'Chưa có tick'}
+              tone={lt && lt.failedGroups > 0 ? 'danger' : 'info'}
             />
             <MetricCard
               label="Lịch định kỳ đang bật"
               value={scheduled.filter(r => r.enabled).length}
               icon={<CalendarClock size={16} />}
               sub={`${scheduled.length} rule định kỳ`}
+              tone={scheduled.filter(r => r.enabled).length > 0 ? 'success' : 'neutral'}
             />
           </div>
 

@@ -80,10 +80,10 @@ export function DataMonitorPage() {
         <div className="flex flex-col gap-6">
           {/* Tổng quan */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard label="Thành viên hoạt động" value={report.totals.activeMembers} icon={<Users size={16} />} sub={`${report.totals.members} tổng`} />
-            <MetricCard label="Kỳ quỹ" value={report.totals.fundPeriods} icon={<CalendarClock size={16} />} />
-            <MetricCard label="Buổi sinh hoạt" value={report.totals.sessions} icon={<CalendarDays size={16} />} />
-            <MetricCard label="Kiểm tra cần xử lý" value={issues.length} icon={<ShieldAlert size={16} />} negative={issues.length > 0} sub={`${report.checks.length} kiểm tra`} />
+            <MetricCard label="Thành viên hoạt động" value={report.totals.activeMembers} icon={<Users size={16} />} sub={`${report.totals.members} tổng`} tone="info" />
+            <MetricCard label="Kỳ quỹ" value={report.totals.fundPeriods} icon={<CalendarClock size={16} />} tone="info" />
+            <MetricCard label="Buổi sinh hoạt" value={report.totals.sessions} icon={<CalendarDays size={16} />} tone="info" />
+            <MetricCard label="Kiểm tra cần xử lý" value={issues.length} icon={<ShieldAlert size={16} />} tone={issues.length > 0 ? 'warning' : 'success'} sub={`${report.checks.length} kiểm tra`} />
           </div>
 
           {issues.length === 0 && (

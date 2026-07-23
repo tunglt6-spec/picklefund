@@ -63,7 +63,7 @@ export function LisaMessagesLog() {
       ) : (
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-1 gap-3 sm:gap-4">
-            <MetricCard accent="blue" icon={<MessageSquare size={18} />} label="Lượt hỏi–đáp" value={items.length} />
+            <MetricCard icon={<MessageSquare size={18} />} label="Lượt hỏi–đáp" value={items.length} tone="info" />
           </div>
 
           <div className="flex flex-col gap-3">
