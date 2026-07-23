@@ -188,17 +188,28 @@ function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children
 }
 
 // ── Hàng KPI runtime tổng quan (9 chỉ số) ──
-interface Kpi9Def { key: string; label: string; icon: React.ReactNode; tone: string; pick: (o: RuntimeSummary['overview']) => number }
+// Phối màu NHẸ theo ngữ nghĩa (phương án A đã duyệt): nền tint rất nhạt + viền trên 3px +
+// số/icon theo màu — đồng bộ với thẻ "Kết quả hôm nay" ở Office View. Chỉ light theme.
+interface KpiPalette { bg: string; border: string; bar: string; fg: string }
+const KPI_COLORS: Record<'emerald' | 'slate' | 'violet' | 'sky' | 'amber' | 'red', KpiPalette> = {
+  emerald: { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', fg: '#059669' },
+  slate: { bg: '#F8FAFC', border: '#E2E8F0', bar: '#94A3B8', fg: '#64748B' },
+  violet: { bg: '#F5F3FF', border: '#EDE9FE', bar: '#6D5DFB', fg: '#6D5DFB' },
+  sky: { bg: '#EFF6FF', border: '#DBEAFE', bar: '#2563EB', fg: '#2563EB' },
+  amber: { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', fg: '#D97706' },
+  red: { bg: '#FEF2F2', border: '#FEE2E2', bar: '#EF4444', fg: '#EF4444' },
+}
+interface Kpi9Def { key: string; label: string; icon: React.ReactNode; color: keyof typeof KPI_COLORS; pick: (o: RuntimeSummary['overview']) => number }
 const KPI9: Kpi9Def[] = [
-  { key: 'activeRules', label: 'Rule đang bật', icon: <ToggleRight size={15} />, tone: 'text-emerald-600', pick: (o) => o.activeRules },
-  { key: 'inactiveRules', label: 'Rule đang tắt', icon: <ToggleLeft size={15} />, tone: 'text-slate-400', pick: (o) => o.inactiveRules },
-  { key: 'runsToday', label: 'Runs hôm nay', icon: <Workflow size={15} />, tone: '[color:var(--pf-primary)]', pick: (o) => o.runsToday },
-  { key: 'aiActionsCreatedToday', label: 'AI Action đã tạo', icon: <Zap size={15} />, tone: 'text-sky-600', pick: (o) => o.aiActionsCreatedToday },
-  { key: 'pendingApprovals', label: 'Chờ duyệt', icon: <Inbox size={15} />, tone: 'text-amber-600', pick: (o) => o.pendingApprovals },
-  { key: 'successfulToday', label: 'Thành công', icon: <CheckCircle2 size={15} />, tone: 'text-emerald-600', pick: (o) => o.successfulToday },
-  { key: 'failedToday', label: 'Lỗi', icon: <AlertTriangle size={15} />, tone: 'text-red-500', pick: (o) => o.failedToday },
-  { key: 'duplicateSkippedToday', label: 'Bỏ qua trùng', icon: <Copy size={15} />, tone: 'text-slate-500', pick: (o) => o.duplicateSkippedToday },
-  { key: 'cooldownBlockedToday', label: 'Bị chặn cooldown', icon: <Timer size={15} />, tone: 'text-slate-500', pick: (o) => o.cooldownBlockedToday },
+  { key: 'activeRules', label: 'Rule đang bật', icon: <ToggleRight size={15} />, color: 'emerald', pick: (o) => o.activeRules },
+  { key: 'inactiveRules', label: 'Rule đang tắt', icon: <ToggleLeft size={15} />, color: 'slate', pick: (o) => o.inactiveRules },
+  { key: 'runsToday', label: 'Runs hôm nay', icon: <Workflow size={15} />, color: 'violet', pick: (o) => o.runsToday },
+  { key: 'aiActionsCreatedToday', label: 'AI Action đã tạo', icon: <Zap size={15} />, color: 'sky', pick: (o) => o.aiActionsCreatedToday },
+  { key: 'pendingApprovals', label: 'Chờ duyệt', icon: <Inbox size={15} />, color: 'amber', pick: (o) => o.pendingApprovals },
+  { key: 'successfulToday', label: 'Thành công', icon: <CheckCircle2 size={15} />, color: 'emerald', pick: (o) => o.successfulToday },
+  { key: 'failedToday', label: 'Lỗi', icon: <AlertTriangle size={15} />, color: 'red', pick: (o) => o.failedToday },
+  { key: 'duplicateSkippedToday', label: 'Bỏ qua trùng', icon: <Copy size={15} />, color: 'slate', pick: (o) => o.duplicateSkippedToday },
+  { key: 'cooldownBlockedToday', label: 'Bị chặn cooldown', icon: <Timer size={15} />, color: 'amber', pick: (o) => o.cooldownBlockedToday },
 ]
 
 export function AiManagerDashboard() {
@@ -509,15 +520,23 @@ export function AiManagerDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
-              {KPI9.map((k) => (
-                <div key={k.key} className="rounded-xl border border-slate-100 bg-white p-3 shadow-sm" title={k.label}>
-                  <span className={`${k.tone} inline-flex`}>{k.icon}</span>
-                  <p className={`mt-1.5 text-xl font-bold leading-none tabular-nums ${k.tone}`}>
-                    {rt.summary ? k.pick(rt.summary.overview) : '—'}
-                  </p>
-                  <p className="mt-1 text-[10px] leading-tight text-slate-400 line-clamp-2">{k.label}</p>
-                </div>
-              ))}
+              {KPI9.map((k) => {
+                const c = KPI_COLORS[k.color]
+                return (
+                  <div
+                    key={k.key}
+                    className="rounded-xl border p-3 shadow-sm"
+                    style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+                    title={k.label}
+                  >
+                    <span className="inline-flex" style={{ color: c.fg }}>{k.icon}</span>
+                    <p className="mt-1.5 text-xl font-bold leading-none tabular-nums" style={{ color: c.fg }}>
+                      {rt.summary ? k.pick(rt.summary.overview) : '—'}
+                    </p>
+                    <p className="mt-1 text-[10px] leading-tight text-slate-500 line-clamp-2">{k.label}</p>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
