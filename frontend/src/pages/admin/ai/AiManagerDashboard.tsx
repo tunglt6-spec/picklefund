@@ -27,9 +27,6 @@ interface OpsSection {
   group: string
 }
 
-/** Thứ tự cụm hiển thị trong hub. */
-const GROUP_ORDER = ['Điều phối & Duyệt', 'Thông báo & Lịch', 'Giám sát', 'Tri thức & Nhật ký'] as const
-
 function buildSections(isSuper: boolean): OpsSection[] {
   return [
     // ── Điều phối & Duyệt ──
@@ -146,13 +143,13 @@ function SectionCard({
       disabled={!clickable}
       onClick={() => clickable && onGo(s.to!)}
       style={cardStyle}
-      className={`group relative flex flex-col gap-2.5 rounded-xl border p-4 text-left transition-all ${
+      className={`group relative flex flex-col gap-2 rounded-xl border p-3 text-left transition-all ${
         clickable ? 'hover:shadow-sm cursor-pointer' : 'cursor-default'
       } ${s.status === 'here' ? 'ring-1 ring-inset' : ''}`}
     >
       <div className="flex items-center justify-between">
         <span
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className="flex h-8 w-8 items-center justify-center rounded-lg"
           style={soon ? { background: '#F1F5F9', color: '#94A3B8' } : { background: palette.chip, color: palette.fg }}
         >
           {s.icon}
@@ -174,11 +171,11 @@ function SectionCard({
         <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.desc}</p>
       </div>
       {metrics && metrics.length > 0 && (
-        <div className="mt-auto grid grid-cols-3 gap-1.5">
+        <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
-            <div key={m.label} className="rounded-lg px-1 py-1.5 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-surface))` }}>
-              <p className="text-[15px] font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
-              <p className="mt-1 text-[10px] leading-tight text-slate-400 truncate">{m.label}</p>
+            <div key={m.label} className="rounded-md px-0.5 py-1 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-surface))` }}>
+              <p className="text-sm font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
+              <p className="mt-0.5 text-[9px] leading-tight text-slate-400 truncate">{m.label}</p>
             </div>
           ))}
         </div>
@@ -527,24 +524,15 @@ export function AiManagerDashboard() {
           )}
         </div>
 
-        {/* Hub điều hướng — gom theo cụm chức năng, mỗi card có số liệu runtime THẬT */}
+        {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn (4 card/hàng ở desktop rộng), card giữ
+            màu theo nhóm chức năng (tím/xanh dương/hổ phách/xanh lá) nên vẫn nhận biết cụm dù
+            không tách tiêu đề nhóm — bố cục sát nhau, hết trống chỗ. */}
         <Card>
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
-          <div className="space-y-5">
-            {GROUP_ORDER.map(group => {
-              const items = sections.filter(s => s.group === group)
-              if (items.length === 0) return null
-              return (
-                <div key={group}>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group}</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {items.map(s => {
-                      const extra = metricsFor(s.key)
-                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} palette={GROUP_TONE[group]} />
-                    })}
-                  </div>
-                </div>
-              )
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {sections.map(s => {
+              const extra = metricsFor(s.key)
+              return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} palette={GROUP_TONE[s.group]} />
             })}
           </div>
         </Card>
