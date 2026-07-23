@@ -97,6 +97,12 @@ export class UpdateWorkflowRuleDto {
   scheduleType?: string;
 }
 
+/** Bật/tắt timer Scheduler (công tắc hệ thống) từ UI. */
+export class SchedulerToggleDto {
+  @IsBoolean()
+  enabled: boolean;
+}
+
 /** Ngữ cảnh test thủ công (tuỳ chọn) — dùng để đánh giá điều kiện. */
 export class TestTriggerDto {
   @IsOptional()

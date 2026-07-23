@@ -6,7 +6,10 @@ import { AiActionsService } from '../ai-actions/ai-actions.service';
 import { AgentActivityService } from '../aido/agent-activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 
-const prisma = { workflowRule: { findMany: jest.fn() } };
+const prisma = {
+  workflowRule: { findMany: jest.fn() },
+  systemSetting: { findUnique: jest.fn(), upsert: jest.fn() },
+};
 
 // track() phải GỌI fn() để dispatchTrigger vẫn chạy (giữ nguyên hành vi kiểm thử).
 const activity = {
@@ -82,9 +85,42 @@ describe('HermesSchedulerService (EPIC9)', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     prisma.workflowRule.findMany.mockResolvedValue([]);
+    prisma.systemSetting.findUnique.mockResolvedValue(null);
+    prisma.systemSetting.upsert.mockResolvedValue({});
     hermes.dispatchTrigger.mockResolvedValue({ ...OK_SUMMARY });
     hermes.listRuns.mockResolvedValue([]);
     service = await makeService(false);
+  });
+
+  describe('setEnabled (UI toggle, lưu bền)', () => {
+    it('BẬT → status enabled=true + upsert lưu "true"; TẮT → false + lưu "false"', async () => {
+      const s = await makeService(false);
+      const on = await s.setEnabled(true);
+      expect(on.enabled).toBe(true);
+      expect(s.status().enabled).toBe(true);
+      expect(prisma.systemSetting.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { key: 'HERMES_SCHEDULER_ENABLED' },
+          update: { value: 'true' },
+          create: { key: 'HERMES_SCHEDULER_ENABLED', value: 'true' },
+        }),
+      );
+      const off = await s.setEnabled(false);
+      expect(off.enabled).toBe(false);
+      expect(s.status().enabled).toBe(false);
+      s.onModuleDestroy();
+    });
+
+    it('trạng thái đã lưu ĐÈ env default khi onModuleInit', async () => {
+      prisma.systemSetting.findUnique.mockResolvedValueOnce({
+        key: 'HERMES_SCHEDULER_ENABLED',
+        value: 'true',
+      });
+      const s = await makeService(false); // env=false nhưng DB lưu true
+      await s.onModuleInit();
+      expect(s.status().enabled).toBe(true);
+      s.onModuleDestroy();
+    });
   });
 
   describe('timer gating (an toàn dev/test)', () => {

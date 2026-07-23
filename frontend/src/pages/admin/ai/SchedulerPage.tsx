@@ -82,6 +82,7 @@ export function SchedulerPage() {
   const [error, setError] = useState(false)
   const [partial, setPartial] = useState<string[]>([]) // nguồn lỗi cục bộ
   const [running, setRunning] = useState(false)
+  const [toggling, setToggling] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -126,6 +127,28 @@ export function SchedulerPage() {
     }
   }
 
+  // Bật/tắt timer Scheduler (công tắc hệ thống, lưu bền). Bật cần xác nhận vì ảnh hưởng MỌI CLB.
+  const handleToggleTimer = async () => {
+    const turnOn = !status?.enabled
+    if (
+      turnOn &&
+      !window.confirm(
+        'Bật timer sẽ cho Hermes TỰ quét & tạo đề xuất định kỳ cho MỌI CLB (vẫn cần người duyệt trước khi thực thi). Tiếp tục?',
+      )
+    )
+      return
+    setToggling(true)
+    try {
+      await api.post('/workflows/runtime/scheduler', { enabled: turnOn })
+      toast.success(turnOn ? 'Đã BẬT timer định kỳ' : 'Đã TẮT timer định kỳ')
+      await load()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Đổi trạng thái timer thất bại')
+    } finally {
+      setToggling(false)
+    }
+  }
+
   // Cập nhật 1 rule (bật/tắt hoặc đổi chu kỳ) qua PUT /workflows/rules/:id (endpoint sẵn có).
   const saveRule = async (id: string, patch: Record<string, unknown>, okMsg: string) => {
     setSavingId(id)
@@ -148,6 +171,14 @@ export function SchedulerPage() {
         subtitle="Lịch cron & tác vụ định kỳ của Hermes AI COO"
         actions={
           <div className="flex items-center gap-2">
+            <ActionButton
+              icon={<Power size={15} />}
+              variant={status?.enabled ? 'ghost' : 'primary'}
+              onClick={handleToggleTimer}
+              disabled={toggling || loading}
+            >
+              {toggling ? 'Đang đổi…' : status?.enabled ? 'Tắt timer' : 'Bật timer'}
+            </ActionButton>
             {scheduled.length > 0 && (
               <ActionButton icon={<Play size={15} />} onClick={handleRunNow} disabled={running}>
                 {running ? 'Đang chạy…' : 'Chạy định kỳ ngay'}

@@ -19,6 +19,7 @@ import {
   UpdateWorkflowRuleDto,
   TestTriggerDto,
   DispatchTestDto,
+  SchedulerToggleDto,
 } from './workflows.dto';
 
 /**
@@ -126,6 +127,18 @@ export class WorkflowsController {
   })
   runtimeStatus() {
     return ok(this.scheduler.status());
+  }
+
+  @Post('runtime/scheduler')
+  @ApiOperation({
+    summary:
+      'Bật/tắt timer Scheduler (CÔNG TẮC HỆ THỐNG, lưu bền) — timer bật quét rule định kỳ của MỌI CLB.',
+  })
+  async setScheduler(@Body() dto: SchedulerToggleDto) {
+    return ok(
+      await this.scheduler.setEnabled(dto.enabled),
+      dto.enabled ? 'Đã BẬT timer định kỳ' : 'Đã TẮT timer định kỳ',
+    );
   }
 
   @Get('runtime/history')

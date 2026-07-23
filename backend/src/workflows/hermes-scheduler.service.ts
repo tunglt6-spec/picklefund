@@ -17,6 +17,9 @@ export const SCHEDULE_TYPES = ['MANUAL', 'DAILY', 'WEEKLY', 'MONTHLY'] as const;
 export type ScheduleType = (typeof SCHEDULE_TYPES)[number];
 const AUTO_TYPES: ScheduleType[] = ['DAILY', 'WEEKLY', 'MONTHLY'];
 
+/** Khóa lưu bền trạng thái BẬT/TẮT timer (UI toggle) — giữ qua restart/deploy. */
+const SCHEDULER_SETTING_KEY = 'HERMES_SCHEDULER_ENABLED';
+
 export interface TickSummary {
   tickedAt: string;
   groups: number;
@@ -43,7 +46,10 @@ export interface TickSummary {
 export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(HermesSchedulerService.name);
   private timer: ReturnType<typeof setInterval> | null = null;
-  private readonly enabled: boolean;
+  // enabled RUNTIME-mutable: bật/tắt qua UI (setEnabled) + lưu bền SystemSetting. env chỉ là
+  // mặc định khi CHƯA có bản ghi đã lưu.
+  private enabled: boolean;
+  private readonly envDefault: boolean;
   private readonly intervalMs = 60_000;
   private lastTick: TickSummary | null = null;
 
@@ -53,24 +59,64 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
     private activity: AgentActivityService,
     config: ConfigService,
   ) {
-    this.enabled = config.get<string>('HERMES_SCHEDULER_ENABLED') === 'true';
+    this.envDefault = config.get<string>('HERMES_SCHEDULER_ENABLED') === 'true';
+    this.enabled = this.envDefault;
   }
 
-  onModuleInit() {
-    if (!this.enabled) {
-      this.logger.log(
-        'Scheduler TẮT (HERMES_SCHEDULER_ENABLED != true) — chỉ run-now thủ công.',
-      );
-      return;
+  async onModuleInit() {
+    // Trạng thái đã lưu (UI toggle) ĐÈ lên env default; lỗi đọc → giữ env default (an toàn).
+    try {
+      const row = await this.prisma.systemSetting.findUnique({
+        where: { key: SCHEDULER_SETTING_KEY },
+      });
+      if (row) this.enabled = row.value === 'true';
+    } catch (e) {
+      this.logSafe('load scheduler setting', e);
     }
-    this.timer = setInterval(() => {
-      this.tick().catch((e: unknown) => this.logSafe('tick', e));
-    }, this.intervalMs);
-    this.logger.log(`Scheduler BẬT — tick mỗi ${this.intervalMs / 1000}s.`);
+    if (this.enabled) this.startTimer();
+    else this.logger.log('Scheduler TẮT — chỉ run-now thủ công.');
   }
 
   onModuleDestroy() {
-    if (this.timer) clearInterval(this.timer);
+    this.stopTimer();
+  }
+
+  private startTimer() {
+    if (this.timer) return;
+    this.timer = setInterval(() => {
+      this.tick().catch((e: unknown) => this.logSafe('tick', e));
+    }, this.intervalMs);
+    // KHÔNG để riêng timer giữ tiến trình sống (HTTP server đã giữ) — tránh chặn thoát/test teardown.
+    this.timer.unref?.();
+    this.logger.log(`Scheduler BẬT — tick mỗi ${this.intervalMs / 1000}s.`);
+  }
+
+  private stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  /**
+   * Bật/tắt timer lúc chạy (UI) + LƯU BỀN vào SystemSetting → giữ nguyên qua restart/deploy.
+   * Đây là CÔNG TẮC HỆ THỐNG (global): timer bật sẽ quét rule định kỳ của MỌI CLB.
+   */
+  async setEnabled(on: boolean): Promise<{ enabled: boolean }> {
+    this.enabled = on;
+    try {
+      await this.prisma.systemSetting.upsert({
+        where: { key: SCHEDULER_SETTING_KEY },
+        update: { value: String(on) },
+        create: { key: SCHEDULER_SETTING_KEY, value: String(on) },
+      });
+    } catch (e) {
+      this.logSafe('persist scheduler setting', e);
+    }
+    if (on) this.startTimer();
+    else this.stopTimer();
+    this.logger.log(`Scheduler ${on ? 'BẬT' : 'TẮT'} qua UI (đã lưu bền).`);
+    return { enabled: this.enabled };
   }
 
   // ---------- Period keys (chống dispatch trùng trong cùng kỳ) ----------
