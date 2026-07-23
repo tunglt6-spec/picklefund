@@ -77,6 +77,9 @@ const GROUP_TONE: Record<string, GroupTone> = {
   'Tri thức & Nhật ký': { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', chip: '#D1FAE5', fg: '#059669' },
 }
 
+// Tông màu DÙNG CHUNG cho MỌI card Khu vực vận hành — 1 màu tím Hermes cho đồng nhất.
+const HUB_TONE: GroupTone = GROUP_TONE['Điều phối & Duyệt']
+
 // Màu nhận diện 5 agent — ĐỒNG BỘ với Office View ("Kết quả hôm nay của từng Agent").
 const AGENT_COLOR: Record<string, string> = {
   maika: '#6D5DFB',
@@ -524,15 +527,14 @@ export function AiManagerDashboard() {
           )}
         </div>
 
-        {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn (4 card/hàng ở desktop rộng), card giữ
-            màu theo nhóm chức năng (tím/xanh dương/hổ phách/xanh lá) nên vẫn nhận biết cụm dù
-            không tách tiêu đề nhóm — bố cục sát nhau, hết trống chỗ. */}
+        {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn, 4 card/hàng từ ~1024px (laptop 1280 luôn
+            thấy 4 cột), sát nhau, hết trống chỗ. Mọi card dùng CHUNG 1 tông tím Hermes cho đồng nhất. */}
         <Card>
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {sections.map(s => {
               const extra = metricsFor(s.key)
-              return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} palette={GROUP_TONE[s.group]} />
+              return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} palette={HUB_TONE} />
             })}
           </div>
         </Card>
