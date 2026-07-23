@@ -34,6 +34,10 @@ export const SUPPORTED_TRIGGER_TYPES = [
   'ATTENDANCE_NOT_CLOSED',
   'SESSION_CAPACITY_RISK',
   'LOW_MEMBER_ATTENDANCE',
+  // Phase 4 (lô Điều phối + Thi đấu + Báo cáo) — hoàn tất 13 rule.
+  'APPROVAL_OVERDUE',
+  'MATCH_RESULT_MISSING',
+  'WEEKLY_CLUB_HEALTH_REPORT',
   // Business events (Epic 7) — publish bởi HermesEventPublisher sau transaction thành công.
   'ATTENDANCE_COMPLETED',
   'CONTRIBUTION_CONFIRMED',
@@ -664,7 +668,103 @@ export class HermesWorkflowService {
         dedupScope: period.id,
       };
     }
+    // ── Phase 4 (lô Điều phối + Thi đấu + Báo cáo) ──
+    if (triggerType === 'APPROVAL_OVERDUE') {
+      // AI Action còn chờ duyệt quá 48h (loại chính rule này để không tự tham chiếu).
+      const cutoff = new Date(Date.now() - 48 * 3_600_000);
+      const overdueApprovalCount = await this.prisma.aiAction.count({
+        where: {
+          clubId,
+          status: 'PENDING_APPROVAL',
+          createdAt: { lte: cutoff },
+          NOT: { actionType: 'workflow:APPROVAL_OVERDUE' },
+        },
+      });
+      return { overdueApprovalCount, dedupScope: 'approvals' };
+    }
+    if (triggerType === 'MATCH_RESULT_MISSING') {
+      // Trận trong giải ĐANG diễn ra (>1 ngày) chưa có kết quả (scoreA null, chưa hoàn tất/hủy).
+      const cutoff = new Date(Date.now() - 1 * 86_400_000);
+      const missingResultCount = await this.prisma.minigameMatch.count({
+        where: {
+          minigame: { clubId, status: 'ACTIVE', startedAt: { lte: cutoff } },
+          status: { in: ['PENDING', 'IN_PROGRESS'] },
+          scoreA: null,
+        },
+      });
+      return { missingResultCount, dedupScope: 'matches' };
+    }
+    if (triggerType === 'WEEKLY_CLUB_HEALTH_REPORT') {
+      // Ảnh chụp sức khỏe CLB (Maika phân tích — dữ liệu thật): quỹ, công nợ, buổi sắp tới.
+      const [incomeAgg, expenseAgg, period, upcoming] = await Promise.all([
+        this.prisma.fundContribution.aggregate({
+          where: { clubId, fundSource: 'COMMON', isConfirmed: true },
+          _sum: { amount: true },
+        }),
+        this.prisma.livingExpense.aggregate({
+          where: {
+            clubId,
+            fundSource: 'COMMON',
+            status: { in: ['approved', 'paid'] },
+          },
+          _sum: { amount: true },
+        }),
+        this.prisma.fundPeriod.findFirst({
+          where: { clubId, status: 'active', type: 'chung' },
+          orderBy: { startDate: 'desc' },
+          select: { id: true },
+        }),
+        (() => {
+          const t = new Date();
+          t.setHours(0, 0, 0, 0);
+          return this.prisma.attendanceSession.count({
+            where: { clubId, status: 'scheduled', sessionDate: { gte: t } },
+          });
+        })(),
+      ]);
+      let unpaidCount = 0;
+      if (period) {
+        const [memberCount, paidRows] = await Promise.all([
+          this.prisma.member.count({ where: { clubId, isDeleted: false } }),
+          this.prisma.fundContribution.findMany({
+            where: {
+              clubId,
+              fundPeriodId: period.id,
+              fundSource: 'COMMON',
+              isConfirmed: true,
+              memberId: { not: null },
+            },
+            select: { memberId: true },
+            distinct: ['memberId'],
+          }),
+        ]);
+        unpaidCount = Math.max(0, memberCount - paidRows.length);
+      }
+      const fundBalance =
+        Number(incomeAgg._sum.amount ?? 0) - Number(expenseAgg._sum.amount ?? 0);
+      return {
+        reportingWeek: this.isoWeekKey(new Date()),
+        fundBalance,
+        unpaidCount,
+        upcomingSessions: upcoming,
+        dedupScope: this.isoWeekKey(new Date()),
+      };
+    }
     return {};
+  }
+
+  /** Khoá tuần ISO `YYYY-Www` (deterministic) — dùng cho dedup báo cáo tuần. */
+  private isoWeekKey(d: Date): string {
+    const date = new Date(
+      Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()),
+    );
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil(
+      ((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
+    );
+    return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
   }
 
   /**

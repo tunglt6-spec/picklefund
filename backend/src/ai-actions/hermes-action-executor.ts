@@ -67,6 +67,13 @@ export class HermesActionExecutor implements ActionExecutor {
         return this.executeSessionCapacityRisk(action);
       case 'workflow:LOW_MEMBER_ATTENDANCE':
         return this.executeLowMemberAttendance(action);
+      // ── Phase 4 — Điều phối + Thi đấu + Báo cáo ──
+      case 'workflow:APPROVAL_OVERDUE':
+        return this.executeApprovalOverdue(action);
+      case 'workflow:MATCH_RESULT_MISSING':
+        return this.executeMatchResultMissing(action);
+      case 'workflow:WEEKLY_CLUB_HEALTH_REPORT':
+        return this.executeWeeklyClubHealthReport(action);
       default:
         return Promise.resolve({
           ok: true,
@@ -755,6 +762,160 @@ export class HermesActionExecutor implements ActionExecutor {
     );
     return this.liveResult(
       `Hỏi thăm ${recipients.length} thành viên chuyên cần thấp. Đã gửi [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 4: APPROVAL_OVERDUE ----------
+
+  /** Nhắc quản trị duyệt các AI Action chờ quá 48h (KHÔNG tự duyệt, không tự chạy tác vụ gốc). */
+  private async executeApprovalOverdue(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const cutoff = new Date(Date.now() - 48 * 3_600_000);
+    const overdue = await this.prisma.aiAction.count({
+      where: {
+        clubId,
+        status: 'PENDING_APPROVAL',
+        createdAt: { lte: cutoff },
+        NOT: { actionType: 'workflow:APPROVAL_OVERDUE' },
+      },
+    });
+    if (overdue === 0) {
+      return this.liveResult('Không còn AI Action nào chờ duyệt quá hạn.');
+    }
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Nhắc duyệt AI Action tồn đọng';
+    const body =
+      action.summary ||
+      `Có ${overdue} hành động AI chờ duyệt quá lâu. Vui lòng vào Hộp Duyệt xử lý.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `APPROVAL_OVERDUE ${action.id}: overdue=${overdue} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Nhắc duyệt ${overdue} AI Action tồn đọng tới ${recipients.length} quản trị [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 4: MATCH_RESULT_MISSING ----------
+
+  /** Nhắc quản trị/trọng tài nhập kết quả trận (KHÔNG tự suy đoán tỷ số/đội thắng). */
+  private async executeMatchResultMissing(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const cutoff = new Date(Date.now() - 1 * 86_400_000);
+    const missing = await this.prisma.minigameMatch.count({
+      where: {
+        minigame: { clubId, status: 'ACTIVE', startedAt: { lte: cutoff } },
+        status: { in: ['PENDING', 'IN_PROGRESS'] },
+        scoreA: null,
+      },
+    });
+    if (missing === 0) {
+      return this.liveResult('Không còn trận nào thiếu kết quả.');
+    }
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Nhắc nhập kết quả trận đấu';
+    const body =
+      action.summary ||
+      `Có ${missing} trận trong giải đang diễn ra chưa nhập kết quả. Vui lòng cập nhật để hoàn tất bảng đấu.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `MATCH_RESULT_MISSING ${action.id}: missing=${missing} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Nhắc nhập kết quả ${missing} trận tới ${recipients.length} quản trị [${this.countsStr(counts)}].`,
+    );
+  }
+
+  // ---------- Phase 4: WEEKLY_CLUB_HEALTH_REPORT ----------
+
+  /** Gửi báo cáo sức khỏe CLB tuần (quỹ/công nợ/hoạt động) tới Ban quản trị. */
+  private async executeWeeklyClubHealthReport(
+    action: ExecutableAction,
+  ): Promise<Record<string, unknown>> {
+    const clubId = action.clubId;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [incomeAgg, expenseAgg, period, upcoming] = await Promise.all([
+      this.prisma.fundContribution.aggregate({
+        where: { clubId, fundSource: 'COMMON', isConfirmed: true },
+        _sum: { amount: true },
+      }),
+      this.prisma.livingExpense.aggregate({
+        where: {
+          clubId,
+          fundSource: 'COMMON',
+          status: { in: ['approved', 'paid'] },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.fundPeriod.findFirst({
+        where: { clubId, status: 'active', type: 'chung' },
+        orderBy: { startDate: 'desc' },
+        select: { id: true },
+      }),
+      this.prisma.attendanceSession.count({
+        where: { clubId, status: 'scheduled', sessionDate: { gte: today } },
+      }),
+    ]);
+    let unpaidCount = 0;
+    if (period) {
+      const [memberCount, paidRows] = await Promise.all([
+        this.prisma.member.count({ where: { clubId, isDeleted: false } }),
+        this.prisma.fundContribution.findMany({
+          where: {
+            clubId,
+            fundPeriodId: period.id,
+            fundSource: 'COMMON',
+            isConfirmed: true,
+            memberId: { not: null },
+          },
+          select: { memberId: true },
+          distinct: ['memberId'],
+        }),
+      ]);
+      unpaidCount = Math.max(0, memberCount - paidRows.length);
+    }
+    const balance =
+      Number(incomeAgg._sum.amount ?? 0) - Number(expenseAgg._sum.amount ?? 0);
+    const recipients = await this.adminRecipients(clubId);
+    const channels = this.resolveChannels(action.requestPayload);
+    const title = action.title || 'Báo cáo sức khỏe CLB tuần';
+    const body =
+      action.summary ||
+      `Số dư quỹ: ${this.fmtMoney(balance)} · Chưa đóng kỳ: ${unpaidCount} · Buổi sắp tới: ${upcoming}.`;
+    const counts = await this.fanOut(
+      clubId,
+      action.id,
+      recipients,
+      title,
+      body,
+      channels,
+    );
+    this.logger.log(
+      `WEEKLY_CLUB_HEALTH_REPORT ${action.id}: balance=${balance} unpaid=${unpaidCount} admins=${recipients.length} counts=${this.countsStr(counts)}`,
+    );
+    return this.liveResult(
+      `Gửi báo cáo sức khỏe tuần tới ${recipients.length} quản trị [${this.countsStr(counts)}].`,
     );
   }
 }

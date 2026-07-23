@@ -31,6 +31,35 @@ function fmtTime(iso: string): string {
   return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN', { hour12: false })
 }
 
+/** Nhóm Rule theo module nghiệp vụ (Mục XII). */
+const RULE_CATEGORY: Record<string, string> = {
+  DEBT_ESCALATION: 'Tài chính',
+  FUND_BALANCE_RISK: 'Tài chính',
+  PAYMENT_DUE_REMINDER: 'Tài chính',
+  MISSING_FINANCE_DOCUMENT: 'Tài chính',
+  LOW_MEMBER_ATTENDANCE: 'Thành viên',
+  EVENT_REMINDER: 'Hoạt động CLB',
+  LOW_SESSION_REGISTRATION: 'Hoạt động CLB',
+  ATTENDANCE_NOT_CLOSED: 'Hoạt động CLB',
+  SESSION_CAPACITY_RISK: 'Hoạt động CLB',
+  MATCH_RESULT_MISSING: 'Thi đấu',
+  APPROVAL_OVERDUE: 'Điều phối AIDO',
+  REPORT_DISPATCH: 'Báo cáo',
+  WEEKLY_CLUB_HEALTH_REPORT: 'Báo cáo',
+}
+const CATEGORY_ORDER = ['Tài chính', 'Thành viên', 'Hoạt động CLB', 'Thi đấu', 'Điều phối AIDO', 'Báo cáo', 'Khác']
+const categoryOf = (triggerType: string): string => RULE_CATEGORY[triggerType] ?? 'Khác'
+/** Gom danh sách theo nhóm, giữ thứ tự CATEGORY_ORDER, bỏ nhóm rỗng. */
+function groupByCategory<T>(items: T[], keyFn: (x: T) => string): [string, T[]][] {
+  const map = new Map<string, T[]>()
+  for (const it of items) {
+    const c = categoryOf(keyFn(it))
+    if (!map.has(c)) map.set(c, [])
+    map.get(c)!.push(it)
+  }
+  return CATEGORY_ORDER.filter((c) => map.has(c)).map((c) => [c, map.get(c)!])
+}
+
 export function WorkflowRules() {
   const { rules, runs, templates, loading, available, refetch } = useWorkflows()
   const [busy, setBusy] = useState(false)
@@ -83,6 +112,17 @@ export function WorkflowRules() {
     }
   }
 
+  // KPI runtime THẬT (từ rules + runs đã tải) — Mục XII, không số liệu giả.
+  const kpi = {
+    enabled: rules.filter((r) => r.enabled).length,
+    disabled: rules.filter((r) => !r.enabled).length,
+    waiting: runs.filter((r) => r.status === 'WAITING_APPROVAL').length,
+    completed: runs.filter((r) => r.status === 'COMPLETED').length,
+    failed: runs.filter((r) => r.status === 'FAILED').length,
+  }
+  const templateGroups = groupByCategory(templates, (t) => t.triggerType)
+  const ruleGroups = groupByCategory(rules, (r) => r.triggerType)
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
@@ -123,25 +163,48 @@ export function WorkflowRules() {
           </div>
         )}
 
-        {/* Create from template */}
+        {/* KPI runtime (Mục XII) — chỉ số thật từ rules + runs */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            { label: 'Rule đang bật', value: kpi.enabled, color: 'text-emerald-600' },
+            { label: 'Rule đang tắt', value: kpi.disabled, color: 'text-slate-500' },
+            { label: 'Chờ duyệt', value: kpi.waiting, color: 'text-amber-600' },
+            { label: 'Hoàn tất', value: kpi.completed, color: '[color:var(--pf-primary)]' },
+            { label: 'Lỗi', value: kpi.failed, color: 'text-red-600' },
+          ].map((k) => (
+            <div key={k.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3">
+              <p className={`text-2xl font-bold tabular-nums ${k.color}`}>{k.value}</p>
+              <p className="text-[11px] font-medium text-slate-400 mt-0.5">{k.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Create from template — nhóm theo module */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
           <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Tạo rule từ template</h3>
-          <div className="flex flex-wrap gap-2">
-            {templates.length === 0 ? (
-              <p className="text-sm text-slate-400">Chưa có template.</p>
-            ) : (
-              templates.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => void createTemplate(t)}
-                  disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-xl [background:var(--pf-primary)] px-3 py-2 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
-                >
-                  <Plus size={13} /> {t.name}
-                </button>
-              ))
-            )}
-          </div>
+          {templates.length === 0 ? (
+            <p className="text-sm text-slate-400">Chưa có template.</p>
+          ) : (
+            <div className="space-y-4">
+              {templateGroups.map(([cat, tpls]) => (
+                <div key={cat}>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">{cat}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {tpls.map((t) => (
+                      <button
+                        key={t.key}
+                        onClick={() => void createTemplate(t)}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1.5 rounded-xl [background:var(--pf-primary)] px-3 py-2 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)] disabled:opacity-50"
+                      >
+                        <Plus size={13} /> {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Rule trùng: mở rule hiện có (khuyến nghị) hoặc tạo bản mới có xác nhận */}
           {dup && (
@@ -258,8 +321,12 @@ export function WorkflowRules() {
               <p className="text-xs text-slate-400 mt-1">Tạo rule từ template ở trên để bắt đầu.</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {rules.map((r) => (
+            <div className="space-y-4">
+              {ruleGroups.map(([cat, grpRules]) => (
+                <div key={cat}>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">{cat} · {grpRules.length}</p>
+                  <div className="space-y-2">
+              {grpRules.map((r) => (
                 <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-slate-100 p-3 transition-shadow">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
@@ -295,6 +362,9 @@ export function WorkflowRules() {
                     >
                       <Trash2 size={13} /> Xoá
                     </button>
+                  </div>
+                </div>
+              ))}
                   </div>
                 </div>
               ))}

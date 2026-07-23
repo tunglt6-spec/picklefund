@@ -34,6 +34,7 @@ export interface WorkflowTemplate {
   key: string
   name: string
   triggerType: string
+  scheduleType?: string
   conditionsJson?: Record<string, unknown>
   actionsJson?: unknown[]
 }
@@ -94,6 +95,7 @@ export async function createRuleFromTemplate(
     actionsJson: tpl.actionsJson,
     enabled: true,
     allowDuplicate,
+    ...(tpl.scheduleType ? { scheduleType: tpl.scheduleType } : {}),
   })
 }
 
@@ -137,6 +139,10 @@ export const DISPATCH_TRIGGER_TYPES = [
   'ATTENDANCE_NOT_CLOSED',
   'SESSION_CAPACITY_RISK',
   'LOW_MEMBER_ATTENDANCE',
+  // Phase 4 — Điều phối + Thi đấu + Báo cáo
+  'APPROVAL_OVERDUE',
+  'MATCH_RESULT_MISSING',
+  'WEEKLY_CLUB_HEALTH_REPORT',
 ] as const
 
 /** Tóm tắt dispatch sanitized từ backend — chỉ số đếm, không context/payload. */

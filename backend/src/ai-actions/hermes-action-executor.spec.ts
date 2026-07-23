@@ -50,6 +50,8 @@ describe('HermesActionExecutor', () => {
     sessionRegistration: { findMany: sessionRegistrationFindMany },
     attendanceRecord: { groupBy: attendanceRecordGroupBy },
     user: { findMany: userFindMany },
+    aiAction: { count: jest.fn() },
+    minigameMatch: { count: jest.fn() },
   } as unknown as PrismaService;
   const notifications = {
     dispatch,
@@ -292,6 +294,30 @@ describe('HermesActionExecutor', () => {
     expect(dispatch).toHaveBeenCalledTimes(2);
     const targets = dispatch.mock.calls.map((c) => (c[1] as { targetId: string }).targetId).sort();
     expect(targets).toEqual(['u1', 'u3']);
+    expect(res.mode).toBe('live');
+  });
+
+  // ---------- Phase 4 ----------
+  it('APPROVAL_OVERDUE: nhắc quản trị, query LOẠI chính rule (không tự tham chiếu)', async () => {
+    const aiActionCount = (prisma as unknown as { aiAction: { count: jest.Mock } })
+      .aiAction.count;
+    aiActionCount.mockResolvedValue(3);
+    userFindMany.mockResolvedValue([{ id: 'admin1', email: 'a@real.vn' }]);
+    const res = await executor.execute(
+      baseAction({ actionType: 'workflow:APPROVAL_OVERDUE', title: 'Nhắc duyệt' }),
+    );
+    expect(aiActionCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: 'PENDING_APPROVAL',
+          NOT: { actionType: 'workflow:APPROVAL_OVERDUE' },
+        }),
+      }),
+    );
+    expect(dispatch).toHaveBeenCalledWith(
+      'club-1',
+      expect.objectContaining({ targetType: 'USER', targetId: 'admin1' }),
+    );
     expect(res.mode).toBe('live');
   });
 });

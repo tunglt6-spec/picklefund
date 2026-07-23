@@ -189,4 +189,56 @@ export const WORKFLOW_TEMPLATES = [
       },
     ],
   },
+  // ── Phase 4 — Điều phối AIDO + Thi đấu + Báo cáo ──
+  {
+    key: 'approval-overdue',
+    name: 'AI Action chờ duyệt quá lâu',
+    triggerType: 'APPROVAL_OVERDUE',
+    conditionsJson: { all: [{ field: 'overdueApprovalCount', op: 'gte', value: 1 }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'ai-actions',
+        riskLevel: 'LOW',
+        title: 'Nhắc duyệt AI Action tồn đọng',
+        summary:
+          'Có hành động AI chờ duyệt quá lâu — nhắc người có quyền duyệt xử lý (chờ duyệt; không tự duyệt).',
+        cooldownMinutes: 720,
+      },
+    ],
+  },
+  {
+    key: 'match-result-missing',
+    name: 'Trận đấu chưa nhập kết quả',
+    triggerType: 'MATCH_RESULT_MISSING',
+    conditionsJson: { all: [{ field: 'missingResultCount', op: 'gte', value: 1 }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'minigames',
+        riskLevel: 'LOW',
+        title: 'Nhắc nhập kết quả trận đấu',
+        summary:
+          'Có trận trong giải đang diễn ra chưa nhập kết quả — nhắc trọng tài/người phụ trách (chờ duyệt; không tự suy đoán tỷ số).',
+      },
+    ],
+  },
+  {
+    key: 'weekly-club-health-report',
+    name: 'Báo cáo sức khỏe CLB hằng tuần',
+    triggerType: 'WEEKLY_CLUB_HEALTH_REPORT',
+    scheduleType: 'WEEKLY',
+    conditionsJson: { all: [{ field: 'reportingWeek', op: 'exists' }] },
+    actionsJson: [
+      {
+        type: 'CREATE_AI_ACTION',
+        targetModule: 'reports',
+        riskLevel: 'MEDIUM',
+        title: 'Báo cáo sức khỏe CLB tuần',
+        summary:
+          'Tổng hợp quỹ/công nợ/hoạt động tuần gửi Ban quản trị (chờ duyệt; 1 báo cáo/tuần).',
+        cooldownMinutes: 8640,
+      },
+    ],
+  },
 ] as const;

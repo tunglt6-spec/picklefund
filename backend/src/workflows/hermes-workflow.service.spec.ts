@@ -33,6 +33,8 @@ const prisma = {
   attendanceSession: { count: jest.fn(), findFirst: jest.fn(), findMany: jest.fn() },
   sessionRegistration: { count: jest.fn() },
   attendanceRecord: { groupBy: jest.fn() },
+  aiAction: { count: jest.fn() },
+  minigameMatch: { count: jest.fn() },
 };
 
 const aiActions = {
@@ -593,6 +595,51 @@ describe('HermesWorkflowService', () => {
       prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }, { id: 's2' }]);
       const ctx = await service.buildLiveContext('club-1', 'LOW_MEMBER_ATTENDANCE');
       expect(ctx).toEqual({ hasActivePeriod: true, totalCompleted: 2, lowAttendanceCount: 0 });
+    });
+
+    // ── Phase 4 — Điều phối + Thi đấu + Báo cáo ──
+    it('APPROVAL_OVERDUE: đếm AI Action chờ duyệt quá hạn (loại chính rule) + dedupScope approvals', async () => {
+      prisma.aiAction.count.mockResolvedValue(2);
+      const ctx = await service.buildLiveContext('club-1', 'APPROVAL_OVERDUE');
+      expect(ctx).toEqual({ overdueApprovalCount: 2, dedupScope: 'approvals' });
+      expect(prisma.aiAction.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clubId: 'club-1',
+            status: 'PENDING_APPROVAL',
+            NOT: { actionType: 'workflow:APPROVAL_OVERDUE' },
+          }),
+        }),
+      );
+    });
+
+    it('MATCH_RESULT_MISSING: đếm trận thiếu kết quả (giải ACTIVE) + dedupScope matches', async () => {
+      prisma.minigameMatch.count.mockResolvedValue(4);
+      const ctx = await service.buildLiveContext('club-1', 'MATCH_RESULT_MISSING');
+      expect(ctx).toEqual({ missingResultCount: 4, dedupScope: 'matches' });
+      expect(prisma.minigameMatch.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            minigame: expect.objectContaining({ clubId: 'club-1', status: 'ACTIVE' }),
+            scoreA: null,
+          }),
+        }),
+      );
+    });
+
+    it('WEEKLY_CLUB_HEALTH_REPORT: snapshot quỹ/công nợ/buổi + dedupScope=tuần ISO', async () => {
+      prisma.fundContribution.aggregate.mockResolvedValue({ _sum: { amount: 3_000_000 } });
+      prisma.livingExpense.aggregate.mockResolvedValue({ _sum: { amount: 1_000_000 } });
+      prisma.fundPeriod.findFirst.mockResolvedValue({ id: 'fp-w' });
+      prisma.attendanceSession.count.mockResolvedValue(2);
+      prisma.member.count.mockResolvedValue(10);
+      prisma.fundContribution.findMany.mockResolvedValue([{ memberId: 'm1' }, { memberId: 'm2' }]);
+      const ctx = (await service.buildLiveContext('club-1', 'WEEKLY_CLUB_HEALTH_REPORT')) as Record<string, unknown>;
+      expect(ctx.fundBalance).toBe(2_000_000);
+      expect(ctx.unpaidCount).toBe(8);
+      expect(ctx.upcomingSessions).toBe(2);
+      expect(String(ctx.reportingWeek)).toMatch(/^\d{4}-W\d{2}$/);
+      expect(ctx.dedupScope).toBe(ctx.reportingWeek);
     });
   });
 
