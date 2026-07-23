@@ -900,6 +900,26 @@ export function FixedDoublesDashboardPage() {
     handleSaveScoreApi(matchId, s1, s2)
   }
 
+  // Kết thúc giải đấu: DRAFT/ACTIVE → COMPLETED (endedAt) + phát event MINIGAME_COMPLETED →
+  // vào lịch sử CLB. Còn trận chưa xong thì cảnh báo trước khi chốt.
+  const canFinish = hasSchedule && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
+  const allDone = hasSchedule && completed === schedule.length
+  const handleEndTournament = async () => {
+    if (!id) return
+    const remaining = schedule.length - completed
+    const msg = remaining > 0
+      ? `Còn ${remaining} trận chưa có kết quả. Vẫn kết thúc giải đấu?`
+      : 'Kết thúc giải đấu? Trạng thái chuyển sang "Hoàn Thành" và lưu vào lịch sử CLB.'
+    if (!window.confirm(msg)) return
+    try {
+      await api.post(`/minigames/${id}/end`)
+      await hydrateFromApi()
+      toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    }
+  }
+
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
 
@@ -933,7 +953,18 @@ export function FixedDoublesDashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {canFinish && (
+              <button
+                onClick={handleEndTournament}
+                title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white transition-colors"
+                style={{ background: allDone ? '#16A34A' : '#94A3B8' }}
+              >
+                <Trophy size={15} />
+                <span className="hidden sm:inline">Kết thúc giải đấu</span>
+              </button>
+            )}
             <button
               title="Chỉnh sửa"
               className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"

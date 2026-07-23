@@ -3,10 +3,12 @@ import {
   ArrowLeft, Calendar, Users, Trophy, ClipboardList,
   LayoutGrid, CalendarDays, BarChart2, Crown,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { isGuestId } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
+import api from '../../../lib/api'
 
 const RANK_ROW: Record<number, string> = {
   1: 'bg-yellow-50',
@@ -17,7 +19,7 @@ const RANK_ROW: Record<number, string> = {
 /** Dashboard riêng cho GROUP_STAGE (Vòng bảng): KPI đúng theo bảng/trận + điều hướng
  *  3 thao tác chính (Chia Bảng / Lịch / BXH) + xem trước BXH từng bảng. Không dùng chung
  *  page Đánh Đôi Ngẫu Nhiên (vốn hiển thị KPI vòng/ngồi-nghỉ = 0 cho vòng bảng). */
-export function GroupStageDashboardPage() {
+export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { getMinigame, getDashboard } = useMinigameStore()
@@ -34,6 +36,25 @@ export function GroupStageDashboardPage() {
 
   const { kpi, groups } = data
   const hasGroups = groups.length > 0
+
+  // Kết thúc giải đấu: → COMPLETED + phát MINIGAME_COMPLETED (lịch sử CLB). Reuse POST /minigames/:id/end.
+  const canFinish = mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED' && kpi.totalMatches > 0
+  const allDone = kpi.totalMatches > 0 && kpi.completedMatches === kpi.totalMatches
+  const handleEndTournament = async () => {
+    if (!id) return
+    const remaining = kpi.totalMatches - kpi.completedMatches
+    const msg = remaining > 0
+      ? `Còn ${remaining} trận chưa có kết quả. Vẫn kết thúc giải đấu?`
+      : 'Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.'
+    if (!window.confirm(msg)) return
+    try {
+      await api.post(`/minigames/${id}/end`)
+      resync?.()
+      toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    }
+  }
 
   const navCards = [
     {
@@ -81,12 +102,24 @@ export function GroupStageDashboardPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => navigate(`/minigames/${id}/groups`)}
-            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
-          >
-            <LayoutGrid size={16} /> Chia Bảng
-          </button>
+          <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center">
+            {canFinish && (
+              <button
+                onClick={handleEndTournament}
+                title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
+                style={{ background: allDone ? '#16A34A' : '#94A3B8' }}
+              >
+                <Trophy size={16} /> Kết thúc giải đấu
+              </button>
+            )}
+            <button
+              onClick={() => navigate(`/minigames/${id}/groups`)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
+            >
+              <LayoutGrid size={16} /> Chia Bảng
+            </button>
+          </div>
         </div>
       </div>
 

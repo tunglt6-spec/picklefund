@@ -62,6 +62,25 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
     currentRoundNumber: data.currentRound?.roundNumber ?? 0,
   }
 
+  // Kết thúc giải đấu: → COMPLETED + phát MINIGAME_COMPLETED (lịch sử CLB). Reuse POST /minigames/:id/end.
+  const canFinish = mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED' && data.kpi.totalMatches > 0
+  const allDone = data.kpi.totalMatches > 0 && data.kpi.completedMatches === data.kpi.totalMatches
+  const handleEndTournament = async () => {
+    if (!id) return
+    const remaining = data.kpi.totalMatches - data.kpi.completedMatches
+    const msg = remaining > 0
+      ? `Còn ${remaining} trận chưa có kết quả. Vẫn kết thúc giải đấu?`
+      : 'Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.'
+    if (!window.confirm(msg)) return
+    try {
+      await api.post(`/minigames/${id}/end`)
+      resync?.()
+      toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    }
+  }
+
   const currentRoundData = data.currentRound ? {
     roundNumber: data.currentRound.roundNumber,
     status: data.currentRound.status === 'COMPLETED' ? 'COMPLETED' as const : 'IN_PROGRESS' as const,
@@ -274,14 +293,26 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
 
-          {/* Primary CTA — bốc vòng mới. Backend → persist qua API + resync; local → modal. */}
-          <button
-            onClick={handleDrawRound}
-            className="shrink-0 inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
-          >
-            <Shuffle size={16} />
-            Đánh Đôi Ngẫu Nhiên
-          </button>
+          <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center">
+            {canFinish && (
+              <button
+                onClick={handleEndTournament}
+                title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
+                style={{ background: allDone ? '#16A34A' : '#94A3B8' }}
+              >
+                <Trophy size={16} /> Kết thúc giải đấu
+              </button>
+            )}
+            {/* Primary CTA — bốc vòng mới. Backend → persist qua API + resync; local → modal. */}
+            <button
+              onClick={handleDrawRound}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
+            >
+              <Shuffle size={16} />
+              Đánh Đôi Ngẫu Nhiên
+            </button>
+          </div>
         </div>
       </div>
 

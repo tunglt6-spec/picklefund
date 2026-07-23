@@ -15,7 +15,7 @@ export function MinigameDashboard() {
     return <FixedDoublesDashboardPage />
   }
   if (mg?.formatType === 'GROUP_STAGE') {
-    return <GroupStageDashboardPage />
+    return <GroupStageDashboardPage resync={resync} />
   }
   return <MinigameDashboardPage resync={resync} />
 }
