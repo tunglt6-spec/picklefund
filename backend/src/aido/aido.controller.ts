@@ -4,6 +4,7 @@ import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { AgentActivityService } from './agent-activity.service';
 import { AgentResultsService } from './agent-results.service';
+import { OperationsRuntimeService } from './operations-runtime.service';
 import { intQuery } from '../common/query';
 
 /**
@@ -17,7 +18,23 @@ export class AidoController {
   constructor(
     private readonly activity: AgentActivityService,
     private readonly results: AgentResultsService,
+    private readonly runtime: OperationsRuntimeService,
   ) {}
+
+  /**
+   * AI Operations Center — MỘT bản tổng hợp runtime THẬT (overview 9 KPI + số liệu từng card +
+   * khối lượng từng agent). Scope theo clubId từ JWT (KHÔNG tin frontend). Chỉ SUPER_ADMIN /
+   * CLUB_ADMIN (class-level @Roles). Card Alert/Data/KPI Monitor dùng endpoint sẵn có riêng
+   * (tránh circular DI) — không gộp ở đây.
+   */
+  @Get('operations/runtime-summary')
+  @ApiOperation({
+    summary:
+      'AI Operations Center — tổng hợp runtime THẬT (overview + modules + agents), scope theo CLB.',
+  })
+  async getOperationsRuntime(@CurrentUser() user: JwtUser) {
+    return ok(await this.runtime.getRuntimeSummary(user.clubId ?? ''));
+  }
 
   @Get('agent-activity')
   @ApiOperation({ summary: 'Trạng thái hoạt động hiện tại của các agent (theo CLB)' })

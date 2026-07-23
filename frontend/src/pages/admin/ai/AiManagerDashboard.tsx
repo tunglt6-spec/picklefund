@@ -4,11 +4,12 @@ import {
   Bot, ShieldCheck, Activity, AlertTriangle, Inbox, ClipboardList,
   CheckCircle2, XCircle, Clock, Zap, Info, ChevronRight, BookOpen,
   Workflow, ClipboardCheck, Send, Bell, CalendarClock, Database, Gauge,
-  ScrollText, LayoutGrid,
+  ScrollText, LayoutGrid, ToggleRight, ToggleLeft, Copy, Timer, RefreshCw,
 } from 'lucide-react'
 import {
   useAiManager, AI_TEAM, type IntelSignal, type SignalLevel,
 } from '../../../hooks/useAiManager'
+import { useOperationsRuntime, type RuntimeSummary } from '../../../hooks/useOperationsRuntime'
 import { useAuthStore } from '../../../store/authStore'
 
 /** Các khu vực của AI Operations Center. Trạng thái:
@@ -49,14 +50,6 @@ function buildSections(isSuper: boolean): OpsSection[] {
   ]
 }
 
-const ACCENT: Record<string, { dot: string; bg: string; text: string }> = {
-  indigo: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
-  violet: { dot: '[background:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]' },
-  sky: { dot: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-600' },
-  emerald: { dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-  slate: { dot: 'bg-slate-400', bg: 'bg-slate-100', text: 'text-slate-500' },
-}
-
 const SIGNAL_STYLE: Record<SignalLevel, { bg: string; text: string; dot: string; label: string }> = {
   info: { bg: 'bg-slate-50', text: 'text-slate-600', dot: 'bg-slate-400', label: 'Thông tin' },
   attention: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Chú ý' },
@@ -77,8 +70,17 @@ const RISK_STYLE: Record<string, string> = {
   critical: 'bg-red-100 text-red-700',
 }
 
+// Nhãn tiếng Việt cho loại Club Memory (map đúng category schema thật, không bịa "Daily Brief").
+const MEMORY_LABEL: Record<string, string> = {
+  KNOWLEDGE: 'Kiến thức',
+  OPERATIONAL_NOTE: 'Ghi chú AI',
+  FACT: 'Sự kiện',
+  RULE: 'Quy tắc',
+  POLICY: 'Chính sách',
+  PREFERENCE: 'Ưu tiên',
+}
+
 // Map endpoint ĐỌC (read-only GET) của đề xuất AI → route thật trong app để admin xem dữ liệu.
-// Chỉ điều hướng (không mutate). Đề xuất không map được → hiển thị tĩnh, không bấm.
 const READ_ROUTE_MAP: Record<string, string> = {
   members: '/members',
   'fund-periods': '/fund-periods',
@@ -91,18 +93,36 @@ function resolveReadRoute(endpoint: string): string | null {
   return READ_ROUTE_MAP[seg] ?? null
 }
 
-function SectionCard({ s, onGo }: { s: OpsSection; onGo: (to: string) => void }) {
+const fmtMs = (ms: number): string => (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`)
+const fmtTime = (iso: string | null): string =>
+  iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—'
+
+// ── Card khu vực vận hành (dashboard hoá): icon + tên + mô tả + số liệu runtime THẬT ──
+interface CardMetric { label: string; value: string | number }
+function SectionCard({
+  s, onGo, metrics, badge, progress,
+}: {
+  s: OpsSection
+  onGo: (to: string) => void
+  metrics?: CardMetric[]
+  badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null
+  progress?: number | null
+}) {
   const clickable = s.status === 'active' && !!s.to
+  const badgeCls =
+    badge?.tone === 'ok' ? 'bg-emerald-50 text-emerald-700'
+      : badge?.tone === 'warn' ? 'bg-amber-50 text-amber-700'
+        : 'bg-slate-100 text-slate-500'
   return (
     <button
       type="button"
       disabled={!clickable}
       onClick={() => clickable && onGo(s.to!)}
-      className={`group relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-all ${
+      className={`group relative flex flex-col gap-2.5 rounded-xl border p-4 text-left transition-all ${
         s.status === 'here'
           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
           : clickable
-            ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] cursor-pointer'
+            ? 'border-slate-100 hover:[border-color:var(--pf-primary-soft)] hover:shadow-sm cursor-pointer'
             : 'border-slate-100 bg-slate-50/60 cursor-default'
       }`}
     >
@@ -112,20 +132,37 @@ function SectionCard({ s, onGo }: { s: OpsSection; onGo: (to: string) => void })
         }`}>
           {s.icon}
         </span>
-        {s.status === 'here' && (
-          <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
-        )}
-        {s.status === 'soon' && (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">Đang phát triển</span>
-        )}
-        {clickable && (
-          <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
-        )}
+        <div className="flex items-center gap-1.5">
+          {s.status === 'here' && (
+            <span className="rounded-full [background:var(--pf-primary)] px-2 py-0.5 text-[10px] font-semibold text-white">Đang xem</span>
+          )}
+          {badge && (
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeCls}`}>{badge.text}</span>
+          )}
+          {clickable && (
+            <ChevronRight size={15} className="text-slate-300 transition-colors group-hover:[color:var(--pf-primary)]" />
+          )}
+        </div>
       </div>
       <div className="min-w-0">
         <p className={`text-sm font-semibold truncate ${s.status === 'soon' ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
-        <p className="text-[11px] text-slate-400 leading-snug">{s.desc}</p>
+        <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.desc}</p>
       </div>
+      {typeof progress === 'number' && (
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full rounded-full [background:var(--pf-primary)]" style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+        </div>
+      )}
+      {metrics && metrics.length > 0 && (
+        <div className="mt-0.5 grid grid-cols-3 gap-x-2 gap-y-2 border-t border-slate-100 pt-2.5">
+          {metrics.map((m) => (
+            <div key={m.label} className="min-w-0">
+              <p className="text-[15px] font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
+              <p className="mt-1 text-[10px] leading-tight text-slate-400 truncate">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </button>
   )
 }
@@ -138,14 +175,31 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
   )
 }
 
-function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <span className="text-slate-400">{icon}</span>
-      <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{children}</h3>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <span className="text-slate-400">{icon}</span>
+        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{children}</h3>
+      </div>
+      {right}
     </div>
   )
 }
+
+// ── Hàng KPI runtime tổng quan (9 chỉ số) ──
+interface Kpi9Def { key: string; label: string; icon: React.ReactNode; tone: string; pick: (o: RuntimeSummary['overview']) => number }
+const KPI9: Kpi9Def[] = [
+  { key: 'activeRules', label: 'Rule đang bật', icon: <ToggleRight size={15} />, tone: 'text-emerald-600', pick: (o) => o.activeRules },
+  { key: 'inactiveRules', label: 'Rule đang tắt', icon: <ToggleLeft size={15} />, tone: 'text-slate-400', pick: (o) => o.inactiveRules },
+  { key: 'runsToday', label: 'Runs hôm nay', icon: <Workflow size={15} />, tone: '[color:var(--pf-primary)]', pick: (o) => o.runsToday },
+  { key: 'aiActionsCreatedToday', label: 'AI Action đã tạo', icon: <Zap size={15} />, tone: 'text-sky-600', pick: (o) => o.aiActionsCreatedToday },
+  { key: 'pendingApprovals', label: 'Chờ duyệt', icon: <Inbox size={15} />, tone: 'text-amber-600', pick: (o) => o.pendingApprovals },
+  { key: 'successfulToday', label: 'Thành công', icon: <CheckCircle2 size={15} />, tone: 'text-emerald-600', pick: (o) => o.successfulToday },
+  { key: 'failedToday', label: 'Lỗi', icon: <AlertTriangle size={15} />, tone: 'text-red-500', pick: (o) => o.failedToday },
+  { key: 'duplicateSkippedToday', label: 'Bỏ qua trùng', icon: <Copy size={15} />, tone: 'text-slate-500', pick: (o) => o.duplicateSkippedToday },
+  { key: 'cooldownBlockedToday', label: 'Bị chặn cooldown', icon: <Timer size={15} />, tone: 'text-slate-500', pick: (o) => o.cooldownBlockedToday },
+]
 
 export function AiManagerDashboard() {
   const navigate = useNavigate()
@@ -153,18 +207,12 @@ export function AiManagerDashboard() {
   const goHub = (to: string) => navigate(to.includes('?') ? `${to}&from=aido` : `${to}?from=aido`)
   const role = useAuthStore(s => s.user?.role)
   const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
+  const rt = useOperationsRuntime()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
 
   const sections = useMemo(() => buildSections(role === 'SUPER_ADMIN'), [role])
 
-  const team = useMemo(() => {
-    if (teamFilter === 'active') return AI_TEAM.filter(t => t.implemented)
-    if (teamFilter === 'planned') return AI_TEAM.filter(t => !t.implemented)
-    return AI_TEAM
-  }, [teamFilter])
-
   const riskSignals: IntelSignal[] = [
-    // Cảnh báo vận hành thật (quỹ/công nợ/chuyên cần từ Finance Engine) — ưu tiên hiển thị trước.
     ...opsSignals,
     ...(intel?.attentionSignals ?? []),
     ...(intel?.dataQualitySignals ?? []),
@@ -172,8 +220,6 @@ export function AiManagerDashboard() {
 
   const fmtDuration = (s: number): string =>
     !s ? '—' : s < 60 ? `${s}s` : `${Math.round(s / 60)}m`
-  const countByAi = (agent: string): number =>
-    summary?.actionsByAi.find(x => x.ai === agent)?.count ?? 0
 
   // KPI hàng đợi duyệt — DỮ LIỆU DB THẬT (0 khi chưa có action, không giả lập).
   const queueKpis: { label: string; value: string | number; icon: React.ReactNode }[] = [
@@ -194,6 +240,201 @@ export function AiManagerDashboard() {
     { tone: (ex?.failedToday ?? 0) > 0 ? 'warn' : 'ok', label: 'Executor Mít Đặc', detail: ex ? `${ex.executedToday} thực thi · ${ex.failedToday} lỗi hôm nay · TB ${ex.averageExecutionMs ?? 0}ms` : 'Chưa có hoạt động hôm nay' },
     { tone: 'info', label: 'Đội ngũ AI', detail: `${implAgents}/${AI_TEAM.length} agent hoạt động` },
   ]
+
+  // ── Số liệu runtime nhúng vào từng card (từ runtime-summary + 3 endpoint tái dùng) ──
+  const m = rt.summary?.modules
+  const metricsFor = (key: string): { metrics?: CardMetric[]; badge?: { text: string; tone: 'ok' | 'warn' | 'muted' } | null; progress?: number | null } => {
+    if (!rt.summary) return {}
+    switch (key) {
+      case 'hermes': {
+        const h = m!.hermes
+        return {
+          progress: h.workflowToday > 0 ? Math.round((h.completedToday / h.workflowToday) * 100) : 0,
+          metrics: [
+            { label: 'Workflow', value: h.workflowToday },
+            { label: 'Running', value: h.running },
+            { label: 'Chờ duyệt', value: h.waitingApproval },
+            { label: 'Hoàn tất', value: h.completedToday },
+            { label: 'Lỗi', value: h.failedToday },
+          ],
+        }
+      }
+      case 'workflow': {
+        const w = m!.workflowStudio
+        return {
+          badge: { text: w.health === 'warn' ? 'Cảnh báo' : 'Healthy', tone: w.health === 'warn' ? 'warn' : 'ok' },
+          metrics: [
+            { label: 'Tổng rule', value: w.totalRules },
+            { label: 'Đang bật', value: w.activeRules },
+            { label: 'Manual', value: w.manualRules },
+            { label: 'Tắt', value: w.disabledRules },
+            { label: 'Runs', value: w.runsToday },
+          ],
+        }
+      }
+      case 'approval': {
+        const a = m!.approvalCenter
+        return {
+          metrics: [
+            { label: 'AI Action', value: a.totalToday },
+            { label: 'Chờ duyệt', value: a.pending },
+            { label: 'Đã duyệt', value: a.approvedToday },
+            { label: 'Từ chối', value: a.rejectedToday },
+            { label: 'Hết hạn', value: a.expiredToday },
+          ],
+        }
+      }
+      case 'dispatch': {
+        const ag = rt.summary.agents
+        return {
+          metrics: [
+            { label: 'Maika phân tích', value: ag.maika.analyses },
+            { label: 'Lisa hỏi–đáp', value: ag.lisa.answered },
+            { label: 'Mít Đặc thực thi', value: ag.mitDac.executed },
+          ],
+        }
+      }
+      case 'notif': {
+        const n = m!.notificationCenter
+        return {
+          metrics: [
+            { label: 'Đã gửi', value: n.sentToday },
+            { label: 'In-app', value: n.inApp },
+            { label: 'Email', value: n.email },
+            { label: 'Telegram', value: n.telegram },
+            { label: 'Lỗi', value: n.failedToday },
+          ],
+        }
+      }
+      case 'scheduler': {
+        const sc = m!.scheduler
+        return {
+          badge: { text: sc.autoEnabled ? 'Tự động' : 'Thủ công', tone: sc.autoEnabled ? 'ok' : 'muted' },
+          metrics: [
+            { label: 'Daily', value: sc.daily },
+            { label: 'Weekly', value: sc.weekly },
+            { label: 'Monthly', value: sc.monthly },
+            { label: 'Manual', value: sc.manual },
+          ],
+        }
+      }
+      case 'alert': {
+        if (!rt.alerts) return {}
+        const a = rt.alerts
+        return {
+          badge: a.total > 0 ? { text: `${a.total} mở`, tone: 'warn' } : { text: 'Ổn định', tone: 'ok' },
+          metrics: [
+            { label: 'Tổng', value: a.total },
+            { label: 'High', value: a.high },
+            { label: 'Medium', value: a.medium },
+            { label: 'Critical', value: a.critical },
+          ],
+        }
+      }
+      case 'monitor': {
+        if (!rt.dataMonitor) return {}
+        const d = rt.dataMonitor
+        return {
+          badge: { text: d.status === 'warn' ? 'Cảnh báo' : 'OK', tone: d.status === 'warn' ? 'warn' : 'ok' },
+          metrics: [
+            { label: 'Integrity', value: `${d.integrityPct}%` },
+            { label: 'Vấn đề', value: d.issues },
+            { label: 'Kiểm tra', value: d.checks },
+          ],
+        }
+      }
+      case 'kpi': {
+        if (!rt.kpi || rt.kpi.score == null) return {}
+        return {
+          metrics: [
+            { label: 'Health Score', value: `${rt.kpi.score}/100` },
+            { label: rt.kpi.interpretation ?? 'Sức khỏe CLB', value: rt.kpi.score >= 70 ? 'Ổn định' : rt.kpi.score >= 50 ? 'Theo dõi' : 'Cần cải thiện' },
+          ],
+        }
+      }
+      case 'memory': {
+        const c = m!.clubMemory
+        const top = [...c.byType].sort((a, b) => b.count - a.count).slice(0, 3)
+        return {
+          metrics: [
+            { label: 'Tổng memory', value: c.total },
+            ...top.map((t) => ({ label: MEMORY_LABEL[t.type] ?? t.type, value: t.count })),
+          ],
+        }
+      }
+      case 'audit': {
+        const a = m!.auditLogs
+        const top = a.byAction.slice(0, 3)
+        return {
+          metrics: [
+            { label: 'Tổng (hôm nay)', value: a.total },
+            ...top.map((t) => ({ label: t.name, value: t.count })),
+          ],
+        }
+      }
+      default:
+        return {}
+    }
+  }
+
+  // ── Đội ngũ AI (5 agent) — số liệu runtime THẬT đúng nhiệm vụ từng agent ──
+  const ag = rt.summary?.agents
+  const rosterAll = useMemo(() => {
+    const t = (iso: string | null) => `Cập nhật ${fmtTime(iso)}`
+    const gen = rt.generatedAt
+    return [
+      {
+        key: 'maika', name: 'Maika', role: 'Quản lý & Trí tuệ CLB', implemented: true,
+        stats: ag ? [
+          { l: 'Phân tích', v: ag.maika.analyses },
+          { l: 'Cảnh báo', v: rt.alerts?.total ?? '—' },
+          { l: 'Khuyến nghị', v: ag.maika.recommendations },
+        ] : null,
+        foot: t(gen),
+      },
+      {
+        key: 'lisa', name: 'Lisa', role: 'Trợ lý thành viên & nhắc nhở', implemented: true,
+        stats: ag ? [
+          { l: 'Hỗ trợ', v: ag.lisa.support },
+          { l: 'Giải đáp', v: ag.lisa.answered },
+        ] : null,
+        foot: t(gen),
+      },
+      {
+        key: 'hermes', name: 'Hermes', role: 'Điều phối workflow & thông báo', implemented: true,
+        stats: ag ? [
+          { l: 'Workflow', v: ag.hermes.workflow },
+          { l: 'Approval', v: ag.hermes.approval },
+          { l: 'Completed', v: ag.hermes.completed },
+        ] : null,
+        foot: t(gen),
+      },
+      {
+        key: 'mit-dac', name: 'Mít Đặc', role: 'Executor (thực thi hành động đã duyệt)', implemented: true,
+        stats: ag ? [
+          { l: 'Thực thi', v: ag.mitDac.executed },
+          { l: 'Lỗi', v: ag.mitDac.errors },
+          { l: 'TB thời gian', v: fmtMs(ag.mitDac.avgMs) },
+        ] : null,
+        foot: t(gen),
+      },
+      {
+        key: 'notification', name: 'Notification AI', role: 'Gửi thông báo đa kênh', implemented: true,
+        stats: ag ? [
+          { l: 'Đã gửi', v: ag.notification.sent },
+          { l: 'Lỗi', v: ag.notification.errors },
+          { l: 'Tỷ lệ', v: `${ag.notification.successRate}%` },
+        ] : null,
+        foot: t(gen),
+      },
+    ]
+  }, [ag, rt.alerts, rt.generatedAt])
+
+  const roster = useMemo(() => {
+    if (teamFilter === 'planned') return rosterAll.filter(r => !r.implemented)
+    if (teamFilter === 'active') return rosterAll.filter(r => r.implemented)
+    return rosterAll
+  }, [rosterAll, teamFilter])
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
@@ -235,7 +476,53 @@ export function AiManagerDashboard() {
       </div>
 
       <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
-        {/* Hub điều hướng — 11 khu vực gom theo cụm chức năng */}
+        {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
+        <div>
+          <div className="mb-2.5 flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tổng quan runtime hôm nay</p>
+            <div className="flex items-center gap-2">
+              {rt.stale && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Không thể cập nhật</span>
+              )}
+              {rt.generatedAt && !rt.stale && (
+                <span className="hidden sm:inline text-[11px] text-slate-400">Cập nhật {fmtTime(rt.generatedAt)}</span>
+              )}
+              <button
+                onClick={rt.refresh}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                title="Làm mới số liệu runtime"
+              >
+                <RefreshCw size={12} className={rt.loading ? 'animate-spin' : ''} /> Làm mới
+              </button>
+            </div>
+          </div>
+          {rt.loading && !rt.summary ? (
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="h-[74px] animate-pulse rounded-xl border border-slate-100 bg-slate-50" />
+              ))}
+            </div>
+          ) : rt.error && !rt.summary ? (
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs text-amber-800">Không tải được số liệu runtime — hệ thống sẽ tự thử lại.</p>
+              <button onClick={rt.refresh} className="shrink-0 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">Thử lại</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+              {KPI9.map((k) => (
+                <div key={k.key} className="rounded-xl border border-slate-100 bg-white p-3 shadow-sm" title={k.label}>
+                  <span className={`${k.tone} inline-flex`}>{k.icon}</span>
+                  <p className={`mt-1.5 text-xl font-bold leading-none tabular-nums ${k.tone}`}>
+                    {rt.summary ? k.pick(rt.summary.overview) : '—'}
+                  </p>
+                  <p className="mt-1 text-[10px] leading-tight text-slate-400 line-clamp-2">{k.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Hub điều hướng — gom theo cụm chức năng, mỗi card có số liệu runtime THẬT */}
         <Card>
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <div className="space-y-5">
@@ -245,10 +532,11 @@ export function AiManagerDashboard() {
               return (
                 <div key={group}>
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {items.map(s => (
-                      <SectionCard key={s.key} s={s} onGo={goHub} />
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {items.map(s => {
+                      const extra = metricsFor(s.key)
+                      return <SectionCard key={s.key} s={s} onGo={goHub} metrics={extra.metrics} badge={extra.badge} progress={extra.progress} />
+                    })}
                   </div>
                 </div>
               )
@@ -266,78 +554,69 @@ export function AiManagerDashboard() {
           </p>
         </div>
 
-        {/* AI Team roster */}
+        {/* AI Team roster — số liệu runtime THẬT đúng nhiệm vụ từng agent */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <PanelTitle icon={<Bot size={16} />}>Đội Ngũ AI</PanelTitle>
-            <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-0.5 text-xs">
-              {([['all', 'Tất cả'], ['active', 'Hoạt động'], ['planned', 'Dự kiến']] as const).map(([v, l]) => (
-                <button
-                  key={v}
-                  onClick={() => setTeamFilter(v)}
-                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                    teamFilter === v ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {team.map(t => {
-              const ac = ACCENT[t.accent] ?? ACCENT.slate
-              const online = t.implemented && (t.key !== 'maika' || availability.intel || availability.policies)
-              return (
-                <div key={t.key} className="rounded-xl border border-slate-100 p-4 flex flex-col gap-2">
+          <PanelTitle
+            icon={<Bot size={16} />}
+            right={
+              <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-0.5 text-xs">
+                {([['all', 'Tất cả'], ['active', 'Hoạt động'], ['planned', 'Dự kiến']] as const).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => setTeamFilter(v)}
+                    className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                      teamFilter === v ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            }
+          >Đội Ngũ AI</PanelTitle>
+          {roster.length === 0 ? (
+            <p className="text-sm text-slate-400">Không có agent nào ở bộ lọc này.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+              {roster.map(t => (
+                <div key={t.key} className="rounded-xl border border-slate-100 p-4 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-full ${ac.bg}`}>
-                      <Bot size={16} className={ac.text} />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
+                      <Bot size={16} className="[color:var(--pf-primary)]" />
                     </span>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      t.implemented ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-500' : t.implemented ? 'bg-amber-400' : 'bg-slate-400'}`} />
-                      {t.implemented ? (online ? 'Hoạt động' : 'Chờ') : 'Chưa triển khai'}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Hoạt động
                     </span>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-800">{t.name}</p>
-                    <p className="text-xs text-slate-500 leading-snug">{t.role}</p>
+                    <p className="text-xs text-slate-500 leading-snug line-clamp-2">{t.role}</p>
                   </div>
-                  {t.agent === 'MIT_DAT' && summary?.executor ? (
-                    <>
-                      <div className="mt-1 grid grid-cols-2 gap-1 text-center">
-                        {[
-                          { l: 'Đang chạy', v: summary.executor.running },
-                          { l: 'Xong hôm nay', v: summary.executor.executedToday },
-                          { l: 'Lỗi hôm nay', v: summary.executor.failedToday },
-                          { l: 'TB (ms)', v: summary.executor.averageExecutionMs },
-                        ].map(s => (
-                          <div key={s.l} className="rounded-lg bg-slate-50 py-1">
-                            <p className="text-sm font-bold text-slate-700">{s.v}</p>
-                            <p className="text-[10px] text-slate-400">{s.l}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[10px] text-emerald-600 font-medium">Executor · Mít Đặc</p>
-                    </>
+                  {t.stats ? (
+                    <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                      {t.stats.map(s => (
+                        <div key={s.l} className="rounded-lg bg-slate-50 py-1.5">
+                          <p className="text-sm font-bold text-slate-700 tabular-nums">{s.v}</p>
+                          <p className="text-[10px] text-slate-400 leading-tight">{s.l}</p>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <>
-                      <div className="mt-1 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5">
-                        <span className="text-[11px] text-slate-500">Hành động đã tạo</span>
-                        <span className="text-sm font-bold text-slate-700">{countByAi(t.agent)}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400">Module: {t.module}</p>
-                    </>
+                    <div className="grid grid-cols-3 gap-1">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-[38px] animate-pulse rounded-lg bg-slate-50" />
+                      ))}
+                    </div>
                   )}
+                  <p className="text-[10px] text-slate-400">{t.foot}</p>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
 
-        {/* KPI cards — dữ liệu DB thật (/ai/actions/summary) */}
+        {/* KPI cards — hàng đợi duyệt (dữ liệu DB thật /ai/actions/summary) */}
         <div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {queueKpis.map(k => (
@@ -445,7 +724,6 @@ export function AiManagerDashboard() {
                     <span className="text-right text-[11px] text-slate-500">{h.detail}</span>
                   </div>
                 ))}
-                {/* Tín hiệu tri thức nền (nếu CLB có Club Memory) */}
                 {(intel?.healthSignals ?? []).map((s, i) => (
                   <div key={`hs-${i}`} className="flex items-start gap-2 border-t border-slate-50 pt-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />

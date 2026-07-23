@@ -858,6 +858,11 @@ export class HermesWorkflowService {
         : [];
       const createdActionIds: string[] = [];
       let skippedActionCount = 0;
+      // Ghi nhận TỐI THIỂU tách nguyên nhân bỏ qua (dedup vs cooldown) vào chính resultJson
+      // hiện có — KHÔNG bảng/subsystem mới, KHÔNG migration. AI Operations Center đọc lại để
+      // hiển thị KPI "Bỏ qua trùng" (duplicate) và "Bị chặn cooldown" (cooldown) theo ngày.
+      let skippedDuplicateCount = 0;
+      let skippedCooldownCount = 0;
       for (const raw of actions) {
         const a = (raw ?? {}) as WfAction;
         if (a.type !== 'CREATE_AI_ACTION') continue; // chỉ tạo AiAction; type khác bỏ qua (an toàn)
@@ -884,6 +889,8 @@ export class HermesWorkflowService {
         );
         if ('skipped' in created) {
           skippedActionCount += 1; // trùng/cooldown → không tạo mới
+          if (created.skipped === 'SKIPPED_COOLDOWN') skippedCooldownCount += 1;
+          else skippedDuplicateCount += 1;
         } else {
           createdActionIds.push(created.id);
         }
@@ -900,6 +907,8 @@ export class HermesWorkflowService {
             createdActionIds,
             actionCount: createdActionIds.length,
             skippedActionCount,
+            skippedDuplicateCount,
+            skippedCooldownCount,
           },
           completedAt: new Date(),
         },

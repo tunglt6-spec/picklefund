@@ -6,6 +6,7 @@ import { AidoGateway } from './aido.gateway';
 import { AidoController } from './aido.controller';
 import { AgentActivityService } from './agent-activity.service';
 import { AgentResultsService } from './agent-results.service';
+import { OperationsRuntimeService } from './operations-runtime.service';
 
 /**
  * AidoModule — WebSocket real-time + theo dõi hoạt động agent cho AIDO.
@@ -25,7 +26,12 @@ import { AgentResultsService } from './agent-results.service';
     }),
   ],
   controllers: [AidoController],
-  providers: [AidoGateway, AgentActivityService, AgentResultsService],
+  providers: [
+    AidoGateway,
+    AgentActivityService,
+    AgentResultsService,
+    OperationsRuntimeService,
+  ],
   exports: [AidoGateway, AgentActivityService],
 })
 export class AidoModule {}
