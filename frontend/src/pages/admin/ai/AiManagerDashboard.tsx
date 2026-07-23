@@ -104,6 +104,9 @@ function resolveReadRoute(endpoint: string): string | null {
 }
 
 const fmtMs = (ms: number): string => (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`)
+/** Thời lượng (giây) → s/m/h gọn; 0/undefined → '—'. Dùng cho TG duyệt trung bình. */
+const fmtDur = (s?: number): string =>
+  !s || s <= 0 ? '—' : s < 60 ? `${s}s` : s < 3600 ? `${Math.round(s / 60)}m` : `${(s / 3600).toFixed(1)}h`
 const fmtTime = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—'
 
@@ -293,6 +296,7 @@ export function AiManagerDashboard() {
             { label: 'Đã duyệt', value: a.approvedToday },
             { label: 'Từ chối', value: a.rejectedToday },
             { label: 'Hết hạn', value: a.expiredToday },
+            { label: 'TG duyệt TB', value: fmtDur(summary?.averageApprovalTime) },
           ],
         }
       }
