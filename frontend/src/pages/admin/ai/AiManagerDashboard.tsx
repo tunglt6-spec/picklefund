@@ -261,7 +261,8 @@ export function AiManagerDashboard() {
   const runtimeHealth: { tone: 'ok' | 'warn' | 'info'; label: string; detail: string }[] = [
     { tone: availability.actions ? 'ok' : 'warn', label: 'AI Action Center', detail: availability.actions ? 'Kết nối' : 'Không khả dụng' },
     { tone: availability.intel ? 'ok' : 'warn', label: 'Maika Intelligence', detail: availability.intel ? 'Kết nối' : 'Không khả dụng' },
-    { tone: (ex?.failedToday ?? 0) > 0 ? 'warn' : 'ok', label: 'Executor Mít Đặc', detail: ex ? `${ex.executedToday} thực thi · ${ex.failedToday} lỗi hôm nay · TB ${ex.averageExecutionMs ?? 0}ms` : 'Chưa có hoạt động hôm nay' },
+    // Chỉ báo TÌNH TRẠNG (không lặp lại số thực thi/TB — đã có ở card Mít Đặc mục Đội ngũ AI).
+    { tone: (ex?.failedToday ?? 0) > 0 ? 'warn' : 'ok', label: 'Executor Mít Đặc', detail: !ex ? 'Chưa có hoạt động hôm nay' : ex.failedToday > 0 ? `${ex.failedToday} lỗi hôm nay` : 'Hoạt động ổn định' },
     { tone: 'info', label: 'Đội ngũ AI', detail: `${implAgents}/${AI_TEAM.length} agent hoạt động` },
   ]
 
@@ -310,14 +311,8 @@ export function AiManagerDashboard() {
         }
       }
       case 'dispatch': {
-        const ag = rt.summary.agents
-        return {
-          metrics: [
-            { label: 'Maika phân tích', value: ag.maika.analyses },
-            { label: 'Lisa hỏi–đáp', value: ag.lisa.answered },
-            { label: 'Mít Đặc thực thi', value: ag.mitDac.executed },
-          ],
-        }
+        // Nhật ký AI = card điều hướng; số theo agent đã hiển thị ở mục Đội ngũ AI → không lặp lại.
+        return {}
       }
       case 'notif': {
         const n = m!.notificationCenter

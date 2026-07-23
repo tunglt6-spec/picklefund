@@ -518,10 +518,11 @@ export function AiDigitalOffice() {
 
       {tab === 'operations' && (
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {/* Vận hành = tập trung hàng đợi/live. "Tác vụ hôm nay" (executed) chỉ hiển thị ở tab
+              Analytics để tránh trùng số giữa 2 tab. */}
+          <div className="grid grid-cols-3 gap-3">
             <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={running} />
             <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" value={pending} />
-            <MetricCard icon={<CheckCircle2 size={18} />} accent="teal" label="Hôm nay" value={executedToday} sub="Đã thực thi" />
             <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" value={failed} negative={failed > 0} />
           </div>
 
