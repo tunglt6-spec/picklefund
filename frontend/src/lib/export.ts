@@ -607,6 +607,54 @@ export async function exportReportsPDF(data: ReportSummary, memberBills?: Member
 }
 
 /* ════════════════════════════════════════
+   EXPORT: Báo cáo Chi phí (PDF vector)
+════════════════════════════════════════ */
+export interface ExpenseReportSummaryInput {
+  clubName: string
+  periodName: string
+  totalAll: number
+  totalCommon: number
+  totalMini: number
+  totalApproved: number
+  totalPending: number
+  count: number
+}
+export interface ExpenseReportRowInput {
+  code: string
+  description: string
+  kindLabel: string
+  dateText: string
+  amount: number
+  statusKey: 'approved' | 'pending' | 'paid' | 'rejected'
+}
+
+export async function exportExpensesPDF(
+  summary: ExpenseReportSummaryInput,
+  rows: ExpenseReportRowInput[],
+) {
+  const [{ default: jsPDF }, fonts, { buildExpenseReportPDF }, logo] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+    loadBrandLogo(),
+  ])
+  const now = new Date()
+  const doc = buildExpenseReportPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter(), logo },
+    summary: {
+      ...summary,
+      exportedDateText: now.toLocaleDateString('vi-VN'),
+      exportedAtText: now.toLocaleString('vi-VN'),
+    },
+    rows,
+  })
+  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  return savePdfDoc(doc, `BaoCao_ChiPhi_${slug(summary.clubName)}_${slug(summary.periodName)}`)
+}
+
+/* ════════════════════════════════════════
    EXPORT: Phiếu Thu Quỹ Phụ
 ════════════════════════════════════════ */
 export interface MiniIncomeReceiptData {

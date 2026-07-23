@@ -3,6 +3,7 @@ import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
   FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag, Paperclip,
+  Landmark, Coffee, Check, FileDown,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +18,7 @@ import { useBulkSelection } from '../../hooks/useBulkSelection'
 import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
+import { exportExpensesPDF } from '../../lib/export'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
@@ -36,13 +38,6 @@ const ruleLabels: Record<AllocationRule, string> = {
   PRESENT_ONLY: 'Theo số người tham gia',
   FUND_ONLY:    'Quỹ Chính',
 }
-const ruleHint: Record<AllocationRule, string> = {
-  ATTENDANCE:   'Phân bổ chi phí theo số buổi tham gia thực tế của từng thành viên',
-  EQUAL:        'Chia đều cho tất cả thành viên CLB',
-  PRESENT_ONLY: 'Chỉ tính cho người có mặt buổi đó',
-  FUND_ONLY:    'Chi Quỹ Chính, không phân bổ cá nhân',
-}
-
 const statusCfg: Record<ExpenseStatus, { label: string; variant: 'green' | 'yellow' | 'indigo' | 'red' }> = {
   approved: { label: 'Đã duyệt',      variant: 'green' },
   pending:  { label: 'Chờ duyệt',     variant: 'yellow' },
@@ -108,11 +103,12 @@ const emptyForm = {
 
 type Category = { id: string; name: string; icon?: string | null; isDefault: boolean }
 
-function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, allPeriods, defaultPeriodId }: {
+function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, allPeriods, defaultPeriodId, memberCount }: {
   open: boolean; onClose: () => void; onSave: (form: typeof emptyForm) => void
   editExpense?: LivingExpense | null; isSaving?: boolean; categories: Category[]
   allPeriods: { id: string; name: string; status: string }[]
   defaultPeriodId: string
+  memberCount: number
 }) {
   const isEdit = !!editExpense
   const [form, setForm] = useState({ ...emptyForm, fundPeriodId: defaultPeriodId })
@@ -134,44 +130,61 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
   }
   if (!open) return null
   const isMini = form.fundSource === 'MINI'
+
+  // Thẻ chọn loại chi (Quỹ Chính): sân LUÔN chia đều, sinh hoạt được chọn cách chia.
+  const costCards: { key: CostType; icon: React.ReactNode; title: string; hint: string }[] = [
+    { key: 'COURT', icon: <Landmark size={17} />, title: 'Tiền thuê sân', hint: 'Chia đều mọi người' },
+    { key: 'LIVING', icon: <Coffee size={17} />, title: 'Chi phí sinh hoạt', hint: 'Nước, ăn, bóng…' },
+  ]
+  // Các cách chia sinh hoạt (chip) — nhãn ngắn gọn, đủ 4 lựa chọn nghiệp vụ.
+  const livingRules: { key: AllocationRule; label: string; hint: string }[] = [
+    { key: 'EQUAL', label: 'Chia đều', hint: 'Mọi thành viên như nhau' },
+    { key: 'ATTENDANCE', label: 'Theo số buổi', hint: 'Ai đi nhiều trả nhiều' },
+    { key: 'PRESENT_ONLY', label: 'Người có mặt', hint: 'Chỉ người dự buổi đó' },
+    { key: 'FUND_ONLY', label: 'Không phân bổ', hint: 'Chỉ tính vào quỹ, không chia' },
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="flex-1 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-semibold text-slate-900">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi mới'}</h2>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <h2 className="text-[15px] font-bold text-slate-900">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'}</h2>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {isMini ? 'Quỹ Phụ · không phân bổ cho thành viên' : 'Quỹ Chính · phân bổ cho thành viên'}
+            </p>
+          </div>
           <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
             <X size={16} />
           </button>
         </div>
+
         <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden" key={editExpense?.id ?? 'new'}>
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-            {/* Fund source selector */}
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Chi từ nguồn quỹ</p>
-              <div className="grid grid-cols-2 gap-2">
-                {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
-                  <button key={fs} type="button"
-                    onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
-                    className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
-                      form.fundSource === fs
-                        ? fs === 'COMMON'
-                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                    }`}>
-                    {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
-                    {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
-                  </button>
-                ))}
-              </div>
+          <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+            {/* 1 · Nguồn quỹ — segmented control */}
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+              {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
+                <button key={fs} type="button"
+                  onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all ${
+                    form.fundSource === fs
+                      ? 'bg-white shadow-sm [color:var(--pf-primary)]'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}>
+                  {fs === 'COMMON' ? <DollarSign size={15} /> : <Wallet size={15} />}
+                  {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
+                </button>
+              ))}
             </div>
 
+            {/* 2 · Kỳ quỹ (Quỹ Chính) */}
             {!isMini && allPeriods.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                 <select required value={form.fundPeriodId} onChange={e => setForm(f => ({ ...f, fundPeriodId: e.target.value }))} className="input-base">
-                  <option value="">-- Chọn kỳ quỹ --</option>
+                  <option value="">— Chọn kỳ quỹ —</option>
                   {allPeriods.map(p => (
                     <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
                   ))}
@@ -179,38 +192,35 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
             )}
 
+            {/* 3 · Nội dung */}
             <div>
-              <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <FileText size={11} />Thông tin khoản chi
-              </p>
-              <div className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
-                  <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                    placeholder={isMini ? 'VD: Thưởng đội vô địch, Chi liên hoan...' : 'VD: Tiền sân buổi sáng T7, Nước uống...'}
-                    className="input-base" />
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
+              <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder={isMini ? 'VD: Thưởng đội vô địch, Chi liên hoan…' : 'VD: Tiền thuê sân T7, Nước uống…'}
+                className="input-base" />
+            </div>
+
+            {/* 4 · Số tiền + Ngày */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
+                    placeholder="0" className="input-base pr-8 text-right font-semibold tabular-nums" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">đ</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Số Tiền (VND) <span className="text-red-500">*</span></label>
-                    <input required type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
-                      placeholder="Nhập số tiền" className="input-base" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
-                    <input required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
-                  </div>
-                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
+                <input required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
               </div>
             </div>
 
+            {/* 5 · Cách tính (Quỹ Chính) hoặc chi tiết Quỹ Phụ */}
             {isMini ? (
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 <div>
-                  <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Wallet size={11} />Chi tiết Quỹ Phụ
-                  </p>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại chi <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Loại chi Quỹ Phụ <span className="text-red-500">*</span></label>
                   <select required value={form.miniExpenseType}
                     onChange={e => setForm({ ...form, miniExpenseType: e.target.value as MiniExpenseType })} className="input-base">
                     {(Object.entries(MINI_EXPENSE_TYPE_LABELS) as [MiniExpenseType, string][]).map(([k, v]) => (
@@ -219,57 +229,73 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nhận (nếu có)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Người nhận <span className="text-slate-400 font-normal">(nếu có)</span></label>
                   <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
-                <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
-                  Khoản chi này không phân bổ cho thành viên và không ảnh hưởng đến công nợ cá nhân.
+                <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-[11px] [color:var(--pf-primary)]">
+                  <Wallet size={13} className="mt-0.5 shrink-0" />
+                  <span>Khoản Quỹ Phụ không phân bổ cho thành viên, không ảnh hưởng công nợ cá nhân.</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {/* Loại chi phí (luật Quỹ): sân LUÔN chia đều; sinh hoạt được chọn cách chia */}
-                <div>
-                  <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                    <Users size={11} />Loại chi phí <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([['COURT', 'Tiền thuê sân'], ['LIVING', 'Chi phí sinh hoạt']] as [CostType, string][]).map(([k, v]) => (
-                      <button key={k} type="button"
-                        onClick={() => setForm({ ...form, costType: k, ...(k === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
-                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${form.costType === k
-                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                        {v}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-2">Loại chi phí <span className="text-red-500">*</span></label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {costCards.map(c => {
+                    const active = form.costType === c.key
+                    return (
+                      <button key={c.key} type="button"
+                        onClick={() => setForm({ ...form, costType: c.key, ...(c.key === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
+                        className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-3 text-left transition-all ${
+                          active
+                            ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}>
+                        {active && <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-white" style={{ background: 'var(--pf-primary)' }}><Check size={11} /></span>}
+                        <span className={active ? '[color:var(--pf-primary)]' : 'text-slate-400'}>{c.icon}</span>
+                        <span className={`text-[13px] font-semibold ${active ? '[color:var(--pf-primary)]' : 'text-slate-700'}`}>{c.title}</span>
+                        <span className="text-[10.5px] leading-tight text-slate-400">{c.hint}</span>
                       </button>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
+
+                {/* Sân → chia đều; Sinh hoạt → chọn cách chia bằng chip */}
                 {form.costType === 'COURT' ? (
-                  <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
-                    Tiền thuê sân luôn <b>chia đều</b> cho tất cả thành viên (luật Quỹ).
+                  <div className="mt-2.5 flex items-center gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-[11px] [color:var(--pf-primary)]">
+                    <Users size={13} className="shrink-0" />
+                    <span>Chia đều cho <b>{memberCount > 0 ? `${memberCount} thành viên` : 'tất cả thành viên'}</b> (luật Quỹ).</span>
                   </div>
                 ) : (
-                  <div>
-                    <p className="text-[10px] font-bold [color:var(--pf-primary)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                      Cách chia sinh hoạt <span className="text-red-500 font-normal normal-case tracking-normal">*</span>
-                    </p>
-                    <select value={form.allocationRule}
-                      onChange={e => setForm({ ...form, allocationRule: e.target.value as AllocationRule })} className="input-base">
-                      {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-slate-400 mt-1.5">{ruleHint[form.allocationRule]}</p>
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-slate-600 mb-2">Cách chia sinh hoạt <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {livingRules.map(r => {
+                        const active = form.allocationRule === r.key
+                        return (
+                          <button key={r.key} type="button"
+                            onClick={() => setForm({ ...form, allocationRule: r.key })}
+                            className={`rounded-lg border px-2.5 py-2 text-left transition-all ${
+                              active
+                                ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
+                                : 'border-slate-200 hover:border-slate-300'
+                            }`}>
+                            <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : 'text-slate-700'}`}>{r.label}</span>
+                            <span className="block text-[10px] leading-tight text-slate-400">{r.hint}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
+            {/* 6 · Danh mục (tuỳ chọn) */}
             {categories.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Danh mục <span className="text-slate-400 font-normal">(nếu có)</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Danh mục <span className="text-slate-400 font-normal">(nếu có)</span></label>
                 <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="input-base">
                   <option value="">— Không phân loại —</option>
                   {categories.map(c => (
@@ -279,17 +305,19 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
             )}
 
+            {/* 7 · Ghi chú */}
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú <span className="text-slate-400 font-normal">(nếu có)</span></label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Ghi chú <span className="text-slate-400 font-normal">(nếu có)</span></label>
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                maxLength={200} rows={3} className="input-base resize-none"
-                placeholder="Nhập ghi chú (nếu có)" />
+                maxLength={200} rows={2} className="input-base resize-none"
+                placeholder="Ghi chú thêm cho khoản chi…" />
               <p className="text-right text-[10px] text-slate-400 mt-1">{form.notes.length}/200</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+
+          <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50/50">
             <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}>Hủy bỏ</Button>
-            <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu...' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
+            <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu…' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
           </div>
         </form>
       </div>
@@ -478,6 +506,8 @@ export function Expenses() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
+  // Sĩ số hiển thị cho gợi ý "chia đều cho N thành viên" trong form.
+  const memberCount = clubData.members.filter(m => m.status === 'active').length
 
   const allPeriods = useMemo(() =>
     [...clubData.fundPeriods]
@@ -728,6 +758,38 @@ export function Expenses() {
     XLSX.writeFile(wb, `chi-phi-${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
+  const ruleShort: Record<AllocationRule, string> = {
+    EQUAL: 'Chia đều', ATTENDANCE: 'Theo buổi', PRESENT_ONLY: 'Người có mặt', FUND_ONLY: 'Không phân bổ',
+  }
+  const exportPDF = async () => {
+    if (filtered.length === 0) { toast.error('Không có khoản chi nào để xuất'); return }
+    const rows = filtered.map(e => ({
+      code: e.code,
+      description: e.description,
+      kindLabel: e.fundSource === 'MINI'
+        ? (e.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[e.miniExpenseType] : 'Quỹ Phụ')
+        : `${e.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleShort[e.allocationRule]}`,
+      dateText: e.expenseDate ? formatDate(e.expenseDate) : '',
+      amount: e.amount,
+      statusKey: e.status,
+    }))
+    try {
+      await exportExpensesPDF({
+        clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
+        periodName: allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Tất cả kỳ',
+        totalAll: filtered.reduce((s, e) => s + e.amount, 0),
+        totalCommon: filtered.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON').reduce((s, e) => s + e.amount, 0),
+        totalMini: filtered.filter(e => e.fundSource === 'MINI').reduce((s, e) => s + e.amount, 0),
+        totalApproved: filtered.filter(e => e.status === 'approved' || e.status === 'paid').reduce((s, e) => s + e.amount, 0),
+        totalPending: filtered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0),
+        count: filtered.length,
+      }, rows)
+      toast.success('Đã xuất PDF Chi phí!')
+    } catch {
+      toast.error('Không thể xuất PDF. Vui lòng thử lại.')
+    }
+  }
+
   const isMobile = useIsMobile()
 
   /* ── Mobile layout ── */
@@ -761,6 +823,10 @@ export function Expenses() {
               <button onClick={exportExcel} aria-label="Xuất Excel"
                 className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
                 <Download size={16} />
+              </button>
+              <button onClick={exportPDF} aria-label="Xuất PDF"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+                <FileDown size={16} />
               </button>
               <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
                 className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
@@ -889,8 +955,8 @@ export function Expenses() {
           <ReceiptUploadModal expenseId={receiptTarget.id} expenseLabel={receiptTarget.description}
             onSuccess={handleReceiptSuccess} onClose={() => setReceiptTarget(null)} />
         )}
-        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
-        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
+        <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
+        <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
         <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
       </div>
     )
@@ -926,6 +992,7 @@ export function Expenses() {
             {!isMember && <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>}
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
             <Button variant="outline" size="sm" onClick={exportExcel}><Download size={13} />Xuất Excel</Button>
+            <Button variant="outline" size="sm" onClick={exportPDF}><FileDown size={13} />Xuất PDF</Button>
             {!isMember && <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>}
           </div>
         </div>
@@ -1099,7 +1166,7 @@ export function Expenses() {
       </div>
 
       {/* Drawers & modals */}
-      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} />
+      <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
       <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
 
       {/* Categories management modal */}

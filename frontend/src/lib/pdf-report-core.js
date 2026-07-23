@@ -33,6 +33,7 @@ const C = {
   redBorder: [254, 202, 202],
   orange: [234, 88, 12], // #EA580C
   cyan: [8, 145, 178], // #0891B2
+  amber: [217, 119, 6], // #D97706 (chờ duyệt)
   white: [255, 255, 255],
 }
 
@@ -553,5 +554,189 @@ export function buildMiniReceiptPDF({ jsPDF, fonts, receipt, branding }) {
   doc.text(`${branding.footer || 'PickleFund'} · ${receipt.clubName} · Xuất lúc ${receipt.printedAtText}`, MARGIN, fy)
   doc.text('Trang 1 / 1', PAGE_W - MARGIN, fy, { align: 'right' })
 
+  return doc
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BÁO CÁO CHI PHÍ — vector, dùng chung mọi CLB.
+   summary = { clubName, periodName, totalAll, totalCommon, totalMini,
+               totalApproved, totalPending, count, exportedDateText, exportedAtText }
+   rows = [{ code, description, kindLabel, dateText, amount, statusKey }]
+     statusKey ∈ 'approved' | 'pending' | 'paid' | 'rejected'
+═══════════════════════════════════════════════════════════════════ */
+const EXP_STATUS = {
+  approved: { label: 'Đã duyệt', color: C.green },
+  paid: { label: 'Đã chi', color: C.cyan },
+  pending: { label: 'Chờ duyệt', color: C.amber },
+  rejected: { label: 'Từ chối', color: C.red },
+}
+
+export function buildExpenseReportPDF({ jsPDF, fonts, summary, rows, branding }) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  doc.addFileToVFS('BeVietnamPro-Regular.ttf', fonts.regular)
+  doc.addFileToVFS('BeVietnamPro-Bold.ttf', fonts.bold)
+  doc.addFont('BeVietnamPro-Regular.ttf', 'BVP', 'normal')
+  doc.addFont('BeVietnamPro-Bold.ttf', 'BVP', 'bold')
+
+  const setFill = (c) => doc.setFillColor(c[0], c[1], c[2])
+  const setDraw = (c) => doc.setDrawColor(c[0], c[1], c[2])
+  const setText = (c) => doc.setTextColor(c[0], c[1], c[2])
+  const font = (style, size, color) => {
+    doc.setFont('BVP', style)
+    doc.setFontSize(size)
+    if (color) setText(color)
+  }
+  const rrect = (x, y, w, h, r, mode) => doc.roundedRect(x, y, w, h, r, r, mode)
+  const clip = (text, maxW) => {
+    let t = String(text ?? '')
+    if (doc.getTextWidth(t) <= maxW) return t
+    while (t.length > 1 && doc.getTextWidth(t + '…') > maxW) t = t.slice(0, -1)
+    return t + '…'
+  }
+
+  const drawHeader = (subtitle) => {
+    const h = 26
+    setFill(C.indigoDark)
+    rrect(MARGIN, MARGIN, CONTENT_W, h, 2.5, 'F')
+    setFill(C.indigo)
+    doc.rect(MARGIN, MARGIN + h - 1.6, CONTENT_W, 1.6, 'F')
+    let textX = MARGIN + 7
+    const logo = branding.logo
+    if (logo && logo.dataUrl) {
+      try {
+        setFill(C.white)
+        rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+        const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
+        let iw = 13.2, ih = 13.2
+        if (ratio > 1) ih = 13.2 / ratio
+        else iw = 13.2 * ratio
+        const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
+        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + 1.4 + (13.2 - iw) / 2, MARGIN + 5 + 1.4 + (13.2 - ih) / 2, iw, ih)
+        textX = MARGIN + 6 + 16 + 4
+      } catch { /* bỏ logo nếu lỗi */ }
+    }
+    font('bold', 7, C.white)
+    doc.text((branding.name || 'PickleFund').toUpperCase(), textX, MARGIN + 8)
+    font('bold', 15, C.white)
+    doc.text('BÁO CÁO CHI PHÍ', textX, MARGIN + 15.5)
+    font('normal', 8.5, C.white)
+    doc.text(`${summary.clubName} · ${summary.periodName}`, textX, MARGIN + 21.5)
+    font('normal', 7.5, C.white)
+    doc.text(`Xuất ngày ${summary.exportedDateText}`, PAGE_W - MARGIN - 7, MARGIN + 10, { align: 'right' })
+    if (subtitle) doc.text(subtitle, PAGE_W - MARGIN - 7, MARGIN + 15.5, { align: 'right' })
+    return MARGIN + h
+  }
+
+  const drawFooter = (pageNo, totalPages) => {
+    const y = PAGE_H - MARGIN - 4
+    setDraw(C.lineSoft)
+    doc.setLineWidth(0.3)
+    doc.line(MARGIN, y - 3, PAGE_W - MARGIN, y - 3)
+    font('normal', 6.5, C.grayLight)
+    doc.text(`${branding.footer || 'PickleFund'} · ${summary.clubName} · Xuất lúc ${summary.exportedAtText}`, MARGIN, y)
+    doc.text(`Trang ${pageNo} / ${totalPages}`, PAGE_W - MARGIN, y, { align: 'right' })
+  }
+
+  let y = drawHeader(`${summary.count} khoản chi`) + 5
+
+  /* Dải chỉ số: Tổng chi / Quỹ Chính / Quỹ Phụ / Đã duyệt / Chờ duyệt */
+  const stats = [
+    { label: 'TỔNG CHI', value: vnd(summary.totalAll), color: C.redDark, strong: true },
+    { label: 'QUỸ CHÍNH', value: vnd(summary.totalCommon), color: C.indigoDark },
+    { label: 'QUỸ PHỤ', value: vnd(summary.totalMini), color: C.cyan },
+    { label: 'ĐÃ DUYỆT', value: vnd(summary.totalApproved), color: C.green },
+    { label: 'CHỜ DUYỆT', value: vnd(summary.totalPending), color: C.amber },
+  ]
+  const sW = (CONTENT_W - 4 * 3) / 5
+  stats.forEach((s, i) => {
+    const x = MARGIN + i * (sW + 3)
+    setFill(s.strong ? C.indigoSoft : C.white)
+    setDraw(s.strong ? C.indigoBorder : C.border)
+    doc.setLineWidth(0.35)
+    rrect(x, y, sW, 16, 2, 'FD')
+    font('bold', 5.6, s.strong ? C.indigoDark : C.gray)
+    doc.text(s.label, x + 3, y + 5)
+    font('bold', 8.2, s.color)
+    doc.text(clip(s.value, sW - 6), x + 3, y + 11)
+  })
+  y += 21
+
+  /* Bảng chi tiết — tự phân trang, lặp header */
+  const COLS = [
+    { key: 'idx', label: '#', w: 8, align: 'left' },
+    { key: 'code', label: 'MÃ CHI', w: 29, align: 'left' },
+    { key: 'desc', label: 'NỘI DUNG', w: 49, align: 'left' },
+    { key: 'kind', label: 'PHÂN BỔ', w: 31, align: 'left' },
+    { key: 'date', label: 'NGÀY', w: 19, align: 'left' },
+    { key: 'amount', label: 'SỐ TIỀN', w: 26, align: 'right' },
+    { key: 'status', label: 'TRẠNG THÁI', w: 24, align: 'center' },
+  ]
+  const ROW_H = 7.5
+  const colX = []
+  { let cx = MARGIN; for (const c of COLS) { colX.push(cx); cx += c.w } }
+  const cellX = (i) => {
+    const c = COLS[i]
+    if (c.align === 'right') return colX[i] + c.w - 3
+    if (c.align === 'center') return colX[i] + c.w / 2
+    return colX[i] + 3
+  }
+  const drawTableHead = (yy) => {
+    setFill(C.indigo)
+    doc.rect(MARGIN, yy, CONTENT_W, 8, 'F')
+    font('bold', 6.6, C.white)
+    COLS.forEach((c, i) => doc.text(c.label, cellX(i), yy + 5.3, { align: c.align }))
+    return yy + 8
+  }
+
+  y = drawTableHead(y)
+  const bottomLimit = PAGE_H - MARGIN - 12
+  rows.forEach((r, idx) => {
+    if (y + ROW_H > bottomLimit) {
+      doc.addPage()
+      y = drawHeader(`${summary.count} khoản chi (tiếp)`) + 5
+      y = drawTableHead(y)
+    }
+    if (idx % 2 === 1) {
+      setFill(C.zebra)
+      doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F')
+    }
+    setDraw(C.lineSoft)
+    doc.setLineWidth(0.2)
+    doc.line(MARGIN, y + ROW_H, PAGE_W - MARGIN, y + ROW_H)
+    const midY = y + ROW_H / 2 + 1.6
+    font('normal', 7, C.grayLight)
+    doc.text(String(idx + 1), cellX(0), midY)
+    font('normal', 6.2, C.gray)
+    doc.text(clip(r.code, COLS[1].w - 4), cellX(1), midY)
+    font('bold', 7.4, C.textDark)
+    doc.text(clip(r.description, COLS[2].w - 5), cellX(2), midY)
+    font('normal', 6.6, C.gray)
+    doc.text(clip(r.kindLabel, COLS[3].w - 5), cellX(3), midY)
+    doc.text(r.dateText, cellX(4), midY)
+    font('bold', 7.4, C.textDark)
+    doc.text(vnd(r.amount), cellX(5), midY, { align: 'right' })
+    const st = EXP_STATUS[r.statusKey] ?? EXP_STATUS.pending
+    font('bold', 6.6, st.color)
+    doc.text(st.label, cellX(6), midY, { align: 'center' })
+    y += ROW_H
+  })
+
+  /* Dòng tổng cộng */
+  if (y + ROW_H > bottomLimit) {
+    doc.addPage()
+    y = drawHeader(`${summary.count} khoản chi (tiếp)`) + 5
+    y = drawTableHead(y)
+  }
+  setFill(C.indigoSoft)
+  doc.rect(MARGIN, y, CONTENT_W, ROW_H + 1, 'F')
+  font('bold', 7.6, C.indigoDark)
+  doc.text('TỔNG CỘNG', colX[1] + 3, y + ROW_H / 2 + 1.8)
+  doc.text(vnd(summary.totalAll), cellX(5), y + ROW_H / 2 + 1.8, { align: 'right' })
+
+  const totalPages = doc.getNumberOfPages()
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p)
+    drawFooter(p, totalPages)
+  }
   return doc
 }

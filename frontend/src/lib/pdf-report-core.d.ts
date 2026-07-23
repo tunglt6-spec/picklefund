@@ -73,3 +73,35 @@ export function buildMiniReceiptPDF(opts: {
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any
+
+export interface ExpenseReportSummary {
+  clubName: string
+  periodName: string
+  totalAll: number
+  totalCommon: number
+  totalMini: number
+  totalApproved: number
+  totalPending: number
+  count: number
+  exportedDateText: string
+  exportedAtText: string
+}
+
+export interface ExpenseReportRow {
+  code: string
+  description: string
+  kindLabel: string
+  dateText: string
+  amount: number
+  statusKey: 'approved' | 'pending' | 'paid' | 'rejected'
+}
+
+export function buildExpenseReportPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  summary: ExpenseReportSummary
+  rows: ExpenseReportRow[]
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
