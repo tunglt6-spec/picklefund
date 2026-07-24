@@ -228,7 +228,7 @@ export class MaikaService {
     const today = new Date().toLocaleDateString('vi-VN');
     const healthScore = this.computeHealthScore(snap);
 
-    const prompt = `Bạn là Maika, AI quản lý câu lạc bộ pickleball.
+    const prompt = `Bạn là Maika, AI quản lý câu lạc bộ thể thao (đa bộ môn).
 Dữ liệu CLB "${snap.clubName}" hôm nay ${today}:
 - Thành viên hoạt động: ${snap.activeMembers}/${snap.totalMembers}
 - Chưa đóng quỹ: ${snap.unpaidCount} người
@@ -287,7 +287,7 @@ Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.
     const snap = await this.getClubSnapshot(clubId);
     const weekOf = new Date().toLocaleDateString('vi-VN');
 
-    const prompt = `Bạn là Maika, AI quản lý CLB pickleball.
+    const prompt = `Bạn là Maika, AI quản lý CLB thể thao (đa bộ môn).
 Báo cáo tuần CLB "${snap.clubName}":
 - Thành viên: ${snap.activeMembers} đang hoạt động / ${snap.totalMembers} tổng
 - Tổng Thu (Quỹ Chung): ${snap.commonIncome.toLocaleString('vi-VN')}đ
