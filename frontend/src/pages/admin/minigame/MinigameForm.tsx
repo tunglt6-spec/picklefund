@@ -18,7 +18,8 @@ const STEPS_FOOTBALL = ['Thông Tin Cơ Bản', 'Cấu Hình Điểm Số']
 const STEPS_GOLF = ['Thông Tin Cơ Bản', 'Số Vòng Đấu']
 
 // Môn vợt (TENNIS/BADMINTON/TABLE_TENNIS) chơi như pickleball → dùng chung engine HEAD_TO_HEAD + dashboard.
-type SportType = 'PICKLEBALL' | 'TENNIS' | 'BADMINTON' | 'TABLE_TENNIS' | 'FOOTBALL' | 'GOLF'
+// Môn đồng đội (FOOTBALL/BASKETBALL): đội roster + trận có điểm (dùng chung FootballDashboardPage).
+type SportType = 'PICKLEBALL' | 'TENNIS' | 'BADMINTON' | 'TABLE_TENNIS' | 'FOOTBALL' | 'BASKETBALL' | 'GOLF'
 const RACKET_SPORTS: SportType[] = ['PICKLEBALL', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS']
 
 interface FormState {
@@ -74,8 +75,10 @@ export function MinigameForm() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormState>(DEFAULT)
   const isFootball = form.sport === 'FOOTBALL'
+  const isBasketball = form.sport === 'BASKETBALL'
+  const isTeamSport = isFootball || isBasketball // môn đồng đội: đội roster + trận có điểm
   const isGolf = form.sport === 'GOLF'
-  const steps = isGolf ? STEPS_GOLF : isFootball ? STEPS_FOOTBALL : STEPS
+  const steps = isGolf ? STEPS_GOLF : isTeamSport ? STEPS_FOOTBALL : STEPS
   const [creating, setCreating] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [guestName, setGuestName] = useState('')
@@ -88,7 +91,7 @@ export function MinigameForm() {
         const parts = participants.filter(p => p.minigameId === id && p.status === 'ACTIVE')
         const guestParts = parts.filter(p => p.memberId.startsWith('guest-'))
         setForm({
-          sport: ([...RACKET_SPORTS, 'FOOTBALL', 'GOLF'].includes(mg.sport as SportType) ? mg.sport : 'PICKLEBALL') as SportType,
+          sport: ([...RACKET_SPORTS, 'FOOTBALL', 'BASKETBALL', 'GOLF'].includes(mg.sport as SportType) ? mg.sport : 'PICKLEBALL') as SportType,
           rounds: 1,
           name: mg.name,
           description: mg.description ?? '',
@@ -149,31 +152,32 @@ export function MinigameForm() {
   }
 
   const handleSubmit = async () => {
-    // ── Bóng đá: tạo giải (không cần chọn thành viên) → dựng đội ở màn quản lý ──
-    if (isFootball && !isEdit) {
+    // ── Môn đồng đội (bóng đá/bóng rổ): tạo giải (không cần chọn thành viên) → dựng đội ở màn quản lý ──
+    if (isTeamSport && !isEdit) {
+      const sportLabel = isBasketball ? 'bóng rổ' : 'bóng đá'
       setCreating(true)
       try {
         const res = await api.post('/minigames', {
           name: form.name,
           format: 'GROUP_STAGE',
-          sport: 'FOOTBALL',
+          sport: form.sport,
           scoringModel: 'HEAD_TO_HEAD',
           settings: { allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
         const mgId: string = res.data?.data?.id
-        // Đưa vào store ngay để dashboard bóng đá hiển thị (sync API sẽ xác nhận lại).
+        // Đưa vào store ngay để dashboard hiển thị (sync API sẽ xác nhận lại).
         createMinigame({
           id: mgId, clubId, name: form.name, startDate: form.startDate,
           endDate: form.endDate || undefined, status: 'DRAFT',
           groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints,
           drawPoints: form.drawPoints, lossPoints: 0, notes: form.notes || undefined,
           createdBy: user?.id ?? 'user-1', formatType: 'GROUP_STAGE',
-          sport: 'FOOTBALL', scoringModel: 'HEAD_TO_HEAD', drawMode: form.drawMode,
+          sport: form.sport, scoringModel: 'HEAD_TO_HEAD', drawMode: form.drawMode,
         })
-        toast.success('Đã tạo giải bóng đá! Hãy tạo đội & cầu thủ.')
+        toast.success(`Đã tạo giải ${sportLabel}! Hãy tạo đội & thành viên.`)
         navigate(`/minigames/${mgId}`)
       } catch (err: any) {
-        toast.error(err?.response?.data?.message ?? 'Tạo giải bóng đá thất bại')
+        toast.error(err?.response?.data?.message ?? `Tạo giải ${sportLabel} thất bại`)
       } finally { setCreating(false) }
       return
     }
@@ -317,6 +321,7 @@ export function MinigameForm() {
                       { value: 'BADMINTON' as const, label: '🏸 Cầu lông', sub: 'Chơi như pickleball (đôi/đơn/vòng bảng)' },
                       { value: 'TABLE_TENNIS' as const, label: '🏓 Bóng bàn', sub: 'Chơi như pickleball (đôi/đơn/vòng bảng)' },
                       { value: 'FOOTBALL' as const, label: '⚽ Bóng đá', sub: 'Đội nhiều người · vòng tròn / loại trực tiếp' },
+                      { value: 'BASKETBALL' as const, label: '🏀 Bóng rổ', sub: 'Đội nhiều người · vòng tròn / loại trực tiếp' },
                       { value: 'GOLF' as const, label: '⛳ Golf', sub: 'Cá nhân · tính tổng gậy (stroke-play)' },
                     ]).map(opt => (
                       <label key={opt.value} className={cn(
@@ -327,6 +332,8 @@ export function MinigameForm() {
                           <input type="radio" name="sport" checked={form.sport === opt.value}
                             onChange={() => set(opt.value === 'FOOTBALL'
                               ? { sport: 'FOOTBALL', formatType: 'GROUP_STAGE', allowDraw: true }
+                              : opt.value === 'BASKETBALL'
+                              ? { sport: 'BASKETBALL', formatType: 'GROUP_STAGE', allowDraw: false, winPoints: 2, drawPoints: 0 }
                               : opt.value === 'GOLF'
                               ? { sport: 'GOLF', formatType: 'SINGLES', allowDraw: false }
                               : { sport: opt.value, formatType: 'RANDOM_DOUBLES', allowDraw: false })}
@@ -339,10 +346,10 @@ export function MinigameForm() {
                   </div>
                 </div>
               )}
-              {isFootball ? (
+              {isTeamSport ? (
                 <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-xs text-sky-800">
-                  Thể thức: <b>Vòng tròn</b> (điểm 3-1-0, xếp theo điểm & hiệu số) hoặc <b>Loại trực tiếp</b> (đấu loại tìm nhà vô địch).
-                  Chọn thể thức khi tạo lịch. Đội bóng + cầu thủ dựng ở màn quản lý sau khi tạo giải.
+                  Thể thức: <b>Vòng tròn</b> (xếp theo điểm & hiệu số {isBasketball ? 'điểm' : 'bàn thắng'}) hoặc <b>Loại trực tiếp</b> (đấu loại tìm nhà vô địch).
+                  Chọn thể thức khi tạo lịch. Đội + {isBasketball ? 'vận động viên' : 'cầu thủ'} dựng ở màn quản lý sau khi tạo giải.
                 </div>
               ) : isGolf ? (
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800">
@@ -470,15 +477,15 @@ export function MinigameForm() {
           {/* Step 2 (pickleball/bóng đá) */}
           {step === 1 && !isGolf && (
             <div className="space-y-5">
-              {isFootball && (
+              {isTeamSport && (
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mẫu tính điểm nhanh</label>
                   <div className="flex flex-wrap gap-2">
-                    {([
-                      { w: 3, d: 1, label: 'Chuẩn 3-1-0' },
-                      { w: 2, d: 1, label: '2-1-0' },
-                    ]).map(p => (
-                      <button key={p.label} type="button" onClick={() => set({ winPoints: p.w, drawPoints: p.d, lossPoints: 0, allowDraw: true })}
+                    {(isBasketball
+                      ? [{ w: 2, d: 0, label: 'Thắng 2 - Thua 0', draw: false }, { w: 3, d: 0, label: 'Thắng 3 - Thua 0', draw: false }]
+                      : [{ w: 3, d: 1, label: 'Chuẩn 3-1-0', draw: true }, { w: 2, d: 1, label: '2-1-0', draw: true }]
+                    ).map(p => (
+                      <button key={p.label} type="button" onClick={() => set({ winPoints: p.w, drawPoints: p.d, lossPoints: 0, allowDraw: p.draw })}
                         className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors',
                           form.winPoints === p.w && form.drawPoints === p.d ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
                         {p.label}
@@ -666,8 +673,8 @@ export function MinigameForm() {
               Tiếp theo <ChevronRight size={16} />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={creating || (!isFootball && !isGolf && form.selectedMemberIds.length < 4)}>
-              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isGolf ? 'Tạo Giải Golf' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Minigame'}
+            <Button onClick={handleSubmit} disabled={creating || (!isTeamSport && !isGolf && form.selectedMemberIds.length < 4)}>
+              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isBasketball ? 'Tạo Giải Bóng Rổ' : isGolf ? 'Tạo Giải Golf' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Minigame'}
             </Button>
           )}
         </div>

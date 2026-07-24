@@ -125,8 +125,8 @@ export function MatchHistory() {
                 </div>
 
                 <div className="mt-3 flex gap-2">
-                  {mg.sport === 'FOOTBALL' || mg.sport === 'GOLF' ? (
-                    // Bóng đá/golf có dashboard riêng (BXH/nhánh/điểm ngay trong màn quản lý).
+                  {mg.sport === 'FOOTBALL' || mg.sport === 'BASKETBALL' || mg.sport === 'GOLF' ? (
+                    // Bóng đá/bóng rổ/golf có dashboard riêng (BXH/nhánh/điểm ngay trong màn quản lý).
                     <button onClick={() => navigate(`/minigames/${mg.id}`)}
                       className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
                       <BarChart3 size={14} />{mg.sport === 'GOLF' ? 'Bảng điểm golf' : 'Kết quả & BXH'}

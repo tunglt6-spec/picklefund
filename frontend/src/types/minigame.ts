@@ -7,6 +7,7 @@ export type MinigameFormatType = 'RANDOM_DOUBLES' | 'GROUP_STAGE' | 'FIXED_DOUBL
 export function sportEmoji(sport?: string | null): string {
   switch (sport) {
     case 'FOOTBALL': return '⚽'
+    case 'BASKETBALL': return '🏀'
     case 'GOLF': return '⛳'
     case 'TENNIS': return '🎾'
     case 'BADMINTON': return '🏸'

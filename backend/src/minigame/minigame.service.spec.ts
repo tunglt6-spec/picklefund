@@ -659,11 +659,25 @@ describe('MinigameService', () => {
       expect(data).toHaveLength(12);
     });
 
-    it('không phải giải bóng đá → chặn', async () => {
+    it('không phải môn đồng đội → chặn', async () => {
       mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg); // sport mặc định PICKLEBALL
       await expect(
         service.generateFootballSchedule('mg-1', 'club-1', false),
       ).rejects.toThrow('bóng đá');
+    });
+
+    it('bóng rổ (BASKETBALL) dùng chung engine vòng tròn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce({ ...baseMg, sport: 'BASKETBALL' });
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([
+        { id: 't-1' }, { id: 't-2' }, { id: 't-3' }, { id: 't-4' },
+      ]);
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count: 6 });
+      mockPrisma.minigame.update.mockResolvedValue({ ...baseMg, sport: 'BASKETBALL' });
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg);
+      await service.generateFootballSchedule('mg-1', 'club-1', false);
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(6);
     });
 
     it('đã có lịch → chặn tạo lại', async () => {

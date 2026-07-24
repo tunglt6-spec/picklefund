@@ -13,8 +13,8 @@ export function MinigameDashboard() {
   const { resync } = useMinigameDetailSync(id)
   const mg = getMinigame(id!)
 
-  // Đa bộ môn: bóng đá dùng dashboard riêng (đội + cầu thủ, không phụ thuộc thể thức đôi).
-  if (mg?.sport === 'FOOTBALL') {
+  // Môn đồng đội (bóng đá, bóng rổ): dùng chung dashboard đội-roster (trận có điểm, BXH/knockout).
+  if (mg?.sport === 'FOOTBALL' || mg?.sport === 'BASKETBALL') {
     return <FootballDashboardPage resync={resync} />
   }
   // Golf: dashboard bảng điểm (golfer cá nhân + tổng gậy).

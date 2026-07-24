@@ -618,8 +618,10 @@ export class MinigameService {
     doubleRoundRobin = false,
   ) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL')
-      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
+      throw new BadRequestException(
+        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
+      );
 
     const existing = await this.prisma.minigameMatch.count({
       where: { minigameId: id },
@@ -686,8 +688,10 @@ export class MinigameService {
    */
   async generateKnockout(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL')
-      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
+      throw new BadRequestException(
+        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
+      );
 
     const existing = await this.prisma.minigameMatch.count({
       where: { minigameId: id },
@@ -755,8 +759,10 @@ export class MinigameService {
    */
   async advanceKnockout(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL')
-      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
+      throw new BadRequestException(
+        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
+      );
 
     const all = await this.prisma.minigameMatch.findMany({
       where: { minigameId: id },

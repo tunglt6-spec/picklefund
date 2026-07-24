@@ -20,6 +20,15 @@ import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
 import { cn } from '../../../lib/utils'
 
+// Dùng chung cho các MÔN ĐỒNG ĐỘI (bóng đá, bóng rổ): cùng engine đội-roster + trận có điểm.
+// Chỉ khác nhãn hiển thị theo bộ môn.
+const SPORT_UI: Record<string, {
+  emoji: string; name: string; teamTab: string; player: string; scoreWord: string; gfgaShort: string; gfgaTitle: string
+}> = {
+  FOOTBALL: { emoji: '⚽', name: 'Bóng Đá', teamTab: 'Đội bóng', player: 'cầu thủ', scoreWord: 'bàn thắng', gfgaShort: 'BT-BB', gfgaTitle: 'Bàn thắng - Bàn thua' },
+  BASKETBALL: { emoji: '🏀', name: 'Bóng Rổ', teamTab: 'Đội', player: 'vận động viên', scoreWord: 'điểm', gfgaShort: 'Đ+/Đ−', gfgaTitle: 'Điểm ghi - Điểm thua' },
+}
+
 interface RosterMember { id: string; memberId?: string | null; guestName?: string | null; role?: string | null }
 interface RosterTeam { id: string; name: string; members: RosterMember[] }
 interface FbMatch {
@@ -296,6 +305,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     )
   }
 
+  // Nhãn theo bộ môn (bóng đá / bóng rổ) — cùng engine đội-roster.
+  const ui = SPORT_UI[mg.sport ?? 'FOOTBALL'] ?? SPORT_UI.FOOTBALL
+
   const filteredMembers = members.filter(m =>
     !search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase()))
 
@@ -303,7 +315,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     (side === 'A' ? m.teamA?.name : m.teamB?.name) ?? 'Đội'
 
   const TABS: Array<{ key: Tab; label: string; icon: ReactNode }> = [
-    { key: 'teams', label: 'Đội bóng', icon: <Shield size={16} /> },
+    { key: 'teams', label: ui.teamTab, icon: <Shield size={16} /> },
     { key: 'schedule', label: 'Lịch & Kết quả', icon: <CalendarDays size={16} /> },
     { key: 'standings', label: 'Bảng xếp hạng', icon: <BarChart2 size={16} /> },
   ]
@@ -320,7 +332,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⚽ Bóng Đá</span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">{ui.emoji} {ui.name}</span>
             </div>
             <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-slate-500">
               <span className="flex items-center gap-1.5"><Calendar size={14} />{mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}</span>
@@ -358,7 +370,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{teams.length}</p>
           </div>
           <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Users size={16} /> Cầu thủ</div>
+            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)] capitalize"><Users size={16} /> {ui.player}</div>
             <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{totalPlayers}</p>
           </div>
           <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
@@ -377,7 +389,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 className="mt-3 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
               <div className="mt-3">
                 <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
-                  <Users size={14} /> Cầu thủ là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
+                  <Users size={14} /> <span className="capitalize">{ui.player}</span> là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
                 </div>
                 <div className="mt-2 relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -435,7 +447,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-semibold [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={16} className="text-emerald-600" /> {team.name}</p>
-                        <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{team.members?.length ?? 0} cầu thủ</p>
+                        <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{team.members?.length ?? 0} {ui.player}</p>
                       </div>
                       <button onClick={() => deleteTeam(team.id, team.name)} className="text-slate-400 hover:text-red-500 transition-colors" title="Xóa đội"><Trash2 size={16} /></button>
                     </div>
@@ -448,7 +460,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                           <button onClick={() => removeMember(rm.id)} className="text-slate-400 hover:text-red-500" title="Bỏ khỏi đội"><X size={14} /></button>
                         </li>
                       ))}
-                      {(team.members?.length ?? 0) === 0 && <li className="text-xs text-slate-400 px-1">Chưa có cầu thủ</li>}
+                      {(team.members?.length ?? 0) === 0 && <li className="text-xs text-slate-400 px-1">Chưa có {ui.player}</li>}
                     </ul>
                     {addingTo === team.id ? (
                       <div className="mt-3 rounded-xl border border-slate-200 p-3">
@@ -469,7 +481,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                       </div>
                     ) : (
                       <button onClick={() => openAdd(team.id)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
-                        <UserPlus size={14} /> Thêm cầu thủ
+                        <UserPlus size={14} /> Thêm {ui.player}
                       </button>
                     )}
                   </div>
@@ -631,7 +643,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                       <th className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
                       <th className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
                       <th className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Bàn thắng - Bàn thua">BT-BB</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title={ui.gfgaTitle}>{ui.gfgaShort}</th>
                       <th className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
                       <th className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
                     </tr>
@@ -654,7 +666,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 </table>
               </div>
               <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
-                Xếp theo: Điểm → Hiệu số → Bàn thắng. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
+                Xếp theo: Điểm → Hiệu số → {ui.scoreWord}. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
               </p>
             </div>
               )}
