@@ -655,6 +655,57 @@ export async function exportExpensesPDF(
 }
 
 /* ════════════════════════════════════════
+   EXPORT: Bảng xếp hạng giải đấu (PDF vector) — dùng chung mọi bộ môn
+════════════════════════════════════════ */
+export interface StandingsColumn {
+  key: string
+  label: string
+  w: number
+  align: 'left' | 'center' | 'right'
+  tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign'
+  bold?: boolean
+}
+export interface StandingsPdfInput {
+  clubName: string
+  tournamentName: string
+  sportLabel: string
+  formatLabel: string
+  rankNote?: string
+  columns: StandingsColumn[]
+  rows: Record<string, string | number>[]
+  stats?: { label: string; value: string | number }[]
+}
+
+export async function exportStandingsPDF(input: StandingsPdfInput) {
+  const [{ default: jsPDF }, fonts, { buildStandingsReportPDF }, logo] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+    loadBrandLogo(),
+  ])
+  const now = new Date()
+  const doc = buildStandingsReportPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter(), logo },
+    meta: {
+      clubName: input.clubName,
+      tournamentName: input.tournamentName,
+      sportLabel: input.sportLabel,
+      formatLabel: input.formatLabel,
+      rankNote: input.rankNote,
+      exportedDateText: now.toLocaleDateString('vi-VN'),
+      exportedAtText: now.toLocaleString('vi-VN'),
+    },
+    columns: input.columns,
+    rows: input.rows,
+    stats: input.stats ?? [],
+  })
+  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  return savePdfDoc(doc, `BXH_${slug(input.sportLabel)}_${slug(input.tournamentName)}`)
+}
+
+/* ════════════════════════════════════════
    EXPORT: Phiếu Thu Quỹ Phụ
 ════════════════════════════════════════ */
 export interface MiniIncomeReceiptData {

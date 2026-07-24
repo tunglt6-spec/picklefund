@@ -417,6 +417,164 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   BẢNG XẾP HẠNG GIẢI ĐẤU — vector, dùng chung mọi bộ môn (bóng đá/rổ/vợt/golf).
+   meta = { clubName, tournamentName, sportLabel, formatLabel, exportedDateText, exportedAtText }
+   columns = [{ key, label, w, align:'left'|'center'|'right', tone?, bold? }]
+     tone ∈ 'win'(xanh) | 'loss'(đỏ) | 'points'(tím đậm) | 'muted'(xám) | 'sign'(theo dấu +/-) | undefined
+   rows = [{ [key]: string|number }]   (key 'rank' tự đánh số thứ hạng)
+   stats = [{ label, value }]  (dải chỉ số phía trên, tùy chọn)
+═══════════════════════════════════════════════════════════════════ */
+const RANK_TONE = { win: C.green, loss: C.red, points: C.indigoDark, muted: C.grayLight }
+
+export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, stats, branding }) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  doc.addFileToVFS('BeVietnamPro-Regular.ttf', fonts.regular)
+  doc.addFileToVFS('BeVietnamPro-Bold.ttf', fonts.bold)
+  doc.addFont('BeVietnamPro-Regular.ttf', 'BVP', 'normal')
+  doc.addFont('BeVietnamPro-Bold.ttf', 'BVP', 'bold')
+
+  const setFill = (c) => doc.setFillColor(c[0], c[1], c[2])
+  const setDraw = (c) => doc.setDrawColor(c[0], c[1], c[2])
+  const setText = (c) => doc.setTextColor(c[0], c[1], c[2])
+  const font = (style, size, color) => {
+    doc.setFont('BVP', style)
+    doc.setFontSize(size)
+    if (color) setText(color)
+  }
+  const rrect = (x, y, w, h, r, mode) => doc.roundedRect(x, y, w, h, r, r, mode)
+  const clip = (text, maxW) => {
+    let t = String(text ?? '')
+    if (doc.getTextWidth(t) <= maxW) return t
+    while (t.length > 1 && doc.getTextWidth(t + '…') > maxW) t = t.slice(0, -1)
+    return t + '…'
+  }
+
+  const drawHeader = (subtitle) => {
+    const h = 26
+    setFill(C.indigoDark)
+    rrect(MARGIN, MARGIN, CONTENT_W, h, 2.5, 'F')
+    setFill(C.indigo)
+    doc.rect(MARGIN, MARGIN + h - 1.6, CONTENT_W, 1.6, 'F')
+    let textX = MARGIN + 7
+    const logo = branding.logo
+    if (logo && logo.dataUrl) {
+      try {
+        setFill(C.white)
+        rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+        const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
+        let iw = 13.2, ih = 13.2
+        if (ratio > 1) ih = 13.2 / ratio
+        else iw = 13.2 * ratio
+        const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
+        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + 1.4 + (13.2 - iw) / 2, MARGIN + 5 + 1.4 + (13.2 - ih) / 2, iw, ih)
+        textX = MARGIN + 6 + 16 + 4
+      } catch { /* bỏ logo nếu lỗi */ }
+    }
+    font('bold', 7, C.white)
+    doc.text((branding.name || 'PickleFund').toUpperCase(), textX, MARGIN + 8)
+    font('bold', 15, C.white)
+    doc.text('BẢNG XẾP HẠNG', textX, MARGIN + 15.5)
+    font('normal', 8.5, C.white)
+    doc.text(clip(`${meta.sportLabel} · ${meta.tournamentName}`, CONTENT_W - 60), textX, MARGIN + 21.5)
+    font('normal', 7.5, C.white)
+    doc.text(`Xuất ngày ${meta.exportedDateText}`, PAGE_W - MARGIN - 7, MARGIN + 10, { align: 'right' })
+    if (subtitle) doc.text(clip(subtitle, 70), PAGE_W - MARGIN - 7, MARGIN + 15.5, { align: 'right' })
+    return MARGIN + h
+  }
+
+  const drawFooter = (pageNo, totalPages) => {
+    const y = PAGE_H - MARGIN - 4
+    setDraw(C.lineSoft)
+    doc.setLineWidth(0.3)
+    doc.line(MARGIN, y - 3, PAGE_W - MARGIN, y - 3)
+    font('normal', 6.5, C.grayLight)
+    doc.text(`${branding.footer || 'PickleFund'} · ${meta.clubName} · Xuất lúc ${meta.exportedAtText}`, MARGIN, y)
+    doc.text(`Trang ${pageNo} / ${totalPages}`, PAGE_W - MARGIN, y, { align: 'right' })
+  }
+
+  let y = drawHeader(meta.formatLabel) + 5
+
+  /* Dải chỉ số (tùy chọn) */
+  const st = stats || []
+  if (st.length > 0) {
+    const sW = (CONTENT_W - (st.length - 1) * 4) / st.length
+    st.forEach((s, i) => {
+      const x = MARGIN + i * (sW + 4)
+      setFill(i === 0 ? C.indigoSoft : C.white)
+      setDraw(i === 0 ? C.indigoBorder : C.border)
+      doc.setLineWidth(0.35)
+      rrect(x, y, sW, 15, 2, 'FD')
+      font('bold', 6, i === 0 ? C.indigoDark : C.gray)
+      doc.text(clip(s.label, sW - 6), x + 3.5, y + 5.5)
+      font('bold', 11, i === 0 ? C.indigoDark : C.textDark)
+      doc.text(clip(String(s.value), sW - 6), x + 3.5, y + 11.5)
+    })
+    y += 20
+  }
+
+  /* Bảng BXH */
+  const colX = []
+  { let cx = MARGIN; for (const c of columns) { colX.push(cx); cx += c.w } }
+  const cellX = (i) => {
+    const c = columns[i]
+    if (c.align === 'right') return colX[i] + c.w - 3
+    if (c.align === 'center') return colX[i] + c.w / 2
+    return colX[i] + 3
+  }
+  const ROW_H = 8
+  const drawHead = (yy) => {
+    setFill(C.indigo)
+    doc.rect(MARGIN, yy, CONTENT_W, 8, 'F')
+    font('bold', 6.8, C.white)
+    columns.forEach((c, i) => doc.text(c.label, cellX(i), yy + 5.3, { align: c.align }))
+    return yy + 8
+  }
+
+  y = drawHead(y)
+  const bottomLimit = PAGE_H - MARGIN - 12
+  rows.forEach((r, idx) => {
+    if (y + ROW_H > bottomLimit) {
+      doc.addPage()
+      y = drawHeader(meta.formatLabel) + 5
+      y = drawHead(y)
+    }
+    // Tô nhẹ 3 hạng đầu; các dòng lẻ còn lại zebra.
+    if (idx < 3) { setFill(C.greenBg); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
+    else if (idx % 2 === 1) { setFill(C.zebra); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
+    setDraw(C.lineSoft)
+    doc.setLineWidth(0.2)
+    doc.line(MARGIN, y + ROW_H, PAGE_W - MARGIN, y + ROW_H)
+    const midY = y + ROW_H / 2 + 1.6
+    columns.forEach((c, i) => {
+      let val = c.key === 'rank' ? String(idx + 1) : String(r[c.key] ?? '')
+      let color = C.textDark
+      let style = c.bold ? 'bold' : 'normal'
+      if (c.tone === 'sign') { color = val.startsWith('-') ? C.red : (val.startsWith('+') ? C.green : C.gray) }
+      else if (c.tone && RANK_TONE[c.tone]) { color = RANK_TONE[c.tone] }
+      if (c.tone === 'points') style = 'bold'
+      if (c.key === 'rank') color = C.grayLight
+      font(style, c.key === 'name' ? 8 : 7.5, color)
+      doc.text(clip(val, c.w - (c.align === 'left' ? 5 : 4)), cellX(i), midY, { align: c.align })
+    })
+    y += ROW_H
+  })
+
+  /* Ghi chú xếp hạng */
+  y += 4
+  if (y < bottomLimit) {
+    font('normal', 6.8, C.grayLight)
+    doc.text(meta.rankNote || '', MARGIN, y)
+  }
+
+  const totalPages = doc.getNumberOfPages()
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p)
+    drawFooter(p, totalPages)
+  }
+  return doc
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PHIẾU THU QUỸ PHỤ — vector, theme tím (Quỹ Phụ độc lập Quỹ Chính)
    receipt = { receiptNo?, payerName, incomeType, amount, paymentDate,
                notes?, clubName, clubLocation?, printedDateText, printedAtText }

@@ -10,7 +10,8 @@ import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Search,
   BarChart2, ClipboardList, Save, Crown, Flag, Image as ImageIcon, FileDown,
 } from 'lucide-react'
-import { exportInfographicAsPng, exportInfographicAsPdf } from '../../../components/reports/infographic/infographic.utils'
+import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
+import { exportStandingsPDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -147,9 +148,38 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   const exportLeaderboard = async (fmt: 'png' | 'pdf') => {
     const el = `golf-lb-${id}`
     const fname = `BXH-golf-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    // PDF vector chuẩn SaaS cho bảng điểm golf (dùng chung mẫu báo cáo tài chính).
+    if (fmt === 'pdf') {
+      try {
+        await exportStandingsPDF({
+          clubName: getClubData(clubId).settings?.name ?? 'CLB',
+          tournamentName: mg?.name ?? 'Giải golf',
+          sportLabel: 'Golf',
+          formatLabel: `Stroke-play · ${rounds} vòng`,
+          rankNote: 'Xếp theo: tổng gậy nhỏ nhất. Golfer chưa ghi điểm xếp cuối.',
+          stats: [
+            { label: 'Golfer', value: golfers.length },
+            { label: 'Số vòng', value: rounds },
+          ],
+          columns: [
+            { key: 'rank', label: '#', w: 12, align: 'left' },
+            { key: 'name', label: 'GOLFER', w: 96, align: 'left', bold: true },
+            { key: 'played', label: 'VÒNG', w: 36, align: 'center', tone: 'muted' },
+            { key: 'total', label: 'TỔNG GẬY', w: 42, align: 'right', tone: 'points' },
+          ],
+          rows: leaderboard.map(s => ({
+            name: s.name,
+            played: `${s.played}/${rounds}`,
+            total: s.played > 0 ? s.total : '—',
+          })),
+        })
+      } catch {
+        toast.error('Xuất PDF thất bại')
+      }
+      return
+    }
     try {
-      if (fmt === 'png') await exportInfographicAsPng(el, fname)
-      else await exportInfographicAsPdf(el, fname)
+      await exportInfographicAsPng(el, fname)
     } catch {
       toast.error('Xuất thất bại')
     }

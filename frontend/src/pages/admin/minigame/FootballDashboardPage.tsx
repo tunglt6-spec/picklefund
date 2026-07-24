@@ -12,6 +12,7 @@ import {
   Image as ImageIcon, FileDown,
 } from 'lucide-react'
 import { exportInfographicAsPng, exportInfographicAsPdf } from '../../../components/reports/infographic/infographic.utils'
+import { exportStandingsPDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -231,6 +232,42 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const exportStandings = async (fmt: 'png' | 'pdf') => {
     const el = `std-${id}`
     const fname = `BXH-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    // PDF vector chuẩn SaaS cho BXH vòng tròn (dùng chung mẫu báo cáo tài chính).
+    // Ảnh (PNG) và nhánh loại trực tiếp vẫn chụp DOM (panel ngắn, 1 trang).
+    if (fmt === 'pdf' && !isKnockout) {
+      try {
+        await exportStandingsPDF({
+          clubName: getClubData(clubId).settings?.name ?? 'CLB',
+          tournamentName: mg?.name ?? 'Giải đấu',
+          sportLabel: ui.name,
+          formatLabel: 'Vòng tròn tính điểm',
+          rankNote: `Xếp theo: Điểm → Hiệu số → ${ui.scoreWord}. Điểm: thắng ${mg?.winPoints ?? 3} · hòa ${mg?.drawPoints ?? 1} · thua ${mg?.lossPoints ?? 0}.`,
+          stats: [
+            { label: 'Số đội', value: teams.length },
+            { label: 'Tổng trận', value: matches.length },
+            { label: 'Đã có kết quả', value: `${completedMatches}/${matches.length}` },
+          ],
+          columns: [
+            { key: 'rank', label: '#', w: 8, align: 'left' },
+            { key: 'name', label: 'ĐỘI', w: 56, align: 'left', bold: true },
+            { key: 'P', label: 'T', w: 14, align: 'center' },
+            { key: 'W', label: 'TH', w: 14, align: 'center', tone: 'win' },
+            { key: 'D', label: 'H', w: 14, align: 'center', tone: 'muted' },
+            { key: 'L', label: 'B', w: 14, align: 'center', tone: 'loss' },
+            { key: 'gfga', label: ui.gfgaShort, w: 24, align: 'center', tone: 'muted' },
+            { key: 'gd', label: 'HS', w: 18, align: 'center', tone: 'sign' },
+            { key: 'pts', label: 'ĐIỂM', w: 24, align: 'right', tone: 'points' },
+          ],
+          rows: standings.map(s => ({
+            name: s.name, P: s.P, W: s.W, D: s.D, L: s.L,
+            gfga: `${s.GF}-${s.GA}`, gd: s.GD > 0 ? `+${s.GD}` : String(s.GD), pts: s.Pts,
+          })),
+        })
+      } catch {
+        toast.error('Xuất PDF thất bại')
+      }
+      return
+    }
     try {
       if (fmt === 'png') await exportInfographicAsPng(el, fname)
       else await exportInfographicAsPdf(el, fname)

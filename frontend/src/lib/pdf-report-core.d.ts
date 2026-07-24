@@ -105,3 +105,34 @@ export function buildExpenseReportPDF(opts: {
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any
+
+export interface StandingsReportMeta {
+  clubName: string
+  tournamentName: string
+  sportLabel: string
+  formatLabel: string
+  rankNote?: string
+  exportedDateText: string
+  exportedAtText: string
+}
+
+export interface StandingsReportColumn {
+  key: string
+  label: string
+  w: number
+  align: 'left' | 'center' | 'right'
+  tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign'
+  bold?: boolean
+}
+
+export function buildStandingsReportPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  meta: StandingsReportMeta
+  columns: StandingsReportColumn[]
+  rows: Record<string, string | number>[]
+  stats?: { label: string; value: string | number }[]
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
