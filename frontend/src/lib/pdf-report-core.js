@@ -575,6 +575,145 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   SƠ ĐỒ LOẠI TRỰC TIẾP (knockout bracket) — vector, khổ NGANG A4.
+   meta = { clubName, tournamentName, sportLabel, championName?, exportedDateText, exportedAtText }
+   rounds = [{ label, matches: [{ teamA, teamB, scoreA, scoreB, winner: 'A'|'B'|null, walkover?:bool }] }]
+     round[0] = vòng đầu; mỗi vòng sau số trận = nửa vòng trước (chuẩn single-elimination).
+═══════════════════════════════════════════════════════════════════ */
+export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding }) {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  doc.addFileToVFS('BeVietnamPro-Regular.ttf', fonts.regular)
+  doc.addFileToVFS('BeVietnamPro-Bold.ttf', fonts.bold)
+  doc.addFont('BeVietnamPro-Regular.ttf', 'BVP', 'normal')
+  doc.addFont('BeVietnamPro-Bold.ttf', 'BVP', 'bold')
+
+  const setFill = (c) => doc.setFillColor(c[0], c[1], c[2])
+  const setDraw = (c) => doc.setDrawColor(c[0], c[1], c[2])
+  const setText = (c) => doc.setTextColor(c[0], c[1], c[2])
+  const font = (style, size, color) => { doc.setFont('BVP', style); doc.setFontSize(size); if (color) setText(color) }
+  const rrect = (x, y, w, h, r, mode) => doc.roundedRect(x, y, w, h, r, r, mode)
+  const clip = (text, maxW) => {
+    let t = String(text ?? '')
+    if (doc.getTextWidth(t) <= maxW) return t
+    while (t.length > 1 && doc.getTextWidth(t + '…') > maxW) t = t.slice(0, -1)
+    return t + '…'
+  }
+
+  const PW = 297, PH = 210, M = 12, CW = PW - M * 2
+
+  /* Header band */
+  const headH = 22
+  setFill(C.indigoDark)
+  rrect(M, M, CW, headH, 2.5, 'F')
+  setFill(C.indigo)
+  doc.rect(M, M + headH - 1.6, CW, 1.6, 'F')
+  let textX = M + 7
+  const logo = branding.logo
+  if (logo && logo.dataUrl) {
+    try {
+      setFill(C.white)
+      rrect(M + 6, M + 4.5, 13, 13, 1.6, 'F')
+      const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
+      let iw = 10.6, ih = 10.6
+      if (ratio > 1) ih = 10.6 / ratio; else iw = 10.6 * ratio
+      const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
+      doc.addImage(logo.dataUrl, fmt, M + 6 + 1.2 + (10.6 - iw) / 2, M + 4.5 + 1.2 + (10.6 - ih) / 2, iw, ih)
+      textX = M + 6 + 13 + 4
+    } catch { /* bỏ logo nếu lỗi */ }
+  }
+  font('bold', 7, C.white)
+  doc.text((branding.name || 'PickleFund').toUpperCase(), textX, M + 7)
+  font('bold', 14, C.white)
+  doc.text('SƠ ĐỒ LOẠI TRỰC TIẾP', textX, M + 13.5)
+  font('normal', 8, C.white)
+  doc.text(clip(`${meta.sportLabel} · ${meta.tournamentName}`, CW / 2), textX, M + 18.5)
+  font('normal', 7, C.white)
+  doc.text(`Xuất ngày ${meta.exportedDateText}`, PW - M - 6, M + 7.5, { align: 'right' })
+  if (meta.championName) {
+    font('bold', 9.5, C.white)
+    doc.text(clip(`VÔ ĐỊCH: ${meta.championName}`, CW / 2 - 6), PW - M - 6, M + 15, { align: 'right' })
+  }
+
+  /* Vùng vẽ nhánh */
+  const top = M + headH + 8
+  const bottom = PH - M - 7
+  const areaH = bottom - top
+  const R = Math.max(1, rounds.length)
+  const colW = CW / R
+  const boxW = Math.min(colW - 6, 62)
+  const n0 = rounds[0]?.matches.length || 1
+  const slot0 = areaH / n0
+  const boxH = Math.max(8, Math.min(14, slot0 - 3))
+
+  /* Tâm theo chiều dọc của từng trận mỗi vòng */
+  const centers = []
+  rounds.forEach((rd, r) => {
+    if (r === 0) {
+      centers[r] = rd.matches.map((_, i) => top + slot0 * (i + 0.5))
+    } else {
+      centers[r] = rd.matches.map((_, i) => {
+        const a = centers[r - 1][2 * i]
+        const b = centers[r - 1][2 * i + 1]
+        return b != null ? (a + b) / 2 : a
+      })
+    }
+  })
+
+  /* Đường nối giữa các vòng (vẽ trước, nằm dưới hộp) */
+  setDraw(C.indigoBorder)
+  doc.setLineWidth(0.3)
+  for (let r = 1; r < R; r++) {
+    const xPrevR = M + (r - 1) * colW + boxW
+    const xR = M + r * colW
+    const midX = (xPrevR + xR) / 2
+    rounds[r].matches.forEach((_, i) => {
+      const c1 = centers[r - 1][2 * i]
+      const c2 = centers[r - 1][2 * i + 1] ?? c1
+      const cy = centers[r][i]
+      doc.line(xPrevR, c1, midX, c1)
+      doc.line(xPrevR, c2, midX, c2)
+      doc.line(midX, c1, midX, c2)
+      doc.line(midX, cy, xR, cy)
+    })
+  }
+
+  /* Hộp trận */
+  const drawSide = (x, y, w, name, score, isWinner, isBye) => {
+    if (isWinner) { setFill(C.greenBg); doc.rect(x, y, w, boxH / 2, 'F') }
+    font(isWinner ? 'bold' : 'normal', 6.6, isBye ? C.grayLight : (isWinner ? C.green : C.textDark))
+    doc.text(clip(name, w - 12), x + 2.5, y + boxH / 4 + 1.4)
+    if (score != null && score !== '') {
+      font('bold', 6.8, isWinner ? C.green : C.gray)
+      doc.text(String(score), x + w - 2.5, y + boxH / 4 + 1.4, { align: 'right' })
+    }
+  }
+  rounds.forEach((rd, r) => {
+    const x = M + r * colW
+    font('bold', 7, C.indigoDark)
+    doc.text(clip(rd.label, boxW), x + boxW / 2, top - 3, { align: 'center' })
+    rd.matches.forEach((m, i) => {
+      const cy = centers[r][i]
+      const y = cy - boxH / 2
+      setFill(C.white); setDraw(C.border); doc.setLineWidth(0.35)
+      rrect(x, y, boxW, boxH, 1.5, 'FD')
+      setDraw(C.lineSoft); doc.setLineWidth(0.2)
+      doc.line(x, y + boxH / 2, x + boxW, y + boxH / 2)
+      drawSide(x, y, boxW, m.teamA || 'Chờ...', m.scoreA, m.winner === 'A', false)
+      drawSide(x, y + boxH / 2, boxW, m.walkover ? '(BYE)' : (m.teamB || 'Chờ...'), m.walkover ? '' : m.scoreB, m.winner === 'B', m.walkover)
+    })
+  })
+
+  /* Footer */
+  const fy = PH - M - 3
+  setDraw(C.lineSoft); doc.setLineWidth(0.3)
+  doc.line(M, fy - 3, PW - M, fy - 3)
+  font('normal', 6.5, C.grayLight)
+  doc.text(`${branding.footer || 'PickleFund'} · ${meta.clubName} · Xuất lúc ${meta.exportedAtText}`, M, fy)
+  doc.text('Trang 1 / 1', PW - M, fy, { align: 'right' })
+  return doc
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PHIẾU THU QUỸ PHỤ — vector, theme tím (Quỹ Phụ độc lập Quỹ Chính)
    receipt = { receiptNo?, payerName, incomeType, amount, paymentDate,
                notes?, clubName, clubLocation?, printedDateText, printedAtText }

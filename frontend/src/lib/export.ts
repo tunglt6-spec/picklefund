@@ -706,6 +706,52 @@ export async function exportStandingsPDF(input: StandingsPdfInput) {
 }
 
 /* ════════════════════════════════════════
+   EXPORT: Sơ đồ loại trực tiếp (knockout) — PDF vector khổ ngang
+════════════════════════════════════════ */
+export interface KnockoutMatchInput {
+  teamA?: string
+  teamB?: string
+  scoreA?: number | string | null
+  scoreB?: number | string | null
+  winner: 'A' | 'B' | null
+  walkover?: boolean
+}
+export interface KnockoutRoundInput { label: string; matches: KnockoutMatchInput[] }
+export interface KnockoutPdfInput {
+  clubName: string
+  tournamentName: string
+  sportLabel: string
+  championName?: string
+  rounds: KnockoutRoundInput[]
+}
+
+export async function exportKnockoutPDF(input: KnockoutPdfInput) {
+  const [{ default: jsPDF }, fonts, { buildKnockoutReportPDF }, logo] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+    loadBrandLogo(),
+  ])
+  const now = new Date()
+  const doc = buildKnockoutReportPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter(), logo },
+    meta: {
+      clubName: input.clubName,
+      tournamentName: input.tournamentName,
+      sportLabel: input.sportLabel,
+      championName: input.championName,
+      exportedDateText: now.toLocaleDateString('vi-VN'),
+      exportedAtText: now.toLocaleString('vi-VN'),
+    },
+    rounds: input.rounds,
+  })
+  const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  return savePdfDoc(doc, `SoDo_${slug(input.sportLabel)}_${slug(input.tournamentName)}`)
+}
+
+/* ════════════════════════════════════════
    EXPORT: Phiếu Thu Quỹ Phụ
 ════════════════════════════════════════ */
 export interface MiniIncomeReceiptData {

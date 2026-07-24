@@ -11,8 +11,8 @@ import {
   CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
   Image as ImageIcon, FileDown,
 } from 'lucide-react'
-import { exportInfographicAsPng, exportInfographicAsPdf } from '../../../components/reports/infographic/infographic.utils'
-import { exportStandingsPDF } from '../../../lib/export'
+import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
+import { exportStandingsPDF, exportKnockoutPDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -232,8 +232,32 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const exportStandings = async (fmt: 'png' | 'pdf') => {
     const el = `std-${id}`
     const fname = `BXH-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    // Loại trực tiếp: xuất PDF VECTOR sơ đồ nhánh (khổ ngang).
+    if (fmt === 'pdf' && isKnockout) {
+      try {
+        await exportKnockoutPDF({
+          clubName: getClubData(clubId).settings?.name ?? 'CLB',
+          tournamentName: mg?.name ?? 'Giải đấu',
+          sportLabel: ui.name,
+          championName: champion ?? undefined,
+          rounds: matchGroups.map(grp => ({
+            label: koRoundLabel(grp.matches.length, grp.round),
+            matches: grp.matches.map(m => ({
+              teamA: m.teamA?.name,
+              teamB: m.teamB?.name,
+              scoreA: m.status === 'COMPLETED' ? m.scoreA : null,
+              scoreB: m.status === 'COMPLETED' ? m.scoreB : null,
+              winner: m.winnerId ? (m.winnerId === m.teamAId ? 'A' : m.winnerId === m.teamBId ? 'B' : null) : null,
+              walkover: !m.teamBId,
+            })),
+          })),
+        })
+      } catch {
+        toast.error('Xuất PDF thất bại')
+      }
+      return
+    }
     // PDF vector chuẩn SaaS cho BXH vòng tròn (dùng chung mẫu báo cáo tài chính).
-    // Ảnh (PNG) và nhánh loại trực tiếp vẫn chụp DOM (panel ngắn, 1 trang).
     if (fmt === 'pdf' && !isKnockout) {
       try {
         await exportStandingsPDF({
@@ -268,11 +292,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       }
       return
     }
+    // Còn lại: xuất ẢNH (PNG) — chụp phần bảng/panel đang hiển thị.
     try {
-      if (fmt === 'png') await exportInfographicAsPng(el, fname)
-      else await exportInfographicAsPdf(el, fname)
+      await exportInfographicAsPng(el, fname)
     } catch {
-      toast.error('Xuất thất bại')
+      toast.error('Xuất ảnh thất bại')
     }
   }
 

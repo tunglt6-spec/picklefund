@@ -136,3 +136,32 @@ export function buildStandingsReportPDF(opts: {
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any
+
+export interface KnockoutReportRound {
+  label: string
+  matches: {
+    teamA?: string
+    teamB?: string
+    scoreA?: number | string | null
+    scoreB?: number | string | null
+    winner: 'A' | 'B' | null
+    walkover?: boolean
+  }[]
+}
+
+export function buildKnockoutReportPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  meta: {
+    clubName: string
+    tournamentName: string
+    sportLabel: string
+    championName?: string
+    exportedDateText: string
+    exportedAtText: string
+  }
+  rounds: KnockoutReportRound[]
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
