@@ -435,6 +435,19 @@ export function MinigameForm() {
             <div className="space-y-5">
               <div>
                 <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số vòng đấu ({form.rounds})</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {([
+                    { r: 1, label: '1 vòng (18 hố)' },
+                    { r: 2, label: '2 vòng' },
+                    { r: 4, label: '4 vòng (giải lớn)' },
+                  ]).map(p => (
+                    <button key={p.r} type="button" onClick={() => set({ rounds: p.r })}
+                      className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors',
+                        form.rounds === p.r ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
                 <input type="range" min={1} max={8} value={form.rounds} onChange={e => set({ rounds: +e.target.value })}
                   className="w-full accent-[var(--pf-primary)]" />
                 <div className="flex justify-between text-xs text-slate-400 mt-1">
@@ -448,6 +461,23 @@ export function MinigameForm() {
           {/* Step 2 (pickleball/bóng đá) */}
           {step === 1 && !isGolf && (
             <div className="space-y-5">
+              {isFootball && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mẫu tính điểm nhanh</label>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { w: 3, d: 1, label: 'Chuẩn 3-1-0' },
+                      { w: 2, d: 1, label: '2-1-0' },
+                    ]).map(p => (
+                      <button key={p.label} type="button" onClick={() => set({ winPoints: p.w, drawPoints: p.d, lossPoints: 0, allowDraw: true })}
+                        className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors',
+                          form.winPoints === p.w && form.drawPoints === p.d ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {form.formatType === 'GROUP_STAGE' ? (
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số người mỗi bảng ({form.groupSize})</label>

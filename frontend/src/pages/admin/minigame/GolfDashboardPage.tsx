@@ -8,8 +8,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Search,
-  BarChart2, ClipboardList, Save, Crown, Flag,
+  BarChart2, ClipboardList, Save, Crown, Flag, Image as ImageIcon, FileDown,
 } from 'lucide-react'
+import { exportInfographicAsPng, exportInfographicAsPdf } from '../../../components/reports/infographic/infographic.utils'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -139,6 +140,18 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
       toast.success('Đã kết thúc giải — đã lưu vào lịch sử CLB!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải')
+    }
+  }
+
+  // ── Xuất ảnh/PDF bảng xếp hạng ──
+  const exportLeaderboard = async (fmt: 'png' | 'pdf') => {
+    const el = `golf-lb-${id}`
+    const fname = `BXH-golf-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    try {
+      if (fmt === 'png') await exportInfographicAsPng(el, fname)
+      else await exportInfographicAsPdf(el, fname)
+    } catch {
+      toast.error('Xuất thất bại')
     }
   }
 
@@ -351,7 +364,12 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
               <p className="mt-2 text-sm text-slate-500">Chưa có golfer để xếp hạng.</p>
             </div>
           ) : (
-            <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
+              </div>
+            <div id={`golf-lb-${id}`} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -380,6 +398,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 Stroke-play: <b>tổng gậy nhỏ nhất</b> đứng đầu. Golfer chưa ghi điểm xếp cuối.
               </p>
             </div>
+            </>
           )
         )}
       </div>

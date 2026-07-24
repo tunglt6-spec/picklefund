@@ -9,7 +9,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
   CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
+  Image as ImageIcon, FileDown,
 } from 'lucide-react'
+import { exportInfographicAsPng, exportInfographicAsPdf } from '../../../components/reports/infographic/infographic.utils'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -213,6 +215,18 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    }
+  }
+
+  // ── Xuất ảnh/PDF bảng xếp hạng ──
+  const exportStandings = async (fmt: 'png' | 'pdf') => {
+    const el = `std-${id}`
+    const fname = `BXH-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    try {
+      if (fmt === 'png') await exportInfographicAsPng(el, fname)
+      else await exportInfographicAsPdf(el, fname)
+    } catch {
+      toast.error('Xuất thất bại')
     }
   }
 
@@ -575,8 +589,14 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
               <BarChart2 size={28} className="mx-auto text-slate-300" />
               <p className="mt-2 text-sm text-slate-500">Chưa có đội. Tạo đội và lịch thi đấu để có bảng xếp hạng.</p>
             </div>
-          ) : isKnockout ? (
-            <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          ) : (
+            <>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => exportStandings('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportStandings('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
+              </div>
+              {isKnockout ? (
+            <div id={`std-${id}`} className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               {champion ? (
                 <div className="flex items-center gap-3 rounded-[14px] border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4">
                   <Crown size={30} className="text-amber-500" />
@@ -599,8 +619,8 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+              ) : (
+            <div id={`std-${id}`} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -637,6 +657,8 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 Xếp theo: Điểm → Hiệu số → Bàn thắng. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
               </p>
             </div>
+              )}
+            </>
           )
         )}
       </div>

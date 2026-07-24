@@ -109,7 +109,9 @@ export function MatchHistory() {
               <div key={mg.id} className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold [color:var(--pf-text)] truncate">{mg.name}</p>
+                    <p className="font-semibold [color:var(--pf-text)] truncate">
+                      {mg.sport === 'FOOTBALL' ? '⚽ ' : mg.sport === 'GOLF' ? '⛳ ' : ''}{mg.name}
+                    </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">
                       <CalendarDays size={12} />{mg.endDate ? formatDate(mg.endDate) : mg.createdAt ? formatDate(mg.createdAt.slice(0, 10)) : '—'}
                     </p>
@@ -123,14 +125,24 @@ export function MatchHistory() {
                 </div>
 
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => navigate(`/minigames/${mg.id}/standings`)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
-                    <BarChart3 size={14} />Bảng xếp hạng
-                  </button>
-                  <button onClick={() => navigate(`/minigames/${mg.id}/schedule`)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary)] transition-colors">
-                    <ListChecks size={14} />Chi tiết trận
-                  </button>
+                  {mg.sport === 'FOOTBALL' || mg.sport === 'GOLF' ? (
+                    // Bóng đá/golf có dashboard riêng (BXH/nhánh/điểm ngay trong màn quản lý).
+                    <button onClick={() => navigate(`/minigames/${mg.id}`)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
+                      <BarChart3 size={14} />{mg.sport === 'GOLF' ? 'Bảng điểm golf' : 'Kết quả & BXH'}
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={() => navigate(`/minigames/${mg.id}/standings`)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
+                        <BarChart3 size={14} />Bảng xếp hạng
+                      </button>
+                      <button onClick={() => navigate(`/minigames/${mg.id}/schedule`)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] min-h-11 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary)] transition-colors">
+                        <ListChecks size={14} />Chi tiết trận
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
