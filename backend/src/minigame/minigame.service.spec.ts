@@ -141,6 +141,19 @@ describe('MinigameService', () => {
         }),
       });
     });
+
+    it('truyền sport/scoringModel khi có (đa bộ môn Pha 0)', async () => {
+      mockPrisma.minigame.create.mockResolvedValue(baseMg);
+      await service.create('club-1', 'user-1', {
+        name: 'Giải Golf',
+        format: 'SINGLES',
+        sport: 'GOLF',
+        scoringModel: 'LEADERBOARD',
+      });
+      expect(mockPrisma.minigame.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ sport: 'GOLF', scoringModel: 'LEADERBOARD' }),
+      });
+    });
   });
 
   /* ── addParticipants ── */

@@ -85,10 +85,13 @@ export class MinigameService {
     dto: {
       name: string;
       format: MinigameFormat;
+      sport?: string;
+      scoringModel?: string;
       scheduledAt?: Date;
       settings?: any;
     },
   ) {
+    // sport/scoringModel bỏ trống → DB default PICKLEBALL/HEAD_TO_HEAD (không phá giải cũ).
     return this.prisma.minigame.create({
       data: { clubId, createdById, ...dto },
     });

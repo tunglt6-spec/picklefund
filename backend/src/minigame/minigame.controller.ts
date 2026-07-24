@@ -14,6 +14,7 @@ import {
   IsString,
   IsOptional,
   IsEnum,
+  IsIn,
   IsArray,
   IsInt,
   IsBoolean,
@@ -48,6 +49,9 @@ class CreateMinigameDto {
     'FIXED_DOUBLES_ROUND_ROBIN',
   ])
   format!: MinigameFormat;
+  // Đa bộ môn (Pha 0): tuỳ chọn, mặc định do DB đặt (PICKLEBALL/HEAD_TO_HEAD) → không phá luồng cũ.
+  @IsOptional() @IsString() @MaxLength(30) sport?: string;
+  @IsOptional() @IsIn(['HEAD_TO_HEAD', 'LEADERBOARD']) scoringModel?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() settings?: Record<string, unknown>;
 }
