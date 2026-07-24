@@ -132,8 +132,10 @@ export function MinigameList() {
       const raw: any[] = res.data?.data ?? []
       const list: MiniGame[] = raw.map(m => ({
         id: m.id, clubId: m.clubId, name: m.name, description: m.description ?? undefined,
-        startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
-        endDate: m.endDate ?? undefined, status: normalizeMinigameStatus(m.status),
+        // Model KHÔNG có startDate/endDate — suy từ scheduledAt → startedAt → createdAt (luôn có
+        // ít nhất createdAt nên không còn "—"); endDate lấy từ endedAt (giải đã kết thúc).
+        startDate: (m.scheduledAt ?? m.startedAt ?? m.createdAt)?.slice(0, 10) ?? '',
+        endDate: m.endedAt ? m.endedAt.slice(0, 10) : undefined, status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4, allowDraw: m.settings?.allowDraw ?? false,
         winPoints: m.settings?.winPoints ?? 3, drawPoints: m.settings?.drawPoints ?? 1,
         lossPoints: m.settings?.lossPoints ?? 0, notes: m.notes ?? undefined,

@@ -28,8 +28,10 @@ export function useMinigameSync() {
         clubId: m.clubId,
         name: m.name,
         description: m.description ?? undefined,
-        startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
-        endDate: m.endDate ?? undefined,
+        // Model không có startDate/endDate — suy scheduledAt → startedAt → createdAt (luôn có);
+        // endDate từ endedAt. Tránh cột "Thời gian" ra "—" khi giải không đặt lịch.
+        startDate: (m.scheduledAt ?? m.startedAt ?? m.createdAt)?.slice(0, 10) ?? '',
+        endDate: m.endedAt ? m.endedAt.slice(0, 10) : undefined,
         status: m.status ?? 'DRAFT',
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,

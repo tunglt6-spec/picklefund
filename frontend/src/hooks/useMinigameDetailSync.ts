@@ -36,8 +36,9 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         clubId: m.clubId,
         name: m.name,
         description: m.description ?? undefined,
-        startDate: m.scheduledAt ? m.scheduledAt.slice(0, 10) : (m.startDate ?? ''),
-        endDate: m.endDate ?? undefined,
+        // Suy ngày hiển thị: scheduledAt → startedAt → createdAt (luôn có); endDate từ endedAt.
+        startDate: (m.scheduledAt ?? m.startedAt ?? m.createdAt)?.slice(0, 10) ?? '',
+        endDate: m.endedAt ? m.endedAt.slice(0, 10) : undefined,
         status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,
