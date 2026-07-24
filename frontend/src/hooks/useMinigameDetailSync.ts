@@ -55,6 +55,8 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         createdBy: m.createdById ?? '',
         createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE',
+        sport: m.sport ?? 'PICKLEBALL',
+        scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD',
         drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
       }

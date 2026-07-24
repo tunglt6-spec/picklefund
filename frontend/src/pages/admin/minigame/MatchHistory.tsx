@@ -50,7 +50,7 @@ export function MatchHistory() {
         winPoints: m.settings?.winPoints ?? 3, drawPoints: m.settings?.drawPoints ?? 1,
         lossPoints: m.settings?.lossPoints ?? 0, notes: m.notes ?? undefined,
         createdBy: m.createdById ?? '', createdAt: m.createdAt ?? '',
-        formatType: m.format ?? 'GROUP_STAGE', drawMode: m.settings?.drawMode ?? 'RANDOM',
+        formatType: m.format ?? 'GROUP_STAGE', sport: m.sport ?? 'PICKLEBALL', scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD', drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
       }))
       setMinigamesFromApi(clubId, list)

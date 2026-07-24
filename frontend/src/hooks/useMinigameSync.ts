@@ -39,6 +39,8 @@ export function useMinigameSync() {
         createdBy: m.createdById ?? '',
         createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE',
+        sport: m.sport ?? 'PICKLEBALL',
+        scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD',
         drawMode: m.settings?.drawMode ?? 'RANDOM',
         // pairingMode nằm trong settings — PHẢI carry qua, nếu không FixedDoubles dashboard
         // hiểu nhầm chế độ THỦ CÔNG thành TỰ ĐỘNG (isManual=false) → hiện nút ghép tự động bị BE chặn.

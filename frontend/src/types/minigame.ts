@@ -23,6 +23,10 @@ export interface MiniGame {
   createdBy: string
   createdAt: string
   formatType: MinigameFormatType
+  /** Đa bộ môn: PICKLEBALL (mặc định) | FOOTBALL | GOLF... — quyết định dashboard hiển thị. */
+  sport?: string
+  /** HEAD_TO_HEAD (đối kháng theo trận) | LEADERBOARD (bảng điểm). */
+  scoringModel?: string
   drawMode: DrawMode
   pairingMode?: PairingMode
   /** FIXED_DOUBLES_ROUND_ROBIN: đã sinh lịch lượt đi & lượt về (double round-robin). */
