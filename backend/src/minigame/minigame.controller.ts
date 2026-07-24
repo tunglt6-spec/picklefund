@@ -222,6 +222,24 @@ export class MinigameController {
     );
   }
 
+  // BÓNG ĐÁ (Pha 1c): sinh lịch vòng tròn giữa các đội roster.
+  @Post(':id/football/schedule')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async generateFootballSchedule(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: GenerateScheduleDto,
+  ) {
+    return ok(
+      await this.svc.generateFootballSchedule(
+        id,
+        user.clubId,
+        !!body?.doubleRoundRobin,
+      ),
+      'Đã tạo lịch thi đấu',
+    );
+  }
+
   // GROUP_STAGE: lưu lại cách chia bảng (sau khi kéo-chuyển người giữa các bảng).
   @Put(':id/groups')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')

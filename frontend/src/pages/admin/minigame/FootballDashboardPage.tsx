@@ -1,13 +1,14 @@
 /**
- * FootballDashboardPage (Pha 1b) — Dashboard bộ môn BÓNG ĐÁ.
- * Khác pickleball: đội có NHIỀU cầu thủ (roster) gồm thành viên CLB + khách tự do.
- * Màn này quản lý ĐỘI & CẦU THỦ (tạo đội, thêm/bớt cầu thủ, xóa đội) dùng endpoint
- * roster Pha 1a. Lịch thi đấu + BXH bóng đá sẽ bổ sung ở Pha 1c.
+ * FootballDashboardPage (Pha 1b + 1c) — Dashboard bộ môn BÓNG ĐÁ.
+ * 3 tab: Đội bóng (roster nhiều người) · Lịch & Kết quả (vòng tròn, nhập tỉ số) ·
+ * Bảng xếp hạng (Thắng-Hòa-Thua + bàn thắng/hiệu số, tính client từ matches).
+ * Tái dùng endpoint: roster (Pha 1a), football/schedule + matches/:id/score + /schedule (Pha 1c).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
+  CalendarDays, BarChart2, ListChecks, Save,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
@@ -15,9 +16,19 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
+import { cn } from '../../../lib/utils'
 
 interface RosterMember { id: string; memberId?: string | null; guestName?: string | null; role?: string | null }
 interface RosterTeam { id: string; name: string; members: RosterMember[] }
+interface FbMatch {
+  id: string
+  teamAId?: string | null; teamBId?: string | null
+  teamA?: { id: string; name: string } | null
+  teamB?: { id: string; name: string } | null
+  scoreA?: number | null; scoreB?: number | null
+  round: number; leg: number; status: string; playedAt?: string | null
+}
+type Tab = 'teams' | 'schedule' | 'standings'
 
 export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const { id } = useParams<{ id: string }>()
@@ -35,7 +46,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     return map
   }, [members])
 
+  const [tab, setTab] = useState<Tab>('teams')
   const [teams, setTeams] = useState<RosterTeam[]>([])
+  const [matches, setMatches] = useState<FbMatch[]>([])
   const [loading, setLoading] = useState(true)
 
   // Form tạo đội mới
@@ -52,14 +65,20 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const [addGuest, setAddGuest] = useState('')
   const addGuestRef = useRef<HTMLInputElement>(null)
 
+  // Lịch thi đấu
+  const [doubleLeg, setDoubleLeg] = useState(false)
+  const [genLoading, setGenLoading] = useState(false)
+  const [scoreEdits, setScoreEdits] = useState<Record<string, { a: string; b: string }>>({})
+
   const fetchDetail = useCallback(async () => {
     if (!id) return
     try {
       const res = await api.get(`/minigames/${id}`)
       const m = res.data?.data ?? res.data
       setTeams((m?.teams ?? []) as RosterTeam[])
+      setMatches((m?.matches ?? []) as FbMatch[])
     } catch {
-      toast.error('Không tải được danh sách đội')
+      toast.error('Không tải được dữ liệu giải')
     } finally {
       setLoading(false)
     }
@@ -71,26 +90,22 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     rm.guestName?.trim() || (rm.memberId ? memberName[rm.memberId] ?? 'Thành viên' : 'Thành viên')
 
   const totalPlayers = teams.reduce((s, t) => s + (t.members?.length ?? 0), 0)
+  const completedMatches = matches.filter(m => m.status === 'COMPLETED').length
 
   // ── Tạo đội mới ──
   const togglePick = (mid: string) =>
     setPickIds(ids => ids.includes(mid) ? ids.filter(x => x !== mid) : [...ids, mid])
-
   const addGuestToForm = () => {
-    const n = guestName.trim()
-    if (!n) return
+    const n = guestName.trim(); if (!n) return
     setGuests(g => [...g, n]); setGuestName('')
   }
-
   const createTeam = async () => {
     const name = newTeamName.trim()
     if (!name) { toast.error('Nhập tên đội'); return }
     setSaving(true)
     try {
       await api.post(`/minigames/${id}/roster-teams`, {
-        name,
-        memberIds: pickIds,
-        guests: guests.map(g => ({ name: g })),
+        name, memberIds: pickIds, guests: guests.map(g => ({ name: g })),
       })
       toast.success(`Đã tạo đội "${name}"`)
       setNewTeamName(''); setPickIds([]); setGuests([]); setSearch('')
@@ -109,10 +124,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     const guestList = addGuest.trim() ? [{ name: addGuest.trim() }] : []
     if (addPickIds.length === 0 && guestList.length === 0) { toast.error('Chọn cầu thủ hoặc nhập tên khách'); return }
     try {
-      await api.post(`/minigames/roster-teams/${teamId}/members`, {
-        memberIds: addPickIds,
-        guests: guestList,
-      })
+      await api.post(`/minigames/roster-teams/${teamId}/members`, { memberIds: addPickIds, guests: guestList })
       toast.success('Đã thêm cầu thủ')
       setAddingTo(null); setAddPickIds([]); setAddGuest('')
       await fetchDetail()
@@ -120,32 +132,56 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       toast.error(e?.response?.data?.message ?? 'Thêm cầu thủ thất bại')
     }
   }
-
   const removeMember = async (rosterMemberId: string) => {
-    try {
-      await api.delete(`/minigames/roster-members/${rosterMemberId}`)
-      await fetchDetail()
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Xóa cầu thủ thất bại')
-    }
+    try { await api.delete(`/minigames/roster-members/${rosterMemberId}`); await fetchDetail() }
+    catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa cầu thủ thất bại') }
   }
-
   const deleteTeam = async (teamId: string, name: string) => {
     if (!window.confirm(`Xóa đội "${name}" và toàn bộ cầu thủ trong đội?`)) return
+    if (matches.length > 0) { toast.error('Hãy xóa lịch thi đấu trước khi đổi danh sách đội.'); return }
+    try { await api.delete(`/minigames/${id}/teams/${teamId}`); toast.success('Đã xóa đội'); await fetchDetail() }
+    catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa đội thất bại') }
+  }
+
+  // ── Lịch thi đấu ──
+  const generateSchedule = async () => {
+    if (teams.length < 2) { toast.error('Cần ít nhất 2 đội'); return }
+    setGenLoading(true)
     try {
-      await api.delete(`/minigames/${id}/teams/${teamId}`)
-      toast.success('Đã xóa đội')
+      await api.post(`/minigames/${id}/football/schedule`, { doubleRoundRobin: doubleLeg })
+      toast.success('Đã tạo lịch thi đấu vòng tròn')
       await fetchDetail()
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Xóa đội thất bại')
+      toast.error(e?.response?.data?.message ?? 'Tạo lịch thất bại')
+    } finally { setGenLoading(false) }
+  }
+  const clearSchedule = async () => {
+    if (!window.confirm('Xóa toàn bộ lịch & kết quả thi đấu? Bảng xếp hạng sẽ về 0.')) return
+    try { await api.delete(`/minigames/${id}/schedule`); toast.success('Đã xóa lịch'); setScoreEdits({}); await fetchDetail() }
+    catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa lịch thất bại') }
+  }
+  const saveScore = async (matchId: string) => {
+    const e = scoreEdits[matchId]
+    const a = parseInt(e?.a ?? '', 10); const b = parseInt(e?.b ?? '', 10)
+    if (Number.isNaN(a) || Number.isNaN(b)) { toast.error('Nhập tỉ số hai đội'); return }
+    try {
+      await api.patch(`/minigames/matches/${matchId}/score`, { scoreA: a, scoreB: b })
+      toast.success('Đã lưu tỉ số')
+      await fetchDetail()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Lưu tỉ số thất bại')
     }
   }
 
-  // ── Kết thúc giải đấu ──
+  // ── Kết thúc giải ──
   const canFinish = mg && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
   const handleEnd = async () => {
     if (!id) return
-    if (!window.confirm('Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.')) return
+    const remaining = matches.length - completedMatches
+    const msg = remaining > 0
+      ? `Còn ${remaining} trận chưa có tỉ số. Vẫn kết thúc giải đấu?`
+      : 'Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.'
+    if (!window.confirm(msg)) return
     try {
       await api.post(`/minigames/${id}/end`)
       resync?.()
@@ -154,6 +190,42 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
     }
   }
+
+  // ── Bảng xếp hạng (tính client từ matches đã hoàn thành) ──
+  const standings = useMemo(() => {
+    const stat: Record<string, { id: string; name: string; P: number; W: number; D: number; L: number; GF: number; GA: number }> = {}
+    teams.forEach(t => { stat[t.id] = { id: t.id, name: t.name, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0 } })
+    matches
+      .filter(m => m.status === 'COMPLETED' && m.teamAId && m.teamBId && m.scoreA != null && m.scoreB != null)
+      .forEach(m => {
+        const a = stat[m.teamAId!]; const b = stat[m.teamBId!]
+        if (!a || !b) return
+        const sa = m.scoreA!; const sb = m.scoreB!
+        a.P++; b.P++; a.GF += sa; a.GA += sb; b.GF += sb; b.GA += sa
+        if (sa > sb) { a.W++; b.L++ } else if (sa < sb) { b.W++; a.L++ } else { a.D++; b.D++ }
+      })
+    const win = mg?.winPoints ?? 3, draw = mg?.drawPoints ?? 1, loss = mg?.lossPoints ?? 0
+    return Object.values(stat)
+      .map(s => ({ ...s, GD: s.GF - s.GA, Pts: s.W * win + s.D * draw + s.L * loss }))
+      .sort((x, y) => y.Pts - x.Pts || y.GD - x.GD || y.GF - x.GF || x.name.localeCompare(y.name))
+  }, [teams, matches, mg])
+
+  // Nhóm trận theo lượt → vòng để hiển thị
+  const matchGroups = useMemo(() => {
+    const byLegRound: Record<string, FbMatch[]> = {}
+    matches.forEach(m => {
+      const key = `${m.leg}-${m.round}`
+      ;(byLegRound[key] ??= []).push(m)
+    })
+    return Object.entries(byLegRound)
+      .map(([key, ms]) => {
+        const [leg, round] = key.split('-').map(Number)
+        return { leg, round, matches: ms }
+      })
+      .sort((a, b) => a.leg - b.leg || a.round - b.round)
+  }, [matches])
+
+  const hasDoubleLeg = matches.some(m => m.leg === 2)
 
   if (!mg) {
     return (
@@ -166,214 +238,294 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const filteredMembers = members.filter(m =>
     !search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase()))
 
+  const teamName = (m: FbMatch, side: 'A' | 'B') =>
+    (side === 'A' ? m.teamA?.name : m.teamB?.name) ?? 'Đội'
+
+  const TABS: Array<{ key: Tab; label: string; icon: ReactNode }> = [
+    { key: 'teams', label: 'Đội bóng', icon: <Shield size={16} /> },
+    { key: 'schedule', label: 'Lịch & Kết quả', icon: <CalendarDays size={16} /> },
+    { key: 'standings', label: 'Bảng xếp hạng', icon: <BarChart2 size={16} /> },
+  ]
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
-        <button
-          onClick={() => navigate('/minigames')}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
-        >
+        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit">
           <ArrowLeft size={14} /> Danh Sách Minigame
         </button>
-
         <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">
-                ⚽ Bóng Đá
-              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⚽ Bóng Đá</span>
             </div>
             <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <Calendar size={14} />
-                {mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}
-              </span>
+              <span className="flex items-center gap-1.5"><Calendar size={14} />{mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}</span>
             </div>
           </div>
-
           {canFinish && (
-            <button
-              onClick={handleEnd}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
-              style={{ background: '#16A34A' }}
-            >
+            <button onClick={handleEnd} className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto" style={{ background: '#16A34A' }}>
               <Trophy size={16} /> Kết thúc giải đấu
             </button>
           )}
+        </div>
+
+        {/* Tab pills */}
+        <div className="mt-3 flex gap-2 flex-wrap">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
+                tab === t.key ? 'text-white [background:var(--pf-primary)]' : 'text-slate-600 bg-slate-100 hover:bg-slate-200',
+              )}
+            >
+              {t.icon} {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="p-4 sm:p-6 max-w-[1280px] mx-auto flex flex-col gap-5">
         {/* KPI */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:max-w-md">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-xl">
           <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
             <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Shield size={16} /> Số đội</div>
             <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{teams.length}</p>
           </div>
           <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Users size={16} /> Tổng cầu thủ</div>
+            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Users size={16} /> Cầu thủ</div>
             <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{totalPlayers}</p>
+          </div>
+          <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><ListChecks size={16} /> Trận</div>
+            <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{completedMatches}/{matches.length}</p>
           </div>
         </div>
 
-        {/* Tạo đội mới */}
-        <div className="rounded-[18px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-          <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Tạo đội mới</h2>
-          <input
-            value={newTeamName}
-            onChange={e => setNewTeamName(e.target.value)}
-            placeholder="Tên đội (vd: FC Sấm Sét)"
-            className="mt-3 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary)]"
-          />
+        {/* ══ TAB: ĐỘI BÓNG ══ */}
+        {tab === 'teams' && (
+          <>
+            {/* Tạo đội mới */}
+            <div className="rounded-[18px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+              <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Tạo đội mới</h2>
+              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="Tên đội (vd: FC Sấm Sét)"
+                className="mt-3 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+              <div className="mt-3">
+                <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
+                  <Users size={14} /> Cầu thủ là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
+                </div>
+                <div className="mt-2 relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm thành viên..."
+                    className="w-full rounded-xl border border-slate-200 pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
+                  {filteredMembers.map(m => (
+                    <button key={m.id} onClick={() => togglePick(m.id)}
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                        pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-white border-slate-200 hover:border-slate-300'
+                      }`}>
+                      {pickIds.includes(m.id) && <X size={12} />} {m.fullName}
+                    </button>
+                  ))}
+                  {filteredMembers.length === 0 && <p className="text-xs text-slate-400 py-1">Không có thành viên phù hợp</p>}
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]"><UserPlus size={14} /> Khách mời (ngoài CLB)</div>
+                <div className="mt-2 flex gap-2">
+                  <input value={guestName} onChange={e => setGuestName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuestToForm() } }}
+                    placeholder="Tên khách" className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                  <button onClick={addGuestToForm} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
+                </div>
+                {guests.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {guests.map((g, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs">
+                        {g}<button onClick={() => setGuests(gs => gs.filter((_, j) => j !== i))}><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={createTeam} disabled={saving}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-60">
+                <Plus size={16} /> {saving ? 'Đang tạo...' : 'Tạo đội'}
+              </button>
+            </div>
 
-          {/* chọn thành viên CLB */}
-          <div className="mt-3">
-            <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
-              <Users size={14} /> Cầu thủ là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
-            </div>
-            <div className="mt-2 relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm thành viên..."
-                className="w-full rounded-xl border border-slate-200 pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]"
-              />
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
-              {filteredMembers.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => togglePick(m.id)}
-                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                    pickIds.includes(m.id)
-                      ? 'text-white [background:var(--pf-primary)] border-transparent'
-                      : 'text-slate-600 bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  {pickIds.includes(m.id) && <X size={12} />} {m.fullName}
-                </button>
-              ))}
-              {filteredMembers.length === 0 && <p className="text-xs text-slate-400 py-1">Không có thành viên phù hợp</p>}
-            </div>
-          </div>
-
-          {/* khách tự do */}
-          <div className="mt-3">
-            <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]"><UserPlus size={14} /> Khách mời (ngoài CLB)</div>
-            <div className="mt-2 flex gap-2">
-              <input
-                value={guestName}
-                onChange={e => setGuestName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuestToForm() } }}
-                placeholder="Tên khách"
-                className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]"
-              />
-              <button onClick={addGuestToForm} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
-            </div>
-            {guests.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {guests.map((g, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs">
-                    {g}
-                    <button onClick={() => setGuests(gs => gs.filter((_, j) => j !== i))}><X size={12} /></button>
-                  </span>
+            {/* Danh sách đội */}
+            {loading ? (
+              <p className="text-sm text-slate-400">Đang tải danh sách đội...</p>
+            ) : teams.length === 0 ? (
+              <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
+                <Shield size={28} className="mx-auto text-slate-300" />
+                <p className="mt-2 text-sm text-slate-500">Chưa có đội nào. Tạo đội đầu tiên phía trên.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {teams.map(team => (
+                  <div key={team.id} className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={16} className="text-emerald-600" /> {team.name}</p>
+                        <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{team.members?.length ?? 0} cầu thủ</p>
+                      </div>
+                      <button onClick={() => deleteTeam(team.id, team.name)} className="text-slate-400 hover:text-red-500 transition-colors" title="Xóa đội"><Trash2 size={16} /></button>
+                    </div>
+                    <ul className="mt-3 flex flex-col gap-1.5">
+                      {(team.members ?? []).map(rm => (
+                        <li key={rm.id} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
+                          <span className="[color:var(--pf-text)] truncate">
+                            {nameOf(rm)}{rm.guestName && <span className="ml-1.5 text-[10px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">Khách</span>}
+                          </span>
+                          <button onClick={() => removeMember(rm.id)} className="text-slate-400 hover:text-red-500" title="Bỏ khỏi đội"><X size={14} /></button>
+                        </li>
+                      ))}
+                      {(team.members?.length ?? 0) === 0 && <li className="text-xs text-slate-400 px-1">Chưa có cầu thủ</li>}
+                    </ul>
+                    {addingTo === team.id ? (
+                      <div className="mt-3 rounded-xl border border-slate-200 p-3">
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          {members.map(m => (
+                            <button key={m.id} onClick={() => setAddPickIds(ids => ids.includes(m.id) ? ids.filter(x => x !== m.id) : [...ids, m.id])}
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs border transition-colors ${
+                                addPickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-white border-slate-200'
+                              }`}>{m.fullName}</button>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex gap-2">
+                          <input ref={addGuestRef} value={addGuest} onChange={e => setAddGuest(e.target.value)} placeholder="hoặc tên khách"
+                            className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                          <button onClick={() => submitAdd(team.id)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white [background:var(--pf-primary)]">Lưu</button>
+                          <button onClick={() => setAddingTo(null)} className="rounded-lg px-3 py-1.5 text-sm text-slate-500 bg-slate-100">Hủy</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => openAdd(team.id)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
+                        <UserPlus size={14} /> Thêm cầu thủ
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
-          </div>
-
-          <button
-            onClick={createTeam}
-            disabled={saving}
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-60"
-          >
-            <Plus size={16} /> {saving ? 'Đang tạo...' : 'Tạo đội'}
-          </button>
-        </div>
-
-        {/* Danh sách đội */}
-        {loading ? (
-          <p className="text-sm text-slate-400">Đang tải danh sách đội...</p>
-        ) : teams.length === 0 ? (
-          <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
-            <Shield size={28} className="mx-auto text-slate-300" />
-            <p className="mt-2 text-sm text-slate-500">Chưa có đội nào. Tạo đội đầu tiên phía trên.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {teams.map(team => (
-              <div key={team.id} className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-semibold [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={16} className="text-emerald-600" /> {team.name}</p>
-                    <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{team.members?.length ?? 0} cầu thủ</p>
-                  </div>
-                  <button onClick={() => deleteTeam(team.id, team.name)} className="text-slate-400 hover:text-red-500 transition-colors" title="Xóa đội">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                <ul className="mt-3 flex flex-col gap-1.5">
-                  {(team.members ?? []).map(rm => (
-                    <li key={rm.id} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                      <span className="[color:var(--pf-text)] truncate">
-                        {nameOf(rm)}
-                        {rm.guestName && <span className="ml-1.5 text-[10px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">Khách</span>}
-                      </span>
-                      <button onClick={() => removeMember(rm.id)} className="text-slate-400 hover:text-red-500" title="Bỏ khỏi đội"><X size={14} /></button>
-                    </li>
-                  ))}
-                  {(team.members?.length ?? 0) === 0 && <li className="text-xs text-slate-400 px-1">Chưa có cầu thủ</li>}
-                </ul>
-
-                {addingTo === team.id ? (
-                  <div className="mt-3 rounded-xl border border-slate-200 p-3">
-                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                      {members.map(m => (
-                        <button
-                          key={m.id}
-                          onClick={() => setAddPickIds(ids => ids.includes(m.id) ? ids.filter(x => x !== m.id) : [...ids, m.id])}
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs border transition-colors ${
-                            addPickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-white border-slate-200'
-                          }`}
-                        >
-                          {m.fullName}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        ref={addGuestRef}
-                        value={addGuest}
-                        onChange={e => setAddGuest(e.target.value)}
-                        placeholder="hoặc tên khách"
-                        className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary)]"
-                      />
-                      <button onClick={() => submitAdd(team.id)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white [background:var(--pf-primary)]">Lưu</button>
-                      <button onClick={() => setAddingTo(null)} className="rounded-lg px-3 py-1.5 text-sm text-slate-500 bg-slate-100">Hủy</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => openAdd(team.id)}
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] hover:underline"
-                  >
-                    <UserPlus size={14} /> Thêm cầu thủ
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          </>
         )}
 
-        {/* Ghi chú Pha 1c */}
-        <div className="rounded-[14px] border border-sky-100 bg-sky-50 px-4 py-3 text-xs text-sky-800">
-          Lịch thi đấu &amp; Bảng xếp hạng bóng đá (nhập tỉ số, tính Thắng-Hòa-Thua & hiệu số) sẽ được bổ sung ở bước tiếp theo.
-        </div>
+        {/* ══ TAB: LỊCH & KẾT QUẢ ══ */}
+        {tab === 'schedule' && (
+          <>
+            {matches.length === 0 ? (
+              <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><CalendarDays size={18} /> Tạo lịch thi đấu</h2>
+                <p className="mt-1 text-sm text-slate-500">Sinh lịch <strong>vòng tròn</strong> — mỗi đội gặp tất cả các đội còn lại. Cần ít nhất 2 đội ({teams.length} đội hiện có).</p>
+                <label className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)] cursor-pointer w-fit">
+                  <input type="checkbox" checked={doubleLeg} onChange={e => setDoubleLeg(e.target.checked)} className="accent-[color:var(--pf-primary)]" />
+                  Đá lượt đi & lượt về (mỗi cặp gặp nhau 2 lần)
+                </label>
+                <button onClick={generateSchedule} disabled={genLoading || teams.length < 2}
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-50">
+                  <CalendarDays size={16} /> {genLoading ? 'Đang tạo...' : 'Tạo lịch thi đấu'}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-sm [color:var(--pf-color-muted)]">
+                    {matches.length} trận{hasDoubleLeg ? ' (lượt đi & về)' : ''} · đã có kết quả {completedMatches}/{matches.length}
+                  </p>
+                  <button onClick={clearSchedule} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+                    <Trash2 size={14} /> Xóa lịch & tạo lại
+                  </button>
+                </div>
+                {matchGroups.map(grp => (
+                  <div key={`${grp.leg}-${grp.round}`}>
+                    <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] mb-2">
+                      {hasDoubleLeg ? `Lượt ${grp.leg === 1 ? 'đi' : 'về'} · ` : ''}Vòng {grp.round}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {grp.matches.map(m => {
+                        const done = m.status === 'COMPLETED'
+                        const edit = scoreEdits[m.id] ?? { a: done ? String(m.scoreA ?? '') : '', b: done ? String(m.scoreB ?? '') : '' }
+                        return (
+                          <div key={m.id} className="rounded-[14px] border p-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center gap-2 sm:gap-3">
+                            <span className="flex-1 text-right text-sm font-medium [color:var(--pf-text)] truncate">{teamName(m, 'A')}</span>
+                            <input inputMode="numeric" value={edit.a}
+                              onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: e.target.value.replace(/\D/g, ''), b: (s[m.id]?.b ?? (done ? String(m.scoreB ?? '') : '')) } }))}
+                              className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                            <span className="text-slate-400 text-xs">-</span>
+                            <input inputMode="numeric" value={edit.b}
+                              onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: (s[m.id]?.a ?? (done ? String(m.scoreA ?? '') : '')), b: e.target.value.replace(/\D/g, '') } }))}
+                              className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                            <span className="flex-1 text-left text-sm font-medium [color:var(--pf-text)] truncate">{teamName(m, 'B')}</span>
+                            <button onClick={() => saveScore(m.id)} title="Lưu tỉ số"
+                              className={cn('shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-colors', done ? 'bg-emerald-500 hover:bg-emerald-600' : '[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]')}>
+                              <Save size={14} />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
+        )}
+
+        {/* ══ TAB: BẢNG XẾP HẠNG ══ */}
+        {tab === 'standings' && (
+          teams.length === 0 ? (
+            <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
+              <BarChart2 size={28} className="mx-auto text-slate-300" />
+              <p className="mt-2 text-sm text-slate-500">Chưa có đội. Tạo đội và lịch thi đấu để có bảng xếp hạng.</p>
+            </div>
+          ) : (
+            <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
+                      <th className="text-left font-semibold px-3 py-2.5">#</th>
+                      <th className="text-left font-semibold px-3 py-2.5">Đội</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Số trận">T</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Bàn thắng - Bàn thua">BT-BB</th>
+                      <th className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
+                      <th className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {standings.map((s, i) => (
+                      <tr key={s.id} className={cn('border-b last:border-0 border-[color:var(--pf-border)]', i < 3 && 'bg-emerald-50/40')}>
+                        <td className="px-3 py-2.5 [color:var(--pf-color-muted)]">{i + 1}</td>
+                        <td className="px-3 py-2.5 font-medium [color:var(--pf-text)]">{s.name}</td>
+                        <td className="text-center px-2 py-2.5">{s.P}</td>
+                        <td className="text-center px-2 py-2.5 text-emerald-600 font-medium">{s.W}</td>
+                        <td className="text-center px-2 py-2.5 text-slate-500">{s.D}</td>
+                        <td className="text-center px-2 py-2.5 text-red-500">{s.L}</td>
+                        <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.GF}-{s.GA}</td>
+                        <td className={cn('text-center px-2 py-2.5 font-medium', s.GD > 0 ? 'text-emerald-600' : s.GD < 0 ? 'text-red-500' : 'text-slate-500')}>{s.GD > 0 ? `+${s.GD}` : s.GD}</td>
+                        <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary)]">{s.Pts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
+                Xếp theo: Điểm → Hiệu số → Bàn thắng. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
+              </p>
+            </div>
+          )
+        )}
       </div>
     </div>
   )

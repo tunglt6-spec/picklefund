@@ -523,10 +523,46 @@ export class MinigameService {
       }),
     );
 
-    // Round-robin CIRCLE METHOD (mỗi đội gặp nhau đúng 1 lần, không đội nào đá 2 trận/vòng):
-    //  - Số đội chẵn: rounds = n-1, mỗi vòng n/2 trận.
-    //  - Số đội lẻ: thêm 1 BYE (null) → rounds = n, mỗi vòng có 1 đội nghỉ (không sinh trận).
-    const slots: (string | null)[] = teams.map((t) => t.id);
+    // Round-robin CIRCLE METHOD (helper dùng chung với bóng đá — xem buildRoundRobinMatches).
+    const matches = this.buildRoundRobinMatches(
+      id,
+      teams.map((t) => t.id),
+      doubleRoundRobin,
+    );
+
+    await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
+    await this.prisma.minigameMatch.createMany({ data: matches });
+    // Ghi nhớ lựa chọn thể thức vào settings để dashboard hiển thị đúng lượt đi/về.
+    const prevSettings =
+      mg.settings && typeof mg.settings === 'object'
+        ? (mg.settings as Record<string, unknown>)
+        : {};
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...prevSettings, doubleRoundRobin } },
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * Sinh lịch vòng tròn (circle method) từ danh sách teamId:
+   *  - Số đội chẵn: rounds = n-1, mỗi vòng n/2 trận.
+   *  - Số đội lẻ: thêm 1 BYE (null) → rounds = n, mỗi vòng có 1 đội nghỉ (không sinh trận).
+   * doubleRoundRobin=true ⇒ sinh thêm lượt về (đổi vị trí sân). Chỉ ref teamId (đội cố định).
+   */
+  private buildRoundRobinMatches(
+    minigameId: string,
+    teamIds: string[],
+    doubleRoundRobin: boolean,
+  ): Array<{
+    minigameId: string;
+    teamAId: string;
+    teamBId: string;
+    round: number;
+    leg: number;
+    courtNo: number;
+  }> {
+    const slots: (string | null)[] = [...teamIds];
     if (slots.length % 2 === 1) slots.push(null); // BYE placeholder
     const n = slots.length;
     const rounds = n - 1;
@@ -540,8 +576,6 @@ export class MinigameService {
       leg: number;
       courtNo: number;
     }> = [];
-    // Sinh 1 lượt bằng circle method. swap=true ⇒ đội đổi vị trí Đội 1/Đội 2 (lượt về).
-    // Đội CỐ ĐỊNH: chỉ ref teamId, cùng slots cho cả 2 lượt ⇒ đôi giữ nguyên suốt giải.
     const buildLeg = (leg: number, swap: boolean) => {
       let arr = [...slots]; // cố định slot[0], xoay các slot còn lại qua từng vòng
       for (let round = 0; round < rounds; round++) {
@@ -549,37 +583,66 @@ export class MinigameService {
         for (let i = 0; i < half; i++) {
           const a = arr[i];
           const b = arr[n - 1 - i];
-          // a hoặc b = null ⇒ đội còn lại NGHỈ vòng (BYE) — không tạo trận.
           if (a !== null && b !== null) {
             courtNo++;
             matches.push({
-              minigameId: id,
+              minigameId,
               teamAId: swap ? b : a,
               teamBId: swap ? a : b,
-              round: round + 1, // round đánh lại 1..N mỗi lượt
+              round: round + 1,
               leg,
               courtNo,
             });
           }
         }
-        // Xoay: giữ arr[0], đưa arr[1] về cuối.
         arr = [arr[0], ...arr.slice(2), arr[1]];
       }
     };
-
     buildLeg(1, false); // Lượt đi
-    if (doubleRoundRobin) buildLeg(2, true); // Lượt về (đổi sân)
+    if (doubleRoundRobin) buildLeg(2, true); // Lượt về
+    return matches;
+  }
 
-    await this.prisma.minigameMatch.deleteMany({ where: { minigameId: id } });
+  /**
+   * BÓNG ĐÁ (Pha 1c) — sinh lịch VÒNG TRÒN giữa các đội roster (MinigameTeam.members).
+   * Tách khỏi generateSchedule (vốn phân nhánh GROUP_STAGE của pickleball). Có SCHEDULE LOCK:
+   * đã có lịch thì phải xoá (DELETE /schedule) trước khi tạo lại.
+   */
+  async generateFootballSchedule(
+    id: string,
+    clubId: string,
+    doubleRoundRobin = false,
+  ) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.sport !== 'FOOTBALL')
+      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+
+    const existing = await this.prisma.minigameMatch.count({
+      where: { minigameId: id },
+    });
+    if (existing > 0)
+      throw new BadRequestException(
+        'Lịch thi đấu đã được cố định. Hãy xoá lịch hiện tại trước khi tạo lại.',
+      );
+
+    const teams = await this.prisma.minigameTeam.findMany({
+      where: { minigameId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (teams.length < 2)
+      throw new BadRequestException('Cần ít nhất 2 đội để tạo lịch thi đấu.');
+
+    const matches = this.buildRoundRobinMatches(
+      id,
+      teams.map((t) => t.id),
+      doubleRoundRobin,
+    );
     await this.prisma.minigameMatch.createMany({ data: matches });
-    // Ghi nhớ lựa chọn thể thức vào settings để dashboard hiển thị đúng lượt đi/về.
-    const prevSettings =
-      mg.settings && typeof mg.settings === 'object'
-        ? (mg.settings as Record<string, unknown>)
-        : {};
+
+    const prev = this.asSettings(mg.settings);
     await this.prisma.minigame.update({
       where: { id },
-      data: { settings: { ...prevSettings, doubleRoundRobin } },
+      data: { settings: { ...prev, doubleRoundRobin } },
     });
     return this.findOne(id, clubId);
   }

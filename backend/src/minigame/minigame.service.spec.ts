@@ -619,6 +619,63 @@ describe('MinigameService', () => {
     });
   });
 
+  /* ── generateFootballSchedule (Pha 1c) ── */
+  describe('generateFootballSchedule', () => {
+    const footballMg = { ...baseMg, sport: 'FOOTBALL', format: 'GROUP_STAGE' };
+
+    it('4 đội → vòng tròn 6 trận (1 lượt)', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg); // assertOwnership
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([
+        { id: 't-1' }, { id: 't-2' }, { id: 't-3' }, { id: 't-4' },
+      ]);
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count: 6 });
+      mockPrisma.minigame.update.mockResolvedValue(footballMg);
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg); // findOne
+      await service.generateFootballSchedule('mg-1', 'club-1', false);
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(6);
+    });
+
+    it('4 đội lượt đi & về → 12 trận', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([
+        { id: 't-1' }, { id: 't-2' }, { id: 't-3' }, { id: 't-4' },
+      ]);
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count: 12 });
+      mockPrisma.minigame.update.mockResolvedValue(footballMg);
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg);
+      await service.generateFootballSchedule('mg-1', 'club-1', true);
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(12);
+    });
+
+    it('không phải giải bóng đá → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg); // sport mặc định PICKLEBALL
+      await expect(
+        service.generateFootballSchedule('mg-1', 'club-1', false),
+      ).rejects.toThrow('bóng đá');
+    });
+
+    it('đã có lịch → chặn tạo lại', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(6);
+      await expect(
+        service.generateFootballSchedule('mg-1', 'club-1', false),
+      ).rejects.toThrow('đã được cố định');
+    });
+
+    it('ít hơn 2 đội → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([{ id: 't-1' }]);
+      await expect(
+        service.generateFootballSchedule('mg-1', 'club-1', false),
+      ).rejects.toThrow('ít nhất 2 đội');
+    });
+  });
+
   /* ── business event (EPIC7) ── */
   describe('endMinigame → business event (EPIC7)', () => {
     it('phát MINIGAME_COMPLETED sau khi kết thúc minigame', async () => {
