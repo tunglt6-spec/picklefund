@@ -5,15 +5,27 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useAuthStore } from '../../../store/authStore'
+import { useClubDataStore } from '../../../store/clubDataStore'
 import { isGuestId } from '../../../types/minigame'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
 import {
-  exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare,
+  exportInfographicAsPng, shareInfographic, canShare,
 } from '../../../components/reports/infographic/infographic.utils'
+import { exportStandingsPDF } from '../../../lib/export'
 
 const EXPORT_ID = 'mg-standings-export'
+
+const SPORT_LABEL: Record<string, string> = {
+  PICKLEBALL: 'Pickleball', TENNIS: 'Tennis', BADMINTON: 'Cầu lông', TABLE_TENNIS: 'Bóng bàn',
+  FOOTBALL: 'Bóng đá', BASKETBALL: 'Bóng rổ', GOLF: 'Golf',
+}
+const FORMAT_LABEL: Record<string, string> = {
+  RANDOM_DOUBLES: 'Đánh đôi ngẫu nhiên', GROUP_STAGE: 'Vòng bảng',
+  FIXED_DOUBLES_ROUND_ROBIN: 'Đôi cố định vòng tròn',
+}
 
 const RANK_CLASS: Record<number, string> = {
   1: 'bg-yellow-50 border-l-2 border-yellow-400',
@@ -28,6 +40,8 @@ export function StandingsPage() {
   useMinigameDetailSync(id)
   const navigate = useNavigate()
   const { getMinigame, getStandings, groups } = useMinigameStore()
+  const { user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
   const mg = getMinigame(id!)
   const standings = getStandings(id!)
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
@@ -47,8 +61,43 @@ export function StandingsPage() {
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
-    try { await exportInfographicAsPdf(EXPORT_ID, `${fileBase}.pdf`); toast.success('Đã tải PDF bảng xếp hạng') }
-    catch { toast.error('Xuất PDF thất bại') }
+    // PDF VECTOR chuẩn SaaS (mẫu báo cáo tài chính) — không dùng html2canvas (từng ra 15 trang).
+    try {
+      const rowsData = [...standings].sort((a, b) =>
+        b.rankingPoints - a.rankingPoints || b.pointDifference - a.pointDifference || b.pointsFor - a.pointsFor,
+      )
+      await exportStandingsPDF({
+        clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
+        tournamentName: mg.name,
+        sportLabel: SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
+        formatLabel: FORMAT_LABEL[mg.formatType] ?? 'Bảng xếp hạng',
+        rankNote: 'Xếp theo: Điểm → Hiệu số → Điểm ghi được.',
+        stats: [
+          { label: 'Thành viên', value: standings.length },
+          ...(myGroups.length ? [{ label: 'Số bảng', value: myGroups.length }] : []),
+        ],
+        columns: [
+          { key: 'rank', label: '#', w: 8, align: 'left' },
+          { key: 'name', label: 'THÀNH VIÊN', w: 44, align: 'left', bold: true },
+          { key: 'group', label: 'BẢNG', w: 20, align: 'center', tone: 'muted' },
+          { key: 'played', label: 'TRẬN', w: 12, align: 'center' },
+          { key: 'won', label: 'THẮNG', w: 14, align: 'center', tone: 'win' },
+          { key: 'drawn', label: 'HÒA', w: 12, align: 'center', tone: 'muted' },
+          { key: 'lost', label: 'THUA', w: 12, align: 'center', tone: 'loss' },
+          { key: 'pf', label: 'ĐIỂM+', w: 16, align: 'center' },
+          { key: 'pa', label: 'ĐIỂM-', w: 16, align: 'center', tone: 'muted' },
+          { key: 'diff', label: 'HS', w: 16, align: 'center', tone: 'sign' },
+          { key: 'pts', label: 'ĐIỂM', w: 16, align: 'right', tone: 'points' },
+        ],
+        rows: rowsData.map(s => ({
+          name: s.memberName, group: s.groupName ?? '', played: s.played, won: s.won,
+          drawn: s.drawn, lost: s.lost, pf: s.pointsFor, pa: s.pointsAgainst,
+          diff: s.pointDifference > 0 ? `+${s.pointDifference}` : String(s.pointDifference),
+          pts: s.rankingPoints,
+        })),
+      })
+      toast.success('Đã tải PDF bảng xếp hạng')
+    } catch { toast.error('Xuất PDF thất bại') }
   }
   const doShare = async () => {
     try { await shareInfographic(EXPORT_ID, `Bảng xếp hạng ${mg.name}`) }
