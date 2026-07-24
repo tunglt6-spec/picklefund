@@ -649,9 +649,27 @@ model MinigameTeam {
   player2    Member?         @relation("TeamPlayer2", fields: [player2Id], references: [id])
   matchesAsA MinigameMatch[] @relation("MatchTeamA")
   matchesAsB MinigameMatch[] @relation("MatchTeamB")
+  // Roster nhiều người (môn đồng đội: bóng đá...). Môn ĐÔI vẫn dùng player1/player2 (không đụng).
+  members    MinigameTeamMember[]
 
   @@index([minigameId], map: "idx_mt_minigame")
   @@map("minigame_teams")
+}
+
+/// Thành viên trong roster của 1 đội (môn đồng đội, vd bóng đá). memberId = member CLB thật;
+/// guestName = khách ngoài CLB (không tạo member). Bảng ADDITIVE — môn đôi (pickleball) không dùng.
+model MinigameTeamMember {
+  id        String   @id @default(uuid())
+  teamId    String   @map("team_id")
+  memberId  String?  @map("member_id")
+  guestName String?  @map("guest_name") @db.VarChar(120)
+  role      String?  @db.VarChar(20) // CAPTAIN | PLAYER (tuỳ chọn)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  team MinigameTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId], map: "idx_mtm_team")
+  @@map("minigame_team_members")
 }
 
 model MinigameMatch {

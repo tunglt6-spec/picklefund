@@ -89,6 +89,28 @@ class AddParticipantsDto {
   guests?: GuestParticipantDto[];
 }
 
+/** Đội có roster (môn đồng đội): tên + danh sách member CLB + khách tự do. */
+class RosterTeamDto {
+  @IsString() @MaxLength(60) name!: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) memberIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => GuestParticipantDto)
+  guests?: GuestParticipantDto[];
+}
+
+class AddRosterDto {
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) memberIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => GuestParticipantDto)
+  guests?: GuestParticipantDto[];
+}
+
 class UpdateMatchScoreDto {
   @IsInt() @Min(0) scoreA!: number;
   @IsInt() @Min(0) scoreB!: number;
@@ -239,6 +261,45 @@ export class MinigameController {
     @Body() body: CreateTeamDto,
   ) {
     return ok(await this.svc.createTeam(id, user.clubId, body), 'Đã tạo đội');
+  }
+
+  // ── Đội có roster nhiều người (môn đồng đội, vd bóng đá) — Pha 1 ──
+  @Post(':id/roster-teams')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async createRosterTeam(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: RosterTeamDto,
+  ) {
+    return ok(
+      await this.svc.createRosterTeam(id, user.clubId, body),
+      'Đã tạo đội',
+    );
+  }
+
+  @Post('roster-teams/:teamId/members')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async addRosterMembers(
+    @Param('teamId') teamId: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: AddRosterDto,
+  ) {
+    return ok(
+      await this.svc.addRosterMembers(teamId, user.clubId, body),
+      'Đã thêm thành viên',
+    );
+  }
+
+  @Delete('roster-members/:rosterMemberId')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async removeRosterMember(
+    @Param('rosterMemberId') rosterMemberId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.removeRosterMember(rosterMemberId, user.clubId),
+      'Đã xóa thành viên',
+    );
   }
 
   @Delete(':id/teams/:teamId')

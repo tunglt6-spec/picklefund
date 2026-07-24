@@ -35,6 +35,12 @@ const mockPrisma = {
     count: jest.fn().mockResolvedValue(0),
     groupBy: jest.fn().mockResolvedValue([]),
   },
+  minigameTeamMember: {
+    create: jest.fn(),
+    createMany: jest.fn(),
+    findUnique: jest.fn(),
+    delete: jest.fn(),
+  },
   member: { findMany: jest.fn() },
 };
 
@@ -287,6 +293,46 @@ describe('MinigameService', () => {
           player2Id: 'ghost',
         }),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  /* ── roster đội đồng đội (bóng đá — Pha 1) ── */
+  describe('createRosterTeam / removeRosterMember', () => {
+    it('tạo đội kèm roster (member CLB + khách)', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue(baseMg); // assertOwnership
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'm-1' }, { id: 'm-2' }]);
+      mockPrisma.minigameTeam.create.mockResolvedValue({ id: 'team-1', members: [] });
+      await service.createRosterTeam('mg-1', 'club-1', {
+        name: 'FC Sấm Sét',
+        memberIds: ['m-1', 'm-2'],
+        guests: [{ name: 'Khách A' }, { name: '  ' }],
+      });
+      const arg = mockPrisma.minigameTeam.create.mock.calls[0][0];
+      expect(arg.data.name).toBe('FC Sấm Sét');
+      expect(arg.data.members.create).toEqual([
+        { memberId: 'm-1' },
+        { memberId: 'm-2' },
+        { guestName: 'Khách A' }, // khách tên rỗng bị loại
+      ]);
+    });
+
+    it('chặn member không thuộc CLB', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue(baseMg);
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'm-1' }]); // thiếu m-2
+      await expect(
+        service.createRosterTeam('mg-1', 'club-1', { name: 'X', memberIds: ['m-1', 'm-2'] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('xoá roster member: chặn khi khác CLB', async () => {
+      mockPrisma.minigameTeamMember.findUnique.mockResolvedValue({
+        id: 'rm-1',
+        team: { minigame: { clubId: 'club-KHAC' } },
+      });
+      await expect(
+        service.removeRosterMember('rm-1', 'club-1'),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrisma.minigameTeamMember.delete).not.toHaveBeenCalled();
     });
   });
 

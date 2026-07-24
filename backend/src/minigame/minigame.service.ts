@@ -59,6 +59,7 @@ export class MinigameService {
           include: {
             player1: { select: { id: true, fullName: true } },
             player2: { select: { id: true, fullName: true } },
+            members: { orderBy: { createdAt: 'asc' } }, // roster môn đồng đội (Pha 1)
           },
           orderBy: { points: 'desc' },
         },
@@ -238,6 +239,89 @@ export class MinigameService {
         player1: { select: { id: true, fullName: true } },
         player2: { select: { id: true, fullName: true } },
       },
+    });
+  }
+
+  // ── Đội có ROSTER nhiều người (môn đồng đội, vd bóng đá) — Pha 1 ──
+  private cleanGuestNames(guests?: { name?: string }[]): string[] {
+    return (guests ?? [])
+      .map((g) => (g.name ?? '').trim())
+      .filter((n) => n.length > 0)
+      .slice(0, 50);
+  }
+
+  private async assertMembersInClub(clubId: string, ids: string[]) {
+    if (ids.length === 0) return;
+    const valid = await this.prisma.member.findMany({
+      where: { clubId, id: { in: ids }, isDeleted: false },
+      select: { id: true },
+    });
+    if (valid.length !== ids.length)
+      throw new BadRequestException('Có thành viên không thuộc CLB.');
+  }
+
+  /** Tạo đội kèm roster (member CLB + khách tự do). */
+  async createRosterTeam(
+    minigameId: string,
+    clubId: string,
+    dto: { name: string; memberIds?: string[]; guests?: { name: string }[] },
+  ) {
+    await this.assertOwnership(minigameId, clubId);
+    const ids = [...new Set(dto.memberIds ?? [])];
+    await this.assertMembersInClub(clubId, ids);
+    const guestNames = this.cleanGuestNames(dto.guests);
+    return this.prisma.minigameTeam.create({
+      data: {
+        minigameId,
+        name: dto.name.trim() || 'Đội',
+        members: {
+          create: [
+            ...ids.map((memberId) => ({ memberId })),
+            ...guestNames.map((guestName) => ({ guestName })),
+          ],
+        },
+      },
+      include: { members: true },
+    });
+  }
+
+  /** Thêm thành viên vào roster của đội đã có. */
+  async addRosterMembers(
+    teamId: string,
+    clubId: string,
+    dto: { memberIds?: string[]; guests?: { name: string }[] },
+  ) {
+    const team = await this.prisma.minigameTeam.findUnique({
+      where: { id: teamId },
+      include: { minigame: { select: { clubId: true } } },
+    });
+    if (!team || team.minigame.clubId !== clubId)
+      throw new NotFoundException('Đội không tồn tại');
+    const ids = [...new Set(dto.memberIds ?? [])];
+    await this.assertMembersInClub(clubId, ids);
+    const guestNames = this.cleanGuestNames(dto.guests);
+    await this.prisma.minigameTeamMember.createMany({
+      data: [
+        ...ids.map((memberId) => ({ teamId, memberId })),
+        ...guestNames.map((guestName) => ({ teamId, guestName })),
+      ],
+    });
+    return this.prisma.minigameTeam.findUnique({
+      where: { id: teamId },
+      include: { members: true },
+    });
+  }
+
+  /** Xoá 1 thành viên khỏi roster. */
+  async removeRosterMember(rosterMemberId: string, clubId: string) {
+    const row = await this.prisma.minigameTeamMember.findUnique({
+      where: { id: rosterMemberId },
+      include: { team: { include: { minigame: { select: { clubId: true } } } } },
+    });
+    if (!row || row.team.minigame.clubId !== clubId)
+      throw new NotFoundException('Không tìm thấy thành viên đội');
+    return this.prisma.minigameTeamMember.delete({
+      where: { id: rosterMemberId },
     });
   }
 
