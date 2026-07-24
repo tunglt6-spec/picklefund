@@ -213,7 +213,7 @@ export function MinigameList() {
         <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => void openDelegateModal()}>Ủy quyền</ActionButton>
       )}
       {canManage && (
-        <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton>
+        <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/thi-dau')}>Tạo minigame</ActionButton>
       )}
     </div>
   )
@@ -319,7 +319,7 @@ export function MinigameList() {
               ) : (
                 <EmptyState icon={<Trophy size={26} />} title="Chưa có giải đấu nào"
                   description="Tạo giải đấu / minigame đầu tiên cho câu lạc bộ."
-                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/minigames/new')}>Tạo minigame</ActionButton> : undefined} />
+                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/thi-dau')}>Tạo minigame</ActionButton> : undefined} />
               )
             ) : isMobile ? (
               <div className="p-3">
@@ -353,7 +353,7 @@ export function MinigameList() {
           {/* ── Mobile sticky quick action: Tạo minigame ── */}
           {isMobile && canManage && (
             <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
-              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo minigame" icon={<Plus size={20} />} onClick={() => navigate('/minigames/new')} />
+              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo minigame" icon={<Plus size={20} />} onClick={() => navigate('/thi-dau')} />
             </div>
           )}
         </>

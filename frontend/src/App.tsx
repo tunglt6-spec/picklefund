@@ -100,7 +100,6 @@ const MinigameDashboard = lz(() => import('./pages/admin/minigame/MinigameDashbo
 const GroupAssignment = lz(() => import('./pages/admin/minigame/GroupAssignment'), 'GroupAssignment')
 const MatchSchedule = lz(() => import('./pages/admin/minigame/MatchSchedule'), 'MatchSchedule')
 const StandingsPage = lz(() => import('./pages/admin/minigame/StandingsPage'), 'StandingsPage')
-const MatchHistory = lz(() => import('./pages/admin/minigame/MatchHistory'), 'MatchHistory')
 
 // Member pages
 const MemberDashboard = lz(() => import('./pages/member/MemberDashboard'), 'MemberDashboard')
@@ -255,13 +254,11 @@ export default function App() {
             <Route path="/check-in" element={<CheckIn />} />
             <Route path="/activity" element={<WeeklyActivity />} />
             <Route path="/minigames" element={<MinigameList />} />
-            <Route path="/minigames/new" element={<MinigameForm />} />
             <Route path="/minigames/:id" element={<MinigameDashboard />} />
             <Route path="/minigames/:id/edit" element={<MinigameForm />} />
             <Route path="/minigames/:id/groups" element={<GroupAssignment />} />
             <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
             <Route path="/minigames/:id/standings" element={<StandingsPage />} />
-            <Route path="/match-history" element={<MatchHistory />} />
             <Route path="/finance-dashboard" element={<FinanceDashboard />} />
             </Route>
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}

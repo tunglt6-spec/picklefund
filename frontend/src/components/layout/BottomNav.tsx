@@ -5,7 +5,7 @@ import {
   BarChart3, Building2, ScrollText,
   Receipt, ListOrdered, CreditCard, Bell,
   Menu, Trophy,
-  Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, History, Wallet, Award, Cpu,
+  Coins, CalendarDays, CalendarPlus, ClipboardCheck, Activity, Wallet, Award, Cpu,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import type { Role } from '../../types'
@@ -44,8 +44,7 @@ const moreItemsByRole: Partial<Record<Role, { label: string; icon: React.ReactNo
     { label: 'Đăng ký buổi', icon: <CalendarPlus size={20} />, to: '/session-registration' },
     { label: 'Check-in', icon: <ClipboardCheck size={20} />, to: '/check-in' },
     { label: 'Hoạt động tuần', icon: <Activity size={20} />, to: '/activity' },
-    { label: 'Minigame', icon: <Trophy size={20} />, to: '/minigames' },
-    { label: 'Lịch sử thi đấu', icon: <History size={20} />, to: '/match-history' },
+    { label: 'Giải đấu', icon: <Trophy size={20} />, to: '/minigames' },
     // Nhóm xem tài chính toàn CLB (CHỈ XEM)
     { label: 'Tài chính', icon: <Wallet size={20} />, to: '/finance-dashboard' },
     { label: 'Kỳ quỹ', icon: <Calendar size={20} />, to: '/fund-periods' },

@@ -59,11 +59,18 @@ export function CompeteHub() {
           </div>
         ) : (
           // ADMIN: form tạo (trái) + tổng quan (phải, bám bộ môn của form).
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
-            <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <MinigameForm embedded onSportChange={setSport} />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-end">
+              <button onClick={() => navigate('/minigames')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
+                <ListChecks size={14} /> Danh sách giải
+              </button>
             </div>
-            <MinigameOverviewPanel sport={sport} />
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
+              <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                <MinigameForm embedded onSportChange={setSport} />
+              </div>
+              <MinigameOverviewPanel sport={sport} />
+            </div>
           </div>
         )}
       </div>
