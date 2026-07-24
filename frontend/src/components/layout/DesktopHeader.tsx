@@ -76,7 +76,8 @@ export function DesktopHeader() {
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}
-        className="mr-1 flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[13px] font-semibold transition-colors [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white"
+        className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-white transition-transform active:scale-95"
+        style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         title="Hướng dẫn sử dụng app"
       >
         <BookOpen size={15} /> Hướng dẫn
