@@ -642,14 +642,18 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
   const colW = CW / R
   const boxW = Math.min(colW - 6, 62)
   const n0 = rounds[0]?.matches.length || 1
-  const slot0 = areaH / n0
-  const boxH = Math.max(8, Math.min(14, slot0 - 3))
+  // Khoảng cách dòng (pitch) có GIỚI HẠN để bracket ít đội không bị giãn thưa; khi nhiều đội
+  // thì tự co để vừa 1 trang. Khối bracket được CĂN GIỮA theo chiều dọc.
+  const MAX_PITCH = 46
+  const pitch = Math.min(areaH / n0, MAX_PITCH)
+  const boxH = Math.max(7, Math.min(13, pitch - 5))
+  const startY = top + Math.max(0, (areaH - pitch * n0) / 2)
 
   /* Tâm theo chiều dọc của từng trận mỗi vòng */
   const centers = []
   rounds.forEach((rd, r) => {
     if (r === 0) {
-      centers[r] = rd.matches.map((_, i) => top + slot0 * (i + 0.5))
+      centers[r] = rd.matches.map((_, i) => startY + pitch * (i + 0.5))
     } else {
       centers[r] = rd.matches.map((_, i) => {
         const a = centers[r - 1][2 * i]
@@ -689,8 +693,9 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
   }
   rounds.forEach((rd, r) => {
     const x = M + r * colW
+    // Nhãn vòng đặt ngay trên hộp đầu tiên của cột (gắn với nội dung, không lơ lửng).
     font('bold', 7, C.indigoDark)
-    doc.text(clip(rd.label, boxW), x + boxW / 2, top - 3, { align: 'center' })
+    doc.text(clip(rd.label, boxW), x + boxW / 2, centers[r][0] - boxH / 2 - 3.5, { align: 'center' })
     rd.matches.forEach((m, i) => {
       const cy = centers[r][i]
       const y = cy - boxH / 2
