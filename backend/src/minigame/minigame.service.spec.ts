@@ -676,6 +676,84 @@ describe('MinigameService', () => {
     });
   });
 
+  /* ── generateKnockout / advanceKnockout (Pha 1d) ── */
+  describe('knockout (loại trực tiếp)', () => {
+    const footballMg = { ...baseMg, sport: 'FOOTBALL' };
+    const setupTeams = (count: number) => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg); // assertOwnership
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue(
+        Array.from({ length: count }, (_, i) => ({ id: `t-${i + 1}` })),
+      );
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count });
+      mockPrisma.minigame.update.mockResolvedValue(footballMg);
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg); // findOne
+    };
+
+    it('4 đội → vòng 1 có 2 trận, không BYE', async () => {
+      setupTeams(4);
+      await service.generateKnockout('mg-1', 'club-1');
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(2);
+      expect(data.every((m: any) => m.teamAId && m.teamBId)).toBe(true);
+    });
+
+    it('3 đội → size 4: 1 trận thật + 1 walkover (COMPLETED, có winner)', async () => {
+      setupTeams(3);
+      await service.generateKnockout('mg-1', 'club-1');
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(2);
+      const walkover = data.find((m: any) => m.status === 'COMPLETED');
+      expect(walkover).toBeTruthy();
+      expect(walkover.winnerId).toBeTruthy();
+      expect(walkover.teamBId).toBeNull();
+    });
+
+    it('< 2 đội → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.count.mockResolvedValueOnce(0);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([{ id: 't-1' }]);
+      await expect(
+        service.generateKnockout('mg-1', 'club-1'),
+      ).rejects.toThrow('ít nhất 2 đội');
+    });
+
+    it('advance: 2 trận thắng ở vòng 1 → sinh 1 trận chung kết', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg); // assertOwnership
+      mockPrisma.minigameMatch.findMany.mockResolvedValueOnce([
+        { id: 'm1', round: 1, courtNo: 1, status: 'COMPLETED', winnerId: 't-1' },
+        { id: 'm2', round: 1, courtNo: 2, status: 'COMPLETED', winnerId: 't-3' },
+      ]);
+      mockPrisma.minigameMatch.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg); // findOne
+      await service.advanceKnockout('mg-1', 'club-1');
+      const data = mockPrisma.minigameMatch.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(1);
+      expect(data[0]).toMatchObject({ teamAId: 't-1', teamBId: 't-3', round: 2 });
+    });
+
+    it('advance: vòng còn trận chưa phân thắng bại → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.findMany.mockResolvedValueOnce([
+        { id: 'm1', round: 1, courtNo: 1, status: 'COMPLETED', winnerId: 't-1' },
+        { id: 'm2', round: 1, courtNo: 2, status: 'PENDING', winnerId: null },
+      ]);
+      await expect(
+        service.advanceKnockout('mg-1', 'club-1'),
+      ).rejects.toThrow('chưa có đội thắng');
+    });
+
+    it('advance: đã tới chung kết (1 trận) → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(footballMg);
+      mockPrisma.minigameMatch.findMany.mockResolvedValueOnce([
+        { id: 'm1', round: 2, courtNo: 1, status: 'COMPLETED', winnerId: 't-1' },
+      ]);
+      await expect(
+        service.advanceKnockout('mg-1', 'club-1'),
+      ).rejects.toThrow('chung kết');
+    });
+  });
+
   /* ── business event (EPIC7) ── */
   describe('endMinigame → business event (EPIC7)', () => {
     it('phát MINIGAME_COMPLETED sau khi kết thúc minigame', async () => {

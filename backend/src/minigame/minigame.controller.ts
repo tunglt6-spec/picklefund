@@ -240,6 +240,32 @@ export class MinigameController {
     );
   }
 
+  // BÓNG ĐÁ (Pha 1d): tạo nhánh loại trực tiếp (vòng 1).
+  @Post(':id/football/knockout')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async generateKnockout(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.generateKnockout(id, user.clubId),
+      'Đã tạo nhánh đấu',
+    );
+  }
+
+  // BÓNG ĐÁ (Pha 1d): sinh vòng kế tiếp từ đội thắng vòng hiện tại.
+  @Post(':id/football/knockout/advance')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async advanceKnockout(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.advanceKnockout(id, user.clubId),
+      'Đã tạo vòng kế tiếp',
+    );
+  }
+
   // GROUP_STAGE: lưu lại cách chia bảng (sau khi kéo-chuyển người giữa các bảng).
   @Put(':id/groups')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')

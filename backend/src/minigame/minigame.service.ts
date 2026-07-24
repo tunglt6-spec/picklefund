@@ -642,8 +642,156 @@ export class MinigameService {
     const prev = this.asSettings(mg.settings);
     await this.prisma.minigame.update({
       where: { id },
-      data: { settings: { ...prev, doubleRoundRobin } },
+      data: {
+        settings: { ...prev, doubleRoundRobin, footballFormat: 'ROUND_ROBIN' },
+      },
     });
+    return this.findOne(id, clubId);
+  }
+
+  /** Lũy thừa 2 nhỏ nhất ≥ n (tối thiểu 2). Dùng chia nhánh loại trực tiếp. */
+  private nextPow2(n: number): number {
+    let p = 2;
+    while (p < n) p *= 2;
+    return p;
+  }
+
+  /**
+   * Thứ tự HẠT GIỐNG chuẩn cho nhánh single-elimination kích thước `size` (lũy thừa 2).
+   * Trả mảng seed (1-indexed) tại từng vị trí nhánh sao cho hạt giống mạnh gặp yếu
+   * (1 vs size, 2 vs size-1...) và các BYE (seed > số đội) phân bổ đều.
+   */
+  private seedOrder(size: number): number[] {
+    let seeds = [1, 2];
+    while (seeds.length < size) {
+      const sum = seeds.length * 2 + 1;
+      const next: number[] = [];
+      for (const s of seeds) {
+        next.push(s);
+        next.push(sum - s);
+      }
+      seeds = next;
+    }
+    return seeds;
+  }
+
+  /**
+   * BÓNG ĐÁ (Pha 1d) — sinh nhánh LOẠI TRỰC TIẾP (single elimination) vòng 1.
+   * Đội lẻ/không đủ 2^k → thêm BYE (đội mạnh được đi tiếp không đấu = walkover COMPLETED).
+   * Các vòng sau sinh dần bằng advanceKnockout khi vòng hiện tại đã đủ kết quả.
+   */
+  async generateKnockout(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.sport !== 'FOOTBALL')
+      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+
+    const existing = await this.prisma.minigameMatch.count({
+      where: { minigameId: id },
+    });
+    if (existing > 0)
+      throw new BadRequestException(
+        'Lịch thi đấu đã được cố định. Hãy xoá lịch hiện tại trước khi tạo lại.',
+      );
+
+    const teams = await this.prisma.minigameTeam.findMany({
+      where: { minigameId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (teams.length < 2)
+      throw new BadRequestException('Cần ít nhất 2 đội để tạo nhánh đấu.');
+
+    const n = teams.length;
+    const size = this.nextPow2(n);
+    // Vị trí nhánh → teamId (BYE = null khi seed vượt số đội thật).
+    const bracket = this.seedOrder(size).map((seed) =>
+      seed - 1 < n ? teams[seed - 1].id : null,
+    );
+
+    const matches: Prisma.MinigameMatchCreateManyInput[] = [];
+    for (let i = 0; i < size; i += 2) {
+      const a = bracket[i];
+      const b = bracket[i + 1];
+      const court = i / 2 + 1;
+      if (a && b) {
+        matches.push({
+          minigameId: id,
+          teamAId: a,
+          teamBId: b,
+          round: 1,
+          leg: 1,
+          courtNo: court,
+        });
+      } else if (a || b) {
+        // Walkover: đội có mặt đi tiếp luôn (đối thủ là BYE).
+        matches.push({
+          minigameId: id,
+          teamAId: a ?? b,
+          teamBId: null,
+          round: 1,
+          leg: 1,
+          courtNo: court,
+          status: 'COMPLETED',
+          winnerId: (a ?? b) as string,
+        });
+      }
+    }
+    await this.prisma.minigameMatch.createMany({ data: matches });
+
+    const prev = this.asSettings(mg.settings);
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...prev, footballFormat: 'KNOCKOUT' } },
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * BÓNG ĐÁ (Pha 1d) — sinh VÒNG KẾ TIẾP của nhánh loại trực tiếp từ đội thắng vòng hiện tại.
+   * Chặn nếu vòng hiện tại còn trận chưa phân thắng bại (hòa → phải nhập tỉ số quyết định).
+   */
+  async advanceKnockout(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.sport !== 'FOOTBALL')
+      throw new BadRequestException('Chức năng này chỉ dành cho giải bóng đá.');
+
+    const all = await this.prisma.minigameMatch.findMany({
+      where: { minigameId: id },
+      orderBy: [{ round: 'asc' }, { courtNo: 'asc' }],
+    });
+    if (all.length === 0)
+      throw new BadRequestException('Chưa có nhánh đấu. Hãy tạo nhánh trước.');
+
+    const maxRound = Math.max(...all.map((m) => m.round));
+    const current = all
+      .filter((m) => m.round === maxRound)
+      .sort((a, b) => (a.courtNo ?? 0) - (b.courtNo ?? 0));
+
+    if (current.length <= 1)
+      throw new BadRequestException(
+        'Đã tới trận chung kết — không còn vòng kế tiếp.',
+      );
+    const undecided = current.some(
+      (m) => m.status !== 'COMPLETED' || !m.winnerId,
+    );
+    if (undecided)
+      throw new BadRequestException(
+        'Vòng hiện tại còn trận chưa có đội thắng (hòa/chưa nhập tỉ số).',
+      );
+
+    const winners = current.map((m) => m.winnerId as string);
+    const nextRound = maxRound + 1;
+    const next: Prisma.MinigameMatchCreateManyInput[] = [];
+    for (let i = 0; i < winners.length; i += 2) {
+      next.push({
+        minigameId: id,
+        teamAId: winners[i],
+        teamBId: winners[i + 1],
+        round: nextRound,
+        leg: 1,
+        courtNo: i / 2 + 1,
+      });
+    }
+    await this.prisma.minigameMatch.createMany({ data: next });
     return this.findOne(id, clubId);
   }
 

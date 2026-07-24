@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
-  CalendarDays, BarChart2, ListChecks, Save,
+  CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
@@ -26,6 +26,7 @@ interface FbMatch {
   teamA?: { id: string; name: string } | null
   teamB?: { id: string; name: string } | null
   scoreA?: number | null; scoreB?: number | null
+  winnerId?: string | null
   round: number; leg: number; status: string; playedAt?: string | null
 }
 type Tab = 'teams' | 'schedule' | 'standings'
@@ -49,6 +50,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const [tab, setTab] = useState<Tab>('teams')
   const [teams, setTeams] = useState<RosterTeam[]>([])
   const [matches, setMatches] = useState<FbMatch[]>([])
+  const [mode, setMode] = useState<string | null>(null) // 'ROUND_ROBIN' | 'KNOCKOUT' | null
   const [loading, setLoading] = useState(true)
 
   // Form tạo đội mới
@@ -77,6 +79,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       const m = res.data?.data ?? res.data
       setTeams((m?.teams ?? []) as RosterTeam[])
       setMatches((m?.matches ?? []) as FbMatch[])
+      setMode((m?.settings?.footballFormat as string) ?? null)
     } catch {
       toast.error('Không tải được dữ liệu giải')
     } finally {
@@ -173,6 +176,28 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     }
   }
 
+  // ── Loại trực tiếp (knockout) ──
+  const generateKnockout = async () => {
+    if (teams.length < 2) { toast.error('Cần ít nhất 2 đội'); return }
+    setGenLoading(true)
+    try {
+      await api.post(`/minigames/${id}/football/knockout`)
+      toast.success('Đã tạo nhánh loại trực tiếp')
+      await fetchDetail()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Tạo nhánh thất bại')
+    } finally { setGenLoading(false) }
+  }
+  const advanceKnockout = async () => {
+    try {
+      await api.post(`/minigames/${id}/football/knockout/advance`)
+      toast.success('Đã tạo vòng kế tiếp')
+      await fetchDetail()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Không tạo được vòng kế tiếp')
+    }
+  }
+
   // ── Kết thúc giải ──
   const canFinish = mg && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
   const handleEnd = async () => {
@@ -226,6 +251,28 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   }, [matches])
 
   const hasDoubleLeg = matches.some(m => m.leg === 2)
+  const isKnockout = mode === 'KNOCKOUT'
+
+  // Nhãn vòng loại trực tiếp theo số trận trong vòng: 1=Chung kết, 2=Bán kết, 4=Tứ kết...
+  const koRoundLabel = (matchCount: number, roundIdx: number) => {
+    if (matchCount === 1) return 'Chung kết'
+    if (matchCount === 2) return 'Bán kết'
+    if (matchCount === 4) return 'Tứ kết'
+    return `Vòng ${roundIdx} (1/${matchCount})`
+  }
+
+  // Vòng hiện tại (cao nhất) của nhánh loại trực tiếp + trạng thái để mở nút "Tạo vòng kế tiếp".
+  const maxRound = matches.length ? Math.max(...matches.map(m => m.round)) : 0
+  const currentRoundMatches = matches.filter(m => m.round === maxRound)
+  const currentComplete = currentRoundMatches.length > 0 &&
+    currentRoundMatches.every(m => m.status === 'COMPLETED' && m.winnerId)
+  const isFinalReached = currentRoundMatches.length === 1
+  const canAdvance = isKnockout && !isFinalReached && currentComplete
+  const champion = isKnockout && isFinalReached && currentComplete
+    ? (currentRoundMatches[0].winnerId === currentRoundMatches[0].teamAId
+        ? currentRoundMatches[0].teamA?.name
+        : currentRoundMatches[0].teamB?.name) ?? null
+    : null
 
   if (!mg) {
     return (
@@ -422,58 +469,100 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
         {tab === 'schedule' && (
           <>
             {matches.length === 0 ? (
-              <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-                <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><CalendarDays size={18} /> Tạo lịch thi đấu</h2>
-                <p className="mt-1 text-sm text-slate-500">Sinh lịch <strong>vòng tròn</strong> — mỗi đội gặp tất cả các đội còn lại. Cần ít nhất 2 đội ({teams.length} đội hiện có).</p>
-                <label className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)] cursor-pointer w-fit">
-                  <input type="checkbox" checked={doubleLeg} onChange={e => setDoubleLeg(e.target.checked)} className="accent-[color:var(--pf-primary)]" />
-                  Đá lượt đi & lượt về (mỗi cặp gặp nhau 2 lần)
-                </label>
-                <button onClick={generateSchedule} disabled={genLoading || teams.length < 2}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-50">
-                  <CalendarDays size={16} /> {genLoading ? 'Đang tạo...' : 'Tạo lịch thi đấu'}
-                </button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Vòng tròn */}
+                <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                  <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><CalendarDays size={18} /> Vòng tròn</h2>
+                  <p className="mt-1 text-sm text-slate-500">Mỗi đội gặp tất cả các đội còn lại — tính bảng xếp hạng. Cần ít nhất 2 đội ({teams.length} đội hiện có).</p>
+                  <label className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)] cursor-pointer w-fit">
+                    <input type="checkbox" checked={doubleLeg} onChange={e => setDoubleLeg(e.target.checked)} className="accent-[color:var(--pf-primary)]" />
+                    Đá lượt đi & lượt về (mỗi cặp gặp nhau 2 lần)
+                  </label>
+                  <button onClick={generateSchedule} disabled={genLoading || teams.length < 2}
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-50">
+                    <CalendarDays size={16} /> {genLoading ? 'Đang tạo...' : 'Tạo lịch vòng tròn'}
+                  </button>
+                </div>
+                {/* Loại trực tiếp */}
+                <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                  <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Swords size={18} /> Loại trực tiếp</h2>
+                  <p className="mt-1 text-sm text-slate-500">Đấu loại một trận, đội thắng đi tiếp tới khi tìm ra nhà vô địch. Đội lẻ sẽ có suất đi tiếp (BYE) ở vòng 1.</p>
+                  <button onClick={generateKnockout} disabled={genLoading || teams.length < 2}
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm bg-slate-800 hover:bg-slate-900 disabled:opacity-50">
+                    <Swords size={16} /> {genLoading ? 'Đang tạo...' : 'Tạo nhánh loại trực tiếp'}
+                  </button>
+                </div>
               </div>
             ) : (
               <>
+                {champion && (
+                  <div className="rounded-[18px] border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 flex items-center gap-3">
+                    <Crown size={28} className="text-amber-500" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Nhà vô địch</p>
+                      <p className="text-lg font-bold text-amber-900">{champion}</p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="text-sm [color:var(--pf-color-muted)]">
-                    {matches.length} trận{hasDoubleLeg ? ' (lượt đi & về)' : ''} · đã có kết quả {completedMatches}/{matches.length}
+                    {isKnockout ? 'Loại trực tiếp' : `Vòng tròn${hasDoubleLeg ? ' (lượt đi & về)' : ''}`} · {matches.length} trận · đã có kết quả {completedMatches}/{matches.length}
                   </p>
-                  <button onClick={clearSchedule} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
-                    <Trash2 size={14} /> Xóa lịch & tạo lại
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {canAdvance && (
+                      <button onClick={advanceKnockout} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
+                        <ChevronRight size={14} /> Tạo vòng kế tiếp
+                      </button>
+                    )}
+                    <button onClick={clearSchedule} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+                      <Trash2 size={14} /> Xóa lịch & tạo lại
+                    </button>
+                  </div>
                 </div>
                 {matchGroups.map(grp => (
                   <div key={`${grp.leg}-${grp.round}`}>
                     <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] mb-2">
-                      {hasDoubleLeg ? `Lượt ${grp.leg === 1 ? 'đi' : 'về'} · ` : ''}Vòng {grp.round}
+                      {isKnockout
+                        ? koRoundLabel(grp.matches.length, grp.round)
+                        : `${hasDoubleLeg ? `Lượt ${grp.leg === 1 ? 'đi' : 'về'} · ` : ''}Vòng ${grp.round}`}
                     </p>
                     <div className="flex flex-col gap-2">
                       {grp.matches.map(m => {
                         const done = m.status === 'COMPLETED'
+                        const walkover = isKnockout && !m.teamBId
                         const edit = scoreEdits[m.id] ?? { a: done ? String(m.scoreA ?? '') : '', b: done ? String(m.scoreB ?? '') : '' }
                         return (
                           <div key={m.id} className="rounded-[14px] border p-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center gap-2 sm:gap-3">
-                            <span className="flex-1 text-right text-sm font-medium [color:var(--pf-text)] truncate">{teamName(m, 'A')}</span>
-                            <input inputMode="numeric" value={edit.a}
-                              onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: e.target.value.replace(/\D/g, ''), b: (s[m.id]?.b ?? (done ? String(m.scoreB ?? '') : '')) } }))}
-                              className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
-                            <span className="text-slate-400 text-xs">-</span>
-                            <input inputMode="numeric" value={edit.b}
-                              onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: (s[m.id]?.a ?? (done ? String(m.scoreA ?? '') : '')), b: e.target.value.replace(/\D/g, '') } }))}
-                              className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
-                            <span className="flex-1 text-left text-sm font-medium [color:var(--pf-text)] truncate">{teamName(m, 'B')}</span>
-                            <button onClick={() => saveScore(m.id)} title="Lưu tỉ số"
-                              className={cn('shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-colors', done ? 'bg-emerald-500 hover:bg-emerald-600' : '[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]')}>
-                              <Save size={14} />
-                            </button>
+                            <span className={cn('flex-1 text-right text-sm font-medium truncate', done && m.winnerId === m.teamAId ? 'text-emerald-600 font-bold' : '[color:var(--pf-text)]')}>{teamName(m, 'A')}</span>
+                            {walkover ? (
+                              <span className="text-xs text-slate-400 px-3">được đi tiếp</span>
+                            ) : (
+                              <>
+                                <input inputMode="numeric" value={edit.a}
+                                  onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: e.target.value.replace(/\D/g, ''), b: (s[m.id]?.b ?? (done ? String(m.scoreB ?? '') : '')) } }))}
+                                  className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                                <span className="text-slate-400 text-xs">-</span>
+                                <input inputMode="numeric" value={edit.b}
+                                  onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: (s[m.id]?.a ?? (done ? String(m.scoreA ?? '') : '')), b: e.target.value.replace(/\D/g, '') } }))}
+                                  className="w-11 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                              </>
+                            )}
+                            <span className={cn('flex-1 text-left text-sm font-medium truncate', done && m.winnerId === m.teamBId ? 'text-emerald-600 font-bold' : '[color:var(--pf-text)]')}>{walkover ? '—' : teamName(m, 'B')}</span>
+                            {!walkover && (
+                              <button onClick={() => saveScore(m.id)} title="Lưu tỉ số"
+                                className={cn('shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-colors', done ? 'bg-emerald-500 hover:bg-emerald-600' : '[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]')}>
+                                <Save size={14} />
+                              </button>
+                            )}
                           </div>
                         )
                       })}
                     </div>
                   </div>
                 ))}
+                {isKnockout && !canAdvance && !isFinalReached && !currentComplete && (
+                  <p className="text-xs text-slate-400">Nhập đủ tỉ số (có đội thắng) cho vòng hiện tại để mở vòng kế tiếp.</p>
+                )}
               </>
             )}
           </>
@@ -485,6 +574,30 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
               <BarChart2 size={28} className="mx-auto text-slate-300" />
               <p className="mt-2 text-sm text-slate-500">Chưa có đội. Tạo đội và lịch thi đấu để có bảng xếp hạng.</p>
+            </div>
+          ) : isKnockout ? (
+            <div className="rounded-[18px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+              {champion ? (
+                <div className="flex items-center gap-3 rounded-[14px] border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4">
+                  <Crown size={30} className="text-amber-500" />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Nhà vô địch</p>
+                    <p className="text-xl font-bold text-amber-900">{champion}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">Giải loại trực tiếp đang diễn ra — nhà vô địch sẽ hiện khi chung kết có kết quả. Xem nhánh đấu ở tab <strong>Lịch &amp; Kết quả</strong>.</p>
+              )}
+              {matchGroups.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  {matchGroups.map(grp => (
+                    <div key={`s-${grp.round}`} className="flex items-center gap-2 text-sm">
+                      <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{koRoundLabel(grp.matches.length, grp.round)}</span>
+                      <span className="[color:var(--pf-color-muted)]">{grp.matches.filter(m => m.status === 'COMPLETED').length}/{grp.matches.length} trận xong</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
