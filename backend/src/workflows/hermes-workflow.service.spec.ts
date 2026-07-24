@@ -25,6 +25,7 @@ const prisma = {
     findMany: jest.fn().mockResolvedValue([]),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   fundPeriod: { findFirst: jest.fn(), count: jest.fn() },
   member: { count: jest.fn(), findMany: jest.fn() },
@@ -33,7 +34,7 @@ const prisma = {
   attendanceSession: { count: jest.fn(), findFirst: jest.fn(), findMany: jest.fn() },
   sessionRegistration: { count: jest.fn() },
   attendanceRecord: { groupBy: jest.fn() },
-  aiAction: { count: jest.fn() },
+  aiAction: { count: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
   minigameMatch: { count: jest.fn() },
 };
 
@@ -104,6 +105,31 @@ describe('HermesWorkflowService', () => {
       expect(prisma.workflowRule.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { clubId: 'club-1' } }),
       );
+    });
+  });
+
+  describe('listRuns — đồng bộ run treo WAITING_APPROVAL với AiAction', () => {
+    it('hạ run WAITING_APPROVAL không còn action chờ → COMPLETED (giữ run còn action chờ)', async () => {
+      prisma.workflowRun.findMany
+        .mockResolvedValueOnce([
+          { id: 'run-stale', resultJson: { createdActionIds: ['a1', 'a2'] } },
+          { id: 'run-live', resultJson: { createdActionIds: ['a3'] } },
+        ]) // resolveStaleApprovalRuns: các run đang WAITING_APPROVAL
+        .mockResolvedValueOnce([]); // listRuns: danh sách trả về
+      prisma.aiAction.findMany.mockResolvedValueOnce([{ id: 'a3' }]); // chỉ a3 còn PENDING_APPROVAL
+      await service.listRuns('club-1', {});
+      expect(prisma.workflowRun.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['run-stale'] } },
+          data: expect.objectContaining({ status: 'COMPLETED' }),
+        }),
+      );
+    });
+
+    it('không có run treo → không update', async () => {
+      prisma.workflowRun.findMany.mockResolvedValue([]);
+      await service.listRuns('club-1', {});
+      expect(prisma.workflowRun.updateMany).not.toHaveBeenCalled();
     });
 
     it('cross-club → NotFound (findFirst null)', async () => {

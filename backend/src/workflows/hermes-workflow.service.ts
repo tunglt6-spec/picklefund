@@ -256,11 +256,64 @@ export class HermesWorkflowService {
   }
 
   // ---------- Runs ----------
+
+  /** TTL duyệt AiAction (giờ) — khớp AiActionsService.approvalTtlHours để đồng bộ "chờ duyệt". */
+  private approvalTtlHours(): number {
+    const raw = Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS);
+    return Number.isFinite(raw) && raw > 0 ? raw : 168; // mặc định 7 ngày
+  }
+
+  /**
+   * Hạ WorkflowRun khỏi WAITING_APPROVAL → COMPLETED khi KHÔNG còn AiAction con nào thực sự chờ
+   * duyệt (đã duyệt/từ chối/hết hạn, hoặc quá TTL). Chạy lazy khi list runs — đồng bộ KPI "Chờ duyệt"
+   * với Approval Center (vốn tự auto-expire AiAction). Trước đây run set WAITING_APPROVAL một lần rồi
+   * treo mãi dù action con đã xử lý → KPI lệch (35 vs 0).
+   */
+  private async resolveStaleApprovalRuns(clubId: string): Promise<void> {
+    const waiting = await this.prisma.workflowRun.findMany({
+      where: { clubId, status: 'WAITING_APPROVAL' as never },
+      select: { id: true, resultJson: true },
+    });
+    if (waiting.length === 0) return;
+    const runActions = waiting.map((r) => {
+      const rj = r.resultJson as { createdActionIds?: string[] } | null;
+      return {
+        id: r.id,
+        actionIds: Array.isArray(rj?.createdActionIds) ? rj!.createdActionIds! : [],
+      };
+    });
+    const allIds = [...new Set(runActions.flatMap((r) => r.actionIds))];
+    const cutoff = new Date(Date.now() - this.approvalTtlHours() * 3_600_000);
+    const stillPending = allIds.length
+      ? await this.prisma.aiAction.findMany({
+          where: {
+            clubId,
+            id: { in: allIds },
+            status: 'PENDING_APPROVAL' as never,
+            createdAt: { gte: cutoff },
+          },
+          select: { id: true },
+        })
+      : [];
+    const pendingSet = new Set(stillPending.map((a) => a.id));
+    const resolvedRunIds = runActions
+      .filter((r) => !r.actionIds.some((aid) => pendingSet.has(aid)))
+      .map((r) => r.id);
+    if (resolvedRunIds.length > 0) {
+      await this.prisma.workflowRun.updateMany({
+        where: { id: { in: resolvedRunIds } },
+        data: { status: 'COMPLETED' as never, completedAt: new Date() },
+      });
+    }
+  }
+
   async listRuns(
     clubIdRaw: string | null,
     filters: { status?: string; ruleId?: string },
   ) {
     const clubId = this.requireClub(clubIdRaw);
+    // Đồng bộ trạng thái run treo trước khi liệt kê (khớp Approval Center).
+    await this.resolveStaleApprovalRuns(clubId);
     const runs = await this.prisma.workflowRun.findMany({
       where: {
         clubId,
