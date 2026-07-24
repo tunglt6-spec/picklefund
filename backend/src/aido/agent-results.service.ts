@@ -105,7 +105,13 @@ export class AgentResultsService {
       }),
       this.prisma.notification.groupBy({
         by: ['channel'],
-        where: { clubId, status: 'SENT', createdAt: { gte: todayStart } },
+        // "Đã gửi" = SENT + READ: thông báo đã đọc (READ) VẪN là đã gửi — nếu chỉ đếm SENT
+        // sẽ thiếu các thông báo đã được đọc (hermes đổi status→READ khi user đọc).
+        where: {
+          clubId,
+          status: { in: ['SENT', 'READ'] },
+          createdAt: { gte: todayStart },
+        },
         _count: { _all: true },
       }),
       this.prisma.notification.count({
