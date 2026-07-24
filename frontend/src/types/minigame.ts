@@ -53,6 +53,28 @@ export function normalizeMinigameStatus(raw?: string | null): MinigameStatus {
     : 'DRAFT'
 }
 
+/**
+ * Suy ngày hiển thị "Thời gian" của giải, ƯU TIÊN NGÀY THI ĐẤU THỰC TẾ.
+ * start: firstPlayedAt (ngày đấu trận đầu) → startedAt → scheduledAt → createdAt (luôn có).
+ * end:   lastPlayedAt (ngày đấu trận cuối) → endedAt; chỉ hiện khi khác ngày bắt đầu.
+ * Model không có startDate/endDate; firstPlayedAt/lastPlayedAt do backend tính (min/max playedAt
+ * của trận COMPLETED). Trận nhập điểm mới có playedAt → phản ánh đúng lúc thực đấu.
+ */
+export function deriveMinigameDates(m: {
+  firstPlayedAt?: string | null
+  lastPlayedAt?: string | null
+  startedAt?: string | null
+  scheduledAt?: string | null
+  endedAt?: string | null
+  createdAt?: string | null
+}): { startDate: string; endDate?: string } {
+  const d = (v?: string | null): string => (v ? String(v).slice(0, 10) : '')
+  const startDate =
+    d(m.firstPlayedAt) || d(m.startedAt) || d(m.scheduledAt) || d(m.createdAt) || ''
+  const endRaw = d(m.lastPlayedAt) || d(m.endedAt) || ''
+  return { startDate, endDate: endRaw && endRaw !== startDate ? endRaw : undefined }
+}
+
 export interface MiniGameParticipant {
   id: string
   minigameId: string

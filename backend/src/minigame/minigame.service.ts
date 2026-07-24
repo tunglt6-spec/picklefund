@@ -23,13 +23,32 @@ export class MinigameService {
   }
 
   async findAll(clubId: string) {
-    return this.prisma.minigame.findMany({
+    const games = await this.prisma.minigame.findMany({
       where: { clubId },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { participants: true, teams: true, matches: true } },
       },
     });
+    if (games.length === 0) return games;
+    // NGÀY THI ĐẤU THỰC TẾ: min/max playedAt của trận đã đấu (COMPLETED) — dùng cho cột "Thời gian".
+    // Danh sách không trả từng trận nên tính sẵn ở đây (1 groupBy, không N+1).
+    const played = await this.prisma.minigameMatch.groupBy({
+      by: ['minigameId'],
+      where: {
+        minigameId: { in: games.map((g) => g.id) },
+        status: 'COMPLETED',
+        playedAt: { not: null },
+      },
+      _min: { playedAt: true },
+      _max: { playedAt: true },
+    });
+    const playedMap = new Map(played.map((p) => [p.minigameId, p]));
+    return games.map((g) => ({
+      ...g,
+      firstPlayedAt: playedMap.get(g.id)?._min.playedAt ?? null,
+      lastPlayedAt: playedMap.get(g.id)?._max.playedAt ?? null,
+    }));
   }
 
   async findOne(id: string, clubId: string) {

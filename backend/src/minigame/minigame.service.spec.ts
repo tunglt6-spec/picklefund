@@ -33,6 +33,7 @@ const mockPrisma = {
     createMany: jest.fn(),
     deleteMany: jest.fn(),
     count: jest.fn().mockResolvedValue(0),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   member: { findMany: jest.fn() },
 };
@@ -76,13 +77,25 @@ describe('MinigameService', () => {
 
   /* ── findAll ── */
   describe('findAll', () => {
-    it('returns list filtered by clubId', async () => {
+    it('returns list filtered by clubId (kèm firstPlayedAt/lastPlayedAt = ngày thi đấu thực tế)', async () => {
       mockPrisma.minigame.findMany.mockResolvedValue([baseMg]);
+      mockPrisma.minigameMatch.groupBy.mockResolvedValue([
+        { minigameId: 'mg-1', _min: { playedAt: new Date('2026-07-10') }, _max: { playedAt: new Date('2026-07-12') } },
+      ]);
       const result = await service.findAll('club-1');
-      expect(result).toEqual([baseMg]);
+      expect(result).toEqual([
+        { ...baseMg, firstPlayedAt: new Date('2026-07-10'), lastPlayedAt: new Date('2026-07-12') },
+      ]);
       expect(mockPrisma.minigame.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { clubId: 'club-1' } }),
       );
+    });
+
+    it('giải chưa có trận đấu → firstPlayedAt/lastPlayedAt = null', async () => {
+      mockPrisma.minigame.findMany.mockResolvedValue([baseMg]);
+      mockPrisma.minigameMatch.groupBy.mockResolvedValue([]);
+      const result = await service.findAll('club-1');
+      expect(result).toEqual([{ ...baseMg, firstPlayedAt: null, lastPlayedAt: null }]);
     });
   });
 

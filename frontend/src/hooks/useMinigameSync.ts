@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMinigameStore } from '../store/minigameStore'
 import api from '../lib/api'
-import type { MiniGame } from '../types/minigame'
+import { deriveMinigameDates, type MiniGame } from '../types/minigame'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -28,10 +28,7 @@ export function useMinigameSync() {
         clubId: m.clubId,
         name: m.name,
         description: m.description ?? undefined,
-        // Model không có startDate/endDate — suy scheduledAt → startedAt → createdAt (luôn có);
-        // endDate từ endedAt. Tránh cột "Thời gian" ra "—" khi giải không đặt lịch.
-        startDate: (m.scheduledAt ?? m.startedAt ?? m.createdAt)?.slice(0, 10) ?? '',
-        endDate: m.endedAt ? m.endedAt.slice(0, 10) : undefined,
+        ...deriveMinigameDates(m),
         status: m.status ?? 'DRAFT',
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,

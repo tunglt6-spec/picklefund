@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMinigameStore } from '../store/minigameStore'
 import api from '../lib/api'
-import { normalizeMinigameStatus, type MiniGame, type MiniGameParticipant } from '../types/minigame'
+import { normalizeMinigameStatus, deriveMinigameDates, type MiniGame, type MiniGameParticipant } from '../types/minigame'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -31,14 +31,20 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
       const m = res.data?.data ?? res.data
       if (!m) return
 
+      // Ngày thi đấu thực tế cho màn chi tiết: min/max playedAt các trận đã đấu (findOne có sẵn matches).
+      const playedDates = (m.matches ?? [])
+        .map((x: any) => x.playedAt)
+        .filter((v: any): v is string => !!v)
+        .sort()
+      const firstPlayedAt = playedDates[0] ?? null
+      const lastPlayedAt = playedDates[playedDates.length - 1] ?? null
+
       const mg: MiniGame = {
         id: m.id,
         clubId: m.clubId,
         name: m.name,
         description: m.description ?? undefined,
-        // Suy ngày hiển thị: scheduledAt → startedAt → createdAt (luôn có); endDate từ endedAt.
-        startDate: (m.scheduledAt ?? m.startedAt ?? m.createdAt)?.slice(0, 10) ?? '',
-        endDate: m.endedAt ? m.endedAt.slice(0, 10) : undefined,
+        ...deriveMinigameDates({ ...m, firstPlayedAt, lastPlayedAt }),
         status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,
