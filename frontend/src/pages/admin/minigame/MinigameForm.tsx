@@ -62,7 +62,7 @@ const DEFAULT: FormState = {
   guestMembers: [],
 }
 
-export function MinigameForm() {
+export function MinigameForm({ embedded = false, onSportChange }: { embedded?: boolean; onSportChange?: (sport: string) => void } = {}) {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEdit = !!id
@@ -114,6 +114,9 @@ export function MinigameForm() {
   }, [id, isEdit])
 
   const set = (patch: Partial<FormState>) => setForm(f => ({ ...f, ...patch }))
+
+  // Báo bộ môn đang chọn ra ngoài (hub 2 cột: panel tổng quan bám theo bộ môn của form).
+  useEffect(() => { onSportChange?.(form.sport) }, [form.sport, onSportChange])
 
   const addGuest = () => {
     const name = guestName.trim()
@@ -271,6 +274,8 @@ export function MinigameForm() {
         })
         addParticipants(mg.id, selectedMembers)
         toast.success('Đã tạo minigame!')
+        navigate(`/minigames/${mg.id}`) // tạo xong → vào thẳng dashboard giải mới
+        return
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Tạo minigame thất bại')
         return
@@ -280,14 +285,14 @@ export function MinigameForm() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className={embedded ? '' : 'flex-1 overflow-y-auto bg-slate-50'}>
       <PageHeader
         title={isEdit ? '✏️ Chỉnh Sửa Minigame' : '🏆 Tạo Minigame Mới'}
         subtitle={`Bước ${step + 1}/${steps.length}: ${steps[step]}`}
       />
 
       {/* Step indicator */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-3">
+      <div className={cn('bg-white border-b border-slate-100 px-4 sm:px-6 py-3', !embedded && 'sticky top-0 z-10')}>
         <div className="flex items-center gap-2">
           {steps.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -304,7 +309,7 @@ export function MinigameForm() {
         </div>
       </div>
 
-      <div className="p-6 max-w-2xl">
+      <div className={embedded ? 'pt-4' : 'p-6 max-w-2xl'}>
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
 
           {/* Step 1 */}

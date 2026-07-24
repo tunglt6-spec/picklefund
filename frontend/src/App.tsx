@@ -115,7 +115,6 @@ const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffi
 const MemberPersonalModule = lz(() => import('./pages/member/modules/MemberPersonalModule'), 'MemberPersonalModule')
 const MemberFinanceModule = lz(() => import('./pages/member/modules/MemberFinanceModule'), 'MemberFinanceModule')
 const MemberActivityModule = lz(() => import('./pages/member/modules/MemberActivityModule'), 'MemberActivityModule')
-const MemberCompeteModule = lz(() => import('./pages/member/modules/MemberCompeteModule'), 'MemberCompeteModule')
 
 // Member accounts + change password
 const MemberAccounts = lz(() => import('./pages/admin/MemberAccounts'), 'MemberAccounts')
@@ -141,7 +140,7 @@ const WorkflowRules = lz(() => import('./pages/admin/workflows/WorkflowRules'), 
 const MembersModule = lz(() => import('./pages/admin/modules/MembersModule'), 'MembersModule')
 const FinanceModule = lz(() => import('./pages/admin/modules/FinanceModule'), 'FinanceModule')
 const ActivityModule = lz(() => import('./pages/admin/modules/ActivityModule'), 'ActivityModule')
-const CompeteModule = lz(() => import('./pages/admin/modules/CompeteModule'), 'CompeteModule')
+const CompeteHub = lz(() => import('./pages/admin/modules/CompeteHub'), 'CompeteHub')
 const SystemModule = lz(() => import('./pages/admin/modules/SystemModule'), 'SystemModule')
 
 const queryClient = new QueryClient()
@@ -272,7 +271,7 @@ export default function App() {
             <Route path="/thanh-vien" element={<MembersModule />} />
             <Route path="/tai-chinh" element={<FinanceModule />} />
             <Route path="/hoat-dong" element={<ActivityModule />} />
-            <Route path="/thi-dau" element={<CompeteModule />} />
+            <Route path="/thi-dau" element={<CompeteHub />} />
             <Route path="/he-thong" element={<SystemModule />} />
             <Route path="/admin/ai-manager" element={<AiManagerDashboard />} />
             <Route path="/admin/ai-manager/club-memory" element={<ClubMemoryManager />} />
@@ -299,7 +298,7 @@ export default function App() {
             <Route path="/member/ca-nhan" element={<MemberPersonalModule />} />
             <Route path="/member/tai-chinh" element={<MemberFinanceModule />} />
             <Route path="/member/hoat-dong" element={<MemberActivityModule />} />
-            <Route path="/member/thi-dau" element={<MemberCompeteModule />} />
+            <Route path="/member/thi-dau" element={<CompeteHub />} />
             <Route path="/member/aido" element={<MemberOffice />} />
             </Route>
           </Route>
