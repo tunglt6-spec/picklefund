@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
+import { UserGuideModal } from '../help/UserGuideModal'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
 import { useApplyBranding } from '../../hooks/useApplyBranding'
 import { useAuthStore } from '../../store/authStore'
+import { useGuideStore } from '../../store/guideStore'
 
 const LISA_ROUTES: Record<string, string> = {
   CLUB_ADMIN: '/lisa',
@@ -23,6 +25,18 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
+  const { open: guideOpen, openGuide, closeGuide } = useGuideStore()
+
+  // Tự bật tài liệu Hướng dẫn LẦN ĐẦU cho mỗi tài khoản trên trình duyệt này (đánh dấu đã xem
+  // vào localStorage). Các lần sau người dùng tự mở qua nút "Hướng dẫn" trên header.
+  useEffect(() => {
+    if (!user) return
+    const key = `pf_guide_seen_v1_${user.username ?? user.id ?? 'user'}`
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1')
+      openGuide()
+    }
+  }, [user, openGuide])
 
   const lisaRoute = user ? LISA_ROUTES[user.role] : null
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
@@ -94,6 +108,9 @@ export function AppLayout() {
           </button>
         )}
       </div>
+
+      {/* Tài liệu Hướng dẫn — render 1 lần, điều khiển qua guideStore (nút header + auto-open) */}
+      <UserGuideModal open={guideOpen} onClose={closeGuide} />
     </div>
   )
 }

@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useNotifStore } from '../../store/notifStore'
-import { UserGuideModal } from '../help/UserGuideModal'
+import { useGuideStore } from '../../store/guideStore'
 import { cn } from '../../lib/utils'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -40,7 +40,7 @@ export function DesktopHeader() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [isFull, setIsFull] = useState(false)
-  const [guideOpen, setGuideOpen] = useState(false)
+  const openGuide = useGuideStore((s) => s.openGuide)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -75,13 +75,12 @@ export function DesktopHeader() {
     <header className="hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b bg-white px-6" style={{ borderColor: 'var(--pf-border)' }}>
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
-        onClick={() => setGuideOpen(true)}
+        onClick={openGuide}
         className="mr-1 flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[13px] font-semibold transition-colors [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white"
         title="Hướng dẫn sử dụng app"
       >
         <BookOpen size={15} /> Hướng dẫn
       </button>
-      <UserGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
       {user.role === 'CLUB_ADMIN' && (
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
