@@ -17,7 +17,9 @@ const STEPS_FOOTBALL = ['Thông Tin Cơ Bản', 'Cấu Hình Điểm Số']
 // Golf: golfer nhập ở màn quản lý → chỉ Thông tin cơ bản + Số vòng đấu.
 const STEPS_GOLF = ['Thông Tin Cơ Bản', 'Số Vòng Đấu']
 
-type SportType = 'PICKLEBALL' | 'FOOTBALL' | 'GOLF'
+// Môn vợt (TENNIS/BADMINTON/TABLE_TENNIS) chơi như pickleball → dùng chung engine HEAD_TO_HEAD + dashboard.
+type SportType = 'PICKLEBALL' | 'TENNIS' | 'BADMINTON' | 'TABLE_TENNIS' | 'FOOTBALL' | 'GOLF'
+const RACKET_SPORTS: SportType[] = ['PICKLEBALL', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS']
 
 interface FormState {
   sport: SportType
@@ -86,7 +88,7 @@ export function MinigameForm() {
         const parts = participants.filter(p => p.minigameId === id && p.status === 'ACTIVE')
         const guestParts = parts.filter(p => p.memberId.startsWith('guest-'))
         setForm({
-          sport: mg.sport === 'FOOTBALL' ? 'FOOTBALL' : mg.sport === 'GOLF' ? 'GOLF' : 'PICKLEBALL',
+          sport: ([...RACKET_SPORTS, 'FOOTBALL', 'GOLF'].includes(mg.sport as SportType) ? mg.sport : 'PICKLEBALL') as SportType,
           rounds: 1,
           name: mg.name,
           description: mg.description ?? '',
@@ -245,7 +247,10 @@ export function MinigameForm() {
         // description chỉ là field UI cục bộ → không gửi lên API create.
         const res = await api.post('/minigames', {
           name: form.name,
-          format: form.formatType, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined },
+          format: form.formatType,
+          // Môn vợt (tennis/cầu lông/bóng bàn) chơi như pickleball → cùng HEAD_TO_HEAD, chỉ khác nhãn sport.
+          sport: form.sport, scoringModel: 'HEAD_TO_HEAD',
+          settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined },
         })
         const mgId: string = res.data?.data?.id
         await api.post(`/minigames/${mgId}/participants`, { memberIds: realMemberIds, guests: guestPayload })
@@ -256,6 +261,7 @@ export function MinigameForm() {
           drawPoints: form.drawPoints, lossPoints: 0, notes: form.notes || undefined,
           createdBy: user?.id ?? 'user-1',
           formatType: form.formatType, drawMode: form.drawMode,
+          sport: form.sport, scoringModel: 'HEAD_TO_HEAD',
           pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined,
           id: mgId,
         })
@@ -304,9 +310,12 @@ export function MinigameForm() {
               {!isEdit && (
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Bộ Môn *</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {([
                       { value: 'PICKLEBALL' as const, label: '🏓 Pickleball', sub: 'Đánh đôi / vòng bảng / đôi cố định' },
+                      { value: 'TENNIS' as const, label: '🎾 Tennis', sub: 'Chơi như pickleball (đôi/đơn/vòng bảng)' },
+                      { value: 'BADMINTON' as const, label: '🏸 Cầu lông', sub: 'Chơi như pickleball (đôi/đơn/vòng bảng)' },
+                      { value: 'TABLE_TENNIS' as const, label: '🏓 Bóng bàn', sub: 'Chơi như pickleball (đôi/đơn/vòng bảng)' },
                       { value: 'FOOTBALL' as const, label: '⚽ Bóng đá', sub: 'Đội nhiều người · vòng tròn / loại trực tiếp' },
                       { value: 'GOLF' as const, label: '⛳ Golf', sub: 'Cá nhân · tính tổng gậy (stroke-play)' },
                     ]).map(opt => (
@@ -320,7 +329,7 @@ export function MinigameForm() {
                               ? { sport: 'FOOTBALL', formatType: 'GROUP_STAGE', allowDraw: true }
                               : opt.value === 'GOLF'
                               ? { sport: 'GOLF', formatType: 'SINGLES', allowDraw: false }
-                              : { sport: 'PICKLEBALL', formatType: 'RANDOM_DOUBLES', allowDraw: false })}
+                              : { sport: opt.value, formatType: 'RANDOM_DOUBLES', allowDraw: false })}
                             className="accent-[var(--pf-primary)]" />
                           {opt.label}
                         </span>

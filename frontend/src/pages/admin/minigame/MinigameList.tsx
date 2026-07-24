@@ -20,7 +20,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useMinigameDelegate } from '../../../hooks/useMinigameDelegate'
-import { normalizeMinigameStatus, deriveMinigameDates, type MinigameStatus, type MiniGame } from '../../../types/minigame'
+import { normalizeMinigameStatus, deriveMinigameDates, sportEmoji, type MinigameStatus, type MiniGame } from '../../../types/minigame'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 import {
@@ -242,7 +242,7 @@ export function MinigameList() {
       render: (r) => (
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="truncate font-medium [color:var(--pf-text)]">{r.mg.name}</span>
+            <span className="truncate font-medium [color:var(--pf-text)]">{sportEmoji(r.mg.sport) && `${sportEmoji(r.mg.sport)} `}{r.mg.name}</span>
             <StatusBadge tone={FORMAT_TONE[r.mg.formatType] ?? 'neutral'}>{FORMAT_SHORT[r.mg.formatType] ?? r.mg.formatType}</StatusBadge>
           </div>
           {r.mg.description && <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">{r.mg.description}</p>}
@@ -328,7 +328,7 @@ export function MinigameList() {
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="truncate font-semibold [color:var(--pf-text)]">{r.mg.name}</p>
+                          <p className="truncate font-semibold [color:var(--pf-text)]">{sportEmoji(r.mg.sport) && `${sportEmoji(r.mg.sport)} `}{r.mg.name}</p>
                           <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{r.mg.startDate || '—'}{r.mg.endDate ? ` → ${r.mg.endDate}` : ''}</p>
                         </div>
                         <StatusBadge tone={STATUS_TONE[r.mg.status] ?? 'neutral'} dot>{STATUS_LABEL[r.mg.status] ?? r.mg.status}</StatusBadge>

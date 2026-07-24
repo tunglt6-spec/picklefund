@@ -10,7 +10,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { formatDate } from '../../../lib/utils'
 import api from '../../../lib/api'
-import { normalizeMinigameStatus, deriveMinigameDates, type MinigameStatus, type MiniGame } from '../../../types/minigame'
+import { normalizeMinigameStatus, deriveMinigameDates, sportEmoji, type MinigameStatus, type MiniGame } from '../../../types/minigame'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, EmptyState, LoadingState, ErrorState,
   type StatusTone,
@@ -110,7 +110,7 @@ export function MatchHistory() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold [color:var(--pf-text)] truncate">
-                      {mg.sport === 'FOOTBALL' ? '⚽ ' : mg.sport === 'GOLF' ? '⛳ ' : ''}{mg.name}
+                      {sportEmoji(mg.sport) && `${sportEmoji(mg.sport)} `}{mg.name}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">
                       <CalendarDays size={12} />{mg.endDate ? formatDate(mg.endDate) : mg.createdAt ? formatDate(mg.createdAt.slice(0, 10)) : '—'}

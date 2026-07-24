@@ -2,6 +2,18 @@ export type MinigameStatus = 'DRAFT' | 'GROUPED' | 'PAIRED' | 'SCHEDULED' | 'IN_
 export type MatchStatus = 'PENDING' | 'PLAYING' | 'COMPLETED' | 'CANCELLED'
 
 export type MinigameFormatType = 'RANDOM_DOUBLES' | 'GROUP_STAGE' | 'FIXED_DOUBLES_ROUND_ROBIN' | 'SINGLES' | 'KNOCKOUT'
+
+/** Emoji nhận diện bộ môn (pickleball là mặc định → không cần prefix). */
+export function sportEmoji(sport?: string | null): string {
+  switch (sport) {
+    case 'FOOTBALL': return '⚽'
+    case 'GOLF': return '⛳'
+    case 'TENNIS': return '🎾'
+    case 'BADMINTON': return '🏸'
+    case 'TABLE_TENNIS': return '🏓'
+    default: return ''
+  }
+}
 export type PairingMode = 'RANDOM_PAIRING' | 'BALANCED_SKILL_PAIRING' | 'MANUAL_PAIRING'
 export type DrawMode = 'RANDOM' | 'FAIR_ROTATION' | 'BALANCED_SKILL' | 'SMART_DRAW' | 'GENDER_BALANCED'
 export type GenderBalanceMode = 'OFF' | 'PREFERRED' | 'REQUIRED'
