@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, LogOut, User, Menu } from 'lucide-react'
+import { Bell, LogOut, User, Menu, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
 import { useNotifStore } from '../../store/notifStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
+import { UserGuideModal } from '../help/UserGuideModal'
 
 interface MobileHeaderProps {
   onMenuClick?: () => void
@@ -23,6 +24,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   // Chuông dùng CHUNG nguồn backend (notifStore) với trang Thông báo → đọc hết là về 0.
   const unreadCount = useNotifStore((s) => s.unreadCount)
   const [open, setOpen] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -72,8 +74,16 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <span className="text-[18px] font-[800] text-slate-900 tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
       </div>
 
-      {/* Right: Bell + Avatar */}
+      {/* Right: Hướng dẫn + Bell + Avatar */}
       <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => setGuideOpen(true)}
+          aria-label="Hướng dẫn sử dụng"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] active:opacity-80"
+        >
+          <BookOpen size={18} />
+        </button>
+        <UserGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
         <button
           onClick={() => navigate(notifRoute)}
           className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100"
