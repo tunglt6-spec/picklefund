@@ -592,11 +592,42 @@ model Minigame {
   teams             MinigameTeam[]
   matches           MinigameMatch[]
   participants      MinigameParticipant[]
+  golfers           MinigameGolfer[]
   miniContributions FundContribution[]    @relation("ContributionMinigame")
   miniExpenses      LivingExpense[]       @relation("ExpenseMinigame")
 
   @@index([clubId])
   @@map("minigames")
+}
+
+/// Golf/LEADERBOARD (Pha 2): mỗi golfer là 1 cá nhân (member CLB hoặc khách tự do).
+model MinigameGolfer {
+  id         String   @id @default(uuid())
+  minigameId String   @map("minigame_id")
+  memberId   String?  @map("member_id")
+  guestName  String?  @map("guest_name") @db.VarChar(120)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  minigame Minigame            @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  scores   MinigameGolfScore[]
+
+  @@index([minigameId])
+  @@map("minigame_golfers")
+}
+
+/// Điểm gậy theo từng vòng của golfer (stroke-play). Bảng xếp hạng = tổng gậy nhỏ nhất.
+model MinigameGolfScore {
+  id        String   @id @default(uuid())
+  golferId  String   @map("golfer_id")
+  round     Int      @default(1)
+  strokes   Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  golfer MinigameGolfer @relation(fields: [golferId], references: [id], onDelete: Cascade)
+
+  @@unique([golferId, round])
+  @@index([golferId])
+  @@map("minigame_golf_scores")
 }
 
 enum MinigameFormat {

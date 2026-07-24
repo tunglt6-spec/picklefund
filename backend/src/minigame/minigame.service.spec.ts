@@ -41,6 +41,14 @@ const mockPrisma = {
     findUnique: jest.fn(),
     delete: jest.fn(),
   },
+  minigameGolfer: {
+    createMany: jest.fn(),
+    findUnique: jest.fn(),
+    delete: jest.fn(),
+  },
+  minigameGolfScore: {
+    upsert: jest.fn(),
+  },
   member: { findMany: jest.fn() },
 };
 
@@ -751,6 +759,80 @@ describe('MinigameService', () => {
       await expect(
         service.advanceKnockout('mg-1', 'club-1'),
       ).rejects.toThrow('chung kết');
+    });
+  });
+
+  /* ── Golf / leaderboard (Pha 2) ── */
+  describe('golf (leaderboard)', () => {
+    const golfMg = { ...baseMg, sport: 'GOLF', scoringModel: 'LEADERBOARD' };
+
+    it('addGolfers: tạo golfer từ member + khách', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(golfMg); // assertOwnership
+      mockPrisma.member.findMany.mockResolvedValue([{ id: 'm-1' }]);
+      mockPrisma.minigameGolfer.createMany.mockResolvedValue({ count: 2 });
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg); // findOne
+      await service.addGolfers('mg-1', 'club-1', {
+        memberIds: ['m-1'], guests: [{ name: 'Khách A' }],
+      });
+      const data = mockPrisma.minigameGolfer.createMany.mock.calls[0][0].data;
+      expect(data).toHaveLength(2);
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ memberId: 'm-1' }),
+          expect.objectContaining({ guestName: 'Khách A' }),
+        ]),
+      );
+    });
+
+    it('addGolfers: không phải giải golf → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg); // PICKLEBALL
+      await expect(
+        service.addGolfers('mg-1', 'club-1', { guests: [{ name: 'X' }] }),
+      ).rejects.toThrow('golf');
+    });
+
+    it('upsertGolfScore: lưu điểm gậy hợp lệ', async () => {
+      mockPrisma.minigameGolfer.findUnique.mockResolvedValue({
+        id: 'g-1', minigame: { clubId: 'club-1', id: 'mg-1' },
+      });
+      mockPrisma.minigameGolfScore.upsert.mockResolvedValue({});
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg); // findOne
+      await service.upsertGolfScore('g-1', 'club-1', 1, 72);
+      expect(mockPrisma.minigameGolfScore.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { golferId_round: { golferId: 'g-1', round: 1 } },
+          create: { golferId: 'g-1', round: 1, strokes: 72 },
+          update: { strokes: 72 },
+        }),
+      );
+    });
+
+    it('upsertGolfScore: số gậy < 1 → chặn', async () => {
+      mockPrisma.minigameGolfer.findUnique.mockResolvedValue({
+        id: 'g-1', minigame: { clubId: 'club-1', id: 'mg-1' },
+      });
+      await expect(
+        service.upsertGolfScore('g-1', 'club-1', 1, 0),
+      ).rejects.toThrow('số nguyên dương');
+    });
+
+    it('upsertGolfScore: golfer khác CLB → chặn', async () => {
+      mockPrisma.minigameGolfer.findUnique.mockResolvedValue({
+        id: 'g-1', minigame: { clubId: 'club-KHAC', id: 'mg-1' },
+      });
+      await expect(
+        service.upsertGolfScore('g-1', 'club-1', 1, 72),
+      ).rejects.toThrow('không tồn tại');
+    });
+
+    it('removeGolfer: xóa golfer trong CLB', async () => {
+      mockPrisma.minigameGolfer.findUnique.mockResolvedValue({
+        id: 'g-1', minigame: { clubId: 'club-1', id: 'mg-1' },
+      });
+      mockPrisma.minigameGolfer.delete.mockResolvedValue({});
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(fullMg);
+      await service.removeGolfer('g-1', 'club-1');
+      expect(mockPrisma.minigameGolfer.delete).toHaveBeenCalledWith({ where: { id: 'g-1' } });
     });
   });
 

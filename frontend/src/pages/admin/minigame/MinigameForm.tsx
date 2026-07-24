@@ -14,8 +14,10 @@ import toast from 'react-hot-toast'
 const STEPS = ['Thông Tin Cơ Bản', 'Cấu Hình Điểm Số', 'Chọn Thành Viên']
 // Bóng đá: đội dựng ở màn quản lý sau khi tạo → bỏ bước "Chọn Thành Viên".
 const STEPS_FOOTBALL = ['Thông Tin Cơ Bản', 'Cấu Hình Điểm Số']
+// Golf: golfer nhập ở màn quản lý → chỉ Thông tin cơ bản + Số vòng đấu.
+const STEPS_GOLF = ['Thông Tin Cơ Bản', 'Số Vòng Đấu']
 
-type SportType = 'PICKLEBALL' | 'FOOTBALL'
+type SportType = 'PICKLEBALL' | 'FOOTBALL' | 'GOLF'
 
 interface FormState {
   sport: SportType
@@ -32,6 +34,7 @@ interface FormState {
   winPoints: number
   drawPoints: number
   lossPoints: number
+  rounds: number
   selectedMemberIds: string[]
   guestMembers: Array<{ id: string; name: string }>
 }
@@ -51,6 +54,7 @@ const DEFAULT: FormState = {
   winPoints: 3,
   drawPoints: 1,
   lossPoints: 0,
+  rounds: 1,
   selectedMemberIds: [],
   guestMembers: [],
 }
@@ -68,7 +72,8 @@ export function MinigameForm() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormState>(DEFAULT)
   const isFootball = form.sport === 'FOOTBALL'
-  const steps = isFootball ? STEPS_FOOTBALL : STEPS
+  const isGolf = form.sport === 'GOLF'
+  const steps = isGolf ? STEPS_GOLF : isFootball ? STEPS_FOOTBALL : STEPS
   const [creating, setCreating] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [guestName, setGuestName] = useState('')
@@ -81,7 +86,8 @@ export function MinigameForm() {
         const parts = participants.filter(p => p.minigameId === id && p.status === 'ACTIVE')
         const guestParts = parts.filter(p => p.memberId.startsWith('guest-'))
         setForm({
-          sport: mg.sport === 'FOOTBALL' ? 'FOOTBALL' : 'PICKLEBALL',
+          sport: mg.sport === 'FOOTBALL' ? 'FOOTBALL' : mg.sport === 'GOLF' ? 'GOLF' : 'PICKLEBALL',
+          rounds: 1,
           name: mg.name,
           description: mg.description ?? '',
           startDate: mg.startDate,
@@ -166,6 +172,33 @@ export function MinigameForm() {
         navigate(`/minigames/${mgId}`)
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Tạo giải bóng đá thất bại')
+      } finally { setCreating(false) }
+      return
+    }
+    // ── Golf: tạo giải (không cần chọn thành viên) → thêm golfer ở màn quản lý ──
+    if (isGolf && !isEdit) {
+      setCreating(true)
+      try {
+        const res = await api.post('/minigames', {
+          name: form.name,
+          format: 'SINGLES',
+          sport: 'GOLF',
+          scoringModel: 'LEADERBOARD',
+          settings: { rounds: form.rounds },
+        })
+        const mgId: string = res.data?.data?.id
+        createMinigame({
+          id: mgId, clubId, name: form.name, startDate: form.startDate,
+          endDate: form.endDate || undefined, status: 'DRAFT',
+          groupSize: form.groupSize, allowDraw: false, winPoints: 0,
+          drawPoints: 0, lossPoints: 0, notes: form.notes || undefined,
+          createdBy: user?.id ?? 'user-1', formatType: 'SINGLES',
+          sport: 'GOLF', scoringModel: 'LEADERBOARD', drawMode: form.drawMode,
+        })
+        toast.success('Đã tạo giải golf! Hãy thêm golfer.')
+        navigate(`/minigames/${mgId}`)
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message ?? 'Tạo giải golf thất bại')
       } finally { setCreating(false) }
       return
     }
@@ -271,10 +304,11 @@ export function MinigameForm() {
               {!isEdit && (
                 <div>
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Bộ Môn *</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {([
                       { value: 'PICKLEBALL' as const, label: '🏓 Pickleball', sub: 'Đánh đôi / vòng bảng / đôi cố định' },
-                      { value: 'FOOTBALL' as const, label: '⚽ Bóng đá', sub: 'Đội nhiều người · vòng bảng · bàn thắng' },
+                      { value: 'FOOTBALL' as const, label: '⚽ Bóng đá', sub: 'Đội nhiều người · vòng tròn / loại trực tiếp' },
+                      { value: 'GOLF' as const, label: '⛳ Golf', sub: 'Cá nhân · tính tổng gậy (stroke-play)' },
                     ]).map(opt => (
                       <label key={opt.value} className={cn(
                         'flex flex-col gap-0.5 rounded-lg px-3 py-2.5 cursor-pointer border transition-colors',
@@ -284,6 +318,8 @@ export function MinigameForm() {
                           <input type="radio" name="sport" checked={form.sport === opt.value}
                             onChange={() => set(opt.value === 'FOOTBALL'
                               ? { sport: 'FOOTBALL', formatType: 'GROUP_STAGE', allowDraw: true }
+                              : opt.value === 'GOLF'
+                              ? { sport: 'GOLF', formatType: 'SINGLES', allowDraw: false }
                               : { sport: 'PICKLEBALL', formatType: 'RANDOM_DOUBLES', allowDraw: false })}
                             className="accent-[var(--pf-primary)]" />
                           {opt.label}
@@ -296,8 +332,13 @@ export function MinigameForm() {
               )}
               {isFootball ? (
                 <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-xs text-sky-800">
-                  Thể thức: <b>Vòng bảng / vòng tròn</b> (tính điểm 3-1-0, xếp hạng theo điểm & hiệu số bàn thắng).
-                  Loại trực tiếp sẽ được bổ sung. Đội bóng + cầu thủ sẽ dựng ở màn quản lý sau khi tạo giải.
+                  Thể thức: <b>Vòng tròn</b> (điểm 3-1-0, xếp theo điểm & hiệu số) hoặc <b>Loại trực tiếp</b> (đấu loại tìm nhà vô địch).
+                  Chọn thể thức khi tạo lịch. Đội bóng + cầu thủ dựng ở màn quản lý sau khi tạo giải.
+                </div>
+              ) : isGolf ? (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800">
+                  Golf <b>stroke-play</b>: mỗi golfer ghi số gậy từng vòng, <b>tổng gậy nhỏ nhất</b> đứng đầu bảng.
+                  Golfer (thành viên CLB + khách) sẽ thêm ở màn quản lý sau khi tạo giải.
                 </div>
               ) : (
               <div>
@@ -390,7 +431,22 @@ export function MinigameForm() {
           )}
 
           {/* Step 2 */}
-          {step === 1 && (
+          {step === 1 && isGolf && (
+            <div className="space-y-5">
+              <div>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số vòng đấu ({form.rounds})</label>
+                <input type="range" min={1} max={8} value={form.rounds} onChange={e => set({ rounds: +e.target.value })}
+                  className="w-full accent-[var(--pf-primary)]" />
+                <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  {[1,2,3,4,5,6,7,8].map(n => <span key={n}>{n}</span>)}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Mỗi vòng golfer ghi 1 số gậy. Bảng xếp hạng tính <b>tổng gậy</b> tất cả các vòng — nhỏ nhất đứng đầu.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 (pickleball/bóng đá) */}
+          {step === 1 && !isGolf && (
             <div className="space-y-5">
               {form.formatType === 'GROUP_STAGE' ? (
                 <div>
@@ -571,8 +627,8 @@ export function MinigameForm() {
               Tiếp theo <ChevronRight size={16} />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={creating || (!isFootball && form.selectedMemberIds.length < 4)}>
-              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Minigame'}
+            <Button onClick={handleSubmit} disabled={creating || (!isFootball && !isGolf && form.selectedMemberIds.length < 4)}>
+              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isGolf ? 'Tạo Giải Golf' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Minigame'}
             </Button>
           )}
         </div>

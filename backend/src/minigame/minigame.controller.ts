@@ -121,6 +121,12 @@ class GenerateScheduleDto {
   @IsOptional() @IsBoolean() doubleRoundRobin?: boolean;
 }
 
+// Golf (Pha 2): điểm gậy 1 golfer ở 1 vòng.
+class GolfScoreDto {
+  @IsInt() @Min(1) round!: number;
+  @IsInt() @Min(1) strokes!: number;
+}
+
 class GroupDto {
   @IsString() id!: string;
   @IsString() @MaxLength(60) name!: string;
@@ -263,6 +269,44 @@ export class MinigameController {
     return ok(
       await this.svc.advanceKnockout(id, user.clubId),
       'Đã tạo vòng kế tiếp',
+    );
+  }
+
+  // ── GOLF (Pha 2) ──
+  @Post(':id/golfers')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async addGolfers(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: AddRosterDto,
+  ) {
+    return ok(await this.svc.addGolfers(id, user.clubId, body), 'Đã thêm golfer');
+  }
+
+  @Delete('golfers/:golferId')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async removeGolfer(
+    @Param('golferId') golferId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.removeGolfer(golferId, user.clubId), 'Đã xóa golfer');
+  }
+
+  @Patch('golfers/:golferId/score')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async golfScore(
+    @Param('golferId') golferId: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: GolfScoreDto,
+  ) {
+    return ok(
+      await this.svc.upsertGolfScore(
+        golferId,
+        user.clubId,
+        body.round,
+        body.strokes,
+      ),
+      'Đã lưu điểm',
     );
   }
 

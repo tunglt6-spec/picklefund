@@ -73,6 +73,10 @@ export class MinigameService {
         participants: {
           include: { member: { select: { id: true, fullName: true } } },
         },
+        golfers: {
+          include: { scores: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
     if (!mg || mg.clubId !== clubId)
@@ -793,6 +797,68 @@ export class MinigameService {
     }
     await this.prisma.minigameMatch.createMany({ data: next });
     return this.findOne(id, clubId);
+  }
+
+  // ── GOLF / LEADERBOARD (Pha 2) — stroke-play: golfer cá nhân + điểm gậy theo vòng ──
+
+  /** Thêm golfer (thành viên CLB + khách tự do) vào giải golf. */
+  async addGolfers(
+    id: string,
+    clubId: string,
+    dto: { memberIds?: string[]; guests?: { name: string }[] },
+  ) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.sport !== 'GOLF')
+      throw new BadRequestException('Chức năng này chỉ dành cho giải golf.');
+    const ids = [...new Set(dto.memberIds ?? [])];
+    await this.assertMembersInClub(clubId, ids);
+    const guestNames = this.cleanGuestNames(dto.guests);
+    if (ids.length + guestNames.length === 0)
+      throw new BadRequestException('Chưa chọn golfer nào.');
+    await this.prisma.minigameGolfer.createMany({
+      data: [
+        ...ids.map((memberId) => ({ minigameId: id, memberId })),
+        ...guestNames.map((guestName) => ({ minigameId: id, guestName })),
+      ],
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /** Xóa 1 golfer (điểm theo golfer cascade). */
+  async removeGolfer(golferId: string, clubId: string) {
+    const golfer = await this.prisma.minigameGolfer.findUnique({
+      where: { id: golferId },
+      include: { minigame: { select: { clubId: true, id: true } } },
+    });
+    if (!golfer || golfer.minigame.clubId !== clubId)
+      throw new NotFoundException('Golfer không tồn tại');
+    await this.prisma.minigameGolfer.delete({ where: { id: golferId } });
+    return this.findOne(golfer.minigame.id, clubId);
+  }
+
+  /** Nhập/cập nhật điểm gậy 1 golfer ở 1 vòng (upsert theo golferId + round). */
+  async upsertGolfScore(
+    golferId: string,
+    clubId: string,
+    round: number,
+    strokes: number,
+  ) {
+    const golfer = await this.prisma.minigameGolfer.findUnique({
+      where: { id: golferId },
+      include: { minigame: { select: { clubId: true, id: true } } },
+    });
+    if (!golfer || golfer.minigame.clubId !== clubId)
+      throw new NotFoundException('Golfer không tồn tại');
+    if (!Number.isInteger(round) || round < 1)
+      throw new BadRequestException('Vòng không hợp lệ.');
+    if (!Number.isInteger(strokes) || strokes < 1)
+      throw new BadRequestException('Số gậy phải là số nguyên dương.');
+    await this.prisma.minigameGolfScore.upsert({
+      where: { golferId_round: { golferId, round } },
+      create: { golferId, round, strokes },
+      update: { strokes },
+    });
+    return this.findOne(golfer.minigame.id, clubId);
   }
 
   /** Tên bảng hiển thị: Bảng A, Bảng B, … */

@@ -1,7 +1,7 @@
 export type MinigameStatus = 'DRAFT' | 'GROUPED' | 'PAIRED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type MatchStatus = 'PENDING' | 'PLAYING' | 'COMPLETED' | 'CANCELLED'
 
-export type MinigameFormatType = 'RANDOM_DOUBLES' | 'GROUP_STAGE' | 'FIXED_DOUBLES_ROUND_ROBIN'
+export type MinigameFormatType = 'RANDOM_DOUBLES' | 'GROUP_STAGE' | 'FIXED_DOUBLES_ROUND_ROBIN' | 'SINGLES' | 'KNOCKOUT'
 export type PairingMode = 'RANDOM_PAIRING' | 'BALANCED_SKILL_PAIRING' | 'MANUAL_PAIRING'
 export type DrawMode = 'RANDOM' | 'FAIR_ROTATION' | 'BALANCED_SKILL' | 'SMART_DRAW' | 'GENDER_BALANCED'
 export type GenderBalanceMode = 'OFF' | 'PREFERRED' | 'REQUIRED'
