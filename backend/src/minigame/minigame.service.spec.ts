@@ -220,6 +220,85 @@ describe('MinigameService', () => {
     });
   });
 
+  describe('clearMatchScore', () => {
+    it('reverts team stats and resets match when previously COMPLETED', async () => {
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce({
+          id: 'match-1',
+          teamAId: 'team-a',
+          teamBId: 'team-b',
+          scoreA: 11,
+          scoreB: 7,
+          status: 'COMPLETED',
+          minigame: { clubId: 'club-1', settings: {} },
+        })
+        .mockResolvedValueOnce({ id: 'match-1', status: 'PENDING' });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+
+      await service.clearMatchScore('match-1', 'club-1');
+
+      // Đảo thống kê: đội A (thắng) -1 win -3 điểm; đội B (thua) -1 loss -0 điểm.
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith({
+        where: { id: 'team-a' },
+        data: {
+          wins: { decrement: 1 },
+          losses: { decrement: 0 },
+          points: { decrement: 3 },
+        },
+      });
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith({
+        where: { id: 'team-b' },
+        data: {
+          wins: { decrement: 0 },
+          losses: { decrement: 1 },
+          points: { decrement: 0 },
+        },
+      });
+      // Reset trận về trạng thái trống.
+      expect(mockPrisma.minigameMatch.update).toHaveBeenCalledWith({
+        where: { id: 'match-1' },
+        data: {
+          scoreA: null,
+          scoreB: null,
+          winnerId: null,
+          status: 'PENDING',
+          playedAt: null,
+        },
+      });
+    });
+
+    it('does not touch team stats when match not COMPLETED', async () => {
+      mockPrisma.minigameTeam.update.mockClear();
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce({
+          id: 'match-2',
+          teamAId: 'team-a',
+          teamBId: 'team-b',
+          scoreA: null,
+          scoreB: null,
+          status: 'PENDING',
+          minigame: { clubId: 'club-1', settings: {} },
+        })
+        .mockResolvedValueOnce({ id: 'match-2', status: 'PENDING' });
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+
+      await service.clearMatchScore('match-2', 'club-1');
+      expect(mockPrisma.minigameTeam.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when match not owned by club', async () => {
+      mockPrisma.minigameMatch.findUnique.mockResolvedValueOnce({
+        id: 'match-3',
+        status: 'COMPLETED',
+        minigame: { clubId: 'other-club', settings: {} },
+      });
+      await expect(
+        service.clearMatchScore('match-3', 'club-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   /* ── generateTeams ── */
   describe('generateTeams', () => {
     it('throws BadRequestException for unsupported format', async () => {

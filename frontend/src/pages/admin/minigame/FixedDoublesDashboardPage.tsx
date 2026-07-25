@@ -852,6 +852,18 @@ export function FixedDoublesDashboardPage() {
     }
   }, [enterTeamMatchResult])
 
+  // Xóa kết quả trận: persist server (reset điểm + đảo thống kê đội) TRƯỚC, rồi mới xóa local —
+  // fix lỗi refresh điểm hiện lại + BXH sai do trước đây chỉ xóa ở store.
+  const handleDeleteScoreApi = useCallback(async (matchId: string) => {
+    try {
+      await api.delete(`/minigames/matches/${matchId}/score`)
+      deleteTeamMatchResult(matchId)
+      setDeleteConfirm(null)
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi xóa kết quả')
+    }
+  }, [deleteTeamMatchResult])
+
   const mg = getMinigame(id!)
   if (!mg) {
     return (
@@ -1194,7 +1206,7 @@ export function FixedDoublesDashboardPage() {
                 Hủy
               </button>
               <button
-                onClick={() => { deleteTeamMatchResult(deleteConfirm); setDeleteConfirm(null); toast.success('Đã xóa') }}
+                onClick={() => handleDeleteScoreApi(deleteConfirm)}
                 className="flex-1 py-2 rounded-xl text-sm font-semibold text-white"
                 style={{ background: T.danger }}>
                 Xóa

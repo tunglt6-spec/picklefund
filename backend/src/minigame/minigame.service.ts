@@ -1367,6 +1367,76 @@ export class MinigameService {
     return this.prisma.minigameMatch.findUnique({ where: { id: matchId } });
   }
 
+  /**
+   * XÓA KẾT QUẢ 1 trận (không xóa trận): reset scoreA/scoreB/winnerId về null,
+   * status → PENDING, và ĐẢO thống kê đội (wins/losses/points) đã cộng khi chấm điểm —
+   * để BXH khớp lại. Nếu trận chưa COMPLETED thì chỉ đảm bảo về trạng thái trống.
+   * Sửa lỗi: trước đây FE chỉ xóa ở store nên refresh điểm hiện lại + BXH sai.
+   */
+  async clearMatchScore(matchId: string, clubId: string) {
+    const match = await this.prisma.minigameMatch.findUnique({
+      where: { id: matchId },
+      include: { minigame: true },
+    });
+    if (!match || match.minigame.clubId !== clubId)
+      throw new NotFoundException('Trận đấu không tồn tại');
+
+    // Chỉ đảo thống kê khi trận đã được chấm (mirror nhánh idempotent của updateMatchScore).
+    if (match.status === 'COMPLETED') {
+      const s = this.asSettings(match.minigame.settings);
+      const winPoints = Number.isFinite(Number(s.winPoints))
+        ? Number(s.winPoints)
+        : 3;
+      const drawPoints = Number.isFinite(Number(s.drawPoints))
+        ? Number(s.drawPoints)
+        : 1;
+      const lossPoints = Number.isFinite(Number(s.lossPoints))
+        ? Number(s.lossPoints)
+        : 0;
+      const ptsFor = (won: boolean, draw: boolean) =>
+        won ? winPoints : draw ? drawPoints : lossPoints;
+
+      const oldA = match.scoreA ?? 0;
+      const oldB = match.scoreB ?? 0;
+      const oldAWin = oldA > oldB;
+      const oldBWin = oldB > oldA;
+      const oldDraw = oldA === oldB;
+      if (match.teamAId) {
+        await this.prisma.minigameTeam.update({
+          where: { id: match.teamAId },
+          data: {
+            wins: { decrement: oldAWin ? 1 : 0 },
+            losses: { decrement: oldBWin ? 1 : 0 },
+            points: { decrement: ptsFor(oldAWin, oldDraw) },
+          },
+        });
+      }
+      if (match.teamBId) {
+        await this.prisma.minigameTeam.update({
+          where: { id: match.teamBId },
+          data: {
+            wins: { decrement: oldBWin ? 1 : 0 },
+            losses: { decrement: oldAWin ? 1 : 0 },
+            points: { decrement: ptsFor(oldBWin, oldDraw) },
+          },
+        });
+      }
+    }
+
+    await this.prisma.minigameMatch.update({
+      where: { id: matchId },
+      data: {
+        scoreA: null,
+        scoreB: null,
+        winnerId: null,
+        status: 'PENDING',
+        playedAt: null,
+      },
+    });
+
+    return this.prisma.minigameMatch.findUnique({ where: { id: matchId } });
+  }
+
   async endMinigame(id: string, clubId: string) {
     await this.assertOwnership(id, clubId);
     const mg = await this.prisma.minigame.update({

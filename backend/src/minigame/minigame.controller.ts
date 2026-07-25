@@ -435,6 +435,19 @@ export class MinigameController {
     );
   }
 
+  // Xóa kết quả 1 trận (reset điểm + đảo thống kê đội) — persist server để refresh không hiện lại.
+  @Delete('matches/:matchId/score')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async clearScore(
+    @Param('matchId') matchId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.clearMatchScore(matchId, user.clubId),
+      'Đã xóa kết quả trận đấu',
+    );
+  }
+
   @Post(':id/end')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async end(@Param('id') id: string, @CurrentUser() user: RequestUser) {
