@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMinigameStore } from '../store/minigameStore'
 import api from '../lib/api'
-import { deriveMinigameDates, type MiniGame } from '../types/minigame'
+import { deriveMinigameDates, normalizeMinigameStatus, type MiniGame } from '../types/minigame'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -29,7 +29,9 @@ export function useMinigameSync() {
         name: m.name,
         description: m.description ?? undefined,
         ...deriveMinigameDates(m),
-        status: m.status ?? 'DRAFT',
+        // Normalize BE 'ACTIVE' → 'IN_PROGRESS' (nhãn FE "Đang diễn ra") — nếu để raw sẽ hiện
+        // "ACTIVE" + KPI "Đang diễn ra" đếm hụt (đồng bộ với MinigameList.fetchMinigames).
+        status: normalizeMinigameStatus(m.status),
         groupSize: m.settings?.groupSize ?? 4,
         allowDraw: m.settings?.allowDraw ?? false,
         winPoints: m.settings?.winPoints ?? 3,
@@ -45,6 +47,10 @@ export function useMinigameSync() {
         // pairingMode nằm trong settings — PHẢI carry qua, nếu không FixedDoubles dashboard
         // hiểu nhầm chế độ THỦ CÔNG thành TỰ ĐỘNG (isManual=false) → hiện nút ghép tự động bị BE chặn.
         pairingMode: m.settings?.pairingMode ?? undefined,
+        // Số liệu THẬT per-giải từ BE (KPI/cột người-bảng-trận) — nếu bỏ sẽ hiện 0 hết.
+        playerCount: m.playerCount ?? 0,
+        matchCount: m.matchCount ?? 0,
+        completedCount: m.completedCount ?? 0,
       }))
       setMinigamesFromApi(clubId, minigames)
     }).catch(() => { /* keep local store data */ })

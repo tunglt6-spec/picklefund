@@ -154,8 +154,10 @@ export function MinigameList() {
     if (didInit.current) return
     didInit.current = true
     if (isLocalToken(accessToken)) return
-    if (getMinigames(clubId).length === 0) void fetchMinigames()
-  }, [accessToken, clubId, fetchMinigames, getMinigames])
+    // Luôn tải mới khi vào trang (không chỉ khi store rỗng) → số liệu người/bảng/trận + trạng thái
+    // luôn tươi sau khi thi đấu/đổi status, không kẹt dữ liệu cũ từ global sync.
+    void fetchMinigames()
+  }, [accessToken, clubId, fetchMinigames])
 
   /* ── Actions (GIỮ NGUYÊN logic/API) ── */
   const handleDelete = async (id: string, name: string) => {
