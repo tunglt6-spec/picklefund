@@ -149,6 +149,10 @@ export class LisaService {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Mốc "hôm nay": buổi ĐÃ DIỄN RA chỉ tính sessionDate <= now. Sửa lỗi Lisa coi buổi
+    // TƯƠNG LAI là "buổi gần nhất/lịch sử điểm danh" + đếm nhầm vào tổng buổi tham dự.
+    const now = new Date();
+
     const [
       contributions,
       allClubContributions,
@@ -168,7 +172,7 @@ export class LisaService {
         select: { amount: true },
       }),
       this.prisma.attendanceSession.findMany({
-        where: { clubId: member.clubId },
+        where: { clubId: member.clubId, sessionDate: { lte: now } },
         select: { id: true },
       }),
       this.prisma.attendanceRecord.findMany({
@@ -192,9 +196,9 @@ export class LisaService {
             select: { memberId: true, amount: true },
           })
         : Promise.resolve([]),
-      // 5 most recent sessions with their attendance records
+      // 5 most recent sessions ĐÃ DIỄN RA (sessionDate <= hôm nay) — KHÔNG lấy buổi tương lai.
       this.prisma.attendanceSession.findMany({
-        where: { clubId: member.clubId },
+        where: { clubId: member.clubId, sessionDate: { lte: now } },
         orderBy: { sessionDate: 'desc' },
         take: 5,
         select: {
@@ -337,6 +341,7 @@ Chưa đóng (${unpaid.length} người): ${unpaid.join(', ') || 'không có'}`;
     }
 
     return `=== DỮ LIỆU CLB CỦA ${ctx.memberName.toUpperCase()} ===
+Hôm nay: ${new Date().toLocaleDateString('vi-VN')} (dùng làm mốc; buổi có ngày SAU hôm nay là buổi SẮP TỚI, không phải "gần nhất")
 CLB: ${ctx.clubName}
 Trạng thái thành viên: ${ctx.status === 'active' ? 'Đang hoạt động' : ctx.status}
 Kỳ quỹ hiện tại: ${ctx.activePeriodName ?? 'Chưa có kỳ quỹ'}
@@ -471,8 +476,10 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
       }
     }
 
+    // Chỉ 3 buổi ĐÃ DIỄN RA (sessionDate <= hôm nay) — buổi tương lai không có điểm danh,
+    // nếu tính vào sẽ báo "vắng 3 buổi" oan cho mọi thành viên.
     const recentSessions = await this.prisma.attendanceSession.findMany({
-      where: { clubId },
+      where: { clubId, sessionDate: { lte: new Date() } },
       orderBy: { sessionDate: 'desc' },
       take: 3,
       select: { id: true },

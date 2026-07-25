@@ -63,8 +63,9 @@ export class AiService {
         },
         orderBy: { createdAt: 'desc' },
       }),
+      // 5 buổi ĐÃ DIỄN RA (sessionDate <= hôm nay) — không lấy buổi tương lai làm "gần nhất".
       this.prisma.attendanceSession.findMany({
-        where: { clubId },
+        where: { clubId, sessionDate: { lte: new Date() } },
         include: {
           attendanceRecords: { select: { memberId: true, status: true } },
         },
