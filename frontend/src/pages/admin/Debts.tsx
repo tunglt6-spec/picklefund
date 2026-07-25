@@ -9,7 +9,7 @@
  * StatusBadge/EmptyState) — token màu, không hardcode brand.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Clock, Wallet } from 'lucide-react'
+import { Users, AlertCircle, Wallet } from 'lucide-react'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
@@ -24,7 +24,9 @@ function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
 }
 
-type DebtStatus = 'unpaid' | 'pending' | 'paid'
+// CANONICAL (money-based): 2 trạng thái — Đã đóng (đủ tiền, xác nhận) / Chưa đóng (còn thiếu
+// hoặc chưa nộp). Trạng thái "chờ xác nhận" gộp vào "chưa đóng" theo yêu cầu canonical.
+type DebtStatus = 'unpaid' | 'paid'
 interface DebtRow {
   id: string
   name: string
@@ -35,7 +37,6 @@ interface DebtRow {
 
 const STATUS_META: Record<DebtStatus, { label: string; tone: StatusTone }> = {
   unpaid: { label: 'Chưa đóng', tone: 'danger' },
-  pending: { label: 'Chờ xác nhận', tone: 'warning' },
   paid: { label: 'Đã đóng', tone: 'success' },
 }
 
@@ -53,17 +54,16 @@ export function Debts() {
   )
   const amount = activePeriod?.contributionAmount ?? 0
 
-  // Số nợ thật/thành viên (courtFee chia đều + livingFee theo tỉ lệ tham dự - đã đóng),
-  // canonical từ financial-calculator qua fund-periods summary — khớp Reports/FundPeriods.
-  const [memberBalances, setMemberBalances] = useState<Record<string, number>>({})
+  // Canonical/thành viên từ fund-periods summary (financial-calculator): số dư + đã-đóng-đủ.
+  const [memberInfo, setMemberInfo] = useState<Record<string, { balance: number; paid: boolean }>>({})
   useEffect(() => {
-    if (!activePeriod?.id || isLocalToken(accessToken)) { setMemberBalances({}); return }
+    if (!activePeriod?.id || isLocalToken(accessToken)) { setMemberInfo({}); return }
     let cancelled = false
     api.get(`/fund-periods/${activePeriod.id}/summary`).then((res) => {
       if (cancelled) return
-      const list = (res.data?.data?.members ?? []) as { memberId: string; balance: number }[]
-      setMemberBalances(Object.fromEntries(list.map((m) => [m.memberId, m.balance])))
-    }).catch(() => { if (!cancelled) setMemberBalances({}) })
+      const list = (res.data?.data?.members ?? []) as { memberId: string; balance: number; contributionPaid?: boolean }[]
+      setMemberInfo(Object.fromEntries(list.map((m) => [m.memberId, { balance: m.balance, paid: !!m.contributionPaid }])))
+    }).catch(() => { if (!cancelled) setMemberInfo({}) })
     return () => { cancelled = true }
   }, [activePeriod?.id, accessToken])
 
@@ -72,42 +72,41 @@ export function Debts() {
     return members
       .filter((m) => m.status === 'active')
       .map((m) => {
-        const contrib = commonContribs.find(
-          (c) => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id),
-        )
-        const status: DebtStatus = !contrib ? 'unpaid' : contrib.isConfirmed ? 'paid' : 'pending'
-        // Ưu tiên số dư thật (balance < 0 = còn nợ) từ backend; fallback mức đóng chuẩn
-        // khi chưa có dữ liệu backend (demo/local token hoặc đang tải).
-        const realBalance = memberBalances[m.id]
-        const owed = realBalance !== undefined ? Math.max(0, -realBalance) : amount
-        return {
-          id: m.id,
-          name: m.fullName,
-          phone: m.phone,
-          status,
-          amount: status === 'paid' ? 0 : owed,
+        const info = memberInfo[m.id]
+        // CANONICAL: "đã đóng" = đã nộp đủ (contributionPaid). Fallback khi chưa có summary:
+        // suy từ contribution đã xác nhận (money chưa có → dùng mức đóng chuẩn).
+        let status: DebtStatus
+        let owed: number
+        if (info !== undefined) {
+          status = info.paid ? 'paid' : 'unpaid'
+          owed = Math.max(0, -info.balance)
+        } else {
+          const contrib = commonContribs.find(
+            (c) => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id),
+          )
+          status = contrib?.isConfirmed ? 'paid' : 'unpaid'
+          owed = amount
         }
+        return { id: m.id, name: m.fullName, phone: m.phone, status, amount: status === 'paid' ? 0 : owed }
       })
       .sort((a, b) => {
-        const order: Record<DebtStatus, number> = { unpaid: 0, pending: 1, paid: 2 }
+        const order: Record<DebtStatus, number> = { unpaid: 0, paid: 1 }
         return order[a.status] - order[b.status] || a.name.localeCompare(b.name, 'vi')
       })
-  }, [members, contributions, activePeriod, amount, memberBalances])
+  }, [members, contributions, activePeriod, amount, memberInfo])
 
   const stats = useMemo(() => {
     const unpaid = rows.filter((r) => r.status === 'unpaid')
-    const pending = rows.filter((r) => r.status === 'pending')
     const paid = rows.filter((r) => r.status === 'paid')
-    const totalDebt = [...unpaid, ...pending].reduce((s, r) => s + r.amount, 0)
+    const totalDebt = unpaid.reduce((s, r) => s + r.amount, 0)
     const collectRate = rows.length > 0 ? Math.round((paid.length / rows.length) * 100) : 0
-    return { unpaid: unpaid.length, pending: pending.length, paid: paid.length, totalDebt, collectRate }
+    return { unpaid: unpaid.length, paid: paid.length, totalDebt, collectRate }
   }, [rows])
 
   const [tab, setTab] = useState<'all' | DebtStatus>('all')
   const tabs: TabItem[] = [
     { key: 'all', label: 'Tất cả', badge: rows.length },
     { key: 'unpaid', label: 'Chưa đóng', badge: stats.unpaid },
-    { key: 'pending', label: 'Chờ xác nhận', badge: stats.pending },
     { key: 'paid', label: 'Đã đóng', badge: stats.paid },
   ]
   const filtered = tab === 'all' ? rows : rows.filter((r) => r.status === tab)
@@ -139,7 +138,7 @@ export function Debts() {
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <MetricCard accent="rose" icon={<AlertCircle size={18} />} label="Còn nợ" value={stats.unpaid} sub="thành viên chưa đóng" />
-            <MetricCard accent="amber" icon={<Clock size={18} />} label="Chờ xác nhận" value={stats.pending} sub="đã đóng, chờ duyệt" />
+            <MetricCard accent="teal" icon={<Users size={18} />} label="Đã đóng" value={stats.paid} sub="thành viên đã đóng đủ" />
             <MetricCard accent="violet" icon={<Wallet size={18} />} label="Tổng công nợ" value={formatVND(stats.totalDebt)} />
             <MetricCard accent="teal" icon={<Users size={18} />} label="Tỷ lệ đã thu" value={`${stats.collectRate}%`} sub={`${stats.paid}/${rows.length} đã đóng`} />
           </div>

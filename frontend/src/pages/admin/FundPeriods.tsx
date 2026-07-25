@@ -280,6 +280,7 @@ export function FundPeriods() {
     carryForwardBalance: number
     commonBalance: number
     clubAssetsBalance: number
+    unpaidCount: number
   } | null>(null)
 
   const activeChungId = useMemo(
@@ -300,6 +301,7 @@ export function FundPeriods() {
           carryForwardBalance,
           commonBalance,
           clubAssetsBalance: Number(fund?.clubAssets?.balance ?? (commonBalance + carryForwardBalance)),
+          unpaidCount: Number(fund?.unpaidCount ?? 0),
         })
       })
       .catch(() => { if (!cancelled) setPeriodsFinanceSummary(null) })
@@ -319,9 +321,10 @@ export function FundPeriods() {
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = relevant.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const primaryActive = fps.filter(p => p.status === 'active').sort((a, b) => b.startDate.localeCompare(a.startDate))[0]
-      const unpaidCount = primaryActive
+      // CANONICAL: số người chưa đóng = unpaidCount từ summary (money-based); fallback record-based.
+      const unpaidCount = periodsFinanceSummary?.unpaidCount ?? (primaryActive
         ? (primaryActive.billedMemberCount ?? memberCount) - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
-        : 0
+        : 0)
       const txCount = relevant.length
 
       const remaining = Math.max(0, totalTarget - totalCollected)
@@ -343,7 +346,7 @@ export function FundPeriods() {
     }
 
     return { chung: calcChung(), game: calcMini() }
-  }, [periods, contributions, memberCount])
+  }, [periods, contributions, memberCount, periodsFinanceSummary])
 
   // Current fund: active or preparing (draft), sorted newest first
   const activePeriods = useMemo(() => ({
