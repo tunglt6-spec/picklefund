@@ -233,8 +233,22 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       setIsDrawModalOpen(true)
     }
   }
-  const handleCompleteRound = () => {
-    if (data.currentRound) lockRound(data.currentRound.id)
+  // Hoàn thành lượt: persist server (settings.lockedRounds) rồi resync — trước đây chỉ set store
+  // nên hydrate lại mất tác dụng. Chế độ demo (local-token) giữ lock cục bộ.
+  const handleCompleteRound = async () => {
+    const cr = data.currentRound
+    if (!cr) return
+    if (backend) {
+      try {
+        await api.post(`/minigames/${id}/rounds/${cr.roundNumber}/lock`)
+        resync?.()
+        toast.success('Đã hoàn thành lượt')
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message ?? 'Lỗi hoàn thành lượt')
+      }
+    } else {
+      lockRound(cr.id)
+    }
   }
 
   const handleEditParticipant = (memberId: string, name: string) => {
@@ -242,20 +256,46 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
     setEditName(name)
   }
 
-  const handleConfirmEdit = () => {
+  // Đổi tên người chơi (khách mời): persist server rồi resync. Chế độ demo: sửa store cục bộ.
+  const handleConfirmEdit = async () => {
     if (!editTarget || !editName.trim()) return
-    updateParticipant(id!, editTarget.memberId, { memberName: editName.trim() })
+    const key = editTarget.memberId
+    const name = editName.trim()
     setEditTarget(null)
+    if (backend) {
+      try {
+        await api.patch(`/minigames/${id}/participants/${key}`, { name })
+        resync?.()
+        toast.success('Đã cập nhật tên')
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message ?? 'Lỗi đổi tên')
+      }
+    } else {
+      updateParticipant(id!, key, { memberName: name })
+    }
   }
 
   const handleDeleteParticipant = (memberId: string, name: string) => {
     setDeleteTarget({ memberId, name })
   }
 
-  const handleConfirmDelete = () => {
+  // Xóa người chơi: persist server (xóa participant/khách) rồi resync — trước đây chỉ set store
+  // nên F5 hiện lại. Chế độ demo: xóa store cục bộ.
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return
-    removeParticipant(id!, deleteTarget.memberId)
+    const key = deleteTarget.memberId
     setDeleteTarget(null)
+    if (backend) {
+      try {
+        await api.delete(`/minigames/${id}/participants/${key}`)
+        resync?.()
+        toast.success('Đã xóa người chơi')
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message ?? 'Lỗi xóa người chơi')
+      }
+    } else {
+      removeParticipant(id!, key)
+    }
   }
 
   return (

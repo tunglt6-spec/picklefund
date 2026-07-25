@@ -89,6 +89,11 @@ class AddParticipantsDto {
   guests?: GuestParticipantDto[];
 }
 
+/** Đổi tên người chơi (chỉ khách mời) — settings.guests. */
+class UpdateParticipantNameDto {
+  @IsString() @MaxLength(120) name!: string;
+}
+
 /** Đội có roster (môn đồng đội): tên + danh sách member CLB + khách tự do. */
 class RosterTeamDto {
   @IsString() @MaxLength(60) name!: string;
@@ -204,6 +209,49 @@ export class MinigameController {
         body.memberIds ?? [],
         body.guests,
       ),
+    );
+  }
+
+  // Xóa 1 người chơi (member: xóa participant; khách: bỏ khỏi settings.guests) — persist server.
+  @Delete(':id/participants/:key')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async removeParticipant(
+    @Param('id') id: string,
+    @Param('key') key: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.removeParticipant(id, user.clubId, key),
+      'Đã xóa người chơi',
+    );
+  }
+
+  // Đổi tên người chơi (chỉ khách mời) — persist server.
+  @Patch(':id/participants/:key')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async updateParticipant(
+    @Param('id') id: string,
+    @Param('key') key: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: UpdateParticipantNameDto,
+  ) {
+    return ok(
+      await this.svc.updateParticipantName(id, user.clubId, key, body.name),
+      'Đã cập nhật tên',
+    );
+  }
+
+  // Hoàn thành/khóa 1 lượt (Đôi Ngẫu Nhiên) → settings.lockedRounds — persist server.
+  @Post(':id/rounds/:roundNumber/lock')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async lockRound(
+    @Param('id') id: string,
+    @Param('roundNumber') roundNumber: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.lockRound(id, user.clubId, Number(roundNumber)),
+      'Đã hoàn thành lượt',
     );
   }
 

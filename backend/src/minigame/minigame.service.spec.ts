@@ -16,6 +16,7 @@ const mockPrisma = {
   minigameParticipant: {
     findMany: jest.fn(),
     createMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   minigameTeam: {
     findMany: jest.fn(),
@@ -103,7 +104,7 @@ describe('MinigameService', () => {
       mockPrisma.minigameTeam.findMany.mockResolvedValue([]);
       const result = await service.findAll('club-1');
       expect(result).toEqual([
-        { ...baseMg, firstPlayedAt: new Date('2026-07-10'), lastPlayedAt: new Date('2026-07-12'), playerCount: 0, matchCount: 0, completedCount: 3 },
+        { ...baseMg, firstPlayedAt: new Date('2026-07-10'), lastPlayedAt: new Date('2026-07-12'), playerCount: 0, matchCount: 0, completedCount: 3, groupCount: 0 },
       ]);
       expect(mockPrisma.minigame.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { clubId: 'club-1' } }),
@@ -117,8 +118,85 @@ describe('MinigameService', () => {
       mockPrisma.minigameTeam.findMany.mockResolvedValue([]);
       const result = await service.findAll('club-1');
       expect(result).toEqual([
-        { ...baseMg, firstPlayedAt: null, lastPlayedAt: null, playerCount: 0, matchCount: 0, completedCount: 0 },
+        { ...baseMg, firstPlayedAt: null, lastPlayedAt: null, playerCount: 0, matchCount: 0, completedCount: 0, groupCount: 0 },
       ]);
+    });
+
+    it('groupCount đếm settings.groups (GROUP_STAGE)', async () => {
+      mockPrisma.minigame.findMany.mockResolvedValue([
+        { ...baseMg, format: 'GROUP_STAGE', settings: { groups: [{ id: 'A' }, { id: 'B' }] } },
+      ]);
+      mockPrisma.minigameMatch.groupBy.mockResolvedValue([]);
+      mockPrisma.minigameGolfer.groupBy.mockResolvedValue([]);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([]);
+      const result = await service.findAll('club-1');
+      expect(result[0].groupCount).toBe(2);
+    });
+  });
+
+  describe('participant & round persistence', () => {
+    it('removeParticipant: xóa participant thành viên (không đụng guests)', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue({
+        id: 'mg-1',
+        clubId: 'club-1',
+        settings: { guests: [{ id: 'guest-x', name: 'K' }] },
+      });
+      mockPrisma.minigameParticipant.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.minigame.update.mockClear();
+      await service.removeParticipant('mg-1', 'club-1', 'mem-9');
+      expect(mockPrisma.minigameParticipant.deleteMany).toHaveBeenCalledWith({
+        where: { minigameId: 'mg-1', memberId: 'mem-9' },
+      });
+      expect(mockPrisma.minigame.update).not.toHaveBeenCalled();
+    });
+
+    it('removeParticipant: xóa KHÁCH khỏi settings.guests khi không phải member', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue({
+        id: 'mg-1',
+        clubId: 'club-1',
+        settings: { guests: [{ id: 'guest-x', name: 'K' }, { id: 'guest-y', name: 'L' }] },
+      });
+      mockPrisma.minigameParticipant.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.minigame.update.mockResolvedValue({});
+      await service.removeParticipant('mg-1', 'club-1', 'guest-x');
+      expect(mockPrisma.minigame.update).toHaveBeenCalledWith({
+        where: { id: 'mg-1' },
+        data: { settings: { guests: [{ id: 'guest-y', name: 'L' }] } },
+      });
+    });
+
+    it('updateParticipantName: đổi tên khách; từ chối khi không phải khách', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue({
+        id: 'mg-1',
+        clubId: 'club-1',
+        settings: { guests: [{ id: 'guest-x', name: 'Cũ' }] },
+      });
+      mockPrisma.minigame.update.mockResolvedValue({});
+      await service.updateParticipantName('mg-1', 'club-1', 'guest-x', 'Mới');
+      expect(mockPrisma.minigame.update).toHaveBeenCalledWith({
+        where: { id: 'mg-1' },
+        data: { settings: { guests: [{ id: 'guest-x', name: 'Mới' }] } },
+      });
+      await expect(
+        service.updateParticipantName('mg-1', 'club-1', 'mem-9', 'X'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('lockRound: thêm roundNumber vào settings.lockedRounds (không nhân đôi)', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValue({
+        id: 'mg-1',
+        clubId: 'club-1',
+        settings: { lockedRounds: [1] },
+      });
+      mockPrisma.minigame.update.mockResolvedValue({});
+      await service.lockRound('mg-1', 'club-1', 2);
+      expect(mockPrisma.minigame.update).toHaveBeenCalledWith({
+        where: { id: 'mg-1' },
+        data: { settings: { lockedRounds: [1, 2] } },
+      });
+      mockPrisma.minigame.update.mockClear();
+      await service.lockRound('mg-1', 'club-1', 1); // đã có → không update lại
+      expect(mockPrisma.minigame.update).not.toHaveBeenCalled();
     });
   });
 

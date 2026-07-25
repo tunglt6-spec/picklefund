@@ -89,7 +89,7 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
 
       // RANDOM_DOUBLES: hydrate vòng/trận từ backend (persist server) vào store.
       if (mg.formatType === 'RANDOM_DOUBLES') {
-        hydrateDoublesRoundsFromApi(m.id, m.teams ?? [], m.matches ?? [])
+        hydrateDoublesRoundsFromApi(m.id, m.teams ?? [], m.matches ?? [], m.settings?.lockedRounds ?? [])
       }
       // GROUP_STAGE: hydrate bảng (settings.groups) + đội-đơn + lịch (matches.groupId).
       if (mg.formatType === 'GROUP_STAGE') {

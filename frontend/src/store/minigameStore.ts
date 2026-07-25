@@ -964,7 +964,7 @@ interface MinigameStore {
 
   // RANDOM_DOUBLES: hydrate vòng/trận từ backend (persist) vào shape rounds/doublesMatches
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  hydrateDoublesRoundsFromApi: (minigameId: string, apiTeams: any[], apiMatches: any[]) => void
+  hydrateDoublesRoundsFromApi: (minigameId: string, apiTeams: any[], apiMatches: any[], lockedRounds?: number[]) => void
 
   // GROUP_STAGE: hydrate bảng (settings.groups) + đội-đơn (teams) + trận (matches, groupId)
   // từ backend vào shape groups/matches (đấu đơn player1 vs player2).
@@ -1808,7 +1808,8 @@ export const useMinigameStore = create<MinigameStore>()(
       },
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      hydrateDoublesRoundsFromApi: (minigameId, apiTeams, apiMatches) => {
+      hydrateDoublesRoundsFromApi: (minigameId, apiTeams, apiMatches, lockedRounds) => {
+        const lockedSet = new Set((lockedRounds ?? []).map(Number))
         const parts = get().participants.filter(p => p.minigameId === minigameId)
         const partOf = new Map(parts.map(p => [p.memberId, p]))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1841,7 +1842,9 @@ export const useMinigameStore = create<MinigameStore>()(
           rounds.push({
             id: roundId, minigameId, roundNumber, drawMode: 'RANDOM',
             totalPlayers: ms.length * 4, totalMatches: ms.length, sitOutCount: 0,
-            status: ms.every(m => m.status === 'COMPLETED') ? 'COMPLETED' : 'ACTIVE',
+            // Lượt hoàn thành = mọi trận xong HOẶC admin đã "Hoàn thành lượt" (settings.lockedRounds)
+            // → cho phép bốc vòng mới dù còn trận chưa có kết quả.
+            status: (lockedSet.has(roundNumber) || ms.every(m => m.status === 'COMPLETED')) ? 'COMPLETED' : 'ACTIVE',
             createdAt: ms[0]?.createdAt ?? new Date().toISOString(),
           })
           ms.forEach((m, i) => {

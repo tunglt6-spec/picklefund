@@ -44,6 +44,7 @@ export interface MiniGame {
   playerCount?: number
   matchCount?: number
   completedCount?: number
+  groupCount?: number
   drawMode: DrawMode
   pairingMode?: PairingMode
   /** FIXED_DOUBLES_ROUND_ROBIN: đã sinh lịch lượt đi & lượt về (double round-robin). */

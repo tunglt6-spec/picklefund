@@ -81,6 +81,11 @@ export class MinigameService {
         (teamMemberMap.get(g.id) ?? 0),
       matchCount: g._count?.matches ?? 0,
       completedCount: playedMap.get(g.id)?._count?._all ?? 0,
+      // Số BẢNG (GROUP_STAGE) nằm trong settings.groups (JSON), không phải relation → tính tại đây
+      // để danh sách hiển thị đúng cột "Bảng" thay vì đọc store chưa nạp.
+      groupCount: Array.isArray(this.asSettings(g.settings).groups)
+        ? (this.asSettings(g.settings).groups as unknown[]).length
+        : 0,
     }));
   }
 
@@ -210,6 +215,92 @@ export class MinigameService {
       });
     }
 
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * XÓA 1 người chơi khỏi giải (RANDOM_DOUBLES/GROUP_STAGE): nếu là THÀNH VIÊN → xóa row
+   * minigame_participants; nếu là KHÁCH → bỏ khỏi settings.guests. Persist server để refresh
+   * không hiện lại (trước đây FE chỉ mutate store). Không đụng trận đã bốc (BXH tính lại từ trận).
+   */
+  async removeParticipant(id: string, clubId: string, key: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    const del = await this.prisma.minigameParticipant.deleteMany({
+      where: { minigameId: id, memberId: key },
+    });
+    if (del.count === 0) {
+      const settings = this.asSettings(mg.settings);
+      const guests =
+        (settings.guests as Array<{ id: string }> | undefined) ?? [];
+      const next = guests.filter((g) => g.id !== key);
+      if (next.length !== guests.length) {
+        await this.prisma.minigame.update({
+          where: { id },
+          data: {
+            settings: { ...settings, guests: next } as Prisma.InputJsonValue,
+          },
+        });
+      }
+    }
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * ĐỔI TÊN người chơi — CHỈ áp dụng cho KHÁCH mời (tên trong settings.guests). Thành viên CLB
+   * lấy tên từ hồ sơ member (không sửa trong giải). Persist server.
+   */
+  async updateParticipantName(
+    id: string,
+    clubId: string,
+    key: string,
+    name: string,
+  ) {
+    const mg = await this.assertOwnership(id, clubId);
+    const clean = (name ?? '').trim();
+    if (!clean) throw new BadRequestException('Tên không được để trống.');
+    const settings = this.asSettings(mg.settings);
+    const guests =
+      (settings.guests as Array<{ id: string; name: string }> | undefined) ??
+      [];
+    const idx = guests.findIndex((g) => g.id === key);
+    if (idx < 0)
+      throw new BadRequestException(
+        'Chỉ đổi được tên KHÁCH MỜI. Tên thành viên lấy từ hồ sơ CLB.',
+      );
+    const next = guests.map((g, i) => (i === idx ? { ...g, name: clean } : g));
+    await this.prisma.minigame.update({
+      where: { id },
+      data: {
+        settings: { ...settings, guests: next } as Prisma.InputJsonValue,
+      },
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /**
+   * KHÓA/HOÀN THÀNH 1 lượt (RANDOM_DOUBLES): lưu roundNumber vào settings.lockedRounds để
+   * cho phép bốc vòng mới dù lượt chưa đủ kết quả. Persist server (trước đây FE chỉ set store
+   * nên hydrate lại mất). FE suy trạng thái lượt = COMPLETED nếu nằm trong lockedRounds.
+   */
+  async lockRound(id: string, clubId: string, roundNumber: number) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (!Number.isInteger(roundNumber) || roundNumber < 1)
+      throw new BadRequestException('Vòng không hợp lệ.');
+    const settings = this.asSettings(mg.settings);
+    const locked = Array.isArray(settings.lockedRounds)
+      ? (settings.lockedRounds as number[])
+      : [];
+    if (!locked.includes(roundNumber)) {
+      await this.prisma.minigame.update({
+        where: { id },
+        data: {
+          settings: {
+            ...settings,
+            lockedRounds: [...locked, roundNumber],
+          } as Prisma.InputJsonValue,
+        },
+      });
+    }
     return this.findOne(id, clubId);
   }
 

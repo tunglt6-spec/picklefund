@@ -140,7 +140,7 @@ export function MinigameList() {
         formatType: m.format ?? 'GROUP_STAGE', sport: m.sport ?? 'PICKLEBALL', scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD', drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
         // Số liệu thật per-giải từ BE (KPI/bảng) — không phụ thuộc store participants/matches.
-        playerCount: m.playerCount ?? 0, matchCount: m.matchCount ?? 0, completedCount: m.completedCount ?? 0,
+        playerCount: m.playerCount ?? 0, matchCount: m.matchCount ?? 0, completedCount: m.completedCount ?? 0, groupCount: m.groupCount ?? 0,
       }))
       setMinigamesFromApi(clubId, list)
       setLoadState('idle')
@@ -176,7 +176,8 @@ export function MinigameList() {
        không đọc store participants/matches (store chỉ nạp khi mở chi tiết → danh sách bị undercount). ── */
   const toRow = (mg: MiniGame): TourRow => {
     const players = mg.playerCount ?? 0
-    const groupCount = groups.filter(g => g.minigameId === mg.id).length
+    // Ưu tiên số bảng THẬT từ BE (settings.groups); fallback store khi mở chi tiết.
+    const groupCount = mg.groupCount ?? groups.filter(g => g.minigameId === mg.id).length
     const matchCount = mg.matchCount ?? 0
     const completed = mg.completedCount ?? 0
     return { mg, players, groupCount, matchCount, completed, pct: matchCount > 0 ? Math.round((completed / matchCount) * 100) : 0 }

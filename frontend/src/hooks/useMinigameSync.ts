@@ -51,6 +51,7 @@ export function useMinigameSync() {
         playerCount: m.playerCount ?? 0,
         matchCount: m.matchCount ?? 0,
         completedCount: m.completedCount ?? 0,
+        groupCount: m.groupCount ?? 0,
       }))
       setMinigamesFromApi(clubId, minigames)
     }).catch(() => { /* keep local store data */ })

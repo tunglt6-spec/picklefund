@@ -211,7 +211,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
       } finally { setCreating(false) }
       return
     }
-    if (form.selectedMemberIds.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
+    // Guard "≥4 người" CHỈ khi TẠO giải dùng participants (vợt/pickleball). Khi SỬA, team/golf
+    // không dùng participants (selectedMemberIds rỗng) nên bỏ guard để không chặn nhầm.
+    if (!isEdit && form.selectedMemberIds.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
     const selectedMembers = form.selectedMemberIds.map(mid => {
       const m = members.find(x => x.id === mid)
       const guest = form.guestMembers.find(g => g.id === mid)
@@ -234,14 +236,18 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           name: form.name,
           settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints },
         })
-        await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload })
+        // Team/golf KHÔNG dùng participants (dùng teams/golfers riêng) → không POST để tránh
+        // xóa nhầm settings.guests và tránh guard participants. Chỉ đồng bộ với môn vợt/pickleball.
+        if (!isTeamSport && !isGolf) {
+          await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload })
+          syncParticipants(id, selectedMembers)
+        }
         updateMinigame(id, {
           name: form.name, description: form.description, startDate: form.startDate,
           endDate: form.endDate || undefined, notes: form.notes, groupSize: form.groupSize,
           allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, lossPoints: 0,
           formatType: form.formatType, drawMode: form.drawMode,
         })
-        syncParticipants(id, selectedMembers)
         toast.success('Đã cập nhật minigame!')
       } catch (err: any) {
         toast.error(err?.response?.data?.message ?? 'Cập nhật minigame thất bại')
