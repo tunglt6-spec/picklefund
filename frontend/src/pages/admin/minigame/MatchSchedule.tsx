@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { ArrowLeft, ClipboardEdit, Pencil, Trash2 } from 'lucide-react'
+import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
@@ -20,9 +22,26 @@ type Filter = 'all' | 'pending' | 'completed' | string
 function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; minigameName: string }) {
   const navigate = useNavigate()
   const { getMinigame, doublesMatches, rounds, removeDoublesMatch } = useMinigameStore()
+  const { accessToken } = useAuthStore()
+  const isLocalToken = !!accessToken && (accessToken.startsWith('local-token-') || accessToken.startsWith('token-'))
   const mg = getMinigame(minigameId)
   const myMatches = doublesMatches.filter(m => m.minigameId === minigameId)
   const myRounds = rounds.filter(r => r.minigameId === minigameId).sort((a, b) => a.roundNumber - b.roundNumber)
+
+  // Xóa trận: persist server (đảo thống kê nếu đã có KQ) TRƯỚC rồi mới xóa local — fix lỗi
+  // refresh trận/kết quả hiện lại + BXH sai. Chế độ demo (local-token) chỉ xóa cục bộ.
+  const handleDeleteMatch = async (matchId: string) => {
+    if (!isLocalToken) {
+      try {
+        await api.delete(`/minigames/matches/${matchId}`)
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message ?? 'Lỗi xóa trận')
+        return
+      }
+    }
+    removeDoublesMatch(matchId)
+    toast.success('Đã xóa trận đấu')
+  }
 
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameDoublesMatch | null>(null)
@@ -166,7 +185,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               )}
               <div className="flex gap-2">
                 <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-slate-600 bg-slate-100">Hủy</button>
-                <button onClick={() => { removeDoublesMatch(deleteTarget.id); setDeleteTarget(null) }}
+                <button onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
                   className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-600">Xóa</button>
               </div>
             </div>
@@ -330,10 +349,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 Hủy
               </button>
               <button
-                onClick={() => {
-                  removeDoublesMatch(deleteTarget.id)
-                  setDeleteTarget(null)
-                }}
+                onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 Xóa

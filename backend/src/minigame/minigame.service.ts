@@ -1368,9 +1368,62 @@ export class MinigameService {
   }
 
   /**
+   * ĐẢO thống kê đội (wins/losses/points) mà 1 trận đã COMPLETED cộng vào — dùng chung
+   * cho xóa-kết-quả và xóa-hẳn-trận. Không làm gì nếu trận chưa chấm hoặc không gắn đội
+   * (SINGLES). Điểm xếp hạng lấy theo settings để khớp updateMatchScore/BXH.
+   */
+  private async reverseCompletedMatchStats(match: {
+    status: string;
+    scoreA: number | null;
+    scoreB: number | null;
+    teamAId: string | null;
+    teamBId: string | null;
+    minigame: { settings: Prisma.JsonValue };
+  }) {
+    if (match.status !== 'COMPLETED') return;
+    const s = this.asSettings(match.minigame.settings);
+    const winPoints = Number.isFinite(Number(s.winPoints))
+      ? Number(s.winPoints)
+      : 3;
+    const drawPoints = Number.isFinite(Number(s.drawPoints))
+      ? Number(s.drawPoints)
+      : 1;
+    const lossPoints = Number.isFinite(Number(s.lossPoints))
+      ? Number(s.lossPoints)
+      : 0;
+    const ptsFor = (won: boolean, draw: boolean) =>
+      won ? winPoints : draw ? drawPoints : lossPoints;
+
+    const oldA = match.scoreA ?? 0;
+    const oldB = match.scoreB ?? 0;
+    const oldAWin = oldA > oldB;
+    const oldBWin = oldB > oldA;
+    const oldDraw = oldA === oldB;
+    if (match.teamAId) {
+      await this.prisma.minigameTeam.update({
+        where: { id: match.teamAId },
+        data: {
+          wins: { decrement: oldAWin ? 1 : 0 },
+          losses: { decrement: oldBWin ? 1 : 0 },
+          points: { decrement: ptsFor(oldAWin, oldDraw) },
+        },
+      });
+    }
+    if (match.teamBId) {
+      await this.prisma.minigameTeam.update({
+        where: { id: match.teamBId },
+        data: {
+          wins: { decrement: oldBWin ? 1 : 0 },
+          losses: { decrement: oldAWin ? 1 : 0 },
+          points: { decrement: ptsFor(oldBWin, oldDraw) },
+        },
+      });
+    }
+  }
+
+  /**
    * XÓA KẾT QUẢ 1 trận (không xóa trận): reset scoreA/scoreB/winnerId về null,
-   * status → PENDING, và ĐẢO thống kê đội (wins/losses/points) đã cộng khi chấm điểm —
-   * để BXH khớp lại. Nếu trận chưa COMPLETED thì chỉ đảm bảo về trạng thái trống.
+   * status → PENDING, và ĐẢO thống kê đội đã cộng khi chấm điểm — để BXH khớp lại.
    * Sửa lỗi: trước đây FE chỉ xóa ở store nên refresh điểm hiện lại + BXH sai.
    */
   async clearMatchScore(matchId: string, clubId: string) {
@@ -1381,47 +1434,7 @@ export class MinigameService {
     if (!match || match.minigame.clubId !== clubId)
       throw new NotFoundException('Trận đấu không tồn tại');
 
-    // Chỉ đảo thống kê khi trận đã được chấm (mirror nhánh idempotent của updateMatchScore).
-    if (match.status === 'COMPLETED') {
-      const s = this.asSettings(match.minigame.settings);
-      const winPoints = Number.isFinite(Number(s.winPoints))
-        ? Number(s.winPoints)
-        : 3;
-      const drawPoints = Number.isFinite(Number(s.drawPoints))
-        ? Number(s.drawPoints)
-        : 1;
-      const lossPoints = Number.isFinite(Number(s.lossPoints))
-        ? Number(s.lossPoints)
-        : 0;
-      const ptsFor = (won: boolean, draw: boolean) =>
-        won ? winPoints : draw ? drawPoints : lossPoints;
-
-      const oldA = match.scoreA ?? 0;
-      const oldB = match.scoreB ?? 0;
-      const oldAWin = oldA > oldB;
-      const oldBWin = oldB > oldA;
-      const oldDraw = oldA === oldB;
-      if (match.teamAId) {
-        await this.prisma.minigameTeam.update({
-          where: { id: match.teamAId },
-          data: {
-            wins: { decrement: oldAWin ? 1 : 0 },
-            losses: { decrement: oldBWin ? 1 : 0 },
-            points: { decrement: ptsFor(oldAWin, oldDraw) },
-          },
-        });
-      }
-      if (match.teamBId) {
-        await this.prisma.minigameTeam.update({
-          where: { id: match.teamBId },
-          data: {
-            wins: { decrement: oldBWin ? 1 : 0 },
-            losses: { decrement: oldAWin ? 1 : 0 },
-            points: { decrement: ptsFor(oldBWin, oldDraw) },
-          },
-        });
-      }
-    }
+    await this.reverseCompletedMatchStats(match);
 
     await this.prisma.minigameMatch.update({
       where: { id: matchId },
@@ -1435,6 +1448,26 @@ export class MinigameService {
     });
 
     return this.prisma.minigameMatch.findUnique({ where: { id: matchId } });
+  }
+
+  /**
+   * XÓA HẲN 1 trận khỏi lịch (Đôi Ngẫu Nhiên: "Xóa trận đấu"). Đảo thống kê đội nếu
+   * trận đã COMPLETED (giữ BXH đúng) rồi xóa row. AN TOÀN cho mọi format: KHÔNG xóa đội
+   * (đội có thể dùng chung cho trận khác ở Đôi Cố Định/Vòng Bảng/bóng đá); đội tạm mồ côi
+   * ở Đôi Ngẫu Nhiên chỉ còn thống kê 0, không ảnh hưởng BXH per-player.
+   * Sửa lỗi: trước đây FE chỉ xóa ở store nên refresh trận + kết quả hiện lại.
+   */
+  async deleteMatch(matchId: string, clubId: string) {
+    const match = await this.prisma.minigameMatch.findUnique({
+      where: { id: matchId },
+      include: { minigame: true },
+    });
+    if (!match || match.minigame.clubId !== clubId)
+      throw new NotFoundException('Trận đấu không tồn tại');
+
+    await this.reverseCompletedMatchStats(match);
+    await this.prisma.minigameMatch.delete({ where: { id: matchId } });
+    return { deleted: true };
   }
 
   async endMinigame(id: string, clubId: string) {

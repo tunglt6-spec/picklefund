@@ -448,6 +448,19 @@ export class MinigameController {
     );
   }
 
+  // Xóa hẳn 1 trận khỏi lịch (đảo thống kê nếu đã có kết quả) — persist server.
+  @Delete('matches/:matchId')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async deleteMatch(
+    @Param('matchId') matchId: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.deleteMatch(matchId, user.clubId),
+      'Đã xóa trận đấu',
+    );
+  }
+
   @Post(':id/end')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
   async end(@Param('id') id: string, @CurrentUser() user: RequestUser) {

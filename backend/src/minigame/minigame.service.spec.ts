@@ -31,6 +31,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
     createMany: jest.fn(),
+    delete: jest.fn(),
     deleteMany: jest.fn(),
     count: jest.fn().mockResolvedValue(0),
     groupBy: jest.fn().mockResolvedValue([]),
@@ -296,6 +297,68 @@ describe('MinigameService', () => {
       await expect(
         service.clearMatchScore('match-3', 'club-1'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('deleteMatch', () => {
+    it('reverts stats when COMPLETED then deletes the match row', async () => {
+      mockPrisma.minigameTeam.update.mockClear();
+      mockPrisma.minigameMatch.findUnique.mockResolvedValueOnce({
+        id: 'match-d1',
+        teamAId: 'team-a',
+        teamBId: 'team-b',
+        scoreA: 5,
+        scoreB: 11,
+        status: 'COMPLETED',
+        minigame: { clubId: 'club-1', settings: {} },
+      });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.delete.mockResolvedValue({});
+
+      const res = await service.deleteMatch('match-d1', 'club-1');
+
+      // Đội B thắng: A -1 loss -0đ; B -1 win -3đ.
+      expect(mockPrisma.minigameTeam.update).toHaveBeenCalledWith({
+        where: { id: 'team-b' },
+        data: {
+          wins: { decrement: 1 },
+          losses: { decrement: 0 },
+          points: { decrement: 3 },
+        },
+      });
+      expect(mockPrisma.minigameMatch.delete).toHaveBeenCalledWith({
+        where: { id: 'match-d1' },
+      });
+      expect(res).toEqual({ deleted: true });
+    });
+
+    it('deletes without touching team stats when not COMPLETED', async () => {
+      mockPrisma.minigameTeam.update.mockClear();
+      mockPrisma.minigameMatch.findUnique.mockResolvedValueOnce({
+        id: 'match-d2',
+        teamAId: 'team-a',
+        teamBId: 'team-b',
+        scoreA: null,
+        scoreB: null,
+        status: 'PENDING',
+        minigame: { clubId: 'club-1', settings: {} },
+      });
+      mockPrisma.minigameMatch.delete.mockResolvedValue({});
+
+      await service.deleteMatch('match-d2', 'club-1');
+      expect(mockPrisma.minigameTeam.update).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameMatch.delete).toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when match not owned by club', async () => {
+      mockPrisma.minigameMatch.findUnique.mockResolvedValueOnce({
+        id: 'match-d3',
+        status: 'COMPLETED',
+        minigame: { clubId: 'other-club', settings: {} },
+      });
+      await expect(service.deleteMatch('match-d3', 'club-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
