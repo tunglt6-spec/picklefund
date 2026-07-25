@@ -175,8 +175,14 @@ export class LisaService {
         where: { clubId: member.clubId, sessionDate: { lte: now } },
         select: { id: true },
       }),
+      // "Buổi tham dự" = bản ghi CÓ MẶT (PRESENT) của buổi ĐÃ DIỄN RA — khớp mẫu số totalSessions
+      // (buổi quá khứ). Trước đây đếm mọi bản ghi (gồm ABSENT + buổi tương lai) → ra tỉ lệ vô lý 22/21.
       this.prisma.attendanceRecord.findMany({
-        where: { memberId },
+        where: {
+          memberId,
+          status: 'PRESENT',
+          attendanceSession: { sessionDate: { lte: now } },
+        },
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true, attendanceSessionId: true },
       }),
