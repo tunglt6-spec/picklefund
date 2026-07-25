@@ -11,6 +11,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
   },
   minigameParticipant: {
     findMany: jest.fn(),
@@ -673,6 +674,26 @@ describe('MinigameService', () => {
           data: expect.objectContaining({ points: { increment: 1 } }),
         }),
       );
+    });
+
+    it('nâng minigame sang ACTIVE khi nhập điểm (chỉ nếu còn tiền-diễn-ra)', async () => {
+      mockPrisma.minigame.updateMany.mockClear();
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce({
+          ...matchWith({ winPoints: 3 }),
+          minigame: { clubId: 'club-1', id: 'mg-1', settings: { winPoints: 3 } },
+        })
+        .mockResolvedValue({ id: 'mt-1' });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+      await service.updateMatchScore('mt-1', 'club-1', 11, 5);
+      expect(mockPrisma.minigame.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'mg-1',
+          status: { notIn: ['ACTIVE', 'COMPLETED', 'CANCELLED'] },
+        },
+        data: expect.objectContaining({ status: 'ACTIVE' }),
+      });
     });
   });
 

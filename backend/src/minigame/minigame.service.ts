@@ -576,7 +576,12 @@ export class MinigameService {
         : {};
     await this.prisma.minigame.update({
       where: { id },
-      data: { settings: { ...prevSettings, doubleRoundRobin } },
+      data: {
+        settings: { ...prevSettings, doubleRoundRobin },
+        // Có lịch = giải bắt đầu → ĐANG DIỄN RA (đồng bộ group-stage/random-doubles).
+        status: 'ACTIVE',
+        startedAt: mg.startedAt ?? new Date(),
+      },
     });
     return this.findOne(id, clubId);
   }
@@ -683,6 +688,8 @@ export class MinigameService {
       where: { id },
       data: {
         settings: { ...prev, doubleRoundRobin, footballFormat: 'ROUND_ROBIN' },
+        status: 'ACTIVE',
+        startedAt: mg.startedAt ?? new Date(),
       },
     });
     return this.findOne(id, clubId);
@@ -781,7 +788,11 @@ export class MinigameService {
     const prev = this.asSettings(mg.settings);
     await this.prisma.minigame.update({
       where: { id },
-      data: { settings: { ...prev, footballFormat: 'KNOCKOUT' } },
+      data: {
+        settings: { ...prev, footballFormat: 'KNOCKOUT' },
+        status: 'ACTIVE',
+        startedAt: mg.startedAt ?? new Date(),
+      },
     });
     return this.findOne(id, clubId);
   }
@@ -897,6 +908,8 @@ export class MinigameService {
       create: { golferId, round, strokes },
       update: { strokes },
     });
+    // Nhập điểm golf = giải đang diễn ra → nâng status nếu còn "Nháp".
+    await this.activateIfPending(golfer.minigame.id);
     return this.findOne(golfer.minigame.id, clubId);
   }
 
@@ -910,6 +923,22 @@ export class MinigameService {
     return v && typeof v === 'object' && !Array.isArray(v)
       ? (v as Record<string, unknown>)
       : {};
+  }
+
+  /**
+   * Nâng minigame sang ĐANG DIỄN RA (ACTIVE) khi vừa nhập/sửa điểm — CHỈ khi còn ở trạng thái
+   * tiền-diễn-ra (không đụng ACTIVE/COMPLETED/CANCELLED, tránh mở lại giải đã kết thúc khi sửa
+   * điểm). Atomic qua updateMany. Sửa lỗi: trước đây nhập điểm/tạo lịch không persist status ở BE
+   * nên refresh về "Nháp". Áp dụng ĐỒNG BỘ mọi bộ môn (đối kháng + golf).
+   */
+  private async activateIfPending(minigameId: string) {
+    await this.prisma.minigame.updateMany({
+      where: {
+        id: minigameId,
+        status: { notIn: ['ACTIVE', 'COMPLETED', 'CANCELLED'] },
+      },
+      data: { status: 'ACTIVE', startedAt: new Date() },
+    });
   }
 
   /**
@@ -1363,6 +1392,9 @@ export class MinigameService {
         },
       });
     }
+
+    // Nhập điểm = giải đang diễn ra → nâng status nếu còn "Nháp" (không mở lại giải đã kết thúc).
+    await this.activateIfPending(match.minigame.id);
 
     return this.prisma.minigameMatch.findUnique({ where: { id: matchId } });
   }
