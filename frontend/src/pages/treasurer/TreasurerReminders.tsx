@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
@@ -10,9 +10,13 @@ import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 
+function isLocalToken(token?: string | null) {
+  return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
+}
+
 export function TreasurerReminders() {
   const isMobile = useIsMobile()
-  const { user } = useAuthStore()
+  const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const data = getClubData(clubId)
@@ -20,16 +24,32 @@ export function TreasurerReminders() {
   const { data: contributions } = useClubContributions(clubId)
 
   const activePeriod = getActiveChungPeriod(data.fundPeriods)
+
+  // CANONICAL: tập thành viên CHƯA đóng đủ (money-based) từ fund-periods summary — gồm cả
+  // short-payer (đã nộp base nhưng còn thiếu phí sinh hoạt). Fallback record-based khi chưa có summary.
+  const [unpaidSet, setUnpaidSet] = useState<Set<string> | null>(null)
+  useEffect(() => {
+    if (!activePeriod?.id || isLocalToken(accessToken)) { setUnpaidSet(null); return }
+    let cancelled = false
+    api.get(`/fund-periods/${activePeriod.id}/summary`).then((res) => {
+      if (cancelled) return
+      const list = (res.data?.data?.members ?? []) as { memberId: string; contributionPaid?: boolean }[]
+      setUnpaidSet(new Set(list.filter((m) => !m.contributionPaid).map((m) => m.memberId)))
+    }).catch(() => { if (!cancelled) setUnpaidSet(null) })
+    return () => { cancelled = true }
+  }, [activePeriod?.id, accessToken])
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set())
   const [sendingAll, setSendingAll] = useState(false)
 
   const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
 
-  // Members who haven't paid (no confirmed COMMON contribution in active period)
+  // Thành viên CHƯA đóng đủ (canonical money-based, gồm short-payer). Fallback record-based
+  // (chưa có khoản đã xác nhận) khi summary chưa tải.
   const unpaidMembers = data.members
     .filter(m => m.status === 'active')
     .filter(m => {
+      if (unpaidSet) return unpaidSet.has(m.id)
       const contrib = commonContribs.find(
         c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id) && c.isConfirmed
       )
@@ -102,7 +122,7 @@ export function TreasurerReminders() {
   const amount = activePeriod?.contributionAmount ?? 1000000
 
   if (isMobile) {
-    const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length - pendingMembers.length
+    const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
@@ -263,7 +283,7 @@ export function TreasurerReminders() {
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đã hoàn thành</p>
             </div>
             <p className="text-2xl font-bold text-emerald-600">
-              {data.members.filter(m => m.status === 'active').length - unpaidMembers.length - pendingMembers.length} người
+              {data.members.filter(m => m.status === 'active').length - unpaidMembers.length} người
             </p>
             <p className="text-xs text-slate-500 mt-0.5">Đã xác nhận đóng quỹ</p>
           </div>
