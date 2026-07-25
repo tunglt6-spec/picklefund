@@ -15,6 +15,7 @@ import { exportStandingsPDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { normalizeMinigameStatus } from '../../../types/minigame'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
@@ -29,7 +30,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
-  const { getMinigame } = useMinigameStore()
+  const { getMinigame, updateMinigame } = useMinigameStore()
   const { getClubData } = useClubDataStore()
   const mg = getMinigame(id!)
   const members = getClubData(clubId).members
@@ -63,12 +64,14 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
       const m = res.data?.data ?? res.data
       setGolfers((m?.golfers ?? []) as Golfer[])
       setRounds(Math.max(1, Number(m?.settings?.rounds) || 1))
+      // Đồng bộ trạng thái vào store để badge header không kẹt "Nháp" sau khi nhập điểm.
+      if (m?.status) updateMinigame(id, { status: normalizeMinigameStatus(m.status) })
     } catch {
       toast.error('Không tải được dữ liệu giải')
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, updateMinigame])
 
   useEffect(() => { void fetchDetail() }, [fetchDetail])
 

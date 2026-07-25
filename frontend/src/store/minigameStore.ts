@@ -1855,6 +1855,7 @@ export const useMinigameStore = create<MinigameStore>()(
               winningTeam: m.winnerId === m.teamAId ? 1 : m.winnerId === m.teamBId ? 2 : undefined,
               status: m.status === 'COMPLETED' ? 'COMPLETED' : 'PENDING',
               matchDate: m.playedAt ? String(m.playedAt).slice(0, 10) : undefined,
+              note: m.note ?? undefined,
             })
           })
         }
@@ -1907,6 +1908,8 @@ export const useMinigameStore = create<MinigameStore>()(
               winnerId,
               status,
               round: m.round ?? 1,
+              matchDate: m.playedAt ? String(m.playedAt).slice(0, 10) : undefined,
+              notes: m.note ?? undefined,
             }
           })
         set(s => ({

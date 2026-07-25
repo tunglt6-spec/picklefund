@@ -119,6 +119,9 @@ class AddRosterDto {
 class UpdateMatchScoreDto {
   @IsInt() @Min(0) scoreA!: number;
   @IsInt() @Min(0) scoreB!: number;
+  // Ngày thi đấu (override playedAt tự set) + ghi chú trận — tùy chọn.
+  @IsOptional() @IsDateString() playedAt?: string;
+  @IsOptional() @IsString() @MaxLength(300) note?: string;
 }
 
 class GenerateScheduleDto {
@@ -474,12 +477,10 @@ export class MinigameController {
     @Body() body: UpdateMatchScoreDto,
   ) {
     return ok(
-      await this.svc.updateMatchScore(
-        matchId,
-        user.clubId,
-        body.scoreA,
-        body.scoreB,
-      ),
+      await this.svc.updateMatchScore(matchId, user.clubId, body.scoreA, body.scoreB, {
+        playedAt: body.playedAt,
+        note: body.note,
+      }),
     );
   }
 

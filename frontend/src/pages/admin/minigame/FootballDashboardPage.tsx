@@ -16,6 +16,7 @@ import { exportStandingsPDF, exportKnockoutPDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { normalizeMinigameStatus } from '../../../types/minigame'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
@@ -48,7 +49,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
-  const { getMinigame } = useMinigameStore()
+  const { getMinigame, updateMinigame } = useMinigameStore()
   const { getClubData } = useClubDataStore()
   const mg = getMinigame(id!)
   const members = getClubData(clubId).members
@@ -92,12 +93,14 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       setTeams((m?.teams ?? []) as RosterTeam[])
       setMatches((m?.matches ?? []) as FbMatch[])
       setMode((m?.settings?.footballFormat as string) ?? null)
+      // Đồng bộ trạng thái vào store để badge header không kẹt "Nháp" sau khi tạo lịch/nhập điểm.
+      if (m?.status) updateMinigame(id, { status: normalizeMinigameStatus(m.status) })
     } catch {
       toast.error('Không tải được dữ liệu giải')
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, updateMinigame])
 
   useEffect(() => { void fetchDetail() }, [fetchDetail])
 

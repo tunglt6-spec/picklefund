@@ -50,6 +50,15 @@ const FORMAT_TONE: Record<string, StatusTone> = {
   RANDOM_DOUBLES: 'ai', FIXED_DOUBLES_ROUND_ROBIN: 'warning', GROUP_STAGE: 'info',
 }
 
+// Nhãn thể thức theo BỘ MÔN trước (đồng đội/golf), else theo format. Tránh golf hiện "SINGLES"
+// thô hay bóng đá/rổ hiện nhầm "Vòng bảng".
+function formatBadgeLabel(mg: MiniGame): string {
+  if (mg.sport === 'FOOTBALL') return '⚽ Bóng đá'
+  if (mg.sport === 'BASKETBALL') return '🏀 Bóng rổ'
+  if (mg.sport === 'GOLF') return '⛳ Golf'
+  return FORMAT_SHORT[mg.formatType] ?? mg.formatType
+}
+
 type ModeTab = 'all' | FormatType
 const MODE_TABS = [
   { key: 'all', label: 'Tất cả' },
@@ -249,7 +258,7 @@ export function MinigameList() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="truncate font-medium [color:var(--pf-text)]">{sportEmoji(r.mg.sport) && `${sportEmoji(r.mg.sport)} `}{r.mg.name}</span>
-            <StatusBadge tone={FORMAT_TONE[r.mg.formatType] ?? 'neutral'}>{FORMAT_SHORT[r.mg.formatType] ?? r.mg.formatType}</StatusBadge>
+            <StatusBadge tone={FORMAT_TONE[r.mg.formatType] ?? 'neutral'}>{formatBadgeLabel(r.mg)}</StatusBadge>
           </div>
           {r.mg.description && <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">{r.mg.description}</p>}
         </div>
@@ -340,7 +349,7 @@ export function MinigameList() {
                         <StatusBadge tone={STATUS_TONE[r.mg.status] ?? 'neutral'} dot>{STATUS_LABEL[r.mg.status] ?? r.mg.status}</StatusBadge>
                       </div>
                       <div className="mt-2 flex items-center gap-2">
-                        <StatusBadge tone={FORMAT_TONE[r.mg.formatType] ?? 'neutral'}>{FORMAT_SHORT[r.mg.formatType] ?? r.mg.formatType}</StatusBadge>
+                        <StatusBadge tone={FORMAT_TONE[r.mg.formatType] ?? 'neutral'}>{formatBadgeLabel(r.mg)}</StatusBadge>
                         <span className="text-xs [color:var(--pf-color-muted)]">{r.players} người · {r.groupCount} bảng · {r.matchCount} trận</span>
                       </div>
                       {r.matchCount > 0 && <div className="mt-2"><Progress pct={r.pct} /></div>}

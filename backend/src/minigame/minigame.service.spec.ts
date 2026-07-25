@@ -754,6 +754,28 @@ describe('MinigameService', () => {
       );
     });
 
+    it('lưu playedAt (ngày chọn) + note khi có; note rỗng → null', async () => {
+      mockPrisma.minigameMatch.findUnique
+        .mockResolvedValueOnce(matchWith({ winPoints: 3 }))
+        .mockResolvedValue({ id: 'mt-1' });
+      mockPrisma.minigameTeam.update.mockResolvedValue({});
+      mockPrisma.minigameMatch.update.mockClear();
+      mockPrisma.minigameMatch.update.mockResolvedValue({});
+      await service.updateMatchScore('mt-1', 'club-1', 11, 5, {
+        playedAt: '2026-07-01',
+        note: '  Trận hay  ',
+      });
+      expect(mockPrisma.minigameMatch.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'mt-1' },
+          data: expect.objectContaining({
+            playedAt: new Date('2026-07-01'),
+            note: 'Trận hay',
+          }),
+        }),
+      );
+    });
+
     it('nâng minigame sang ACTIVE khi nhập điểm (chỉ nếu còn tiền-diễn-ra)', async () => {
       mockPrisma.minigame.updateMany.mockClear();
       mockPrisma.minigameMatch.findUnique

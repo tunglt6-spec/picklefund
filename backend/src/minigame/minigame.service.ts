@@ -75,10 +75,14 @@ export class MinigameService {
       firstPlayedAt: playedMap.get(g.id)?._min.playedAt ?? null,
       lastPlayedAt: playedMap.get(g.id)?._max.playedAt ?? null,
       // Số liệu tổng hợp per-giải cho KPI/bảng danh sách (thay vì đọc store chưa nạp).
+      // + KHÁCH MỜI (settings.guests) để khớp màn chi tiết (trước đây list bỏ sót khách).
       playerCount:
         (g._count?.participants ?? 0) +
         (golferMap.get(g.id) ?? 0) +
-        (teamMemberMap.get(g.id) ?? 0),
+        (teamMemberMap.get(g.id) ?? 0) +
+        (Array.isArray(this.asSettings(g.settings).guests)
+          ? (this.asSettings(g.settings).guests as unknown[]).length
+          : 0),
       matchCount: g._count?.matches ?? 0,
       completedCount: playedMap.get(g.id)?._count?._all ?? 0,
       // Số BẢNG (GROUP_STAGE) nằm trong settings.groups (JSON), không phải relation → tính tại đây
@@ -1387,6 +1391,7 @@ export class MinigameService {
     clubId: string,
     scoreA: number,
     scoreB: number,
+    opts?: { playedAt?: string; note?: string },
   ) {
     const match = await this.prisma.minigameMatch.findUnique({
       where: { id: matchId },
@@ -1458,7 +1463,10 @@ export class MinigameService {
         scoreB,
         winnerId,
         status: 'COMPLETED',
-        playedAt: new Date(),
+        // Ngày thi đấu: dùng ngày người dùng chọn nếu hợp lệ, else NOW.
+        playedAt: opts?.playedAt ? new Date(opts.playedAt) : new Date(),
+        // Ghi chú trận (tùy chọn) — rỗng → null.
+        note: opts?.note?.trim() ? opts.note.trim() : null,
       },
     });
 

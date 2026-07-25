@@ -719,6 +719,7 @@ model MinigameMatch {
   courtNo    Int?        @map("court_no")
   status     MatchStatus @default(PENDING)
   playedAt   DateTime?   @map("played_at")
+  note       String?     @map("note") @db.VarChar(300)
   createdAt  DateTime    @default(now()) @map("created_at")
 
   minigame Minigame      @relation(fields: [minigameId], references: [id], onDelete: Cascade)

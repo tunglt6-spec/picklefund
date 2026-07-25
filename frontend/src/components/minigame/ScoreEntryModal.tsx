@@ -44,7 +44,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
     if (noDrawAllowed) { toast.error('Không cho phép hòa trong giải đấu này'); return }
     enterScore(match.id, s1!, s2!, notes || undefined)
     try {
-      await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1!, scoreB: s2! })
+      await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1!, scoreB: s2!, playedAt: matchDate || undefined, note: notes || undefined })
       toast.success('Đã lưu kết quả trận đấu!')
     } catch {
       // Không báo "đã lưu" khi server từ chối — tránh hiểu nhầm đã đồng bộ thành công.

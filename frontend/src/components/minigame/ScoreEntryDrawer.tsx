@@ -55,7 +55,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
     // → điểm trận đôi mất khi resync/reload trên phiên backend.
     enterDoublesMatchResult(match.id, s1, s2, note || undefined)
     try {
-      await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1, scoreB: s2 })
+      await api.patch(`/minigames/matches/${match.id}/score`, { scoreA: s1, scoreB: s2, playedAt: matchDate || undefined, note: note || undefined })
       toast.success('Đã lưu kết quả trận đấu!')
     } catch {
       toast.error('Kết quả đã lưu cục bộ nhưng không thể đồng bộ lên server')
