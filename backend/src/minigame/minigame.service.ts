@@ -27,27 +27,60 @@ export class MinigameService {
       where: { clubId },
       orderBy: { createdAt: 'desc' },
       include: {
-        _count: { select: { participants: true, teams: true, matches: true } },
+        _count: {
+          select: {
+            // Người chơi môn vợt/vòng bảng = participant của giải.
+            participants: true,
+            teams: true,
+            matches: true,
+          },
+        },
       },
     });
     if (games.length === 0) return games;
-    // NGÀY THI ĐẤU THỰC TẾ: min/max playedAt của trận đã đấu (COMPLETED) — dùng cho cột "Thời gian".
-    // Danh sách không trả từng trận nên tính sẵn ở đây (1 groupBy, không N+1).
-    const played = await this.prisma.minigameMatch.groupBy({
-      by: ['minigameId'],
-      where: {
-        minigameId: { in: games.map((g) => g.id) },
-        status: 'COMPLETED',
-        playedAt: { not: null },
-      },
-      _min: { playedAt: true },
-      _max: { playedAt: true },
-    });
+    const ids = games.map((g) => g.id);
+    // Số liệu THẬT per-giải (danh sách KHÔNG trả từng trận/đội) — tính sẵn, batched, không N+1:
+    //  - played: ngày thi đấu thực tế (min/max playedAt) + SỐ trận đã hoàn thành.
+    //  - golfers: số golfer (môn golf).
+    //  - teamRows: số cầu thủ trong đội roster (bóng đá/rổ) — cộng members của các đội.
+    const [played, golferGroups, teamRows] = await Promise.all([
+      this.prisma.minigameMatch.groupBy({
+        by: ['minigameId'],
+        where: { minigameId: { in: ids }, status: 'COMPLETED', playedAt: { not: null } },
+        _min: { playedAt: true },
+        _max: { playedAt: true },
+        _count: { _all: true },
+      }),
+      this.prisma.minigameGolfer.groupBy({
+        by: ['minigameId'],
+        where: { minigameId: { in: ids } },
+        _count: { _all: true },
+      }),
+      this.prisma.minigameTeam.findMany({
+        where: { minigameId: { in: ids } },
+        select: { minigameId: true, _count: { select: { members: true } } },
+      }),
+    ]);
     const playedMap = new Map(played.map((p) => [p.minigameId, p]));
+    const golferMap = new Map(golferGroups.map((g) => [g.minigameId, g._count._all]));
+    const teamMemberMap = new Map<string, number>();
+    for (const t of teamRows) {
+      teamMemberMap.set(
+        t.minigameId,
+        (teamMemberMap.get(t.minigameId) ?? 0) + t._count.members,
+      );
+    }
     return games.map((g) => ({
       ...g,
       firstPlayedAt: playedMap.get(g.id)?._min.playedAt ?? null,
       lastPlayedAt: playedMap.get(g.id)?._max.playedAt ?? null,
+      // Số liệu tổng hợp per-giải cho KPI/bảng danh sách (thay vì đọc store chưa nạp).
+      playerCount:
+        (g._count?.participants ?? 0) +
+        (golferMap.get(g.id) ?? 0) +
+        (teamMemberMap.get(g.id) ?? 0),
+      matchCount: g._count?.matches ?? 0,
+      completedCount: playedMap.get(g.id)?._count?._all ?? 0,
     }));
   }
 

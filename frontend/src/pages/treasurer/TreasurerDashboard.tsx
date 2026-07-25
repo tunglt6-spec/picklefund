@@ -54,6 +54,7 @@ export function TreasurerDashboard() {
     carryForwardBalance: number
     commonBalance: number
     clubAssetsBalance: number
+    unpaidCount: number
   } | null>(null)
 
   useEffect(() => {
@@ -70,6 +71,8 @@ export function TreasurerDashboard() {
           commonBalance,
           // Tổng tài sản CLB = Quỹ Chính + Số dư chuyển kỳ — KHÔNG cộng Quỹ Phụ
           clubAssetsBalance: Number(fund?.clubAssets?.balance ?? (commonBalance + carryForwardBalance)),
+          // Số NGƯỜI chưa đóng quỹ (canonical) — khớp màn Báo cáo, khác "Chờ xác nhận" (số dòng).
+          unpaidCount: Number(fund?.unpaidCount ?? 0),
         })
       })
       .catch(() => { if (!cancelled) setFinanceSummary(null) })
@@ -78,6 +81,8 @@ export function TreasurerDashboard() {
 
   // Tổng tài sản CLB từ backend; fallback: Quỹ Chính + Số dư chuyển kỳ (không cộng Quỹ Phụ)
   const clubAssetsBalance = financeSummary?.clubAssetsBalance ?? (balance + (financeSummary?.carryForwardBalance ?? 0))
+  // "Chưa đóng quỹ" = số NGƯỜI chưa đóng (canonical từ summary); fallback tạm số dòng chờ xác nhận.
+  const unpaidMembers = financeSummary?.unpaidCount ?? unpaid.length
 
   const [reminding, setReminding] = useState<string | null>(null)
   const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
@@ -206,7 +211,7 @@ export function TreasurerDashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <KpiCard title="Chưa Đóng Quỹ" value={`${unpaid.length} người`} icon={<AlertTriangle size={18} />} color="orange" alert={unpaid.length > 0} badge={unpaid.length > 0 ? `${unpaid.length}` : undefined} />
+          <KpiCard title="Chưa Đóng Quỹ" value={`${unpaidMembers} người`} icon={<AlertTriangle size={18} />} color="orange" alert={unpaidMembers > 0} badge={unpaidMembers > 0 ? `${unpaidMembers}` : undefined} />
           <KpiCard title="Chi Thiếu Hóa Đơn" value={`${noReceipt.length} khoản`} icon={<FileText size={18} />} color="yellow" alert={noReceipt.length > 0} />
           <KpiCard title="Chờ Xác Nhận" value={`${pendingCount} khoản`} icon={<Clock size={18} />} color="gray" />
         </div>

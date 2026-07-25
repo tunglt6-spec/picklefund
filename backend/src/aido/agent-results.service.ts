@@ -134,6 +134,18 @@ export class AgentResultsService {
 
     const hermesCount = (s: string) =>
       hermesByStatus.find((x) => x.status === s)?._count._all ?? 0;
+
+    // "Chờ duyệt" = SỐ AiAction đang PENDING_APPROVAL trong TTL (khớp Approval Center),
+    // KHÔNG đếm WorkflowRun WAITING_APPROVAL (run set 1 lần rồi treo → lệch với thực tế).
+    const ttlHours = Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS);
+    const ttl = Number.isFinite(ttlHours) && ttlHours > 0 ? ttlHours : 168;
+    const pendingApprovalCount = await this.prisma.aiAction.count({
+      where: {
+        clubId,
+        status: 'PENDING_APPROVAL',
+        createdAt: { gte: new Date(Date.now() - ttl * 3_600_000) },
+      },
+    });
     const avgMs = execRows.length
       ? Math.round(
           execRows.reduce((a, r) => a + (r.executionDuration ?? 0), 0) /
@@ -153,7 +165,7 @@ export class AgentResultsService {
       lisa: { remindersToday: lisaReminders, answeredToday: lisaAnsweredToday },
       hermes: {
         runsToday: hermesByStatus.reduce((a, x) => a + x._count._all, 0),
-        waitingApproval: hermesCount('WAITING_APPROVAL'),
+        waitingApproval: pendingApprovalCount,
         running: hermesCount('RUNNING'),
         completedToday: hermesCount('COMPLETED'),
         failedToday: hermesCount('FAILED'),

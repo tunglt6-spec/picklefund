@@ -53,7 +53,9 @@ export function MemberContributions() {
     !search || (c.periodName ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
-  const totalPaid = contributions.reduce((s, c) => s + c.amount, 0)
+  // "Tổng đã đóng" = CHỈ khoản đã xác nhận (khớp "Đã Đóng Quỹ" ở Tổng quan; khoản chờ xác nhận
+  // chưa tính là đã đóng). Trước đây cộng cả khoản chưa xác nhận → lệch với Dashboard.
+  const totalPaid = contributions.reduce((s, c) => s + (c.isConfirmed ? c.amount : 0), 0)
   const confirmedCount = contributions.filter(c => c.isConfirmed).length
   const pendingCount = contributions.filter(c => !c.isConfirmed).length
 

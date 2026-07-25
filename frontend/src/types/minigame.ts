@@ -40,6 +40,10 @@ export interface MiniGame {
   sport?: string
   /** HEAD_TO_HEAD (đối kháng theo trận) | LEADERBOARD (bảng điểm). */
   scoringModel?: string
+  /** Số liệu tổng hợp per-giải do BE /minigames trả (KPI/bảng danh sách — không đọc store). */
+  playerCount?: number
+  matchCount?: number
+  completedCount?: number
   drawMode: DrawMode
   pairingMode?: PairingMode
   /** FIXED_DOUBLES_ROUND_ROBIN: đã sinh lịch lượt đi & lượt về (double round-robin). */

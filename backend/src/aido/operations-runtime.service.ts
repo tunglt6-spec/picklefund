@@ -218,9 +218,23 @@ export class OperationsRuntimeService {
         where: { clubId, createdAt: { gte: todayStart } },
         _count: { _all: true },
       }),
-      // Hàng chờ duyệt HIỆN TẠI (mọi thời điểm, chưa xử lý) — overview #5.
+      // Hàng chờ duyệt HIỆN TẠI: loại action quá TTL (khớp Approval Center vốn auto-expire) →
+      // không đếm action treo cũ. TTL = AI_ACTION_APPROVAL_TTL_HOURS (mặc định 168h).
       this.prisma.aiAction.count({
-        where: { clubId, status: 'PENDING_APPROVAL' },
+        where: {
+          clubId,
+          status: 'PENDING_APPROVAL',
+          createdAt: {
+            gte: new Date(
+              Date.now() -
+                (Number.isFinite(Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS)) &&
+                Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS) > 0
+                  ? Number(process.env.AI_ACTION_APPROVAL_TTL_HOURS)
+                  : 168) *
+                  3_600_000,
+            ),
+          },
+        },
       }),
       this.prisma.clubMemory.groupBy({
         by: ['type'],

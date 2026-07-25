@@ -45,6 +45,7 @@ const mockPrisma = {
     createMany: jest.fn(),
     findUnique: jest.fn(),
     delete: jest.fn(),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   minigameGolfScore: {
     upsert: jest.fn(),
@@ -94,11 +95,13 @@ describe('MinigameService', () => {
     it('returns list filtered by clubId (kèm firstPlayedAt/lastPlayedAt = ngày thi đấu thực tế)', async () => {
       mockPrisma.minigame.findMany.mockResolvedValue([baseMg]);
       mockPrisma.minigameMatch.groupBy.mockResolvedValue([
-        { minigameId: 'mg-1', _min: { playedAt: new Date('2026-07-10') }, _max: { playedAt: new Date('2026-07-12') } },
+        { minigameId: 'mg-1', _min: { playedAt: new Date('2026-07-10') }, _max: { playedAt: new Date('2026-07-12') }, _count: { _all: 3 } },
       ]);
+      mockPrisma.minigameGolfer.groupBy.mockResolvedValue([]);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([]);
       const result = await service.findAll('club-1');
       expect(result).toEqual([
-        { ...baseMg, firstPlayedAt: new Date('2026-07-10'), lastPlayedAt: new Date('2026-07-12') },
+        { ...baseMg, firstPlayedAt: new Date('2026-07-10'), lastPlayedAt: new Date('2026-07-12'), playerCount: 0, matchCount: 0, completedCount: 3 },
       ]);
       expect(mockPrisma.minigame.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { clubId: 'club-1' } }),
@@ -108,8 +111,12 @@ describe('MinigameService', () => {
     it('giải chưa có trận đấu → firstPlayedAt/lastPlayedAt = null', async () => {
       mockPrisma.minigame.findMany.mockResolvedValue([baseMg]);
       mockPrisma.minigameMatch.groupBy.mockResolvedValue([]);
+      mockPrisma.minigameGolfer.groupBy.mockResolvedValue([]);
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([]);
       const result = await service.findAll('club-1');
-      expect(result).toEqual([{ ...baseMg, firstPlayedAt: null, lastPlayedAt: null }]);
+      expect(result).toEqual([
+        { ...baseMg, firstPlayedAt: null, lastPlayedAt: null, playerCount: 0, matchCount: 0, completedCount: 0 },
+      ]);
     });
   });
 

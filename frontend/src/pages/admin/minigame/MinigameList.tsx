@@ -77,7 +77,7 @@ export function MinigameList() {
   const navigate = useNavigate()
   const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? ''
-  const { getMinigames, deleteMinigame, setMinigamesFromApi, participants, groups, matches } = useMinigameStore()
+  const { getMinigames, deleteMinigame, setMinigamesFromApi, groups } = useMinigameStore()
   const minigames = getMinigames(clubId)
   const isMobile = useIsMobile()
   const { canManage } = useMinigameDelegate()
@@ -139,6 +139,8 @@ export function MinigameList() {
         createdBy: m.createdById ?? '', createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE', sport: m.sport ?? 'PICKLEBALL', scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD', drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
+        // Số liệu thật per-giải từ BE (KPI/bảng) — không phụ thuộc store participants/matches.
+        playerCount: m.playerCount ?? 0, matchCount: m.matchCount ?? 0, completedCount: m.completedCount ?? 0,
       }))
       setMinigamesFromApi(clubId, list)
       setLoadState('idle')
@@ -168,13 +170,14 @@ export function MinigameList() {
     }
   }
 
-  /* ── Derived rows (đếm từ store — giữ nguyên cách tính cũ, không đổi logic) ── */
+  /* ── Derived rows — dùng SỐ LIỆU THẬT per-giải từ BE (playerCount/matchCount/completedCount),
+       không đọc store participants/matches (store chỉ nạp khi mở chi tiết → danh sách bị undercount). ── */
   const toRow = (mg: MiniGame): TourRow => {
-    const players = participants.filter(p => p.minigameId === mg.id && p.status === 'ACTIVE').length
+    const players = mg.playerCount ?? 0
     const groupCount = groups.filter(g => g.minigameId === mg.id).length
-    const mts = matches.filter(m => m.minigameId === mg.id)
-    const completed = mts.filter(m => m.status === 'COMPLETED').length
-    return { mg, players, groupCount, matchCount: mts.length, completed, pct: mts.length > 0 ? Math.round((completed / mts.length) * 100) : 0 }
+    const matchCount = mg.matchCount ?? 0
+    const completed = mg.completedCount ?? 0
+    return { mg, players, groupCount, matchCount, completed, pct: matchCount > 0 ? Math.round((completed / matchCount) * 100) : 0 }
   }
 
   const q = search.trim().toLowerCase()
@@ -188,9 +191,9 @@ export function MinigameList() {
   const totalTournaments = minigames.length
   const inProgress = minigames.filter(m => m.status === 'IN_PROGRESS').length
   const completedTournaments = minigames.filter(m => m.status === 'COMPLETED').length
-  const totalPlayers = participants.filter(p => p.status === 'ACTIVE' && minigames.some(m => m.id === p.minigameId)).length
-  const totalMatches = matches.filter(mt => minigames.some(m => m.id === mt.minigameId)).length
-  const completedMatches = matches.filter(mt => mt.status === 'COMPLETED' && minigames.some(m => m.id === mt.minigameId)).length
+  const totalPlayers = minigames.reduce((s, m) => s + (m.playerCount ?? 0), 0)
+  const totalMatches = minigames.reduce((s, m) => s + (m.matchCount ?? 0), 0)
+  const completedMatches = minigames.reduce((s, m) => s + (m.completedCount ?? 0), 0)
 
   const hasActiveFilter = modeTab !== 'all' || statusFilter !== 'all' || !!q
   const resetFilters = () => { setModeTab('all'); setStatusFilter('all'); setSearch('') }

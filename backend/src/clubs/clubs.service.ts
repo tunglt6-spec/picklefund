@@ -111,7 +111,7 @@ export class ClubsService {
     const [clubs, total] = await Promise.all([
       this.prisma.club.findMany({
         where: { status: { not: 'deleted' } },
-        include: { _count: { select: { members: true, fundPeriods: true } } },
+        include: { _count: { select: { members: { where: { isDeleted: false } }, fundPeriods: true } } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -124,7 +124,7 @@ export class ClubsService {
   async findOne(id: string) {
     const club = await this.prisma.club.findUnique({
       where: { id },
-      include: { _count: { select: { members: true, fundPeriods: true } } },
+      include: { _count: { select: { members: { where: { isDeleted: false } }, fundPeriods: true } } },
     });
     if (!club) throw new NotFoundException('CLB không tồn tại');
     return club;
@@ -302,13 +302,16 @@ export class ClubsService {
   }
 
   async stats() {
-    const [total, active, suspended, totalMembers, totalPeriods] =
+    const since24h = new Date(Date.now() - 24 * 3_600_000);
+    const [total, active, suspended, totalMembers, totalPeriods, logins24h] =
       await Promise.all([
         this.prisma.club.count({ where: { status: { not: 'deleted' } } }),
         this.prisma.club.count({ where: { status: 'active' } }),
         this.prisma.club.count({ where: { status: 'suspended' } }),
         this.prisma.member.count({ where: { isDeleted: false } }),
         this.prisma.fundPeriod.count(),
+        // Đăng nhập 24h THẬT: User.lastLoginAt cập nhật mỗi lần đăng nhập (auth.service).
+        this.prisma.user.count({ where: { lastLoginAt: { gte: since24h } } }),
       ]);
     return {
       totalClubs: total,
@@ -316,7 +319,7 @@ export class ClubsService {
       suspendedClubs: suspended,
       totalMembers,
       totalFundPeriods: totalPeriods,
-      loginsLast24h: 0,
+      loginsLast24h: logins24h,
     };
   }
 }

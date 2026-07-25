@@ -181,7 +181,10 @@ describe('OperationsRuntimeService', () => {
     );
     expect(prisma.aiAction.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { clubId: 'club-xyz', status: 'PENDING_APPROVAL' },
+        where: expect.objectContaining({
+          clubId: 'club-xyz',
+          status: 'PENDING_APPROVAL',
+        }),
       }),
     );
     expect(prisma.aiAction.groupBy).toHaveBeenCalledWith(
