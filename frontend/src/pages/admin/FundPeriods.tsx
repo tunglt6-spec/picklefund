@@ -1957,8 +1957,9 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
     : period
       ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       : 0
-  const effectiveCollected = collected + prevBalance
-  const pct = target > 0 ? Math.min(100, Math.round((effectiveCollected / target) * 100)) : (miniMode && collected > 0 ? 100 : 0)
+  // CANONICAL "% đã thu kỳ này" = thu ĐÃ xác nhận / target — KHÔNG cộng số dư chuyển kỳ vào tử số
+  // (chuyển kỳ là tiền kỳ trước, không phải "thu kỳ này"). Đồng nhất với KPI Tổng quan + cột danh sách.
+  const pct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : (miniMode && collected > 0 ? 100 : 0)
   const barColor = color === 'indigo' ? '[background:var(--pf-primary)]' : '[background:var(--pf-primary)]'
   const borderColor = color === 'indigo' ? '[border-color:var(--pf-primary-soft)]' : '[border-color:var(--pf-primary-soft)]'
 

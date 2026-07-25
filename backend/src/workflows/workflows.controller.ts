@@ -203,6 +203,14 @@ export class WorkflowsController {
     return ok(await this.svc.listRuns(user.clubId, { status, ruleId }));
   }
 
+  // Đếm TỔNG (không cap 100) cho KPI: chờ duyệt (AiAction pending TTL) / hoàn tất / lỗi.
+  // Đặt TRƯỚC 'runs/:id' để không bị bắt nhầm 'stats' làm id.
+  @Get('runs/stats')
+  @ApiOperation({ summary: 'Thống kê run cho KPI (chờ duyệt/hoàn tất/lỗi).' })
+  async runsStats(@CurrentUser() user: JwtUser) {
+    return ok(await this.svc.runsSummary(user.clubId));
+  }
+
   @Get('runs/:id')
   @ApiOperation({ summary: 'Chi tiết workflow run.' })
   async findRun(@Param('id') id: string, @CurrentUser() user: JwtUser) {

@@ -326,6 +326,40 @@ export class HermesWorkflowService {
     return runs.map((r) => this.toRunResponse(r));
   }
 
+  /**
+   * Thống kê run cho KPI trang Hermes Workflows — đếm TỔNG toàn bộ (không cap 100 như listRuns).
+   * "Chờ duyệt" = AiAction PENDING_APPROVAL trong TTL (khớp Approval Center), KHÔNG đếm WorkflowRun
+   * WAITING_APPROVAL. "Hoàn tất"/"Lỗi" = tổng WorkflowRun COMPLETED/FAILED toàn CLB.
+   */
+  async runsSummary(clubIdRaw: string | null) {
+    const clubId = this.requireClub(clubIdRaw);
+    await this.resolveStaleApprovalRuns(clubId);
+    const [byStatus, waiting] = await Promise.all([
+      this.prisma.workflowRun.groupBy({
+        by: ['status'],
+        where: { clubId },
+        _count: { _all: true },
+      }),
+      this.prisma.aiAction.count({
+        where: {
+          clubId,
+          status: 'PENDING_APPROVAL' as never,
+          createdAt: {
+            gte: new Date(Date.now() - this.approvalTtlHours() * 3_600_000),
+          },
+        },
+      }),
+    ]);
+    const c = (s: string) =>
+      byStatus.find((x) => x.status === s)?._count._all ?? 0;
+    return {
+      total: byStatus.reduce((a, x) => a + x._count._all, 0),
+      waitingApproval: waiting,
+      completed: c('COMPLETED'),
+      failed: c('FAILED'),
+    };
+  }
+
   async findRun(id: string, clubIdRaw: string | null) {
     const clubId = this.requireClub(clubIdRaw);
     const run = await this.prisma.workflowRun.findFirst({

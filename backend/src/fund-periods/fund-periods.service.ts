@@ -482,7 +482,14 @@ export class FundPeriodsService {
       }),
       this.prisma.livingExpense.groupBy({
         by: ['fundPeriodId'],
-        where: { clubId, fundPeriodId: { in: ids }, ...fsFilter },
+        // CANONICAL: Chi = chỉ khoản đã duyệt/đã chi (approved/paid) — khớp financial-calculator,
+        // KHÔNG gộp pending/rejected (trước đây gộp mọi status cho biểu đồ → lệch KPI).
+        where: {
+          clubId,
+          fundPeriodId: { in: ids },
+          ...fsFilter,
+          status: { in: ['approved', 'paid'] },
+        },
         _sum: { amount: true },
       }),
     ]);

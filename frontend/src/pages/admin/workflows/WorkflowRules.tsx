@@ -61,7 +61,7 @@ function groupByCategory<T>(items: T[], keyFn: (x: T) => string): [string, T[]][
 }
 
 export function WorkflowRules() {
-  const { rules, runs, templates, loading, available, refetch } = useWorkflows()
+  const { rules, runs, templates, runStats, loading, available, refetch } = useWorkflows()
   const [busy, setBusy] = useState(false)
   const [dispatchResult, setDispatchResult] = useState<DispatchSummary | null>(null)
   const [liveResult, setLiveResult] = useState<DispatchLiveResult | null>(null)
@@ -112,13 +112,14 @@ export function WorkflowRules() {
     }
   }
 
-  // KPI runtime THẬT (từ rules + runs đã tải) — Mục XII, không số liệu giả.
+  // KPI runtime THẬT. "Chờ duyệt/Hoàn tất/Lỗi" lấy từ backend runStats (đếm TỔNG, không cap 100
+  // như danh sách runs; "Chờ duyệt" = AiAction pending — khớp Approval Center). Fallback client khi chưa có.
   const kpi = {
     enabled: rules.filter((r) => r.enabled).length,
     disabled: rules.filter((r) => !r.enabled).length,
-    waiting: runs.filter((r) => r.status === 'WAITING_APPROVAL').length,
-    completed: runs.filter((r) => r.status === 'COMPLETED').length,
-    failed: runs.filter((r) => r.status === 'FAILED').length,
+    waiting: runStats?.waitingApproval ?? runs.filter((r) => r.status === 'WAITING_APPROVAL').length,
+    completed: runStats?.completed ?? runs.filter((r) => r.status === 'COMPLETED').length,
+    failed: runStats?.failed ?? runs.filter((r) => r.status === 'FAILED').length,
   }
   // Palette tint value-based (đồng bộ nguyên tắc màu KPI toàn app).
   const WF_KPI_TONE = {

@@ -43,10 +43,19 @@ export interface WorkflowTemplate {
  * useWorkflows — đọc rules/runs/templates của Hermes Workflow Engine (self-scope theo JWT).
  * Chỉ gọi /workflows/* (SUPER_ADMIN/CLUB_ADMIN). Không đọc dữ liệu module khác.
  */
+/** Thống kê run cho KPI (đếm tổng ở backend, không bị cap 100 như danh sách runs). */
+export interface RunStats {
+  total: number
+  waitingApproval: number
+  completed: number
+  failed: number
+}
+
 export function useWorkflows() {
   const [rules, setRules] = useState<WorkflowRule[]>([])
   const [runs, setRuns] = useState<WorkflowRun[]>([])
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([])
+  const [runStats, setRunStats] = useState<RunStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [available, setAvailable] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -59,12 +68,14 @@ export function useWorkflows() {
       api.get('/workflows/rules'),
       api.get('/workflows/runs'),
       api.get('/workflows/templates'),
+      api.get('/workflows/runs/stats'),
     ])
-      .then(([r, ru, t]) => {
+      .then(([r, ru, t, st]) => {
         if (!alive) return
         if (r.status === 'fulfilled') setRules((r.value.data?.data ?? []) as WorkflowRule[])
         if (ru.status === 'fulfilled') setRuns((ru.value.data?.data ?? []) as WorkflowRun[])
         if (t.status === 'fulfilled') setTemplates((t.value.data?.data ?? []) as WorkflowTemplate[])
+        if (st.status === 'fulfilled') setRunStats((st.value.data?.data ?? null) as RunStats | null)
         setAvailable(r.status === 'fulfilled')
       })
       .finally(() => {
@@ -75,7 +86,7 @@ export function useWorkflows() {
     }
   }, [refreshKey])
 
-  return { rules, runs, templates, loading, available, refetch }
+  return { rules, runs, templates, runStats, loading, available, refetch }
 }
 
 export interface RuleExistsInfo {

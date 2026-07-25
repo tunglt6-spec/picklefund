@@ -55,6 +55,8 @@ export function TreasurerDashboard() {
     commonBalance: number
     clubAssetsBalance: number
     unpaidCount: number
+    totalIncome: number
+    totalExpense: number
   } | null>(null)
 
   useEffect(() => {
@@ -73,6 +75,9 @@ export function TreasurerDashboard() {
           clubAssetsBalance: Number(fund?.clubAssets?.balance ?? (commonBalance + carryForwardBalance)),
           // Số NGƯỜI chưa đóng quỹ (canonical) — khớp màn Báo cáo, khác "Chờ xác nhận" (số dòng).
           unpaidCount: Number(fund?.unpaidCount ?? 0),
+          // CANONICAL Thu/Chi kỳ hiện tại: Thu = đã xác nhận; Chi = đã duyệt/đã chi (approved/paid).
+          totalIncome: Number(fund?.totalIncome ?? 0),
+          totalExpense: Number(fund?.totalExpenses ?? 0),
         })
       })
       .catch(() => { if (!cancelled) setFinanceSummary(null) })
@@ -83,6 +88,10 @@ export function TreasurerDashboard() {
   const clubAssetsBalance = financeSummary?.clubAssetsBalance ?? (balance + (financeSummary?.carryForwardBalance ?? 0))
   // "Chưa đóng quỹ" = số NGƯỜI chưa đóng (canonical từ summary); fallback tạm số dòng chờ xác nhận.
   const unpaidMembers = financeSummary?.unpaidCount ?? unpaid.length
+  // Thu/Chi/Số dư Quỹ Chính theo CANONICAL (kỳ hiện tại, Chi=approved/paid); fallback client khi chưa có kỳ.
+  const canonIncome = financeSummary?.totalIncome ?? commonIncome
+  const canonExpense = financeSummary?.totalExpense ?? commonExpTotal
+  const canonBalance = financeSummary?.commonBalance ?? balance
 
   const [reminding, setReminding] = useState<string | null>(null)
   const [receiptModal, setReceiptModal] = useState<{ id: string; label: string } | null>(null)
@@ -204,9 +213,9 @@ export function TreasurerDashboard() {
 
         {/* KPI grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <KpiCard title="Thu Quỹ Chính" value={commonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
-          <KpiCard title="Chi Quỹ Chính" value={commonExpTotal} isCurrency icon={<CreditCard size={18} />} color="orange" />
-          <KpiCard title="Số Dư Q.Chính" value={balance} isCurrency icon={<Building2 size={18} />} color="blue" />
+          <KpiCard title="Thu Quỹ Chính" value={canonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
+          <KpiCard title="Chi Quỹ Chính" value={canonExpense} isCurrency icon={<CreditCard size={18} />} color="orange" />
+          <KpiCard title="Số Dư Q.Chính" value={canonBalance} isCurrency icon={<Building2 size={18} />} color="blue" />
           <KpiCard title="Khoản Chi" value={`${expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
         </div>
 
