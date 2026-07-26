@@ -41,6 +41,9 @@ export interface SmartReminder {
   dueDate: string | null;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   memberId: string;
+  // userId của tài khoản gắn với thành viên — cần để gửi notification (SPECIFIC_USER).
+  // null nếu thành viên chưa có tài khoản → không thể nhắc qua kênh notification.
+  userId: string | null;
   clubId: string;
 }
 

@@ -30,9 +30,9 @@ export class LisaScheduler {
     const clubIds = await this.getActiveClubIds();
     for (const clubId of clubIds) {
       try {
-        const count = await this.lisa.dispatchRemindersForClub(clubId);
+        const r = await this.lisa.dispatchRemindersForClub(clubId);
         this.logger.log(
-          `[Lisa] Dispatched ${count} reminders for club ${clubId}`,
+          `[Lisa] Club ${clubId}: sinh ${r.generated}, gửi ${r.dispatched}, bỏ qua ${r.skipped} (trùng/không có tài khoản)`,
         );
       } catch (err: any) {
         this.logger.error(

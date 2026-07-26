@@ -1,4 +1,11 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { LisaService } from './lisa.service';
 import { CurrentUser, Roles} from '../common/decorators';
@@ -52,8 +59,7 @@ export class LisaController {
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Post('reminders/dispatch')
   async dispatchReminders(@CurrentUser() user: any) {
-    const count = await this.svc.dispatchRemindersForClub(user.clubId);
-    return ok({ dispatched: count });
+    return ok(await this.svc.dispatchRemindersForClub(user.clubId));
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
@@ -62,6 +68,18 @@ export class LisaController {
     @Param('memberId') memberId: string,
     @CurrentUser() user: any,
   ) {
-    return ok(await this.svc.getPersonalBrief(memberId, user.clubId));
+    const isSuperAdmin = user.role === 'SUPER_ADMIN';
+    // SUPER_ADMIN được xem thành viên mọi CLB. Còn lại BẮT BUỘC có clubId và khớp
+    // (getPersonalBrief ném 404 nếu ctx.clubId !== callerClubId). Chặn trường hợp
+    // non-super mà clubId null (nếu có) → không lọt xem chéo CLB.
+    if (!isSuperAdmin && !user.clubId) {
+      throw new NotFoundException(`Member ${memberId} not found`);
+    }
+    return ok(
+      await this.svc.getPersonalBrief(
+        memberId,
+        isSuperAdmin ? undefined : user.clubId,
+      ),
+    );
   }
 }

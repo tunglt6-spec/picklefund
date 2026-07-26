@@ -10,7 +10,9 @@ type Brief = { greeting: string; paymentStatus: string; activitySummary: string;
 const SUGGESTIONS = [
   'Tôi đã đóng quỹ chưa?',
   'Tôi đã tham gia bao nhiêu buổi?',
-  'Chi phí của tôi kỳ này là bao nhiêu?',
+  // Đổi từ "Chi phí của tôi kỳ này?" — context Lisa chưa có chi phí phân bổ theo TV nên
+  // câu đó khiến Lisa trả lời "chưa có". Thay bằng câu Lisa trả lời được từ số liệu hiện có.
+  'Số dư quỹ CLB hiện tại là bao nhiêu?',
   'Có thông báo gì mới không?',
 ]
 
