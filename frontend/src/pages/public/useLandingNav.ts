@@ -1,5 +1,9 @@
-/** useLandingNav — điều hướng landing: "/#anchor" cuộn mượt tới section, else router navigate. */
+/** useLandingNav — điều hướng landing: "/#anchor" cuộn mượt tới section (trừ chiều cao header
+ *  sticky để không bị che), else router navigate. */
 import { useNavigate } from 'react-router-dom'
+
+/** Chiều cao header sticky (h-16 = 64px) + đệm nhỏ để section không nấp dưới header. */
+const HEADER_OFFSET = 76
 
 export function useLandingNav() {
   const navigate = useNavigate()
@@ -9,7 +13,8 @@ export function useLandingNav() {
       const id = href.slice(2)
       const el = document.getElementById(id)
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
         history.replaceState(null, '', href)
         return
       }
