@@ -109,6 +109,12 @@
    specificity, dùng cho các container public cần căn giữa (Landing/PublicShell). */
 .pf-center-x { margin-left: auto; margin-right: auto; }
 
+/* Landing: `* { padding:0 }` (unlayered, ở trên) đè MỌI padding utility Tailwind (@layer utilities)
+   → card/section landing mất padding (chạm mép, đặc biệt mobile). Khôi phục padding utility CHỈ trong
+   landing (KHÔNG đụng app admin) bằng revert-layer: phần tử có utility nhận lại đúng giá trị; phần tử
+   không có utility vẫn 0. `.pf-landing *` (0,1,1) thắng `*` (0,0,0) nên revert-layer có hiệu lực. */
+.pf-landing, .pf-landing * { padding: revert-layer; }
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--color-neutral-50);
