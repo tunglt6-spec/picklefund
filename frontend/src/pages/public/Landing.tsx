@@ -104,7 +104,7 @@ function DashboardMock() {
             <span className="text-[8px] font-semibold [color:var(--pf-color-muted)]">AI Agents đang hoạt động:</span>
             {AGENTS.map((a) => (
               <span key={a.name} className="inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-[8px] font-semibold" style={{ background: a.soft, color: a.color }}>
-                <AgentAvatar agent={a} className="h-3.5 w-3.5 shrink-0 rounded-full text-[7px]" imgClass="h-3.5 w-3.5 rounded-full object-cover object-center" />{a.name}
+                <AgentAvatar agent={a} className="h-3.5 w-3.5 shrink-0 rounded-full text-[7px]" imgClass="h-3.5 w-3.5 rounded-full object-cover object-center" />{a.name === 'Notification AI' ? 'Noti AI' : a.name}
               </span>
             ))}
           </div>
@@ -282,7 +282,7 @@ export function Landing() {
                     {AGENTS.map((a) => (
                       <div key={a.name} className="flex flex-col items-center gap-1" title={`${a.name} · ${a.shortLabel}`}>
                         <AgentAvatar agent={a} className="h-11 w-11 rounded-full border-2 border-white text-sm" imgClass="h-11 w-11 rounded-full object-cover object-center" />
-                        <span className="text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name.split(' ')[0]}</span>
+                        <span className="text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name === 'Notification AI' ? 'Noti AI' : a.name}</span>
                       </div>
                     ))}
                   </div>
