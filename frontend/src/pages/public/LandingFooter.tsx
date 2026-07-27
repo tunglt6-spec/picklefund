@@ -21,7 +21,7 @@ export function LandingFooter() {
   const go = useLandingNav()
   const year = new Date().getFullYear()
   return (
-    <footer id="contact" className="border-t [border-color:var(--pf-border)] [background:var(--pf-surface)]">
+    <footer id="contact" className="mt-6 border-t [border-color:var(--pf-border)] [background:var(--pf-surface)] sm:mt-8">
       <div className="pf-center-x max-w-[1200px] px-4 py-12 sm:px-6">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           {/* Brand */}
@@ -36,7 +36,7 @@ export function LandingFooter() {
 
           {FOOTER_GROUPS.map((group) => (
             <nav key={group.title} aria-label={group.title}>
-              <p className="text-sm font-bold [color:var(--pf-text)]">{group.title}</p>
+              <p className="text-sm font-extrabold [color:var(--pf-text)]">{group.title}</p>
               <div className="mt-3 flex flex-col gap-2">
                 {group.items.map((item) => <FooterLink key={item.title} item={item} onNavigate={go} />)}
               </div>

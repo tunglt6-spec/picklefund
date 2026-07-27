@@ -24,7 +24,7 @@ function MegaPanel({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (href?: s
   return (
     <div className="absolute left-1/2 top-full z-50 w-[min(920px,calc(100vw-2rem))] -translate-x-1/2 pt-3">
       <div
-        className="rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]"
+        className="pf-fade rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]"
         style={{ boxShadow: 'var(--pf-shadow-hover)' }}
       >
         {menu.heading && (
@@ -187,8 +187,12 @@ export function LandingHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b transition-shadow [background:rgba(255,255,255,0.9)] backdrop-blur"
-      style={{ borderColor: scrolled ? 'var(--pf-border)' : 'transparent', boxShadow: scrolled ? 'var(--pf-shadow)' : 'none' }}
+      className="sticky top-0 z-40 border-b backdrop-blur-md transition-all duration-300 [-webkit-backdrop-filter:saturate(150%)_blur(12px)] [backdrop-filter:saturate(150%)_blur(12px)]"
+      style={{
+        background: scrolled ? 'rgb(255 255 255 / 0.85)' : 'rgb(255 255 255 / 0.72)',
+        borderColor: scrolled ? 'var(--pf-border)' : 'transparent',
+        boxShadow: scrolled ? 'var(--pf-shadow)' : 'none',
+      }}
     >
       <div className="pf-center-x flex h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6">
         <Wordmark />
