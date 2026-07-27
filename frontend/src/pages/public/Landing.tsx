@@ -278,11 +278,11 @@ export function Landing() {
                   </div>
                 )}
                 {f.agents && (
-                  <div className="mt-4 flex items-center gap-2">
+                  <div className="mt-4 flex items-center justify-between gap-1.5 sm:justify-start sm:gap-2">
                     {AGENTS.map((a) => (
-                      <div key={a.name} className="flex flex-col items-center gap-1" title={`${a.name} · ${a.shortLabel}`}>
-                        <AgentAvatar agent={a} className="h-11 w-11 rounded-full border-2 border-white text-sm" imgClass="h-11 w-11 rounded-full object-cover object-center" />
-                        <span className="text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name === 'Notification AI' ? 'Noti AI' : a.name}</span>
+                      <div key={a.name} className="flex min-w-0 flex-col items-center gap-1" title={`${a.name} · ${a.shortLabel}`}>
+                        <AgentAvatar agent={a} className="h-10 w-10 rounded-full border-2 border-white text-sm sm:h-11 sm:w-11" imgClass="h-10 w-10 rounded-full object-cover object-center sm:h-11 sm:w-11" />
+                        <span className="max-w-full truncate text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name === 'Notification AI' ? 'Noti AI' : a.name}</span>
                       </div>
                     ))}
                   </div>
