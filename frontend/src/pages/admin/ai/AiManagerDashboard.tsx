@@ -451,9 +451,9 @@ export function AiManagerDashboard() {
 
   return (
     <div className="[background:var(--pf-bg)]">
-      {/* Header — KHÔNG bọc scroll riêng: để nội dung chảy trong scroll của AppLayout (tránh
-          scroll lồng làm cắt chân khi nhúng làm tab trong AIDO). Sticky bám scroll ngoài. */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 py-4">
+      {/* Header — KHÔNG bọc scroll riêng (tránh scroll lồng cắt chân khi nhúng tab AIDO) và
+          KHÔNG sticky (thanh tab AIDO đã sticky top-0; 2 sticky sẽ chồng nhau). */}
+      <div className="bg-white border-b border-slate-100 py-4">
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">

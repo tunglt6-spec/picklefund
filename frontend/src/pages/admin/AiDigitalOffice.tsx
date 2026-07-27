@@ -360,10 +360,10 @@ export function AiDigitalOffice() {
   }, [results, health, opsSignals, executedToday, running])
 
   const tabs: TabItem[] = [
-    { key: 'office', label: 'Office View' },
-    { key: 'operations', label: 'Operations View', badge: pending },
-    { key: 'analytics', label: 'Analytics View' },
-    { key: 'ops-center', label: 'AI Operations Center' },
+    { key: 'office', label: 'Tổng quan' },
+    { key: 'operations', label: 'Vận hành', badge: pending },
+    { key: 'analytics', label: 'Phân tích' },
+    { key: 'ops-center', label: 'Trung tâm điều hành AI' },
   ]
 
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
@@ -413,7 +413,13 @@ export function AiDigitalOffice() {
         }
       />
 
-      <ResponsiveTabs tabs={tabs} active={tab} onChange={setTab} className="mb-5" />
+      {/* Thanh tab — bar trắng sticky full-bleed + kẻ dưới, nội dung căn max-w-1600
+          (đúng chuẩn ModuleTabs màn Thành viên: căn lề thẳng tiêu đề + nội dung). */}
+      <div className="-mx-4 mb-5 sticky top-0 z-20 border-b [border-color:var(--pf-border)] sm:-mx-6" style={{ background: 'var(--pf-surface)' }}>
+        <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
+          <ResponsiveTabs tabs={tabs} active={tab} onChange={setTab} className="py-2.5" />
+        </div>
+      </div>
 
       {tab === 'office' && (
         <div className="space-y-5">
