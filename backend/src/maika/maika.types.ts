@@ -4,9 +4,10 @@ export interface ClubSnapshot {
   activeMembers: number;
   totalMembers: number;
   unpaidCount: number;
-  commonBalance: number; // Quỹ Chính
+  commonBalance: number; // Quỹ Chính — số dư KỲ hiện tại (thu-chi trong kỳ)
+  clubAssets: number; // Tài sản ròng Quỹ Chính = commonBalance kỳ + carry-forward (canonical)
   miniBalance: number; // Quỹ Phụ (Mini) — ĐỘC LẬP
-  totalAssets: number; // = Quỹ Chính (KHÔNG cộng Quỹ Phụ) — nhất quán clubAssets/Dashboard
+  totalAssets: number; // = clubAssets (KHÔNG cộng Quỹ Phụ) — nhất quán Dashboard/Reports
   commonIncome: number;
   commonExpense: number;
   currentPeriodName: string | null;

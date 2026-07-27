@@ -43,18 +43,20 @@ export class OperationalAlertsService {
 
     // Số liệu từ Finance Engine (đã tính sẵn) — Maika chỉ đọc, không tính lại.
     const s = await this.fundPeriods.summary(period.id, clubId);
-    const balance = Number(s.balance);
+    // T1 — cảnh báo "Quỹ âm" xét TÀI SẢN RÒNG (clubAssets = kỳ + carry-forward), không phải
+    // số dư kỳ (s.balance) → hết dương-tính-giả khi kỳ này chi>thu nhưng CLB còn dự trữ.
+    const netAssets = Number(s.clubAssets?.balance ?? s.balance);
     const miniBalance = Number(s.miniBalance);
     const unpaid = Number(s.unpaidCount) || 0;
     const lowAttendance = Number(s.lowAttendanceCount) || 0;
 
     const signals: IntelSignal[] = [];
 
-    if (balance < 0) {
+    if (netAssets < 0) {
       signals.push({
         code: 'OPS_FUND_NEGATIVE',
         level: 'warning',
-        message: `Quỹ Chính kỳ "${period.name}" đang ÂM. Cần rà soát thu/chi (số liệu từ Finance Engine).`,
+        message: `Quỹ Chính (tài sản ròng) của CLB đang ÂM tại kỳ "${period.name}". Cần rà soát thu/chi (số liệu từ Finance Engine).`,
       });
     }
     if (miniBalance < 0) {

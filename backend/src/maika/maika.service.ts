@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
+import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import type {
   ClubSnapshot,
   DailyBrief,
@@ -23,6 +24,7 @@ export class MaikaService {
     private prisma: PrismaService,
     private config: ConfigService,
     private hermes: HermesService,
+    private fundPeriods: FundPeriodsService,
   ) {
     this.geminiModel =
       this.config.get<string>('GEMINI_MODEL') ?? 'gemini-3.5-flash';
@@ -98,19 +100,29 @@ export class MaikaService {
     const commonBalance = commonIncome - commonExpense;
     const miniBalance = miniIncome - miniExpense;
 
-    // Count unpaid members in active period
+    // T1/T2 — CANONICAL: clubAssets (số dư RÒNG = kỳ + carry-forward) + unpaidCount (GỒM người
+    // đóng THIẾU) lấy từ FundPeriodsService.summary → khớp Dashboard/Reports, hết dương-tính-giả
+    // "Quỹ âm" (kỳ này chi>thu nhưng CLB còn dự trữ dương) và hết under-count công nợ.
     let unpaidCount = 0;
+    let clubAssets = commonBalance; // fallback (không có kỳ mở): dùng số dư kỳ
     if (activePeriod) {
-      const paidMemberIds = await this.prisma.fundContribution.findMany({
-        where: { clubId, fundPeriodId: activePeriod.id, isConfirmed: true },
-        select: { memberId: true },
-      });
-      const paidSet = new Set(paidMemberIds.map((c) => c.memberId));
-      const activeM = await this.prisma.member.findMany({
-        where: { clubId, status: 'active', isDeleted: false },
-        select: { id: true },
-      });
-      unpaidCount = activeM.filter((m) => !paidSet.has(m.id)).length;
+      try {
+        const summary = await this.fundPeriods.summary(activePeriod.id, clubId);
+        unpaidCount = Number(summary?.unpaidCount ?? 0);
+        clubAssets = Number(summary?.clubAssets?.balance ?? commonBalance);
+      } catch {
+        // Summary lỗi → fallback đếm nhị phân + số dư kỳ (không chặn brief).
+        const paidMemberIds = await this.prisma.fundContribution.findMany({
+          where: { clubId, fundPeriodId: activePeriod.id, isConfirmed: true, fundSource: 'COMMON' },
+          select: { memberId: true },
+        });
+        const paidSet = new Set(paidMemberIds.map((c) => c.memberId));
+        const activeM = await this.prisma.member.findMany({
+          where: { clubId, status: 'active', isDeleted: false },
+          select: { id: true },
+        });
+        unpaidCount = activeM.filter((m) => !paidSet.has(m.id)).length;
+      }
     }
 
     const currentPeriodSessions = activePeriod
@@ -124,11 +136,11 @@ export class MaikaService {
       totalMembers,
       unpaidCount,
       commonBalance,
+      clubAssets,
       miniBalance,
-      // Tổng tài sản CLB = Quỹ Chính; KHÔNG cộng Quỹ Phụ (Mini độc lập — nhất quán
-      // Dashboard/Reports & FinancialCalculatorService.clubAssets). Trước đây cộng gộp
-      // miniBalance → "Quỹ âm" lệch báo cáo.
-      totalAssets: commonBalance,
+      // Tổng tài sản CLB = clubAssets (Quỹ Chính RÒNG có carry-forward); KHÔNG cộng Quỹ Phụ
+      // (Mini độc lập). Trước đây dùng commonBalance kỳ → "Quỹ âm" dương-tính-giả khi có dự trữ.
+      totalAssets: clubAssets,
       commonIncome,
       commonExpense,
       currentPeriodName: activePeriod?.name ?? null,
@@ -157,8 +169,14 @@ export class MaikaService {
       }
     }
 
-    // 2) OpenRouter Free (DeepSeek / Qwen)
-    const orKey = this.config.get<string>('OPENROUTER_API_KEY');
+    // 2) OpenRouter Free (DeepSeek / Qwen) — T4 privacy: prompt Maika chứa số liệu tài chính CLB.
+    // Mặc định KHÔNG gửi ra model :free bên thứ ba; đi thẳng rule-based fallback. Bật
+    // MAIKA_ALLOW_THIRDPARTY_FIN=true nếu tổ chức chấp nhận rủi ro.
+    const allowThirdParty =
+      this.config.get<string>('MAIKA_ALLOW_THIRDPARTY_FIN') === 'true';
+    const orKey = allowThirdParty
+      ? this.config.get<string>('OPENROUTER_API_KEY')
+      : undefined;
     if (orKey) {
       try {
         const res = await fetch(
@@ -231,23 +249,24 @@ export class MaikaService {
     const prompt = `Bạn là Maika, AI quản lý câu lạc bộ thể thao (đa bộ môn).
 Dữ liệu CLB "${snap.clubName}" hôm nay ${today}:
 - Thành viên hoạt động: ${snap.activeMembers}/${snap.totalMembers}
-- Chưa đóng quỹ: ${snap.unpaidCount} người
-- Số dư Quỹ Chính (kỳ hiện tại): ${snap.commonBalance.toLocaleString('vi-VN')}đ
+- Chưa đóng quỹ (gồm đóng thiếu): ${snap.unpaidCount} người
+- Số dư Quỹ Chính (tài sản ròng, gồm dư chuyển kỳ): ${snap.clubAssets.toLocaleString('vi-VN')}đ
 - Quỹ Phụ (độc lập): ${snap.miniBalance.toLocaleString('vi-VN')}đ
 - Kỳ hiện tại: ${snap.currentPeriodName ?? 'Chưa có kỳ'}
 - Điểm sức khỏe CLB: ${healthScore.score}/100
 
 Viết Daily Brief ngắn gọn (3-4 câu), chuyên nghiệp, bằng tiếng Việt.
-Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.`;
+Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.
+QUAN TRỌNG: CHỈ dùng đúng các con số đã cung cấp ở trên; TUYỆT ĐỐI không tự bịa hay suy diễn thêm số liệu, ngày tháng, tên người hay sự kiện.`;
 
-    const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Số dư Quỹ Chính ${snap.commonBalance.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`;
+    const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Số dư Quỹ Chính ${snap.clubAssets.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`;
 
     const summary = await this.askAI(prompt, fallback);
 
     const brief: DailyBrief = {
       date: today,
       summary,
-      fundBalance: `Quỹ Chung: ${snap.commonBalance.toLocaleString('vi-VN')}đ | Quỹ Mini: ${snap.miniBalance.toLocaleString('vi-VN')}đ`,
+      fundBalance: `Quỹ Chung: ${snap.clubAssets.toLocaleString('vi-VN')}đ | Quỹ Mini: ${snap.miniBalance.toLocaleString('vi-VN')}đ`,
       debtAlert:
         snap.unpaidCount > 0
           ? `${snap.unpaidCount} thành viên chưa đóng quỹ kỳ ${snap.currentPeriodName}`
@@ -290,13 +309,14 @@ Chỉ nêu những điểm quan trọng nhất. Không dùng emoji quá nhiều.
     const prompt = `Bạn là Maika, AI quản lý CLB thể thao (đa bộ môn).
 Báo cáo tuần CLB "${snap.clubName}":
 - Thành viên: ${snap.activeMembers} đang hoạt động / ${snap.totalMembers} tổng
-- Tổng Thu (Quỹ Chung): ${snap.commonIncome.toLocaleString('vi-VN')}đ
-- Tổng Chi (Quỹ Chung): ${snap.commonExpense.toLocaleString('vi-VN')}đ
-- Số dư: ${snap.commonBalance.toLocaleString('vi-VN')}đ
-- Chưa đóng quỹ: ${snap.unpaidCount}/${snap.activeMembers} người
+- Tổng Thu (Quỹ Chung, kỳ này): ${snap.commonIncome.toLocaleString('vi-VN')}đ
+- Tổng Chi (Quỹ Chung, kỳ này): ${snap.commonExpense.toLocaleString('vi-VN')}đ
+- Số dư Quỹ Chính (tài sản ròng, gồm dư chuyển kỳ): ${snap.clubAssets.toLocaleString('vi-VN')}đ
+- Chưa đóng quỹ (gồm đóng thiếu): ${snap.unpaidCount}/${snap.activeMembers} người
 
 Viết báo cáo tuần (5-6 câu), nêu highlights, so sánh, và 2-3 khuyến nghị cải thiện.
-Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
+Ngôn ngữ chuyên nghiệp, tiếng Việt.
+QUAN TRỌNG: CHỈ dùng đúng các con số đã cung cấp ở trên; TUYỆT ĐỐI không tự bịa hay suy diễn thêm số liệu, ngày tháng, tên người hay sự kiện.`;
 
     const fallback = `Báo cáo tuần CLB ${snap.clubName}: ${snap.activeMembers} thành viên hoạt động. Thu/Chi Quỹ Chung: ${snap.commonIncome.toLocaleString('vi-VN')}đ / ${snap.commonExpense.toLocaleString('vi-VN')}đ. Số dư: ${snap.commonBalance.toLocaleString('vi-VN')}đ.`;
 
@@ -335,14 +355,15 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
   // ─── Anomaly Detection ────────────────────────────────────────────────────
 
   private computeAnomaliesFromSnap(
-    snap: Pick<ClubSnapshot, 'commonBalance' | 'miniBalance' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
+    snap: Pick<ClubSnapshot, 'commonBalance' | 'clubAssets' | 'miniBalance' | 'activeMembers' | 'unpaidCount' | 'commonIncome' | 'commonExpense' | 'totalMembers'>,
   ): AnomalyResult['anomalies'] {
     const anomalies: AnomalyResult['anomalies'] = [];
-    // Quỹ Chính âm — CHỈ xét Quỹ Chính (KHÔNG gộp Quỹ Phụ). Khớp báo cáo dashboard.
-    if (snap.commonBalance < 0) {
+    // Quỹ Chính âm — xét TÀI SẢN RÒNG (clubAssets = kỳ + carry-forward), KHÔNG gộp Quỹ Phụ.
+    // Trước đây xét commonBalance kỳ → dương-tính-giả khi CLB còn dự trữ dương từ kỳ trước.
+    if (snap.clubAssets < 0) {
       anomalies.push({
         type: 'fund_negative',
-        description: `Quỹ Chính âm: ${snap.commonBalance.toLocaleString('vi-VN')}đ`,
+        description: `Quỹ Chính âm: ${snap.clubAssets.toLocaleString('vi-VN')}đ`,
         severity: 'HIGH',
       });
     }
@@ -413,7 +434,8 @@ Ngôn ngữ chuyên nghiệp, tiếng Việt.`;
   // ─── Health Score ─────────────────────────────────────────────────────────
 
   computeHealthScore(snap: ClubSnapshot): HealthScoreResult {
-    const totalIncome = snap.commonIncome + snap.miniBalance;
+    // Th1 — cổng "có nguồn thu" chỉ xét THU Quỹ Chính (income), không cộng số dư Mini (balance).
+    const totalIncome = snap.commonIncome;
     const finScore =
       totalIncome > 0
         ? Math.round(
