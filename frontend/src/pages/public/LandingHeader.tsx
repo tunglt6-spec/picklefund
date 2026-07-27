@@ -4,6 +4,7 @@
  * click ra ngoài, khóa scroll nền khi drawer mở. Nội dung lấy từ landing-content.ts.
  */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, ChevronDown, Clock, ArrowRight } from 'lucide-react'
 import { MEGA_MENUS, type MegaMenu, type MenuItem } from './landing-content'
@@ -270,7 +271,9 @@ export function LandingHeader() {
 function MobileDrawer({
   onClose, onNavigate, navigate,
 }: { onClose: () => void; onNavigate: (href?: string) => void; navigate: (to: string) => void }): ReactNode {
-  return (
+  // Portal ra body: header có backdrop-filter → tạo containing block cho con position:fixed,
+  // nếu render trong header thì drawer bị giới hạn trong chiều cao header (~64px) → vỡ layout.
+  return createPortal(
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu điều hướng">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute inset-y-0 right-0 flex w-[min(88vw,360px)] flex-col [background:var(--pf-surface)]">
@@ -312,6 +315,7 @@ function MobileDrawer({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

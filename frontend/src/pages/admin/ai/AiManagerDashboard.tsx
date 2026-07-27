@@ -450,8 +450,9 @@ export function AiManagerDashboard() {
   }, [rosterAll, teamFilter])
 
   return (
-    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      {/* Header */}
+    <div className="[background:var(--pf-bg)]">
+      {/* Header — KHÔNG bọc scroll riêng: để nội dung chảy trong scroll của AppLayout (tránh
+          scroll lồng làm cắt chân khi nhúng làm tab trong AIDO). Sticky bám scroll ngoài. */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
