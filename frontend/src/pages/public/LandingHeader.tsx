@@ -194,7 +194,7 @@ export function LandingHeader() {
         <Wordmark />
 
         {/* Desktop nav */}
-        <div ref={navRef} className="hidden items-center gap-0.5 lg:flex">
+        <nav ref={navRef} className="hidden flex-1 items-center justify-center gap-1 lg:flex xl:gap-2">
           {MEGA_MENUS.map((menu) => (
             <Fragment key={menu.key}>
               <div
@@ -207,7 +207,7 @@ export function LandingHeader() {
                   onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); setOpenKey(menu.key) } }}
                   aria-haspopup="true"
                   aria-expanded={openKey === menu.key}
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
+                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]"
                 >
                   {menu.label}
                   <ChevronDown size={14} className="transition-transform" style={{ transform: openKey === menu.key ? 'rotate(180deg)' : 'none' }} />
@@ -218,14 +218,14 @@ export function LandingHeader() {
               {menu.key === 'product' && (
                 <button
                   onClick={() => navigate('/pricing')}
-                  className="rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
+                  className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]"
                 >
                   Bảng giá
                 </button>
               )}
             </Fragment>
           ))}
-        </div>
+        </nav>
 
         {/* Desktop CTA */}
         <div className="hidden items-center gap-2 lg:flex">
