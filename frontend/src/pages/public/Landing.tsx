@@ -13,9 +13,31 @@ import { LandingHeader } from './LandingHeader'
 import { LandingFooter } from './LandingFooter'
 import {
   STATS, SPORTS, FEATURES, AGENTS, BENEFITS, TESTIMONIALS, PRICING_TIERS, FAQS,
+  type Agent,
 } from './landing-content'
 
 const CONTAINER = 'pf-center-x max-w-[1200px] px-4 sm:px-6'
+
+/* ── Avatar trợ lý AI (ảnh public/agents/*.png) — fallback initial nếu thiếu file ── */
+function AgentAvatar({ agent, className, imgClass }: { agent: Agent; className: string; imgClass?: string }) {
+  const [err, setErr] = useState(false)
+  if (err) {
+    return (
+      <div className={`flex items-center justify-center font-extrabold text-white ${className}`} style={{ background: agent.color }} role="img" aria-label={`Trợ lý AI ${agent.name}`}>
+        {agent.name.charAt(0)}
+      </div>
+    )
+  }
+  return (
+    <img
+      src={agent.avatar}
+      alt={`Trợ lý AI ${agent.name}`}
+      loading="lazy"
+      onError={() => setErr(true)}
+      className={`${className} ${imgClass ?? 'object-cover object-top'}`}
+    />
+  )
+}
 
 /* ── Mockup dashboard trong Hero (self-contained, minh hoạ) ── */
 function DashboardMock() {
@@ -79,10 +101,10 @@ function DashboardMock() {
           </div>
           {/* AI agents row */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-lg border p-2 [border-color:var(--pf-border)]">
-            <span className="text-[8px] font-semibold [color:var(--pf-color-muted)]">AI Agents:</span>
+            <span className="text-[8px] font-semibold [color:var(--pf-color-muted)]">AI Agents đang hoạt động:</span>
             {AGENTS.map((a) => (
-              <span key={a.name} className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-semibold" style={{ background: a.soft, color: a.color }}>
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.color }} />{a.name}
+              <span key={a.name} className="inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-[8px] font-semibold" style={{ background: a.soft, color: a.color }}>
+                <AgentAvatar agent={a} className="h-3.5 w-3.5 shrink-0 rounded-full text-[7px]" imgClass="h-3.5 w-3.5 rounded-full object-cover object-center" />{a.name}
               </span>
             ))}
           </div>
@@ -215,10 +237,16 @@ export function Landing() {
         <section id="sports" className={`${CONTAINER} py-12`}>
           <SectionHead title="Hỗ trợ nhiều bộ môn thể thao" subtitle="Một nền tảng – quản lý toàn bộ hoạt động của CLB." />
           <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
-            {SPORTS.map((sp) => (
-              <div key={sp.name} className="flex flex-col items-center gap-2 rounded-2xl border p-4 transition-shadow hover:shadow-md [background:var(--pf-surface)] [border-color:var(--pf-border)]">
+            {SPORTS.map((sp, i) => (
+              <div
+                key={sp.name}
+                className="flex flex-col items-center gap-2 rounded-2xl border p-4 transition-shadow hover:shadow-md"
+                style={i === 0
+                  ? { background: 'var(--pf-primary-soft)', borderColor: 'var(--pf-primary)' }
+                  : { background: 'var(--pf-surface)', borderColor: 'var(--pf-border)' }}
+              >
                 <span className="text-2xl" role="img" aria-label={sp.name}>{sp.emoji}</span>
-                <span className="text-center text-xs font-medium [color:var(--pf-text)]">{sp.name}</span>
+                <span className="text-center text-xs font-medium" style={{ color: i === 0 ? 'var(--pf-primary)' : 'var(--pf-text)', fontWeight: i === 0 ? 700 : 500 }}>{sp.name}</span>
               </div>
             ))}
           </div>
@@ -249,29 +277,46 @@ export function Landing() {
                     <div className="h-1.5 w-full rounded-full [background:var(--pf-surface-muted)]"><div className="h-1.5 rounded-full" style={{ width: `${f.progress.percent}%`, background: 'var(--pf-primary)' }} /></div>
                   </div>
                 )}
+                {f.agents && (
+                  <div className="mt-4 flex items-center gap-2">
+                    {AGENTS.map((a) => (
+                      <div key={a.name} className="flex flex-col items-center gap-1" title={`${a.name} · ${a.shortLabel}`}>
+                        <AgentAvatar agent={a} className="h-11 w-11 rounded-full border-2 border-white text-sm" imgClass="h-11 w-11 rounded-full object-cover object-center" />
+                        <span className="text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name.split(' ')[0]}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── AIDO agents ── */}
+        {/* ── AIDO agents — nền tím trái / card avatar phải (bám hình tham chiếu) ── */}
         <section id="aido" className={`${CONTAINER} py-12`}>
-          <div className="rounded-3xl p-6 sm:p-10" style={{ background: 'linear-gradient(135deg, var(--pf-primary-soft), var(--pf-surface))', border: '1px solid var(--pf-border)' }}>
-            <SectionHead title="Đội ngũ AI đồng hành" subtitle="AI hỗ trợ vận hành – luôn bên bạn để mỗi việc đi đúng hướng." />
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {AGENTS.map((a) => (
-                <div key={a.name} className="flex flex-col rounded-2xl border p-4 text-center [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-lg font-extrabold text-white" style={{ background: a.color }}>{a.name.charAt(0)}</span>
-                  <p className="mt-3 text-sm font-bold">{a.name}</p>
-                  <p className="text-[11px] font-semibold" style={{ color: a.color }}>{a.shortLabel}</p>
-                  <p className="mt-1.5 text-[11px] leading-snug [color:var(--pf-color-muted)]">{a.desc}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 text-center">
-              <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all active:scale-[0.98]" style={{ background: 'var(--pf-primary)' }}>
-                Tìm hiểu AIDO <ArrowRight size={15} />
-              </button>
+          <div className="overflow-hidden rounded-3xl border [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow-hover)' }}>
+            <div className="grid lg:grid-cols-[300px_1fr]">
+              {/* Panel tím trái */}
+              <div className="flex flex-col justify-center gap-4 p-8 text-white" style={{ background: 'linear-gradient(160deg, var(--pf-primary), var(--pf-secondary))' }}>
+                <h2 className="text-2xl font-extrabold leading-tight sm:text-[28px]">Đội ngũ AI đồng hành</h2>
+                <p className="text-sm leading-relaxed text-white/85">AI hỗ trợ vận hành – luôn bên bạn để mỗi việc đi đúng hướng.</p>
+                <button onClick={() => navigate('/login')} className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold shadow-sm transition-transform active:scale-[0.98]" style={{ color: 'var(--pf-primary)' }}>
+                  Tìm hiểu AIDO <ArrowRight size={15} />
+                </button>
+              </div>
+              {/* 5 card agent với avatar nhân vật */}
+              <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-5 [background:var(--pf-surface)]">
+                {AGENTS.map((a) => (
+                  <div key={a.name} className="flex flex-col overflow-hidden rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+                    <AgentAvatar agent={a} className="aspect-[4/5] w-full text-2xl" imgClass="aspect-[4/5] w-full object-cover object-top" />
+                    <div className="flex flex-1 flex-col p-3 text-center">
+                      <p className="text-[13px] font-bold leading-tight">{a.name}</p>
+                      <p className="text-[10px] font-semibold" style={{ color: a.color }}>{a.shortLabel}</p>
+                      <p className="mt-1 text-[10px] leading-snug [color:var(--pf-color-muted)]">{a.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -295,7 +340,7 @@ export function Landing() {
         {/* ── Testimonials ── */}
         <section id="testimonials" className={`${CONTAINER} py-12`}>
           <SectionHead title="Các CLB tin dùng PickleFund" />
-          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {TESTIMONIALS.map((t) => (
               <figure key={t.name} className="flex h-full flex-col rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="flex items-center gap-1 text-amber-400" aria-label="5 sao">
@@ -311,8 +356,17 @@ export function Landing() {
                 </figcaption>
               </figure>
             ))}
+            {/* Ô thứ 4: hơn 30+ CLB khác (icon khiên) */}
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border p-5 text-center [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><ShieldCheck size={16} /></span>
+                ))}
+              </div>
+              <p className="text-sm font-bold [color:var(--pf-text)]">Và hơn 30+ CLB khác</p>
+              <p className="text-[11px] [color:var(--pf-color-muted)]">đang tin dùng PickleFund mỗi ngày</p>
+            </div>
           </div>
-          <p className="mt-6 text-center text-sm font-semibold [color:var(--pf-color-muted)]">Và hơn 30+ CLB khác</p>
         </section>
 
         {/* ── Pricing ── */}

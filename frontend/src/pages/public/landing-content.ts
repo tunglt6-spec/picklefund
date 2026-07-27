@@ -198,6 +198,8 @@ export interface FeatureCard {
   /** Số liệu MINH HOẠ marketing (không phải dữ liệu runtime tài khoản thật). */
   stats?: { label: string; value: string; tone?: string }[]
   progress?: { label: string; percent: number }
+  /** true = hiển thị cụm avatar 5 trợ lý AI (card "Trợ lý AI thông minh"). */
+  agents?: boolean
 }
 export const FEATURES: FeatureCard[] = [
   {
@@ -233,6 +235,7 @@ export const FEATURES: FeatureCard[] = [
   {
     icon: Bot, title: 'Trợ lý AI thông minh',
     desc: 'Maika phân tích, Lisa hỗ trợ, Hermes điều phối, Mít Đặc thực thi và Notification AI thông báo.',
+    agents: true,
   },
   {
     icon: Smartphone, title: 'Đa nền tảng',
@@ -248,13 +251,17 @@ export interface Agent {
   desc: string
   color: string
   soft: string
+  /** Ảnh nhân vật (public/agents/*.png). Có fallback initial nếu thiếu file. */
+  avatar: string
+  /** Trạng thái đang chạy (hiển thị dạng chấm xanh) — khớp minh hoạ. */
+  status: string
 }
 export const AGENTS: Agent[] = [
-  { name: 'Maika', role: 'Club Intelligence Manager', shortLabel: 'AI Analyst', desc: 'Phân tích CLB, đưa ra khuyến nghị, nhận diện rủi ro và cơ hội.', color: 'var(--pf-color-ai)', soft: 'var(--pf-color-ai-soft)' },
-  { name: 'Lisa', role: 'Member Assistant', shortLabel: 'AI Assistant', desc: 'Hỗ trợ thành viên, giải đáp thắc mắc, nhắc việc và chuyển yêu cầu.', color: 'var(--pf-color-info)', soft: 'var(--pf-color-info-soft)' },
-  { name: 'Hermes', role: 'Workflow Orchestrator', shortLabel: 'AI Orchestrator', desc: 'Điều phối workflow, lịch, phê duyệt và thông báo ở tầng điều phối.', color: 'var(--pf-secondary)', soft: 'var(--pf-secondary-soft)' },
-  { name: 'Mít Đặc', role: 'Execution Agent', shortLabel: 'AI Executor', desc: 'Thực thi hành động sau khi được phê duyệt và cấp quyền phù hợp.', color: 'var(--pf-color-warning)', soft: 'var(--pf-color-warning-soft)' },
-  { name: 'Notification AI', role: 'Notification Agent', shortLabel: 'AI Notifier', desc: 'Gửi thông báo qua In-app, Email và Telegram theo cấu hình.', color: 'var(--pf-primary)', soft: 'var(--pf-primary-soft)' },
+  { name: 'Maika', role: 'Club Intelligence Manager', shortLabel: 'AI Analyst', desc: 'Phân tích CLB, đưa ra khuyến nghị, nhận diện rủi ro và cơ hội.', color: 'var(--pf-color-ai)', soft: 'var(--pf-color-ai-soft)', avatar: '/agents/maika.png', status: 'Đang phân tích' },
+  { name: 'Lisa', role: 'Member Assistant', shortLabel: 'AI Assistant', desc: 'Hỗ trợ thành viên, giải đáp thắc mắc, nhắc việc và chuyển yêu cầu.', color: 'var(--pf-color-info)', soft: 'var(--pf-color-info-soft)', avatar: '/agents/lisa.png', status: 'Đang trả lời' },
+  { name: 'Hermes', role: 'Workflow Orchestrator', shortLabel: 'AI Orchestrator', desc: 'Điều phối workflow, lịch, phê duyệt và thông báo ở tầng điều phối.', color: 'var(--pf-secondary)', soft: 'var(--pf-secondary-soft)', avatar: '/agents/hermes.png', status: 'Đang điều phối' },
+  { name: 'Mít Đặc', role: 'Execution Agent', shortLabel: 'AI Executor', desc: 'Thực thi hành động sau khi được phê duyệt và cấp quyền phù hợp.', color: 'var(--pf-color-warning)', soft: 'var(--pf-color-warning-soft)', avatar: '/agents/mit-dac.png', status: 'Đang thực thi' },
+  { name: 'Notification AI', role: 'Notification Agent', shortLabel: 'AI Notifier', desc: 'Gửi thông báo qua In-app, Email và Telegram theo cấu hình.', color: 'var(--pf-primary)', soft: 'var(--pf-primary-soft)', avatar: '/agents/notification-ai.png', status: 'Đang gửi' },
 ]
 
 /* ── XVII. Vì sao chọn PickleFund (6 lợi ích) ── */
