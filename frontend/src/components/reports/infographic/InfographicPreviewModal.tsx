@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from 'lucide-react'
 import { InfographicOverlayA } from './InfographicOverlayA'
 import { InfographicOverlayB } from './InfographicOverlayB'
@@ -9,10 +9,11 @@ import toast from 'react-hot-toast'
 const ID_A = 'infographic-canvas-a'
 const ID_B = 'infographic-canvas-b'
 
-/* Scale preview: overlay gốc 1080×1920 → thu nhỏ vừa modal. Khung ngoài nhận kích thước đã scale. */
+/* Scale preview: overlay gốc rộng 1080 → thu nhỏ vừa modal. Chiều cao overlay biến thiên
+   (A cố định 1920; B là hoá đơn cao động theo số TV) → đo chiều cao thật để khung preview
+   khớp export 100%, không cắt/không thừa. */
 const PREVIEW_SCALE = 0.46
 const PREVIEW_W = Math.round(1080 * PREVIEW_SCALE)
-const PREVIEW_H = Math.round(1920 * PREVIEW_SCALE)
 
 interface InfographicPreviewModalProps {
   data: InfographicReportData
@@ -25,6 +26,14 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
   const activeId = tab === 'A' ? ID_A : ID_B
   const tabLabel = tab === 'A' ? 'TổngQuan' : 'BillTV'
+
+  // Đo chiều cao thật của overlay preview (native size) → set chiều cao khung scale.
+  const previewInnerRef = useRef<HTMLDivElement>(null)
+  const [previewH, setPreviewH] = useState(Math.round(1920 * PREVIEW_SCALE))
+  useLayoutEffect(() => {
+    const el = previewInnerRef.current
+    if (el) setPreviewH(Math.round(el.scrollHeight * PREVIEW_SCALE))
+  }, [tab, data])
 
   const handleExportPng = async () => {
     setExporting('png')
@@ -107,15 +116,23 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           </button>
         </div>
 
-        {/* Scrollable preview — scale bằng transform (KHÔNG dùng zoom: zoom scale phần tử
-            position:absolute không tin cậy trên Chrome → các section overlay bị đè lên nhau). */}
+        {/* ── NGUỒN EXPORT: overlay NATIVE 1080×1920, off-screen, KHÔNG scale ──
+            html2canvas capture element theo id này. PHẢI nằm ngoài mọi ancestor transform/zoom,
+            nếu không nội dung bị chụp ở kích thước đã scale → thu nhỏ + khoảng trắng (root cause). */}
+        <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: '-100000px', width: 1080, height: 1920, overflow: 'hidden', pointerEvents: 'none' }}>
+          {tab === 'A'
+            ? <InfographicOverlayA data={data} id={ID_A} />
+            : <InfographicOverlayB data={data} id={ID_B} />}
+        </div>
+
+        {/* ── PREVIEW hiển thị: bản scale RIÊNG (id khác), nội dung y hệt bản export ──
+            scale bằng transform + khung ngoài mang kích thước đã scale để chiếm đúng layout. */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-950 py-4 px-2">
-          {/* Khung ngoài mang KÍCH THƯỚC ĐÃ SCALE để chiếm đúng layout; inner scale nội dung 1080×1920. */}
-          <div style={{ width: PREVIEW_W, height: PREVIEW_H }} className="mx-auto">
-            <div style={{ width: 1080, height: 1920, transform: `scale(${PREVIEW_SCALE})`, transformOrigin: 'top left' }}>
+          <div style={{ width: PREVIEW_W, height: previewH }} className="mx-auto">
+            <div ref={previewInnerRef} style={{ width: 1080, transform: `scale(${PREVIEW_SCALE})`, transformOrigin: 'top left' }}>
               {tab === 'A'
-                ? <InfographicOverlayA data={data} id={ID_A} />
-                : <InfographicOverlayB data={data} id={ID_B} />}
+                ? <InfographicOverlayA data={data} id={`${ID_A}-preview`} />
+                : <InfographicOverlayB data={data} id={`${ID_B}-preview`} />}
             </div>
           </div>
         </div>
