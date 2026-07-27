@@ -453,8 +453,8 @@ export function AiManagerDashboard() {
     <div className="[background:var(--pf-bg)]">
       {/* Header — KHÔNG bọc scroll riêng: để nội dung chảy trong scroll của AppLayout (tránh
           scroll lồng làm cắt chân khi nhúng làm tab trong AIDO). Sticky bám scroll ngoài. */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 py-4">
+        <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Bot size={20} className="[color:var(--pf-primary)]" />
@@ -473,7 +473,7 @@ export function AiManagerDashboard() {
         </div>
       </div>
 
-      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 py-5 space-y-6">
         {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
         <div>
           <div className="mb-2.5 flex items-center justify-between">
