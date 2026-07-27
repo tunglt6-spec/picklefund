@@ -104,7 +104,7 @@ function Field({ label, right, children }: { label: string; right?: React.ReactN
   )
 }
 
-const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800 dark:focus:border-indigo-400 dark:focus:ring-indigo-900/50'
+const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800 dark:focus:border-indigo-400 dark:focus:ring-indigo-900/50'
 
 /* ─── Register Flow ─── */
 interface ClubForm  { name: string; code: string; address: string; contactPhone: string; contactEmail: string }
@@ -664,7 +664,7 @@ export function Login() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col h-full p-12">
+        <div className="relative z-10 flex flex-col h-full p-10">
 
           {/* Logo */}
           <motion.div variants={fadeUp} custom={0} initial="hidden" animate="show" className="flex items-center gap-3">
@@ -676,28 +676,28 @@ export function Login() {
           </motion.div>
 
           {/* Hero headline */}
-          <div className="mt-auto mb-8">
+          <div className="mt-auto mb-6">
             <motion.div variants={fadeUp} custom={1} initial="hidden" animate="show"
-              className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3.5 py-1.5 mb-8">
+              className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3.5 py-1.5 mb-5">
               <span className="pulse-glow w-2 h-2 rounded-full bg-emerald-400 inline-block" />
               <span className="text-white/90 text-xs font-medium tracking-wide">Nền tảng quản lý quỹ CLB thể thao thế hệ mới</span>
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={2} initial="hidden" animate="show"
-              className="text-[56px] font-extrabold leading-[1.05] mb-5 tracking-tight"
+              className="text-[46px] font-extrabold leading-[1.05] mb-4 tracking-tight"
               style={{ fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
               <span className="text-gradient-animate block">Kết nối đam mê.</span>
               <span className="text-white block">Quản lý chuyên nghiệp.</span>
             </motion.h1>
 
             <motion.p variants={fadeUp} custom={3} initial="hidden" animate="show"
-              className="text-white/70 text-base max-w-md leading-relaxed mb-10">
+              className="text-white/70 text-base max-w-md leading-relaxed mb-6">
               Giải pháp quản lý quỹ, thành viên và hoạt động CLB trên một nền tảng duy nhất — từ Pickleball, Tennis đến bất kỳ môn thể thao nào.
             </motion.p>
 
             {/* Feature glass cards */}
             <motion.div variants={fadeUp} custom={4} initial="hidden" animate="show"
-              className="grid grid-cols-2 gap-3 mb-10">
+              className="grid grid-cols-2 gap-3 mb-6">
               {features.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="glass-card rounded-2xl p-4 group hover:bg-white/15 transition-all duration-300 cursor-default">
                   <div className="flex items-start gap-3">
@@ -749,7 +749,7 @@ export function Login() {
       {/* ═══════════════════════════════════════
           RIGHT PANEL  40%
       ═══════════════════════════════════════ */}
-      <div className="flex-1 lg:w-[40%] flex flex-col items-center justify-center p-6 lg:p-10 overflow-y-auto">
+      <div className="flex-1 lg:w-[40%] flex flex-col items-center justify-center p-5 lg:px-10 lg:py-6 overflow-y-auto">
 
         {/* Mobile logo */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -766,10 +766,10 @@ export function Login() {
 
                 {/* Card */}
                 <div className="bg-white dark:bg-[#111827] rounded-[28px] border border-slate-100 dark:border-slate-800"
-                  style={{ padding: '40px', boxShadow: '0 25px 80px rgba(0,0,0,0.08)' }}>
+                  style={{ padding: '28px', boxShadow: '0 25px 80px rgba(0,0,0,0.08)' }}>
 
                   {/* Header */}
-                  <div className="flex items-center gap-3 mb-8">
+                  <div className="flex items-center gap-3 mb-5">
                     <PickleFundLogo size={36} />
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Chào mừng trở lại!</h2>
@@ -777,7 +777,7 @@ export function Login() {
                     </div>
                   </div>
 
-                  <form ref={formRef} onSubmit={doLogin} className="space-y-4">
+                  <form ref={formRef} onSubmit={doLogin} className="space-y-3">
                     <Field label="Email hoặc Tên đăng nhập">
                       <input type="text" value={username} onChange={e => setUsername(e.target.value)}
                         placeholder="Nhập tài khoản của bạn" className={inputBase}
@@ -809,13 +809,13 @@ export function Login() {
                     </label>
 
                     {/* Login button */}
-                    <GradientButton type="submit" disabled={loading} className="w-full justify-center py-4 text-base">
+                    <GradientButton type="submit" disabled={loading} className="w-full justify-center py-3 text-base">
                       {loading ? <><Spinner />Đang đăng nhập...</> : <><Lock size={16} />Đăng nhập</>}
                     </GradientButton>
                   </form>
 
                   {/* Divider */}
-                  <div className="flex items-center gap-3 my-4">
+                  <div className="flex items-center gap-3 my-3">
                     <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
                     <span className="text-xs text-slate-400">hoặc</span>
                     <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
@@ -823,7 +823,7 @@ export function Login() {
 
                   {/* SSO button */}
                   <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200">
+                    className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200">
                     <Building2 size={17} className="text-indigo-500" />
                     Đăng nhập bằng tài khoản CLB
                     <ExternalLink size={13} className="text-slate-400 ml-auto" />
@@ -866,24 +866,24 @@ export function Login() {
                 </div>
 
                 {/* Register CTA */}
-                <div className="mt-5 text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">CLB mới chưa có tài khoản?</p>
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">CLB mới chưa có tài khoản?</p>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => setMode('register')}
-                    className="inline-flex items-center gap-2 py-3 px-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200 w-full justify-center">
+                    className="inline-flex items-center gap-2 py-2.5 px-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200 w-full justify-center">
                     <Building2 size={16} />
                     Đăng ký CLB mới — Miễn phí
                   </motion.button>
                 </div>
 
                 {/* Mobile link widget */}
-                <div className="mt-5">
+                <div className="mt-3">
                   <MobileLinkWidget />
                 </div>
 
                 {/* Footer links */}
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-slate-400 dark:text-slate-600 mb-2">© 2026 PickleFund · SportsTech Vietnam</p>
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-600 mb-1.5">© 2026 PickleFund · SportsTech Vietnam</p>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     {['Giới thiệu', 'Hướng dẫn', 'Bảo mật', 'Điều khoản', 'Liên hệ'].map(l => (
                       <button key={l} className="text-xs text-slate-400 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{l}</button>
@@ -895,7 +895,7 @@ export function Login() {
             ) : (
               <motion.div key="register" variants={cardAnim} initial="hidden" animate="show" exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}>
                 <div className="bg-white dark:bg-[#111827] rounded-[28px] border border-slate-100 dark:border-slate-800"
-                  style={{ padding: '40px', boxShadow: '0 25px 80px rgba(0,0,0,0.08)' }}>
+                  style={{ padding: '28px', boxShadow: '0 25px 80px rgba(0,0,0,0.08)' }}>
                   <div className="flex items-center gap-3 mb-7">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       onClick={() => setMode('login')}
