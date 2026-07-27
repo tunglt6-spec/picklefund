@@ -9,6 +9,11 @@ import toast from 'react-hot-toast'
 const ID_A = 'infographic-canvas-a'
 const ID_B = 'infographic-canvas-b'
 
+/* Scale preview: overlay gốc 1080×1920 → thu nhỏ vừa modal. Khung ngoài nhận kích thước đã scale. */
+const PREVIEW_SCALE = 0.46
+const PREVIEW_W = Math.round(1080 * PREVIEW_SCALE)
+const PREVIEW_H = Math.round(1920 * PREVIEW_SCALE)
+
 interface InfographicPreviewModalProps {
   data: InfographicReportData
   onClose: () => void
@@ -102,19 +107,17 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           </button>
         </div>
 
-        {/* Scrollable preview */}
+        {/* Scrollable preview — scale bằng transform (KHÔNG dùng zoom: zoom scale phần tử
+            position:absolute không tin cậy trên Chrome → các section overlay bị đè lên nhau). */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-slate-950 py-4 px-2">
-            {tab === 'A' && (
-            <div style={{ width: 1080, zoom: 0.46, transformOrigin: 'top left' }} className="mx-auto">
-              <InfographicOverlayA data={data} id={ID_A} />
+          {/* Khung ngoài mang KÍCH THƯỚC ĐÃ SCALE để chiếm đúng layout; inner scale nội dung 1080×1920. */}
+          <div style={{ width: PREVIEW_W, height: PREVIEW_H }} className="mx-auto">
+            <div style={{ width: 1080, height: 1920, transform: `scale(${PREVIEW_SCALE})`, transformOrigin: 'top left' }}>
+              {tab === 'A'
+                ? <InfographicOverlayA data={data} id={ID_A} />
+                : <InfographicOverlayB data={data} id={ID_B} />}
             </div>
-          )}
-
-          {tab === 'B' && (
-            <div style={{ width: 1080, zoom: 0.46, transformOrigin: 'top left' }} className="mx-auto">
-              <InfographicOverlayB data={data} id={ID_B} />
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Bottom action bar */}
