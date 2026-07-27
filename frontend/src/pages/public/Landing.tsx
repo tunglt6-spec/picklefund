@@ -178,7 +178,7 @@ export function Landing() {
   }, [])
 
   return (
-    <div className="pf-landing min-h-screen [background:var(--pf-bg)] [color:var(--pf-text)]">
+    <div className="min-h-screen [background:var(--pf-bg)] [color:var(--pf-text)]">
       <style>{`@media (prefers-reduced-motion: no-preference){.pf-fade{animation:pfFade .5s ease both}@keyframes pfFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}}`}</style>
       <LandingHeader />
 

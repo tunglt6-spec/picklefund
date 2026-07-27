@@ -98,22 +98,20 @@
   --shadow-card-hover: 0 4px 12px 0 rgb(0 0 0 / 0.1);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Reset margin/padding — PHẢI đặt trong @layer base để utility Tailwind v4 (@layer utilities,
+   xếp SAU base) ghi đè đúng. Nếu để UNLAYERED, reset này thắng MỌI p-*/m-* utility (cascade layer
+   ưu tiên trước specificity) → padding/margin utility bị vô hiệu TOÀN APP (card/section chạm mép). */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
-/* Fix Tailwind v4: `mx-auto` (trong @layer utilities) bị `* { margin:0 }` (unlayered) đè
-   → container full-width lệch trái ở màn rộng. Class unlayered này thắng `*` theo
-   specificity, dùng cho các container public cần căn giữa (Landing/PublicShell). */
+/* Căn giữa container public (Landing/PublicShell). Sau khi reset về @layer base thì `mx-auto`
+   utility cũng hoạt động, nhưng giữ class này vì nhiều nơi đang dùng trực tiếp. */
 .pf-center-x { margin-left: auto; margin-right: auto; }
-
-/* Landing: `* { padding:0 }` (unlayered, ở trên) đè MỌI padding utility Tailwind (@layer utilities)
-   → card/section landing mất padding (chạm mép, đặc biệt mobile). Khôi phục padding utility CHỈ trong
-   landing (KHÔNG đụng app admin) bằng revert-layer: phần tử có utility nhận lại đúng giá trị; phần tử
-   không có utility vẫn 0. `.pf-landing *` (0,1,1) thắng `*` (0,0,0) nên revert-layer có hiệu lực. */
-.pf-landing, .pf-landing * { padding: revert-layer; }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
