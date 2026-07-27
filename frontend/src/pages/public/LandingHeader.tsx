@@ -277,42 +277,46 @@ function MobileDrawer({
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu điều hướng">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute inset-y-0 right-0 flex w-[min(88vw,360px)] flex-col [background:var(--pf-surface)]">
-        <div className="flex items-center justify-between border-b px-4 py-3 [border-color:var(--pf-border)]">
+        <div className="shrink-0 flex items-center justify-between border-b px-4 py-3 [border-color:var(--pf-border)]">
           <Wordmark />
           <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg [color:var(--pf-text)]" aria-label="Đóng menu">
             <X size={22} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4">
-          {MEGA_MENUS.map((menu) => (
-            <Fragment key={menu.key}>
-              <MobileAccordion menu={menu} onNavigate={onNavigate} />
-              {/* Bảng giá ngay sau Sản phẩm (thứ tự: Sản phẩm, Bảng giá, Giải pháp, Tài nguyên, Về chúng tôi) */}
-              {menu.key === 'product' && (
-                <button
-                  onClick={() => { onClose(); navigate('/pricing') }}
-                  className="block w-full border-b px-1 py-3.5 text-left text-[15px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
-                >
-                  Bảng giá
-                </button>
-              )}
-            </Fragment>
-          ))}
-        </div>
-        <div className="flex flex-col gap-2 border-t p-4 [border-color:var(--pf-border)]">
-          <button
-            onClick={() => { onClose(); navigate('/login') }}
-            className="w-full rounded-full border px-4 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
-          >
-            Đăng nhập
-          </button>
-          <button
-            onClick={() => { onClose(); navigate('/login') }}
-            className="w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            Dùng thử miễn phí
-          </button>
+        {/* Thân: nav + nút gom LIỀN KHỐI từ trên xuống (nút ngay sau nav, không đẩy xuống đáy →
+            hết khoảng trống giữa). Vùng này cuộn khi mở nhiều accordion; khoảng trống dồn xuống đáy. */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4">
+            {MEGA_MENUS.map((menu) => (
+              <Fragment key={menu.key}>
+                <MobileAccordion menu={menu} onNavigate={onNavigate} />
+                {/* Bảng giá ngay sau Sản phẩm (thứ tự: Sản phẩm, Bảng giá, Giải pháp, Tài nguyên, Về chúng tôi) */}
+                {menu.key === 'product' && (
+                  <button
+                    onClick={() => { onClose(); navigate('/pricing') }}
+                    className="block w-full border-b px-1 py-3.5 text-left text-[15px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
+                  >
+                    Bảng giá
+                  </button>
+                )}
+              </Fragment>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 p-4 pt-3 [border-color:var(--pf-border)]">
+            <button
+              onClick={() => { onClose(); navigate('/login') }}
+              className="w-full rounded-full border px-4 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
+            >
+              Đăng nhập
+            </button>
+            <button
+              onClick={() => { onClose(); navigate('/login') }}
+              className="w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white"
+              style={{ background: 'var(--pf-primary)' }}
+            >
+              Dùng thử miễn phí
+            </button>
+          </div>
         </div>
       </div>
     </div>,
