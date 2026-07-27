@@ -3,7 +3,7 @@
  * Sticky, nền trắng mờ, shadow nhẹ khi cuộn. A11y: aria-expanded/haspopup, đóng bằng Escape,
  * click ra ngoài, khóa scroll nền khi drawer mở. Nội dung lấy từ landing-content.ts.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, ChevronDown, Clock, ArrowRight } from 'lucide-react'
 import { MEGA_MENUS, type MegaMenu, type MenuItem } from './landing-content'
@@ -196,32 +196,35 @@ export function LandingHeader() {
         {/* Desktop nav */}
         <div ref={navRef} className="hidden items-center gap-0.5 lg:flex">
           {MEGA_MENUS.map((menu) => (
-            <div
-              key={menu.key}
-              className="relative"
-              onMouseEnter={() => setOpenKey(menu.key)}
-              onMouseLeave={() => setOpenKey(null)}
-            >
-              <button
-                onClick={() => setOpenKey((k) => (k === menu.key ? null : menu.key))}
-                onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); setOpenKey(menu.key) } }}
-                aria-haspopup="true"
-                aria-expanded={openKey === menu.key}
-                className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
+            <Fragment key={menu.key}>
+              <div
+                className="relative"
+                onMouseEnter={() => setOpenKey(menu.key)}
+                onMouseLeave={() => setOpenKey(null)}
               >
-                {menu.label}
-                <ChevronDown size={14} className="transition-transform" style={{ transform: openKey === menu.key ? 'rotate(180deg)' : 'none' }} />
-              </button>
-              {openKey === menu.key && <MegaPanel menu={menu} onNavigate={onNavigate} />}
-            </div>
+                <button
+                  onClick={() => setOpenKey((k) => (k === menu.key ? null : menu.key))}
+                  onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); setOpenKey(menu.key) } }}
+                  aria-haspopup="true"
+                  aria-expanded={openKey === menu.key}
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
+                >
+                  {menu.label}
+                  <ChevronDown size={14} className="transition-transform" style={{ transform: openKey === menu.key ? 'rotate(180deg)' : 'none' }} />
+                </button>
+                {openKey === menu.key && <MegaPanel menu={menu} onNavigate={onNavigate} />}
+              </div>
+              {/* Bảng giá — mục độc lập, đặt ngay sau Sản phẩm (theo thiết kế tham chiếu) */}
+              {menu.key === 'product' && (
+                <button
+                  onClick={() => navigate('/pricing')}
+                  className="rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
+                >
+                  Bảng giá
+                </button>
+              )}
+            </Fragment>
           ))}
-          {/* Bảng giá — mục độc lập */}
-          <button
-            onClick={() => navigate('/pricing')}
-            className="rounded-full px-3 py-2 text-sm font-medium transition-colors [color:var(--pf-text-muted)] hover:[color:var(--pf-text)]"
-          >
-            Bảng giá
-          </button>
         </div>
 
         {/* Desktop CTA */}
@@ -274,13 +277,20 @@ function MobileDrawer({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-4">
-          {MEGA_MENUS.map((menu) => <MobileAccordion key={menu.key} menu={menu} onNavigate={onNavigate} />)}
-          <button
-            onClick={() => { onClose(); navigate('/pricing') }}
-            className="block w-full border-b px-1 py-3.5 text-left text-[15px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
-          >
-            Bảng giá
-          </button>
+          {MEGA_MENUS.map((menu) => (
+            <Fragment key={menu.key}>
+              <MobileAccordion menu={menu} onNavigate={onNavigate} />
+              {/* Bảng giá ngay sau Sản phẩm (thứ tự: Sản phẩm, Bảng giá, Giải pháp, Tài nguyên, Về chúng tôi) */}
+              {menu.key === 'product' && (
+                <button
+                  onClick={() => { onClose(); navigate('/pricing') }}
+                  className="block w-full border-b px-1 py-3.5 text-left text-[15px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
+                >
+                  Bảng giá
+                </button>
+              )}
+            </Fragment>
+          ))}
         </div>
         <div className="flex flex-col gap-2 border-t p-4 [border-color:var(--pf-border)]">
           <button
