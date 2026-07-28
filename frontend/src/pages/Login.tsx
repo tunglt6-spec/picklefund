@@ -749,14 +749,14 @@ export function Login() {
       {/* ═══════════════════════════════════════
           RIGHT PANEL  40%
       ═══════════════════════════════════════ */}
-      <div className="flex-1 lg:w-[40%] flex flex-col items-center justify-center p-5 lg:px-10 lg:py-6 overflow-y-auto">
+      <div className="flex-1 lg:w-[40%] flex flex-col items-center justify-center p-4 lg:px-10 lg:py-6 overflow-y-auto">
 
-        {/* Mobile logo */}
+        {/* Mobile logo (thu gọn để vừa 1 viewport trên điện thoại) */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="lg:hidden flex flex-col items-center mb-8">
-          <PickleFundLogo size={56} className="mb-3" />
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">PickleFund</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Quản lý quỹ CLB thể thao</p>
+          className="lg:hidden flex flex-col items-center mb-4">
+          <PickleFundLogo size={48} className="mb-2" />
+          <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">PickleFund</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-[13px] mt-0.5">Quản lý quỹ CLB thể thao</p>
         </motion.div>
 
         <div className="w-full max-w-[480px]">
@@ -769,7 +769,7 @@ export function Login() {
                   style={{ padding: '28px', boxShadow: '0 25px 80px rgba(0,0,0,0.08)' }}>
 
                   {/* Header */}
-                  <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center gap-3 mb-4">
                     <PickleFundLogo size={36} />
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Chào mừng trở lại!</h2>
@@ -866,7 +866,7 @@ export function Login() {
                 </div>
 
                 {/* Register CTA */}
-                <div className="mt-4 text-center">
+                <div className="mt-3 text-center">
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">CLB mới chưa có tài khoản?</p>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => setMode('register')}
@@ -882,7 +882,7 @@ export function Login() {
                 </div>
 
                 {/* Footer links */}
-                <div className="mt-3 text-center">
+                <div className="mt-2.5 text-center">
                   <p className="text-xs text-slate-400 dark:text-slate-600 mb-1.5">© 2026 PickleFund · SportsTech Vietnam</p>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     {['Giới thiệu', 'Hướng dẫn', 'Bảo mật', 'Điều khoản', 'Liên hệ'].map(l => (
