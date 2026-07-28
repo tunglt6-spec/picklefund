@@ -14,12 +14,13 @@ import { useClubDataStore } from '../../../store/clubDataStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
-import { exportStandingsPDF } from '../../../lib/export'
+import { exportStandingsPDF, exportSchedulePDF } from '../../../lib/export'
 import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 
 const FD_EXPORT_ID = 'fd-standings-export'
+const FD_SCHEDULE_ID = 'fd-schedule-export'
 const FD_SPORT_LABEL: Record<string, string> = {
   PICKLEBALL: 'Pickleball', TENNIS: 'Tennis', BADMINTON: 'Cầu lông', TABLE_TENNIS: 'Bóng bàn',
   FOOTBALL: 'Bóng đá', BASKETBALL: 'Bóng rổ', GOLF: 'Golf',
@@ -424,6 +425,31 @@ function RoundCard({
   )
 }
 
+// ── nút xuất Ảnh/PDF dùng chung (pill có nhãn — chuẩn SaaS toàn app) ─────────────
+function ExportButtons({ onPng, onPdf, ariaScope }: {
+  onPng?: () => void
+  onPdf?: () => void
+  ariaScope: string
+}) {
+  if (!onPng && !onPdf) return null
+  return (
+    <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
+      {onPng && (
+        <button onClick={onPng} aria-label={`Tải ảnh ${ariaScope}`} title="Tải ảnh"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-90 transition-opacity">
+          <ImageIcon size={14} /> Ảnh
+        </button>
+      )}
+      {onPdf && (
+        <button onClick={onPdf} aria-label={`Xuất PDF ${ariaScope}`} title="Xuất PDF"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors">
+          <FileText size={14} /> PDF
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── compact ranking ────────────────────────────────────────────────────────────
 function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
   standings: MiniGameTeamStanding[]
@@ -433,26 +459,13 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
 }) {
   return (
     <div id={exportId} style={CARD} className="overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: T.border }}>
-        <div className="flex items-center gap-2">
-          <Trophy size={14} style={{ color: T.warning }} />
-          <span className="font-bold text-sm" style={{ color: T.txt1 }}>Bảng Xếp Hạng</span>
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b" style={{ borderColor: T.border }}>
+        <div className="flex items-center gap-2 min-w-0">
+          <Trophy size={14} style={{ color: T.warning }} className="shrink-0" />
+          <span className="font-bold text-sm truncate" style={{ color: T.txt1 }}>Bảng Xếp Hạng</span>
         </div>
-        {standings.length > 0 && (onExportPng || onExportPdf) && (
-          <div className="flex items-center gap-1.5" data-html2canvas-ignore="true">
-            {onExportPng && (
-              <button onClick={onExportPng} aria-label="Tải ảnh bảng xếp hạng" title="Tải ảnh"
-                className="flex h-7 w-7 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-80">
-                <ImageIcon size={13} />
-              </button>
-            )}
-            {onExportPdf && (
-              <button onClick={onExportPdf} aria-label="Xuất PDF bảng xếp hạng" title="Xuất PDF"
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50">
-                <FileText size={13} />
-              </button>
-            )}
-          </div>
+        {standings.length > 0 && (
+          <ExportButtons onPng={onExportPng} onPdf={onExportPdf} ariaScope="bảng xếp hạng" />
         )}
       </div>
       {standings.length === 0 ? (
@@ -986,6 +999,49 @@ export function FixedDoublesDashboardPage() {
     handleSaveScoreApi(matchId, s1, s2)
   }
 
+  // ── Xuất Ảnh/PDF Lịch Thi Đấu — PNG chụp panel lịch, PDF vector bảng đầy đủ mọi trận ──
+  const doExportSchedulePng = async () => {
+    try { await exportInfographicAsPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')); toast.success('Đã tải ảnh lịch thi đấu') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportSchedulePdf = async () => {
+    if (schedule.length === 0) { toast.error('Chưa có lịch thi đấu'); return }
+    try {
+      // Sắp xếp lượt → vòng để bảng PDF liệt kê đủ mọi trận (không phụ thuộc trạng thái đóng/mở panel).
+      const scheduleSorted = [...schedule].sort((a, b) => (a.leg ?? 1) - (b.leg ?? 1) || a.round - b.round)
+      await exportSchedulePDF({
+        clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
+        tournamentName: mg.name,
+        sportLabel: FD_SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
+        formatLabel: 'Đôi cố định vòng tròn',
+        rankNote: 'Tỷ số theo Đội 1 – Đội 2. Trận chưa đấu để dấu “–”.',
+        stats: [
+          { label: 'Số đội', value: teams.length },
+          { label: 'Tổng trận', value: kpi?.totalMatches ?? schedule.length },
+          { label: 'Đã hoàn thành', value: `${completed}/${schedule.length}` },
+        ],
+        columns: [
+          { key: 'vong', label: 'VÒNG', w: 24, align: 'left', bold: true },
+          { key: 't1', label: 'ĐỘI 1', w: 58, align: 'left' },
+          { key: 'sc', label: 'TỶ SỐ', w: 22, align: 'center', bold: true },
+          { key: 't2', label: 'ĐỘI 2', w: 58, align: 'left' },
+          { key: 'st', label: 'TRẠNG THÁI', w: 24, align: 'right', tone: 'muted' },
+        ],
+        rows: scheduleSorted.map(m => {
+          const done = m.status === 'COMPLETED'
+          return {
+            vong: isDoubleLeg ? `${(m.leg ?? 1) === 1 ? 'Đi' : 'Về'} · V${m.round}` : `Vòng ${m.round}`,
+            t1: getTeamInfo(m.team1Id).name,
+            sc: done ? `${m.team1Score} - ${m.team2Score}` : '–',
+            t2: getTeamInfo(m.team2Id).name,
+            st: done ? 'Đã xong' : (m.status === 'CANCELLED' ? 'Đã hủy' : 'Chờ'),
+          }
+        }),
+      })
+      toast.success('Đã tải PDF lịch thi đấu')
+    } catch { toast.error('Xuất PDF thất bại') }
+  }
+
   // Kết thúc giải đấu: DRAFT/ACTIVE → COMPLETED (endedAt) + phát event MINIGAME_COMPLETED →
   // vào lịch sử CLB. Còn trận chưa xong thì cảnh báo trước khi chốt.
   const canFinish = hasSchedule && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
@@ -1126,17 +1182,19 @@ export function FixedDoublesDashboardPage() {
 
             {/* ── left: schedule ── */}
             <div className="col-span-12 lg:col-span-7 xl:col-span-8 space-y-3">
+             <div id={FD_SCHEDULE_ID} className="space-y-3">
               {/* card header */}
-              <div style={CARD} className="px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} style={{ color: T.brand }} />
+              <div style={CARD} className="px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <Calendar size={14} style={{ color: T.brand }} className="shrink-0" />
                   <span className="font-bold text-sm" style={{ color: T.txt1 }}>Lịch Thi Đấu</span>
                   <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đội &amp; lịch đã cố định</span>
                   <span className="text-[11px]" style={{ color: T.txt2 }}>
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
+                  <ExportButtons onPng={doExportSchedulePng} onPdf={doExportSchedulePdf} ariaScope="lịch thi đấu" />
                   <button
                     onClick={handleClearSchedule}
                     className="text-[11px] font-semibold text-red-400 hover:text-red-600 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
@@ -1191,6 +1249,7 @@ export function FixedDoublesDashboardPage() {
                   <p className="text-sm">Chưa có lịch thi đấu</p>
                 </div>
               )}
+             </div>
 
               {/* recent activity — fills empty space below schedule */}
               <RecentActivityCard entries={[]} />

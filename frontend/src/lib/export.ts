@@ -674,6 +674,12 @@ export interface StandingsPdfInput {
   columns: StandingsColumn[]
   rows: Record<string, string | number>[]
   stats?: { label: string; value: string | number }[]
+  /** Tiêu đề header (mặc định 'BẢNG XẾP HẠNG'). */
+  title?: string
+  /** Tô nhẹ 3 dòng đầu (mặc định true). Tắt cho bảng không xếp hạng (vd Lịch). */
+  highlightTop3?: boolean
+  /** Tiền tố tên file (mặc định 'BXH'). */
+  filePrefix?: string
 }
 
 export async function exportStandingsPDF(input: StandingsPdfInput) {
@@ -694,6 +700,8 @@ export async function exportStandingsPDF(input: StandingsPdfInput) {
       sportLabel: input.sportLabel,
       formatLabel: input.formatLabel,
       rankNote: input.rankNote,
+      title: input.title,
+      highlightTop3: input.highlightTop3,
       exportedDateText: now.toLocaleDateString('vi-VN'),
       exportedAtText: now.toLocaleString('vi-VN'),
     },
@@ -702,7 +710,21 @@ export async function exportStandingsPDF(input: StandingsPdfInput) {
     stats: input.stats ?? [],
   })
   const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
-  return savePdfDoc(doc, `BXH_${slug(input.sportLabel)}_${slug(input.tournamentName)}`)
+  return savePdfDoc(doc, `${input.filePrefix ?? 'BXH'}_${slug(input.sportLabel)}_${slug(input.tournamentName)}`)
+}
+
+/* ════════════════════════════════════════
+   EXPORT: Lịch thi đấu (PDF vector) — tái dùng bảng chuẩn, đổi tiêu đề + tắt highlight top-3
+════════════════════════════════════════ */
+export async function exportSchedulePDF(
+  input: Omit<StandingsPdfInput, 'title' | 'highlightTop3' | 'filePrefix' | 'rankNote'> & { rankNote?: string },
+) {
+  return exportStandingsPDF({
+    ...input,
+    title: 'LỊCH THI ĐẤU',
+    highlightTop3: false,
+    filePrefix: 'Lich',
+  })
 }
 
 /* ════════════════════════════════════════

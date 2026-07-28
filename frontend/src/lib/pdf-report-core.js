@@ -473,7 +473,7 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
     font('bold', 7, C.white)
     doc.text((branding.name || 'PickleFund').toUpperCase(), textX, MARGIN + 8)
     font('bold', 15, C.white)
-    doc.text('BẢNG XẾP HẠNG', textX, MARGIN + 15.5)
+    doc.text(meta.title || 'BẢNG XẾP HẠNG', textX, MARGIN + 15.5)
     font('normal', 8.5, C.white)
     doc.text(clip(`${meta.sportLabel} · ${meta.tournamentName}`, CONTENT_W - 60), textX, MARGIN + 21.5)
     font('normal', 7.5, C.white)
@@ -538,8 +538,8 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
       y = drawHeader(meta.formatLabel) + 5
       y = drawHead(y)
     }
-    // Tô nhẹ 3 hạng đầu; các dòng lẻ còn lại zebra.
-    if (idx < 3) { setFill(C.greenBg); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
+    // Tô nhẹ 3 hạng đầu (tắt cho bảng không xếp hạng, vd Lịch); các dòng lẻ còn lại zebra.
+    if (meta.highlightTop3 !== false && idx < 3) { setFill(C.greenBg); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
     else if (idx % 2 === 1) { setFill(C.zebra); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
     setDraw(C.lineSoft)
     doc.setLineWidth(0.2)

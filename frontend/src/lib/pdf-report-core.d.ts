@@ -112,6 +112,10 @@ export interface StandingsReportMeta {
   sportLabel: string
   formatLabel: string
   rankNote?: string
+  /** Tiêu đề lớn ở header (mặc định 'BẢNG XẾP HẠNG'). Đặt 'LỊCH THI ĐẤU' khi tái dùng cho bảng lịch. */
+  title?: string
+  /** Tô nhẹ 3 dòng đầu (mặc định true). Đặt false cho bảng không xếp hạng (vd Lịch). */
+  highlightTop3?: boolean
   exportedDateText: string
   exportedAtText: string
 }
