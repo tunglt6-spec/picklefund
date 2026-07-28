@@ -14,7 +14,7 @@ import { useAuthStore } from '../../store/authStore'
 import api from '../../lib/api'
 import { PageShell, PageHeader, MetricCard, ChartCard, EmptyState } from '../../components/shared'
 
-const CHART_PRIMARY = '#6D5DFB' // --pf-primary
+const CHART_PRIMARY = 'var(--pf-primary)' // --pf-primary
 
 function weekStart(d: Date): Date {
   const x = new Date(d)

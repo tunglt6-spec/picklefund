@@ -811,7 +811,7 @@ export function Expenses() {
     ]
 
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">

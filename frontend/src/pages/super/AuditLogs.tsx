@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Search, ScrollText, FileSpreadsheet, FileText } from 'lucide-react'
+import { Search, ScrollText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
+import { ExportActions } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import api from '../../lib/api'
@@ -78,18 +79,7 @@ export function AuditLogs() {
       <PageHeader
         title="Audit Logs"
         subtitle={`${filtered.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
-        actions={filtered.length > 0 ? (
-          <div className="flex items-center gap-2">
-            <button onClick={doExportExcel} aria-label="Xuất Excel"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
-              <FileSpreadsheet size={14} />Xuất Excel
-            </button>
-            <button onClick={doExportPdf} aria-label="Xuất PDF"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
-              <FileText size={14} />Xuất PDF
-            </button>
-          </div>
-        ) : undefined}
+        actions={filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
       <div className="p-6 max-w-[1100px] mx-auto space-y-5">

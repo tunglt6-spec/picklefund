@@ -396,7 +396,7 @@ export function SuperClubs() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="font-bold text-slate-900 text-base">Quản lý CLB</div>

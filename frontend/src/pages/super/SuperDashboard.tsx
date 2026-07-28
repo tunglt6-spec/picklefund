@@ -46,7 +46,7 @@ export function SuperDashboard() {
   /* ── Mobile layout ─────────────────────────────────────────── */
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="px-4 pt-4 pb-6 space-y-4">
 
           {/* Welcome / context card */}
@@ -136,7 +136,7 @@ export function SuperDashboard() {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#6D5DFB" radius={[4, 4, 0, 0]} name="Số lượng" />
+                <Bar dataKey="value" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} name="Số lượng" />
               </BarChart>
             </ResponsiveContainer>
           </div>

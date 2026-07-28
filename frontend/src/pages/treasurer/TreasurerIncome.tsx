@@ -267,7 +267,7 @@ export function TreasurerIncome() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
           <div className="text-[17px] font-[800] text-slate-900 shrink-0">Khoản Thu</div>
           <div className="flex items-center gap-1.5 ml-auto">

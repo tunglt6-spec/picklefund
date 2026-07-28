@@ -341,7 +341,7 @@ export function Contributions() {
     const sortedCommon = [...commonContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>

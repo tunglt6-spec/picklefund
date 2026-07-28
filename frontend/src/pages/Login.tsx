@@ -634,7 +634,7 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A]">
+    <div className="flex min-h-screen [background:var(--pf-bg)] dark:bg-[#0F172A]">
 
       {/* ═══════════════════════════════════════
           LEFT PANEL  60%

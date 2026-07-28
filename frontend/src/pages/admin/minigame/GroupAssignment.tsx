@@ -147,7 +147,7 @@ export function GroupAssignment() {
   ) : null
 
   return (
-    <div className={isMobile ? 'min-h-screen bg-[#F8FAFC]' : 'flex-1 overflow-y-auto bg-slate-50'}>
+    <div className={isMobile ? 'min-h-screen [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto bg-slate-50'}>
       {isMobile ? mobileHeader : null}
       {!isMobile && <PageHeader
         title={`Chia Bảng – ${mg.name}`}

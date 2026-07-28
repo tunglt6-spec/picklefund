@@ -198,7 +198,7 @@ export function KpiMonitorPage() {
                     <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={28} />
                     <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="workflow" name="Workflow" fill="#6D5DFB" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="workflow" name="Workflow" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="ai" name="Hành động AI" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>

@@ -40,7 +40,7 @@ export function MemberAttendance() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
           <div className="text-[17px] font-[800] text-slate-900">Lịch Tham Gia</div>
           {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}

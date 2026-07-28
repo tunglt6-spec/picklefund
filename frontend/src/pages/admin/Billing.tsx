@@ -226,7 +226,7 @@ export function Billing() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3">
           <p className="text-[17px] font-[800] text-slate-900">Gói dịch vụ</p>
           <p className="text-[12px] text-slate-400">Quản lý subscription & AI usage</p>

@@ -149,7 +149,7 @@ export function TreasurerReminders() {
   if (isMobile) {
     const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] text-slate-900">Nhắc Nhở Đóng Quỹ</div>

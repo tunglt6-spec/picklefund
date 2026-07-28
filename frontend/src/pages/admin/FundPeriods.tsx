@@ -29,7 +29,7 @@ const statusVariant: Record<FundPeriodStatus, 'gray' | 'green' | 'yellow' | 'ind
   draft: 'yellow', active: 'green', closed: 'gray', finalized: 'gray'
 }
 
-const DONUT_COLORS = ['#6D5DFB', '#7c3aed']
+const DONUT_COLORS = ['var(--pf-primary)', '#7c3aed']
 
 const emptyForm = {
   name: '', startDate: '', endDate: '',
@@ -553,7 +553,7 @@ export function FundPeriods() {
     const chungPeriods = filtered.filter(p => (p.type ?? 'chung') === 'chung')
     const gamePeriods = filtered.filter(p => p.type === 'game')
     return (
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
           <span className="text-[17px] font-[800] text-slate-900">Kỳ Quỹ</span>
@@ -1911,7 +1911,7 @@ function HighlightsTab({ contributions, periods, members }: {
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => `${Math.round(v / 1000)}k`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => formatVND(Number(v))} labelStyle={{ fontSize: 11 }} contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }} />
-                <Bar dataKey="confirmed" name="Đã xác nhận" fill="#6D5DFB" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="confirmed" name="Đã xác nhận" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="pending" name="Chờ xác nhận" fill="#fbbf24" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

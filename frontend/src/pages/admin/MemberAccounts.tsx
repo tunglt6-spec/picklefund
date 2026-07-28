@@ -465,7 +465,7 @@ export function MemberAccounts() {
 
   // ── Desktop table ─────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F8FAFC]">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
       <div className="bg-white border-b border-[#E2E8F0] px-6 py-5">
         <div className="flex items-start justify-between flex-wrap gap-3">

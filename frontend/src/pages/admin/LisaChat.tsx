@@ -186,7 +186,7 @@ export function LisaChat() {
   if (isMobile) {
     return (
       <div
-        className="flex flex-col overflow-hidden bg-[#F8FAFC]"
+        className="flex flex-col overflow-hidden [background:var(--pf-bg)]"
         style={{
           position: 'fixed',
           top: 64,
