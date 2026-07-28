@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Receipt } from 'lucide-react'
+import { Plus, Edit2, Trash2, Receipt, FileSpreadsheet, FileText } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageShell, PageHeader } from '../../components/shared'
@@ -11,6 +11,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { AllocationRule, CostType, LivingExpense } from '../../types'
 import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 
 const RULES: { value: AllocationRule; label: string; desc: string }[] = [
@@ -128,15 +129,58 @@ export function TreasurerExpense() {
 
   const ruleLabel = (r: AllocationRule) => RULES.find(x => x.value === r)?.label ?? r
 
+  const doExportExcel = () => {
+    exportGenericExcel('Khoan_chi', 'Khoản chi',
+      ['Mô tả', 'Kỳ quỹ', 'Ngày chi', 'Số tiền (VNĐ)', 'Phân bổ', 'Hóa đơn'],
+      expenses.map((e) => {
+        const period = data.fundPeriods.find((p) => p.id === e.fundPeriodId)
+        return [e.description, period?.name ?? '', e.expenseDate, e.amount, ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']
+      }),
+    )
+    toast.success('Đã xuất Excel khoản chi')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Khoan_chi',
+      title: 'Danh Sách Khoản Chi',
+      metaLeft: `${expenses.length} khoản · Thiếu hóa đơn ${expenses.filter((e) => !e.receiptUrl).length}`,
+      columns: [
+        { header: 'Mô tả' }, { header: 'Kỳ quỹ' }, { header: 'Ngày chi', align: 'center' },
+        { header: 'Số tiền', align: 'right' }, { header: 'Phân bổ', align: 'center' }, { header: 'Hóa đơn', align: 'center' },
+      ],
+      rows: expenses.map((e) => {
+        const period = data.fundPeriods.find((p) => p.id === e.fundPeriodId)
+        return [e.description, period?.name ?? '—', formatDate(e.expenseDate), formatVND(e.amount), ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']
+      }),
+      summaryLabel: 'Tổng đã chi',
+      summaryValue: formatVND(totalExpenses),
+    })
+    toast.success('Đã xuất PDF khoản chi')
+  }
+
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="text-[17px] font-[800] text-slate-900">Khoản Chi</div>
-          <button onClick={openCreate} disabled={activePeriods.length === 0}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white disabled:opacity-40 active:opacity-80">
-            <Plus size={13} />Thêm
-          </button>
+          <div className="flex items-center gap-1.5">
+            {expenses.length > 0 && (
+              <>
+                <button onClick={doExportExcel} aria-label="Xuất Excel"
+                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileSpreadsheet size={14} />
+                </button>
+                <button onClick={doExportPdf} aria-label="Xuất PDF"
+                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileText size={14} />
+                </button>
+              </>
+            )}
+            <button onClick={openCreate} disabled={activePeriods.length === 0}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white disabled:opacity-40 active:opacity-80">
+              <Plus size={13} />Thêm
+            </button>
+          </div>
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {activePeriods.length === 0 ? (
@@ -263,9 +307,17 @@ export function TreasurerExpense() {
         title="Nhập Khoản Chi"
         subtitle="Ghi nhận chi phí của CLB"
         actions={
-          <Button onClick={openCreate} disabled={activePeriods.length === 0}>
-            <Plus size={14} />Thêm khoản chi
-          </Button>
+          <div className="flex items-center gap-2">
+            {expenses.length > 0 && (
+              <>
+                <Button variant="ghost" size="sm" onClick={doExportExcel}><FileSpreadsheet size={14} />Xuất Excel</Button>
+                <Button variant="ghost" size="sm" onClick={doExportPdf}><FileText size={14} />Xuất PDF</Button>
+              </>
+            )}
+            <Button onClick={openCreate} disabled={activePeriods.length === 0}>
+              <Plus size={14} />Thêm khoản chi
+            </Button>
+          </div>
         }
       />
 

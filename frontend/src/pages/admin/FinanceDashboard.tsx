@@ -9,15 +9,19 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
 } from 'recharts'
-import { ArrowUpRight, ArrowDownLeft, Wallet } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Wallet, Image as ImageIcon, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
+import { exportInfographicAsPng, exportInfographicAsPdf } from '../../components/reports/infographic/infographic.utils'
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, EmptyState, LoadingState, ErrorState,
-  StatusBadge, type StatusTone,
+  StatusBadge, ActionButton, type StatusTone,
 } from '../../components/shared'
+
+const FD_EXPORT_ID = 'finance-dashboard-export'
 
 interface Summary {
   totalIncome: number
@@ -124,11 +128,27 @@ export function FinanceDashboard() {
     return a
   }, [summary])
 
+  const slug = `Tai_chinh_${activePeriod?.name ?? 'CLB'}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')
+  const doExportPng = async () => {
+    try { await exportInfographicAsPng(FD_EXPORT_ID, slug); toast.success('Đã tải ảnh dashboard tài chính') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportPdf = async () => {
+    try { await exportInfographicAsPdf(FD_EXPORT_ID, slug); toast.success('Đã tải PDF dashboard tài chính') }
+    catch { toast.error('Xuất PDF thất bại') }
+  }
+
   return (
     <PageShell>
       <PageHeader
         title="Dashboard tài chính"
         subtitle={activePeriod ? `Kỳ quỹ: ${activePeriod.name} · nguồn: Finance Engine` : 'Tổng quan tài chính CLB'}
+        actions={summary ? (
+          <>
+            <ActionButton variant="secondary" iconOnly ariaLabel="Tải ảnh dashboard" icon={<ImageIcon size={16} />} onClick={doExportPng} />
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF dashboard" icon={<FileText size={16} />} onClick={doExportPdf} />
+          </>
+        ) : undefined}
       />
 
       {!activePeriod ? (
@@ -138,7 +158,7 @@ export function FinanceDashboard() {
       ) : error ? (
         <ErrorState onRetry={() => void load(activePeriod.id)} />
       ) : summary ? (
-        <div className="flex flex-col gap-5">
+        <div id={FD_EXPORT_ID} className="flex flex-col gap-5">
           {/* 3 KPI: Tổng thu · Tổng chi · Tồn quỹ */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <MetricCard accent="green" icon={<ArrowUpRight size={18} />} label="Tổng thu (Quỹ Chính)" value={formatVND(summary.totalIncome)} />

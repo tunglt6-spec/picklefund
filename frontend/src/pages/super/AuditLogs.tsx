@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Search, ScrollText } from 'lucide-react'
+import { Search, ScrollText, FileSpreadsheet, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useAuthStore } from '../../store/authStore'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import api from '../../lib/api'
 
 interface AuditLog {
@@ -51,11 +53,43 @@ export function AuditLogs() {
     return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
   }
 
+  const doExportExcel = () => {
+    exportGenericExcel('Audit_Log_He_Thong', 'Audit Log',
+      ['Thời gian', 'Người dùng', 'Hành động', 'Chi tiết', 'CLB'],
+      filtered.map((l) => [formatTime(l.createdAt), l.user?.username ?? '', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+    )
+    toast.success('Đã xuất Excel nhật ký')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Audit_Log_He_Thong',
+      title: 'Nhật Ký Kiểm Toán Hệ Thống',
+      metaLeft: `${filtered.length} thao tác`,
+      columns: [
+        { header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' }, { header: 'CLB' },
+      ],
+      rows: filtered.map((l) => [formatTime(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+    })
+    toast.success('Đã xuất PDF nhật ký')
+  }
+
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50">
       <PageHeader
         title="Audit Logs"
         subtitle={`${filtered.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
+        actions={filtered.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <button onClick={doExportExcel} aria-label="Xuất Excel"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+              <FileSpreadsheet size={14} />Excel
+            </button>
+            <button onClick={doExportPdf} aria-label="Xuất PDF"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+              <FileText size={14} />PDF
+            </button>
+          </div>
+        ) : undefined}
       />
 
       <div className="p-6 max-w-[1100px] mx-auto space-y-5">

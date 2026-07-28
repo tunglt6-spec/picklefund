@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
-import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download } from 'lucide-react'
+import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download, FileText } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { exportGenericTablePDF } from '../../lib/export'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageShell, PageHeader } from '../../components/shared'
@@ -154,6 +155,34 @@ export function TreasurerIncome() {
     XLSX.writeFile(wb, `Khoan_thu_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
+  const exportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Khoan_thu',
+      title: 'Danh Sách Khoản Thu',
+      metaLeft: `${contributions.length} khoản · Đã xác nhận ${formatVND(totalConfirmed)}`,
+      columns: [
+        { header: 'Nguồn quỹ', align: 'center' }, { header: 'Thành viên / Người nộp' }, { header: 'Kỳ quỹ / Loại' },
+        { header: 'Ngày đóng', align: 'center' }, { header: 'Số tiền', align: 'right' },
+        { header: 'Hình thức', align: 'center' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: contributions.map((c) => {
+        const period = data.fundPeriods.find((p) => p.id === c.fundPeriodId)
+        const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
+        return [
+          isMiniRow ? 'Quỹ Phụ' : 'Quỹ Chính',
+          isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
+          isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
+          formatDate(c.paymentDate), formatVND(c.amount),
+          c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
+          c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+        ]
+      }),
+      summaryLabel: 'Tổng đã xác nhận (Quỹ Chính)',
+      summaryValue: formatVND(totalConfirmed),
+    })
+    toast.success('Đã xuất PDF khoản thu')
+  }
+
   const toggleConfirm = async (id: string) => {
     try {
       await api.patch(`/contributions/${id}/confirm`)
@@ -252,10 +281,16 @@ export function TreasurerIncome() {
               </button>
             )}
             {contributions.length > 0 && (
-              <button onClick={exportExcel} aria-label="Xuất Excel"
-                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                <Download size={14} />
-              </button>
+              <>
+                <button onClick={exportExcel} aria-label="Xuất Excel"
+                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <Download size={14} />
+                </button>
+                <button onClick={exportPdf} aria-label="Xuất PDF"
+                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileText size={14} />
+                </button>
+              </>
             )}
             <button onClick={openCreate}
               className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white active:opacity-80">
@@ -439,9 +474,14 @@ export function TreasurerIncome() {
         actions={
           <div className="flex items-center gap-2">
             {contributions.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={exportExcel}>
-                <Download size={14} />Xuất Excel
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={exportExcel}>
+                  <Download size={14} />Xuất Excel
+                </Button>
+                <Button variant="ghost" size="sm" onClick={exportPdf}>
+                  <FileText size={14} />Xuất PDF
+                </Button>
+              </>
             )}
             <Button onClick={openCreate}>
               <Plus size={14} />Ghi nhận thu

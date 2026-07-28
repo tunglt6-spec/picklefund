@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
+import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ActionButton, type Column } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import api from '../../lib/api'
 
 interface PersonalReceipt {
@@ -61,12 +63,51 @@ export function MemberContributions() {
 
   const isMobile = useIsMobile()
 
+  const memberSlug = memberName.replace(/\s/g, '_')
+  const doExportExcel = () => {
+    exportGenericExcel('Dong_quy_' + memberSlug, 'Đóng quỹ',
+      ['Kỳ quỹ', 'Ngày đóng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái'],
+      filtered.map((c) => [c.periodName ?? 'Kỳ quỹ', formatDate(c.paymentDate), c.amount, c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt', c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận']),
+    )
+    toast.success('Đã xuất Excel lịch sử đóng quỹ')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Dong_quy_' + memberSlug,
+      title: 'Lịch Sử Đóng Quỹ',
+      subtitle: memberName,
+      metaLeft: `${filtered.length} khoản · Đã xác nhận ${confirmedCount}`,
+      columns: [
+        { header: 'Kỳ quỹ' }, { header: 'Ngày đóng', align: 'center' }, { header: 'Số tiền', align: 'right' },
+        { header: 'Hình thức', align: 'center' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: filtered.map((c) => [c.periodName ?? 'Kỳ quỹ', formatDate(c.paymentDate), formatVND(c.amount), c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt', c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận']),
+      summaryLabel: 'Tổng đã đóng (đã xác nhận)',
+      summaryValue: formatVND(totalPaid),
+    })
+    toast.success('Đã xuất PDF lịch sử đóng quỹ')
+  }
+
   if (isMobile) {
     return (
       <div className="min-h-screen bg-[#F8FAFC]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
-          <div className="text-[17px] font-[800] text-slate-900">Lịch Sử Đóng Quỹ</div>
-          <div className="text-[12px] text-slate-400">{memberName}</div>
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[17px] font-[800] text-slate-900">Lịch Sử Đóng Quỹ</div>
+            <div className="text-[12px] text-slate-400 truncate">{memberName}</div>
+          </div>
+          {filtered.length > 0 && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button onClick={doExportExcel} aria-label="Xuất Excel"
+                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                <FileSpreadsheet size={14} />
+              </button>
+              <button onClick={doExportPdf} aria-label="Xuất PDF"
+                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
+                <FileText size={14} />
+              </button>
+            </div>
+          )}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           <div className="grid grid-cols-3 gap-2">
@@ -159,7 +200,14 @@ export function MemberContributions() {
 
   return (
     <PageShell maxWidth={1200}>
-      <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName} />
+      <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName}
+        actions={filtered.length > 0 ? (
+          <>
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel đóng quỹ" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF đóng quỹ" icon={<FileText size={16} />} onClick={doExportPdf} />
+          </>
+        ) : undefined}
+      />
 
       {/* KPI — MetricCard giống Admin */}
       <div className="grid grid-cols-3 gap-4">

@@ -15,7 +15,9 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Wallet, Gamepad2, TrendingUp, TrendingDown, AlertCircle,
   Receipt, FileBarChart, X, Eye, RefreshCw, ArrowUpRight, ArrowDownRight, Layers,
+  FileSpreadsheet, FileText,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
@@ -24,6 +26,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
@@ -371,9 +374,36 @@ export function ThuChiHub() {
     },
   ]
 
+  const doExportExcel = () => {
+    exportGenericExcel('Giao_dich_tai_chinh', 'Giao dịch',
+      ['Ngày', 'Loại', 'Nguồn quỹ', 'Nội dung', 'Đối tượng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái'],
+      filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, t.amount, t.method, t.statusLabel]),
+    )
+    toast.success('Đã xuất Excel giao dịch')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Giao_dich_tai_chinh',
+      title: 'Giao Dịch Tài Chính',
+      metaLeft: `${filteredTx.length} giao dịch · Thu ${formatVND(filteredIncomeTotal)} · Chi ${formatVND(filteredExpenseTotal)}`,
+      columns: [
+        { header: 'Ngày', align: 'center' }, { header: 'Loại', align: 'center' }, { header: 'Nguồn quỹ', align: 'center' },
+        { header: 'Nội dung' }, { header: 'Đối tượng' }, { header: 'Số tiền', align: 'right' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, formatVND(t.amount), t.statusLabel]),
+    })
+    toast.success('Đã xuất PDF giao dịch')
+  }
+
   const headerActions = (
     <>
-      <ActionButton variant="secondary" iconOnly ariaLabel="Xuất báo cáo" icon={<FileBarChart size={16} />} onClick={() => navigate('/reports')} />
+      {filteredTx.length > 0 && (
+        <>
+          <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel giao dịch" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
+          <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF giao dịch" icon={<FileText size={16} />} onClick={doExportPdf} />
+        </>
+      )}
+      <ActionButton variant="secondary" iconOnly ariaLabel="Báo cáo tổng hợp" icon={<FileBarChart size={16} />} onClick={() => navigate('/reports')} />
       <ActionButton variant="secondary" icon={<TrendingDown size={15} />} onClick={() => navigate('/expenses')}>Thêm chi phí</ActionButton>
       <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/contributions')}>Thu quỹ</ActionButton>
     </>

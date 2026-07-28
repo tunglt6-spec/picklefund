@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
+import { Bell, Send, CheckCircle, Clock, FileSpreadsheet, FileText } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -120,6 +121,30 @@ export function TreasurerReminders() {
   }
 
   const amount = activePeriod?.contributionAmount ?? 1000000
+
+  const doExportExcel = () => {
+    exportGenericExcel('Nhac_dong_quy', 'Chưa đóng',
+      ['Thành viên', 'Liên hệ', 'Số tiền cần đóng (VNĐ)', 'Trạng thái'],
+      unpaidMembers.map((m) => [m.fullName, m.phone ?? m.email ?? '', amount, sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
+    )
+    toast.success('Đã xuất Excel danh sách chưa đóng')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Nhac_dong_quy',
+      title: 'Danh Sách Chưa Đóng Quỹ',
+      subtitle: activePeriod?.name,
+      metaLeft: `${unpaidMembers.length} chưa đóng · ${pendingMembers.length} chờ xác nhận`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Liên hệ' },
+        { header: 'Số tiền cần đóng', align: 'right' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: unpaidMembers.map((m, i) => [i + 1, m.fullName, m.phone ?? m.email ?? '—', formatVND(amount), sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
+      summaryLabel: 'Tổng cần thu',
+      summaryValue: formatVND(unpaidMembers.length * amount),
+    })
+    toast.success('Đã xuất PDF danh sách chưa đóng')
+  }
 
   if (isMobile) {
     const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length
@@ -242,12 +267,22 @@ export function TreasurerReminders() {
         subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
         actions={
           unpaidMembers.length > 0
-            ? <button
-                onClick={sendAll}
-                disabled={sendingAll}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg [background:var(--pf-primary)] text-white text-sm font-semibold hover:[background:var(--pf-primary-hover)] disabled:opacity-50 transition-colors">
-                <Send size={14} />{sendingAll ? 'Đang gửi…' : `Nhắc tất cả (${unpaidMembers.length})`}
-              </button>
+            ? <div className="flex items-center gap-2">
+                <button onClick={doExportExcel} aria-label="Xuất Excel"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+                  <FileSpreadsheet size={14} />Excel
+                </button>
+                <button onClick={doExportPdf} aria-label="Xuất PDF"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+                  <FileText size={14} />PDF
+                </button>
+                <button
+                  onClick={sendAll}
+                  disabled={sendingAll}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg [background:var(--pf-primary)] text-white text-sm font-semibold hover:[background:var(--pf-primary-hover)] disabled:opacity-50 transition-colors">
+                  <Send size={14} />{sendingAll ? 'Đang gửi…' : `Nhắc tất cả (${unpaidMembers.length})`}
+                </button>
+              </div>
             : undefined
         }
       />

@@ -4,12 +4,14 @@
  * mới, không đổi nghiệp vụ — chỉ tổng hợp & hiển thị.
  */
 import { useMemo, useState } from 'react'
-import { Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
+import { Search, DollarSign, CalendarCheck, TrendingUp, Activity, FileSpreadsheet, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatVND, cn } from '../../lib/utils'
-import { PageShell, PageHeader, MetricCard, EmptyState } from '../../components/shared'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { PageShell, PageHeader, MetricCard, EmptyState, ActionButton } from '../../components/shared'
 
 const fmtDate = (s?: string) => (s ? s.slice(0, 10).split('-').reverse().join('/') : '')
 
@@ -36,6 +38,27 @@ export function MemberActivity() {
   const filtered = rows.filter((r) => !q || r.m.fullName.toLowerCase().includes(q.toLowerCase()))
   const sel = rows.find((r) => r.m.id === selId) ?? filtered[0]
 
+  const doExportExcel = () => {
+    exportGenericExcel('Hoat_dong_thanh_vien', 'Hoạt động',
+      ['Thành viên', 'Buổi tham gia', 'Chuyên cần (%)', 'Số lần đóng', 'Tổng đóng quỹ (VNĐ)'],
+      rows.map((r) => [r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '', r.rate != null ? r.rate : '', r.contribs.length, r.totalPaid]),
+    )
+    toast.success('Đã xuất Excel hoạt động thành viên')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Hoat_dong_thanh_vien',
+      title: 'Hoạt Động Thành Viên',
+      metaLeft: `${rows.length} thành viên`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Buổi tham gia', align: 'center' },
+        { header: 'Chuyên cần', align: 'center' }, { header: 'Số lần đóng', align: 'center' }, { header: 'Tổng đóng quỹ', align: 'right' },
+      ],
+      rows: rows.map((r, i) => [i + 1, r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '—', r.rate != null ? `${r.rate}%` : '—', r.contribs.length, formatVND(r.totalPaid)]),
+    })
+    toast.success('Đã xuất PDF hoạt động thành viên')
+  }
+
   if (members.length === 0) {
     return (
       <PageShell>
@@ -48,7 +71,14 @@ export function MemberActivity() {
 
   return (
     <PageShell>
-      <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ từng thành viên · điểm danh · đóng quỹ · chuyên cần" />
+      <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ từng thành viên · điểm danh · đóng quỹ · chuyên cần"
+        actions={
+          <>
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel hoạt động" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF hoạt động" icon={<FileText size={16} />} onClick={doExportPdf} />
+          </>
+        }
+      />
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}

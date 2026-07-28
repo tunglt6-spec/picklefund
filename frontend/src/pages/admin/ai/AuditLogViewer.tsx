@@ -4,10 +4,12 @@
  * ở backend (client không override). Chỉ log của CLB mình. V2.2 shared-kit + trạng thái.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ScrollText, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import api from '../../../lib/api'
+import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import {
-  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState,
+  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ActionButton,
   type StatusTone,
 } from '../../../components/shared'
 
@@ -70,11 +72,37 @@ export function AuditLogViewer() {
   const pageSafe = Math.min(page, totalPages)
   const paged = logs.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE)
 
+  const doExportExcel = () => {
+    exportGenericExcel('Audit_Log_CLB', 'Audit Log',
+      ['Thời gian', 'Người dùng', 'Hành động', 'Tài nguyên', 'Chi tiết'],
+      logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '', l.action, l.resource, l.detail ?? '']),
+    )
+    toast.success('Đã xuất Excel nhật ký')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Audit_Log_CLB',
+      title: 'Nhật Ký Kiểm Toán',
+      metaLeft: `${logs.length} bản ghi`,
+      columns: [
+        { header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' },
+      ],
+      rows: logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource]),
+    })
+    toast.success('Đã xuất PDF nhật ký')
+  }
+
   return (
     <PageShell>
       <PageHeader
         title="Audit Logs"
         subtitle="Nhật ký kiểm toán — các thao tác trong CLB của bạn"
+        actions={logs.length > 0 ? (
+          <>
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel nhật ký" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF nhật ký" icon={<FileText size={16} />} onClick={doExportPdf} />
+          </>
+        ) : undefined}
       />
 
       <div className="flex flex-col gap-4">
