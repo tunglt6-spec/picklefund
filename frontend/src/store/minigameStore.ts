@@ -816,41 +816,41 @@ function computeStandings(
   const { winPoints, drawPoints, lossPoints } = minigame
   const mgMatches = matches.filter(m => m.minigameId === minigame.id && m.status === 'COMPLETED')
 
+  const buildRow = (participant: MiniGameParticipant, myMatches: MiniGameMatch[], groupId: string, groupName: string): MiniGameStanding => {
+    let won = 0, drawn = 0, lost = 0, pf = 0, pa = 0
+    for (const m of myMatches) {
+      const isP1 = m.player1Id === participant.memberId
+      const myScore = isP1 ? (m.player1Score ?? 0) : (m.player2Score ?? 0)
+      const oppScore = isP1 ? (m.player2Score ?? 0) : (m.player1Score ?? 0)
+      pf += myScore; pa += oppScore
+      if (m.winnerId === participant.memberId) won++
+      else if (!m.winnerId) drawn++
+      else lost++
+    }
+    const rankingPoints = won * winPoints + drawn * drawPoints + lost * lossPoints
+    return {
+      memberId: participant.memberId, memberName: participant.memberName, groupId, groupName,
+      played: myMatches.length, won, drawn, lost,
+      pointsFor: pf, pointsAgainst: pa, pointDifference: pf - pa, rankingPoints, rank: 0,
+    }
+  }
+  const sortRank = (rows: MiniGameStanding[]) => rows.sort((a, b) =>
+    b.rankingPoints - a.rankingPoints || b.pointDifference - a.pointDifference || b.pointsFor - a.pointsFor
+  ).map((s, i) => ({ ...s, rank: i + 1 }))
+
+  // CHƯA CÓ BẢNG (format không chia bảng / chưa bốc bảng): 1 danh sách chung gồm MỌI participant,
+  // trận lọc theo người (bỏ qua groupId) → không còn "0 thành viên" khi có participant.
+  if (groups.length === 0) {
+    return sortRank(participants.map(p =>
+      buildRow(p, mgMatches.filter(m => m.player1Id === p.memberId || m.player2Id === p.memberId), '', '')
+    ))
+  }
+
   return groups.flatMap(grp => {
     const members = participants.filter(p => grp.memberIds.includes(p.memberId))
-    return members.map(participant => {
-      const myMatches = mgMatches.filter(
-        m => m.groupId === grp.id && (m.player1Id === participant.memberId || m.player2Id === participant.memberId)
-      )
-      let won = 0, drawn = 0, lost = 0, pf = 0, pa = 0
-      for (const m of myMatches) {
-        const isP1 = m.player1Id === participant.memberId
-        const myScore = isP1 ? (m.player1Score ?? 0) : (m.player2Score ?? 0)
-        const oppScore = isP1 ? (m.player2Score ?? 0) : (m.player1Score ?? 0)
-        pf += myScore; pa += oppScore
-        if (m.winnerId === participant.memberId) won++
-        else if (!m.winnerId) drawn++
-        else lost++
-      }
-      const rankingPoints = won * winPoints + drawn * drawPoints + lost * lossPoints
-      return {
-        memberId: participant.memberId,
-        memberName: participant.memberName,
-        groupId: grp.id,
-        groupName: grp.groupName,
-        played: myMatches.length,
-        won, drawn, lost,
-        pointsFor: pf,
-        pointsAgainst: pa,
-        pointDifference: pf - pa,
-        rankingPoints,
-        rank: 0,
-      } satisfies Omit<MiniGameStanding, 'rank'> & { rank: number }
-    }).sort((a, b) =>
-      b.rankingPoints - a.rankingPoints ||
-      b.pointDifference - a.pointDifference ||
-      b.pointsFor - a.pointsFor
-    ).map((s, i) => ({ ...s, rank: i + 1 }))
+    return sortRank(members.map(p =>
+      buildRow(p, mgMatches.filter(m => m.groupId === grp.id && (m.player1Id === p.memberId || m.player2Id === p.memberId)), grp.id, grp.groupName)
+    ))
   })
 }
 
@@ -1186,10 +1186,23 @@ export const useMinigameStore = create<MinigameStore>()(
       },
 
       getStandings: (minigameId) => {
-        const { minigames, groups, participants, matches } = get()
+        const { minigames, groups, participants, matches, rounds, roundSitOuts, doublesMatches } = get()
         const mg = minigames.find(m => m.id === minigameId)
         if (!mg) return []
-        return computeStandings(mg, groups.filter(g => g.minigameId === minigameId), participants.filter(p => p.minigameId === minigameId), matches)
+        const parts = participants.filter(p => p.minigameId === minigameId)
+        // RANDOM_DOUBLES: BXH tính từ VÒNG/TRẬN ĐÔI (không chia bảng) — computeStandings group-based
+        // sẽ trả rỗng. Dùng computeDoublesAggregates rồi adapt về shape MiniGameStanding (groupId/
+        // groupName rỗng ⇒ StandingsPage hiện cột "Bảng" trống + chỉ tab Tổng Quan). Fix BXH trống.
+        if (mg.formatType === 'RANDOM_DOUBLES') {
+          const { standings } = computeDoublesAggregates(mg, parts, rounds, roundSitOuts, doublesMatches)
+          return standings.map(s => ({
+            memberId: s.memberId, memberName: s.memberName, groupId: '', groupName: '',
+            played: s.played, won: s.won, drawn: s.drawn, lost: s.lost,
+            pointsFor: s.pointsFor, pointsAgainst: s.pointsAgainst,
+            pointDifference: s.pointDifference, rankingPoints: s.rankingPoints, rank: s.rank,
+          }))
+        }
+        return computeStandings(mg, groups.filter(g => g.minigameId === minigameId), parts, matches)
       },
 
       getDashboard: (minigameId) => {
