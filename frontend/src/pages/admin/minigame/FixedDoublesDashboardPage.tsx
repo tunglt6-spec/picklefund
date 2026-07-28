@@ -4,16 +4,26 @@ import {
   ArrowLeft, Edit2, Bell, MoreHorizontal, Calendar, Trophy,
   ChevronDown, ChevronUp, Shuffle, RefreshCw, Plus, Trash2,
   Check, X, MoreVertical, AlertCircle, TrendingUp,
-  Users, Target, Activity,
+  Users, Target, Activity, Image as ImageIcon, FileText,
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { useAuthStore } from '../../../store/authStore'
+import { useClubDataStore } from '../../../store/clubDataStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
+import { exportStandingsPDF } from '../../../lib/export'
+import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
+
+const FD_EXPORT_ID = 'fd-standings-export'
+const FD_SPORT_LABEL: Record<string, string> = {
+  PICKLEBALL: 'Pickleball', TENNIS: 'Tennis', BADMINTON: 'Cầu lông', TABLE_TENNIS: 'Bóng bàn',
+  FOOTBALL: 'Bóng đá', BASKETBALL: 'Bóng rổ', GOLF: 'Golf',
+}
 
 // ── design tokens ──────────────────────────────────────────────────────────────
 const T = {
@@ -415,14 +425,35 @@ function RoundCard({
 }
 
 // ── compact ranking ────────────────────────────────────────────────────────────
-function CompactRankingCard({ standings }: { standings: MiniGameTeamStanding[] }) {
+function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
+  standings: MiniGameTeamStanding[]
+  exportId?: string
+  onExportPng?: () => void
+  onExportPdf?: () => void
+}) {
   return (
-    <div style={CARD} className="overflow-hidden">
+    <div id={exportId} style={CARD} className="overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: T.border }}>
         <div className="flex items-center gap-2">
           <Trophy size={14} style={{ color: T.warning }} />
           <span className="font-bold text-sm" style={{ color: T.txt1 }}>Bảng Xếp Hạng</span>
         </div>
+        {standings.length > 0 && (onExportPng || onExportPdf) && (
+          <div className="flex items-center gap-1.5" data-html2canvas-ignore="true">
+            {onExportPng && (
+              <button onClick={onExportPng} aria-label="Tải ảnh bảng xếp hạng" title="Tải ảnh"
+                className="flex h-7 w-7 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-80">
+                <ImageIcon size={13} />
+              </button>
+            )}
+            {onExportPdf && (
+              <button onClick={onExportPdf} aria-label="Xuất PDF bảng xếp hạng" title="Xuất PDF"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50">
+                <FileText size={13} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
       {standings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-slate-400">
@@ -746,6 +777,8 @@ export function FixedDoublesDashboardPage() {
     deleteTeamMatchResult, participants,
     setTeamsFromApi, setTeamMatchesFromApi, updateMinigame,
   } = useMinigameStore()
+  const { user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
 
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -878,6 +911,47 @@ export function FixedDoublesDashboardPage() {
   const dashboard   = getFixedDoublesDashboard(id!)
   const kpi         = dashboard?.kpi
   const schedule    = dashboard?.schedule ?? []
+
+  // ── Xuất Ảnh/PDF bảng xếp hạng (đôi cố định) — PDF vector chuẩn SaaS, PNG chụp panel ──
+  const doExportPng = async () => {
+    try { await exportInfographicAsPng(FD_EXPORT_ID, `BXH_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')); toast.success('Đã tải ảnh bảng xếp hạng') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportPdf = async () => {
+    try {
+      await exportStandingsPDF({
+        clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
+        tournamentName: mg.name,
+        sportLabel: FD_SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
+        formatLabel: 'Đôi cố định vòng tròn',
+        rankNote: `Xếp theo: Điểm → Hiệu số → Điểm ghi được. Điểm: thắng ${mg.winPoints} · hòa ${mg.drawPoints} · thua ${mg.lossPoints}.`,
+        stats: [
+          { label: 'Số đội', value: teams.length },
+          { label: 'Tổng trận', value: kpi?.totalMatches ?? schedule.length },
+          { label: 'Đã có kết quả', value: `${kpi?.completedMatches ?? 0}/${kpi?.totalMatches ?? schedule.length}` },
+        ],
+        columns: [
+          { key: 'rank', label: '#', w: 8, align: 'left' },
+          { key: 'name', label: 'ĐỘI', w: 18, align: 'left', bold: true },
+          { key: 'pair', label: 'CẶP ĐÔI', w: 46, align: 'left', tone: 'muted' },
+          { key: 'P', label: 'T', w: 12, align: 'center' },
+          { key: 'W', label: 'TH', w: 12, align: 'center', tone: 'win' },
+          { key: 'D', label: 'H', w: 12, align: 'center', tone: 'muted' },
+          { key: 'L', label: 'B', w: 12, align: 'center', tone: 'loss' },
+          { key: 'gd', label: 'HS', w: 16, align: 'center', tone: 'sign' },
+          { key: 'pts', label: 'ĐIỂM', w: 20, align: 'right', tone: 'points' },
+        ],
+        rows: standings.map(s => ({
+          name: s.teamName,
+          pair: `${s.player1Name} & ${s.player2Name}`,
+          P: s.played, W: s.won, D: s.drawn, L: s.lost,
+          gd: s.pointDifference > 0 ? `+${s.pointDifference}` : String(s.pointDifference),
+          pts: s.rankingPoints,
+        })),
+      })
+      toast.success('Đã tải PDF bảng xếp hạng')
+    } catch { toast.error('Xuất PDF thất bại') }
+  }
   const rounds      = Array.from(new Set(schedule.map(m => m.round))).sort((a, b) => a - b)
   // Lượt đi/lượt về: nhóm theo leg (1=đi, 2=về). Nhiều leg ⇒ hiện 2 mục.
   const legs        = Array.from(new Set(schedule.map(m => m.leg ?? 1))).sort((a, b) => a - b)
@@ -1124,7 +1198,7 @@ export function FixedDoublesDashboardPage() {
 
             {/* ── right panel ── */}
             <div className="col-span-12 lg:col-span-5 xl:col-span-4 space-y-4">
-              <CompactRankingCard standings={standings} />
+              <CompactRankingCard standings={standings} exportId={FD_EXPORT_ID} onExportPng={doExportPng} onExportPdf={doExportPdf} />
               {completed > 0 && (
                 <QuickStatsCard
                   totalFor={totalFor}
@@ -1139,7 +1213,7 @@ export function FixedDoublesDashboardPage() {
 
         {/* paired + has results */}
         {mg.status === 'PAIRED' && standings.length > 0 && (
-          <CompactRankingCard standings={standings} />
+          <CompactRankingCard standings={standings} exportId={FD_EXPORT_ID} onExportPng={doExportPng} onExportPdf={doExportPdf} />
         )}
       </div>
 
