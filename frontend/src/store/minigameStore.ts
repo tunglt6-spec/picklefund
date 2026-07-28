@@ -1925,10 +1925,19 @@ export const useMinigameStore = create<MinigameStore>()(
               notes: m.note ?? undefined,
             }
           })
-        set(s => ({
-          groups: [...s.groups.filter(g => g.minigameId !== minigameId), ...groups],
-          matches: [...s.matches.filter(m => m.minigameId !== minigameId), ...matches],
-        }))
+        // AN TOÀN: nếu participants (relation) chưa được nạp nhưng đã có đội-đơn (teamInfo:
+        // memberKey+tên), suy participants từ teams để computeStandings/BXH không rỗng.
+        set(s => {
+          const existingIds = new Set(s.participants.filter(p => p.minigameId === minigameId).map(p => p.memberId))
+          const derived: MiniGameParticipant[] = [...teamInfo.values()]
+            .filter(t => t.key && !existingIds.has(t.key))
+            .map(t => ({ id: t.key, minigameId, memberId: t.key, memberName: t.name || 'Người chơi', status: 'ACTIVE', isGuest: false }))
+          return {
+            groups: [...s.groups.filter(g => g.minigameId !== minigameId), ...groups],
+            matches: [...s.matches.filter(m => m.minigameId !== minigameId), ...matches],
+            participants: derived.length ? [...s.participants, ...derived] : s.participants,
+          }
+        })
       },
 
       getTeams: (minigameId) => get().teams.filter(t => t.minigameId === minigameId),
