@@ -9,15 +9,17 @@
  * StatusBadge/EmptyState) — token màu, không hardcode brand.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Wallet } from 'lucide-react'
+import { Users, AlertCircle, Wallet, FileSpreadsheet, FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
-  StatusBadge, EmptyState, ResponsiveTabs, type Column, type TabItem, type StatusTone,
+  StatusBadge, EmptyState, ResponsiveTabs, ActionButton, type Column, type TabItem, type StatusTone,
 } from '../../components/shared'
 
 function isLocalToken(token?: string | null) {
@@ -125,11 +127,42 @@ export function Debts() {
 
   const hasData = members.some((m) => m.status === 'active')
 
+  const periodSlug = (activePeriod?.name ?? 'ky').replace(/\s/g, '_')
+  const doExportExcel = () => {
+    exportGenericExcel('Cong_No_' + periodSlug, 'Công nợ',
+      ['Thành viên', 'Điện thoại', 'Trạng thái', 'Còn nợ (VNĐ)'],
+      rows.map((r) => [r.name, r.phone ?? '', STATUS_META[r.status].label, r.amount]),
+    )
+    toast.success('Đã xuất Excel công nợ')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Cong_No_' + periodSlug,
+      title: 'Công Nợ Cá Nhân',
+      subtitle: activePeriod ? `Kỳ ${activePeriod.name}` : undefined,
+      metaLeft: `${rows.length} thành viên · Tỷ lệ đã thu ${stats.collectRate}%`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Điện thoại' },
+        { header: 'Trạng thái', align: 'center' }, { header: 'Còn nợ', align: 'right' },
+      ],
+      rows: rows.map((r, i) => [i + 1, r.name, r.phone ?? '—', STATUS_META[r.status].label, r.amount > 0 ? formatVND(r.amount) : '—']),
+      summaryLabel: 'Tổng công nợ',
+      summaryValue: formatVND(stats.totalDebt),
+    })
+    toast.success('Đã xuất PDF công nợ')
+  }
+
   return (
     <PageShell>
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
+        actions={hasData ? (
+          <>
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel công nợ" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
+            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF công nợ" icon={<FileText size={16} />} onClick={doExportPdf} />
+          </>
+        ) : undefined}
       />
 
       {!hasData ? (

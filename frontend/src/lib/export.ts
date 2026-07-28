@@ -215,6 +215,52 @@ export async function exportExcel(
 }
 
 /* ════════════════════════════════════════
+   EXPORT GENERIC: bảng bất kỳ (Excel + PDF) — dùng chung cho các màn tổng hợp
+   (Công nợ, Chấm điểm, Kỳ quỹ, Chi thủ quỹ, Nhật ký...). Giữ đồng bộ mẫu BASE_CSS.
+════════════════════════════════════════ */
+type CellAlign = 'left' | 'right' | 'center'
+export interface GenericTableColumn { header: string; align?: CellAlign }
+
+function escHtml(v: string | number) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/** Excel 1 sheet từ headers + rows. */
+export function exportGenericExcel(fileBase: string, sheetName: string, headers: string[], rows: (string | number)[][]) {
+  exportExcel(fileBase, [{ name: sheetName.slice(0, 31), headers, rows }])
+}
+
+/** PDF bảng (vector-hoá qua html2canvas mẫu chung): header brand + bảng + summary tùy chọn. */
+export function exportGenericTablePDF(opts: {
+  fileBase: string
+  title: string
+  subtitle?: string
+  metaLeft?: string
+  columns: GenericTableColumn[]
+  rows: (string | number)[][]
+  summaryLabel?: string
+  summaryValue?: string
+}) {
+  const cls = (a?: CellAlign) => (a === 'right' ? 'right' : a === 'center' ? 'center' : '')
+  const thead = `<tr>${opts.columns.map(c => `<th class="${cls(c.align)}">${escHtml(c.header)}</th>`).join('')}</tr>`
+  const body = opts.rows.map(r =>
+    `<tr>${r.map((cell, i) => `<td class="${cls(opts.columns[i]?.align)}">${escHtml(cell)}</td>`).join('')}</tr>`,
+  ).join('')
+  return downloadPDF([`
+    <div class="header">
+      <h1>${escHtml(brandName())} · ${escHtml(opts.title)}</h1>
+      ${opts.subtitle ? `<p>${escHtml(opts.subtitle)}</p>` : ''}
+      <div class="header-meta"><span>${escHtml(opts.metaLeft ?? '')}</span><span>Xuất ngày: ${today()}</span></div>
+    </div>
+    <table><thead>${thead}</thead><tbody>${body}</tbody></table>
+    ${opts.summaryLabel ? `<div class="summary"><span class="label">${escHtml(opts.summaryLabel)}</span><span class="value">${escHtml(opts.summaryValue ?? '')}</span></div>` : ''}
+    <div class="footer">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>
+  `], opts.fileBase)
+}
+
+/* ════════════════════════════════════════
    EXPORT: Ledger (Sổ Quỹ)
 ════════════════════════════════════════ */
 export interface LedgerRow { date: string; type: string; desc: string; amount: number; balance: number }

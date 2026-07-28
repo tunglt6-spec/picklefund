@@ -18,6 +18,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { BulkImportModal } from '../../components/admin/BulkImportModal'
 import toast from 'react-hot-toast'
 
@@ -399,6 +400,30 @@ export function FundPeriods() {
     { name: 'Quỹ Chính', value: stats.chung.balance },
     { name: 'Quỹ Phụ', value: stats.game.balance },
   ]
+
+  // ── Xuất Excel/PDF danh sách kỳ quỹ (theo bộ lọc hiện tại) ──
+  const periodTypeLabel = (p: FundPeriod) => ((p.type ?? 'chung') === 'chung' ? 'Quỹ Chính' : 'Quỹ Phụ')
+  const doExportExcel = () => {
+    exportGenericExcel('Ky_Quy', 'Kỳ quỹ',
+      ['Tên kỳ', 'Loại', 'Trạng thái', 'Từ ngày', 'Đến ngày', 'Mức đóng (VNĐ)'],
+      filtered.map((p) => [p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '', p.contributionAmount]),
+    )
+    toast.success('Đã xuất Excel kỳ quỹ')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: 'Ky_Quy',
+      title: 'Danh Sách Kỳ Quỹ',
+      metaLeft: `${filtered.length} kỳ`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Tên kỳ' }, { header: 'Loại', align: 'center' },
+        { header: 'Trạng thái', align: 'center' }, { header: 'Từ ngày', align: 'center' },
+        { header: 'Đến ngày', align: 'center' }, { header: 'Mức đóng', align: 'right' },
+      ],
+      rows: filtered.map((p, i) => [i + 1, p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '—', formatVND(p.contributionAmount)]),
+    })
+    toast.success('Đã xuất PDF kỳ quỹ')
+  }
 
   const handleSave = (
     type: FundPeriodType,
@@ -872,16 +897,26 @@ export function FundPeriods() {
       <PageHeader
         title="Kỳ Quỹ"
         subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
-        actions={isMember ? undefined : (
-          <div className="flex gap-2">
-            <Button onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
-              <Building2 size={14} />+ Tạo Quỹ Chính
-            </Button>
-            <Button variant="outline" onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
-              <Wallet size={14} />+ Tạo Quỹ Phụ
-            </Button>
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {filtered.length > 0 && (
+              <>
+                <Button variant="outline" onClick={doExportExcel}><FileSpreadsheet size={14} />Excel</Button>
+                <Button variant="outline" onClick={doExportPdf}><FileText size={14} />PDF</Button>
+              </>
+            )}
+            {!isMember && (
+              <>
+                <Button onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}>
+                  <Building2 size={14} />+ Tạo Quỹ Chính
+                </Button>
+                <Button variant="outline" onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}>
+                  <Wallet size={14} />+ Tạo Quỹ Phụ
+                </Button>
+              </>
+            )}
           </div>
-        )}
+        }
       />
 
       <div className="flex flex-col gap-5">

@@ -12,7 +12,7 @@ import {
   Image as ImageIcon, FileDown,
 } from 'lucide-react'
 import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
-import { exportStandingsPDF, exportKnockoutPDF } from '../../../lib/export'
+import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -301,6 +301,68 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     } catch {
       toast.error('Xuất ảnh thất bại')
     }
+  }
+
+  // ── Xuất ảnh/PDF LỊCH & KẾT QUẢ (tab schedule) — knockout dùng PDF sơ đồ nhánh, vòng tròn dùng bảng lịch ──
+  const exportSchedule = async (fmt: 'png' | 'pdf') => {
+    const el = `sched-${id}`
+    const fname = `Lich-${mg?.name ?? 'giai-dau'}`.replace(/\s+/g, '-')
+    if (fmt === 'pdf' && isKnockout) {
+      try {
+        await exportKnockoutPDF({
+          clubName: getClubData(clubId).settings?.name ?? 'CLB',
+          tournamentName: mg?.name ?? 'Giải đấu',
+          sportLabel: ui.name,
+          championName: champion ?? undefined,
+          rounds: matchGroups.map(grp => ({
+            label: koRoundLabel(grp.matches.length, grp.round),
+            matches: grp.matches.map(m => ({
+              teamA: m.teamA?.name,
+              teamB: m.teamB?.name,
+              scoreA: m.status === 'COMPLETED' ? m.scoreA : null,
+              scoreB: m.status === 'COMPLETED' ? m.scoreB : null,
+              winner: m.winnerId ? (m.winnerId === m.teamAId ? 'A' : m.winnerId === m.teamBId ? 'B' : null) : null,
+              walkover: !m.teamBId,
+            })),
+          })),
+        })
+      } catch { toast.error('Xuất PDF thất bại') }
+      return
+    }
+    if (fmt === 'pdf' && !isKnockout) {
+      try {
+        await exportSchedulePDF({
+          clubName: getClubData(clubId).settings?.name ?? 'CLB',
+          tournamentName: mg?.name ?? 'Giải đấu',
+          sportLabel: ui.name,
+          formatLabel: hasDoubleLeg ? 'Vòng tròn (lượt đi & về)' : 'Vòng tròn',
+          rankNote: 'Tỷ số theo Đội 1 – Đội 2. Trận chưa đấu để dấu “–”.',
+          stats: [
+            { label: 'Số đội', value: teams.length },
+            { label: 'Tổng trận', value: matches.length },
+            { label: 'Đã hoàn thành', value: `${completedMatches}/${matches.length}` },
+          ],
+          columns: [
+            { key: 'vong', label: 'VÒNG', w: 24, align: 'left', bold: true },
+            { key: 't1', label: 'ĐỘI 1', w: 58, align: 'left' },
+            { key: 'sc', label: 'TỶ SỐ', w: 22, align: 'center', bold: true },
+            { key: 't2', label: 'ĐỘI 2', w: 58, align: 'left' },
+            { key: 'st', label: 'TRẠNG THÁI', w: 24, align: 'right', tone: 'muted' },
+          ],
+          rows: matchGroups.flatMap(grp => grp.matches.map(m => ({
+            vong: hasDoubleLeg ? `${grp.leg === 1 ? 'Đi' : 'Về'} · V${grp.round}` : `Vòng ${grp.round}`,
+            t1: teamName(m, 'A'),
+            sc: m.status === 'COMPLETED' ? `${m.scoreA} - ${m.scoreB}` : '–',
+            t2: teamName(m, 'B'),
+            st: m.status === 'COMPLETED' ? 'Đã xong' : 'Chờ',
+          }))),
+        })
+      } catch { toast.error('Xuất PDF thất bại') }
+      return
+    }
+    try {
+      await exportInfographicAsPng(el, fname)
+    } catch { toast.error('Xuất ảnh thất bại') }
   }
 
   // ── Bảng xếp hạng (tính client từ matches đã hoàn thành) ──
@@ -599,6 +661,8 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     {isKnockout ? 'Loại trực tiếp' : `Vòng tròn${hasDoubleLeg ? ' (lượt đi & về)' : ''}`} · {matches.length} trận · đã có kết quả {completedMatches}/{matches.length}
                   </p>
                   <div className="flex items-center gap-2">
+                    <button onClick={() => exportSchedule('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                    <button onClick={() => exportSchedule('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
                     {canAdvance && (
                       <button onClick={advanceKnockout} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
                         <ChevronRight size={14} /> Tạo vòng kế tiếp
@@ -609,6 +673,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     </button>
                   </div>
                 </div>
+                <div id={`sched-${id}`} className="flex flex-col gap-4">
                 {matchGroups.map(grp => (
                   <div key={`${grp.leg}-${grp.round}`}>
                     <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] mb-2">
@@ -650,6 +715,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     </div>
                   </div>
                 ))}
+                </div>
                 {isKnockout && !canAdvance && !isFinalReached && !currentComplete && (
                   <p className="text-xs text-slate-400">Nhập đủ tỉ số (có đội thắng) cho vòng hiện tại để mở vòng kế tiếp.</p>
                 )}

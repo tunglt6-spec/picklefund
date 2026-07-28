@@ -9,9 +9,10 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star } from 'lucide-react'
+import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, FileSpreadsheet, FileText } from 'lucide-react'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
   StatusBadge, EmptyState, LoadingState, ErrorState, ActionButton, ResponsiveTabs,
@@ -202,6 +203,28 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
     return { total: rows.length, excellent, good, review }
   }, [rows])
 
+  const doExportExcel = () => {
+    exportGenericExcel(`Cham_Diem_${month}`, 'Bảng điểm',
+      ['Thành viên', 'Điểm', 'Xếp loại'],
+      rows.map((r) => [r.memberName, r.total, r.classification]),
+    )
+    toast.success('Đã xuất Excel bảng điểm')
+  }
+  const doExportPdf = () => {
+    exportGenericTablePDF({
+      fileBase: `Cham_Diem_${month}`,
+      title: 'Bảng Điểm Thành Viên',
+      subtitle: monthLabel(month),
+      metaLeft: `${stats.total} TV · Xuất sắc ${stats.excellent} · Tốt ${stats.good} · Cần lưu ý ${stats.review}`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Thành viên' },
+        { header: 'Điểm', align: 'center' }, { header: 'Xếp loại', align: 'center' },
+      ],
+      rows: rows.map((r, i) => [i + 1, r.memberName, r.total, r.classification]),
+    })
+    toast.success('Đã xuất PDF bảng điểm')
+  }
+
   const handleFinalize = async () => {
     setConfirmFinalize(false)
     setBusy(true)
@@ -260,8 +283,14 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
           </select>
         </label>
 
-        {isAdmin && !isMember && (
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {rows.length > 0 && (
+            <>
+              <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel bảng điểm" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} className="min-h-11" />
+              <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF bảng điểm" icon={<FileText size={16} />} onClick={doExportPdf} className="min-h-11" />
+            </>
+          )}
+          {isAdmin && !isMember && (
             <ActionButton
               icon={<Lock size={16} />}
               onClick={() => setConfirmFinalize(true)}
@@ -270,8 +299,8 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
             >
               Chốt tháng
             </ActionButton>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* KPI */}

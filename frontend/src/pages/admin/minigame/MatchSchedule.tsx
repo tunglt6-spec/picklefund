@@ -10,11 +10,26 @@ import { ScoreEntryDrawer } from '../../../components/minigame/ScoreEntryDrawer'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useAuthStore } from '../../../store/authStore'
+import { useClubDataStore } from '../../../store/clubDataStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
+import { ScheduleExportButtons } from '../../../components/minigame/ScheduleExportButtons'
+import { exportSchedulePDF } from '../../../lib/export'
+import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
 
 type Filter = 'all' | 'pending' | 'completed' | string
+
+const MS_SPORT_LABEL: Record<string, string> = {
+  PICKLEBALL: 'Pickleball', TENNIS: 'Tennis', BADMINTON: 'Cầu lông', TABLE_TENNIS: 'Bóng bàn',
+  FOOTBALL: 'Bóng đá', BASKETBALL: 'Bóng rổ', GOLF: 'Golf',
+}
+function msStatusLabel(s: string) {
+  return s === 'COMPLETED' ? 'Đã xong' : s === 'PLAYING' ? 'Đang đấu' : s === 'CANCELLED' ? 'Đã hủy' : 'Chờ'
+}
+const MS_DOUBLES_ID = 'ms-doubles-schedule-export'
+const MS_GROUP_ID = 'ms-group-schedule-export'
+const slugName = (s: string) => `Lich_${s}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')
 
 /** Lịch Thi Đấu for RANDOM_DOUBLES minigames — sourced from rounds/doublesMatches
  *  (kept in sync with "Rút Thăm Vòng Mới" and the round/group panel on the dashboard),
@@ -22,11 +37,58 @@ type Filter = 'all' | 'pending' | 'completed' | string
 function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; minigameName: string }) {
   const navigate = useNavigate()
   const { getMinigame, doublesMatches, rounds, removeDoublesMatch } = useMinigameStore()
-  const { accessToken } = useAuthStore()
+  const { accessToken, user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
   const isLocalToken = !!accessToken && (accessToken.startsWith('local-token-') || accessToken.startsWith('token-'))
   const mg = getMinigame(minigameId)
   const myMatches = doublesMatches.filter(m => m.minigameId === minigameId)
   const myRounds = rounds.filter(r => r.minigameId === minigameId).sort((a, b) => a.roundNumber - b.roundNumber)
+
+  // ── Xuất Ảnh/PDF lịch (đôi ngẫu nhiên) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
+  const doExportPng = async () => {
+    try { await exportInfographicAsPng(MS_DOUBLES_ID, slugName(minigameName)); toast.success('Đã tải ảnh lịch thi đấu') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportPdf = async () => {
+    if (myMatches.length === 0) { toast.error('Chưa có lịch thi đấu'); return }
+    try {
+      const sorted = [...myMatches].sort((a, b) => {
+        const ra = myRounds.find(r => r.id === a.roundId)?.roundNumber ?? 0
+        const rb = myRounds.find(r => r.id === b.roundId)?.roundNumber ?? 0
+        return ra !== rb ? ra - rb : a.matchNumber - b.matchNumber
+      })
+      const done = myMatches.filter(m => m.status === 'COMPLETED').length
+      await exportSchedulePDF({
+        clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
+        tournamentName: minigameName,
+        sportLabel: MS_SPORT_LABEL[mg?.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
+        formatLabel: 'Đôi ngẫu nhiên',
+        rankNote: 'Tỷ số theo Cặp 1 – Cặp 2. Trận chưa đấu để dấu “–”.',
+        stats: [
+          { label: 'Số vòng', value: myRounds.length },
+          { label: 'Tổng trận', value: myMatches.length },
+          { label: 'Đã hoàn thành', value: `${done}/${myMatches.length}` },
+        ],
+        columns: [
+          { key: 'stt', label: '#', w: 10, align: 'left' },
+          { key: 'vong', label: 'VÒNG', w: 18, align: 'center', bold: true },
+          { key: 't1', label: 'CẶP 1', w: 54, align: 'left' },
+          { key: 'sc', label: 'TỶ SỐ', w: 22, align: 'center', bold: true },
+          { key: 't2', label: 'CẶP 2', w: 54, align: 'left' },
+          { key: 'st', label: 'TRẠNG THÁI', w: 28, align: 'right', tone: 'muted' },
+        ],
+        rows: sorted.map((m, i) => ({
+          stt: i + 1,
+          vong: String(myRounds.find(r => r.id === m.roundId)?.roundNumber ?? '–'),
+          t1: m.team1.map(p => p.memberName).join(' & '),
+          sc: m.status === 'COMPLETED' ? `${m.team1Score} - ${m.team2Score}` : '–',
+          t2: m.team2.map(p => p.memberName).join(' & '),
+          st: msStatusLabel(m.status),
+        })),
+      })
+      toast.success('Đã tải PDF lịch thi đấu')
+    } catch { toast.error('Xuất PDF thất bại') }
+  }
 
   // Xóa trận: persist server (đảo thống kê nếu đã có KQ) TRƯỚC rồi mới xóa local — fix lỗi
   // refresh trận/kết quả hiện lại + BXH sai. Chế độ demo (local-token) chỉ xóa cục bộ.
@@ -77,6 +139,9 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
             <p className="text-[11px] text-slate-400 truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
+          {myRounds.length > 0 && (
+            <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
+          )}
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
             className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
@@ -111,7 +176,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               ))}
             </div>
 
-            <div className="px-4 py-4 space-y-3">
+            <div id={MS_DOUBLES_ID} className="px-4 py-4 space-y-3">
               {filtered.length === 0 ? (
                 <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
               ) : filtered.map((m, idx) => {
@@ -201,9 +266,14 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         title={`Lịch Thi Đấu – ${minigameName}`}
         subtitle={`${myMatches.length} trận · ${myRounds.length} vòng`}
         actions={
-          <Button size="sm" onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}>
-            <ClipboardEdit size={14} /> Nhập Kết Quả
-          </Button>
+          <div className="flex items-center gap-2">
+            {myRounds.length > 0 && (
+              <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" />
+            )}
+            <Button size="sm" onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}>
+              <ClipboardEdit size={14} /> Nhập Kết Quả
+            </Button>
+          </div>
         }
       />
 
@@ -235,7 +305,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               ))}
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div id={MS_DOUBLES_ID} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -366,12 +436,61 @@ export function MatchSchedule() {
   const { id } = useParams<{ id: string }>()
   useMinigameDetailSync(id)
   const navigate = useNavigate()
-  const { accessToken } = useAuthStore()
+  const { accessToken, user } = useAuthStore()
+  const { getClubData } = useClubDataStore()
   const { getMinigame, matches, groups, generateSchedule } = useMinigameStore()
   const mg = getMinigame(id!)
   const myMatches = matches.filter(m => m.minigameId === id)
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
   const isLocalToken = !!accessToken && (accessToken.startsWith('local-token-') || accessToken.startsWith('token-'))
+
+  // ── Xuất Ảnh/PDF lịch (vòng bảng) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
+  const doExportPng = async () => {
+    try { await exportInfographicAsPng(MS_GROUP_ID, slugName(mg?.name ?? 'lich')); toast.success('Đã tải ảnh lịch thi đấu') }
+    catch { toast.error('Xuất ảnh thất bại') }
+  }
+  const doExportPdf = async () => {
+    if (myMatches.length === 0) { toast.error('Chưa có lịch thi đấu'); return }
+    try {
+      const sorted = [...myMatches].sort((a, b) => {
+        const ga = myGroups.find(g => g.id === a.groupId)?.groupOrder ?? 0
+        const gb = myGroups.find(g => g.id === b.groupId)?.groupOrder ?? 0
+        return ga !== gb ? ga - gb : (a.round ?? 1) - (b.round ?? 1)
+      })
+      const done = myMatches.filter(m => m.status === 'COMPLETED').length
+      await exportSchedulePDF({
+        clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
+        tournamentName: mg?.name ?? 'Giải đấu',
+        sportLabel: MS_SPORT_LABEL[mg?.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
+        formatLabel: 'Vòng bảng',
+        rankNote: 'Tỷ số theo Người chơi 1 – Người chơi 2. Trận chưa đấu để dấu “–”.',
+        stats: [
+          { label: 'Số bảng', value: myGroups.length },
+          { label: 'Tổng trận', value: myMatches.length },
+          { label: 'Đã hoàn thành', value: `${done}/${myMatches.length}` },
+        ],
+        columns: [
+          { key: 'stt', label: '#', w: 10, align: 'left' },
+          { key: 'bang', label: 'BẢNG', w: 20, align: 'center', bold: true },
+          { key: 'vong', label: 'VÒNG', w: 14, align: 'center' },
+          { key: 'p1', label: 'NGƯỜI CHƠI 1', w: 46, align: 'left' },
+          { key: 'sc', label: 'TỶ SỐ', w: 20, align: 'center', bold: true },
+          { key: 'p2', label: 'NGƯỜI CHƠI 2', w: 46, align: 'left' },
+          { key: 'st', label: 'TRẠNG THÁI', w: 30, align: 'right', tone: 'muted' },
+        ],
+        rows: sorted.map((m, i) => ({
+          stt: i + 1,
+          bang: myGroups.find(g => g.id === m.groupId)?.groupName ?? '–',
+          vong: String(m.round ?? 1),
+          p1: m.player1Name,
+          sc: m.status === 'COMPLETED' ? `${m.player1Score} - ${m.player2Score}` : '–',
+          p2: m.player2Name,
+          st: msStatusLabel(m.status),
+        })),
+      })
+      toast.success('Đã tải PDF lịch thi đấu')
+    } catch { toast.error('Xuất PDF thất bại') }
+  }
 
   // Self-heal (CHỈ chế độ demo/local-token): bảng đã có nhưng chưa có lịch → dựng cục bộ.
   // Với token thật, lịch là của server (hydrate qua useMinigameDetailSync) — KHÔNG dựng cục bộ
@@ -442,6 +561,9 @@ export function MatchSchedule() {
             <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
             <p className="text-[11px] text-slate-400 truncate">{mg.name} · {myMatches.length} trận</p>
           </div>
+          {myMatches.length > 0 && (
+            <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
+          )}
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
             className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
@@ -464,7 +586,7 @@ export function MatchSchedule() {
           ))}
         </div>
 
-        <div className="px-4 py-4 space-y-3">
+        <div id={MS_GROUP_ID} className="px-4 py-4 space-y-3">
           {mFiltered.length === 0 ? (
             <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
           ) : mFiltered.map((m, idx) => {
@@ -525,9 +647,14 @@ export function MatchSchedule() {
         title={`Lịch Thi Đấu – ${mg.name}`}
         subtitle={`${myMatches.length} trận`}
         actions={
-          <Button size="sm" onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}>
-            <ClipboardEdit size={14} /> Nhập Kết Quả
-          </Button>
+          <div className="flex items-center gap-2">
+            {myMatches.length > 0 && (
+              <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" />
+            )}
+            <Button size="sm" onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}>
+              <ClipboardEdit size={14} /> Nhập Kết Quả
+            </Button>
+          </div>
         }
       />
 
@@ -552,7 +679,7 @@ export function MatchSchedule() {
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div id={MS_GROUP_ID} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
