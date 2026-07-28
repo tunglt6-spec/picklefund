@@ -3,7 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ActionButton, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, type Column } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
@@ -201,12 +201,7 @@ export function MemberContributions() {
   return (
     <PageShell maxWidth={1200}>
       <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName}
-        actions={filtered.length > 0 ? (
-          <>
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel đóng quỹ" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF đóng quỹ" icon={<FileText size={16} />} onClick={doExportPdf} />
-          </>
-        ) : undefined}
+        actions={filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
       {/* KPI — MetricCard giống Admin */}

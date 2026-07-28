@@ -9,13 +9,13 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, FileSpreadsheet, FileText } from 'lucide-react'
+import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star } from 'lucide-react'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
-  StatusBadge, EmptyState, LoadingState, ErrorState, ActionButton, ResponsiveTabs,
+  StatusBadge, EmptyState, LoadingState, ErrorState, ActionButton, ExportActions, ResponsiveTabs,
   type Column, type TabItem, type StatusTone,
 } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
@@ -284,12 +284,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         </label>
 
         <div className="flex flex-wrap items-center gap-2">
-          {rows.length > 0 && (
-            <>
-              <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel bảng điểm" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} className="min-h-11" />
-              <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF bảng điểm" icon={<FileText size={16} />} onClick={doExportPdf} className="min-h-11" />
-            </>
-          )}
+          {rows.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
           {isAdmin && !isMember && (
             <ActionButton
               icon={<Lock size={16} />}

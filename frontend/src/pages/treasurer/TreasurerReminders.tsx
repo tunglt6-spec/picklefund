@@ -270,11 +270,11 @@ export function TreasurerReminders() {
             ? <div className="flex items-center gap-2">
                 <button onClick={doExportExcel} aria-label="Xuất Excel"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
-                  <FileSpreadsheet size={14} />Excel
+                  <FileSpreadsheet size={14} />Xuất Excel
                 </button>
                 <button onClick={doExportPdf} aria-label="Xuất PDF"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
-                  <FileText size={14} />PDF
+                  <FileText size={14} />Xuất PDF
                 </button>
                 <button
                   onClick={sendAll}

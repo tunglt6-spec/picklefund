@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus, Users, UserCheck, UserMinus, Sparkles, X, Edit2, Trash2, Power,
-  FileSpreadsheet, FileText, Phone, Mail, Calendar, Wallet, KeyRound,
+  Phone, Mail, Calendar, Wallet, KeyRound,
   ClipboardList, Eye, CircleUserRound, AlertTriangle, RefreshCw,
 } from 'lucide-react'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -26,7 +26,7 @@ import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   PageShell, PageHeader, MetricCard, FilterBar, DataTable, type Column,
-  StatusBadge, type StatusTone, ActionButton, EmptyState, LoadingState, MobileCardList,
+  StatusBadge, type StatusTone, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
   BulkActionBar, RowCheckbox,
 } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
@@ -673,8 +673,7 @@ export function Members() {
   /* ── Header actions (chỉ hiển thị action có backend hỗ trợ) ── */
   const headerActions = (
     <>
-      <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-      <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF" icon={<FileText size={16} />} onClick={doExportPDF} />
+      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} />
       <ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton>
       <ActionButton icon={<Plus size={16} />} onClick={openCreate}>Thêm thành viên</ActionButton>
     </>

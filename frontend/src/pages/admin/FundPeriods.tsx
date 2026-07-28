@@ -901,8 +901,8 @@ export function FundPeriods() {
           <div className="flex flex-wrap gap-2">
             {filtered.length > 0 && (
               <>
-                <Button variant="outline" onClick={doExportExcel}><FileSpreadsheet size={14} />Excel</Button>
-                <Button variant="outline" onClick={doExportPdf}><FileText size={14} />PDF</Button>
+                <Button variant="outline" onClick={doExportExcel}><FileSpreadsheet size={14} />Xuất Excel</Button>
+                <Button variant="outline" onClick={doExportPdf}><FileText size={14} />Xuất PDF</Button>
               </>
             )}
             {!isMember && (

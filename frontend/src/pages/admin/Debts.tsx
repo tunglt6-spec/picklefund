@@ -9,7 +9,7 @@
  * StatusBadge/EmptyState) — token màu, không hardcode brand.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Wallet, FileSpreadsheet, FileText } from 'lucide-react'
+import { Users, AlertCircle, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -19,7 +19,7 @@ import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
-  StatusBadge, EmptyState, ResponsiveTabs, ActionButton, type Column, type TabItem, type StatusTone,
+  StatusBadge, EmptyState, ResponsiveTabs, ExportActions, type Column, type TabItem, type StatusTone,
 } from '../../components/shared'
 
 function isLocalToken(token?: string | null) {
@@ -157,12 +157,7 @@ export function Debts() {
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
-        actions={hasData ? (
-          <>
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel công nợ" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF công nợ" icon={<FileText size={16} />} onClick={doExportPdf} />
-          </>
-        ) : undefined}
+        actions={hasData ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
       {!hasData ? (

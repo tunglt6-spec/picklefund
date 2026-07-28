@@ -4,14 +4,14 @@
  * mới, không đổi nghiệp vụ — chỉ tổng hợp & hiển thị.
  */
 import { useMemo, useState } from 'react'
-import { Search, DollarSign, CalendarCheck, TrendingUp, Activity, FileSpreadsheet, FileText } from 'lucide-react'
+import { Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatVND, cn } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
-import { PageShell, PageHeader, MetricCard, EmptyState, ActionButton } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, EmptyState, ExportActions } from '../../components/shared'
 
 const fmtDate = (s?: string) => (s ? s.slice(0, 10).split('-').reverse().join('/') : '')
 
@@ -72,12 +72,7 @@ export function MemberActivity() {
   return (
     <PageShell>
       <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ từng thành viên · điểm danh · đóng quỹ · chuyên cần"
-        actions={
-          <>
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel hoạt động" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF hoạt động" icon={<FileText size={16} />} onClick={doExportPdf} />
-          </>
-        }
+        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
       />
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">

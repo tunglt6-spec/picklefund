@@ -597,12 +597,12 @@ export function Contributions() {
               const pName = activePeriod?.name ?? 'Thu_Quy'
               exportContribExcel(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))
               toast.success('Đã xuất Excel danh sách thu quỹ!')
-            }}><FileSpreadsheet size={14} />Excel</Button>
+            }}><FileSpreadsheet size={14} />Xuất Excel</Button>
             <Button variant="outline" onClick={() => {
               const pName = activePeriod?.name ?? 'Thu Quỹ'
               exportContribPDF(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)
               toast.success('Đã xuất PDF danh sách thu quỹ!')
-            }}><FileText size={14} />PDF</Button>
+            }}><FileText size={14} />Xuất PDF</Button>
             {!isMember && (
               <Button onClick={openCreate}>
                 <Plus size={15} />Ghi nhận thu

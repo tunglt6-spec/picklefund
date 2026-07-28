@@ -435,15 +435,15 @@ function ExportButtons({ onPng, onPdf, ariaScope }: {
   return (
     <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
       {onPng && (
-        <button onClick={onPng} aria-label={`Tải ảnh ${ariaScope}`} title="Tải ảnh"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-90 transition-opacity">
-          <ImageIcon size={14} /> Ảnh
+        <button onClick={onPng} aria-label={`Xuất ảnh ${ariaScope}`} title="Xuất ảnh"
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-90 transition-opacity">
+          <ImageIcon size={15} /> Xuất ảnh
         </button>
       )}
       {onPdf && (
         <button onClick={onPdf} aria-label={`Xuất PDF ${ariaScope}`} title="Xuất PDF"
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors">
-          <FileText size={14} /> PDF
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors">
+          <FileText size={15} /> Xuất PDF
         </button>
       )}
     </div>

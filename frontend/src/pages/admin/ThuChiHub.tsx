@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Wallet, Gamepad2, TrendingUp, TrendingDown, AlertCircle,
   Receipt, FileBarChart, X, Eye, RefreshCw, ArrowUpRight, ArrowDownRight, Layers,
-  FileSpreadsheet, FileText,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
@@ -35,7 +34,7 @@ import {
 } from '../../types'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, FilterBar, DataTable, type Column,
-  StatusBadge, type StatusTone, ActionButton, EmptyState, LoadingState, MobileCardList,
+  StatusBadge, type StatusTone, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
   ResponsiveTabs,
 } from '../../components/shared'
 
@@ -397,13 +396,8 @@ export function ThuChiHub() {
 
   const headerActions = (
     <>
-      {filteredTx.length > 0 && (
-        <>
-          <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel giao dịch" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-          <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF giao dịch" icon={<FileText size={16} />} onClick={doExportPdf} />
-        </>
-      )}
-      <ActionButton variant="secondary" iconOnly ariaLabel="Báo cáo tổng hợp" icon={<FileBarChart size={16} />} onClick={() => navigate('/reports')} />
+      {filteredTx.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+      <ActionButton variant="secondary" icon={<FileBarChart size={16} />} onClick={() => navigate('/reports')}>Báo cáo</ActionButton>
       <ActionButton variant="secondary" icon={<TrendingDown size={15} />} onClick={() => navigate('/expenses')}>Thêm chi phí</ActionButton>
       <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/contributions')}>Thu quỹ</ActionButton>
     </>

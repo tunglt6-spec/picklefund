@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
 } from 'recharts'
-import { ArrowUpRight, ArrowDownLeft, Wallet, Image as ImageIcon, FileText } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
@@ -18,7 +18,7 @@ import { exportInfographicAsPng, exportInfographicAsPdf } from '../../components
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, EmptyState, LoadingState, ErrorState,
-  StatusBadge, ActionButton, type StatusTone,
+  StatusBadge, ExportActions, type StatusTone,
 } from '../../components/shared'
 
 const FD_EXPORT_ID = 'finance-dashboard-export'
@@ -143,12 +143,7 @@ export function FinanceDashboard() {
       <PageHeader
         title="Dashboard tài chính"
         subtitle={activePeriod ? `Kỳ quỹ: ${activePeriod.name} · nguồn: Finance Engine` : 'Tổng quan tài chính CLB'}
-        actions={summary ? (
-          <>
-            <ActionButton variant="secondary" iconOnly ariaLabel="Tải ảnh dashboard" icon={<ImageIcon size={16} />} onClick={doExportPng} />
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF dashboard" icon={<FileText size={16} />} onClick={doExportPdf} />
-          </>
-        ) : undefined}
+        actions={summary ? <ExportActions onImage={doExportPng} onPdf={doExportPdf} /> : undefined}
       />
 
       {!activePeriod ? (

@@ -4,12 +4,12 @@
  * ở backend (client không override). Chỉ log của CLB mình. V2.2 shared-kit + trạng thái.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { ScrollText, Search, ChevronLeft, ChevronRight, FileSpreadsheet, FileText } from 'lucide-react'
+import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import {
-  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ActionButton,
+  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ExportActions,
   type StatusTone,
 } from '../../../components/shared'
 
@@ -97,12 +97,7 @@ export function AuditLogViewer() {
       <PageHeader
         title="Audit Logs"
         subtitle="Nhật ký kiểm toán — các thao tác trong CLB của bạn"
-        actions={logs.length > 0 ? (
-          <>
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel nhật ký" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} />
-            <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF nhật ký" icon={<FileText size={16} />} onClick={doExportPdf} />
-          </>
-        ) : undefined}
+        actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
       <div className="flex flex-col gap-4">

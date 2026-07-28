@@ -33,7 +33,7 @@ import { InfographicPreviewModal } from '../../components/reports/infographic/In
 import { mapToInfographicData } from '../../components/reports/infographic/infographic.utils'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, FilterBar, DataTable, type Column,
-  StatusBadge, ActionButton, EmptyState, LoadingState, MobileCardList, ResponsiveTabs,
+  StatusBadge, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList, ResponsiveTabs,
 } from '../../components/shared'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz). */
@@ -338,8 +338,7 @@ export function Reports() {
 
   const headerActions = (
     <>
-      <ActionButton variant="secondary" iconOnly ariaLabel="Xuất Excel" icon={<FileSpreadsheet size={16} />} onClick={doExportExcel} disabled={!officialReady} title={officialReady ? 'Xuất Excel' : EXPORT_HINT} />
-      <ActionButton variant="secondary" iconOnly ariaLabel="Xuất PDF" icon={<FileText size={16} />} onClick={doExportPDF} disabled={!officialReady} title={officialReady ? 'Xuất PDF' : EXPORT_HINT} />
+      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady} />
       <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!officialReady} title={officialReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
     </>
   )
