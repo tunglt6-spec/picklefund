@@ -160,8 +160,12 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
     }
   }
   const dashLink = `/minigames/${featured?.id}`
-  const standingsLink = isTeam || isGolf ? dashLink : `/minigames/${featured?.id}/standings`
-  const scheduleLink = isTeam || isGolf ? dashLink : `/minigames/${featured?.id}/schedule`
+  // Đôi cố định cũng có BXH/lịch RIÊNG trong dashboard (giống đội/golf) → trang BXH/lịch generic
+  // chỉ cho RANDOM_DOUBLES + GROUP_STAGE. Tránh link tới trang generic sẽ trống/sai.
+  const isFixedDoubles = featured?.formatType === 'FIXED_DOUBLES_ROUND_ROBIN'
+  const useDashboardViews = isTeam || isGolf || isFixedDoubles
+  const standingsLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/standings`
+  const scheduleLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/schedule`
 
   const card = 'rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]'
 

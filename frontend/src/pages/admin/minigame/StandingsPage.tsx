@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -48,6 +48,15 @@ export function StandingsPage() {
 
   const [activeTab, setActiveTab] = useState<'all' | string>('all')
   const isMobile = useIsMobile()
+
+  // Trang BXH generic chỉ phục vụ RANDOM_DOUBLES + GROUP_STAGE. Format đội (đôi cố định/bóng đá/
+  // bóng rổ) & golf có BXH RIÊNG trong dashboard của chúng → điều hướng về dashboard (tránh trang
+  // trống do đọc nhầm slice matches/groups). Chặn được cả #1/#3 trong audit.
+  useEffect(() => {
+    if (mg && mg.formatType !== 'RANDOM_DOUBLES' && mg.formatType !== 'GROUP_STAGE') {
+      navigate(`/minigames/${id}`, { replace: true })
+    }
+  }, [mg, id, navigate])
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">

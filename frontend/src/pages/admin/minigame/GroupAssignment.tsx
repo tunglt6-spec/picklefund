@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown } from 'lucide-react'
 import api from '../../../lib/api'
@@ -25,6 +25,15 @@ export function GroupAssignment() {
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
   const [openMove, setOpenMove] = useState<string | null>(null)
   const isMobile = useIsMobile()
+
+  // Chia bảng chỉ dành cho GROUP_STAGE (RANDOM_DOUBLES có thông báo riêng bên dưới). Format đội
+  // (đôi cố định/bóng đá/bóng rổ) & golf KHÔNG chia bảng → điều hướng về dashboard (tránh dead-end
+  // "Chia Bảng Tự Động" báo lỗi). Chặn #5 trong audit.
+  useEffect(() => {
+    if (mg && mg.formatType !== 'GROUP_STAGE' && mg.formatType !== 'RANDOM_DOUBLES') {
+      navigate(`/minigames/${id}`, { replace: true })
+    }
+  }, [mg, id, navigate])
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">

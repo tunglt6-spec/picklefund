@@ -386,6 +386,15 @@ export function MatchSchedule() {
   const [scoreMatch, setScoreMatch] = useState<MiniGameMatch | null>(null)
   const isMobile = useIsMobile()
 
+  // Trang Lịch generic chỉ phục vụ RANDOM_DOUBLES (nhánh dưới) + GROUP_STAGE (bảng matches).
+  // Format đội (đôi cố định/bóng đá/bóng rổ) & golf có lịch RIÊNG trong dashboard → điều hướng về
+  // dashboard (tránh "Không có trận nào" do slice matches trống). Chặn #2/#4 trong audit.
+  useEffect(() => {
+    if (mg && mg.formatType !== 'RANDOM_DOUBLES' && mg.formatType !== 'GROUP_STAGE') {
+      navigate(`/minigames/${id}`, { replace: true })
+    }
+  }, [mg, id, navigate])
+
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
       <p className="text-slate-500">Không tìm thấy minigame</p>
