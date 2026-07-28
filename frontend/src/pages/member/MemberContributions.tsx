@@ -99,12 +99,12 @@ export function MemberContributions() {
           {filtered.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
               <button onClick={doExportExcel} aria-label="Xuất Excel"
-                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                <FileSpreadsheet size={14} />
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                <FileSpreadsheet size={14} />Excel
               </button>
               <button onClick={doExportPdf} aria-label="Xuất PDF"
-                className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                <FileText size={14} />
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                <FileText size={14} />PDF
               </button>
             </div>
           )}

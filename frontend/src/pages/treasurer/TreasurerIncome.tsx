@@ -270,7 +270,7 @@ export function TreasurerIncome() {
       <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
           <div className="text-[17px] font-[800] text-slate-900 shrink-0">Khoản Thu</div>
-          <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 ml-auto">
             {unconfirmedIds.length > 0 && (
               <button
                 onClick={bulkConfirm}
@@ -283,12 +283,12 @@ export function TreasurerIncome() {
             {contributions.length > 0 && (
               <>
                 <button onClick={exportExcel} aria-label="Xuất Excel"
-                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                  <Download size={14} />
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <Download size={14} />Excel
                 </button>
                 <button onClick={exportPdf} aria-label="Xuất PDF"
-                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                  <FileText size={14} />
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileText size={14} />PDF
                 </button>
               </>
             )}

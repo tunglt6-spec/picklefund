@@ -163,16 +163,16 @@ export function TreasurerExpense() {
       <div className="min-h-screen [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
           <div className="text-[17px] font-[800] text-slate-900">Khoản Chi</div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             {expenses.length > 0 && (
               <>
                 <button onClick={doExportExcel} aria-label="Xuất Excel"
-                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                  <FileSpreadsheet size={14} />
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileSpreadsheet size={14} />Excel
                 </button>
                 <button onClick={doExportPdf} aria-label="Xuất PDF"
-                  className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-slate-100 text-slate-600 active:bg-slate-200">
-                  <FileText size={14} />
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  <FileText size={14} />PDF
                 </button>
               </>
             )}

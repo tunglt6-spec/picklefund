@@ -27,17 +27,18 @@ const FD_SPORT_LABEL: Record<string, string> = {
 }
 
 // ── design tokens ──────────────────────────────────────────────────────────────
+// Màu qua token --pf-* (đồng bộ Football/Golf). warning giữ hex vì không có token khớp chính xác.
 const T = {
-  brand:   '#6D5DFB',
-  cyan:    '#5B4BE8',
-  success: '#22C55E',
+  brand:   'var(--pf-primary)',
+  cyan:    'var(--pf-primary-hover)',
+  success: 'var(--pf-color-success)',
   warning: '#F59E0B',
-  danger:  '#EF4444',
-  bg:      '#F8FAFC',
-  card:    '#FFFFFF',
-  border:  '#E2E8F0',
-  txt1:    '#0F172A',
-  txt2:    '#64748B',
+  danger:  'var(--pf-color-danger)',
+  bg:      'var(--pf-bg)',
+  card:    'var(--pf-surface)',
+  border:  'var(--pf-border)',
+  txt1:    'var(--pf-text)',
+  txt2:    'var(--pf-color-muted)',
 }
 
 const CARD = {
@@ -1308,7 +1309,7 @@ export function FixedDoublesDashboardPage() {
               </button>
               <button onClick={() => doCreateSchedule(true)}
                 className="w-full text-left px-4 py-3 rounded-xl border-2 transition-colors"
-                style={{ borderColor: T.brand, background: `${T.brand}0d` }}>
+                style={{ borderColor: T.brand, background: 'var(--pf-primary-soft)' }}>
                 <div className="font-semibold text-sm" style={{ color: T.brand }}>Lượt đi &amp; lượt về</div>
                 <div className="text-[12px] text-slate-500">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
               </button>

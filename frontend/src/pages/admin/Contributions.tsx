@@ -348,22 +348,22 @@ export function Contributions() {
             <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
             <p className="text-[12px] text-slate-400">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {contributions.length > 0 && (
               <>
                 <button
                   onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
                   aria-label="Xuất Excel"
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200"
                 >
-                  <FileSpreadsheet size={16} />
+                  <FileSpreadsheet size={16} />Excel
                 </button>
                 <button
                   onClick={() => exportContribPDF(activePeriod?.name ?? 'Thu Quỹ', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)}
                   aria-label="Xuất PDF"
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200"
                 >
-                  <FileText size={16} />
+                  <FileText size={16} />PDF
                 </button>
               </>
             )}

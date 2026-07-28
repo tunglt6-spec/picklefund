@@ -140,11 +140,11 @@ export function StandingsPage() {
             <p className="text-[11px] text-slate-400 truncate">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={doExportPng} aria-label="Tải ảnh" className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
-              <ImageIcon size={16} />
+            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+              <ImageIcon size={14} /> Ảnh
             </button>
-            <button onClick={doExportPdf} aria-label="Xuất PDF" className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
-              <FileText size={16} />
+            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+              <FileText size={14} /> PDF
             </button>
             {canShare() && (
               <button onClick={doShare} aria-label="Chia sẻ" className="flex h-9 w-9 items-center justify-center rounded-xl text-white [background:var(--pf-primary)] active:opacity-70">

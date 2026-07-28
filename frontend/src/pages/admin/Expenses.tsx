@@ -819,14 +819,14 @@ export function Expenses() {
               <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
               {(selectedPeriodId || activePeriod) && <p className="text-[11px] text-slate-400">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
               <button onClick={exportExcel} aria-label="Xuất Excel"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-                <Download size={16} />
+                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                <Download size={16} />Excel
               </button>
               <button onClick={exportPDF} aria-label="Xuất PDF"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
-                <FileDown size={16} />
+                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
+                <FileDown size={16} />PDF
               </button>
               <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
                 className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
