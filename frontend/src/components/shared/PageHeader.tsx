@@ -31,7 +31,7 @@ export function PageHeader({
     return (
       <header
         className={cn(
-          'mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between',
+          'mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between',
           className,
         )}
       >
@@ -40,7 +40,7 @@ export function PageHeader({
         ) : (
           <span />
         )}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap lg:justify-end">
           {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
           {actions}
         </div>
