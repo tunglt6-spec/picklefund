@@ -269,7 +269,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
   return (
     <div className="flex flex-col gap-5">
       {/* Bộ chọn tháng + actions */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
           <span className="[color:var(--pf-color-muted)]">Tháng</span>
           <select
