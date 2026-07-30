@@ -46,9 +46,14 @@ Tóm tắt: có **3 lớp AI tách biệt**:
 ⚠️ Model của nhà cung cấp có vòng đời — **luôn đọc model từ env** để đổi nhanh không build lại. Nhiều tính năng "AI" (health score, anomaly, reminders, Hermes, embedding) thực chất là **rule-based**.
 
 ## Lưu ý vận hành hay gặp
-- **PWA cache**: khi deploy xong mà client vẫn thấy bản cũ → do service worker/Cloudflare cache. `index.html`/`sw.js`/`registerSW.js`/`manifest` đã set `no-cache` ở `frontend/nginx.conf`; client kẹt cần dọn site data 1 lần.
-- **502 production**: kiểm `df -h /` trước (từng do VPS đầy đĩa) rồi mới debug.
-- Không commit trực tiếp trên VPS; mọi thay đổi qua `main` + pipeline.
+- **VPS dùng chung**: box `135.181.30.143` (`/opt/picklefund`, `/opt/avcp`, `/opt/ai-affiliate`) chạy nhiều app. **Một nginx `picklefund-nginx` (cổng 80/443) làm reverse proxy cho CẢ 3** — vhost avcp/affiliate nằm ở `conf.d` (mount từ repo khác), PickleFund ở `nginx/nginx.conf`. Sửa nginx cẩn thận: sai cú pháp → `docker compose up` khiến nginx không lên → **sập cả 3 app**. Container backend tên thật là **`picklefund-api`** (KHÔNG phải `picklefund-backend`); frontend = `picklefund-app`.
+- **PWA cache**: deploy xong mà client vẫn thấy bản cũ → service worker/Cloudflare cache. `index.html`/`sw.js`/`registerSW.js`/`manifest` đã `no-cache` ở `frontend/nginx.conf`; client kẹt cần **dọn site data 1 lần**.
+- **502 production** — kiểm theo thứ tự:
+  1. `df -h /` (root chỉ 38G, từng đầy 100% do containerd → Postgres crash-loop `No space left on device`). Layer image ở `/var/lib/containerd` (Storage Driver overlayfs), đã bind-mount sang **Hetzner Volume 40G** (`/mnt/HC_Volume_106498015`).
+  2. `docker ps -a` + `docker logs picklefund-api|picklefund-db`. **Backend/DB "Up" mà vẫn 502** ⇒ nginx cache IP upstream cũ. **Fix:** `docker exec picklefund-nginx nginx -t && docker exec picklefund-nginx nginx -s reload` (re-resolve upstream, không downtime). Đã vá gốc bằng `resolver 127.0.0.11` + `proxy_pass http://$var` trong `nginx/nginx.conf` (giống avcp/affiliate) → tự re-resolve, không cần reload.
+  - ⚠️ ĐỪNG dùng `docker network disconnect/connect` để test — mất DNS alias `backend` → 502; khôi phục bằng `docker compose up -d --force-recreate --no-deps backend` (ghim `IMAGE_TAG`, vì default `:latest` không tồn tại).
+- **UI header chuẩn v2.1**: có 2 component header dùng chung (`components/shared/PageHeader` + `components/layout/PageHeader`); cả hai chỉ chuyển hàng + dồn 2 đầu ở **`lg` (1024px)**, dưới đó xếp dọc + cụm nút canh trái wrap gọn (tránh dồn lệch trên tablet).
+- Không commit trực tiếp trên VPS; mọi thay đổi qua `main` + pipeline. Validate nginx trước khi merge: `docker cp candidate picklefund-nginx:/etc/nginx/candidate.conf && docker exec picklefund-nginx nginx -t -c /etc/nginx/candidate.conf`.
 
 ## Tài liệu liên quan
 - Kiến trúc AI as-built: `docs/AI_ARCHITECTURE.md`
