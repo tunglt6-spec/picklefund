@@ -53,7 +53,8 @@ export function Attendance() {
   const [selectedSession, setSelectedSession] = useState<AttendanceSession | null>(null)
   const [attendance, setAttendance] = useState<Record<string, boolean>>({})
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
+  // courtFee để TRỐNG mặc định (không gợi ý số tiền) — người dùng tự nhập mỗi buổi.
+  const [form, setForm] = useState<{ sessionDate: string; startTime: string; endTime: string; courtFee: number | ''; courtName: string }>({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: '', courtName: '' })
   const [isSaving, setIsSaving] = useState(false)
   const [editSession, setEditSession] = useState<AttendanceSession | null>(null)
   const [editForm, setEditForm] = useState({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: 450000, courtName: '' })
@@ -182,6 +183,7 @@ export function Attendance() {
       const d = res.data?.data
       setSessions(prev => [...prev, { ...d, courtFee: Number(d?.courtFee ?? form.courtFee), _count: { attendanceRecords: 0 } }])
       setShowCreate(false)
+      setForm({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: '', courtName: '' })
       toast.success('Đã tạo buổi chơi mới!')
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Tạo buổi thất bại'
@@ -442,8 +444,8 @@ export function Attendance() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
-            <input type="number" required min="1" value={form.courtFee}
-              onChange={e => setForm({ ...form, courtFee: Number(e.target.value) })} className="input-base" />
+            <input type="number" required min="1" value={form.courtFee} placeholder="Nhập tiền sân"
+              onChange={e => setForm({ ...form, courtFee: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
           </div>
         </form>
       </Modal>

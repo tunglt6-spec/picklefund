@@ -16,6 +16,7 @@ import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import {
   CreateAttendanceSessionDto,
+  UpdateAttendanceSessionDto,
   SetRegistrationsDto,
 } from './attendance.dto';
 
@@ -87,7 +88,7 @@ export class AttendanceController {
   async update(
     @Param('id') id: string,
     @CurrentUser() user: any,
-    @Body() body: CreateAttendanceSessionDto,
+    @Body() body: UpdateAttendanceSessionDto,
   ) {
     return ok(await this.service.update(id, user.clubId, body));
   }

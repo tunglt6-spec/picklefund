@@ -39,6 +39,44 @@ export class CreateAttendanceSessionDto {
   notes?: string;
 }
 
+/**
+ * Cập nhật buổi chơi — PARTIAL: mọi field optional. KHÔNG bắt buộc `fundPeriodId`
+ * (buổi chơi có thể không thuộc kỳ quỹ nào; sửa giờ/tiền sân không nên đòi kỳ quỹ).
+ * Service.update chỉ ghi field được gửi -> giữ nguyên kỳ quỹ hiện tại khi bỏ trống.
+ */
+export class UpdateAttendanceSessionDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  fundPeriodId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  sessionDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  courtFee?: number;
+
+  @IsOptional()
+  @IsString()
+  courtName?: string;
+
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
 export class UpdateAttendanceRecordDto {
   @IsString()
   @IsNotEmpty()
