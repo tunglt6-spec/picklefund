@@ -336,10 +336,13 @@ export class ScoringService {
 
   /** Mọi quy tắc điểm của CLB, sắp theo sortOrder tăng dần. */
   async listRules(clubId: string) {
-    return this.prisma.scoringRule.findMany({
+    const rules = await this.prisma.scoringRule.findMany({
       where: { clubId },
       orderBy: { sortOrder: 'asc' },
     });
+    // Ẩn "Vắng buổi tập" (ATTENDANCE_ABSENT): điểm danh nay tính theo % đi nên rule này
+    // KHÔNG còn tác dụng. Chỉ ẩn khỏi UI; giữ trong DB để không mất dữ liệu/relations.
+    return rules.filter((r) => r.systemKey !== RULE_KEY.ATTENDANCE_ABSENT);
   }
 
   /** Tạo quy tắc điểm mới (MANUAL mặc định, active). Validate category + delta. */
