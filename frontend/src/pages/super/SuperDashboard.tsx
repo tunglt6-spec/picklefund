@@ -146,24 +146,24 @@ export function SuperDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-2 px-2 font-medium text-gray-500">Tên CLB</th>
-                    <th className="text-center py-2 px-2 font-medium text-gray-500">TV</th>
-                    <th className="text-center py-2 px-2 font-medium text-gray-500">Kỳ</th>
-                    <th className="text-center py-2 px-2 font-medium text-gray-500">Trạng thái</th>
+                  <tr className="border-b border-[color:var(--pf-border)]">
+                    <th className="text-left py-2 px-2 font-medium [color:var(--pf-color-muted)]">Tên CLB</th>
+                    <th className="text-center py-2 px-2 font-medium [color:var(--pf-color-muted)]">TV</th>
+                    <th className="text-center py-2 px-2 font-medium [color:var(--pf-color-muted)]">Kỳ</th>
+                    <th className="text-center py-2 px-2 font-medium [color:var(--pf-color-muted)]">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {clubs.length === 0 ? (
-                    <tr><td colSpan={4} className="text-center py-8 text-gray-400 text-xs">Đang tải...</td></tr>
+                    <tr><td colSpan={4} className="text-center py-8 [color:var(--pf-color-muted)] text-xs">Đang tải...</td></tr>
                   ) : clubs.map(club => (
-                    <tr key={club.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/super/clubs/${club.id}`)}>
+                    <tr key={club.id} className="hover:[background:var(--pf-surface-muted)] cursor-pointer" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                       <td className="py-2.5 px-2">
-                        <div className="font-medium text-gray-900">{club.name}</div>
-                        <div className="text-xs text-gray-400">{club.code}</div>
+                        <div className="font-medium [color:var(--pf-text)]">{club.name}</div>
+                        <div className="text-xs [color:var(--pf-color-muted)]">{club.code}</div>
                       </td>
-                      <td className="text-center py-2.5 px-2 text-gray-700">{club._count?.members}</td>
-                      <td className="text-center py-2.5 px-2 text-gray-700">{club._count?.fundPeriods}</td>
+                      <td className="text-center py-2.5 px-2 [color:var(--pf-text)]">{club._count?.members}</td>
+                      <td className="text-center py-2.5 px-2 [color:var(--pf-text)]">{club._count?.fundPeriods}</td>
                       <td className="text-center py-2.5 px-2">
                         <Badge variant={club.status === 'active' ? 'green' : club.status === 'suspended' ? 'orange' : 'red'}>
                           {club.status === 'active' ? 'Hoạt động' : club.status === 'suspended' ? 'Bị khóa' : 'Đã xóa'}

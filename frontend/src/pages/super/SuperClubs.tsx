@@ -57,7 +57,7 @@ interface ClubUser {
   isActive: boolean
 }
 
-const inputCls = 'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]'
+const inputCls = 'w-full rounded-lg border border-[color:var(--pf-border)] px-4 py-2.5 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]'
 
 export function SuperClubs() {
   const navigate = useNavigate()
@@ -220,47 +220,47 @@ export function SuperClubs() {
       <form onSubmit={handleCreate} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên CLB *</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mã CLB *</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB *</label>
             <input required value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
               placeholder="VD: PBHN" className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Điện thoại</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
             <input value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email liên hệ</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
             <input type="email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ sân</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
             <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
           </div>
         </div>
 
         {/* Tài khoản admin ban đầu — bắt buộc. Email admin dùng để gửi thông báo cho thành viên. */}
         <div className="rounded-lg border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] p-4">
-          <p className="text-sm font-semibold text-gray-800 mb-1">Tài khoản Admin CLB *</p>
-          <p className="text-xs text-gray-500 mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
+          <p className="text-sm font-semibold [color:var(--pf-text)] mb-1">Tài khoản Admin CLB *</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập admin *</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập admin *</label>
               <input required value={form.adminUsername}
                 onChange={e => setForm({ ...form, adminUsername: e.target.value.trim() })}
                 placeholder="VD: admin_pbhn" className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu admin *</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu admin *</label>
               <input required type="password" minLength={6} value={form.adminPassword}
                 onChange={e => setForm({ ...form, adminPassword: e.target.value })}
                 placeholder="Tối thiểu 6 ký tự" className={inputCls} />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email cá nhân admin *</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email cá nhân admin *</label>
               <input required type="email" value={form.adminEmail}
                 onChange={e => setForm({ ...form, adminEmail: e.target.value.trim() })}
                 placeholder="email thật (không dùng đuôi .local)" className={inputCls} />
@@ -268,7 +268,7 @@ export function SuperClubs() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-4 border-t border-[color:var(--pf-border)]">
           <Button variant="secondary" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy</Button>
           <Button type="submit" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo CLB'}</Button>
         </div>
@@ -281,23 +281,23 @@ export function SuperClubs() {
       <form onSubmit={handleEdit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên CLB *</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Điện thoại</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
             <input value={editForm.contactPhone} onChange={e => setEditForm({ ...editForm, contactPhone: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email liên hệ</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
             <input type="email" value={editForm.contactEmail} onChange={e => setEditForm({ ...editForm, contactEmail: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ sân</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
             <input value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className={inputCls} />
           </div>
         </div>
-        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-4 border-t border-[color:var(--pf-border)]">
           <Button variant="secondary" type="button" onClick={() => setEditClub(null)} disabled={isSaving}>Hủy</Button>
           <Button type="submit" disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}</Button>
         </div>
@@ -308,8 +308,8 @@ export function SuperClubs() {
   const deleteModal = (
     <Modal open={!!deleteClub} onClose={() => setDeleteClub(null)} title="Xác nhận xóa CLB" size="sm">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Bạn có chắc muốn xóa CLB <span className="font-semibold text-gray-900">{deleteClub?.name}</span>? Hành động này không thể hoàn tác.
+        <p className="text-sm [color:var(--pf-color-muted)]">
+          Bạn có chắc muốn xóa CLB <span className="font-semibold [color:var(--pf-text)]">{deleteClub?.name}</span>? Hành động này không thể hoàn tác.
         </p>
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="secondary" type="button" onClick={() => setDeleteClub(null)}>Hủy</Button>
@@ -333,18 +333,18 @@ export function SuperClubs() {
       size="sm"
     >
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm [color:var(--pf-color-muted)]">
           {pendingAction?.kind === 'status' ? (
             <>
               Bạn có chắc muốn {pendingAction.club.status === 'active' ? 'khóa' : 'mở khóa'} CLB{' '}
-              <span className="font-semibold text-gray-900">{pendingAction.club.name}</span>?
+              <span className="font-semibold [color:var(--pf-text)]">{pendingAction.club.name}</span>?
               {pendingAction.club.status === 'active' && ' Toàn bộ thành viên CLB sẽ không thể đăng nhập cho tới khi mở khóa lại.'}
             </>
           ) : pendingAction?.kind === 'plan' ? (
             <>
               Bạn có chắc muốn đổi gói CLB{' '}
-              <span className="font-semibold text-gray-900">{pendingAction.club.name}</span>{' '}
-              sang <span className="font-semibold text-gray-900">{PLAN_LABEL[pendingAction.nextPlan]}</span>?
+              <span className="font-semibold [color:var(--pf-text)]">{pendingAction.club.name}</span>{' '}
+              sang <span className="font-semibold [color:var(--pf-text)]">{PLAN_LABEL[pendingAction.nextPlan]}</span>?
             </>
           ) : null}
         </p>
@@ -361,24 +361,24 @@ export function SuperClubs() {
   const rolesModal = (
     <Modal open={!!rolesClub} onClose={() => setRolesClub(null)} title={`Phân quyền: ${rolesClub?.name ?? ''}`} size="lg">
       <div className="space-y-3">
-        {loadingUsers && <div className="text-center py-8 text-gray-400 text-sm">Đang tải...</div>}
+        {loadingUsers && <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>}
         {!loadingUsers && usersError && (
           <div className="text-center py-8 text-red-400 text-sm">Không tải được danh sách. Vui lòng thử lại.</div>
         )}
         {!loadingUsers && !usersError && clubUsers.length === 0 && (
-          <div className="text-center py-8 text-gray-400 text-sm">Chưa có thành viên nào</div>
+          <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên nào</div>
         )}
         {!loadingUsers && !usersError && clubUsers.map(u => (
-          <div key={u.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-gray-100 bg-gray-50">
+          <div key={u.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]">
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-900 text-sm truncate">{u.username}</div>
-              <div className="text-xs text-gray-400 truncate">{u.email}</div>
+              <div className="font-medium [color:var(--pf-text)] text-sm truncate">{u.username}</div>
+              <div className="text-xs [color:var(--pf-color-muted)] truncate">{u.email}</div>
             </div>
             <select
               value={u.role}
               disabled={savingRole === u.id}
               onChange={e => handleRoleChange(u.id, e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm [background:var(--pf-surface)] focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-60"
+              className="rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm [background:var(--pf-surface)] focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-60"
             >
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               {!ROLES.find(r => r.value === u.role) && (
@@ -387,7 +387,7 @@ export function SuperClubs() {
             </select>
           </div>
         ))}
-        <div className="flex justify-end pt-2 border-t border-gray-100">
+        <div className="flex justify-end pt-2 border-t border-[color:var(--pf-border)]">
           <Button variant="secondary" onClick={() => setRolesClub(null)}>Đóng</Button>
         </div>
       </div>
@@ -491,39 +491,39 @@ export function SuperClubs() {
 
       <div className="flex flex-col gap-4">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-2.5 [color:var(--pf-color-muted)]" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm CLB theo tên hoặc mã..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[color:var(--pf-border)] text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]"
           />
         </div>
 
         <div className="rounded-2xl border overflow-hidden [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Tên CLB</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Địa chỉ</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Thành viên</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Kỳ quỹ</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Gói</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Trạng thái</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Hành động</th>
+                <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>
+                <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Địa chỉ</th>
+                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Thành viên</th>
+                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Kỳ quỹ</th>
+                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Gói</th>
+                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
+                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map(club => (
-                <tr key={club.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={club.id} className="hover:[background:var(--pf-surface-muted)] transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-900">{club.name}</div>
-                    <div className="text-xs text-gray-400">{club.code} · {club.contactEmail}</div>
+                    <div className="font-semibold [color:var(--pf-text)]">{club.name}</div>
+                    <div className="text-xs [color:var(--pf-color-muted)]">{club.code} · {club.contactEmail}</div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{club.address || '—'}</td>
-                  <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.members}</td>
-                  <td className="px-4 py-3 text-center font-semibold text-gray-900">{club._count?.fundPeriods}</td>
+                  <td className="px-4 py-3 [color:var(--pf-color-muted)]">{club.address || '—'}</td>
+                  <td className="px-4 py-3 text-center font-semibold [color:var(--pf-text)]">{club._count?.members}</td>
+                  <td className="px-4 py-3 text-center font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods}</td>
                   <td className="px-4 py-3 text-center">
                     <PlanSelect club={club} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                   </td>

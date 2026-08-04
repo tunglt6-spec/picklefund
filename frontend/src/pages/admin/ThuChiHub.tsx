@@ -471,10 +471,10 @@ export function ThuChiHub() {
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={barData} barGap={4} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => (v >= 1e6 ? `${v / 1e6}M` : v >= 1e3 ? `${v / 1e3}k` : `${v}`)} />
-                  <Tooltip content={<BarTooltip />} cursor={{ fill: '#F7F9FC' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => (v >= 1e6 ? `${v / 1e6}M` : v >= 1e3 ? `${v / 1e3}k` : `${v}`)} />
+                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'var(--pf-surface-muted)' }} />
                   <Bar dataKey="Thu" fill={CHART_INCOME} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Chi" fill={CHART_EXPENSE} radius={[4, 4, 0, 0]} />
                 </BarChart>

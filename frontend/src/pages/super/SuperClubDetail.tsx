@@ -148,16 +148,16 @@ export function SuperClubDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Đang tải...</div>
+      <div className="min-h-screen [background:var(--pf-surface-muted)] flex items-center justify-center">
+        <div className="[color:var(--pf-color-muted)] text-sm">Đang tải...</div>
       </div>
     )
   }
 
   if (!club) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
-        <div className="text-gray-500 text-sm">Không tìm thấy CLB</div>
+      <div className="min-h-screen [background:var(--pf-surface-muted)] flex flex-col items-center justify-center gap-4">
+        <div className="[color:var(--pf-color-muted)] text-sm">Không tìm thấy CLB</div>
         <Button variant="secondary" onClick={() => navigate('/super/clubs')}><ArrowLeft size={16} /> Quay lại</Button>
       </div>
     )
@@ -423,33 +423,33 @@ export function SuperClubDetail() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Club info sidebar */}
         <div className="rounded-2xl border p-5 space-y-4 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
-          <div className="flex items-center gap-2 text-gray-700 font-semibold">
+          <div className="flex items-center gap-2 [color:var(--pf-text)] font-semibold">
             <Building2 size={16} />Thông tin CLB
           </div>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-gray-500">Trạng thái</span>
+              <span className="[color:var(--pf-color-muted)]">Trạng thái</span>
               <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
                 {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
               </Badge>
             </div>
             {club.address && (
-              <div className="flex items-start gap-2 text-gray-600">
-                <MapPin size={14} className="mt-0.5 text-gray-400 shrink-0" />{club.address}
+              <div className="flex items-start gap-2 [color:var(--pf-color-muted)]">
+                <MapPin size={14} className="mt-0.5 [color:var(--pf-color-muted)] shrink-0" />{club.address}
               </div>
             )}
             {club.contactEmail && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Mail size={14} className="text-gray-400 shrink-0" />{club.contactEmail}
+              <div className="flex items-center gap-2 [color:var(--pf-color-muted)]">
+                <Mail size={14} className="[color:var(--pf-color-muted)] shrink-0" />{club.contactEmail}
               </div>
             )}
             {club.contactPhone && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Phone size={14} className="text-gray-400 shrink-0" />{club.contactPhone}
+              <div className="flex items-center gap-2 [color:var(--pf-color-muted)]">
+                <Phone size={14} className="[color:var(--pf-color-muted)] shrink-0" />{club.contactPhone}
               </div>
             )}
-            <div className="flex items-center gap-2 text-gray-600">
-              <Users size={14} className="text-gray-400 shrink-0" />
+            <div className="flex items-center gap-2 [color:var(--pf-color-muted)]">
+              <Users size={14} className="[color:var(--pf-color-muted)] shrink-0" />
               {club._count?.members ?? members.length} thành viên · {club._count?.fundPeriods ?? 0} kỳ quỹ
             </div>
           </div>
@@ -463,22 +463,22 @@ export function SuperClubDetail() {
 
           {tab === 'members' ? (
             members.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">Chưa có thành viên nào</div>
+              <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên nào</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                   <tr>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Tên đăng nhập</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Email</th>
-                    <th className="text-center px-4 py-3 font-semibold text-gray-700">Vai trò</th>
-                    <th className="text-center px-4 py-3 font-semibold text-gray-700">Trạng thái</th>
+                    <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
+                    <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Email</th>
+                    <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Vai trò</th>
+                    <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {members.map(m => (
-                    <tr key={m.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{m.username}</td>
-                      <td className="px-4 py-3 text-gray-500">{m.email}</td>
+                    <tr key={m.id} className="hover:[background:var(--pf-surface-muted)]">
+                      <td className="px-4 py-3 font-medium [color:var(--pf-text)]">{m.username}</td>
+                      <td className="px-4 py-3 [color:var(--pf-color-muted)]">{m.email}</td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-block text-xs px-2.5 py-1 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
                           {ROLE_LABEL[m.role] ?? m.role}

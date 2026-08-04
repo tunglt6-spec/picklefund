@@ -66,9 +66,9 @@ function BrandingTab() {
 
   const textField = (label: string, key: keyof ClubBranding, ph = '', max = 200) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
       <input
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+        className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
         value={(form[key] as string | null) ?? ''}
         maxLength={max}
         placeholder={ph}
@@ -78,14 +78,14 @@ function BrandingTab() {
   )
   const colorField = (label: string, key: 'primaryColor' | 'secondaryColor') => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
       <div className="flex items-center gap-2">
-        <input type="color" className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+        <input type="color" className="h-9 w-12 rounded border border-[color:var(--pf-border)] cursor-pointer"
           value={HEX_RE.test(form[key]) ? form[key] : '#6D5DFB'}
           onChange={e => set({ [key]: e.target.value.toUpperCase() })} />
         <input
           className={cn('flex-1 rounded-lg border px-3 py-2 text-sm font-mono outline-none focus:ring-1',
-            badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:[border-color:var(--pf-primary)] focus:ring-[color:var(--pf-primary)]')}
+            badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)] focus:ring-[color:var(--pf-primary)]')}
           value={form[key]} maxLength={7} placeholder="#RRGGBB"
           onChange={e => set({ [key]: e.target.value })} />
       </div>
@@ -102,8 +102,8 @@ function BrandingTab() {
           Logo/nền/favicon nhập bằng URL ảnh. Màu áp dụng dần trên giao diện & PDF ở các bản cập nhật tiếp theo.
         </p>
       </div>
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6 space-y-4">
-        <h3 className="font-semibold text-gray-900">Nhận diện</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6 space-y-4">
+        <h3 className="font-semibold [color:var(--pf-text)]">Nhận diện</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {textField('Tên hiển thị', 'displayName', 'PickleFund', 60)}
           {textField('Tên rút gọn', 'shortName', 'PF', 20)}
@@ -158,56 +158,56 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
   return (
     <div className="space-y-6">
       {/* Basic info */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Thông tin cơ bản</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Thông tin cơ bản</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên CLB <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.name}
               onChange={e => set({ name: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mã CLB</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB</label>
             <input
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={form.code}
               readOnly
             />
-            <p className="text-xs text-gray-400 mt-1">Không thể thay đổi sau khi tạo</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không thể thay đổi sau khi tạo</p>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ</label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.address}
               onChange={e => set({ address: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số điện thoại</label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.contactPhone}
               onChange={e => set({ contactPhone: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email liên hệ</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
             <input
               type="email"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.contactEmail}
               onChange={e => set({ contactEmail: e.target.value })}
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mô tả CLB</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mô tả CLB</label>
             <textarea
               rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none resize-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none resize-none"
               value={form.description}
               onChange={e => set({ description: e.target.value })}
             />
@@ -216,33 +216,33 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
       </div>
 
       {/* Fund settings */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Cài đặt quỹ mặc định</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Cài đặt quỹ mặc định</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Số thành viên tối đa</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số thành viên tối đa</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.maxMembers}
               onChange={e => set({ maxMembers: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mức đóng quỹ mặc định (₫)</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mức đóng quỹ mặc định (₫)</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.defaultContribution}
               onChange={e => set({ defaultContribution: e.target.value })}
             />
-            <p className="text-xs text-gray-400 mt-1">Áp dụng khi tạo kỳ quỹ mới</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Áp dụng khi tạo kỳ quỹ mới</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Số buổi dự kiến/kỳ</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến/kỳ</label>
             <input
               type="number"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={form.defaultSessions}
               onChange={e => set({ defaultSessions: e.target.value })}
             />
@@ -291,30 +291,30 @@ function AccountTab() {
   return (
     <div className="space-y-6">
       {/* Profile */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Thông tin tài khoản</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Thông tin tài khoản</h3>
         <div className="flex items-center gap-4 mb-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl [background:var(--pf-primary)] text-2xl font-bold text-white">
             {user?.username?.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-lg">{user?.username}</p>
+            <p className="font-semibold [color:var(--pf-text)] text-lg">{user?.username}</p>
             <span className="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">Club Admin</span>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
             <input
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={user?.username ?? ''}
               readOnly
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email</label>
             <input
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={user?.email ?? ''}
               readOnly
             />
@@ -323,8 +323,8 @@ function AccountTab() {
       </div>
 
       {/* Change password */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Đổi mật khẩu</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Đổi mật khẩu</h3>
         <div className="space-y-4 max-w-md">
           {[
             { label: 'Mật khẩu hiện tại',    key: 'old' as const, show: showOld,     toggle: () => setShowOld(v => !v) },
@@ -332,17 +332,17 @@ function AccountTab() {
             { label: 'Xác nhận mật khẩu mới', key: 'confirm' as const, show: showConfirm, toggle: () => setShowConfirm(v => !v) },
           ].map(field => (
             <div key={field.key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{field.label}</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{field.label}</label>
               <div className="relative">
                 <input
                   type={field.show ? 'text' : 'password'}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 pr-10 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
                   value={pw[field.key]}
                   onChange={e => setPw(p => ({ ...p, [field.key]: e.target.value }))}
                   placeholder="••••••••"
                 />
                 <button type="button" onClick={field.toggle}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {field.show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -369,7 +369,7 @@ function AccountTab() {
       {/* Danger zone */}
       <div className="[background:var(--pf-surface)] rounded-xl border border-red-200 p-5 md:p-6">
         <h3 className="font-semibold text-red-700 mb-1">Vùng nguy hiểm</h3>
-        <p className="text-sm text-gray-500 mb-4">Các thao tác dưới đây không thể hoàn tác.</p>
+        <p className="text-sm [color:var(--pf-color-muted)] mb-4">Các thao tác dưới đây không thể hoàn tác.</p>
         <Button variant="danger" size="sm" onClick={() => toast.error('Liên hệ Super Admin để xoá tài khoản')}>
           Yêu cầu xoá tài khoản
         </Button>
@@ -451,29 +451,29 @@ function NotificationsTab(_: { clubId: string }) {
     }
   }
 
-  if (loading) return <div className="py-12 text-center text-sm text-gray-400">Đang tải...</div>
+  if (loading) return <div className="py-12 text-center text-sm [color:var(--pf-color-muted)]">Đang tải...</div>
 
   return (
     <div className="space-y-6">
       {/* Bật/tắt thông báo */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">Nhận thông báo</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Bật/tắt toàn bộ thông báo từ hệ thống</p>
+            <h3 className="font-semibold [color:var(--pf-text)]">Nhận thông báo</h3>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Bật/tắt toàn bộ thông báo từ hệ thống</p>
           </div>
           <Toggle value={pref.enabled} onChange={v => set({ enabled: v })} />
         </div>
       </div>
 
       {/* Kênh ưu tiên */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Kênh nhận thông báo ưu tiên</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Kênh nhận thông báo ưu tiên</h3>
         <div className="space-y-2">
           {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
             <label key={ch} className={cn(
               'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-colors',
-              pref.channels.includes(ch) ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-gray-200 hover:border-gray-300'
+              pref.channels.includes(ch) ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-[color:var(--pf-border)] hover:border-[color:var(--pf-border)]'
             )}>
               <input type="checkbox" value={ch} checked={pref.channels.includes(ch)}
                 onChange={() => {
@@ -483,10 +483,10 @@ function NotificationsTab(_: { clubId: string }) {
                   set({ channels: next })
                 }} className="accent-[var(--pf-primary)]" />
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium [color:var(--pf-text)]">
                   {ch === 'IN_APP' ? '📱 Trong ứng dụng' : ch === 'EMAIL' ? '📧 Email' : '✈️ Telegram'}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs [color:var(--pf-color-muted)]">
                   {ch === 'IN_APP' ? 'Thông báo hiển thị trực tiếp trong app' :
                    ch === 'EMAIL' ? `Tối đa ${pref.maxDailyEmail} email/ngày` :
                    `Tối đa ${pref.maxDailyTelegram} tin/ngày`}
@@ -499,13 +499,13 @@ function NotificationsTab(_: { clubId: string }) {
 
       {/* Telegram Chat ID */}
       {pref.channels.includes('TELEGRAM') && (
-        <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-          <h3 className="font-semibold text-gray-900 mb-1">Liên kết Telegram</h3>
-          <p className="text-xs text-gray-500 mb-3">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+          <h3 className="font-semibold [color:var(--pf-text)] mb-1">Liên kết Telegram</h3>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">
             Nhắn tin cho <span className="font-mono [color:var(--pf-primary)]">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
           </p>
           <input
-            className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+            className="w-full max-w-xs rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
             placeholder="Ví dụ: 123456789"
             value={pref.telegramChatId ?? ''}
             onChange={e => set({ telegramChatId: e.target.value })}
@@ -514,45 +514,45 @@ function NotificationsTab(_: { clubId: string }) {
       )}
 
       {/* Giờ yên tĩnh */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-1">Giờ yên tĩnh</h3>
-        <p className="text-xs text-gray-500 mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-1">Giờ yên tĩnh</h3>
+        <p className="text-xs [color:var(--pf-color-muted)] mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
         <div className="flex items-center gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Từ</label>
+            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Từ</label>
             <input type="number" min={0} max={23}
-              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-20 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursStart}
               onChange={e => set({ quietHoursStart: +e.target.value })} />
-            <span className="text-xs text-gray-400 ml-1">h</span>
+            <span className="text-xs [color:var(--pf-color-muted)] ml-1">h</span>
           </div>
-          <span className="text-gray-400 mt-4">—</span>
+          <span className="[color:var(--pf-color-muted)] mt-4">—</span>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Đến</label>
+            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Đến</label>
             <input type="number" min={0} max={23}
-              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-20 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursEnd}
               onChange={e => set({ quietHoursEnd: +e.target.value })} />
-            <span className="text-xs text-gray-400 ml-1">h</span>
+            <span className="text-xs [color:var(--pf-color-muted)] ml-1">h</span>
           </div>
         </div>
       </div>
 
       {/* Giới hạn/ngày */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Giới hạn thông báo mỗi ngày</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-4">Giới hạn thông báo mỗi ngày</h3>
         <div className="grid grid-cols-2 gap-4 max-w-sm">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Email tối đa</label>
+            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Email tối đa</label>
             <input type="number" min={0} max={10}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyEmail}
               onChange={e => set({ maxDailyEmail: +e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Telegram tối đa</label>
+            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Telegram tối đa</label>
             <input type="number" min={0} max={20}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyTelegram}
               onChange={e => set({ maxDailyTelegram: +e.target.value })} />
           </div>
@@ -620,9 +620,9 @@ function TelegramTab() {
 
   return (
     <div className="space-y-5">
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-1">Kết nối Telegram Bot</h3>
-        <p className="text-sm text-gray-500 mb-4">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-1">Kết nối Telegram Bot</h3>
+        <p className="text-sm [color:var(--pf-color-muted)] mb-4">
           Liên kết bot <strong>MÍT ĐẶC BOT</strong> với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
         </p>
 
@@ -649,9 +649,9 @@ function TelegramTab() {
         </div>
 
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Chat ID</label>
+          <label className="block text-sm font-medium [color:var(--pf-text)]">Chat ID</label>
           <input
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+            className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm font-mono focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
             placeholder="Ví dụ: -1001234567890 hoặc 123456789"
             value={chatId}
             onChange={e => { setChatId(e.target.value); setLinked(false) }}
@@ -668,8 +668,8 @@ function TelegramTab() {
         </div>
       </div>
 
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Các lệnh Bot hỗ trợ</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-3">Các lệnh Bot hỗ trợ</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           {[
             { cmd: '/status',    desc: 'Tổng quan CLB' },
@@ -682,9 +682,9 @@ function TelegramTab() {
             { cmd: '/reminders', desc: 'Nhắc nhở hôm nay' },
             { cmd: '/myid',      desc: 'Lấy Chat ID của bạn' },
           ].map(({ cmd, desc }) => (
-            <div key={cmd} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+            <div key={cmd} className="flex items-center gap-2 [background:var(--pf-surface-muted)] rounded-lg px-3 py-2">
               <code className="[color:var(--pf-primary)] font-mono font-medium">{cmd}</code>
-              <span className="text-gray-500">— {desc}</span>
+              <span className="[color:var(--pf-color-muted)]">— {desc}</span>
             </div>
           ))}
         </div>
@@ -739,53 +739,53 @@ function PaymentTab() {
     } finally { setSaving(false) }
   }
 
-  if (loading) return <div className="py-12 text-center text-sm text-gray-400">Đang tải...</div>
+  if (loading) return <div className="py-12 text-center text-sm [color:var(--pf-color-muted)]">Đang tải...</div>
 
   return (
     <div className="space-y-6">
-      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-        <h3 className="font-semibold text-gray-900 mb-1">Tài khoản ngân hàng nhận tiền quỹ</h3>
-        <p className="text-xs text-gray-500 mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <h3 className="font-semibold [color:var(--pf-text)] mb-1">Tài khoản ngân hàng nhận tiền quỹ</h3>
+        <p className="text-xs [color:var(--pf-color-muted)] mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngân hàng</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Ngân hàng</label>
             <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
               value={info.bank_code}
               onChange={e => set({ bank_code: e.target.value })}>
               {POPULAR_BANKS.map(b => <option key={b.code} value={b.code}>{b.name} ({b.code})</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none font-mono"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none font-mono"
               placeholder="Ví dụ: 0123456789"
               value={info.bank_account_number}
               onChange={e => set({ bank_account_number: e.target.value })} />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
             <input
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none uppercase"
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none uppercase"
               placeholder="VD: NGUYEN VAN A"
               value={info.bank_account_name}
               onChange={e => set({ bank_account_name: e.target.value.toUpperCase() })} />
-            <p className="text-xs text-gray-400 mt-1">Nhập chữ hoa, không dấu — đúng như tên trên tài khoản ngân hàng</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Nhập chữ hoa, không dấu — đúng như tên trên tài khoản ngân hàng</p>
           </div>
         </div>
       </div>
 
       {qrUrl && (
-        <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Xem trước mã QR</h3>
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+          <h3 className="font-semibold [color:var(--pf-text)] mb-3">Xem trước mã QR</h3>
           <div className="flex items-start gap-6">
-            <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-gray-200 object-contain" />
-            <div className="text-sm text-gray-600 space-y-1">
+            <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-[color:var(--pf-border)] object-contain" />
+            <div className="text-sm [color:var(--pf-color-muted)] space-y-1">
               <p><span className="font-medium">Ngân hàng:</span> {POPULAR_BANKS.find(b => b.code === info.bank_code)?.name}</p>
               <p><span className="font-medium">Số TK:</span> <span className="font-mono">{info.bank_account_number}</span></p>
               <p><span className="font-medium">Tên TK:</span> {info.bank_account_name}</p>
-              <p className="text-xs text-gray-400 mt-2">QR này sẽ được dùng khi tạo phiếu thu quỹ cho thành viên</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-2">QR này sẽ được dùng khi tạo phiếu thu quỹ cho thành viên</p>
             </div>
           </div>
         </div>
@@ -989,19 +989,19 @@ export function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen [background:var(--pf-surface-muted)]">
       <PageHeader title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-4xl">
         {/* Tab bar */}
-        <div className="flex gap-1 [background:var(--pf-surface)] border border-gray-200 rounded-xl p-1">
+        <div className="flex gap-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-xl p-1">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.id
                   ? '[background:var(--pf-primary)] text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]'
               )}>
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>

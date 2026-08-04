@@ -25,7 +25,7 @@ const iconBgMap: Record<string, string> = {
   yellow: 'bg-yellow-50 text-yellow-600',
   slate:  '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   blue:   'bg-blue-50 text-blue-600',
-  gray:   'bg-gray-100 text-gray-600',
+  gray:   '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
 }
 
 export function KpiCard({

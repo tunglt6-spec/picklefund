@@ -422,10 +422,10 @@ export function Reports() {
                     ) : (
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={periodBars} barCategoryGap="28%">
-                          <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" vertical={false} />
-                          <XAxis dataKey="ky" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
-                          <YAxis tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}tr`} tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
-                          <Tooltip content={<VNDTooltip />} cursor={{ fill: '#F7F9FC' }} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" vertical={false} />
+                          <XAxis dataKey="ky" tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
+                          <YAxis tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}tr`} tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
+                          <Tooltip content={<VNDTooltip />} cursor={{ fill: 'var(--pf-surface-muted)' }} />
                           <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                           <Bar dataKey="Thu" fill={CHART_INCOME} radius={[4, 4, 0, 0]} />
                           <Bar dataKey="Chi" fill={CHART_EXPENSE} radius={[4, 4, 0, 0]} />
@@ -473,11 +473,11 @@ export function Reports() {
                       <>
                       <ResponsiveContainer width="100%" height={Math.max(200, Math.min(attendanceRates.length, 10) * 28)}>
                         <BarChart data={attendanceRates.slice(0, 10)} layout="vertical" barSize={10}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" horizontal={false} />
-                          <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748B' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                          <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} width={100} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" horizontal={false} />
+                          <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                          <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} width={100} />
                           <Tooltip content={<PctTooltip />} />
-                          <Bar dataKey="rate" fill="#2563EB" radius={[0, 4, 4, 0]} name="Tỷ lệ %" background={{ fill: '#F7F9FC', radius: 4 }} />
+                          <Bar dataKey="rate" fill="#2563EB" radius={[0, 4, 4, 0]} name="Tỷ lệ %" background={{ fill: 'var(--pf-surface-muted)', radius: 4 }} />
                         </BarChart>
                       </ResponsiveContainer>
                       {attendanceRates.some((r) => r.rate < 50) && (
