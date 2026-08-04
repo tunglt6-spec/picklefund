@@ -30,13 +30,13 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="absolute inset-0 bg-slate-900/40 pointer-events-none" />
+      <div className="pf-modal-backdrop absolute inset-0 bg-slate-900/40 pointer-events-none" />
       <div className={cn(
-        'relative z-10 w-full bg-white rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
-        'max-h-[calc(100vh-2rem)]',
+        'pf-modal-panel relative z-10 w-full bg-white shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
+        'rounded-t-2xl max-h-[90vh] sm:rounded-2xl sm:max-h-[calc(100vh-2rem)]',
         sizeClasses[size]
       )}>
         {/* Header */}

@@ -30,7 +30,7 @@ export function MobileCardList<T>({
     )
   }
   return (
-    <div className={cn('flex flex-col gap-2.5', className)}>
+    <div className={cn('pf-stagger flex flex-col gap-2.5', className)}>
       {items.map((item, i) => (
         <div
           key={itemKey(item, i)}
