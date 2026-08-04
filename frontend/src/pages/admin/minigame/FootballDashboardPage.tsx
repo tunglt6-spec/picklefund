@@ -705,7 +705,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                             <span className={cn('flex-1 text-left text-sm font-medium truncate', done && m.winnerId === m.teamBId ? 'text-emerald-600 font-bold' : '[color:var(--pf-text)]')}>{walkover ? '—' : teamName(m, 'B')}</span>
                             {!walkover && (
                               <button onClick={() => saveScore(m.id)} title="Lưu tỉ số"
-                                className={cn('shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-colors', done ? 'bg-emerald-500 hover:bg-emerald-600' : '[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]')}>
+                                className={cn('shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition-colors', done ? 'bg-emerald-500 hover:bg-emerald-500' : '[background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]')}>
                                 <Save size={14} />
                               </button>
                             )}

@@ -29,7 +29,7 @@ export function BulkActionBar({
         <button
           onClick={onDelete}
           disabled={deleting}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-500 disabled:opacity-50"
         ><Trash2 size={14} />{deleting ? 'Đang xóa...' : `Xóa ${count} ${noun}`}</button>
       </div>
     </div>

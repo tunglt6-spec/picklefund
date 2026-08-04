@@ -45,7 +45,7 @@ export function QuickActionsPanel({
       label: 'Hoàn Thành Vòng',
       icon: <CheckCircle size={18} className="text-white" />,
       bgClass: 'bg-green-500',
-      hoverClass: 'hover:bg-green-600',
+      hoverClass: 'hover:bg-green-500',
       onClick: () => onCompleteRound?.(),
       disabled: !canCompleteRound,
       disabledTitle: 'Chưa có vòng đang diễn ra',
@@ -64,7 +64,7 @@ export function QuickActionsPanel({
       label: 'Lịch Thi Đấu',
       icon: <Calendar size={18} className="text-white" />,
       bgClass: 'bg-sky-500',
-      hoverClass: 'hover:bg-sky-600',
+      hoverClass: 'hover:bg-sky-500',
       onClick: () => {
         onViewSchedule?.()
         navigate(`/minigames/${minigameId}/schedule`)
@@ -74,7 +74,7 @@ export function QuickActionsPanel({
       label: 'Bảng Xếp Hạng',
       icon: <BarChart2 size={18} className="text-white" />,
       bgClass: 'bg-amber-500',
-      hoverClass: 'hover:bg-amber-600',
+      hoverClass: 'hover:bg-amber-500',
       onClick: () => {
         onViewStandings?.()
         navigate(`/minigames/${minigameId}/standings`)

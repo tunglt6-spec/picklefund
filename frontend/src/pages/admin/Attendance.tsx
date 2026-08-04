@@ -373,7 +373,7 @@ export function Attendance() {
         footer={
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>Hủy</Button>
-            <Button onClick={handleDeleteSession} disabled={isDeleting} className="bg-red-600 hover:bg-red-700 text-white border-red-600">
+            <Button onClick={handleDeleteSession} disabled={isDeleting} className="bg-red-500 hover:bg-red-500 text-white border-red-600">
               {isDeleting ? 'Đang xóa...' : 'Xóa buổi chơi'}
             </Button>
           </div>

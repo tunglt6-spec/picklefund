@@ -1036,7 +1036,7 @@ export function FundPeriods() {
                     <button
                       onClick={handleBulkDelete}
                       disabled={bulkDeleting}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-500 disabled:opacity-50"
                     ><Trash2 size={14} />{bulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.size} kỳ đã chọn`}</button>
                   </div>
                 </div>

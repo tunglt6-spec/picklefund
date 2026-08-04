@@ -8,7 +8,7 @@ const variantClasses: Record<Variant, string> = {
   // V2.2 brand primary — tím (token, không hard-code màu).
   primary:   'text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] active:[background:var(--pf-primary-hover)]',
   secondary: '[background:var(--pf-color-muted-soft)] [color:var(--pf-text)] hover:bg-slate-200 active:bg-slate-300',
-  danger:    'bg-red-500 text-white hover:bg-red-600 shadow-sm active:bg-red-700',
+  danger:    'bg-red-500 text-white hover:bg-red-500 shadow-sm active:bg-red-500',
   ghost:     '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] active:bg-slate-200',
   outline:   'border border-slate-300 [background:var(--pf-surface)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] hover:border-slate-400 active:[background:var(--pf-color-muted-soft)]',
 }

@@ -435,12 +435,12 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
             <div className="flex gap-2">
               {exp.status === 'pending' && (
                 <>
-                  <Button size="sm" onClick={onApprove} className="bg-emerald-600 hover:bg-emerald-700 text-white"><CheckCircle size={13} />Duyệt chi</Button>
-                  <Button size="sm" onClick={onReject} className="bg-red-500 hover:bg-red-600 text-white"><X size={13} />Từ chối</Button>
+                  <Button size="sm" onClick={onApprove} className="bg-emerald-500 hover:bg-emerald-500 text-white"><CheckCircle size={13} />Duyệt chi</Button>
+                  <Button size="sm" onClick={onReject} className="bg-red-500 hover:bg-red-500 text-white"><X size={13} />Từ chối</Button>
                 </>
               )}
               <Button size="sm" variant="outline" onClick={onEdit}><Pencil size={13} />Sửa</Button>
-              <Button size="sm" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white"><Trash2 size={13} />Xóa</Button>
+              <Button size="sm" onClick={onDelete} className="bg-red-500 hover:bg-red-500 text-white"><Trash2 size={13} />Xóa</Button>
             </div>
           )}
         </div>

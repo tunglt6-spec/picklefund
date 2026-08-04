@@ -179,14 +179,14 @@ export function AiApprovalInbox() {
                       <button
                         onClick={() => void runMutation(() => approveAiAction(a.id), 'Đã duyệt')}
                         disabled={busy}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
                       >
                         <Check size={13} /> Duyệt
                       </button>
                       <button
                         onClick={() => void runMutation(() => rejectAiAction(a.id), 'Đã từ chối')}
                         disabled={busy}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                       >
                         <X size={13} /> Từ chối
                       </button>
@@ -301,7 +301,7 @@ export function AiApprovalInbox() {
                     <button
                       onClick={() => void runMutation(() => executeAiAction(a.id), 'Đã thực thi')}
                       disabled={busy}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
                     >
                       <Zap size={13} /> Thực thi
                     </button>
@@ -409,14 +409,14 @@ export function AiApprovalInbox() {
                       <button
                         onClick={() => void runMutation(() => approveAiAction(detail.id), 'Đã duyệt')}
                         disabled={busy}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
                       >
                         <Check size={15} /> Duyệt
                       </button>
                       <button
                         onClick={() => void runMutation(() => rejectAiAction(detail.id, rejectReason.trim() || undefined), 'Đã từ chối')}
                         disabled={busy}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                       >
                         <X size={15} /> Từ chối
                       </button>
@@ -427,7 +427,7 @@ export function AiApprovalInbox() {
                   <button
                     onClick={() => void runMutation(() => executeAiAction(detail.id), 'Đã thực thi')}
                     disabled={busy}
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
                   >
                     <Zap size={15} /> Thực thi (Mít Đặc)
                   </button>

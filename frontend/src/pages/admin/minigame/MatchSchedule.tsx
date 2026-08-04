@@ -251,7 +251,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               <div className="flex gap-2">
                 <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                 <button onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
-                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-600">Xóa</button>
+                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-500">Xóa</button>
               </div>
             </div>
           </div>
@@ -420,7 +420,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               </button>
               <button
                 onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-500 transition-colors"
               >
                 Xóa
               </button>

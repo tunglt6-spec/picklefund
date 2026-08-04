@@ -609,7 +609,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                 className={cn(
                   'flex-[2] py-2.5 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors',
                   preview && !confirmBlockedByGender
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-500'
                     : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] cursor-not-allowed',
                 )}
               >

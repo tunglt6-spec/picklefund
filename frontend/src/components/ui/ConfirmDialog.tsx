@@ -27,8 +27,8 @@ export function ConfirmDialog({
   const iconBg = variant === 'danger' ? 'bg-red-50' : 'bg-amber-50'
   const iconColor = variant === 'danger' ? 'text-red-500' : 'text-amber-500'
   const btnClass = variant === 'danger'
-    ? 'bg-red-600 hover:bg-red-700 text-white'
-    : 'bg-amber-500 hover:bg-amber-600 text-white'
+    ? 'bg-red-500 hover:bg-red-500 text-white'
+    : 'bg-amber-500 hover:bg-amber-500 text-white'
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

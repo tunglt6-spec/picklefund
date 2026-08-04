@@ -82,7 +82,7 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
       {allDone && onCompleteRound && (
         <button
           onClick={onCompleteRound}
-          className="mt-1 w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2.5 px-4 transition-colors"
+          className="mt-1 w-full flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-500 text-white text-sm font-semibold py-2.5 px-4 transition-colors"
         >
           <CheckCircle2 size={18} />
           Hoàn Thành Vòng

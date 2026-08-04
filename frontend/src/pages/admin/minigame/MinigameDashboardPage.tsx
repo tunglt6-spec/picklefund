@@ -508,7 +508,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-500 transition-colors"
               >
                 Xóa
               </button>
