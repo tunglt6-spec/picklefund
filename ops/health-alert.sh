@@ -19,19 +19,23 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -u
 
-ENV_FILE="${PF_ENV_FILE:-/opt/picklefund/.env.production}"
 DISK_THRESHOLD="${PF_DISK_THRESHOLD:-85}"
 API_URL="${PF_API_URL:-https://api.picklefund.uk/health}"
 STATE_DIR="${PF_STATE_DIR:-/var/tmp/pf-health}"
 mkdir -p "$STATE_DIR"
 
-# Nạp token Telegram (không in ra log).
-if [ -f "$ENV_FILE" ]; then
+# Nạp token Telegram (không in ra log). Thử CẢ .env.production và .env — backend đặt
+# TELEGRAM_* ở /opt/picklefund/.env (qua compose env_file). PF_ENV_FILE nếu đặt sẽ được
+# nạp CUỐI (đè giá trị), để tùy biến nguồn.
+ENV_CANDIDATES="/opt/picklefund/.env.production /opt/picklefund/.env"
+[ -n "${PF_ENV_FILE:-}" ] && ENV_CANDIDATES="$ENV_CANDIDATES $PF_ENV_FILE"
+for _envf in $ENV_CANDIDATES; do
+  [ -f "$_envf" ] || continue
   set -a
   # shellcheck disable=SC1090
-  . "$ENV_FILE"
+  . "$_envf"
   set +a
-fi
+done
 BOT="${TELEGRAM_BOT_TOKEN:-}"
 CHAT="${TELEGRAM_CHAT_ID:-}"
 
