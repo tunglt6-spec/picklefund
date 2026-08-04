@@ -360,7 +360,7 @@ export function TreasurerExpense() {
                       <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-20"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                     {expenses.map(e => {
                       const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
                       return (

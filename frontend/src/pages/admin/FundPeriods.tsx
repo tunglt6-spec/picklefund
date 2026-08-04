@@ -1737,7 +1737,7 @@ function HistoryTab({ contributions, periods, members }: {
                 <th className="px-4 py-2.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
               {paged.map(c => {
                 const member = members.find(m => m.id === c.memberId)
                 const period = periods.find(p => p.id === c.fundPeriodId)

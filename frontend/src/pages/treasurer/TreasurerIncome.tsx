@@ -575,7 +575,7 @@ export function TreasurerIncome() {
                       <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-20"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                     {contributions.map(c => {
                       const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
                       const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'

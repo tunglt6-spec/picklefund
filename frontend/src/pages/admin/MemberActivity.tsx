@@ -122,7 +122,7 @@ export function MemberActivity() {
               {sel.contribs.length === 0 ? (
                 <p className="py-6 text-sm [color:var(--pf-color-muted)]">Chưa có khoản đóng quỹ.</p>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-[color:var(--pf-border-soft)]">
                   {[...sel.contribs].sort((a, b) => (a.paymentDate < b.paymentDate ? 1 : -1)).slice(0, 20).map((c) => (
                     <div key={c.id} className="flex items-center justify-between py-2 text-sm">
                       <span className="[color:var(--pf-color-muted)]">{fmtDate(c.paymentDate)}{c.paymentMethod ? ` · ${c.paymentMethod}` : ''}</span>

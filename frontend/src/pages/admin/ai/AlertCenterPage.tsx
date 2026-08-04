@@ -199,7 +199,7 @@ export function AlertCenterPage() {
             {failedRuns.length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Không có workflow lỗi.</p>
             ) : (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-[color:var(--pf-border-soft)]">
                 {failedRuns.slice(0, 20).map(r => (
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
@@ -226,7 +226,7 @@ export function AlertCenterPage() {
             {failedActions.length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Không có hành động AI lỗi.</p>
             ) : (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-[color:var(--pf-border-soft)]">
                 {failedActions.slice(0, 20).map(a => (
                   <div key={a.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">

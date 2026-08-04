@@ -319,7 +319,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {filtered.length === 0 && (
                     <tr><td colSpan={8} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Không có trận nào</td></tr>
                   )}
@@ -694,7 +694,7 @@ export function MatchSchedule() {
                 <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
               {filtered.length === 0 && (
                 <tr><td colSpan={9} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Không có trận nào</td></tr>
               )}

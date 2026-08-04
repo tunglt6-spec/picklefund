@@ -232,7 +232,7 @@ export function MemberDashboard() {
                     Xem tất cả <ChevronRight size={13} />
                   </button>
                 </div>
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-[color:var(--pf-border-soft)]">
                   {completedSessions.slice(-5).reverse().map(s => (
                     <div key={s.id} className="px-4 py-2.5 flex items-center justify-between">
                       <div>

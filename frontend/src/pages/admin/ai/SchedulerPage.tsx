@@ -244,7 +244,7 @@ export function SchedulerPage() {
                 action={<ActionButton onClick={() => navigate('/admin/workflows?from=aido')}>Tới Workflow Studio</ActionButton>}
               />
             ) : (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-[color:var(--pf-border-soft)]">
                 {rules.map(r => (
                   <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
                     <div className="min-w-0 flex-1">
@@ -314,7 +314,7 @@ export function SchedulerPage() {
             {runs.length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có lượt chạy định kỳ nào.</p>
             ) : (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-[color:var(--pf-border-soft)]">
                 {runs.slice(0, 30).map(r => (
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">

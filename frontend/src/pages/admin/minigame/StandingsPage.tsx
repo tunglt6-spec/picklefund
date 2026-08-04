@@ -318,7 +318,7 @@ export function StandingsPage() {
                 <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase font-bold">Điểm</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
               {sorted.length === 0 && (
                 <tr><td colSpan={11} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Chưa có dữ liệu</td></tr>
               )}

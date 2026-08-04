@@ -347,7 +347,7 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
             )}
 
             {fileName && !fileError && totalRows > 0 && (
-              <div className="rounded-xl border border-[color:var(--pf-border)] divide-y divide-slate-100">
+              <div className="rounded-xl border border-[color:var(--pf-border)] divide-y divide-[color:var(--pf-border-soft)]">
                 <div className="px-4 py-2.5 flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
                   <FileSpreadsheet size={15} className="[color:var(--pf-color-muted)]" />{fileName}
                 </div>

@@ -217,7 +217,7 @@ export function GroupAssignment() {
                       {grp.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
                     </span>
                   </div>
-                  <div className="divide-y divide-slate-50">
+                  <div className="divide-y divide-[color:var(--pf-border-soft)]">
                     {grp.memberIds.map(memberId => {
                       const part = myParts.find(p => p.memberId === memberId)
                       if (!part) return null

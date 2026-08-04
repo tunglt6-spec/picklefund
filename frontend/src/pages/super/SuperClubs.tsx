@@ -514,7 +514,7 @@ export function SuperClubs() {
                 <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
               {filtered.map(club => (
                 <tr key={club.id} className="hover:[background:var(--pf-surface-muted)] transition-colors">
                   <td className="px-4 py-3">

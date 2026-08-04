@@ -246,7 +246,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                       <th className="text-center px-3 py-2 font-semibold" title="Điểm xếp hạng">Điểm</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                     {standings.length === 0 ? (
                       <tr><td colSpan={6} className="text-center py-6 [color:var(--pf-color-muted)] text-xs">Chưa có người chơi</td></tr>
                     ) : standings.map(s => (

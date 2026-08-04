@@ -543,7 +543,7 @@ export function MemberAccounts() {
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {filtered.map(acc => (
                     <tr key={acc.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                       <td className="px-4 py-3">

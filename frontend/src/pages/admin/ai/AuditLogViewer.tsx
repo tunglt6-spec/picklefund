@@ -158,7 +158,7 @@ export function AuditLogViewer() {
                     <th className="text-left px-4 py-3 font-semibold">Chi tiết</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {paged.map(log => (
                     <tr key={log.id} className="hover:[background:var(--pf-color-muted-soft)]">
                       <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{fmt(log.createdAt)}</td>

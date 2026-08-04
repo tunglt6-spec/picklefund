@@ -474,7 +474,7 @@ export function SuperClubDetail() {
                     <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {members.map(m => (
                     <tr key={m.id} className="hover:[background:var(--pf-surface-muted)]">
                       <td className="px-4 py-3 font-medium [color:var(--pf-text)]">{m.username}</td>

@@ -153,7 +153,7 @@ export function SuperDashboard() {
                     <th className="text-center py-2 px-2 font-medium [color:var(--pf-color-muted)]">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {clubs.length === 0 ? (
                     <tr><td colSpan={4} className="text-center py-8 [color:var(--pf-color-muted)] text-xs">Đang tải...</td></tr>
                   ) : clubs.map(club => (
