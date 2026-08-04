@@ -27,6 +27,8 @@ interface AutoDelta {
   lateDelta: number;
   overdueDelta: number;
   absentCount: number;
+  /** Số buổi ĐÃ điểm danh trong tháng (mẫu số để tính TB điểm danh). */
+  sessionCount: number;
   lateCount: number;
   overdueCount: number;
 }
@@ -144,6 +146,7 @@ export class ScoringService {
           lateDelta: 0,
           overdueDelta: 0,
           absentCount: 0,
+          sessionCount: 0,
           lateCount: 0,
           overdueCount: 0,
         };
@@ -152,27 +155,40 @@ export class ScoringService {
       return e;
     };
 
-    // ── Điểm danh: đếm buổi ABSENT của member trong tháng ──
+    // ── Điểm danh: chấm THEO TỪNG BUỔI rồi lấy TRUNG BÌNH tháng ──
+    // Mỗi buổi ĐÃ điểm danh (auto-chốt): board = 100 (có mặt) hoặc 100+absentDelta (vắng).
+    // Điểm điểm danh tháng = trung bình board ⇒ delta khỏi 100 =
+    //   absentDelta × (số buổi vắng ÷ số buổi đã điểm danh). Vắng được chia đều theo số buổi.
     const sessions = await this.prisma.attendanceSession.findMany({
       where: { clubId, sessionDate: { gte: start, lt: end } },
       select: { id: true },
     });
     const sessionIds = sessions.map((s) => s.id);
     if (sessionIds.length > 0) {
-      const absentGroups = await this.prisma.attendanceRecord.groupBy({
-        by: ['memberId'],
-        where: {
-          clubId,
-          status: 'ABSENT',
-          attendanceSessionId: { in: sessionIds },
-          ...(memberIds ? { memberId: { in: memberIds } } : {}),
-        },
+      // Buổi ĐÃ điểm danh = có ≥1 record (auto-chốt) — là MẪU SỐ tính trung bình.
+      const attendedSessions = await this.prisma.attendanceRecord.groupBy({
+        by: ['attendanceSessionId'],
+        where: { clubId, attendanceSessionId: { in: sessionIds } },
         _count: { _all: true },
       });
-      for (const g of absentGroups) {
-        const e = ensure(g.memberId);
-        e.absentCount = g._count._all;
-        e.attendance = e.absentCount * absentDelta;
+      const attendedCount = attendedSessions.length;
+      if (attendedCount > 0) {
+        const absentGroups = await this.prisma.attendanceRecord.groupBy({
+          by: ['memberId'],
+          where: {
+            clubId,
+            status: 'ABSENT',
+            attendanceSessionId: { in: sessionIds },
+            ...(memberIds ? { memberId: { in: memberIds } } : {}),
+          },
+          _count: { _all: true },
+        });
+        for (const g of absentGroups) {
+          const e = ensure(g.memberId);
+          e.absentCount = g._count._all;
+          e.sessionCount = attendedCount;
+          e.attendance = (e.absentCount * absentDelta) / attendedCount;
+        }
       }
     }
 
@@ -293,21 +309,27 @@ export class ScoringService {
       manualByMember.set(g.memberId, g._sum.delta ?? 0);
     }
 
-    return members.map((m) => {
-      const auto = autoMap.get(m.id);
-      const total = this.clamp(
-        SCORE_BASELINE +
-          (auto?.attendance ?? 0) +
-          (auto?.finance ?? 0) +
-          (manualByMember.get(m.id) ?? 0),
+    return members
+      .map((m) => {
+        const auto = autoMap.get(m.id);
+        const total = this.clamp(
+          SCORE_BASELINE +
+            (auto?.attendance ?? 0) +
+            (auto?.finance ?? 0) +
+            (manualByMember.get(m.id) ?? 0),
+        );
+        return {
+          memberId: m.id,
+          memberName: m.fullName,
+          total,
+          classification: classifyScore(total),
+        };
+      })
+      // (1) Sắp theo ĐIỂM giảm dần (≈ thứ tự xếp loại); cùng điểm → theo tên (vi).
+      .sort(
+        (a, b) =>
+          b.total - a.total || a.memberName.localeCompare(b.memberName, 'vi'),
       );
-      return {
-        memberId: m.id,
-        memberName: m.fullName,
-        total,
-        classification: classifyScore(total),
-      };
-    });
   }
 
   // ── Quản lý thang điểm (ScoringRule CRUD, scope clubId) ────────────────
@@ -511,8 +533,8 @@ export class ScoringService {
     const autoLines: Array<{ label: string; delta: number }> = [];
     if (auto && auto.absentCount > 0 && attendance < 0) {
       autoLines.push({
-        label: `Vắng ${auto.absentCount} buổi`,
-        delta: attendance,
+        label: `Vắng ${auto.absentCount}/${auto.sessionCount} buổi (TB)`,
+        delta: Math.round(attendance),
       });
     }
     if (auto && auto.lateCount > 0) {
@@ -586,11 +608,12 @@ export class ScoringService {
     return `${now.getFullYear()}-${month}`;
   }
 
-  /** Clamp điểm về [0, SCORE_BASELINE]. */
+  /** Làm tròn (điểm TB điểm danh có thể lẻ) rồi clamp về [0, SCORE_BASELINE]. */
   private clamp(score: number): number {
-    if (score < 0) return 0;
-    if (score > SCORE_BASELINE) return SCORE_BASELINE;
-    return score;
+    const r = Math.round(score);
+    if (r < 0) return 0;
+    if (r > SCORE_BASELINE) return SCORE_BASELINE;
+    return r;
   }
 
   /** Khoảng [đầu tháng, đầu tháng sau) từ periodMonth 'YYYY-MM'. */

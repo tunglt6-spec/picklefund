@@ -180,7 +180,11 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
     setError(false)
     try {
       const res = await api.get(`/scoring/period?month=${month}`)
-      setRows((res.data?.data ?? []) as PeriodRow[])
+      // (1) Sắp theo ĐIỂM giảm dần (cao→thấp); cùng điểm → theo tên. Áp cho bảng + Excel + PDF.
+      const data = ((res.data?.data ?? []) as PeriodRow[])
+        .slice()
+        .sort((a, b) => b.total - a.total || a.memberName.localeCompare(b.memberName, 'vi'))
+      setRows(data)
     } catch {
       setError(true)
     } finally {
