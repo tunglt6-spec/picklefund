@@ -32,7 +32,7 @@ const VARIANT_STYLE: Record<Variant, CSSProperties> = {
 }
 
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary: 'shadow-sm hover:shadow-md active:scale-[0.98] hover:[background:var(--pf-primary-hover)]',
+  primary: 'shadow-sm hover:shadow-md hover:[background:var(--pf-primary-hover)]',
   secondary: 'hover:[background:var(--pf-color-muted-soft)]',
   ghost: 'hover:[background:var(--pf-color-muted-soft)]',
 }
@@ -66,7 +66,7 @@ export function ActionButton({
     <button
       aria-label={accessibleName}
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none',
+        'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[color:var(--pf-primary)]',
         iconOnly ? 'h-10 w-10 p-0' : 'px-4 py-2',
         VARIANT_CLASS[variant],
         fullWidth && 'w-full',

@@ -73,7 +73,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                   key={t.key}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+                    'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
                     isActive
                       ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
                       : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
