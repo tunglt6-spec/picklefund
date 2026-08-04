@@ -24,7 +24,7 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
   const data = [
     { name: 'Hoàn Thành', value: kpi.completedMatches, color: '#22C55E' },
     { name: 'Chờ Điểm', value: kpi.pendingResultMatches, color: '#F59E0B' },
-    { name: 'Còn Lại', value: remaining, color: '#E2E8F0' },
+    { name: 'Còn Lại', value: remaining, color: 'var(--pf-border)' },
   ]
 
   const percentage = Math.round(kpi.completionRate)
@@ -58,7 +58,7 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
                 formatter={(value: unknown, name: unknown) => [value as number, name as string]}
                 contentStyle={{
                   borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
+                  border: '1px solid var(--pf-border)',
                   fontSize: '12px',
                 }}
               />

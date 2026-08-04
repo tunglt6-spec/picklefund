@@ -123,10 +123,10 @@ export function WorkflowRules() {
   }
   // Palette tint value-based (đồng bộ nguyên tắc màu KPI toàn app).
   const WF_KPI_TONE = {
-    success: { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', fg: '#059669' },
-    warning: { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', fg: '#D97706' },
-    danger: { bg: '#FEF2F2', border: '#FEE2E2', bar: '#EF4444', fg: '#EF4444' },
-    neutral: { bg: '#F8FAFC', border: '#E2E8F0', bar: '#94A3B8', fg: '#64748B' },
+    success: { bg: 'color-mix(in srgb, #059669 10%, var(--pf-surface))', border: 'color-mix(in srgb, #059669 30%, var(--pf-surface))', bar: '#059669', fg: '#059669' },
+    warning: { bg: 'color-mix(in srgb, #D97706 10%, var(--pf-surface))', border: 'color-mix(in srgb, #D97706 30%, var(--pf-surface))', bar: '#D97706', fg: '#D97706' },
+    danger: { bg: 'color-mix(in srgb, #EF4444 10%, var(--pf-surface))', border: 'color-mix(in srgb, #EF4444 30%, var(--pf-surface))', bar: '#EF4444', fg: '#EF4444' },
+    neutral: { bg: 'var(--pf-surface-muted)', border: 'var(--pf-border)', bar: '#94A3B8', fg: '#64748B' },
   } as const
   const templateGroups = groupByCategory(templates, (t) => t.triggerType)
   const ruleGroups = groupByCategory(rules, (r) => r.triggerType)

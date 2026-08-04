@@ -50,23 +50,23 @@ const CARD = {
 
 // ── status config ──────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
-  DRAFT:       { label: 'Nháp',          bg: '#F1F5F9', color: '#64748B' },
-  PAIRED:      { label: 'Đã Ghép Cặp',  bg: '#F5F3FF', color: '#7C3AED' },
+  DRAFT:       { label: 'Nháp',          bg: 'var(--pf-surface-muted)', color: '#64748B' },
+  PAIRED:      { label: 'Đã Ghép Cặp',  bg: 'color-mix(in srgb, #6D5DFB 10%, var(--pf-surface))', color: '#7C3AED' },
   SCHEDULED:   { label: 'Có Lịch',      bg: '#EEEDFE', color: '#6D5DFB' },
   IN_PROGRESS: { label: 'Đang Diễn Ra', bg: '#DCFCE7', color: '#16A34A' },
   COMPLETED:   { label: 'Hoàn Thành',   bg: '#DCFCE7', color: '#16A34A' },
-  CANCELLED:   { label: 'Đã Hủy',       bg: '#FEE2E2', color: '#DC2626' },
+  CANCELLED:   { label: 'Đã Hủy',       bg: 'color-mix(in srgb, #EF4444 30%, var(--pf-surface))', color: '#DC2626' },
 }
 
 const MATCH_STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:   { label: 'Chờ',     bg: '#FEF3C7', color: '#D97706' },
+  PENDING:   { label: 'Chờ',     bg: 'color-mix(in srgb, #D97706 30%, var(--pf-surface))', color: '#D97706' },
   COMPLETED: { label: 'Đã xong', bg: '#DCFCE7', color: '#16A34A' },
-  CANCELLED: { label: 'Đã hủy',  bg: '#FEE2E2', color: '#DC2626' },
+  CANCELLED: { label: 'Đã hủy',  bg: 'color-mix(in srgb, #EF4444 30%, var(--pf-surface))', color: '#DC2626' },
 }
 
 // ── small helpers ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CFG[status] ?? { label: status, bg: '#F1F5F9', color: '#64748B' }
+  const cfg = STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: '#64748B' }
   return (
     <span
       className="text-[11px] font-semibold rounded-full px-2.5 py-0.5 inline-flex items-center gap-1"
@@ -79,7 +79,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function MatchStatusBadge({ status }: { status: string }) {
-  const cfg = MATCH_STATUS_CFG[status] ?? { label: status, bg: '#F1F5F9', color: '#64748B' }
+  const cfg = MATCH_STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: '#64748B' }
   return (
     <span
       className="text-[10px] font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 whitespace-nowrap"
@@ -103,7 +103,7 @@ function KpiCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.txt2 }}>{label}</p>
-        <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#F1F5F9' }}>
+        <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--pf-surface-muted)' }}>
           {icon}
         </span>
       </div>
@@ -379,7 +379,7 @@ function RoundCard({
           )}
           {!allDone && done === 0 && (
             <span className="text-[10px] font-semibold rounded-full px-2 py-0.5"
-              style={{ background: '#F1F5F9', color: T.txt2 }}>Chưa diễn ra</span>
+              style={{ background: 'var(--pf-surface-muted)', color: T.txt2 }}>Chưa diễn ra</span>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -1089,7 +1089,7 @@ export function FixedDoublesDashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <span className="text-[11px] font-semibold rounded-full px-2 py-0.5"
-                style={{ background: '#FEF3C7', color: '#D97706' }}>
+                style={{ background: 'color-mix(in srgb, #D97706 30%, var(--pf-surface))', color: '#D97706' }}>
                 🤝 Đôi Cố Định
               </span>
               <StatusBadge status={mg.status} />

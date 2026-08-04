@@ -196,7 +196,7 @@ export function KpiMonitorPage() {
                   <BarChart data={trend} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} width={28} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid var(--pf-border)' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="workflow" name="Workflow" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="ai" name="Hành động AI" fill="#0EA5E9" radius={[4, 4, 0, 0]} />

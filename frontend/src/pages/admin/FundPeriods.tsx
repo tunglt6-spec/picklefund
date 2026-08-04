@@ -1910,7 +1910,7 @@ function HighlightsTab({ contributions, periods, members }: {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => `${Math.round(v / 1000)}k`} tick={{ fontSize: 10, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v) => formatVND(Number(v))} labelStyle={{ fontSize: 11 }} contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+                <Tooltip formatter={(v) => formatVND(Number(v))} labelStyle={{ fontSize: 11 }} contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--pf-border)' }} />
                 <Bar dataKey="confirmed" name="Đã xác nhận" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="pending" name="Chờ xác nhận" fill="#fbbf24" radius={[4, 4, 0, 0]} />
               </BarChart>

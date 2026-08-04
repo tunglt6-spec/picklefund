@@ -118,7 +118,7 @@ function ManHinhLoi({
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center"
-      style={{ background: 'var(--pf-bg, #f8fafc)', color: 'var(--pf-text, #1e293b)' }}
+      style={{ background: 'var(--pf-bg, var(--pf-surface-muted))', color: 'var(--pf-text, #1e293b)' }}
     >
       <div
         className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
@@ -144,7 +144,7 @@ function ManHinhLoi({
               window.location.href = '/'
             }}
             className="rounded-xl border px-4 py-2 text-sm font-semibold"
-            style={{ borderColor: 'var(--pf-border, #e2e8f0)', color: 'var(--pf-text, #1e293b)' }}
+            style={{ borderColor: 'var(--pf-border, var(--pf-border))', color: 'var(--pf-text, #1e293b)' }}
           >
             Về trang chủ
           </button>

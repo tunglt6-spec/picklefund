@@ -12,8 +12,8 @@ interface MobileClubCardProps {
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   active:    { label: 'Hoạt động', color: '#22C55E', bg: '#F0FDF4' },
-  suspended: { label: 'Bị khóa',  color: '#F59E0B', bg: '#FFFBEB' },
-  deleted:   { label: 'Đã xóa',   color: '#EF4444', bg: '#FEF2F2' },
+  suspended: { label: 'Bị khóa',  color: '#F59E0B', bg: 'color-mix(in srgb, #D97706 10%, var(--pf-surface))' },
+  deleted:   { label: 'Đã xóa',   color: '#EF4444', bg: 'color-mix(in srgb, #EF4444 10%, var(--pf-surface))' },
 }
 
 export function MobileClubCard({ name, code, memberCount, fundPeriodCount, status }: MobileClubCardProps) {

@@ -467,7 +467,7 @@ export function MemberAccounts() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="[background:var(--pf-surface)] border-b border-[#E2E8F0] px-6 py-5">
+      <div className="[background:var(--pf-surface)] border-b border-[var(--pf-border)] px-6 py-5">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             {!embedded && <h1 className="text-base font-bold text-[#0F172A]">Tài khoản thành viên</h1>}
@@ -498,7 +498,7 @@ export function MemberAccounts() {
             { label: 'Chưa kích hoạt', value: accounts.filter(a => ['pending', 'must_change'].includes(getStatus(a))).length, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Bị khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600', bg: 'bg-red-50' },
           ].map(s => (
-            <div key={s.label} className="[background:var(--pf-surface)] rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-4">
+            <div key={s.label} className="[background:var(--pf-surface)] rounded-[18px] border border-[var(--pf-border)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-4">
               <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
                 <Users size={16} className={s.color} />
               </div>
@@ -509,7 +509,7 @@ export function MemberAccounts() {
         </div>
 
         {/* Table card (search header + table) */}
-        <div className="[background:var(--pf-surface)] rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
+        <div className="[background:var(--pf-surface)] rounded-[18px] border border-[var(--pf-border)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
           <div className="px-5 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-3">
             <div className="relative w-64">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
