@@ -159,25 +159,41 @@ export function Notifications() {
   useEffect(() => { fetchNotifs() }, [fetchNotifs])
 
   const handleRead = async (id: string) => {
+    // Optimistic: đánh dấu đã đọc NGAY (UI tức thì), rollback nếu API lỗi.
+    const prevNotifs = notifs
+    const prevUnread = unreadCount
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, status: 'READ' } : n))
+    setUnreadCount(prev => {
+      const next = Math.max(0, prev - 1)
+      setGlobalUnread(Math.min(next, 9))
+      return next
+    })
     try {
       await api.patch(`/hermes/notifications/${id}/read`)
-      setNotifs(prev => prev.map(n => n.id === id ? { ...n, status: 'READ' } : n))
-      setUnreadCount(prev => {
-        const next = Math.max(0, prev - 1)
-        setGlobalUnread(Math.min(next, 9))
-        return next
-      })
-    } catch { /* silent */ }
+    } catch {
+      setNotifs(prevNotifs)
+      setUnreadCount(prevUnread)
+      setGlobalUnread(Math.min(prevUnread, 9))
+      toast.error('Không thể đánh dấu đã đọc — thử lại')
+    }
   }
 
   const handleReadAll = async () => {
+    // Optimistic: đánh dấu TẤT CẢ đã đọc ngay, rollback nếu lỗi.
+    const prevNotifs = notifs
+    const prevUnread = unreadCount
+    setNotifs(prev => prev.map(n => ({ ...n, status: 'READ' as const })))
+    setUnreadCount(0)
+    resetGlobal()
     try {
       await api.post('/hermes/notifications/read-all')
-      setNotifs(prev => prev.map(n => ({ ...n, status: 'READ' as const })))
-      setUnreadCount(0)
-      resetGlobal()
       toast.success('Đã đánh dấu tất cả là đã đọc')
-    } catch { /* silent */ }
+    } catch {
+      setNotifs(prevNotifs)
+      setUnreadCount(prevUnread)
+      setGlobalUnread(Math.min(prevUnread, 9))
+      toast.error('Không thể đánh dấu — thử lại')
+    }
   }
 
   const [tab, setTab] = useState<TabKey>('all')
