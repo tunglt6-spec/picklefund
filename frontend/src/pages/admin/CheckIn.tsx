@@ -102,14 +102,21 @@ export function CheckIn() {
     })
 
   // Member self-scope: check-in CHÍNH mình qua PUT /member/me/sessions/:id/checkin (không body).
+  // Optimistic: hiện "Có mặt" NGAY (không chờ PUT + reload), rollback nếu API lỗi.
   const memberCheckInSelf = async () => {
     if (!sessionId || !myMemberId || saving) return
+    if (present.has(myMemberId)) return // đã có mặt
+    setPresent((prev) => new Set(prev).add(myMemberId)) // optimistic
     setSaving(true)
     try {
       await api.put(`/member/me/sessions/${sessionId}/checkin`)
       toast.success('Đã check-in')
-      await load(sessionId)
     } catch {
+      setPresent((prev) => {
+        const next = new Set(prev)
+        next.delete(myMemberId!)
+        return next
+      })
       toast.error('Check-in thất bại. Vui lòng thử lại.')
     } finally {
       setSaving(false)
