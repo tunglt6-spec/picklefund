@@ -343,6 +343,18 @@ select:-webkit-autofill {
   --color-pink-600:#f472b6; --color-pink-700:#f9a8d4; --color-pink-800:#f9a8d4;
 }
 
+/* ── Recharts (dark): cursor hover + hộp tooltip mặc định của recharts vốn SÁNG
+   (#ccc / #fff) → ở dark thành mảng trắng lớn khi rê chuột. Retint 1 chỗ cho MỌI biểu
+   đồ (tooltip custom đã token-hoá riêng nên không đụng; màu series Thu/Chi giữ nguyên). ── */
+[data-theme="dark"] .recharts-tooltip-cursor { fill: var(--pf-surface-muted) !important; }
+[data-theme="dark"] .recharts-default-tooltip {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  border-radius: 12px;
+  box-shadow: var(--pf-shadow-hover);
+}
+[data-theme="dark"] .recharts-default-tooltip .recharts-tooltip-label { color: var(--pf-text) !important; }
+
 /* A11y (Elite): tôn trọng người dùng tắt hiệu ứng — gần như bỏ mọi animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   *,
