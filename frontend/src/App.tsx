@@ -193,7 +193,15 @@ export default function App() {
         {/* ErrorBoundary bọc toàn bộ route: 1 màn lỗi → hiện thông báo + nút "Tải lại", KHÔNG trắng
             cả app; lỗi tải chunk sau deploy → tự tải lại lấy bản mới. */}
         <ErrorBoundary>
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Đang tải…</div>}>
+        <Suspense fallback={
+          <div className="flex min-h-screen items-center justify-center [background:var(--pf-bg)]">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary)]"
+              role="status"
+              aria-label="Đang tải"
+            />
+          </div>
+        }>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/pricing" element={<Pricing />} />

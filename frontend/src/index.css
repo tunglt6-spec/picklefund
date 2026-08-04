@@ -193,6 +193,22 @@ body {
   }
 }
 
+/* Skeleton shimmer (Elite): vệt sáng chạy ngang thay 'pulse' mờ dần. Dùng cho LoadingState. */
+.pf-skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--pf-surface-muted) 30%,
+    #e9eef6 50%,
+    var(--pf-surface-muted) 70%
+  );
+  background-size: 200% 100%;
+  animation: pfShimmer 1.4s ease-in-out infinite;
+}
+@keyframes pfShimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
 /* A11y (Elite): tôn trọng người dùng tắt hiệu ứng — gần như bỏ mọi animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   *,
