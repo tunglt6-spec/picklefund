@@ -26,7 +26,7 @@ const TONE_PALETTE: Record<MetricTone, { bg: string; border: string; bar: string
   danger: mkTone('#EF4444'),
   info: mkTone('#2563EB'),
   brand: mkTone('#6D5DFB'),
-  neutral: mkTone('#94A3B8', 'var(--pf-color-muted)'),
+  neutral: mkTone('var(--pf-color-muted)', 'var(--pf-color-muted)'),
 }
 
 interface MetricCardProps {

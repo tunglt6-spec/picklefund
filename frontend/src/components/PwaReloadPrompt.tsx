@@ -40,7 +40,7 @@ export function PwaReloadPrompt() {
         padding: '10px 14px',
         borderRadius: 14,
         background: 'var(--pf-surface, #ffffff)',
-        color: 'var(--pf-text, #0f172a)',
+        color: 'var(--pf-text, var(--pf-text))',
         border: '1px solid var(--pf-border)',
         boxShadow: '0 8px 24px rgba(15, 23, 42, 0.18)',
         maxWidth: 'calc(100vw - 24px)',

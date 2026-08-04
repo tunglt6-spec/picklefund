@@ -339,7 +339,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                 onClick={handleEndTournament}
                 title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
-                style={{ background: allDone ? '#16A34A' : '#94A3B8' }}
+                style={{ background: allDone ? '#16A34A' : 'var(--pf-color-muted)' }}
               >
                 <Trophy size={16} /> Kết thúc giải đấu
               </button>

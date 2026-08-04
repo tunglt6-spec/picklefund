@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import type { MiniGamePersonalStanding } from '../../types/minigame'
 
-const BAR_COLORS = ['#f59e0b', '#94a3b8', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
+const BAR_COLORS = ['#f59e0b', 'var(--pf-color-muted)', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
 
 interface Props {
   standings: MiniGamePersonalStanding[]

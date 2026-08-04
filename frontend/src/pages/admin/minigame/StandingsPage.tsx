@@ -33,7 +33,7 @@ const RANK_CLASS: Record<number, string> = {
   3: 'bg-amber-50 border-l-2 border-amber-400',
 }
 
-const BAR_COLORS = ['#f59e0b', '#94a3b8', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
+const BAR_COLORS = ['#f59e0b', 'var(--pf-color-muted)', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
 
 export function StandingsPage() {
   const { id } = useParams<{ id: string }>()

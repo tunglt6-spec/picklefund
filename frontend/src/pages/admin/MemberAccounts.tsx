@@ -470,8 +470,8 @@ export function MemberAccounts() {
       <div className="[background:var(--pf-surface)] border-b border-[var(--pf-border)] px-6 py-5">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            {!embedded && <h1 className="text-base font-bold text-[#0F172A]">Tài khoản thành viên</h1>}
-            <p className="text-xs text-[#64748B] mt-0.5">
+            {!embedded && <h1 className="text-base font-bold text-[var(--pf-text)]">Tài khoản thành viên</h1>}
+            <p className="text-xs text-[var(--pf-color-muted)] mt-0.5">
               Cấp quyền đăng nhập view-only cho thành viên CLB
             </p>
           </div>
@@ -502,8 +502,8 @@ export function MemberAccounts() {
               <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
                 <Users size={16} className={s.color} />
               </div>
-              <p className="text-2xl font-bold text-[#0F172A]">{s.value}</p>
-              <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+              <p className="text-2xl font-bold text-[var(--pf-text)]">{s.value}</p>
+              <p className="text-xs text-[var(--pf-color-muted)] mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>

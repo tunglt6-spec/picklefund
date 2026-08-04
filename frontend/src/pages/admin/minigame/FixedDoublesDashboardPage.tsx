@@ -50,23 +50,23 @@ const CARD = {
 
 // ── status config ──────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
-  DRAFT:       { label: 'Nháp',          bg: 'var(--pf-surface-muted)', color: '#64748B' },
+  DRAFT:       { label: 'Nháp',          bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' },
   PAIRED:      { label: 'Đã Ghép Cặp',  bg: 'color-mix(in srgb, #6D5DFB 10%, var(--pf-surface))', color: '#7C3AED' },
-  SCHEDULED:   { label: 'Có Lịch',      bg: '#EEEDFE', color: '#6D5DFB' },
-  IN_PROGRESS: { label: 'Đang Diễn Ra', bg: '#DCFCE7', color: '#16A34A' },
-  COMPLETED:   { label: 'Hoàn Thành',   bg: '#DCFCE7', color: '#16A34A' },
+  SCHEDULED:   { label: 'Có Lịch',      bg: 'var(--pf-primary-soft)', color: '#6D5DFB' },
+  IN_PROGRESS: { label: 'Đang Diễn Ra', bg: 'color-mix(in srgb, #16A34A 18%, var(--pf-surface))', color: '#16A34A' },
+  COMPLETED:   { label: 'Hoàn Thành',   bg: 'color-mix(in srgb, #16A34A 18%, var(--pf-surface))', color: '#16A34A' },
   CANCELLED:   { label: 'Đã Hủy',       bg: 'color-mix(in srgb, #EF4444 30%, var(--pf-surface))', color: '#DC2626' },
 }
 
 const MATCH_STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:   { label: 'Chờ',     bg: 'color-mix(in srgb, #D97706 30%, var(--pf-surface))', color: '#D97706' },
-  COMPLETED: { label: 'Đã xong', bg: '#DCFCE7', color: '#16A34A' },
+  COMPLETED: { label: 'Đã xong', bg: 'color-mix(in srgb, #16A34A 18%, var(--pf-surface))', color: '#16A34A' },
   CANCELLED: { label: 'Đã hủy',  bg: 'color-mix(in srgb, #EF4444 30%, var(--pf-surface))', color: '#DC2626' },
 }
 
 // ── small helpers ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: '#64748B' }
+  const cfg = STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }
   return (
     <span
       className="text-[11px] font-semibold rounded-full px-2.5 py-0.5 inline-flex items-center gap-1"
@@ -79,7 +79,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function MatchStatusBadge({ status }: { status: string }) {
-  const cfg = MATCH_STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: '#64748B' }
+  const cfg = MATCH_STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }
   return (
     <span
       className="text-[10px] font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 whitespace-nowrap"
@@ -375,7 +375,7 @@ function RoundCard({
           <span className="text-[11px]" style={{ color: T.txt2 }}>{done}/{matches.length} trận</span>
           {allDone && (
             <span className="text-[10px] font-semibold rounded-full px-2 py-0.5"
-              style={{ background: '#DCFCE7', color: '#16A34A' }}>✓ Hoàn thành</span>
+              style={{ background: 'color-mix(in srgb, #16A34A 18%, var(--pf-surface))', color: '#16A34A' }}>✓ Hoàn thành</span>
           )}
           {!allDone && done === 0 && (
             <span className="text-[10px] font-semibold rounded-full px-2 py-0.5"
@@ -553,7 +553,7 @@ function TournamentStatusCard({ status }: { status: string }) {
   if (status !== 'IN_PROGRESS') return null
   return (
     <div className="rounded-2xl border p-4 flex gap-3"
-      style={{ background: '#EEEDFE', borderColor: '#C7C2FB' }}>
+      style={{ background: 'var(--pf-primary-soft)', borderColor: 'color-mix(in srgb, #6D5DFB 30%, var(--pf-surface))' }}>
       <AlertCircle size={16} style={{ color: T.brand }} className="shrink-0 mt-0.5" />
       <div>
         <p className="text-sm font-bold" style={{ color: T.brand }}>Giải đấu đang diễn ra</p>
@@ -1102,7 +1102,7 @@ export function FixedDoublesDashboardPage() {
                 onClick={handleEndTournament}
                 title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
                 className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white transition-colors"
-                style={{ background: allDone ? '#16A34A' : '#94A3B8' }}
+                style={{ background: allDone ? '#16A34A' : 'var(--pf-color-muted)' }}
               >
                 <Trophy size={15} />
                 <span className="hidden sm:inline">Kết thúc giải đấu</span>

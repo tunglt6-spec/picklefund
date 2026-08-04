@@ -68,12 +68,12 @@ const RUN_STATUS_META: Record<string, { label: string; color: string }> = {
   RUNNING: { label: 'Đang chạy', color: 'var(--pf-accent-sky, #3B82F6)' },
   PENDING: { label: 'Chờ', color: 'var(--pf-accent-amber, #F59E0B)' },
   FAILED: { label: 'Thất bại', color: 'var(--pf-accent-rose, #EF4444)' },
-  CANCELLED: { label: 'Đã hủy', color: 'var(--pf-color-muted, #94A3B8)' },
+  CANCELLED: { label: 'Đã hủy', color: 'var(--pf-color-muted, var(--pf-color-muted))' },
 }
 const riskMeta = (r?: string) =>
   RISK_META[(r ?? '').toLowerCase()] ?? { label: r ?? '—', color: 'var(--pf-primary)' }
 const runMeta = (s?: string) =>
-  RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, #94A3B8)' }
+  RUN_STATUS_META[(s ?? '').toUpperCase()] ?? { label: s ?? '—', color: 'var(--pf-color-muted, var(--pf-color-muted))' }
 
 type AgentStatus = 'online' | 'busy' | 'waiting' | 'error' | 'offline'
 
@@ -395,10 +395,10 @@ export function AiDigitalOffice() {
           <div className="flex items-center gap-2">
             <span
               className="hidden sm:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium [border-color:var(--pf-border)]"
-              style={{ color: alive ? 'var(--pf-green)' : 'var(--pf-color-muted, #94A3B8)' }}
+              style={{ color: alive ? 'var(--pf-green)' : 'var(--pf-color-muted, var(--pf-color-muted))' }}
               title={beatAt ? `Nhịp nền lúc ${new Date(beatAt).toLocaleTimeString('vi-VN')}` : 'Chưa nhận nhịp nền'}
             >
-              <LiveDot color={alive ? 'var(--pf-green)' : 'var(--pf-color-muted, #94A3B8)'} size={7} active={alive} />
+              <LiveDot color={alive ? 'var(--pf-green)' : 'var(--pf-color-muted, var(--pf-color-muted))'} size={7} active={alive} />
               {alive ? 'AI nền: đang chạy' : 'AI nền: chờ…'}
             </span>
             {updatedAt && (
@@ -678,7 +678,7 @@ export function AiDigitalOffice() {
                 {[
                   { label: 'Chờ duyệt', value: pending, color: 'var(--pf-accent-amber, #F59E0B)' },
                   { label: 'Đã duyệt', value: summary?.approvedActions ?? 0, color: 'var(--pf-accent-sky, #3B82F6)' },
-                  { label: 'Từ chối', value: summary?.rejectedActions ?? 0, color: 'var(--pf-color-muted, #94A3B8)' },
+                  { label: 'Từ chối', value: summary?.rejectedActions ?? 0, color: 'var(--pf-color-muted, var(--pf-color-muted))' },
                   { label: 'Thất bại', value: failed, color: 'var(--pf-accent-rose, #EF4444)' },
                 ].map((it) => (
                   <div key={it.label} className="rounded-xl border px-3 py-3 [border-color:var(--pf-border)]">

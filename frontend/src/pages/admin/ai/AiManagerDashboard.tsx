@@ -229,7 +229,7 @@ const kpiTone = (bar: string, fg?: string): KpiPalette => ({
 })
 const KPI_COLORS: Record<'emerald' | 'slate' | 'violet' | 'sky' | 'amber' | 'red', KpiPalette> = {
   emerald: kpiTone('#059669'),
-  slate: kpiTone('#94A3B8', 'var(--pf-color-muted)'),
+  slate: kpiTone('var(--pf-color-muted)', 'var(--pf-color-muted)'),
   violet: kpiTone('#6D5DFB'),
   sky: kpiTone('#2563EB'),
   amber: kpiTone('#D97706'),

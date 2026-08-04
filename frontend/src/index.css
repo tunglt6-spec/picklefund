@@ -124,8 +124,8 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-neutral-50);
-  color: var(--color-neutral-900);
+  background-color: var(--pf-bg);
+  color: var(--pf-text);
   -webkit-font-smoothing: antialiased;
   font-size: 14px;
   line-height: 1.5;

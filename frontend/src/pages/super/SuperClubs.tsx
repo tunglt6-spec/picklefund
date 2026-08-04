@@ -37,7 +37,7 @@ function PlanSelect({
       title="Gói dịch vụ"
     >
       {PLAN_OPTIONS.map((p) => (
-        <option key={p} value={p} style={{ color: '#0F172A' }}>Gói {PLAN_LABEL[p]}</option>
+        <option key={p} value={p} style={{ color: 'var(--pf-text)' }}>Gói {PLAN_LABEL[p]}</option>
       ))}
     </select>
   )

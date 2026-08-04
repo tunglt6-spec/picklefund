@@ -127,7 +127,7 @@ function ManHinhLoi({
         ⚠️
       </div>
       <h1 className="text-lg font-bold">{tieuDe}</h1>
-      <p className="max-w-sm text-sm" style={{ color: 'var(--pf-color-muted, #64748b)' }}>
+      <p className="max-w-sm text-sm" style={{ color: 'var(--pf-color-muted, var(--pf-color-muted))' }}>
         {moTa}
       </p>
       {hien && (
