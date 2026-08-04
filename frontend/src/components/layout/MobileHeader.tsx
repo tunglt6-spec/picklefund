@@ -54,7 +54,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 flex items-center justify-between"
+      className="sticky top-0 z-40 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 flex items-center justify-between"
       style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Left: Hamburger + Logo + Name */}
@@ -62,7 +62,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <button
           onClick={onMenuClick}
           aria-label="Mở menu"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600 active:bg-slate-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
         >
           <Menu size={20} />
         </button>
@@ -71,7 +71,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         ) : (
           <div className="shrink-0"><PickleFundLogoMark size={26} /></div>
         )}
-        <span className="text-[18px] font-[800] text-slate-900 tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
+        <span className="text-[18px] font-[800] [color:var(--pf-text)] tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
       </div>
 
       {/* Right: Hướng dẫn + Bell + Avatar */}
@@ -86,7 +86,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         </button>
         <button
           onClick={() => navigate(notifRoute)}
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 active:bg-slate-100"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
         >
           <Bell size={18} />
           {unreadCount > 0 && (
@@ -108,9 +108,9 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-11 w-52 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/60 overflow-hidden z-50">
+            <div className="absolute right-0 top-11 w-52 rounded-2xl [background:var(--pf-surface)] border border-[color:var(--pf-border)] shadow-xl overflow-hidden z-50">
               {/* User info */}
-              <div className="px-4 py-3 border-b border-slate-50">
+              <div className="px-4 py-3 border-b border-[color:var(--pf-border-soft)]">
                 <div className="flex items-center gap-2.5">
                   <div
                     className="h-8 w-8 rounded-xl flex items-center justify-center text-[11px] font-[800] text-white shrink-0"
@@ -119,8 +119,8 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
                     {initials}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-slate-900 truncate">{user.username}</div>
-                    <div className="text-xs text-slate-400">{ROLE_LABEL[user.role] ?? user.role}</div>
+                    <div className="text-sm font-semibold [color:var(--pf-text)] truncate">{user.username}</div>
+                    <div className="text-xs [color:var(--pf-color-muted)]">{ROLE_LABEL[user.role] ?? user.role}</div>
                   </div>
                 </div>
               </div>
@@ -128,16 +128,16 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
               {/* Profile link */}
               <button
                 onClick={() => { setOpen(false); navigate(user.role === 'MEMBER_VIEW' ? '/member/dashboard' : '/dashboard') }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 active:bg-slate-100"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] active:[background:var(--pf-color-muted-soft)]"
               >
-                <User size={15} className="text-slate-400" />
+                <User size={15} className="[color:var(--pf-color-muted)]" />
                 Trang cá nhân
               </button>
 
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 active:bg-red-100 border-t border-slate-50"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] active:[background:var(--pf-color-danger-soft)] border-t border-[color:var(--pf-border-soft)]"
               >
                 <LogOut size={15} />
                 Đăng xuất

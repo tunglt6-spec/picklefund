@@ -69,10 +69,10 @@ export function DesktopHeader() {
     else document.exitFullscreen?.()
   }
 
-  const iconBtn = 'flex h-9 w-9 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] text-slate-500 hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
+  const iconBtn = 'flex h-9 w-9 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
 
   return (
-    <header className="hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b bg-white px-6" style={{ borderColor: 'var(--pf-border)' }}>
+    <header className="hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b [background:var(--pf-surface)] px-6" style={{ borderColor: 'var(--pf-border)' }}>
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}
@@ -130,20 +130,20 @@ export function DesktopHeader() {
         </button>
 
         {open && (
-          <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl border bg-white shadow-xl" style={{ borderColor: 'var(--pf-border)' }}>
+          <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl border [background:var(--pf-surface)] shadow-xl" style={{ borderColor: 'var(--pf-border)' }}>
             <div className="border-b px-4 py-3" style={{ borderColor: 'var(--pf-border-soft, #eef0f4)' }}>
-              <div className="text-sm font-semibold text-slate-900 truncate">{user.username}</div>
-              <div className="text-xs text-slate-400">{ROLE_LABEL[user.role] ?? user.role}</div>
+              <div className="text-sm font-semibold [color:var(--pf-text)] truncate">{user.username}</div>
+              <div className="text-xs [color:var(--pf-color-muted)]">{ROLE_LABEL[user.role] ?? user.role}</div>
             </div>
             <button
               onClick={() => { setOpen(false); navigate(user.role === 'MEMBER_VIEW' ? '/member/dashboard' : '/') }}
-              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-3 text-sm [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
             >
-              <User size={15} className="text-slate-400" /> Trang chính
+              <User size={15} className="[color:var(--pf-color-muted)]" /> Trang chính
             </button>
             <button
               onClick={() => { setOpen(false); logout(); navigate('/login', { replace: true }) }}
-              className="flex w-full items-center gap-3 border-t px-4 py-3 text-sm text-red-500 hover:bg-red-50"
+              className="flex w-full items-center gap-3 border-t px-4 py-3 text-sm [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
               style={{ borderColor: 'var(--pf-border-soft, #eef0f4)' }}
             >
               <LogOut size={15} /> Đăng xuất

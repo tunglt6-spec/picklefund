@@ -35,19 +35,19 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
     >
       <div className="pf-modal-backdrop absolute inset-0 bg-slate-900/40 pointer-events-none" />
       <div className={cn(
-        'pf-modal-panel relative z-10 w-full bg-white shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
+        'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
         'rounded-t-2xl max-h-[90vh] sm:rounded-2xl sm:max-h-[calc(100vh-2rem)]',
         sizeClasses[size]
       )}>
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-start justify-between px-6 py-4 border-b border-[color:var(--pf-border)] shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+            <h2 className="text-base font-semibold [color:var(--pf-text)]">{title}</h2>
+            {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors ml-4 shrink-0"
+            className="flex h-8 w-8 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)] transition-colors ml-4 shrink-0"
           >
             <X size={16} />
           </button>
@@ -60,7 +60,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0 bg-slate-50/50">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--pf-border)] shrink-0 [background:var(--pf-surface-muted)]">
             {footer}
           </div>
         )}

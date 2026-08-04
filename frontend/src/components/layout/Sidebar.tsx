@@ -129,7 +129,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const lisaRoute = LISA_ROUTES[user.role]
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-white" style={{ borderRight: '1px solid var(--color-border)', boxShadow: '1px 0 0 0 rgba(15,23,42,0.02)' }}>
+    <aside className="flex h-screen w-60 flex-col [background:var(--pf-surface)]" style={{ borderRight: '1px solid var(--color-border)', boxShadow: '1px 0 0 0 rgba(15,23,42,0.02)' }}>
 
       {/* ── Logo (branding trắng nhãn — EPIC10B) ── */}
       <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid var(--color-border-soft)' }}>
@@ -139,27 +139,27 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="shrink-0"><PickleFundLogoMark size={30} /></div>
         )}
         <div className="leading-tight min-w-0 flex-1">
-          <p className="text-sm font-bold text-slate-900 truncate">{branding.displayName ?? 'PickleFund'}</p>
-          <p className="text-[10px] font-medium text-slate-400 truncate">{branding.shortName ?? 'Sports Community Platform'}</p>
+          <p className="text-sm font-bold [color:var(--pf-text)] truncate">{branding.displayName ?? 'PickleFund'}</p>
+          <p className="text-[10px] font-medium [color:var(--pf-color-muted)] truncate">{branding.shortName ?? 'Sports Community Platform'}</p>
         </div>
       </div>
 
       {/* ── CLB card ── */}
       <div className="px-3 py-3" style={{ borderBottom: '1px solid var(--color-border-soft)' }}>
-        <div className="rounded-xl px-3 py-2.5 bg-slate-50" style={{ border: '1px solid var(--color-border-soft)' }}>
+        <div className="rounded-xl px-3 py-2.5 [background:var(--pf-surface-muted)]" style={{ border: '1px solid var(--color-border-soft)' }}>
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white text-xs font-bold"
               style={{ background: 'linear-gradient(135deg, #6D5DFB, #5B4BE8)' }}>
               {(clubData.settings?.name ?? user.username ?? 'C').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+              <p className="text-xs font-semibold [color:var(--pf-text)] truncate leading-tight">
                 {clubData.settings?.name || user.username || 'CLB của tôi'}
               </p>
               {clubData.settings?.code ? (
-                <p className="text-[10px] mt-0.5 text-slate-400">Mã CLB: {clubData.settings.code}</p>
+                <p className="text-[10px] mt-0.5 [color:var(--pf-color-muted)]">Mã CLB: {clubData.settings.code}</p>
               ) : (
-                <span className="inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5 bg-slate-100 text-slate-500">
+                <span className="inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5 [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">
                   {roleLabels[user.role]}
                 </span>
               )}
@@ -168,7 +168,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           {activePeriod && (
             <div className="mt-2 flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] truncate text-slate-500">Kỳ Quỹ {activePeriod.name}</span>
+              <span className="text-[10px] truncate [color:var(--pf-color-muted)]">Kỳ Quỹ {activePeriod.name}</span>
             </div>
           )}
         </div>
@@ -200,22 +200,22 @@ export function Sidebar({ onClose }: SidebarProps) {
                 {item.desc && (
                   <span className={cn(
                     'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold',
-                    isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400 group-hover:[color:var(--pf-primary)]'
+                    isActive ? 'bg-white/20 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary)]'
                   )}>
                     {i + 1}
                   </span>
                 )}
                 {/* Icon */}
-                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : 'text-slate-400 group-hover:[color:var(--pf-primary)]')}>
+                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : '[color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary)]')}>
                   {item.icon}
                 </span>
                 {/* Tiêu đề + mô tả */}
                 <div className="min-w-0 flex-1">
-                  <p className={cn('truncate text-sm font-semibold leading-tight', isActive ? 'text-white' : 'text-slate-700')}>
+                  <p className={cn('truncate text-sm font-semibold leading-tight', isActive ? 'text-white' : '[color:var(--pf-text)]')}>
                     {item.label}
                   </p>
                   {item.desc && (
-                    <p className={cn('mt-0.5 truncate text-[11px] leading-tight', isActive ? 'text-white/70' : 'text-slate-400')}>
+                    <p className={cn('mt-0.5 truncate text-[11px] leading-tight', isActive ? 'text-white/70' : '[color:var(--pf-color-muted)]')}>
                       {item.desc}
                     </p>
                   )}
@@ -240,7 +240,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <button
             onClick={() => { navigate(lisaRoute); onClose?.() }}
             className="group mt-3 flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all duration-200 hover:-translate-y-px"
-            style={{ background: 'linear-gradient(135deg, var(--pf-primary-soft), #ffffff)', border: '1px solid var(--pf-primary-soft)' }}
+            style={{ background: 'linear-gradient(135deg, var(--pf-primary-soft), var(--pf-surface))', border: '1px solid var(--pf-primary-soft)' }}
           >
             <img
               src="/lisa-avatar.jpg?v=2"
