@@ -107,29 +107,39 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       );
     }
 
-    it('vắng 2/2 buổi (TB, rule -5) → 95 Xuất sắc', async () => {
+    it('vắng 1/4 buổi (đi 75%) → 75 Đạt', async () => {
       mockAutoRules();
       prisma.attendanceSession.findMany.mockResolvedValue([
         { id: 's1' },
         { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
-      mockAttendance(['s1', 's2'], [{ memberId: 'm1', count: 2 }]);
+      mockAttendance(
+        ['s1', 's2', 's3', 's4'],
+        [{ memberId: 'm1', count: 1 }],
+      );
       prisma.memberScoreEvent.aggregate.mockResolvedValue({
         _sum: { delta: null },
       });
       const r = await svc.computeMemberScore('c1', 'm1', '2026-07');
-      // TB điểm danh = 100 + (-5)×2/2 = 95
-      expect(r.total).toBe(95);
-      expect(r.classification).toBe('Xuất sắc');
+      // đi 3/4 = 75%
+      expect(r.total).toBe(75);
+      expect(r.classification).toBe('Đạt');
     });
 
-    it('vắng 2/2 buổi (TB 95) + 1 kỳ nợ (-10) → 85 Tốt', async () => {
+    it('vắng 1/4 (đi 75%) + 1 kỳ nợ (-10) → 65 Cần cải thiện', async () => {
       mockAutoRules();
       prisma.attendanceSession.findMany.mockResolvedValue([
         { id: 's1' },
         { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
-      mockAttendance(['s1', 's2'], [{ memberId: 'm1', count: 2 }]);
+      mockAttendance(
+        ['s1', 's2', 's3', 's4'],
+        [{ memberId: 'm1', count: 1 }],
+      );
       prisma.fundPeriod.findMany.mockResolvedValue([
         { id: 'fp1', endDate: new Date('2020-01-31') }, // quá hạn
       ]);
@@ -139,18 +149,23 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
         _sum: { delta: null },
       });
       const r = await svc.computeMemberScore('c1', 'm1', '2020-01');
-      // 95 (điểm danh) − 10 (nợ 1 kỳ) = 85
-      expect(r.total).toBe(85);
-      expect(r.classification).toBe('Tốt');
+      // 75 (đi 75%) − 10 (nợ 1 kỳ) = 65
+      expect(r.total).toBe(65);
+      expect(r.classification).toBe('Cần cải thiện');
     });
 
-    it('điểm danh 95 + manual -100 → clamp ≥ 0', async () => {
+    it('vắng 2/4 (đi 50%) + manual -100 → clamp ≥ 0', async () => {
       mockAutoRules();
       prisma.attendanceSession.findMany.mockResolvedValue([
         { id: 's1' },
         { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
-      mockAttendance(['s1', 's2'], [{ memberId: 'm1', count: 2 }]); // TB 95
+      mockAttendance(
+        ['s1', 's2', 's3', 's4'],
+        [{ memberId: 'm1', count: 2 }],
+      ); // đi 50%
       prisma.memberScoreEvent.aggregate.mockResolvedValue({
         _sum: { delta: -100 },
       });
@@ -197,7 +212,7 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
   });
 
   describe('getPeriodScores (LIVE, sắp theo điểm)', () => {
-    it('A vắng 2/2 → 95, B sạch → 100; sắp B trước A', async () => {
+    it('A vắng 2/4 → 50, B sạch → 100; sắp B trước A', async () => {
       prisma.scoringRule.findMany.mockResolvedValue([
         { systemKey: 'ATTENDANCE_ABSENT', delta: -5 },
         { systemKey: 'FINANCE_LATE', delta: -5 },
@@ -210,6 +225,8 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       prisma.attendanceSession.findMany.mockResolvedValue([
         { id: 's1' },
         { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
       prisma.attendanceRecord.groupBy.mockImplementation((args: any) =>
         Promise.resolve(
@@ -217,6 +234,8 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
             ? [
                 { attendanceSessionId: 's1', _count: { _all: 1 } },
                 { attendanceSessionId: 's2', _count: { _all: 1 } },
+                { attendanceSessionId: 's3', _count: { _all: 1 } },
+                { attendanceSessionId: 's4', _count: { _all: 1 } },
               ]
             : [{ memberId: 'A', _count: { _all: 2 } }],
         ),
@@ -227,11 +246,11 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       const a = rows.find((r) => r.memberId === 'A')!;
       const b = rows.find((r) => r.memberId === 'B')!;
 
-      expect(a.total).toBe(95); // 100 + (-5)×2/2
-      expect(a.classification).toBe('Xuất sắc');
+      expect(a.total).toBe(50); // đi 2/4 = 50%
+      expect(a.classification).toBe('Cần cải thiện');
       expect(a.memberName).toBe('An');
       expect(b.total).toBe(100);
-      // (1) sắp theo điểm giảm dần → B (100) trước A (95)
+      // (1) sắp theo điểm giảm dần → B (100) trước A (50)
       expect(rows[0].memberId).toBe('B');
       expect(rows[1].memberId).toBe('A');
     });
@@ -248,6 +267,8 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       prisma.attendanceSession.findMany.mockResolvedValue([
         { id: 's1' },
         { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
       prisma.attendanceRecord.groupBy.mockImplementation((args: any) =>
         Promise.resolve(
@@ -255,8 +276,10 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
             ? [
                 { attendanceSessionId: 's1', _count: { _all: 1 } },
                 { attendanceSessionId: 's2', _count: { _all: 1 } },
+                { attendanceSessionId: 's3', _count: { _all: 1 } },
+                { attendanceSessionId: 's4', _count: { _all: 1 } },
               ]
-            : [{ memberId: 'm1', _count: { _all: 2 } }],
+            : [{ memberId: 'm1', _count: { _all: 1 } }],
         ),
       );
       prisma.fundPeriod.findMany.mockResolvedValue([
@@ -270,11 +293,11 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
       prisma.memberScoreEvent.findMany.mockResolvedValue([]);
 
       const d = await svc.getMemberDetail('c1', 'm1', '2020-01');
-      // TB điểm danh 95 (vắng 2/2, -5) + nợ 1 kỳ (-10) → 85
-      expect(d.total).toBe(85);
+      // đi 3/4 = 75 (vắng 1/4, -25) + nợ 1 kỳ (-10) → 65
+      expect(d.total).toBe(65);
       expect(d.autoLines).toEqual(
         expect.arrayContaining([
-          { label: 'Vắng 2/2 buổi (TB)', delta: -5 },
+          { label: 'Vắng 1/4 buổi (đi 75%)', delta: -25 },
           { label: 'Nợ 1 kỳ', delta: -10 },
         ]),
       );
@@ -419,18 +442,39 @@ describe('ScoringService (chấm điểm thành viên động — Phase 1)', () 
     });
   });
 
-  describe('auto rule thiếu/inactive → phần đó = 0', () => {
-    it('không có AUTO rule → vắng không trừ (100)', async () => {
-      prisma.scoringRule.findMany.mockResolvedValue([]); // không rule
-      prisma.attendanceSession.findMany.mockResolvedValue([{ id: 's1' }]);
-      prisma.attendanceRecord.groupBy.mockResolvedValue([
-        { memberId: 'm1', _count: { _all: 5 } },
+  describe('FINANCE rule thiếu/inactive → phần tài chính = 0', () => {
+    it('không có FINANCE rule → nợ không trừ (điểm danh % vẫn tính)', async () => {
+      prisma.scoringRule.findMany.mockResolvedValue([]); // không rule finance
+      prisma.attendanceSession.findMany.mockResolvedValue([
+        { id: 's1' },
+        { id: 's2' },
+        { id: 's3' },
+        { id: 's4' },
       ]);
+      // 4 buổi đã điểm danh, KHÔNG vắng → đi 100%
+      prisma.attendanceRecord.groupBy.mockImplementation((args: any) =>
+        Promise.resolve(
+          args?.by?.includes('attendanceSessionId')
+            ? [
+                { attendanceSessionId: 's1', _count: { _all: 1 } },
+                { attendanceSessionId: 's2', _count: { _all: 1 } },
+                { attendanceSessionId: 's3', _count: { _all: 1 } },
+                { attendanceSessionId: 's4', _count: { _all: 1 } },
+              ]
+            : [],
+        ),
+      );
+      // Có kỳ nợ quá hạn nhưng rule delta thiếu → finance = 0.
+      prisma.fundPeriod.findMany.mockResolvedValue([
+        { id: 'fp1', endDate: new Date('2020-01-31') },
+      ]);
+      prisma.member.findMany.mockResolvedValue([{ id: 'm1' }]);
+      prisma.fundContribution.findMany.mockResolvedValue([]); // nợ
       prisma.memberScoreEvent.aggregate.mockResolvedValue({
         _sum: { delta: null },
       });
-      const r = await svc.computeMemberScore('c1', 'm1', '2026-07');
-      expect(r.total).toBe(100);
+      const r = await svc.computeMemberScore('c1', 'm1', '2020-01');
+      expect(r.total).toBe(100); // đi 100%, finance rule thiếu → 0
     });
   });
 });

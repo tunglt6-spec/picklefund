@@ -26,7 +26,10 @@ export default defineConfig({
     // - cleanupOutdatedCaches: xoá precache cũ mỗi lần cập nhật.
     // - manifest: false → dùng public/manifest.json + icons đã có sẵn.
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': SW mới CHỜ người dùng bấm "Tải lại" (banner PwaReloadPrompt) thay vì
+      // reload ngầm — hết cảnh kẹt bản cũ mà không biết. updateServiceWorker(true) sẽ
+      // skipWaiting + reload khi user bấm.
+      registerType: 'prompt',
       injectRegister: 'auto',
       manifest: false,
       workbox: {
@@ -38,8 +41,7 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
+        // KHÔNG skipWaiting/clientsClaim: để SW mới CHỜ user bấm "Tải lại" (flow prompt).
         runtimeCaching: [
           {
             // Ảnh (banner AIDO, avatar, logo, ảnh nội dung) — cache khi dùng.

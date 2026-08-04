@@ -132,7 +132,7 @@ export class ScoringService {
     });
     const ruleDelta = (key: string): number =>
       autoRules.find((r) => r.systemKey === key)?.delta ?? 0;
-    const absentDelta = ruleDelta(RULE_KEY.ATTENDANCE_ABSENT);
+    // Điểm danh dùng mô hình % (có mặt 100 · vắng 0) — KHÔNG dùng delta rule ATTENDANCE_ABSENT.
     const lateDelta = ruleDelta(RULE_KEY.FINANCE_LATE);
     const overdueDelta = ruleDelta(RULE_KEY.FINANCE_OVERDUE);
 
@@ -155,10 +155,10 @@ export class ScoringService {
       return e;
     };
 
-    // ── Điểm danh: chấm THEO TỪNG BUỔI rồi lấy TRUNG BÌNH tháng ──
-    // Mỗi buổi ĐÃ điểm danh (auto-chốt): board = 100 (có mặt) hoặc 100+absentDelta (vắng).
-    // Điểm điểm danh tháng = trung bình board ⇒ delta khỏi 100 =
-    //   absentDelta × (số buổi vắng ÷ số buổi đã điểm danh). Vắng được chia đều theo số buổi.
+    // ── Điểm danh: chấm THEO TỪNG BUỔI rồi lấy TRUNG BÌNH tháng (mô hình %) ──
+    // Mỗi buổi ĐÃ điểm danh (auto-chốt): board = 100 (có mặt) hoặc 0 (vắng).
+    // Điểm điểm danh tháng = trung bình board = TỈ LỆ ĐI (%) ⇒ delta khỏi 100 =
+    //   -100 × (số buổi vắng ÷ số buổi đã điểm danh). Đi 75% → 75đ, vắng nửa → 50đ.
     const sessions = await this.prisma.attendanceSession.findMany({
       where: { clubId, sessionDate: { gte: start, lt: end } },
       select: { id: true },
@@ -187,7 +187,7 @@ export class ScoringService {
           const e = ensure(g.memberId);
           e.absentCount = g._count._all;
           e.sessionCount = attendedCount;
-          e.attendance = (e.absentCount * absentDelta) / attendedCount;
+          e.attendance = -(100 * e.absentCount) / attendedCount;
         }
       }
     }
@@ -533,7 +533,7 @@ export class ScoringService {
     const autoLines: Array<{ label: string; delta: number }> = [];
     if (auto && auto.absentCount > 0 && attendance < 0) {
       autoLines.push({
-        label: `Vắng ${auto.absentCount}/${auto.sessionCount} buổi (TB)`,
+        label: `Vắng ${auto.absentCount}/${auto.sessionCount} buổi (đi ${Math.round((100 * (auto.sessionCount - auto.absentCount)) / auto.sessionCount)}%)`,
         delta: Math.round(attendance),
       });
     }
