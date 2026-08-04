@@ -16,12 +16,12 @@ export function PeriodSelector({ periods, selectedId, onChange, label = 'Kỳ qu
   if (periods.length === 0) return null
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-500 shrink-0">{label}:</span>
+      <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{label}:</span>
       <div className="relative inline-flex items-center">
         <select
           value={selectedId}
           onChange={e => onChange(e.target.value)}
-          className="pl-3 pr-7 py-1.5 text-sm font-medium bg-white border border-slate-200 rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] text-slate-800"
+          className="pl-3 pr-7 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
         >
           {periods.map(p => (
             <option key={p.id} value={p.id}>
@@ -29,7 +29,7 @@ export function PeriodSelector({ periods, selectedId, onChange, label = 'Kỳ qu
             </option>
           ))}
         </select>
-        <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
       </div>
     </div>
   )

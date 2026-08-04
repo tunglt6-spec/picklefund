@@ -47,7 +47,7 @@ export function CompeteHub() {
                 {SPORTS.map(s => (
                   <button key={s.v} onClick={() => setSport(s.v)}
                     className={cn('inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold border transition-colors',
-                      sport === s.v ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
+                      sport === s.v ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]')}>
                     {sportEmoji(s.v) || '🏓'} {s.label}
                   </button>
                 ))}

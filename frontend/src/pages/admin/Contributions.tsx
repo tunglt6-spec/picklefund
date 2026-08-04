@@ -342,11 +342,11 @@ export function Contributions() {
     const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 space-y-2">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[16px] font-[700] text-slate-900">Thu Quỹ</h2>
-            <p className="text-[12px] text-slate-400">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
+            <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>
+            <p className="text-[12px] [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {contributions.length > 0 && (
@@ -354,14 +354,14 @@ export function Contributions() {
                 <button
                   onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
                   aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
                   <FileSpreadsheet size={16} />Excel
                 </button>
                 <button
                   onClick={() => exportContribPDF(activePeriod?.name ?? 'Thu Quỹ', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)}
                   aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
                   <FileText size={16} />PDF
                 </button>
@@ -384,27 +384,27 @@ export function Contributions() {
 
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Chính</p>
+          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
+            <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Chính</p>
             <p className="text-[18px] font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
           </div>
-          <div className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
-            <p className="text-[11px] text-slate-400 uppercase tracking-wide">Quỹ Phụ</p>
+          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
+            <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Phụ</p>
             <p className="text-[18px] font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>
 
         {/* Mobile Fund Tabs */}
-        <div className="flex gap-1 bg-slate-100 rounded-[12px] p-1 mx-4 mt-2">
+        <div className="flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? 'bg-white [color:var(--pf-primary)] shadow-sm' : 'text-slate-500'}`}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Chính
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] text-emerald-600 shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Phụ
           </button>
@@ -413,7 +413,7 @@ export function Contributions() {
         <div className="px-4 pt-3 pb-6 space-y-2">
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
-              <div className="text-center py-14 text-slate-400 text-sm">
+              <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
                 <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
                 Chưa có khoản thu nào
               </div>
@@ -430,11 +430,11 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
                   )}
                 />
@@ -442,7 +442,7 @@ export function Contributions() {
             })
           ) : (
             sortedMini.length === 0 ? (
-              <div className="text-center py-14 text-slate-400 text-sm">
+              <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
                 <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
                 Chưa có khoản thu Quỹ Phụ nào
               </div>
@@ -459,12 +459,12 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:text-slate-400' : 'text-slate-300 active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => exportMiniReceipt(c)} className="text-slate-400 active:text-violet-600 p-1.5" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
-                      <button onClick={() => openEdit(c)} className="text-slate-400 active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="text-slate-300 active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                      <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-1.5" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-1.5"><Trash2 size={14} /></button>
                     </>
                   )}
                 />
@@ -494,7 +494,7 @@ export function Contributions() {
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                        : 'border-slate-200 text-slate-500'
+                        : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)]'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
                     {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
@@ -512,11 +512,11 @@ export function Contributions() {
                 {!editTarget && (
                   <label className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer [border-color:var(--pf-border)]">
                     <input type="checkbox" checked={bulkAll} onChange={e => setBulkAll(e.target.checked)} className="h-4 w-4 rounded accent-[var(--pf-primary)]" />
-                    <span className="text-xs font-medium text-slate-700">Ghi cho <strong>tất cả TV chưa đóng</strong> kỳ này</span>
+                    <span className="text-xs font-medium [color:var(--pf-text)]">Ghi cho <strong>tất cả TV chưa đóng</strong> kỳ này</span>
                   </label>
                 )}
                 <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                   <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                     <option value="">-- Chọn thành viên --</option>
                     {members.filter(m => m.status === 'active' || m.id === editTarget?.memberId).map(m => <option key={m.id} value={m.id}>{m.fullName}{m.status !== 'active' ? ' (tạm nghỉ)' : ''}</option>)}
@@ -524,7 +524,7 @@ export function Contributions() {
                 </div>
                 {chungPeriods.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                     <select required value={formPeriodId} onChange={e => {
                       const p = chungPeriods.find(x => x.id === e.target.value)
                       setFormPeriodId(e.target.value)
@@ -541,7 +541,7 @@ export function Contributions() {
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
                   <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                     {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -549,7 +549,7 @@ export function Contributions() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
+                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
                   <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                     placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
                 </div>
@@ -557,25 +557,25 @@ export function Contributions() {
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input required type="number" min={1} value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
                 <input type="date" value={form.paymentDate}
                   onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức thanh toán</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
               <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
                 <option value="bank_transfer">Chuyển khoản</option>
                 <option value="cash">Tiền mặt</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
               <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 placeholder="Thông tin thêm..." className="input-base" />
             </div>
@@ -587,7 +587,7 @@ export function Contributions() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Thu Quỹ"
         subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
@@ -622,35 +622,35 @@ export function Contributions() {
         {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
           {/* Quỹ Chính */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <DollarSign size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{formatVND(commonTotal)}</p>
-            <div className="flex gap-4 mt-2 text-xs text-slate-500">
+            <p className="text-2xl font-bold [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
+            <div className="flex gap-4 mt-2 text-xs [color:var(--pf-color-muted)]">
               <span className="text-emerald-600">✓ {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
               <span className="text-amber-600">⏳ {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
             </div>
           </div>
           {/* Quỹ Phụ */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <Wallet size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{formatVND(miniTotal)}</p>
+            <p className="text-2xl font-bold [color:var(--pf-text)]">{formatVND(miniTotal)}</p>
             <div className="flex gap-3 mt-2 flex-wrap">
               {Object.entries(MINI_INCOME_TYPE_LABELS).map(([k, label]) => {
                 const amt = miniContribs.filter(c => c.miniIncomeType === k).reduce((s, c) => s + c.amount, 0)
                 if (!amt) return null
-                return <span key={k} className="text-xs text-slate-500">{label}: {formatVND(amt)}</span>
+                return <span key={k} className="text-xs [color:var(--pf-color-muted)]">{label}: {formatVND(amt)}</span>
               })}
-              {miniContribs.length === 0 && <span className="text-xs text-slate-400">Chưa có giao dịch</span>}
+              {miniContribs.length === 0 && <span className="text-xs [color:var(--pf-color-muted)]">Chưa có giao dịch</span>}
             </div>
           </div>
         </div>
@@ -672,14 +672,14 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><DollarSign size={11} className="[color:var(--pf-primary)]" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quỹ Chính</h3>
+            <h3 className="text-sm font-semibold [color:var(--pf-text)]">Quỹ Chính</h3>
           </div>
           {commonContribs.length === 0 ? (
-            <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Chính nào.</p>
+            <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-8 text-center">
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
               <table className="table-base">
                 <thead>
                   <tr>
@@ -705,9 +705,9 @@ export function Contributions() {
                           <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
                         </td>
                       )}
-                      <td className="font-medium text-slate-900">{c.member?.fullName ?? c.memberId}</td>
-                      <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
-                      <td className="text-right font-semibold text-slate-900">{formatVND(c.amount)}</td>
+                      <td className="font-medium [color:var(--pf-text)]">{c.member?.fullName ?? c.memberId}</td>
+                      <td className="text-center [color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</td>
+                      <td className="text-right font-semibold [color:var(--pf-text)]">{formatVND(c.amount)}</td>
                       <td className="text-center">
                         <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
                       </td>
@@ -719,7 +719,7 @@ export function Contributions() {
                       {!isMember && (
                         <td className="text-center">
                           <button onClick={() => toggleConfirm(c.id)}
-                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
+                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:[color:var(--pf-color-muted)]' : 'text-slate-200 hover:text-emerald-500'}`}>
                             {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
                           </button>
                         </td>
@@ -728,10 +728,10 @@ export function Contributions() {
                         <td className="text-center">
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={() => openEdit(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
                               title="Sửa"><Edit2 size={13} /></button>
                             <button onClick={() => setDeleteId(c.id)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
                               title="Xóa"><Trash2 size={13} /></button>
                           </div>
                         </td>
@@ -743,12 +743,12 @@ export function Contributions() {
             </div>
           )}
           {commonPages > 1 && (
-            <div className="flex items-center justify-end gap-2 px-1 text-xs text-slate-500">
+            <div className="flex items-center justify-end gap-2 px-1 text-xs [color:var(--pf-color-muted)]">
               <button disabled={commonPage <= 1} onClick={() => setCommonPage(p => Math.max(1, p - 1))}
-                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Trước</button>
+                className="px-2 py-1 rounded border border-[color:var(--pf-border)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]">Trước</button>
               <span>Trang {commonPage}/{commonPages}</span>
               <button disabled={commonPage >= commonPages} onClick={() => setCommonPage(p => Math.min(commonPages, p + 1))}
-                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Sau</button>
+                className="px-2 py-1 rounded border border-[color:var(--pf-border)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]">Sau</button>
             </div>
           )}
         </div>
@@ -757,14 +757,14 @@ export function Contributions() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><Wallet size={11} className="[color:var(--pf-primary)]" /></div>
-            <h3 className="text-sm font-semibold text-slate-700">Quỹ Phụ</h3>
+            <h3 className="text-sm font-semibold [color:var(--pf-text)]">Quỹ Phụ</h3>
           </div>
           {miniContribs.length === 0 ? (
-            <div className="bg-white rounded-xl border border-dashed border-slate-200 py-8 text-center">
-              <p className="text-sm text-slate-400">Chưa có khoản thu Quỹ Phụ nào.</p>
+            <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-8 text-center">
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
               <table className="table-base">
                 <thead>
                   <tr>
@@ -791,11 +791,11 @@ export function Contributions() {
                           <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
                         </td>
                       )}
-                      <td className="font-medium text-slate-900">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
+                      <td className="font-medium [color:var(--pf-text)]">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
                       <td>
                         <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>
                       </td>
-                      <td className="text-center text-slate-500 text-xs">{formatDate(c.paymentDate)}</td>
+                      <td className="text-center [color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</td>
                       <td className="text-right font-semibold [color:var(--pf-primary)]">{formatVND(c.amount)}</td>
                       <td className="text-center">
                         <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
@@ -808,7 +808,7 @@ export function Contributions() {
                       {!isMember && (
                         <td className="text-center">
                           <button onClick={() => toggleConfirm(c.id)}
-                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:text-slate-300' : 'text-slate-200 hover:text-emerald-500'}`}>
+                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:[color:var(--pf-color-muted)]' : 'text-slate-200 hover:text-emerald-500'}`}>
                             {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
                           </button>
                         </td>
@@ -817,13 +817,13 @@ export function Contributions() {
                         <td className="text-center">
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={() => exportMiniReceipt(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-violet-50 hover:text-violet-600 transition-colors"
                               title="Xuất phiếu thu"><FileText size={13} /></button>
                             <button onClick={() => openEdit(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
                               title="Sửa"><Edit2 size={13} /></button>
                             <button onClick={() => setDeleteId(c.id)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
                               title="Xóa"><Trash2 size={13} /></button>
                           </div>
                         </td>
@@ -835,12 +835,12 @@ export function Contributions() {
             </div>
           )}
           {miniPages > 1 && (
-            <div className="flex items-center justify-end gap-2 px-1 text-xs text-slate-500">
+            <div className="flex items-center justify-end gap-2 px-1 text-xs [color:var(--pf-color-muted)]">
               <button disabled={miniPage <= 1} onClick={() => setMiniPage(p => Math.max(1, p - 1))}
-                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Trước</button>
+                className="px-2 py-1 rounded border border-[color:var(--pf-border)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]">Trước</button>
               <span>Trang {miniPage}/{miniPages}</span>
               <button disabled={miniPage >= miniPages} onClick={() => setMiniPage(p => Math.min(miniPages, p + 1))}
-                className="px-2 py-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50">Sau</button>
+                className="px-2 py-1 rounded border border-[color:var(--pf-border)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]">Sau</button>
             </div>
           )}
         </div>
@@ -863,7 +863,7 @@ export function Contributions() {
           {/* Fund source selector */}
           {!editTarget && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Nguồn quỹ <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Nguồn quỹ <span className="text-red-500">*</span></label>
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button
@@ -875,7 +875,7 @@ export function Contributions() {
                         ? fs === 'COMMON'
                           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                           : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                        : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'
                     }`}
                   >
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -896,11 +896,11 @@ export function Contributions() {
               {!editTarget && (
                 <label className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer [border-color:var(--pf-border)]">
                   <input type="checkbox" checked={bulkAll} onChange={e => setBulkAll(e.target.checked)} className="h-4 w-4 rounded accent-[var(--pf-primary)]" />
-                  <span className="text-xs font-medium text-slate-700">Ghi cho <strong>tất cả thành viên chưa đóng</strong> kỳ này</span>
+                  <span className="text-xs font-medium [color:var(--pf-text)]">Ghi cho <strong>tất cả thành viên chưa đóng</strong> kỳ này</span>
                 </label>
               )}
               <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                 <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                   <option value="">-- Chọn thành viên --</option>
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
@@ -908,7 +908,7 @@ export function Contributions() {
               </div>
               {chungPeriods.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                   <select required value={formPeriodId} onChange={e => {
                     const p = chungPeriods.find(x => x.id === e.target.value)
                     setFormPeriodId(e.target.value)
@@ -925,7 +925,7 @@ export function Contributions() {
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
                 <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -933,7 +933,7 @@ export function Contributions() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Người nộp</label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
                 <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                   placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
               </div>
@@ -942,25 +942,25 @@ export function Contributions() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày thu</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
               <input type="date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Hình thức thanh toán</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
             <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
               <option value="bank_transfer">Chuyển khoản</option>
               <option value="cash">Tiền mặt</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
             <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder="Thông tin thêm..." className="input-base" />
           </div>

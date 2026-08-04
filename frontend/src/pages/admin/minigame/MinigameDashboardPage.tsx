@@ -46,7 +46,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   if (!mg || !data) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-slate-500">Không tìm thấy minigame</p>
+        <p className="[color:var(--pf-color-muted)]">Không tìm thấy minigame</p>
       </div>
     )
   }
@@ -301,10 +301,10 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header / Top bar */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
+      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
         <button
           onClick={() => navigate('/minigames')}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit"
+          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
         >
           <ArrowLeft size={14} />
           Danh Sách Minigame
@@ -313,20 +313,20 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
         <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
+              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
               <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                 🏓 Đánh Đôi Ngẫu Nhiên
               </span>
             </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-slate-500">
+            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
               <span className="flex items-center gap-1.5">
                 <Calendar size={14} />
                 {mg.startDate} — {mg.endDate}
               </span>
               {mg.description && (
                 <>
-                  <span className="text-slate-300">·</span>
+                  <span className="[color:var(--pf-color-muted)]">·</span>
                   <span className="truncate">{mg.description}</span>
                 </>
               )}
@@ -373,9 +373,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                 onCompleteRound={handleCompleteRound}
               />
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col items-center justify-center gap-2 text-center h-full min-h-[200px]">
-                <p className="text-slate-400 font-medium">Chưa có lượt đấu nào</p>
-                <p className="text-sm text-slate-400">Nhấn "Rút Thăm Vòng Mới" để bắt đầu</p>
+              <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-6 flex flex-col items-center justify-center gap-2 text-center h-full min-h-[200px]">
+                <p className="[color:var(--pf-color-muted)] font-medium">Chưa có lượt đấu nào</p>
+                <p className="text-sm [color:var(--pf-color-muted)]">Nhấn "Rút Thăm Vòng Mới" để bắt đầu</p>
               </div>
             )}
           </div>
@@ -407,10 +407,10 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {/* Score Entry Modal */}
       {scoreEntryMatchId && scoreEntryMatch && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center gap-2 mb-4">
               <Trophy size={20} className="[color:var(--pf-primary)]" />
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-lg font-bold [color:var(--pf-text)]">
                 Nhập Kết Quả Trận #{scoreEntryMatch.matchNumber}
               </h3>
             </div>
@@ -418,14 +418,14 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             <div className="space-y-4">
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
                 <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 1</p>
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium [color:var(--pf-text)]">
                   {scoreEntryMatch.team1[0].memberName} &amp; {scoreEntryMatch.team1[1].memberName}
                 </p>
               </div>
 
               <div className="flex items-center gap-4 justify-center py-2">
                 <div className="flex flex-col items-center gap-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đội 1</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 1</label>
                   <input
                     type="number"
                     min={0}
@@ -435,9 +435,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                     className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
                 </div>
-                <span className="text-2xl font-bold text-slate-300 mt-5">—</span>
+                <span className="text-2xl font-bold [color:var(--pf-color-muted)] mt-5">—</span>
                 <div className="flex flex-col items-center gap-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đội 2</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 2</label>
                   <input
                     type="number"
                     min={0}
@@ -451,7 +451,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
                 <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 2</p>
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium [color:var(--pf-text)]">
                   {scoreEntryMatch.team2[0].memberName} &amp; {scoreEntryMatch.team2[1].memberName}
                 </p>
               </div>
@@ -460,7 +460,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handleCloseModal}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
               >
                 Hủy
               </button>
@@ -484,15 +484,15 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {/* Delete Confirm Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <UserMinus size={18} className="text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">Xóa thành viên</h3>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Xóa <span className="font-semibold text-slate-700">{deleteTarget.name}</span> khỏi minigame?
+                <h3 className="text-base font-bold [color:var(--pf-text)]">Xóa thành viên</h3>
+                <p className="text-sm [color:var(--pf-color-muted)] mt-0.5">
+                  Xóa <span className="font-semibold [color:var(--pf-text)]">{deleteTarget.name}</span> khỏi minigame?
                 </p>
               </div>
             </div>
@@ -502,7 +502,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
               >
                 Hủy
               </button>
@@ -520,16 +520,16 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {/* Edit Participant Modal */}
       {editTarget && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
                 <UserPen size={18} className="[color:var(--pf-primary)]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Sửa thành viên</h3>
+              <h3 className="text-base font-bold [color:var(--pf-text)]">Sửa thành viên</h3>
             </div>
             <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5">
                   Tên hiển thị
                 </label>
                 <input
@@ -537,7 +537,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleConfirmEdit()}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                  className="w-full border border-[color:var(--pf-border)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
                   placeholder="Nhập tên..."
                   autoFocus
                 />
@@ -546,7 +546,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setEditTarget(null)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
               >
                 Hủy
               </button>

@@ -33,10 +33,10 @@ export function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onCancel} />
-      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden">
+      <div className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden">
         {/* Close */}
         <button onClick={onCancel}
-          className="absolute right-4 top-4 h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+          className="absolute right-4 top-4 h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
           <X size={15} />
         </button>
 
@@ -46,8 +46,8 @@ export function ConfirmDialog({
             <AlertTriangle size={22} className={iconColor} />
           </div>
 
-          <h2 className="text-base font-bold text-slate-900 mb-2">{title}</h2>
-          <p className="text-sm text-slate-500 leading-relaxed">{message}</p>
+          <h2 className="text-base font-bold [color:var(--pf-text)] mb-2">{title}</h2>
+          <p className="text-sm [color:var(--pf-color-muted)] leading-relaxed">{message}</p>
         </div>
 
         {/* Footer */}

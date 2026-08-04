@@ -22,7 +22,7 @@ export function MobileClubCard({ name, code, memberCount, fundPeriodCount, statu
 
   return (
     <button
-      className="w-full bg-white rounded-[18px] border border-slate-100 p-4 shadow-sm flex items-center gap-3 active:bg-slate-50 transition-colors text-left"
+      className="w-full [background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] p-4 shadow-sm flex items-center gap-3 active:[background:var(--pf-surface-muted)] transition-colors text-left"
       onClick={() => navigate(`/super/clubs`)}
     >
       {/* Avatar */}
@@ -34,20 +34,20 @@ export function MobileClubCard({ name, code, memberCount, fundPeriodCount, statu
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-0.5">
-          <span className="text-[15px] font-[700] text-slate-900 truncate">{name}</span>
+          <span className="text-[15px] font-[700] [color:var(--pf-text)] truncate">{name}</span>
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
             style={{ color: s.color, background: s.bg }}>
             {s.label}
           </span>
         </div>
-        <div className="text-[12px] text-slate-400 mb-1.5">Mã: {code}</div>
-        <div className="flex items-center gap-3 text-[12px] text-slate-500">
+        <div className="text-[12px] [color:var(--pf-color-muted)] mb-1.5">Mã: {code}</div>
+        <div className="flex items-center gap-3 text-[12px] [color:var(--pf-color-muted)]">
           <span className="flex items-center gap-1"><Users size={11} /> {memberCount} thành viên</span>
           <span className="flex items-center gap-1"><Calendar size={11} /> {fundPeriodCount} kỳ quỹ</span>
         </div>
       </div>
 
-      <ChevronRight size={16} className="text-slate-300 flex-shrink-0" />
+      <ChevronRight size={16} className="[color:var(--pf-color-muted)] flex-shrink-0" />
     </button>
   )
 }

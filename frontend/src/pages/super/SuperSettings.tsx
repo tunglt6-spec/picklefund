@@ -68,30 +68,30 @@ const S = ({ id: _id, label, type = 'text', value, onChange, placeholder = '' }:
   id: string; label: string; type?: string; value: string; onChange: (v: string) => void; placeholder?: string
 }) => (
   <div>
-    <label className="block text-xs font-medium text-slate-700 mb-1.5">{label}</label>
+    <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
     <input type={type} value={value} onChange={e => onChange(e.target.value)}
       placeholder={placeholder} className="input-base" />
   </div>
 )
 
 const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) => (
-  <div className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+  <div className="flex items-center justify-between py-3 border-b border-[color:var(--pf-border)] last:border-0">
     <div>
-      <p className="text-sm font-medium text-slate-800">{label}</p>
-      <p className="text-xs text-slate-400">{desc}</p>
+      <p className="text-sm font-medium [color:var(--pf-text)]">{label}</p>
+      <p className="text-xs [color:var(--pf-color-muted)]">{desc}</p>
     </div>
     <button onClick={() => onChange(!value)}
       className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : 'bg-slate-200'}`}>
-      <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
+      <span className={`absolute top-0.5 left-0.5 h-5 w-5 [background:var(--pf-surface)] rounded-full shadow-sm transition-transform duration-300 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   </div>
 )
 
 const Section = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-  <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-    <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2.5">
+  <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+    <div className="px-5 py-3.5 border-b border-[color:var(--pf-border)] flex items-center gap-2.5">
       <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">{icon}</div>
-      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+      <h3 className="text-sm font-semibold [color:var(--pf-text)]">{title}</h3>
     </div>
     <div className="p-5">{children}</div>
   </div>
@@ -154,13 +154,13 @@ export function SuperSettings() {
   }
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center bg-slate-50">
+    <div className="flex-1 flex items-center justify-center [background:var(--pf-surface-muted)]">
       <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Cài Đặt Hệ Thống"
         subtitle="Cấu hình toàn bộ nền tảng PickleFund"
@@ -216,12 +216,12 @@ export function SuperSettings() {
           <div className="space-y-4 max-w-md">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên đăng nhập</label>
-                <input className="input-base bg-slate-50 text-slate-500 cursor-not-allowed" value={user?.username ?? ''} readOnly />
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
+                <input className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.username ?? ''} readOnly />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Email</label>
-                <input className="input-base bg-slate-50 text-slate-500 cursor-not-allowed" value={user?.email ?? ''} readOnly />
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Email</label>
+                <input className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.email ?? ''} readOnly />
               </div>
             </div>
             {([
@@ -230,7 +230,7 @@ export function SuperSettings() {
               { label: 'Xác nhận mật khẩu mới', key: 'confirm' as const },
             ]).map(f => (
               <div key={f.key}>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">{f.label}</label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{f.label}</label>
                 <div className="relative">
                   <input
                     type={showPw[f.key] ? 'text' : 'password'}
@@ -240,7 +240,7 @@ export function SuperSettings() {
                     placeholder="••••••••"
                   />
                   <button type="button" onClick={() => setShowPw(s => ({ ...s, [f.key]: !s[f.key] }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                     {showPw[f.key] ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -258,10 +258,10 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <div className="bg-slate-100 rounded-xl p-4 text-xs text-slate-500 space-y-1">
-          <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold text-slate-700">v{__APP_VERSION__}</span></div>
+        <div className="[background:var(--pf-color-muted-soft)] rounded-xl p-4 text-xs [color:var(--pf-color-muted)] space-y-1">
+          <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold [color:var(--pf-text)]">v{__APP_VERSION__}</span></div>
           <div className="flex justify-between"><span>Môi trường</span><span className="font-mono text-emerald-600">{import.meta.env.PROD ? 'production' : 'development'}</span></div>
-          <div className="flex justify-between"><span>Build</span><span className="font-mono text-slate-600">{__BUILD_DATE__}</span></div>
+          <div className="flex justify-between"><span>Build</span><span className="font-mono [color:var(--pf-color-muted)]">{__BUILD_DATE__}</span></div>
         </div>
       </div>
     </div>

@@ -107,10 +107,10 @@ export function AlertCenterPage() {
   const SignalList = ({ items }: { items: IntelSignal[] }) => (
     <div className="space-y-2">
       {[...items].sort((a, b) => severityRank(b.level) - severityRank(a.level)).map((s, i) => (
-        <div key={`${s.code}-${i}`} className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+        <div key={`${s.code}-${i}`} className="flex items-start justify-between gap-3 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5">
           <div className="min-w-0">
-            <p className="text-sm text-slate-700">{s.message}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">{s.code}</p>
+            <p className="text-sm [color:var(--pf-text)]">{s.message}</p>
+            <p className="text-[10px] [color:var(--pf-color-muted)] mt-0.5">{s.code}</p>
           </div>
           <StatusBadge tone={LEVEL_TONE[s.level]}>{LEVEL_LABEL[s.level]}</StatusBadge>
         </div>
@@ -140,13 +140,13 @@ export function AlertCenterPage() {
           </div>
 
           {/* Lọc theo mức */}
-          <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit overflow-x-auto">
+          <div className="flex gap-1 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] p-1 w-fit overflow-x-auto">
             {LEVEL_TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setLevel(t.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  level === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:text-slate-800'
+                  level === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                 }`}
               >
                 {t.label}
@@ -168,43 +168,43 @@ export function AlertCenterPage() {
           )}
 
           {/* Cảnh báo vận hành */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <AlertTriangle size={16} className="text-slate-400" /> Cảnh Báo Vận Hành
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <AlertTriangle size={16} className="[color:var(--pf-color-muted)]" /> Cảnh Báo Vận Hành
             </h3>
             {flt(opsAll).length === 0 ? (
-              <p className="text-sm text-slate-400">Không có cảnh báo vận hành{level !== 'all' ? ' ở mức này' : ''}.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không có cảnh báo vận hành{level !== 'all' ? ' ở mức này' : ''}.</p>
             ) : <SignalList items={flt(opsAll)} />}
           </section>
 
           {/* Chất lượng dữ liệu */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Database size={16} className="text-slate-400" /> Chất Lượng Dữ Liệu
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <Database size={16} className="[color:var(--pf-color-muted)]" /> Chất Lượng Dữ Liệu
             </h3>
             {flt(dataQuality).length === 0 ? (
-              <p className="text-sm text-slate-400">Không có vấn đề chất lượng dữ liệu{level !== 'all' ? ' ở mức này' : ''}.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không có vấn đề chất lượng dữ liệu{level !== 'all' ? ' ở mức này' : ''}.</p>
             ) : <SignalList items={flt(dataQuality)} />}
           </section>
 
           {/* Lỗi Workflow */}
           {showErrorSections && (
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
-                <Workflow size={16} className="text-slate-400" /> Lỗi Workflow
+              <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
+                <Workflow size={16} className="[color:var(--pf-color-muted)]" /> Lỗi Workflow
               </h3>
               <button onClick={() => navigate('/admin/workflows?from=aido')} className="text-xs font-medium [color:var(--pf-primary)] hover:underline">Xem Workflow</button>
             </div>
             {failedRuns.length === 0 ? (
-              <p className="text-sm text-slate-400">Không có workflow lỗi.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không có workflow lỗi.</p>
             ) : (
               <div className="divide-y divide-slate-50">
                 {failedRuns.slice(0, 20).map(r => (
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
-                      <p className="text-sm text-slate-800 truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
-                      <p className="text-[11px] text-slate-400">{fmt(r.startedAt ?? r.createdAt)}</p>
+                      <p className="text-sm [color:var(--pf-text)] truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
+                      <p className="text-[11px] [color:var(--pf-color-muted)]">{fmt(r.startedAt ?? r.createdAt)}</p>
                     </div>
                     <StatusBadge tone="danger">Lỗi</StatusBadge>
                   </div>
@@ -216,22 +216,22 @@ export function AlertCenterPage() {
 
           {/* Lỗi AI / Thực thi */}
           {showErrorSections && (
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
-                <Bot size={16} className="text-slate-400" /> Lỗi AI / Thực Thi
+              <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
+                <Bot size={16} className="[color:var(--pf-color-muted)]" /> Lỗi AI / Thực Thi
               </h3>
               <button onClick={() => navigate('/admin/execution-log?from=aido')} className="text-xs font-medium [color:var(--pf-primary)] hover:underline">Nhật ký thực thi</button>
             </div>
             {failedActions.length === 0 ? (
-              <p className="text-sm text-slate-400">Không có hành động AI lỗi.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không có hành động AI lỗi.</p>
             ) : (
               <div className="divide-y divide-slate-50">
                 {failedActions.slice(0, 20).map(a => (
                   <div key={a.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
-                      <p className="text-sm text-slate-800 truncate">{a.title}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{a.errorMessage ?? a.actionType} · {fmt(a.createdAt)}</p>
+                      <p className="text-sm [color:var(--pf-text)] truncate">{a.title}</p>
+                      <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{a.errorMessage ?? a.actionType} · {fmt(a.createdAt)}</p>
                     </div>
                     <StatusBadge tone="danger">Thất bại</StatusBadge>
                   </div>

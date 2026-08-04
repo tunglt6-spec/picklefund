@@ -67,7 +67,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
     <div className="flex items-center justify-center gap-3">
       <button
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors"
+        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:bg-slate-200 flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
       >
         <Minus size={14} />
       </button>
@@ -76,11 +76,11 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         min={0}
         value={value}
         onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
-        className="w-16 text-center text-2xl font-bold border border-slate-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
+        className="w-16 text-center text-2xl font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [color:var(--pf-text)]"
       />
       <button
         onClick={() => onChange(value + 1)}
-        className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors"
+        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:bg-slate-200 flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
       >
         <Plus size={14} />
       </button>
@@ -104,13 +104,13 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Team 1</p>
-            <p className="font-semibold text-slate-800 text-sm mb-2">{team1Name}</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Team 1</p>
+            <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{team1Name}</p>
             <Stepper value={s1} onChange={setS1} />
           </div>
           <div className="text-center">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Team 2</p>
-            <p className="font-semibold text-slate-800 text-sm mb-2">{team2Name}</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Team 2</p>
+            <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{team2Name}</p>
             <Stepper value={s2} onChange={setS2} />
           </div>
         </div>
@@ -128,23 +128,23 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         </div>
 
         <div>
-          <label className="text-xs font-medium text-slate-600 mb-1 block">Ngày thi đấu</label>
+          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
           <input
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
           />
         </div>
 
         <div>
-          <label className="text-xs font-medium text-slate-600 mb-1 block">Ghi chú</label>
+          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
           <textarea
             rows={2}
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Ghi chú về trận đấu..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
           />
         </div>
       </div>

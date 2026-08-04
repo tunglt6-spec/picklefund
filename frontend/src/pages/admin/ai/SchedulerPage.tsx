@@ -233,9 +233,9 @@ export function SchedulerPage() {
           </div>
 
           {/* Luật & lịch chạy (workflow rules) — chỉnh chu kỳ + bật/tắt trực tiếp */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <CalendarClock size={16} className="text-slate-400" /> Luật & Lịch Chạy
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <CalendarClock size={16} className="[color:var(--pf-color-muted)]" /> Luật & Lịch Chạy
             </h3>
             {rules.length === 0 ? (
               <EmptyState
@@ -248,8 +248,8 @@ export function SchedulerPage() {
                 {rules.map(r => (
                   <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-800 truncate">{r.name}</p>
-                      <p className="text-[11px] text-slate-400">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
+                      <p className="text-sm font-medium [color:var(--pf-text)] truncate">{r.name}</p>
+                      <p className="text-[11px] [color:var(--pf-color-muted)]">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {/* Chỉnh chu kỳ */}
@@ -258,7 +258,7 @@ export function SchedulerPage() {
                         disabled={savingId === r.id}
                         onChange={e => saveRule(r.id, { scheduleType: e.target.value }, 'Đã đổi chu kỳ')}
                         aria-label={`Chu kỳ của ${r.name}`}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-50"
+                        className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs font-medium [color:var(--pf-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-50"
                       >
                         {(['MANUAL', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map(v => (
                           <option key={v} value={v}>{SCHEDULE_LABEL[v]}</option>
@@ -273,33 +273,33 @@ export function SchedulerPage() {
                         title={r.enabled ? 'Đang bật — bấm để tắt' : 'Đang tắt — bấm để bật'}
                         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${r.enabled ? '[background:var(--pf-primary)]' : 'bg-slate-300'}`}
                       >
-                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${r.enabled ? 'left-[22px]' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full [background:var(--pf-surface)] shadow transition-all ${r.enabled ? 'left-[22px]' : 'left-0.5'}`} />
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-            <p className="mt-3 text-[11px] text-slate-400">
+            <p className="mt-3 text-[11px] [color:var(--pf-color-muted)]">
               Chu kỳ <b>Thủ công</b> = chỉ chạy khi bấm "Chạy định kỳ ngay". Luật đã tắt sẽ không được scheduler dispatch.
             </p>
           </section>
 
           {/* Cron hệ thống (cố định) */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1 flex items-center gap-2">
-              <Clock size={16} className="text-slate-400" /> Cron Hệ Thống (cố định)
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1 flex items-center gap-2">
+              <Clock size={16} className="[color:var(--pf-color-muted)]" /> Cron Hệ Thống (cố định)
             </h3>
-            <p className="text-[11px] text-slate-400 mb-4">Lịch tự động của Maika/Lisa — cố định theo hệ thống, không cấu hình tại đây.</p>
+            <p className="text-[11px] [color:var(--pf-color-muted)] mb-4">Lịch tự động của Maika/Lisa — cố định theo hệ thống, không cấu hình tại đây.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SYSTEM_CRONS.map((c, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                     {c.icon === 'lisa' ? <Sparkles size={16} /> : <Bot size={16} />}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{c.label}</p>
-                    <p className="text-[11px] text-slate-400">{c.agent} · {c.when}</p>
+                    <p className="text-sm font-medium [color:var(--pf-text)] truncate">{c.label}</p>
+                    <p className="text-[11px] [color:var(--pf-color-muted)]">{c.agent} · {c.when}</p>
                   </div>
                 </div>
               ))}
@@ -307,19 +307,19 @@ export function SchedulerPage() {
           </section>
 
           {/* Lịch sử scheduler dispatch */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Repeat size={16} className="text-slate-400" /> Lịch Sử Chạy Định Kỳ
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <Repeat size={16} className="[color:var(--pf-color-muted)]" /> Lịch Sử Chạy Định Kỳ
             </h3>
             {runs.length === 0 ? (
-              <p className="text-sm text-slate-400">Chưa có lượt chạy định kỳ nào.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có lượt chạy định kỳ nào.</p>
             ) : (
               <div className="divide-y divide-slate-50">
                 {runs.slice(0, 30).map(r => (
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
-                      <p className="text-sm text-slate-800 truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{fmt(r.startedAt ?? r.createdAt)}</p>
+                      <p className="text-sm [color:var(--pf-text)] truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
+                      <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{fmt(r.startedAt ?? r.createdAt)}</p>
                     </div>
                     <StatusBadge tone={RUN_TONE[r.status] ?? 'neutral'}>{r.status}</StatusBadge>
                   </div>

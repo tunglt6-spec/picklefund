@@ -78,9 +78,9 @@ export function MemberActivity() {
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}
         <div className="overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
-          <div className="border-b border-slate-100 p-3">
+          <div className="border-b border-[color:var(--pf-border)] p-3">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm thành viên..." className="input-base pl-9" />
             </div>
           </div>
@@ -90,8 +90,8 @@ export function MemberActivity() {
                 key={r.m.id}
                 onClick={() => setSelId(r.m.id)}
                 className={cn(
-                  'flex w-full items-center justify-between gap-2 border-b border-slate-100 px-3 py-2.5 text-left transition-colors',
-                  sel?.m.id === r.m.id ? '[background:var(--pf-primary-soft)]' : 'hover:bg-slate-50',
+                  'flex w-full items-center justify-between gap-2 border-b border-[color:var(--pf-border)] px-3 py-2.5 text-left transition-colors',
+                  sel?.m.id === r.m.id ? '[background:var(--pf-primary-soft)]' : 'hover:[background:var(--pf-surface-muted)]',
                 )}
               >
                 <span className="min-w-0">
@@ -101,7 +101,7 @@ export function MemberActivity() {
                 <span className="shrink-0 text-xs font-semibold [color:var(--pf-green)]">{formatVND(r.totalPaid)}</span>
               </button>
             ))}
-            {filtered.length === 0 && <p className="p-6 text-center text-sm text-slate-400">Không tìm thấy</p>}
+            {filtered.length === 0 && <p className="p-6 text-center text-sm [color:var(--pf-color-muted)]">Không tìm thấy</p>}
           </div>
         </div>
 

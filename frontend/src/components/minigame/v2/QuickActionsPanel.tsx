@@ -83,12 +83,12 @@ export function QuickActionsPanel({
   ]
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Thao Tác Nhanh
         </h3>
-        <Settings size={16} className="text-slate-400" />
+        <Settings size={16} className="[color:var(--pf-color-muted)]" />
       </div>
 
       <div className="grid grid-cols-2 gap-2">

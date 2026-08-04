@@ -54,10 +54,10 @@ export function QuickStatsPanel({ stats }: QuickStatsPanelProps) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center gap-2 mb-4">
         <Zap size={18} className="[color:var(--pf-primary)]" />
-        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+        <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Thống Kê Nhanh
         </h2>
       </div>
@@ -68,14 +68,14 @@ export function QuickStatsPanel({ stats }: QuickStatsPanelProps) {
             <div className="flex items-center gap-3 py-3">
               <span className="text-base shrink-0 w-6 text-center">{row.emoji}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-400 leading-tight">{row.label}</p>
-                <p className="text-sm text-slate-700 font-medium truncate">{row.name}</p>
+                <p className="text-xs [color:var(--pf-color-muted)] leading-tight">{row.label}</p>
+                <p className="text-sm [color:var(--pf-text)] font-medium truncate">{row.name}</p>
               </div>
               <span className="text-sm font-semibold [color:var(--pf-primary)] shrink-0 tabular-nums">
                 {row.value}
               </span>
             </div>
-            {idx < rows.length - 1 && <div className="border-b border-slate-100" />}
+            {idx < rows.length - 1 && <div className="border-b border-[color:var(--pf-border)]" />}
           </li>
         ))}
       </ul>

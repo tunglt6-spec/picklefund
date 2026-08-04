@@ -32,7 +32,7 @@ const STATUS_STYLE: Record<string, string> = {
   EXECUTED: 'bg-green-100 text-green-700',
   FAILED: 'bg-red-100 text-red-700',
   RETRY_PENDING: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
-  EXPIRED: 'bg-slate-100 text-slate-500',
+  EXPIRED: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
 }
 
 function fmtTime(iso: string): string {
@@ -109,20 +109,20 @@ export function AiApprovalInbox() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
+      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Inbox size={20} className="[color:var(--pf-primary)]" />
             </span>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Hộp Duyệt AI</h1>
-              <p className="text-sm text-slate-500">Hàng đợi phê duyệt hành động AI · Đánh giá điều kiện duyệt</p>
+              <h1 className="text-xl font-bold [color:var(--pf-text)]">Hộp Duyệt AI</h1>
+              <p className="text-sm [color:var(--pf-color-muted)]">Hàng đợi phê duyệt hành động AI · Đánh giá điều kiện duyệt</p>
             </div>
           </div>
           <button
             onClick={refetch}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
           >
             <RefreshCw size={14} /> Làm mới
           </button>
@@ -141,40 +141,40 @@ export function AiApprovalInbox() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Pending queue — REAL */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Inbox size={16} className="text-slate-400" />
-                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Hàng Đợi Chờ Duyệt</h3>
+                <Inbox size={16} className="[color:var(--pf-color-muted)]" />
+                <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Hàng Đợi Chờ Duyệt</h3>
               </div>
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{pending.length}</span>
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải…</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
             ) : pending.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
+              <div className="rounded-xl border border-dashed border-[color:var(--pf-border)] py-10 text-center">
                 <Inbox size={30} className="mx-auto text-slate-200 mb-2" />
-                <p className="text-sm text-slate-500 font-medium">Không có hành động chờ duyệt</p>
-                <p className="text-xs text-slate-400 mt-1">Khi AI tạo yêu cầu cần duyệt, nó sẽ hiện ở đây.</p>
+                <p className="text-sm [color:var(--pf-color-muted)] font-medium">Không có hành động chờ duyệt</p>
+                <p className="text-xs [color:var(--pf-color-muted)] mt-1">Khi AI tạo yêu cầu cần duyệt, nó sẽ hiện ở đây.</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {pending.map(a => (
-                  <div key={a.id} className="rounded-xl border border-slate-100 p-3">
+                  <div key={a.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <Bot size={13} className="[color:var(--pf-primary)] shrink-0" />
-                        <span className="text-xs font-semibold text-slate-500">{a.requestedByAi}</span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>
+                        <span className="text-xs font-semibold [color:var(--pf-color-muted)]">{a.requestedByAi}</span>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                           {a.riskLevel}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 shrink-0">{fmtTime(a.createdAt)}</span>
+                      <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
                     </div>
-                    <p className="text-sm font-semibold text-slate-800 mt-1.5">{a.title}</p>
-                    {a.summary && <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{a.summary}</p>}
-                    <p className="text-[11px] text-slate-400 mt-1">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                    <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
+                    {a.summary && <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 mt-0.5">{a.summary}</p>}
+                    <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         onClick={() => void runMutation(() => approveAiAction(a.id), 'Đã duyệt')}
@@ -192,7 +192,7 @@ export function AiApprovalInbox() {
                       </button>
                       <button
                         onClick={() => void openDetail(a.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
                       >
                         Chi tiết <ChevronRight size={12} />
                       </button>
@@ -204,17 +204,17 @@ export function AiApprovalInbox() {
           </div>
 
           {/* Approval evaluator — REAL read-only preview */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
             <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck size={16} className="text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Đánh Giá Điều Kiện Duyệt</h3>
+              <ShieldCheck size={16} className="[color:var(--pf-color-muted)]" />
+              <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Đánh Giá Điều Kiện Duyệt</h3>
             </div>
             <div className="space-y-3">
               <input
                 value={actionType}
                 onChange={e => setActionType(e.target.value)}
                 placeholder="Loại hành động (VD: send-reminder)…"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
               />
               <div className="flex flex-wrap gap-1.5">
                 {RISK_OPTS.map(o => (
@@ -222,7 +222,7 @@ export function AiApprovalInbox() {
                     key={o.value}
                     onClick={() => setRiskLevel(o.value)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                      riskLevel === o.value ? RISK_STYLE[o.value] : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      riskLevel === o.value ? RISK_STYLE[o.value] : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:bg-slate-200'
                     }`}
                   >
                     {o.label}
@@ -234,7 +234,7 @@ export function AiApprovalInbox() {
                 onChange={e => setObjective(e.target.value)}
                 rows={2}
                 placeholder="Mục tiêu (tuỳ chọn)…"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
               />
               <button
                 onClick={() => void handleEvaluate()}
@@ -250,16 +250,16 @@ export function AiApprovalInbox() {
                 </div>
               )}
               {result && (
-                <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                <div className="rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-3">
                   <div className="flex items-center justify-between">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[result.riskLevel ?? riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[result.riskLevel ?? riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                       {result.riskLevel ?? riskLevel}
                     </span>
                     {typeof result.requiredApprovalCount === 'number' && (
-                      <span className="text-xs font-medium text-slate-500">Cần {result.requiredApprovalCount} phê duyệt</span>
+                      <span className="text-xs font-medium [color:var(--pf-color-muted)]">Cần {result.requiredApprovalCount} phê duyệt</span>
                     )}
                   </div>
-                  {result.reason && <p className="text-xs text-slate-600 mt-2">{result.reason}</p>}
+                  {result.reason && <p className="text-xs [color:var(--pf-color-muted)] mt-2">{result.reason}</p>}
                 </div>
               )}
             </div>
@@ -267,36 +267,36 @@ export function AiApprovalInbox() {
         </div>
 
         {/* Đã duyệt — chờ thực thi (Mít Đặc Executor) */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Zap size={16} className="text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Đã Duyệt — Chờ Thực Thi (Mít Đặc)</h3>
+              <Zap size={16} className="[color:var(--pf-color-muted)]" />
+              <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Đã Duyệt — Chờ Thực Thi (Mít Đặc)</h3>
             </div>
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">{executable.length}</span>
           </div>
           {loading ? (
-            <p className="text-sm text-slate-400">Đang tải…</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
           ) : executable.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center">
+            <div className="rounded-xl border border-dashed border-[color:var(--pf-border)] py-8 text-center">
               <Zap size={26} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-sm text-slate-500 font-medium">Không có hành động chờ thực thi</p>
-              <p className="text-xs text-slate-400 mt-1">Hành động sau khi được duyệt sẽ xuất hiện ở đây.</p>
+              <p className="text-sm [color:var(--pf-color-muted)] font-medium">Không có hành động chờ thực thi</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-1">Hành động sau khi được duyệt sẽ xuất hiện ở đây.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {executable.map(a => (
-                <div key={a.id} className="rounded-xl border border-slate-100 p-3">
+                <div key={a.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <Bot size={13} className="text-emerald-500 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-500">{a.requestedByAi}</span>
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>{a.riskLevel}</span>
+                      <span className="text-xs font-semibold [color:var(--pf-color-muted)]">{a.requestedByAi}</span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>{a.riskLevel}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 shrink-0">{fmtTime(a.createdAt)}</span>
+                    <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
                   </div>
-                  <p className="text-sm font-semibold text-slate-800 mt-1.5">{a.title}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                  <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
+                  <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       onClick={() => void runMutation(() => executeAiAction(a.id), 'Đã thực thi')}
@@ -307,7 +307,7 @@ export function AiApprovalInbox() {
                     </button>
                     <button
                       onClick={() => void openDetail(a.id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                      className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
                     >
                       Chi tiết <ChevronRight size={12} />
                     </button>
@@ -323,27 +323,27 @@ export function AiApprovalInbox() {
       {(detail || detailLoading) && (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetail(null)}>
           <div className="absolute inset-0 bg-black/40" />
-          <div className="relative h-full w-full max-w-md bg-white shadow-xl overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Chi Tiết Hành Động AI</h3>
-              <button onClick={() => setDetail(null)} className="text-slate-400 hover:text-slate-700"><X size={18} /></button>
+          <div className="relative h-full w-full max-w-md [background:var(--pf-surface)] shadow-xl overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-5 py-4 flex items-center justify-between">
+              <h3 className="text-base font-bold [color:var(--pf-text)]">Chi Tiết Hành Động AI</h3>
+              <button onClick={() => setDetail(null)} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]"><X size={18} /></button>
             </div>
 
             {detailLoading || !detail ? (
-              <div className="px-5 py-8 text-sm text-slate-400">Đang tải…</div>
+              <div className="px-5 py-8 text-sm [color:var(--pf-color-muted)]">Đang tải…</div>
             ) : (
               <div className="px-5 py-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${STATUS_STYLE[detail.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${STATUS_STYLE[detail.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                       {detail.status}
                     </span>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[detail.riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[detail.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                       {detail.riskLevel}
                     </span>
                   </div>
-                  <p className="text-base font-bold text-slate-900 mt-2">{detail.title}</p>
-                  {detail.summary && <p className="text-sm text-slate-600 mt-1">{detail.summary}</p>}
+                  <p className="text-base font-bold [color:var(--pf-text)] mt-2">{detail.title}</p>
+                  {detail.summary && <p className="text-sm [color:var(--pf-color-muted)] mt-1">{detail.summary}</p>}
                 </div>
 
                 <div className="space-y-2 text-sm">
@@ -366,8 +366,8 @@ export function AiApprovalInbox() {
 
                 {/* Payload summary — chỉ liệt kê TÊN trường, KHÔNG lộ giá trị nhạy cảm */}
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase mb-1">Tóm tắt payload</p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-[11px] font-semibold [color:var(--pf-color-muted)] uppercase mb-1">Tóm tắt payload</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">
                     {payloadKeys.length
                       ? `${payloadKeys.length} trường (~${payloadSize}B): ${payloadKeys.join(', ')}`
                       : 'Không có payload.'}
@@ -376,18 +376,18 @@ export function AiApprovalInbox() {
 
                 {/* Execution history / audit trail */}
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase mb-2">Lịch sử sự kiện</p>
+                  <p className="text-[11px] font-semibold [color:var(--pf-color-muted)] uppercase mb-2">Lịch sử sự kiện</p>
                   <div className="space-y-2">
                     {detail.events.length === 0 ? (
-                      <p className="text-xs text-slate-400">Chưa có sự kiện.</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">Chưa có sự kiện.</p>
                     ) : (
                       detail.events.map(ev => (
                         <div key={ev.id} className="flex items-start gap-2">
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />
                           <div className="min-w-0">
-                            <p className="text-xs font-medium text-slate-700">{ev.type}</p>
-                            {ev.message && <p className="text-[11px] text-slate-500">{ev.message}</p>}
-                            <p className="text-[10px] text-slate-400">{fmtTime(ev.createdAt)}</p>
+                            <p className="text-xs font-medium [color:var(--pf-text)]">{ev.type}</p>
+                            {ev.message && <p className="text-[11px] [color:var(--pf-color-muted)]">{ev.message}</p>}
+                            <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(ev.createdAt)}</p>
                           </div>
                         </div>
                       ))
@@ -397,13 +397,13 @@ export function AiApprovalInbox() {
 
                 {/* Actions in drawer */}
                 {detail.status === 'PENDING_APPROVAL' && (
-                  <div className="space-y-2 border-t border-slate-100 pt-3">
+                  <div className="space-y-2 border-t border-[color:var(--pf-border)] pt-3">
                     <textarea
                       value={rejectReason}
                       onChange={e => setRejectReason(e.target.value)}
                       rows={2}
                       placeholder="Lý do từ chối (tuỳ chọn)…"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                      className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
                     />
                     <div className="flex gap-2">
                       <button
@@ -453,7 +453,7 @@ export function AiApprovalInbox() {
                 )}
 
                 {policies.length > 0 && (
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] [color:var(--pf-color-muted)]">
                     Duyệt KHÔNG tự thực thi. Hành động APPROVED được thực thi thủ công qua Mít Đặc (bridge no-op hiện tại).
                   </p>
                 )}
@@ -469,8 +469,8 @@ export function AiApprovalInbox() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-xs font-semibold text-slate-400 uppercase shrink-0">{label}</span>
-      <span className="text-sm font-medium text-slate-700 text-right break-words">{children}</span>
+      <span className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase shrink-0">{label}</span>
+      <span className="text-sm font-medium [color:var(--pf-text)] text-right break-words">{children}</span>
     </div>
   )
 }

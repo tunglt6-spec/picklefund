@@ -30,8 +30,8 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
   const percentage = Math.round(kpi.completionRate)
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-      <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+      <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4">
         Tiến Độ Giải Đấu
       </h3>
 
@@ -66,8 +66,8 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
           </ResponsiveContainer>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-3xl font-bold text-slate-800">{percentage}%</span>
-            <span className="text-xs text-slate-400 mt-0.5">Hoàn thành</span>
+            <span className="text-3xl font-bold [color:var(--pf-text)]">{percentage}%</span>
+            <span className="text-xs [color:var(--pf-color-muted)] mt-0.5">Hoàn thành</span>
           </div>
         </div>
 
@@ -79,9 +79,9 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
                   className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-sm text-slate-600">{item.name}</span>
+                <span className="text-sm [color:var(--pf-color-muted)]">{item.name}</span>
               </div>
-              <span className="text-sm font-medium text-slate-700">{item.value}</span>
+              <span className="text-sm font-medium [color:var(--pf-text)]">{item.value}</span>
             </div>
           ))}
         </div>

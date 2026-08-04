@@ -18,12 +18,12 @@ import {
 } from '../../../hooks/useWorkflows'
 
 const RUN_STATUS_STYLE: Record<WorkflowRunStatus, string> = {
-  PENDING: 'bg-slate-100 text-slate-600',
+  PENDING: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   RUNNING: 'bg-sky-100 text-sky-700',
   WAITING_APPROVAL: 'bg-amber-100 text-amber-700',
   COMPLETED: 'bg-emerald-100 text-emerald-700',
   FAILED: 'bg-red-100 text-red-700',
-  CANCELLED: 'bg-slate-100 text-slate-500',
+  CANCELLED: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
 }
 
 function fmtTime(iso: string): string {
@@ -134,20 +134,20 @@ export function WorkflowRules() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
+      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Workflow size={20} className="[color:var(--pf-primary)]" />
             </span>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Hermes Workflows</h1>
-              <p className="text-sm text-slate-500">Workflow rule + lịch sử chạy · hành động đi qua AI Action Center</p>
+              <h1 className="text-xl font-bold [color:var(--pf-text)]">Hermes Workflows</h1>
+              <p className="text-sm [color:var(--pf-color-muted)]">Workflow rule + lịch sử chạy · hành động đi qua AI Action Center</p>
             </div>
           </div>
           <button
             onClick={refetch}
-            className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
           >
             <RefreshCw size={14} /> Làm mới
           </button>
@@ -188,22 +188,22 @@ export function WorkflowRules() {
                 style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
               >
                 <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">{k.label}</p>
+                <p className="text-[11px] font-medium [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
               </div>
             )
           })}
         </div>
 
         {/* Create from template — nhóm theo module */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Tạo rule từ template</h3>
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-3">Tạo rule từ template</h3>
           {templates.length === 0 ? (
-            <p className="text-sm text-slate-400">Chưa có template.</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Chưa có template.</p>
           ) : (
             <div className="space-y-4">
               {templateGroups.map(([cat, tpls]) => (
                 <div key={cat}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">{cat}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat}</p>
                   <div className="flex flex-wrap gap-2">
                     {tpls.map((t) => (
                       <button
@@ -241,7 +241,7 @@ export function WorkflowRules() {
                       Vẫn tạo bản mới
                     </button>
                     <button onClick={() => setDup(null)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]">
                       Huỷ
                     </button>
                   </div>
@@ -252,16 +252,16 @@ export function WorkflowRules() {
         </div>
 
         {/* Dispatch theo Trigger (Epic 6 + Live data) */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Chạy Dispatch theo Trigger</h3>
-          <p className="text-xs text-slate-400 mb-3">
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1">Chạy Dispatch theo Trigger</h3>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">
             <b>Dữ liệu thật</b>: lấy số liệu CLB hiện tại (nợ quỹ, buổi sắp tới, kỳ đã chốt) để rule khớp thực tế →
             tạo AiAction vào <b>Hộp Duyệt</b>. <b>Test rỗng</b>: chỉ chạy thử với ngữ cảnh trống (thường không khớp điều kiện).
           </p>
           <div className="space-y-2">
             {DISPATCH_TRIGGER_TYPES.map((t) => (
               <div key={t} className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-mono text-slate-500 w-40 shrink-0">{t}</span>
+                <span className="text-xs font-mono [color:var(--pf-color-muted)] w-40 shrink-0">{t}</span>
                 <button
                   onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
                   disabled={busy}
@@ -283,8 +283,8 @@ export function WorkflowRules() {
             const r = liveResult ?? dispatchResult!
             const isLive = !!liveResult
             return (
-              <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-xs font-semibold text-slate-600 mb-2">
+              <div className="mt-4 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] p-3">
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] mb-2">
                   Kết quả {isLive ? '(dữ liệu thật)' : '(test rỗng)'}: {r.triggerType}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
@@ -295,14 +295,14 @@ export function WorkflowRules() {
                     ['AiAction', r.createdActions],
                     ['Lỗi', r.failedRuns],
                   ] as const).map(([label, value]) => (
-                    <div key={label} className="rounded-lg bg-white border border-slate-100 px-2 py-1.5">
-                      <p className="text-sm font-bold text-slate-800">{value}</p>
-                      <p className="text-[10px] text-slate-400">{label}</p>
+                    <div key={label} className="rounded-lg [background:var(--pf-surface)] border border-[color:var(--pf-border)] px-2 py-1.5">
+                      <p className="text-sm font-bold [color:var(--pf-text)]">{value}</p>
+                      <p className="text-[10px] [color:var(--pf-color-muted)]">{label}</p>
                     </div>
                   ))}
                 </div>
                 {isLive && (
-                  <div className="mt-2 text-[11px] text-slate-500">
+                  <div className="mt-2 text-[11px] [color:var(--pf-color-muted)]">
                     Số liệu CLB: {Object.entries(liveResult!.liveContext).map(([k, v]) => `${k}=${String(v)}`).join(' · ') || '(trống)'}
                   </div>
                 )}
@@ -322,35 +322,35 @@ export function WorkflowRules() {
         </div>
 
         {/* Rules list */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Workflow Rules</h3>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{rules.length}</span>
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Workflow Rules</h3>
+            <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{rules.length}</span>
           </div>
           {loading ? (
-            <p className="text-sm text-slate-400">Đang tải…</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
           ) : rules.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
+            <div className="rounded-xl border border-dashed border-[color:var(--pf-border)] py-10 text-center">
               <Workflow size={30} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-sm text-slate-500 font-medium">Chưa có workflow rule</p>
-              <p className="text-xs text-slate-400 mt-1">Tạo rule từ template ở trên để bắt đầu.</p>
+              <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có workflow rule</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-1">Tạo rule từ template ở trên để bắt đầu.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {ruleGroups.map(([cat, grpRules]) => (
                 <div key={cat}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">{cat} · {grpRules.length}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat} · {grpRules.length}</p>
                   <div className="space-y-2">
               {grpRules.map((r) => (
-                <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-slate-100 p-3 transition-shadow">
+                <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-[color:var(--pf-border)] p-3 transition-shadow">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800">{r.name}</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-sm font-semibold [color:var(--pf-text)]">{r.name}</p>
+                      <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">
                         {r.triggerType} · ưu tiên {r.priority}
                       </p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${r.enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${r.enabled ? 'bg-emerald-50 text-emerald-700' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${r.enabled ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                       {r.enabled ? 'Đang bật' : 'Đã tắt'}
                     </span>
@@ -366,7 +366,7 @@ export function WorkflowRules() {
                     <button
                       onClick={() => void run(() => setRuleEnabled(r.id, !r.enabled), r.enabled ? 'Đã tắt rule' : 'Đã bật rule')}
                       disabled={busy}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] disabled:opacity-50"
                     >
                       {r.enabled ? 'Tắt' : 'Bật'}
                     </button>
@@ -388,25 +388,25 @@ export function WorkflowRules() {
         </div>
 
         {/* Runs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Lịch Sử Chạy (Runs)</h3>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{runs.length}</span>
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Lịch Sử Chạy (Runs)</h3>
+            <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{runs.length}</span>
           </div>
           {loading ? (
-            <p className="text-sm text-slate-400">Đang tải…</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
           ) : runs.length === 0 ? (
-            <p className="text-sm text-slate-400">Chưa có lần chạy nào.</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Chưa có lần chạy nào.</p>
           ) : (
             <div className="space-y-2">
               {runs.map((run) => (
-                <div key={run.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 px-3 py-2.5">
+                <div key={run.id} className="flex items-center justify-between gap-2 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-700">{run.triggerType}</p>
-                    <p className="text-[10px] text-slate-400">{fmtTime(run.createdAt)}</p>
+                    <p className="text-xs font-medium [color:var(--pf-text)]">{run.triggerType}</p>
+                    <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)}</p>
                     {run.errorMessage && <p className="text-[10px] text-red-500 truncate">{run.errorMessage}</p>}
                   </div>
-                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${RUN_STATUS_STYLE[run.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                     {run.status}
                   </span>
                 </div>

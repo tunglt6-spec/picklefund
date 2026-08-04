@@ -82,7 +82,7 @@ export function BottomNav() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[color:var(--pf-border)]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-stretch" style={{ height: 60 }}>
@@ -126,7 +126,7 @@ export function BottomNav() {
           {hasMore && (
             <button
               onClick={() => setShowMore(true)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors text-slate-400"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors [color:var(--pf-color-muted)]"
             >
               <Menu size={22} />
               <span className="text-[10px] font-[600]">Thêm</span>
@@ -140,9 +140,9 @@ export function BottomNav() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setShowMore(false)} />
           {/* Drawer */}
-          <div className="fixed bottom-16 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl border-t border-slate-100 p-4 pb-6">
+          <div className="fixed bottom-16 left-0 right-0 z-50 [background:var(--pf-surface)] rounded-t-2xl shadow-2xl border-t border-[color:var(--pf-border)] p-4 pb-6">
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
-            <div className="text-[12px] font-[700] text-slate-400 uppercase tracking-wider mb-3 px-1">
+            <div className="text-[12px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-3 px-1">
               Điều hướng
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -150,10 +150,10 @@ export function BottomNav() {
                 <button
                   key={item.to}
                   onClick={() => { navigate(item.to); setShowMore(false) }}
-                  className="flex flex-col items-center gap-1.5 p-3 min-h-11 rounded-[14px] bg-slate-50 hover:bg-slate-100 transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 min-h-11 rounded-[14px] [background:var(--pf-surface-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors"
                 >
                   <span className="[color:var(--pf-primary)]">{item.icon}</span>
-                  <span className="text-[11px] font-[600] text-slate-700">{item.label}</span>
+                  <span className="text-[11px] font-[600] [color:var(--pf-text)]">{item.label}</span>
                 </button>
               ))}
             </div>

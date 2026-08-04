@@ -291,32 +291,32 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
   }
 
   return (
-    <div className={embedded ? '' : 'flex-1 overflow-y-auto bg-slate-50'}>
+    <div className={embedded ? '' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
       <PageHeader
         title={isEdit ? '✏️ Chỉnh Sửa Minigame' : '🏆 Tạo Minigame Mới'}
         subtitle={`Bước ${step + 1}/${steps.length}: ${steps[step]}`}
       />
 
       {/* Step indicator */}
-      <div className={cn('bg-white border-b border-slate-100 px-4 sm:px-6 py-3', !embedded && 'sticky top-0 z-10')}>
+      <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-3', !embedded && 'sticky top-0 z-10')}>
         <div className="flex items-center gap-2">
           {steps.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className={cn(
                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                i < step ? 'bg-green-500 text-white' : i === step ? '[background:var(--pf-primary)] text-white' : 'bg-slate-100 text-slate-400'
+                i < step ? 'bg-green-500 text-white' : i === step ? '[background:var(--pf-primary)] text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
               )}>
                 {i < step ? <Check size={12} /> : i + 1}
               </div>
-              <span className={cn('text-sm font-medium', i === step ? 'text-slate-900' : 'text-slate-400')}>{s}</span>
-              {i < steps.length - 1 && <ChevronRight size={14} className="text-slate-300 mx-1" />}
+              <span className={cn('text-sm font-medium', i === step ? '[color:var(--pf-text)]' : '[color:var(--pf-color-muted)]')}>{s}</span>
+              {i < steps.length - 1 && <ChevronRight size={14} className="[color:var(--pf-color-muted)] mx-1" />}
             </div>
           ))}
         </div>
       </div>
 
       <div className={embedded ? 'pt-4' : 'p-6 max-w-2xl'}>
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-6">
 
           {/* Step 1 */}
           {step === 0 && (
@@ -324,7 +324,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               {/* Chọn bộ môn (đa môn thể thao). Đổi bộ môn → set format + scoring phù hợp. */}
               {!isEdit && (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Bộ Môn *</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Bộ Môn *</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {([
                       { value: 'PICKLEBALL' as const, label: '🏓 Pickleball', sub: 'Đánh đôi / vòng bảng / đôi cố định' },
@@ -337,9 +337,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                     ]).map(opt => (
                       <label key={opt.value} className={cn(
                         'flex flex-col gap-0.5 rounded-lg px-3 py-2.5 cursor-pointer border transition-colors',
-                        form.sport === opt.value ? '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary)]' : 'bg-slate-50 border-transparent hover:bg-slate-100'
+                        form.sport === opt.value ? '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary)]' : '[background:var(--pf-surface-muted)] border-transparent hover:[background:var(--pf-color-muted-soft)]'
                       )}>
-                        <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                        <span className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
                           <input type="radio" name="sport" checked={form.sport === opt.value}
                             onChange={() => set(opt.value === 'FOOTBALL'
                               ? { sport: 'FOOTBALL', formatType: 'GROUP_STAGE', allowDraw: true }
@@ -351,7 +351,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                             className="accent-[var(--pf-primary)]" />
                           {opt.label}
                         </span>
-                        <span className="text-xs text-slate-500 ml-5">{opt.sub}</span>
+                        <span className="text-xs [color:var(--pf-color-muted)] ml-5">{opt.sub}</span>
                       </label>
                     ))}
                   </div>
@@ -369,7 +369,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                 </div>
               ) : (
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Hình Thức Giải Đấu *</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Hình Thức Giải Đấu *</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {([
                     { value: 'RANDOM_DOUBLES' as const, label: '🏓 Đánh Đôi Ngẫu Nhiên', sub: 'Random Doubles — 2v2 mỗi trận' },
@@ -378,9 +378,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   ]).map(opt => (
                     <label key={opt.value} className={cn(
                       'flex flex-col gap-0.5 rounded-lg px-3 py-2.5 cursor-pointer border transition-colors',
-                      form.formatType === opt.value ? '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary)]' : 'bg-slate-50 border-transparent hover:bg-slate-100'
+                      form.formatType === opt.value ? '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary)]' : '[background:var(--pf-surface-muted)] border-transparent hover:[background:var(--pf-color-muted-soft)]'
                     )}>
-                      <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <span className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
                         <input
                           type="radio"
                           name="formatType"
@@ -391,13 +391,13 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                         />
                         {opt.label}
                       </span>
-                      <span className="text-xs text-slate-500 ml-5">{opt.sub}</span>
+                      <span className="text-xs [color:var(--pf-color-muted)] ml-5">{opt.sub}</span>
                     </label>
                   ))}
                 </div>
                 {form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' && !isEdit && (
                   <div className="mt-3">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Cách Ghép Cặp</label>
+                    <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Cách Ghép Cặp</label>
                     <div className="grid grid-cols-1 gap-2">
                       {([
                         { value: 'RANDOM_PAIRING' as const, label: '🎲 Ngẫu Nhiên', sub: 'Ghép cặp tự động ngẫu nhiên' },
@@ -406,14 +406,14 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                       ] as const).map(opt => (
                         <label key={opt.value} className={cn(
                           'flex flex-col gap-0.5 rounded-lg px-3 py-2 cursor-pointer border transition-colors',
-                          form.pairingMode === opt.value ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-transparent hover:bg-slate-100'
+                          form.pairingMode === opt.value ? 'bg-orange-50 border-orange-300' : '[background:var(--pf-surface-muted)] border-transparent hover:[background:var(--pf-color-muted-soft)]'
                         )}>
-                          <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                          <span className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
                             <input type="radio" name="pairingMode" checked={form.pairingMode === opt.value}
                               onChange={() => set({ pairingMode: opt.value })} className="accent-orange-500" />
                             {opt.label}
                           </span>
-                          <span className="text-xs text-slate-500 ml-5">{opt.sub}</span>
+                          <span className="text-xs [color:var(--pf-color-muted)] ml-5">{opt.sub}</span>
                         </label>
                       ))}
                     </div>
@@ -422,37 +422,37 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               </div>
               )}
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Tên Giải Đấu *</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Tên Giải Đấu *</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={e => set({ name: e.target.value })}
                   placeholder="VD: Minigame Q2/2026"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mô tả</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Mô tả</label>
                 <textarea rows={2} value={form.description} onChange={e => set({ description: e.target.value })}
                   placeholder="Mô tả giải đấu..."
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
+                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày bắt đầu</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Ngày bắt đầu</label>
                   <input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                    className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ngày kết thúc</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Ngày kết thúc</label>
                   <input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                    className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Ghi chú</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Ghi chú</label>
                 <textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
+                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" />
               </div>
             </div>
           )}
@@ -461,7 +461,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {step === 1 && isGolf && (
             <div className="space-y-5">
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số vòng đấu ({form.rounds})</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Số vòng đấu ({form.rounds})</label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {([
                     { r: 1, label: '1 vòng (18 hố)' },
@@ -470,17 +470,17 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   ]).map(p => (
                     <button key={p.r} type="button" onClick={() => set({ rounds: p.r })}
                       className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors',
-                        form.rounds === p.r ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
+                        form.rounds === p.r ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]')}>
                       {p.label}
                     </button>
                   ))}
                 </div>
                 <input type="range" min={1} max={8} value={form.rounds} onChange={e => set({ rounds: +e.target.value })}
                   className="w-full accent-[var(--pf-primary)]" />
-                <div className="flex justify-between text-xs text-slate-400 mt-1">
+                <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-1">
                   {[1,2,3,4,5,6,7,8].map(n => <span key={n}>{n}</span>)}
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Mỗi vòng golfer ghi 1 số gậy. Bảng xếp hạng tính <b>tổng gậy</b> tất cả các vòng — nhỏ nhất đứng đầu.</p>
+                <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Mỗi vòng golfer ghi 1 số gậy. Bảng xếp hạng tính <b>tổng gậy</b> tất cả các vòng — nhỏ nhất đứng đầu.</p>
               </div>
             </div>
           )}
@@ -490,7 +490,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
             <div className="space-y-5">
               {isTeamSport && (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Mẫu tính điểm nhanh</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Mẫu tính điểm nhanh</label>
                   <div className="flex flex-wrap gap-2">
                     {(isBasketball
                       ? [{ w: 2, d: 0, label: 'Thắng 2 - Thua 0', draw: false }, { w: 3, d: 0, label: 'Thắng 3 - Thua 0', draw: false }]
@@ -498,7 +498,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                     ).map(p => (
                       <button key={p.label} type="button" onClick={() => set({ winPoints: p.w, drawPoints: p.d, lossPoints: 0, allowDraw: p.draw })}
                         className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors',
-                          form.winPoints === p.w && form.drawPoints === p.d ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100')}>
+                          form.winPoints === p.w && form.drawPoints === p.d ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]')}>
                         {p.label}
                       </button>
                     ))}
@@ -507,20 +507,20 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               )}
               {form.formatType === 'GROUP_STAGE' ? (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Số người mỗi bảng ({form.groupSize})</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Số người mỗi bảng ({form.groupSize})</label>
                   <input type="range" min={2} max={6} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })}
                     className="w-full accent-[var(--pf-primary)]" />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-1">
                     {[2,3,4,5,6].map(n => <span key={n}>{n}</span>)}
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">Chế độ bốc thăm mặc định</label>
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">Chế độ bốc thăm mặc định</label>
                   <select
                     value={form.drawMode}
                     onChange={e => set({ drawMode: e.target.value as DrawMode })}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                    className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   >
                     <option value="RANDOM">Ngẫu Nhiên (Random)</option>
                     <option value="FAIR_ROTATION">Công Bằng Theo Lượt (Fair Rotation)</option>
@@ -528,16 +528,16 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   </select>
                 </div>
               )}
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 [background:var(--pf-surface-muted)] rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">Cho phép hòa</p>
-                  <p className="text-xs text-slate-500">Trận có thể kết thúc với tỷ số bằng nhau</p>
+                  <p className="text-sm font-medium [color:var(--pf-text)]">Cho phép hòa</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Trận có thể kết thúc với tỷ số bằng nhau</p>
                 </div>
                 <button
                   onClick={() => set({ allowDraw: !form.allowDraw })}
                   className={cn('relative inline-flex h-6 w-11 rounded-full transition-colors', form.allowDraw ? '[background:var(--pf-primary)]' : 'bg-slate-200')}
                 >
-                  <span className={cn('inline-block h-5 w-5 rounded-full bg-white shadow transition-transform mt-0.5', form.allowDraw ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')} />
+                  <span className={cn('inline-block h-5 w-5 rounded-full [background:var(--pf-surface)] shadow transition-transform mt-0.5', form.allowDraw ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')} />
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -547,11 +547,11 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   { label: 'Điểm thua', key: 'lossPoints', disabled: true },
                 ].map(({ label, key, disabled }) => (
                   <div key={key}>
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 block">{label}</label>
+                    <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">{label}</label>
                     <input type="number" min={0} value={form[key as keyof FormState] as number}
                       onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)}
                       disabled={disabled}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:bg-slate-50 disabled:text-slate-400" />
+                      className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:[background:var(--pf-surface-muted)] disabled:[color:var(--pf-color-muted)]" />
                   </div>
                 ))}
               </div>
@@ -562,7 +562,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {step === 2 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-slate-600">Chọn thành viên tham gia (tối thiểu 4)</p>
+                <p className="text-sm [color:var(--pf-color-muted)]">Chọn thành viên tham gia (tối thiểu 4)</p>
                 <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', form.selectedMemberIds.length >= 4 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
                   {form.selectedMemberIds.length} đã chọn
                 </span>
@@ -575,13 +575,13 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   return (
                     <div key={m.id} className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                      checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : 'bg-slate-50 border border-transparent hover:bg-slate-100'
+                      checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : '[background:var(--pf-surface-muted)] border border-transparent hover:[background:var(--pf-color-muted-soft)]'
                     )}>
                       <input type="checkbox" checked={checked} onChange={() => toggleMember(m.id)} className="accent-[var(--pf-primary)] h-4 w-4 cursor-pointer" />
-                      <span className="text-sm font-medium text-slate-800 flex-1 cursor-pointer" onClick={() => toggleMember(m.id)}>{m.fullName}</span>
-                      {m.phone && <span className="text-xs text-slate-400">{m.phone}</span>}
+                      <span className="text-sm font-medium [color:var(--pf-text)] flex-1 cursor-pointer" onClick={() => toggleMember(m.id)}>{m.fullName}</span>
+                      {m.phone && <span className="text-xs [color:var(--pf-color-muted)]">{m.phone}</span>}
                       {checked && (
-                        <button type="button" onClick={() => toggleMember(m.id)} className="text-slate-300 hover:text-red-500 transition-colors ml-1">
+                        <button type="button" onClick={() => toggleMember(m.id)} className="[color:var(--pf-color-muted)] hover:text-red-500 transition-colors ml-1">
                           <X size={14} />
                         </button>
                       )}
@@ -591,9 +591,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               </div>
 
               {/* Guest section */}
-              <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="mt-4 pt-4 border-t border-[color:var(--pf-border)]">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Khách Mời</span>
+                  <span className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Khách Mời</span>
                   {!showAddGuest && (
                     <button
                       type="button"
@@ -613,7 +613,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                       return (
                         <div key={g.id} className={cn(
                           'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                          checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : 'bg-slate-50 border border-transparent'
+                          checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : '[background:var(--pf-surface-muted)] border border-transparent'
                         )}>
                           <input
                             type="checkbox"
@@ -621,12 +621,12 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                             onChange={() => toggleMember(g.id)}
                             className="accent-[var(--pf-primary)] h-4 w-4 cursor-pointer"
                           />
-                          <span className="text-sm font-medium text-slate-800 flex-1">{g.name}</span>
+                          <span className="text-sm font-medium [color:var(--pf-text)] flex-1">{g.name}</span>
                           <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
                           <button
                             type="button"
                             onClick={() => removeGuest(g.id)}
-                            className="text-slate-400 hover:text-red-500 transition-colors ml-1"
+                            className="[color:var(--pf-color-muted)] hover:text-red-500 transition-colors ml-1"
                           >
                             <X size={14} />
                           </button>
@@ -646,7 +646,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                       onChange={e => setGuestName(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') { setShowAddGuest(false); setGuestName('') } }}
                       placeholder="Tên khách mời..."
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                      className="flex-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                     />
                     <button
                       type="button"
@@ -659,7 +659,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                     <button
                       type="button"
                       onClick={() => { setShowAddGuest(false); setGuestName('') }}
-                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                      className="[color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)] transition-colors"
                     >
                       <X size={16} />
                     </button>
@@ -667,7 +667,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                 )}
 
                 {form.guestMembers.length === 0 && !showAddGuest && (
-                  <p className="text-xs text-slate-400 italic">Chưa có khách mời. Nhấn "Thêm Khách" để thêm người ngoài CLB.</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] italic">Chưa có khách mời. Nhấn "Thêm Khách" để thêm người ngoài CLB.</p>
                 )}
               </div>
             </div>

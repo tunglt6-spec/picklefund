@@ -37,12 +37,12 @@ export function GroupAssignmentPanel({
       : 'sm:grid-cols-2 xl:grid-cols-3'
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col gap-4">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-4">
       {/* Panel header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Users size={20} className="[color:var(--pf-primary)] shrink-0" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Phân Bảng &amp; Thành Viên
           </h2>
           <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
@@ -63,7 +63,7 @@ export function GroupAssignmentPanel({
 
       {/* Groups grid */}
       {groups.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-6">
+        <p className="text-sm [color:var(--pf-color-muted)] text-center py-6">
           Chưa có bảng nào được tạo.
         </p>
       ) : (

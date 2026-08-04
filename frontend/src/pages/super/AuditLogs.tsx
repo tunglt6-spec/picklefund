@@ -75,7 +75,7 @@ export function AuditLogs() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Audit Logs"
         subtitle={`${filtered.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
@@ -86,7 +86,7 @@ export function AuditLogs() {
         {/* Filters */}
         <div className="space-y-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -94,13 +94,13 @@ export function AuditLogs() {
               className="input-base pl-9 w-full"
             />
           </div>
-          <div className="flex gap-1 bg-white rounded-lg border border-slate-200 p-1 overflow-x-auto">
+          <div className="flex gap-1 [background:var(--pf-surface)] rounded-lg border border-[color:var(--pf-border)] p-1 overflow-x-auto">
             {ACTION_OPTIONS.map(opt => (
               <button
                 key={opt}
                 onClick={() => setAction(opt)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  action === opt ? '[background:var(--pf-primary)] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  action === opt ? '[background:var(--pf-primary)] text-white shadow-sm' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                 }`}
               >
                 {opt}
@@ -110,13 +110,13 @@ export function AuditLogs() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-slate-400 text-sm">Đang tải...</div>
+            <div className="py-16 text-center [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center">
               <ScrollText size={32} className="mx-auto text-slate-200 mb-3" />
-              <p className="text-sm text-slate-400">Chưa có log nào</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có log nào</p>
             </div>
           ) : (
             <table className="table-base">
@@ -132,13 +132,13 @@ export function AuditLogs() {
               <tbody>
                 {filtered.map(log => (
                   <tr key={log.id}>
-                    <td className="text-xs text-slate-400 whitespace-nowrap">{formatTime(log.createdAt)}</td>
-                    <td className="text-slate-700 text-xs font-mono">{log.user?.username ?? '—'}</td>
+                    <td className="text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatTime(log.createdAt)}</td>
+                    <td className="[color:var(--pf-text)] text-xs font-mono">{log.user?.username ?? '—'}</td>
                     <td className="text-center">
                       <Badge variant={ACTION_COLORS[log.action] ?? 'gray'}>{log.action}</Badge>
                     </td>
-                    <td className="text-slate-600 text-xs">{log.detail ?? `${log.resource}`}</td>
-                    <td className="text-xs text-slate-500">{log.club?.name ?? 'System'}</td>
+                    <td className="[color:var(--pf-color-muted)] text-xs">{log.detail ?? `${log.resource}`}</td>
+                    <td className="text-xs [color:var(--pf-color-muted)]">{log.club?.name ?? 'System'}</td>
                   </tr>
                 ))}
               </tbody>

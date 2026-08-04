@@ -117,17 +117,17 @@ export function LisaChat() {
       {/* Brief cards */}
       {brief && messages.length <= 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Đóng quỹ</p>
-            <p className="text-xs font-medium text-slate-700">{brief.paymentStatus}</p>
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Đóng quỹ</p>
+            <p className="text-xs font-medium [color:var(--pf-text)]">{brief.paymentStatus}</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Hoạt động</p>
-            <p className="text-xs font-medium text-slate-700">{brief.activitySummary}</p>
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Hoạt động</p>
+            <p className="text-xs font-medium [color:var(--pf-text)]">{brief.activitySummary}</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Gợi ý</p>
-            <p className="text-xs font-medium text-slate-700">{brief.tips[0] ?? '—'}</p>
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Gợi ý</p>
+            <p className="text-xs font-medium [color:var(--pf-text)]">{brief.tips[0] ?? '—'}</p>
           </div>
         </div>
       )}
@@ -138,16 +138,16 @@ export function LisaChat() {
           <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             {/* Avatar */}
             <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5
-              ${m.role === 'lisa' ? '[background:var(--pf-primary-soft)]' : 'bg-slate-100'}`}>
-              {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary)]" /> : <User size={14} className="text-slate-500" />}
+              ${m.role === 'lisa' ? '[background:var(--pf-primary-soft)]' : '[background:var(--pf-color-muted-soft)]'}`}>
+              {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary)]" /> : <User size={14} className="[color:var(--pf-color-muted)]" />}
             </div>
             {/* Bubble */}
             <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm
               ${m.role === 'lisa'
-                ? 'bg-white border border-slate-100 text-slate-800 rounded-tl-sm'
+                ? '[background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-text)] rounded-tl-sm'
                 : '[background:var(--pf-primary)] text-white rounded-tr-sm'}`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
-              <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? 'text-slate-400' : 'text-white/70'}`}>{m.time}</p>
+              <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? '[color:var(--pf-color-muted)]' : 'text-white/70'}`}>{m.time}</p>
             </div>
           </div>
         ))}
@@ -157,7 +157,7 @@ export function LisaChat() {
             <div className="w-7 h-7 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
               <Bot size={14} className="[color:var(--pf-primary)]" />
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+            <div className="[background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1">
                 <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -174,7 +174,7 @@ export function LisaChat() {
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map(s => (
             <button key={s} onClick={() => sendMessage(s)}
-              className="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors shadow-sm">
+              className="text-xs [background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors shadow-sm">
               {s}
             </button>
           ))}
@@ -197,17 +197,17 @@ export function LisaChat() {
         }}
       >
         {/* Header */}
-        <div className="shrink-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
               <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-[15px] font-[800] text-slate-900">Lisa AI</p>
+              <p className="text-[15px] font-[800] [color:var(--pf-text)]">Lisa AI</p>
               <p className="text-[11px] text-emerald-500 font-medium">● Trực tuyến</p>
             </div>
           </div>
-          <button onClick={fetchBrief} className="p-2 text-slate-400 active:opacity-60">
+          <button onClick={fetchBrief} className="p-2 [color:var(--pf-color-muted)] active:opacity-60">
             <RefreshCw size={16} />
           </button>
         </div>
@@ -216,12 +216,12 @@ export function LisaChat() {
         <div ref={msgRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
 
         {/* Input — stays at bottom, translates up with keyboard */}
-        <div ref={inputBarRef} className="shrink-0 bg-white border-t border-slate-100 px-4 py-3">
+        <div ref={inputBarRef} className="shrink-0 [background:var(--pf-surface)] border-t border-[color:var(--pf-border)] px-4 py-3">
           <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <input
               value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
-              className="flex-1 text-sm bg-slate-100 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+              className="flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
             />
             <button type="submit" disabled={!input.trim() || loading}
               className="w-10 h-10 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
@@ -234,12 +234,12 @@ export function LisaChat() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Lisa AI"
         subtitle="Trợ lý cá nhân thông minh"
         actions={
-          <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:[color:var(--pf-primary)]">
+          <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
             <RefreshCw size={13} />Làm mới
           </button>
         }
@@ -247,12 +247,12 @@ export function LisaChat() {
 
       <div className="flex-1 overflow-y-auto p-6 max-w-[760px] mx-auto w-full">{chatContent}</div>
 
-      <div className="bg-white border-t border-slate-100 p-4 max-w-[760px] mx-auto w-full">
+      <div className="[background:var(--pf-surface)] border-t border-[color:var(--pf-border)] p-4 max-w-[760px] mx-auto w-full">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <input
             value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa bất cứ điều gì về CLB của bạn..."
-            className="flex-1 text-sm bg-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all"
+            className="flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all"
           />
           <button type="submit" disabled={!input.trim() || loading}
             className="px-5 py-3 rounded-xl [background:var(--pf-primary)] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:[background:var(--pf-primary-hover)] transition-colors">

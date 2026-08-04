@@ -48,7 +48,7 @@ function buildSections(isSuper: boolean): OpsSection[] {
 }
 
 const SIGNAL_STYLE: Record<SignalLevel, { bg: string; text: string; dot: string; label: string }> = {
-  info: { bg: 'bg-slate-50', text: 'text-slate-600', dot: 'bg-slate-400', label: 'Thông tin' },
+  info: { bg: '[background:var(--pf-surface-muted)]', text: '[color:var(--pf-color-muted)]', dot: 'bg-slate-400', label: 'Thông tin' },
   attention: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Chú ý' },
   warning: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: 'Cảnh báo' },
 }
@@ -135,7 +135,7 @@ function SectionCard({
   const badgeCls =
     badge?.tone === 'ok' ? 'bg-emerald-50 text-emerald-700'
       : badge?.tone === 'warn' ? 'bg-amber-50 text-amber-700'
-        : 'bg-slate-100 text-slate-500'
+        : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
   // 'soon' (chưa dùng hiện tại) → xám mờ; còn lại tô theo tông NHÓM (tint + viền trên + icon chip).
   const cardStyle: React.CSSProperties = soon
     ? { background: '#F8FAFC', borderColor: '#E2E8F0', borderTop: '3px solid #E2E8F0' }
@@ -165,20 +165,20 @@ function SectionCard({
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeCls}`}>{badge.text}</span>
           )}
           {clickable && (
-            <ChevronRight size={15} className="text-slate-300" />
+            <ChevronRight size={15} className="[color:var(--pf-color-muted)]" />
           )}
         </div>
       </div>
       <div className="min-w-0">
-        <p className={`text-sm font-semibold truncate ${soon ? 'text-slate-500' : 'text-slate-800'}`}>{s.label}</p>
-        <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.desc}</p>
+        <p className={`text-sm font-semibold truncate ${soon ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{s.label}</p>
+        <p className="text-[11px] [color:var(--pf-color-muted)] leading-snug line-clamp-2">{s.desc}</p>
       </div>
       {metrics && metrics.length > 0 && (
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
             <div key={m.label} className="rounded-md px-0.5 py-1 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-surface))` }}>
-              <p className="text-sm font-bold leading-none text-slate-800 tabular-nums truncate">{m.value}</p>
-              <p className="mt-0.5 text-[9px] leading-tight text-slate-400 truncate">{m.label}</p>
+              <p className="text-sm font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
+              <p className="mt-0.5 text-[9px] leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
             </div>
           ))}
         </div>
@@ -189,7 +189,7 @@ function SectionCard({
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-5 ${className}`}>
+    <div className={`[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 ${className}`}>
       {children}
     </div>
   )
@@ -199,8 +199,8 @@ function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
-        <span className="text-slate-400">{icon}</span>
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">{children}</h3>
+        <span className="[color:var(--pf-color-muted)]">{icon}</span>
+        <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">{children}</h3>
       </div>
       {right}
     </div>
@@ -453,7 +453,7 @@ export function AiManagerDashboard() {
     <div className="[background:var(--pf-bg)]">
       {/* Header — KHÔNG bọc scroll riêng (tránh scroll lồng cắt chân khi nhúng tab AIDO) và
           KHÔNG sticky (thanh tab AIDO đã sticky top-0; 2 sticky sẽ chồng nhau). */}
-      <div className="bg-white border-b border-slate-100 py-4">
+      <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4">
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
@@ -461,13 +461,13 @@ export function AiManagerDashboard() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-slate-900">AI Operations Center</h1>
+                <h1 className="text-xl font-bold [color:var(--pf-text)]">AI Operations Center</h1>
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                   <span className="h-1.5 w-1.5 rounded-full [background:var(--pf-primary)] animate-pulse" />
                   Hermes · AI COO
                 </span>
               </div>
-              <p className="text-sm text-slate-500">Điều phối · Duyệt · Thông báo · Lịch · Cảnh báo · Giám sát (read-only)</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Điều phối · Duyệt · Thông báo · Lịch · Cảnh báo · Giám sát (read-only)</p>
             </div>
           </div>
         </div>
@@ -477,17 +477,17 @@ export function AiManagerDashboard() {
         {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
         <div>
           <div className="mb-2.5 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tổng quan runtime hôm nay</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng quan runtime hôm nay</p>
             <div className="flex items-center gap-2">
               {rt.stale && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Không thể cập nhật</span>
               )}
               {rt.generatedAt && !rt.stale && (
-                <span className="hidden sm:inline text-[11px] text-slate-400">Cập nhật {fmtTime(rt.generatedAt)}</span>
+                <span className="hidden sm:inline text-[11px] [color:var(--pf-color-muted)]">Cập nhật {fmtTime(rt.generatedAt)}</span>
               )}
               <button
                 onClick={rt.refresh}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-[11px] font-medium [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-surface-muted)]"
                 title="Làm mới số liệu runtime"
               >
                 <RefreshCw size={12} className={rt.loading ? 'animate-spin' : ''} /> Làm mới
@@ -497,13 +497,13 @@ export function AiManagerDashboard() {
           {rt.loading && !rt.summary ? (
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="h-[74px] animate-pulse rounded-xl border border-slate-100 bg-slate-50" />
+                <div key={i} className="h-[74px] animate-pulse rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]" />
               ))}
             </div>
           ) : rt.error && !rt.summary ? (
             <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
               <p className="text-xs text-amber-800">Không tải được số liệu runtime — hệ thống sẽ tự thử lại.</p>
-              <button onClick={rt.refresh} className="shrink-0 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">Thử lại</button>
+              <button onClick={rt.refresh} className="shrink-0 rounded-lg [background:var(--pf-surface)] px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">Thử lại</button>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
@@ -520,7 +520,7 @@ export function AiManagerDashboard() {
                     <p className="mt-1.5 text-xl font-bold leading-none tabular-nums" style={{ color: c.fg }}>
                       {rt.summary ? k.pick(rt.summary.overview) : '—'}
                     </p>
-                    <p className="mt-1 text-[10px] leading-tight text-slate-500 line-clamp-2">{k.label}</p>
+                    <p className="mt-1 text-[10px] leading-tight [color:var(--pf-color-muted)] line-clamp-2">{k.label}</p>
                   </div>
                 )
               })}
@@ -555,13 +555,13 @@ export function AiManagerDashboard() {
           <PanelTitle
             icon={<Bot size={16} />}
             right={
-              <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-0.5 text-xs">
+              <div className="flex items-center gap-1 rounded-lg [background:var(--pf-color-muted-soft)] p-0.5 text-xs">
                 {([['all', 'Tất cả'], ['active', 'Hoạt động'], ['planned', 'Dự kiến']] as const).map(([v, l]) => (
                   <button
                     key={v}
                     onClick={() => setTeamFilter(v)}
                     className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                      teamFilter === v ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      teamFilter === v ? '[background:var(--pf-surface)] [color:var(--pf-text)] shadow-sm' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                     }`}
                   >
                     {l}
@@ -571,7 +571,7 @@ export function AiManagerDashboard() {
             }
           >Đội Ngũ AI</PanelTitle>
           {roster.length === 0 ? (
-            <p className="text-sm text-slate-400">Không có agent nào ở bộ lọc này.</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Không có agent nào ở bộ lọc này.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               {roster.map(t => {
@@ -597,25 +597,25 @@ export function AiManagerDashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-bold" style={{ color }}>{t.name}</p>
-                    <p className="text-xs text-slate-500 leading-snug line-clamp-2">{t.role}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{t.role}</p>
                   </div>
                   {t.stats ? (
                     <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                       {t.stats.map(s => (
                         <div key={s.l} className="rounded-lg py-1.5" style={{ background: `color-mix(in srgb, ${color} 8%, var(--pf-surface))` }}>
-                          <p className="text-sm font-bold text-slate-700 tabular-nums">{s.v}</p>
-                          <p className="text-[10px] text-slate-400 leading-tight">{s.l}</p>
+                          <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
+                          <p className="text-[10px] [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-1">
                       {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-[38px] animate-pulse rounded-lg bg-slate-50" />
+                        <div key={i} className="h-[38px] animate-pulse rounded-lg [background:var(--pf-surface-muted)]" />
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-400">{t.foot}</p>
+                  <p className="text-[10px] [color:var(--pf-color-muted)]">{t.foot}</p>
                 </div>
                 )
               })}
@@ -629,20 +629,20 @@ export function AiManagerDashboard() {
           <Card>
             <PanelTitle icon={<ShieldCheck size={16} />}>Chính Sách Duyệt Theo Rủi Ro</PanelTitle>
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải…</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
             ) : !availability.policies ? (
-              <p className="text-sm text-slate-400">Không tải được chính sách duyệt (endpoint không khả dụng).</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không tải được chính sách duyệt (endpoint không khả dụng).</p>
             ) : (
               <div className="space-y-2">
                 {policies.map(p => (
-                  <div key={p.riskLevel} className="rounded-xl border border-slate-100 p-3">
+                  <div key={p.riskLevel} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                     <div className="flex items-center justify-between">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[p.riskLevel] ?? 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[p.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                         {p.riskLevel}
                       </span>
-                      <span className="text-xs font-medium text-slate-500">{p.requiredApprovalCount} phê duyệt</span>
+                      <span className="text-xs font-medium [color:var(--pf-color-muted)]">{p.requiredApprovalCount} phê duyệt</span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-1.5">{p.description}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] mt-1.5">{p.description}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {p.requiresSafetyCheck && (
                         <span className="rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">Safety check</span>
@@ -650,7 +650,7 @@ export function AiManagerDashboard() {
                       {p.requiresManualConfirmation && (
                         <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">Xác nhận thủ công</span>
                       )}
-                      <span className="rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                      <span className="rounded-md [background:var(--pf-surface-muted)] px-2 py-0.5 text-[10px] font-medium [color:var(--pf-color-muted)]">
                         Vai trò: {p.requiredRoles.join(', ')}
                       </span>
                     </div>
@@ -664,9 +664,9 @@ export function AiManagerDashboard() {
           <Card>
             <PanelTitle icon={<AlertTriangle size={16} />}>Rủi Ro & Cảnh Báo</PanelTitle>
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải…</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
             ) : !availability.intel && riskSignals.length === 0 ? (
-              <p className="text-sm text-slate-400">Không tải được tín hiệu vận hành (endpoint không khả dụng).</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không tải được tín hiệu vận hành (endpoint không khả dụng).</p>
             ) : riskSignals.length === 0 ? (
               <div className="flex items-center gap-2 text-sm text-emerald-600">
                 <CheckCircle2 size={16} /> Không có cảnh báo — hệ thống ổn định.
@@ -679,9 +679,9 @@ export function AiManagerDashboard() {
                     <div key={`${s.code}-${i}`} className={`rounded-xl px-3 py-2.5 ${st.bg}`}>
                       <div className="flex items-center justify-between">
                         <span className={`text-[11px] font-semibold uppercase ${st.text}`}>{st.label}</span>
-                        <span className="text-[10px] text-slate-400">{s.code}</span>
+                        <span className="text-[10px] [color:var(--pf-color-muted)]">{s.code}</span>
                       </div>
-                      <p className="text-xs text-slate-600 mt-1">{s.message}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)] mt-1">{s.message}</p>
                       {s.code === 'DQ_NO_CLUB_MEMORY' && (
                         <button
                           onClick={() => navigate('/admin/ai-manager/club-memory?from=aido')}
@@ -701,25 +701,25 @@ export function AiManagerDashboard() {
           <Card>
             <PanelTitle icon={<Activity size={16} />}>Sức Khoẻ & Runtime AI</PanelTitle>
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải…</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
             ) : (
               <div className="space-y-2.5">
                 {/* Lưới 2×2 ô trạng thái — canh đều theo tọa độ (đồng bộ style Đội ngũ AI). */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {runtimeHealth.map((h, i) => (
-                    <div key={`rt-${i}`} className="rounded-lg border border-slate-100 px-3 py-2">
+                    <div key={`rt-${i}`} className="rounded-lg border border-[color:var(--pf-border)] px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${HEALTH_DOT[h.tone]}`} />
-                        <span className="text-xs font-medium text-slate-700 truncate">{h.label}</span>
+                        <span className="text-xs font-medium [color:var(--pf-text)] truncate">{h.label}</span>
                       </div>
-                      <p className="mt-0.5 pl-3.5 text-[11px] text-slate-500 truncate">{h.detail}</p>
+                      <p className="mt-0.5 pl-3.5 text-[11px] [color:var(--pf-color-muted)] truncate">{h.detail}</p>
                     </div>
                   ))}
                 </div>
                 {(intel?.healthSignals ?? []).map((s, i) => (
-                  <div key={`hs-${i}`} className="flex items-start gap-2 border-t border-slate-50 pt-2">
+                  <div key={`hs-${i}`} className="flex items-start gap-2 border-t border-[color:var(--pf-border)] pt-2">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
-                    <p className="text-xs text-slate-600">{s.message}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{s.message}</p>
                   </div>
                 ))}
               </div>
@@ -730,12 +730,12 @@ export function AiManagerDashboard() {
           <Card>
             <PanelTitle icon={<ClipboardList size={16} />}>Hoạt Động & Đề Xuất AI</PanelTitle>
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải…</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
             ) : !availability.intel ? (
-              <p className="text-sm text-slate-400">Không tải được hoạt động AI (endpoint không khả dụng).</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không tải được hoạt động AI (endpoint không khả dụng).</p>
             ) : (
               <div className="space-y-3">
-                {intel?.summary && <p className="text-xs text-slate-600 leading-relaxed">{intel.summary}</p>}
+                {intel?.summary && <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{intel.summary}</p>}
                 <div className="space-y-2">
                   {(intel?.suggestedReadActions ?? []).slice(0, 6).map((a, i) => {
                     const route = resolveReadRoute(a.endpoint)
@@ -746,28 +746,28 @@ export function AiManagerDashboard() {
                           type="button"
                           onClick={() => navigate(route)}
                           title={a.reason}
-                          className="group flex w-full items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-left transition-colors hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]"
+                          className="group flex w-full items-center justify-between rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-left transition-colors hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-medium text-slate-700 truncate group-hover:[color:var(--pf-primary)]">{a.label}</p>
-                            <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
+                            <p className="text-xs font-medium [color:var(--pf-text)] truncate group-hover:[color:var(--pf-primary)]">{a.label}</p>
+                            <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
                           </div>
-                          <ChevronRight size={14} className="text-slate-300 shrink-0 transition-colors group-hover:[color:var(--pf-primary)]" />
+                          <ChevronRight size={14} className="[color:var(--pf-color-muted)] shrink-0 transition-colors group-hover:[color:var(--pf-primary)]" />
                         </button>
                       )
                     }
                     return (
-                      <div key={i} title={a.reason} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+                      <div key={i} title={a.reason} className="flex items-center justify-between rounded-lg border border-[color:var(--pf-border)] px-3 py-2">
                         <div className="min-w-0">
-                          <p className="text-xs font-medium text-slate-700 truncate">{a.label}</p>
-                          <p className="text-[10px] text-slate-400 truncate">{a.method} {a.endpoint}</p>
+                          <p className="text-xs font-medium [color:var(--pf-text)] truncate">{a.label}</p>
+                          <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
                         </div>
-                        <span className="text-[10px] text-slate-300 shrink-0">chỉ đọc</span>
+                        <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">chỉ đọc</span>
                       </div>
                     )
                   })}
                   {(intel?.suggestedReadActions?.length ?? 0) === 0 && (
-                    <p className="text-sm text-slate-400">Chưa có đề xuất đọc.</p>
+                    <p className="text-sm [color:var(--pf-color-muted)]">Chưa có đề xuất đọc.</p>
                   )}
                 </div>
               </div>

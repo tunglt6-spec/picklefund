@@ -105,21 +105,21 @@ export function AuditLogViewer() {
         <div className="flex flex-col gap-2">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm theo người dùng, mô tả, tài nguyên…"
-                className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
               />
             </div>
-            <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 overflow-x-auto">
+            <div className="flex gap-1 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] p-1 overflow-x-auto">
               {ACTION_OPTIONS.map(opt => (
                 <button
                   key={opt}
                   onClick={() => setAction(opt)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                    action === opt ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:text-slate-800'
+                    action === opt ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                   }`}
                 >
                   {opt}
@@ -127,13 +127,13 @@ export function AuditLogViewer() {
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs [color:var(--pf-color-muted)]">
             <span>Từ ngày</span>
             <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
             <span>đến</span>
             <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
             {(from || to) && (
               <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary)] hover:underline font-medium">Xoá lọc ngày</button>
             )}
@@ -147,11 +147,11 @@ export function AuditLogViewer() {
         ) : logs.length === 0 ? (
           <EmptyState icon={<ScrollText size={28} />} title="Chưa có nhật ký" description="Các thao tác của CLB sẽ được ghi nhận tại đây." />
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] text-slate-500 uppercase">
+                  <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50 text-[11px] [color:var(--pf-color-muted)] uppercase">
                     <th className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
                     <th className="text-left px-4 py-3 font-semibold">Người dùng</th>
                     <th className="text-center px-4 py-3 font-semibold">Hành động</th>
@@ -161,27 +161,27 @@ export function AuditLogViewer() {
                 <tbody className="divide-y divide-slate-50">
                   {paged.map(log => (
                     <tr key={log.id} className="hover:bg-slate-50/50">
-                      <td className="px-4 py-2.5 text-xs text-slate-400 whitespace-nowrap">{fmt(log.createdAt)}</td>
-                      <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{log.user?.username ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{fmt(log.createdAt)}</td>
+                      <td className="px-4 py-2.5 text-xs font-mono [color:var(--pf-text)]">{log.user?.username ?? '—'}</td>
                       <td className="px-4 py-2.5 text-center">
                         <StatusBadge tone={ACTION_TONE[log.action] ?? 'neutral'}>{log.action}</StatusBadge>
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-slate-600">{log.detail ?? log.resource}</td>
+                      <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{log.detail ?? log.resource}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             {/* Phân trang */}
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-              <span className="text-[11px] text-slate-400">
+            <div className="flex items-center justify-between border-t border-[color:var(--pf-border)] px-4 py-2.5">
+              <span className="text-[11px] [color:var(--pf-color-muted)]">
                 {logs.length} bản ghi · Trang {pageSafe}/{totalPages}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={pageSafe <= 1}
-                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-500 disabled:opacity-40 hover:bg-slate-50"
+                  className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 [color:var(--pf-color-muted)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]"
                   aria-label="Trang trước"
                 >
                   <ChevronLeft size={15} />
@@ -189,7 +189,7 @@ export function AuditLogViewer() {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={pageSafe >= totalPages}
-                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-500 disabled:opacity-40 hover:bg-slate-50"
+                  className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 [color:var(--pf-color-muted)] disabled:opacity-40 hover:[background:var(--pf-surface-muted)]"
                   aria-label="Trang sau"
                 >
                   <ChevronRight size={15} />

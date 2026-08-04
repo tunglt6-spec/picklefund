@@ -93,24 +93,24 @@ export function DataMonitorPage() {
           )}
 
           {/* Danh sách kiểm tra */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
-                <Database size={16} className="text-slate-400" /> Kiểm Tra Chất Lượng Dữ Liệu
+              <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
+                <Database size={16} className="[color:var(--pf-color-muted)]" /> Kiểm Tra Chất Lượng Dữ Liệu
               </h3>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] [color:var(--pf-color-muted)]">
                 {new Date(report.generatedAt).toLocaleString('vi-VN', { hour12: false })}
               </span>
             </div>
             <div className="space-y-3">
               {report.checks.map(c => (
-                <div key={c.key} className="rounded-xl border border-slate-100 p-3.5">
+                <div key={c.key} className="rounded-xl border border-[color:var(--pf-border)] p-3.5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {LEVEL_ICON[c.level]}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-800">{c.label}</p>
-                        <p className="text-[11px] text-slate-400">{c.dimension} · {c.count} mục</p>
+                        <p className="text-sm font-medium [color:var(--pf-text)]">{c.label}</p>
+                        <p className="text-[11px] [color:var(--pf-color-muted)]">{c.dimension} · {c.count} mục</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -126,9 +126,9 @@ export function DataMonitorPage() {
                     </div>
                   </div>
                   {c.items.length > 0 && (
-                    <ul className="mt-2.5 space-y-1 border-t border-slate-50 pt-2.5">
+                    <ul className="mt-2.5 space-y-1 border-t border-[color:var(--pf-border)] pt-2.5">
                       {c.items.map((it, i) => (
-                        <li key={i} className="text-[12px] text-slate-500 flex items-start gap-1.5">
+                        <li key={i} className="text-[12px] [color:var(--pf-color-muted)] flex items-start gap-1.5">
                           <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
                           <span className="min-w-0">{it}</span>
                         </li>
@@ -140,7 +140,7 @@ export function DataMonitorPage() {
             </div>
           </section>
 
-          <p className="text-[11px] text-slate-400 px-1">
+          <p className="text-[11px] [color:var(--pf-color-muted)] px-1">
             Toàn vẹn tham chiếu (khóa ngoại) được cơ sở dữ liệu đảm bảo. Các kiểm tra ở đây là read-only,
             không thay đổi dữ liệu — hãy sửa trực tiếp ở màn Thành viên / Kỳ Quỹ khi cần.
           </p>

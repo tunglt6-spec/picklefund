@@ -29,7 +29,7 @@ const typeConfig: Record<
   },
   system: {
     dotColor: 'bg-slate-400',
-    icon: <Settings size={14} className="text-slate-400" />,
+    icon: <Settings size={14} className="[color:var(--pf-color-muted)]" />,
   },
 }
 
@@ -39,20 +39,20 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
   const hasMore = activities.length > MAX_VISIBLE
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Hoạt Động Gần Đây
         </h3>
-        <Clock size={16} className="text-slate-400" />
+        <Clock size={16} className="[color:var(--pf-color-muted)]" />
       </div>
 
       {visible.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-4">Chưa có hoạt động nào.</p>
+        <p className="text-sm [color:var(--pf-color-muted)] text-center py-4">Chưa có hoạt động nào.</p>
       ) : (
         <div className="relative">
           <div
-            className="absolute left-[17px] top-0 bottom-0 w-px bg-slate-100"
+            className="absolute left-[17px] top-0 bottom-0 w-px [background:var(--pf-color-muted-soft)]"
             aria-hidden="true"
           />
 
@@ -61,16 +61,16 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
               const config = typeConfig[activity.type]
               return (
                 <li key={activity.id} className="flex items-start gap-3 relative pb-4 last:pb-0">
-                  <div className="flex-shrink-0 mt-0.5 z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full bg-white border-2 border-slate-100">
+                  <div className="flex-shrink-0 mt-0.5 z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full [background:var(--pf-surface)] border-2 border-[color:var(--pf-border)]">
                     <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-1.5">
                       <span className="flex-shrink-0 mt-0.5">{config.icon}</span>
-                      <span className="text-sm text-slate-700 leading-snug">{activity.text}</span>
+                      <span className="text-sm [color:var(--pf-text)] leading-snug">{activity.text}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">{activity.time}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{activity.time}</p>
                   </div>
                 </li>
               )
@@ -80,7 +80,7 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
       )}
 
       {hasMore && (
-        <div className="mt-3 pt-3 border-t border-slate-100">
+        <div className="mt-3 pt-3 border-t border-[color:var(--pf-border)]">
           <button className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)] font-medium transition-colors duration-150">
             Xem thêm ({activities.length - MAX_VISIBLE} hoạt động)
           </button>

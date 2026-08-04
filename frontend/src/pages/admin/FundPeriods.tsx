@@ -555,8 +555,8 @@ export function FundPeriods() {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between gap-2">
-          <span className="text-[17px] font-[800] text-slate-900">Kỳ Quỹ</span>
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
+          <span className="text-[17px] font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
           <div className="flex gap-1.5 items-center">
             {bankInfo && (
               <button
@@ -568,12 +568,12 @@ export function FundPeriods() {
             {!isMember && (
               <>
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]"
                   onClick={() => { resetImport(); setShowImport(true) }}
                   title="Nhập Excel"
                 ><Upload size={16} /></button>
                 <button
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]"
                   onClick={() => setShowBulkImport(true)}
                   title="Nhập dữ liệu CLB mới"
                 ><FileSpreadsheet size={16} /></button>
@@ -598,38 +598,38 @@ export function FundPeriods() {
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
-              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Chính</div>
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
               <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
-              <div className="text-[12px] text-slate-500 mt-0.5">{stats.chung.pct}% đã thu</div>
+              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.chung.pct}% đã thu</div>
             </div>
-            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
-              <div className="text-[11px] font-[600] text-slate-400 uppercase tracking-wide mb-1">Quỹ Phụ</div>
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
               <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
-              <div className="text-[12px] text-slate-500 mt-0.5">{stats.game.pct}% đã thu</div>
+              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.game.pct}% đã thu</div>
             </div>
           </div>
 
           {/* QR thanh toán */}
           {bankInfo && buildQrUrl(qrPeriodId) && (
-            <div className="bg-white rounded-[16px] border [border-color:var(--pf-primary-soft)] p-4 shadow-sm">
+            <div className="[background:var(--pf-surface)] rounded-[16px] border [border-color:var(--pf-primary-soft)] p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <QrCode size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] text-slate-800">QR Thanh Toán</span>
+                <span className="text-[13px] font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
               </div>
               <div className="flex gap-3 items-start">
-                <img src={buildQrUrl(qrPeriodId)!} alt="QR" className="w-24 h-24 rounded-lg border border-slate-100 flex-shrink-0" />
+                <img src={buildQrUrl(qrPeriodId)!} alt="QR" className="w-24 h-24 rounded-lg border border-[color:var(--pf-border)] flex-shrink-0" />
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="text-[11px] text-slate-400">Ngân hàng</div>
-                  <div className="text-[13px] font-[600] text-slate-800">{bankInfo.bank_code}</div>
-                  <div className="text-[11px] text-slate-400">Số tài khoản</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)]">Ngân hàng</div>
+                  <div className="text-[13px] font-[600] [color:var(--pf-text)]">{bankInfo.bank_code}</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)]">Số tài khoản</div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-[600] font-mono text-slate-800">{bankInfo.bank_account_number}</span>
-                    <button onClick={copyAcctNumber} className="text-slate-400 active:[color:var(--pf-primary)]">
+                    <span className="text-[13px] font-[600] font-mono [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
+                    <button onClick={copyAcctNumber} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)]">
                       {copiedAcct ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                     </button>
                   </div>
-                  <div className="text-[11px] text-slate-500 truncate">{bankInfo.bank_account_name}</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)] truncate">{bankInfo.bank_account_name}</div>
                 </div>
               </div>
               {commonPeriods.length > 1 && (
@@ -637,7 +637,7 @@ export function FundPeriods() {
                   <select
                     value={qrPeriodId}
                     onChange={e => setQrPeriodId(e.target.value)}
-                    className="w-full text-[12px] rounded-[8px] border border-slate-200 px-2.5 py-1.5 bg-slate-50 text-slate-700"
+                    className="w-full text-[12px] rounded-[8px] border border-[color:var(--pf-border)] px-2.5 py-1.5 [background:var(--pf-surface-muted)] [color:var(--pf-text)]"
                   >
                     {commonPeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
@@ -648,12 +648,12 @@ export function FundPeriods() {
 
           {/* Search */}
           <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm kỳ quỹ..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] bg-white border border-slate-200 text-[14px] text-slate-800 outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-[14px] [color:var(--pf-text)] outline-none focus:[border-color:var(--pf-primary)]"
             />
           </div>
 
@@ -662,20 +662,20 @@ export function FundPeriods() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Building2 size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] text-slate-700">Quỹ Chính ({chungPeriods.length})</span>
+                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Quỹ Chính ({chungPeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {chungPeriods.map(p => (
-                  <div key={p.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                  <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <div className="text-[15px] font-[700] text-slate-900">{p.name}</div>
-                        <div className="text-[12px] text-slate-400">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                        <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
+                        <div className="text-[12px] [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
                     <div className="flex items-center justify-between text-[13px] mb-3">
-                      <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
+                      <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
@@ -686,7 +686,7 @@ export function FundPeriods() {
                             onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
                         )}
                         {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
                         )}
                         {(p.status === 'closed' || p.status === 'finalized') && (
@@ -710,20 +710,20 @@ export function FundPeriods() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Trophy size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] text-slate-700">Quỹ Phụ ({gamePeriods.length})</span>
+                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Quỹ Phụ ({gamePeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {gamePeriods.map(p => (
-                  <div key={p.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                  <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <div className="text-[15px] font-[700] text-slate-900">{p.name}</div>
-                        <div className="text-[12px] text-slate-400">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                        <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
+                        <div className="text-[12px] [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
                     <div className="flex items-center justify-between text-[13px] mb-3">
-                      <span className="text-slate-500">Mức đóng: <span className="font-[600] text-slate-800">{formatVND(p.contributionAmount)}</span></span>
+                      <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
@@ -734,7 +734,7 @@ export function FundPeriods() {
                             onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
                         )}
                         {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-slate-600 border border-slate-200 active:bg-slate-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
                         )}
                         {(p.status === 'closed' || p.status === 'finalized') && (
@@ -754,7 +754,7 @@ export function FundPeriods() {
           )}
 
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-slate-400 text-[14px]">Chưa có kỳ quỹ nào</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">Chưa có kỳ quỹ nào</div>
           )}
         </div>
 
@@ -767,30 +767,30 @@ export function FundPeriods() {
               </select>
             )}
             {buildQrUrl(qrPeriodId) && (
-              <img src={buildQrUrl(qrPeriodId)!} alt="QR thanh toán" className="w-64 h-64 rounded-xl border border-slate-100" />
+              <img src={buildQrUrl(qrPeriodId)!} alt="QR thanh toán" className="w-64 h-64 rounded-xl border border-[color:var(--pf-border)]" />
             )}
             {bankInfo && (
-              <div className="w-full rounded-lg bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-slate-500">Ngân hàng</span><span className="font-bold">{bankInfo.bank_code}</span></div>
+              <div className="w-full rounded-lg [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] p-4 space-y-2 text-sm">
+                <div className="flex justify-between"><span className="[color:var(--pf-color-muted)]">Ngân hàng</span><span className="font-bold">{bankInfo.bank_code}</span></div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Số tài khoản</span>
+                  <span className="[color:var(--pf-color-muted)]">Số tài khoản</span>
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
-                    <button onClick={copyAcctNumber} className="p-1 rounded text-slate-400">
+                    <button onClick={copyAcctNumber} className="p-1 rounded [color:var(--pf-color-muted)]">
                       {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between"><span className="text-slate-500">Chủ tài khoản</span><span className="font-bold">{bankInfo.bank_account_name}</span></div>
+                <div className="flex justify-between"><span className="[color:var(--pf-color-muted)]">Chủ tài khoản</span><span className="font-bold">{bankInfo.bank_account_name}</span></div>
                 {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
-                  <div className="flex justify-between pt-2 border-t border-slate-200">
-                    <span className="text-slate-500">Số tiền đóng quỹ</span>
+                  <div className="flex justify-between pt-2 border-t border-[color:var(--pf-border)]">
+                    <span className="[color:var(--pf-color-muted)]">Số tiền đóng quỹ</span>
                     <span className="font-bold [color:var(--pf-primary)]">{formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}</span>
                   </div>
                 )}
               </div>
             )}
-            <p className="text-xs text-slate-400 text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
+            <p className="text-xs [color:var(--pf-color-muted)] text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
           </div>
         </Modal>
 
@@ -818,21 +818,21 @@ export function FundPeriods() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Kỳ quỹ áp dụng <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ áp dụng <span className="text-red-500">*</span></label>
               <select value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base">
                 <option value="">-- Chọn kỳ quỹ --</option>
                 {commonPeriods.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div
-              className="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center py-8 gap-2 cursor-pointer hover:[border-color:var(--pf-primary)]"
+              className="border-2 border-dashed border-[color:var(--pf-border)] rounded-xl flex flex-col items-center justify-center py-8 gap-2 cursor-pointer hover:[border-color:var(--pf-primary)]"
               onClick={() => document.getElementById('import-file-m')?.click()}
               onDragOver={e => e.preventDefault()}
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
             >
-              <Upload size={24} className="text-slate-300" />
-              <p className="text-sm text-slate-500">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file</span></p>
-              <p className="text-xs text-slate-400">.xlsx, .xls</p>
+              <Upload size={24} className="[color:var(--pf-color-muted)]" />
+              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file</span></p>
+              <p className="text-xs [color:var(--pf-color-muted)]">.xlsx, .xls</p>
               <input id="import-file-m" type="file" accept=".xlsx,.xls" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }} />
             </div>
             {importFileError && <p className="text-sm text-red-500">{importFileError}</p>}
@@ -971,11 +971,11 @@ export function FundPeriods() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
-          <div className="flex border-b border-slate-100 px-2 pt-1">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="flex border-b border-[color:var(--pf-border)] px-2 pt-1">
             {([['list', 'Danh sách kỳ quỹ'], ['history', 'Lịch sử giao dịch'], ['highlights', 'Giao dịch nổi bật']] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]' : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'}`}>
                 {label}
               </button>
             ))}
@@ -984,9 +984,9 @@ export function FundPeriods() {
           {tab === 'list' && (
             <>
               {/* Filters */}
-              <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-slate-50">
+              <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-[color:var(--pf-border)]">
                 <div className="relative flex-1 min-w-[180px]">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                   <input
                     value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
                     placeholder="Tìm kiếm kỳ quỹ..."
@@ -999,7 +999,7 @@ export function FundPeriods() {
                     <option value="chung">Quỹ Chính</option>
                     <option value="game">Quỹ Phụ</option>
                   </select>
-                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
                 </div>
                 <div className="relative">
                   <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value as '' | FundPeriodStatus); setPage(1) }}
@@ -1010,7 +1010,7 @@ export function FundPeriods() {
                     <option value="closed">Đã đóng</option>
                     <option value="finalized">Đã chốt</option>
                   </select>
-                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
                 </div>
                 {!isMember && (
                   <>
@@ -1031,7 +1031,7 @@ export function FundPeriods() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedIds(new Set())}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]"
                     >Bỏ chọn</button>
                     <button
                       onClick={handleBulkDelete}
@@ -1046,13 +1046,13 @@ export function FundPeriods() {
               {paginated.length === 0 ? (
                 <div className="py-16 text-center">
                   <FolderOpen size={32} className="mx-auto text-slate-200 mb-3" />
-                  <p className="text-sm text-slate-400">Không có kỳ quỹ nào</p>
+                  <p className="text-sm [color:var(--pf-color-muted)]">Không có kỳ quỹ nào</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-100 text-xs text-slate-500 bg-slate-50">
+                      <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">
                         {!isMember && (
                           <th className="w-10 px-4 py-3">
                             <input
@@ -1093,7 +1093,7 @@ export function FundPeriods() {
                         const days = Math.round((endMs - startMs) / 86400000)
                         const pType = p.type ?? 'chung'
                         return (
-                          <tr key={p.id} className={`border-b border-slate-50 transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:bg-slate-50/60'}`}>
+                          <tr key={p.id} className={`border-b border-[color:var(--pf-border)] transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:bg-slate-50/60'}`}>
                             {!isMember && (
                               <td className="px-4 py-3.5">
                                 <input
@@ -1105,23 +1105,23 @@ export function FundPeriods() {
                                 />
                               </td>
                             )}
-                            <td className="px-5 py-3.5 font-medium text-slate-900">{p.name}</td>
+                            <td className="px-5 py-3.5 font-medium [color:var(--pf-text)]">{p.name}</td>
                             <td className="px-4 py-3.5">
                               {pType === 'game'
                                 ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Wallet size={10} />Mini</span>
                                 : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Building2 size={10} />Chung</span>
                               }
                             </td>
-                            <td className="px-4 py-3.5 text-slate-500 text-xs">{days} ngày</td>
-                            <td className="px-4 py-3.5 text-right font-medium text-slate-800">{formatVND(p.contributionAmount)}</td>
+                            <td className="px-4 py-3.5 [color:var(--pf-color-muted)] text-xs">{days} ngày</td>
+                            <td className="px-4 py-3.5 text-right font-medium [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</td>
                             <td className="px-4 py-3.5 text-right text-green-600 font-medium">{formatVND(collected)}</td>
                             <td className="px-4 py-3.5 text-right text-red-500 font-medium">{formatVND(remaining)}</td>
                             <td className="px-4 py-3.5 w-28">
                               <div className="flex items-center gap-1.5">
-                                <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div className="flex-1 h-1.5 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
                                   <div className="h-full rounded-full [background:var(--pf-primary)] transition-all" style={{ width: `${pct}%` }} />
                                 </div>
-                                <span className="text-xs text-slate-500 whitespace-nowrap">{pct}%</span>
+                                <span className="text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{pct}%</span>
                               </div>
                             </td>
                             <td className="px-4 py-3.5">
@@ -1129,12 +1129,12 @@ export function FundPeriods() {
                             </td>
                             <td className="px-4 py-3.5">
                               <div className="flex items-center justify-center gap-1">
-                                <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:[color:var(--pf-primary)] transition-colors">
+                                <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors">
                                   <Eye size={14} />
                                 </button>
                                 {!isMember && (
                                   <>
-                                    <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors">
+                                    <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:text-amber-600 transition-colors">
                                       <Pencil size={14} />
                                     </button>
                                     {p.status === 'draft' && (
@@ -1143,7 +1143,7 @@ export function FundPeriods() {
                                       </button>
                                     )}
                                     {p.status === 'active' && (
-                                      <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors">
+                                      <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors">
                                         <Lock size={14} />
                                       </button>
                                     )}
@@ -1152,10 +1152,10 @@ export function FundPeriods() {
                                         <LockOpen size={14} />
                                       </button>
                                     )}
-                                    <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] text-slate-500 hover:[color:var(--pf-primary)] transition-colors">
+                                    <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors">
                                       <FileText size={14} />
                                     </button>
-                                    <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
+                                    <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 [color:var(--pf-color-muted)] hover:text-red-600 transition-colors">
                                       <Trash2 size={14} />
                                     </button>
                                   </>
@@ -1172,21 +1172,21 @@ export function FundPeriods() {
 
               {/* Pagination */}
               {filtered.length > 0 && (
-                <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 text-sm text-slate-500">
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-[color:var(--pf-border)] text-sm [color:var(--pf-color-muted)]">
                   <span>Hiển thị {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} đến {Math.min(page * PAGE_SIZE, filtered.length)} của {filtered.length}</span>
                   <div className="flex items-center gap-1">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                      className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronLeft size={16} />
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                       <button key={n} onClick={() => setPage(n)}
-                        className={`w-8 h-8 rounded text-xs font-medium transition-colors ${n === page ? '[background:var(--pf-primary)] text-white' : 'hover:bg-slate-100'}`}>
+                        className={`w-8 h-8 rounded text-xs font-medium transition-colors ${n === page ? '[background:var(--pf-primary)] text-white' : 'hover:[background:var(--pf-color-muted-soft)]'}`}>
                         {n}
                       </button>
                     ))}
                     <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                      className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronRight size={16} />
                     </button>
                   </div>
@@ -1208,20 +1208,20 @@ export function FundPeriods() {
         {/* Bottom row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Recent transactions */}
-          <div className="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-            <h3 className="font-bold text-slate-900 text-sm mb-4">Lịch sử giao dịch gần đây</h3>
+          <div className="md:col-span-2 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+            <h3 className="font-bold [color:var(--pf-text)] text-sm mb-4">Lịch sử giao dịch gần đây</h3>
             {recentTx.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-6">Chưa có giao dịch nào</p>
+              <p className="text-xs [color:var(--pf-color-muted)] text-center py-6">Chưa có giao dịch nào</p>
             ) : (
               <div className="space-y-2">
                 {recentTx.map(tx => {
                   const period = periods.find(p => p.id === tx.fundPeriodId)
                   const member = members.find(m => m.id === tx.memberId)
                   return (
-                    <div key={tx.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div key={tx.id} className="flex items-center justify-between py-2 border-b border-[color:var(--pf-border)] last:border-0">
                       <div>
-                        <p className="text-sm font-medium text-slate-800">{member?.fullName ?? tx.memberId}</p>
-                        <p className="text-xs text-slate-400">{period?.name ?? '—'} · {formatDate(tx.paymentDate)}</p>
+                        <p className="text-sm font-medium [color:var(--pf-text)]">{member?.fullName ?? tx.memberId}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(tx.paymentDate)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-600">+{formatVND(tx.amount)}</p>
@@ -1238,8 +1238,8 @@ export function FundPeriods() {
 
           <div className="space-y-4">
             {/* Donut chart */}
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
-              <h3 className="font-bold text-slate-900 text-sm mb-3">Biểu đồ thu theo loại quỹ</h3>
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+              <h3 className="font-bold [color:var(--pf-text)] text-sm mb-3">Biểu đồ thu theo loại quỹ</h3>
               <div className="h-36">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -1255,7 +1255,7 @@ export function FundPeriods() {
               </div>
               <div className="flex justify-center gap-4 mt-1">
                 {donutData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-1.5 text-xs text-slate-600">
+                  <div key={i} className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ background: DONUT_COLORS[i] }} />
                     {d.name}
                   </div>
@@ -1264,14 +1264,14 @@ export function FundPeriods() {
             </div>
 
             {/* QR thanh toán */}
-            <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                <h3 className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">
                   <QrCode size={15} className="[color:var(--pf-primary)]" />QR thanh toán
                 </h3>
                 {bankInfo && buildQrUrl(qrPeriodId) && (
                   <button onClick={() => setShowQrModal(true)}
-                    className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-1 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)] transition-colors"
                     title="Phóng to QR">
                     <Maximize2 size={13} />
                   </button>
@@ -1281,8 +1281,8 @@ export function FundPeriods() {
               {!bankInfo ? (
                 <div className="text-center py-4">
                   <QrCode size={28} className="mx-auto text-slate-200 mb-2" />
-                  <p className="text-xs text-slate-500 font-medium">Chưa cấu hình tài khoản</p>
-                  <p className="text-xs text-slate-400 mt-1">Vào Cài đặt → Thanh toán để thêm thông tin ngân hàng</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] font-medium">Chưa cấu hình tài khoản</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] mt-1">Vào Cài đặt → Thanh toán để thêm thông tin ngân hàng</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1302,13 +1302,13 @@ export function FundPeriods() {
                       <img
                         src={buildQrUrl(qrPeriodId)!}
                         alt="QR thanh toán"
-                        className="w-40 h-40 rounded-lg border border-slate-100"
+                        className="w-40 h-40 rounded-lg border border-[color:var(--pf-border)]"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
                   ) : (
                     <div className="flex justify-center py-3">
-                      <div className="w-40 h-40 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
+                      <div className="w-40 h-40 rounded-lg [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] flex items-center justify-center">
                         <QrCode size={32} className="text-slate-200" />
                       </div>
                     </div>
@@ -1317,27 +1317,27 @@ export function FundPeriods() {
                   {/* Bank info */}
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Ngân hàng</span>
-                      <span className="font-semibold text-slate-800">{bankInfo.bank_code}</span>
+                      <span className="[color:var(--pf-color-muted)]">Ngân hàng</span>
+                      <span className="font-semibold [color:var(--pf-text)]">{bankInfo.bank_code}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Số tài khoản</span>
+                      <span className="[color:var(--pf-color-muted)]">Số tài khoản</span>
                       <div className="flex items-center gap-1">
-                        <span className="font-mono font-semibold text-slate-800">{bankInfo.bank_account_number}</span>
+                        <span className="font-mono font-semibold [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
                         <button onClick={copyAcctNumber}
-                          className="p-0.5 rounded hover:bg-slate-100 text-slate-400 hover:[color:var(--pf-primary)] transition-colors"
+                          className="p-0.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"
                           title="Copy số tài khoản">
                           {copiedAcct ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
                         </button>
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Chủ tài khoản</span>
-                      <span className="font-semibold text-slate-800 text-right max-w-[60%] truncate">{bankInfo.bank_account_name}</span>
+                      <span className="[color:var(--pf-color-muted)]">Chủ tài khoản</span>
+                      <span className="font-semibold [color:var(--pf-text)] text-right max-w-[60%] truncate">{bankInfo.bank_account_name}</span>
                     </div>
                     {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
-                      <div className="flex justify-between pt-1 border-t border-slate-50">
-                        <span className="text-slate-500">Số tiền</span>
+                      <div className="flex justify-between pt-1 border-t border-[color:var(--pf-border)]">
+                        <span className="[color:var(--pf-color-muted)]">Số tiền</span>
                         <span className="font-bold [color:var(--pf-primary)]">
                           {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
                         </span>
@@ -1396,31 +1396,31 @@ export function FundPeriods() {
         <Modal open title={viewPeriod.name} onClose={() => setViewPeriod(null)} size="sm">
           <div className="p-4 space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-500">Loại quỹ</span>
+              <span className="[color:var(--pf-color-muted)]">Loại quỹ</span>
               <span className="font-medium">{(viewPeriod.type ?? 'chung') === 'chung' ? 'Quỹ Chính' : 'Quỹ Phụ'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Trạng thái</span>
+              <span className="[color:var(--pf-color-muted)]">Trạng thái</span>
               <Badge variant={statusVariant[viewPeriod.status]} dot>{statusLabel[viewPeriod.status]}</Badge>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Ngày bắt đầu</span>
+              <span className="[color:var(--pf-color-muted)]">Ngày bắt đầu</span>
               <span className="font-medium">{formatDate(viewPeriod.startDate)}</span>
             </div>
             {viewPeriod.endDate && (
               <div className="flex justify-between">
-                <span className="text-slate-500">Ngày kết thúc</span>
+                <span className="[color:var(--pf-color-muted)]">Ngày kết thúc</span>
                 <span className="font-medium">{formatDate(viewPeriod.endDate)}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-slate-500">Số tiền/người</span>
+              <span className="[color:var(--pf-color-muted)]">Số tiền/người</span>
               <span className="font-medium [color:var(--pf-primary)]">{formatVND(viewPeriod.contributionAmount)}</span>
             </div>
             {viewPeriod.notes && (
               <div>
-                <span className="text-slate-500">Ghi chú</span>
-                <p className="mt-1 text-slate-700 bg-slate-50 rounded-lg p-2">{viewPeriod.notes}</p>
+                <span className="[color:var(--pf-color-muted)]">Ghi chú</span>
+                <p className="mt-1 [color:var(--pf-text)] [background:var(--pf-surface-muted)] rounded-lg p-2">{viewPeriod.notes}</p>
               </div>
             )}
             <div className="pt-2 flex gap-2">
@@ -1455,31 +1455,31 @@ export function FundPeriods() {
             <img
               src={buildQrUrl(qrPeriodId)!}
               alt="QR thanh toán"
-              className="w-64 h-64 rounded-xl border border-slate-100"
+              className="w-64 h-64 rounded-xl border border-[color:var(--pf-border)]"
             />
           )}
           {bankInfo && (
-            <div className="w-full rounded-lg bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
+            <div className="w-full rounded-lg [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] p-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Ngân hàng</span>
+                <span className="[color:var(--pf-color-muted)]">Ngân hàng</span>
                 <span className="font-bold">{bankInfo.bank_code}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Số tài khoản</span>
+                <span className="[color:var(--pf-color-muted)]">Số tài khoản</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
-                  <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:[color:var(--pf-primary)]">
+                  <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
                     {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
                   </button>
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Chủ tài khoản</span>
+                <span className="[color:var(--pf-color-muted)]">Chủ tài khoản</span>
                 <span className="font-bold">{bankInfo.bank_account_name}</span>
               </div>
               {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
-                <div className="flex justify-between pt-2 border-t border-slate-200">
-                  <span className="text-slate-500">Số tiền đóng quỹ</span>
+                <div className="flex justify-between pt-2 border-t border-[color:var(--pf-border)]">
+                  <span className="[color:var(--pf-color-muted)]">Số tiền đóng quỹ</span>
                   <span className="font-bold [color:var(--pf-primary)] text-base">
                     {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
                   </span>
@@ -1487,7 +1487,7 @@ export function FundPeriods() {
               )}
             </div>
           )}
-          <p className="text-xs text-slate-400 text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
+          <p className="text-xs [color:var(--pf-color-muted)] text-center">Quét mã QR để chuyển khoản đóng quỹ</p>
         </div>
       </Modal>
 
@@ -1534,7 +1534,7 @@ export function FundPeriods() {
                     <AlertCircle size={13} />Dòng bị lỗi ({importResult.errors.length})
                   </div>
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-red-100 text-xs text-slate-500">
+                    <thead><tr className="border-b border-red-100 text-xs [color:var(--pf-color-muted)]">
                       <th className="text-left px-4 py-2">Dòng</th>
                       <th className="text-left px-4 py-2">Họ và tên</th>
                       <th className="text-left px-4 py-2">Lỗi</th>
@@ -1542,7 +1542,7 @@ export function FundPeriods() {
                     <tbody>
                       {importResult.errors.map((e, i) => (
                         <tr key={i} className="border-b border-red-50">
-                          <td className="px-4 py-2 text-slate-500">{e.row}</td>
+                          <td className="px-4 py-2 [color:var(--pf-color-muted)]">{e.row}</td>
                           <td className="px-4 py-2 font-medium">{e.memberName}</td>
                           <td className="px-4 py-2 text-red-600">{e.error}</td>
                         </tr>
@@ -1564,7 +1564,7 @@ export function FundPeriods() {
                 </Button>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">
                   Bước 2 — Chọn kỳ quỹ để nhập <span className="text-red-500">*</span>
                 </label>
                 <select value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base text-sm">
@@ -1575,15 +1575,15 @@ export function FundPeriods() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Bước 3 — Tải lên file Excel</label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Bước 3 — Tải lên file Excel</label>
                 <label
-                  className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:[border-color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]/30 transition-colors"
+                  className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[color:var(--pf-border)] rounded-lg cursor-pointer hover:[border-color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]/30 transition-colors"
                   onDragOver={e => e.preventDefault()}
                   onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
                 >
-                  <Upload size={24} className="text-slate-400" />
-                  <span className="text-sm text-slate-500">Kéo thả file vào đây hoặc <span className="[color:var(--pf-primary)] font-medium">chọn file</span></span>
-                  <span className="text-xs text-slate-400">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
+                  <Upload size={24} className="[color:var(--pf-color-muted)]" />
+                  <span className="text-sm [color:var(--pf-color-muted)]">Kéo thả file vào đây hoặc <span className="[color:var(--pf-primary)] font-medium">chọn file</span></span>
+                  <span className="text-xs [color:var(--pf-color-muted)]">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
                   <input
                     ref={importFileRef}
                     type="file"
@@ -1597,15 +1597,15 @@ export function FundPeriods() {
                 )}
               </div>
               {importRows.length > 0 && (
-                <div className="rounded-lg border border-slate-100 overflow-hidden">
-                  <div className="bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 flex items-center justify-between">
+                <div className="rounded-lg border border-[color:var(--pf-border)] overflow-hidden">
+                  <div className="[background:var(--pf-surface-muted)] px-4 py-2 text-xs font-semibold [color:var(--pf-color-muted)] flex items-center justify-between">
                     <span>Xem trước dữ liệu ({importRows.length} dòng)</span>
-                    <button onClick={resetImport} className="text-slate-400 hover:text-red-500 text-xs">Xóa</button>
+                    <button onClick={resetImport} className="[color:var(--pf-color-muted)] hover:text-red-500 text-xs">Xóa</button>
                   </div>
                   <div className="overflow-x-auto max-h-56 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-white">
-                        <tr className="border-b border-slate-100 text-xs text-slate-500">
+                      <thead className="sticky top-0 [background:var(--pf-surface)]">
+                        <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)]">
                           <th className="text-left px-4 py-2">#</th>
                           <th className="text-left px-4 py-2">Họ và tên</th>
                           <th className="text-right px-4 py-2">Số tiền</th>
@@ -1618,12 +1618,12 @@ export function FundPeriods() {
                         {importRows.map((r, i) => {
                           const found = members.some(m => m.fullName.toLowerCase().trim() === r.memberName.toLowerCase().trim())
                           return (
-                            <tr key={i} className="border-b border-slate-50">
-                              <td className="px-4 py-1.5 text-slate-400 text-xs">{i + 2}</td>
+                            <tr key={i} className="border-b border-[color:var(--pf-border)]">
+                              <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs">{i + 2}</td>
                               <td className="px-4 py-1.5 font-medium">{r.memberName}</td>
                               <td className="px-4 py-1.5 text-right [color:var(--pf-primary)]">{r.amount.toLocaleString('vi-VN')}đ</td>
-                              <td className="px-4 py-1.5 text-slate-500 text-xs">{r.paymentDate || '—'}</td>
-                              <td className="px-4 py-1.5 text-slate-500 text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
+                              <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs">{r.paymentDate || '—'}</td>
+                              <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
                               <td className="px-4 py-1.5 text-center">
                                 {found
                                   ? <CheckCircle2 size={14} className="text-green-500 mx-auto" />
@@ -1699,11 +1699,11 @@ function HistoryTab({ contributions, periods, members }: {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <Filter size={14} className="text-slate-400 shrink-0" />
+        <Filter size={14} className="[color:var(--pf-color-muted)] shrink-0" />
         <select
           value={filterPeriod}
           onChange={e => { setFilterPeriod(e.target.value); setHistPage(1) }}
-          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:[border-color:var(--pf-primary)]"
+          className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs [color:var(--pf-text)] focus:outline-none focus:[border-color:var(--pf-primary)]"
         >
           <option value="">Tất cả kỳ quỹ</option>
           {periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -1711,7 +1711,7 @@ function HistoryTab({ contributions, periods, members }: {
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value as any); setHistPage(1) }}
-          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:[border-color:var(--pf-primary)]"
+          className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs [color:var(--pf-text)] focus:outline-none focus:[border-color:var(--pf-primary)]"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="confirmed">Đã xác nhận</option>
@@ -1721,20 +1721,20 @@ function HistoryTab({ contributions, periods, members }: {
 
       {/* Table */}
       {paged.length === 0 ? (
-        <div className="py-10 text-center text-slate-400 text-sm">
+        <div className="py-10 text-center [color:var(--pf-color-muted)] text-sm">
           <TrendingUp size={28} className="mx-auto mb-2 text-slate-200" />Chưa có giao dịch nào
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-100">
+        <div className="overflow-x-auto rounded-xl border border-[color:var(--pf-border)]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Ngày</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Thành viên</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Kỳ quỹ</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500">Loại quỹ</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold text-slate-500">Số tiền</th>
-                <th className="px-4 py-2.5 text-center text-xs font-semibold text-slate-500">Trạng thái</th>
+              <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Ngày</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Thành viên</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Loại quỹ</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -1743,16 +1743,16 @@ function HistoryTab({ contributions, periods, members }: {
                 const period = periods.find(p => p.id === c.fundPeriodId)
                 return (
                   <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
+                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-[10px] font-bold [color:var(--pf-primary)] shrink-0">
                           {(member?.fullName ?? c.payerName ?? '?').charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-xs font-medium text-slate-700">{member?.fullName ?? c.payerName ?? '—'}</span>
+                        <span className="text-xs font-medium [color:var(--pf-text)]">{member?.fullName ?? c.payerName ?? '—'}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{period?.name ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'}`}>
                         {c.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
@@ -1778,15 +1778,15 @@ function HistoryTab({ contributions, periods, members }: {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-1">
-          <span className="text-xs text-slate-400">{sorted.length} giao dịch</span>
+          <span className="text-xs [color:var(--pf-color-muted)]">{sorted.length} giao dịch</span>
           <div className="flex items-center gap-1">
             <button onClick={() => setHistPage(p => Math.max(1, p - 1))} disabled={histPage === 1}
-              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors">
+              className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 transition-colors">
               <ChevronLeft size={14} />
             </button>
-            <span className="text-xs text-slate-600 px-2">{histPage}/{totalPages}</span>
+            <span className="text-xs [color:var(--pf-color-muted)] px-2">{histPage}/{totalPages}</span>
             <button onClick={() => setHistPage(p => Math.min(totalPages, p + 1))} disabled={histPage === totalPages}
-              className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors">
+              className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 transition-colors">
               <ChevronRight size={14} />
             </button>
           </div>
@@ -1843,11 +1843,11 @@ function HighlightsTab({ contributions, periods, members }: {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Top contributors */}
         <div>
-          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
             <Trophy size={15} className="text-amber-500" />Top đóng quỹ
           </h3>
           {topContributors.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
+            <p className="text-xs [color:var(--pf-color-muted)] py-4 text-center">Chưa có dữ liệu</p>
           ) : (
             <div className="space-y-2.5">
               {topContributors.map((c, i) => (
@@ -1855,15 +1855,15 @@ function HighlightsTab({ contributions, periods, members }: {
                   <span className="text-sm w-6 text-center shrink-0">{medals[i]}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-slate-700 truncate">{c.name}</span>
+                      <span className="text-xs font-semibold [color:var(--pf-text)] truncate">{c.name}</span>
                       <span className="text-xs font-bold text-emerald-600 shrink-0 ml-2">{formatVND(c.total)}</span>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-gradient-to-r from-[var(--pf-primary)] to-emerald-400"
                         style={{ width: `${Math.round((c.total / (topContributors[0]?.total || 1)) * 100)}%` }} />
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400 shrink-0">{c.count} lần</span>
+                  <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{c.count} lần</span>
                 </div>
               ))}
             </div>
@@ -1872,22 +1872,22 @@ function HighlightsTab({ contributions, periods, members }: {
 
         {/* Largest single transactions */}
         <div>
-          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
             <Star size={15} className="[color:var(--pf-primary)]" />Giao dịch lớn nhất
           </h3>
           {topTx.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
+            <p className="text-xs [color:var(--pf-color-muted)] py-4 text-center">Chưa có dữ liệu</p>
           ) : (
             <div className="space-y-2">
               {topTx.map((c, i) => {
                 const member = members.find(m => m.id === c.memberId)
                 const period = periods.find(p => p.id === c.fundPeriodId)
                 return (
-                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/60 transition-colors">
-                    <span className="text-sm w-5 text-center shrink-0 font-bold text-slate-400">{i + 1}</span>
+                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl [background:var(--pf-surface-muted)] hover:bg-slate-100/60 transition-colors">
+                    <span className="text-sm w-5 text-center shrink-0 font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-700 truncate">{member?.fullName ?? c.payerName ?? '—'}</p>
-                      <p className="text-[10px] text-slate-400">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
+                      <p className="text-xs font-semibold [color:var(--pf-text)] truncate">{member?.fullName ?? c.payerName ?? '—'}</p>
+                      <p className="text-[10px] [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
                     </div>
                     <span className="text-xs font-bold text-emerald-600 shrink-0">{formatVND(c.amount)}</span>
                   </div>
@@ -1901,7 +1901,7 @@ function HighlightsTab({ contributions, periods, members }: {
       {/* Per-period bar chart */}
       {periodStats.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
             <TrendingUp size={15} className="[color:var(--pf-primary)]" />Thu quỹ theo kỳ
           </h3>
           <div className="h-48">
@@ -1917,8 +1917,8 @@ function HighlightsTab({ contributions, periods, members }: {
             </ResponsiveContainer>
           </div>
           <div className="flex gap-4 justify-center mt-1">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-3 h-3 rounded-sm [background:var(--pf-primary)] inline-block" />Đã xác nhận</div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Chờ xác nhận</div>
+            <div className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]"><span className="w-3 h-3 rounded-sm [background:var(--pf-primary)] inline-block" />Đã xác nhận</div>
+            <div className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Chờ xác nhận</div>
           </div>
         </div>
       )}
@@ -1939,14 +1939,14 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
   stats: KpiStats; label: string; labelValue?: number
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">{title}</span>
+        <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
       </div>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
-          <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Số dư</p>
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Số dư</p>
           <p className={`text-base font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
             <p className="text-[10px] text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
@@ -1956,12 +1956,12 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
           )}
         </div>
         <div>
-          <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Đã thu</p>
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Đã thu</p>
           <p className="text-base font-bold text-green-600">{stats.pct}%</p>
           <p className="text-[10px] text-green-500">{formatVND(stats.balance)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Còn thiếu</p>
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Còn thiếu</p>
           <p className="text-base font-bold text-red-500">{stats.remainPct}%</p>
           <p className="text-[10px] text-red-400">{formatVND(stats.remaining)}</p>
         </div>
@@ -1972,9 +1972,9 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
           <span className="font-bold text-amber-700">{formatVND(stats.totalPending)}</span>
         </div>
       )}
-      <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-        <span>{label}: <strong className="text-slate-700">{labelValue ?? stats.unpaidCount}</strong></span>
-        <span>Giao dịch: <strong className="text-slate-700">{stats.txCount}</strong></span>
+      <div className="mt-3 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
+        <span>{label}: <strong className="[color:var(--pf-text)]">{labelValue ?? stats.unpaidCount}</strong></span>
+        <span>Giao dịch: <strong className="[color:var(--pf-text)]">{stats.txCount}</strong></span>
       </div>
     </div>
   )
@@ -2002,23 +2002,23 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
   const borderColor = color === 'indigo' ? '[border-color:var(--pf-primary-soft)]' : '[border-color:var(--pf-primary-soft)]'
 
   return (
-    <div className={`bg-white rounded-xl border ${borderColor} shadow-[var(--shadow-card)] p-5`}>
+    <div className={`[background:var(--pf-surface)] rounded-xl border ${borderColor} shadow-[var(--shadow-card)] p-5`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <span className="font-bold text-slate-800 text-sm">{title}</span>
+          <span className="font-bold [color:var(--pf-text)] text-sm">{title}</span>
         </div>
         {period && <Badge variant={color === 'indigo' ? 'indigo' : 'purple'} dot>{statusLabel[period.status]}</Badge>}
       </div>
       {period ? (
         <>
-          <p className="text-xs text-slate-500 mb-1">{period.name}</p>
-          <p className="text-xs text-slate-400 mb-3">{formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-1">{period.name}</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">{formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
           <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="flex-1 h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
               <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-xs font-medium text-slate-600">{pct}%</span>
+            <span className="text-xs font-medium [color:var(--pf-color-muted)]">{pct}%</span>
           </div>
           {!miniMode && prevBalance > 0 && (
             <div className="flex items-center justify-between text-xs mt-1 mb-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
@@ -2026,11 +2026,11 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
               <span className="font-semibold text-emerald-700">+{formatVND(prevBalance)}</span>
             </div>
           )}
-          <div className="flex justify-between text-xs text-slate-500 mt-2">
-            <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
+          <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2">
+            <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
             {miniMode
-              ? <span>Giao dịch: <strong className="text-slate-800">{contributions.filter(c => c.fundSource === 'MINI').length}</strong></span>
-              : <span>Mục tiêu: <strong className="text-slate-800">{formatVND(target)}</strong></span>
+              ? <span>Giao dịch: <strong className="[color:var(--pf-text)]">{contributions.filter(c => c.fundSource === 'MINI').length}</strong></span>
+              : <span>Mục tiêu: <strong className="[color:var(--pf-text)]">{formatVND(target)}</strong></span>
             }
           </div>
           <div className="flex gap-2 mt-4">
@@ -2046,21 +2046,21 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
         </>
       ) : miniMode && collected > 0 ? (
         <>
-          <p className="text-xs text-slate-400 mb-3">Chưa có kỳ quỹ đang mở</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">Chưa có kỳ quỹ đang mở</p>
           <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="flex-1 h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
               <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: '100%' }} />
             </div>
-            <span className="text-xs font-medium text-slate-600">—</span>
+            <span className="text-xs font-medium [color:var(--pf-color-muted)]">—</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-500 mt-2 mb-4">
-            <span>Đã thu: <strong className="text-slate-800">{formatVND(collected)}</strong></span>
+          <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2 mb-4">
+            <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
           </div>
           {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
         </>
       ) : (
         <div className="py-4 text-center">
-          <p className="text-xs text-slate-400 mb-3">Chưa có kỳ quỹ đang mở</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mb-3">Chưa có kỳ quỹ đang mở</p>
           {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
         </div>
       )}
@@ -2089,26 +2089,26 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
     >
       <form id={formId} onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên kỳ <span className="text-red-500">*</span></label>
+          <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên kỳ <span className="text-red-500">*</span></label>
           <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
             placeholder="VD: Quý 3/2026" className="input-base" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
             <input required type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
             <input required type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Mức đóng/người (VNĐ) <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ) <span className="text-red-500">*</span></label>
             <input required type="number" value={form.contributionAmount}
               onChange={e => setForm({ ...form, contributionAmount: Number(e.target.value) })} className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Số buổi dự kiến</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến</label>
             <input type="number" value={form.totalSessions}
               onChange={e => setForm({ ...form, totalSessions: Number(e.target.value) })} className="input-base" />
           </div>
@@ -2125,14 +2125,14 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
                 disabled={prevPeriodError || prevPeriodInfo === null || prevPeriodInfo === undefined}
                 onChange={e => setForm({ ...form, copyMembersFromPreviousPeriod: e.target.checked })}
               />
-              <span className="flex items-center gap-2 flex-wrap text-[13px] font-medium text-slate-700">
+              <span className="flex items-center gap-2 flex-wrap text-[13px] font-medium [color:var(--pf-text)]">
                 Sao chép thành viên từ kỳ quỹ trước
                 <Badge variant="green">Đề xuất</Badge>
               </span>
             </label>
 
             {prevPeriodInfo === undefined && !prevPeriodError && (
-              <p className="mt-2 text-xs text-slate-400">Đang tải thông tin kỳ quỹ trước...</p>
+              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Đang tải thông tin kỳ quỹ trước...</p>
             )}
 
             {prevPeriodError && (
@@ -2142,25 +2142,25 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             )}
 
             {!prevPeriodError && prevPeriodInfo === null && (
-              <p className="mt-2 text-xs text-slate-500">Chưa có kỳ quỹ trước để sao chép thành viên.</p>
+              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có kỳ quỹ trước để sao chép thành viên.</p>
             )}
 
             {!prevPeriodError && prevPeriodInfo && prevPeriodInfo.memberCount === 0 && (
-              <p className="mt-2 text-xs text-slate-500">Kỳ quỹ trước chưa có thành viên để sao chép.</p>
+              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Kỳ quỹ trước chưa có thành viên để sao chép.</p>
             )}
 
             {!prevPeriodError && prevPeriodInfo && prevPeriodInfo.memberCount > 0 && form.copyMembersFromPreviousPeriod && (
               <div className="mt-2.5 space-y-2.5">
-                <p className="text-xs text-slate-600">
+                <p className="text-xs [color:var(--pf-color-muted)]">
                   Hệ thống sẽ sao chép danh sách thành viên từ kỳ quỹ gần nhất cùng loại.
                 </p>
                 <div className="rounded-[12px] border p-3 [background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] space-y-1">
                   <p className="text-[11px] font-[600] uppercase tracking-wide [color:var(--pf-color-muted)]">Kỳ quỹ gần nhất</p>
-                  <p className="text-sm font-semibold text-slate-800">{prevPeriodInfo.name}</p>
-                  <p className="text-xs text-slate-500">Thời gian: {formatDate(prevPeriodInfo.startDate)} - {formatDate(prevPeriodInfo.endDate)}</p>
-                  <p className="text-xs text-slate-500">Số lượng thành viên: {prevPeriodInfo.memberCount} thành viên</p>
+                  <p className="text-sm font-semibold [color:var(--pf-text)]">{prevPeriodInfo.name}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Thời gian: {formatDate(prevPeriodInfo.startDate)} - {formatDate(prevPeriodInfo.endDate)}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Số lượng thành viên: {prevPeriodInfo.memberCount} thành viên</p>
                 </div>
-                <p className="text-[11px] leading-relaxed text-slate-500">
+                <p className="text-[11px] leading-relaxed [color:var(--pf-color-muted)]">
                   Danh sách thành viên sẽ được sao chép sang kỳ quỹ mới.<br />
                   Mức đóng/người sẽ áp dụng theo giá trị bạn nhập ở trên.<br />
                   Trạng thái mặc định: Chưa đóng (0 đ).
@@ -2171,7 +2171,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
         )}
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1.5">Ghi chú</label>
+          <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
             rows={2} className="input-base resize-none" placeholder="Thông tin thêm về kỳ quỹ..." />
         </div>

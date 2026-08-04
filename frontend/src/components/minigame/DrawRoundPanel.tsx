@@ -8,7 +8,7 @@ const STATUS_LABEL: Record<MiniGameRound['status'], string> = {
   DRAFT: 'Nháp', ACTIVE: 'Đang Diễn Ra', LOCKED: 'Đã Khóa', COMPLETED: 'Hoàn Thành',
 }
 const STATUS_CLASS: Record<MiniGameRound['status'], string> = {
-  DRAFT: 'bg-slate-100 text-slate-600',
+  DRAFT: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   ACTIVE: 'bg-amber-100 text-amber-700',
   LOCKED: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   COMPLETED: 'bg-green-100 text-green-700',
@@ -28,22 +28,22 @@ export function DrawRoundPanel({ currentRound, currentRoundHasCompletedMatches, 
   const canLock = !!currentRound && currentRound.status === 'ACTIVE'
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
         <Shuffle size={15} className="[color:var(--pf-primary)]" />
-        <p className="text-sm font-semibold text-slate-800">Bốc Thăm Lượt Đấu</p>
+        <p className="text-sm font-semibold [color:var(--pf-text)]">Bốc Thăm Lượt Đấu</p>
       </div>
 
       {currentRound && (
-        <div className="bg-slate-50 rounded-lg p-3 mb-3 space-y-1">
+        <div className="[background:var(--pf-surface-muted)] rounded-lg p-3 mb-3 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500">Lượt hiện tại</span>
+            <span className="text-xs [color:var(--pf-color-muted)]">Lượt hiện tại</span>
             <span className={cn('text-xs font-medium rounded-full px-2 py-0.5', STATUS_CLASS[currentRound.status])}>
               {STATUS_LABEL[currentRound.status]}
             </span>
           </div>
-          <p className="text-sm font-semibold text-slate-800">Lượt {currentRound.roundNumber}</p>
-          <p className="text-xs text-slate-500">{currentRound.totalPlayers} người · {currentRound.totalMatches} trận · {currentRound.sitOutCount} ngồi ngoài</p>
+          <p className="text-sm font-semibold [color:var(--pf-text)]">Lượt {currentRound.roundNumber}</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">{currentRound.totalPlayers} người · {currentRound.totalMatches} trận · {currentRound.sitOutCount} ngồi ngoài</p>
         </div>
       )}
 

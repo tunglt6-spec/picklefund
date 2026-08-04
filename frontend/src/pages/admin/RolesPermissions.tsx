@@ -90,11 +90,11 @@ export function RolesPermissions() {
               const locked = u.role === 'SUPER_ADMIN' || isMe
               return (
                 <tr key={u.id}>
-                  <td className="font-mono text-xs font-semibold text-slate-900">
-                    {u.username}{isMe && <span className="ml-1 text-[10px] text-slate-400">(bạn)</span>}
+                  <td className="font-mono text-xs font-semibold [color:var(--pf-text)]">
+                    {u.username}{isMe && <span className="ml-1 text-[10px] [color:var(--pf-color-muted)]">(bạn)</span>}
                   </td>
-                  <td className="text-slate-700">{u.fullName}</td>
-                  <td className="text-xs text-slate-500">{u.email}</td>
+                  <td className="[color:var(--pf-text)]">{u.fullName}</td>
+                  <td className="text-xs [color:var(--pf-color-muted)]">{u.email}</td>
                   <td className="text-center">
                     {locked ? (
                       <Badge variant={roleVariant[u.role]}>{roleLabel[u.role]}</Badge>
@@ -116,7 +116,7 @@ export function RolesPermissions() {
                       onClick={() => setPendingToggle(u)}
                       disabled={locked}
                       className={cn(
-                        'inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors disabled:cursor-not-allowed disabled:opacity-30',
+                        'inline-flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] transition-colors disabled:cursor-not-allowed disabled:opacity-30',
                         u.isActive ? 'hover:bg-red-50 hover:text-red-500' : 'hover:bg-emerald-50 hover:text-emerald-600',
                       )}
                       title={locked ? 'Không thể thao tác' : (u.isActive ? 'Khóa tài khoản' : 'Mở khóa')}
@@ -128,7 +128,7 @@ export function RolesPermissions() {
               )
             })}
             {users.length === 0 && (
-              <tr><td colSpan={6} className="py-12 text-center text-sm text-slate-400">{loading ? 'Đang tải...' : 'Chưa có tài khoản'}</td></tr>
+              <tr><td colSpan={6} className="py-12 text-center text-sm [color:var(--pf-color-muted)]">{loading ? 'Đang tải...' : 'Chưa có tài khoản'}</td></tr>
             )}
           </tbody>
         </table>

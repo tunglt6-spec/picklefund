@@ -76,14 +76,14 @@ function KpiCard({ icon, iconBg, iconColor, label, value, isCount, unit }: {
   label: string; value: number; isCount?: boolean; unit?: string
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
       <div className="flex items-center justify-between mb-3">
         <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>{icon}</div>
       </div>
-      <p className="text-xl font-bold text-slate-900 leading-tight">
+      <p className="text-xl font-bold [color:var(--pf-text)] leading-tight">
         {isCount ? `${value.toLocaleString('vi-VN')} ${unit}` : formatVND(value)}
       </p>
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-1">{label}</p>
+      <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mt-1">{label}</p>
     </div>
   )
 }
@@ -147,16 +147,16 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
+      <div className="w-full max-w-md [background:var(--pf-surface)] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <div>
-            <h2 className="text-[15px] font-bold text-slate-900">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'}</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <h2 className="text-[15px] font-bold [color:var(--pf-text)]">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'}</h2>
+            <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">
               {isMini ? 'Quỹ Phụ · không phân bổ cho thành viên' : 'Quỹ Chính · phân bổ cho thành viên'}
             </p>
           </div>
-          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -164,14 +164,14 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
         <form onSubmit={e => { e.preventDefault(); onSave(form); setForm(emptyForm) }} className="flex-1 flex flex-col overflow-hidden" key={editExpense?.id ?? 'new'}>
           <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
             {/* 1 · Nguồn quỹ — segmented control */}
-            <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-xl [background:var(--pf-color-muted-soft)] p-1">
               {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                 <button key={fs} type="button"
                   onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
                   className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all ${
                     form.fundSource === fs
-                      ? 'bg-white shadow-sm [color:var(--pf-primary)]'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? '[background:var(--pf-surface)] shadow-sm [color:var(--pf-primary)]'
+                      : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                   }`}>
                   {fs === 'COMMON' ? <DollarSign size={15} /> : <Wallet size={15} />}
                   {fs === 'COMMON' ? 'Quỹ Chính' : 'Quỹ Phụ'}
@@ -182,7 +182,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 2 · Kỳ quỹ (Quỹ Chính) */}
             {!isMini && allPeriods.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                 <select required value={form.fundPeriodId} onChange={e => setForm(f => ({ ...f, fundPeriodId: e.target.value }))} className="input-base">
                   <option value="">— Chọn kỳ quỹ —</option>
                   {allPeriods.map(p => (
@@ -194,7 +194,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
             {/* 3 · Nội dung */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
               <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder={isMini ? 'VD: Thưởng đội vô địch, Chi liên hoan…' : 'VD: Tiền thuê sân T7, Nước uống…'}
                 className="input-base" />
@@ -203,15 +203,15 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 4 · Số tiền + Ngày */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                     placeholder="0" className="input-base pr-8 text-right font-semibold tabular-nums" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">đ</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold [color:var(--pf-color-muted)] pointer-events-none">đ</span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
                 <input required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
               </div>
             </div>
@@ -220,7 +220,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {isMini ? (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Loại chi Quỹ Phụ <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Loại chi Quỹ Phụ <span className="text-red-500">*</span></label>
                   <select required value={form.miniExpenseType}
                     onChange={e => setForm({ ...form, miniExpenseType: e.target.value as MiniExpenseType })} className="input-base">
                     {(Object.entries(MINI_EXPENSE_TYPE_LABELS) as [MiniExpenseType, string][]).map(([k, v]) => (
@@ -229,7 +229,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Người nhận <span className="text-slate-400 font-normal">(nếu có)</span></label>
+                  <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Người nhận <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
                   <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
@@ -240,7 +240,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-2">Loại chi phí <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Loại chi phí <span className="text-red-500">*</span></label>
                 <div className="grid grid-cols-2 gap-2.5">
                   {costCards.map(c => {
                     const active = form.costType === c.key
@@ -250,12 +250,12 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                         className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-3 text-left transition-all ${
                           active
                             ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                            : 'border-slate-200 hover:border-slate-300'
+                            : 'border-[color:var(--pf-border)] hover:border-slate-300'
                         }`}>
                         {active && <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-white" style={{ background: 'var(--pf-primary)' }}><Check size={11} /></span>}
-                        <span className={active ? '[color:var(--pf-primary)]' : 'text-slate-400'}>{c.icon}</span>
-                        <span className={`text-[13px] font-semibold ${active ? '[color:var(--pf-primary)]' : 'text-slate-700'}`}>{c.title}</span>
-                        <span className="text-[10.5px] leading-tight text-slate-400">{c.hint}</span>
+                        <span className={active ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}>{c.icon}</span>
+                        <span className={`text-[13px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{c.title}</span>
+                        <span className="text-[10.5px] leading-tight [color:var(--pf-color-muted)]">{c.hint}</span>
                       </button>
                     )
                   })}
@@ -269,7 +269,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   </div>
                 ) : (
                   <div className="mt-3">
-                    <label className="block text-xs font-semibold text-slate-600 mb-2">Cách chia sinh hoạt <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Cách chia sinh hoạt <span className="text-red-500">*</span></label>
                     <div className="grid grid-cols-2 gap-2">
                       {livingRules.map(r => {
                         const active = form.allocationRule === r.key
@@ -279,10 +279,10 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                             className={`rounded-lg border px-2.5 py-2 text-left transition-all ${
                               active
                                 ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                                : 'border-slate-200 hover:border-slate-300'
+                                : 'border-[color:var(--pf-border)] hover:border-slate-300'
                             }`}>
-                            <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : 'text-slate-700'}`}>{r.label}</span>
-                            <span className="block text-[10px] leading-tight text-slate-400">{r.hint}</span>
+                            <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{r.label}</span>
+                            <span className="block text-[10px] leading-tight [color:var(--pf-color-muted)]">{r.hint}</span>
                           </button>
                         )
                       })}
@@ -295,7 +295,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 6 · Danh mục (tuỳ chọn) */}
             {categories.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Danh mục <span className="text-slate-400 font-normal">(nếu có)</span></label>
+                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Danh mục <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
                 <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="input-base">
                   <option value="">— Không phân loại —</option>
                   {categories.map(c => (
@@ -307,15 +307,15 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
             {/* 7 · Ghi chú */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Ghi chú <span className="text-slate-400 font-normal">(nếu có)</span></label>
+              <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ghi chú <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 maxLength={200} rows={2} className="input-base resize-none"
                 placeholder="Ghi chú thêm cho khoản chi…" />
-              <p className="text-right text-[10px] text-slate-400 mt-1">{form.notes.length}/200</p>
+              <p className="text-right text-[10px] [color:var(--pf-color-muted)] mt-1">{form.notes.length}/200</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-3 px-5 py-4 border-t border-[color:var(--pf-border)] bg-slate-50/50">
             <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}>Hủy bỏ</Button>
             <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu…' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
           </div>
@@ -350,14 +350,14 @@ function FilterPanel({ open, onClose, values, onApply }: {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-80 bg-white flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h2 className="text-sm font-semibold text-slate-900">Bộ lọc</h2>
-          <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"><X size={14} /></button>
+      <div className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
+          <h2 className="text-sm font-semibold [color:var(--pf-text)]">Bộ lọc</h2>
+          <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"><X size={14} /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Trạng thái</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Trạng thái</label>
             <select value={status} onChange={e => setStatus(e.target.value)} className="input-base">
               <option value="all">Tất cả</option>
               <option value="approved">Đã duyệt</option>
@@ -367,7 +367,7 @@ function FilterPanel({ open, onClose, values, onApply }: {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Quy tắc phân bổ</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Quy tắc phân bổ</label>
             <select value={rule} onChange={e => setRule(e.target.value)} className="input-base">
               <option value="all">Tất cả</option>
               {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
@@ -376,14 +376,14 @@ function FilterPanel({ open, onClose, values, onApply }: {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">Khoảng thời gian</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-2">Khoảng thời gian</label>
             <div className="grid grid-cols-2 gap-2">
               <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
               <input type="date" value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
             </div>
           </div>
         </div>
-        <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
+        <div className="flex gap-2 px-5 py-4 border-t border-[color:var(--pf-border)]">
           <Button variant="outline" className="flex-1" onClick={handleClear}>Xóa bộ lọc</Button>
           <Button className="flex-1" onClick={handleApply}>Áp dụng</Button>
         </div>
@@ -407,7 +407,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
       ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Phụ</Badge>
       : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chính</Badge> },
     { label: 'Nội dung',   value: <span className="font-medium">{exp.description}</span>, span: true },
-    { label: 'Số tiền',    value: <span className="text-lg font-bold text-slate-900">{formatVND(exp.amount)}</span> },
+    { label: 'Số tiền',    value: <span className="text-lg font-bold [color:var(--pf-text)]">{formatVND(exp.amount)}</span> },
     { label: 'Ngày chi',   value: exp.expenseDate },
     ...(isMini
       ? [
@@ -426,9 +426,9 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-full max-w-lg bg-white flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <button onClick={onClose} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+      <div className="w-full max-w-lg [background:var(--pf-surface)] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--pf-border)]">
+          <button onClick={onClose} className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors">
             <ArrowLeft size={15} />Chi tiết khoản chi
           </button>
           {!isMember && (
@@ -448,35 +448,35 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
             {fields.map((f, i) => (
               <div key={i} className={f.span ? 'col-span-2' : ''}>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">{f.label}</p>
-                <div className="text-xs text-slate-700">{f.value}</div>
+                <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">{f.label}</p>
+                <div className="text-xs [color:var(--pf-text)]">{f.value}</div>
               </div>
             ))}
           </div>
 
           {/* Chứng từ / hóa đơn */}
           <div className="px-6 pb-6">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
+            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
             {exp.receiptUrl ? (
-              <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <div className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] bg-slate-50/60 p-3">
                 {/\.(jpe?g|png|webp)$/i.test(exp.receiptUrl) ? (
                   <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer" className="shrink-0">
-                    <img src={resolveReceiptUrl(exp.receiptUrl)} alt="Hóa đơn" className="h-16 w-16 rounded-lg object-cover border border-slate-200" />
+                    <img src={resolveReceiptUrl(exp.receiptUrl)} alt="Hóa đơn" className="h-16 w-16 rounded-lg object-cover border border-[color:var(--pf-border)]" />
                   </a>
                 ) : (
-                  <div className="h-16 w-16 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                  <div className="h-16 w-16 rounded-lg [background:var(--pf-surface)] border border-[color:var(--pf-border)] flex items-center justify-center shrink-0">
                     <FileText size={22} className="[color:var(--pf-primary)]" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-700">Đã đính kèm hóa đơn</p>
+                  <p className="text-xs font-medium [color:var(--pf-text)]">Đã đính kèm hóa đơn</p>
                   <div className="flex items-center gap-3 mt-1.5">
                     <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
                       <Eye size={12} />Xem
                     </a>
                     {!isMember && (
-                      <button onClick={onAttach} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700">
+                      <button onClick={onAttach} className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]">
                         <Paperclip size={12} />Đổi hóa đơn
                       </button>
                     )}
@@ -484,10 +484,10 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
                 </div>
               </div>
             ) : isMember ? (
-              <p className="text-xs text-slate-400">Chưa có hóa đơn đính kèm</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">Chưa có hóa đơn đính kèm</p>
             ) : (
               <button onClick={onAttach}
-                className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors">
+                className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[color:var(--pf-border)] py-3 text-sm font-semibold [color:var(--pf-color-muted)] hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors">
                 <Paperclip size={15} />Đính kèm hóa đơn
               </button>
             )}
@@ -813,11 +813,11 @@ export function Expenses() {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pt-3 pb-2 space-y-2">
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-[16px] font-[700] text-slate-900">Chi Phí</h2>
-              {(selectedPeriodId || activePeriod) && <p className="text-[11px] text-slate-400">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
+              <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Chi Phí</h2>
+              {(selectedPeriodId || activePeriod) && <p className="text-[11px] [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-1.5">
               <button onClick={exportExcel} aria-label="Xuất Excel"
@@ -829,7 +829,7 @@ export function Expenses() {
                 <FileDown size={16} />PDF
               </button>
               <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-500 border border-slate-200">
+                className="flex h-11 w-11 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)]">
                 <Filter size={16} />
               </button>
               {!isMember && (
@@ -849,7 +849,7 @@ export function Expenses() {
 
           {/* Search */}
           <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Tìm khoản chi..." className="input-base pl-8 w-full text-[13px] py-1.5" />
           </div>
@@ -859,7 +859,7 @@ export function Expenses() {
             {statusTabs.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
                 className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-[600] transition-all ${
-                  tab === t.key ? 'text-white' : 'bg-slate-100 text-slate-500'
+                  tab === t.key ? 'text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
                 }`}
                 style={tab === t.key ? { background: 'var(--pf-primary)' } : {}}>
                 {t.label}
@@ -876,8 +876,8 @@ export function Expenses() {
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
-            <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 px-3 py-2.5 shadow-sm">
-              <p className="text-[10px] text-slate-400 truncate">{k.label}</p>
+            <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] px-3 py-2.5 shadow-sm">
+              <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{k.label}</p>
               <p className={`text-[13px] font-[700] tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
             </div>
           ))}
@@ -886,16 +886,16 @@ export function Expenses() {
         {/* Expense list */}
         <div className="px-4 pt-3 pb-6 space-y-2">
           {mobileFiltered.length === 0 ? (
-            <div className="text-center py-14 text-slate-400 text-sm">
+            <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
               <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
               {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
           ) : mobileFiltered.map(e => (
-            <div key={e.id} className="bg-white rounded-[16px] border border-slate-100 px-4 py-3 shadow-sm">
+            <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-[600] text-slate-900 truncate">{e.description}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
+                  <div className="text-[13px] font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-[14px] font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
@@ -908,7 +908,7 @@ export function Expenses() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-slate-50">
+              <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-[color:var(--pf-border)]">
                 {!isMember && e.status === 'pending' && (
                   <>
                     <button onClick={() => handleApprove(e.id)}
@@ -922,17 +922,17 @@ export function Expenses() {
                   </>
                 )}
                 <button onClick={() => setDetailExp(e)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-slate-50 text-slate-500 active:bg-slate-100 ml-auto">
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)] ml-auto">
                   <Eye size={12} />Chi tiết
                 </button>
                 {!isMember && (
                   <>
                     <button onClick={() => setEditTarget(e)}
-                      className="p-1.5 text-slate-300 active:[color:var(--pf-primary)]">
+                      className="p-1.5 [color:var(--pf-color-muted)] active:[color:var(--pf-primary)]">
                       <Pencil size={13} />
                     </button>
                     <button onClick={() => setConfirmId(e.id)}
-                      className="p-1.5 text-slate-300 active:text-red-500">
+                      className="p-1.5 [color:var(--pf-color-muted)] active:text-red-500">
                       <Trash2 size={13} />
                     </button>
                   </>
@@ -963,13 +963,13 @@ export function Expenses() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4">
+      <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-4">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            {!embedded && <h1 className="text-base font-bold text-slate-900">Chi Phí</h1>}
-            <p className="text-xs text-slate-500 mt-0.5">
+            {!embedded && <h1 className="text-base font-bold [color:var(--pf-text)]">Chi Phí</h1>}
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
               {allPeriods.find(p => p.id === selectedPeriodId)?.name ?? 'Quản lý và theo dõi các khoản chi của CLB'}
             </p>
           </div>
@@ -981,8 +981,8 @@ export function Expenses() {
                 onChange={id => setSelectedPeriodId(id)}
               />
             )}
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-              <Calendar size={13} className="text-slate-400" />
+            <div className="flex items-center gap-2 rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-3 py-2 text-xs [color:var(--pf-color-muted)]">
+              <Calendar size={13} className="[color:var(--pf-color-muted)]" />
               <span>
                 {activePeriod
                   ? `${formatDate(activePeriod.startDate)} – ${formatDate(activePeriod.endDate)}`
@@ -1009,16 +1009,16 @@ export function Expenses() {
         </div>
 
         {/* Table card */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)]">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
           {/* Tabs + Search */}
-          <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100 flex-wrap gap-3">
+          <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-[color:var(--pf-border)] flex-wrap gap-3">
             <div className="flex items-center gap-0.5 -mb-px">
               {TABS.map(t => (
                 <button key={t.key} onClick={() => { setTab(t.key as 'all' | ExpenseStatus); setPage(1) }}
                   className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                     tab === t.key
                       ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
-                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                      : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                   }`}>
                   {t.label}
                   {t.key === 'pending' && pendingCount > 0 && (
@@ -1030,7 +1030,7 @@ export function Expenses() {
               ))}
             </div>
             <div className="relative w-56 pb-3">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
               <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
                 placeholder="Tìm kiếm khoản chi..." className="input-base pl-8 h-8 text-xs" />
             </div>
@@ -1051,7 +1051,7 @@ export function Expenses() {
           {paginated.length === 0 ? (
             <div className="py-16 text-center">
               <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
-              <p className="text-sm text-slate-400">Không có khoản chi nào</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không có khoản chi nào</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1094,15 +1094,15 @@ export function Expenses() {
                           </td>
                         )}
                         <td className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</td>
-                        <td className="font-medium text-slate-900 max-w-[200px] truncate">{exp.description}</td>
+                        <td className="font-medium [color:var(--pf-text)] max-w-[200px] truncate">{exp.description}</td>
                         <td className="text-center">
                           {isMini
                             ? <Badge variant="indigo">Quỹ Phụ</Badge>
                             : <Badge variant="gray">Quỹ Chính</Badge>}
                         </td>
-                        <td className="text-center text-slate-500 text-xs">{exp.expenseDate}</td>
-                        <td className="text-right font-semibold text-slate-900">{formatVND(exp.amount)}</td>
-                        <td className="text-slate-600 text-xs">{isMini
+                        <td className="text-center [color:var(--pf-color-muted)] text-xs">{exp.expenseDate}</td>
+                        <td className="text-right font-semibold [color:var(--pf-text)]">{formatVND(exp.amount)}</td>
+                        <td className="[color:var(--pf-color-muted)] text-xs">{isMini
                           ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Phụ')
                           : `${exp.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleLabels[exp.allocationRule]}`}</td>
                         <td className="text-center">
@@ -1113,22 +1113,22 @@ export function Expenses() {
                             {!isMember && exp.status === 'pending' && (
                               <>
                                 <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
-                                  className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                  className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
                                   <CheckCircle size={13} />
                                 </button>
                                 <button onClick={() => handleReject(exp.id)} title="Từ chối"
-                                  className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                                  className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
                                   <X size={13} />
                                 </button>
                               </>
                             )}
                             <button onClick={() => setDetailExp(exp)} title="Xem"
-                              className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+                              className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
                               <Eye size={13} />
                             </button>
                             {!isMember && (
                               <button onClick={() => setConfirmId(exp.id)} title="Xóa"
-                                className="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                                className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-600 transition-colors">
                                 <Trash2 size={13} />
                               </button>
                             )}
@@ -1143,23 +1143,23 @@ export function Expenses() {
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-50">
-            <span className="text-xs text-slate-500">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-[color:var(--pf-border)]">
+            <span className="text-xs [color:var(--pf-color-muted)]">
               {filtered.length === 0
                 ? 'Không có kết quả'
                 : `Hiển thị ${Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} đến ${Math.min(page * PAGE_SIZE, filtered.length)} của ${filtered.length} khoản chi`}
             </span>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">‹</button>
+                className="h-7 px-2.5 rounded-lg border border-[color:var(--pf-border)] text-xs hover:[background:var(--pf-surface-muted)] disabled:opacity-40">‹</button>
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <button key={p} onClick={() => setPage(p)}
-                  className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? '[background:var(--pf-primary)] text-white' : 'border border-slate-200 hover:bg-slate-50'}`}>
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium ${page === p ? '[background:var(--pf-primary)] text-white' : 'border border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]'}`}>
                   {p}
                 </button>
               ))}
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs hover:bg-slate-50 disabled:opacity-40">›</button>
+                className="h-7 px-2.5 rounded-lg border border-[color:var(--pf-border)] text-xs hover:[background:var(--pf-surface-muted)] disabled:opacity-40">›</button>
             </div>
           </div>
         </div>
@@ -1172,23 +1172,23 @@ export function Expenses() {
       {/* Categories management modal */}
       {showCatMgr && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Danh mục chi phí</h3>
-              <button onClick={() => setShowCatMgr(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-100"><X size={16} /></button>
+              <h3 className="text-base font-bold [color:var(--pf-text)]">Danh mục chi phí</h3>
+              <button onClick={() => setShowCatMgr(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:[background:var(--pf-color-muted-soft)]"><X size={16} /></button>
             </div>
             <div className="space-y-2 max-h-52 overflow-y-auto">
-              {categories.length === 0 && <p className="text-xs text-slate-400 text-center py-4">Chưa có danh mục nào</p>}
+              {categories.length === 0 && <p className="text-xs [color:var(--pf-color-muted)] text-center py-4">Chưa có danh mục nào</p>}
               {categories.map(c => (
-                <div key={c.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                  <span className="text-sm text-slate-700">{c.icon ? `${c.icon} ` : ''}{c.name}</span>
+                <div key={c.id} className="flex items-center justify-between [background:var(--pf-surface-muted)] rounded-lg px-3 py-2">
+                  <span className="text-sm [color:var(--pf-text)]">{c.icon ? `${c.icon} ` : ''}{c.name}</span>
                   {!c.isDefault && (
-                    <button onClick={() => deleteCategory(c.id)} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={13} /></button>
+                    <button onClick={() => deleteCategory(c.id)} className="[color:var(--pf-color-muted)] hover:text-red-500 p-1"><Trash2 size={13} /></button>
                   )}
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 pt-1 border-t border-slate-100">
+            <div className="flex gap-2 pt-1 border-t border-[color:var(--pf-border)]">
               <input value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} placeholder="🏸" className="input-base w-14 text-center text-lg" maxLength={2} />
               <input value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Tên danh mục" className="input-base flex-1" maxLength={100} onKeyDown={e => e.key === 'Enter' && addCategory()} />
               <Button size="sm" onClick={addCategory} disabled={!newCatName.trim()}><Plus size={14} /></Button>

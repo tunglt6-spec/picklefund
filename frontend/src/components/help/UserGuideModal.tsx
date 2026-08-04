@@ -14,7 +14,7 @@ interface Section {
 }
 
 const B = ({ items }: { items: React.ReactNode[] }) => (
-  <ul className="mt-1.5 space-y-1.5 text-sm leading-relaxed text-slate-600">
+  <ul className="mt-1.5 space-y-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
     {items.map((it, i) => (
       <li key={i} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--pf-primary)]" /><span>{it}</span></li>
     ))}
@@ -26,7 +26,7 @@ const SECTIONS: Section[] = [
     id: 'gioi-thieu', icon: '👋', title: 'Giới thiệu',
     body: (
       <>
-        <p className="text-sm leading-relaxed text-slate-600">PickleFund là nền tảng quản lý <b>quỹ &amp; hoạt động</b> cho CLB thể thao <b>đa bộ môn</b>. Menu bên trái gồm các module chính; nút <b>Hướng dẫn</b> trên header mở lại tài liệu này bất cứ lúc nào. Cần hỏi nhanh, bấm <b>Lisa AI</b> (góc dưới trái) — trợ lý trả lời theo dữ liệu CLB của bạn.</p>
+        <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">PickleFund là nền tảng quản lý <b>quỹ &amp; hoạt động</b> cho CLB thể thao <b>đa bộ môn</b>. Menu bên trái gồm các module chính; nút <b>Hướng dẫn</b> trên header mở lại tài liệu này bất cứ lúc nào. Cần hỏi nhanh, bấm <b>Lisa AI</b> (góc dưới trái) — trợ lý trả lời theo dữ liệu CLB của bạn.</p>
         <B items={[
           <><b>4 vai trò</b>: Chủ nhiệm (toàn quyền), Thủ quỹ (tài chính), Thành viên (xem + phần cá nhân), Super Admin (nhiều CLB).</>,
           <>Nguyên tắc: mọi thao tác <b>Thêm/Sửa/Xóa</b> là quyền Chủ nhiệm/Thủ quỹ; Thành viên chủ yếu xem và tự thao tác phần của mình.</>,
@@ -72,7 +72,7 @@ const SECTIONS: Section[] = [
     id: 'tao-giai-dau', icon: '🏆', title: 'Tạo Giải đấu',
     body: (
       <>
-        <p className="text-sm leading-relaxed text-slate-600">Màn 2 cột: bên <b>trái</b> tạo giải, bên <b>phải</b> xem tổng quan theo bộ môn đang chọn. Nút <b>Danh sách giải</b> để xem tất cả giải.</p>
+        <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">Màn 2 cột: bên <b>trái</b> tạo giải, bên <b>phải</b> xem tổng quan theo bộ môn đang chọn. Nút <b>Danh sách giải</b> để xem tất cả giải.</p>
         <B items={[
           <><b>7 bộ môn</b>: Pickleball, Tennis, Cầu lông, Bóng bàn (đánh đôi/đơn/vòng bảng); Bóng đá, Bóng rổ (vòng tròn hoặc loại trực tiếp); Golf (tính tổng gậy).</>,
           <><b>Tạo giải</b>: chọn bộ môn → điền tên/ngày → thiết lập thể thức. Bóng đá/rổ: dựng đội &amp; cầu thủ, nhập tỉ số. Golf: thêm golfer, nhập gậy từng vòng.</>,
@@ -134,13 +134,13 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onMouseDown={onClose}>
-      <div className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl [background:var(--pf-surface)] shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'var(--pf-border)' }}>
-          <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+          <h2 className="flex items-center gap-2 text-base font-bold [color:var(--pf-text)]">
             <BookOpen size={18} className="text-[color:var(--pf-primary)]" /> Hướng dẫn sử dụng PickleFund
           </h2>
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Đóng"><X size={18} /></button>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)]" aria-label="Đóng"><X size={18} /></button>
         </div>
 
         <div className="flex min-h-0 flex-1">
@@ -148,7 +148,7 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
           <nav className="hidden w-52 shrink-0 overflow-y-auto border-r p-3 sm:block" style={{ borderColor: 'var(--pf-border)' }}>
             {SECTIONS.map((s) => (
               <button key={s.id} onClick={() => jump(s.id)}
-                className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium transition-colors ${active === s.id ? 'text-white [background:var(--pf-primary)]' : 'text-slate-600 hover:bg-slate-100'}`}>
+                className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium transition-colors ${active === s.id ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]'}`}>
                 <span>{s.icon}</span> {s.title}
               </button>
             ))}
@@ -158,11 +158,11 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
           <div className="min-w-0 flex-1 overflow-y-auto px-5 py-4">
             {SECTIONS.map((s) => (
               <section key={s.id} id={`guide-${s.id}`} className="mb-6 scroll-mt-2">
-                <h3 className="flex items-center gap-2 text-[15px] font-bold text-slate-900"><span>{s.icon}</span> {s.title}</h3>
+                <h3 className="flex items-center gap-2 text-[15px] font-bold [color:var(--pf-text)]"><span>{s.icon}</span> {s.title}</h3>
                 <div className="mt-1.5">{s.body}</div>
               </section>
             ))}
-            <p className="mt-2 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
+            <p className="mt-2 rounded-xl [background:var(--pf-surface-muted)] px-4 py-3 text-xs [color:var(--pf-color-muted)]">
               💡 Cần trợ giúp cụ thể? Mở <b>Lisa AI</b> ở góc dưới bên trái và hỏi trực tiếp — Lisa trả lời theo dữ liệu CLB của bạn.
             </p>
           </div>

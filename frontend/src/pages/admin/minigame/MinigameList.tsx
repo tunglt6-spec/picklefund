@@ -378,7 +378,7 @@ export function MinigameList() {
       {isClubAdmin && showDelegateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowDelegateModal(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white [box-shadow:var(--pf-shadow)]">
+          <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
             <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
               <h2 className="flex items-center gap-2 text-base font-semibold [color:var(--pf-text)]">
                 <UserCheck size={18} className="[color:var(--pf-primary)]" />Ủy quyền quản lý minigame

@@ -150,10 +150,10 @@ export function TreasurerReminders() {
     const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Nhắc Nhở Đóng Quỹ</div>
-            {activePeriod && <div className="text-[12px] text-slate-400">{activePeriod.name} · {formatVND(amount)}/người</div>}
+            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Nhắc Nhở Đóng Quỹ</div>
+            {activePeriod && <div className="text-[12px] [color:var(--pf-color-muted)]">{activePeriod.name} · {formatVND(amount)}/người</div>}
           </div>
           {unpaidMembers.length > 0 && (
             <button
@@ -173,9 +173,9 @@ export function TreasurerReminders() {
               { label: 'Chờ xác nhận', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
               { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
             ].map(k => (
-              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
                 <div className={`text-[16px] font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{k.label}</div>
+                <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
               </div>
             ))}
           </div>
@@ -185,17 +185,17 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Bell size={13} className="text-red-500" />
-                <span className="text-[13px] font-[700] text-slate-800">Chưa đóng quỹ</span>
+                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chưa đóng quỹ</span>
                 <span className="ml-auto text-[12px] font-[600] text-red-500">{unpaidMembers.length} người</span>
               </div>
               {unpaidMembers.map(m => {
                 const sent = sentIds.has(m.id)
                 return (
-                  <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="text-[14px] font-[700] text-slate-900">{m.fullName}</div>
-                        <div className="text-[12px] text-slate-400 mt-0.5">{m.phone ?? m.email ?? '—'}</div>
+                        <div className="text-[14px] font-[700] [color:var(--pf-text)]">{m.fullName}</div>
+                        <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{m.phone ?? m.email ?? '—'}</div>
                       </div>
                       <div className="text-[14px] font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
                     </div>
@@ -210,7 +210,7 @@ export function TreasurerReminders() {
                             <Send size={12} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>
                         ) : (
-                          <div className="flex-1 h-8 flex items-center justify-center rounded-[10px] text-[11px] text-slate-400 bg-slate-50 border border-dashed border-slate-200">
+                          <div className="flex-1 h-8 flex items-center justify-center rounded-[10px] text-[11px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border border-dashed border-[color:var(--pf-border)]">
                             Chưa có tài khoản app
                           </div>
                         )}
@@ -231,16 +231,16 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Clock size={13} className="text-amber-500" />
-                <span className="text-[13px] font-[700] text-slate-800">Chờ xác nhận</span>
+                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chờ xác nhận</span>
                 <span className="ml-auto text-[12px] font-[600] text-amber-600">{pendingMembers.length} người</span>
               </div>
               {pendingMembers.map(m => {
                 const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
                 return (
-                  <div key={m.id} className="bg-white rounded-[16px] border border-amber-100 p-4 shadow-sm flex items-center justify-between">
+                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-amber-100 p-4 shadow-sm flex items-center justify-between">
                     <div>
-                      <div className="text-[14px] font-[700] text-slate-900">{m.fullName}</div>
-                      {contrib?.notes && <div className="text-[12px] text-slate-400 mt-0.5">{contrib.notes}</div>}
+                      <div className="text-[14px] font-[700] [color:var(--pf-text)]">{m.fullName}</div>
+                      {contrib?.notes && <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{contrib.notes}</div>}
                     </div>
                     <div className="text-[14px] font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? amount)}</div>
                   </div>
@@ -250,9 +250,9 @@ export function TreasurerReminders() {
           )}
 
           {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
-            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-16 text-center">
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-16 text-center">
               <CheckCircle size={32} className="mx-auto text-emerald-300 mb-3" />
-              <p className="text-[14px] font-[600] text-slate-600">Tất cả thành viên đã đóng quỹ!</p>
+              <p className="text-[14px] font-[600] [color:var(--pf-color-muted)]">Tất cả thành viên đã đóng quỹ!</p>
             </div>
           )}
         </div>
@@ -261,7 +261,7 @@ export function TreasurerReminders() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Nhắc Nhở Đóng Quỹ"
         subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
@@ -269,11 +269,11 @@ export function TreasurerReminders() {
           unpaidMembers.length > 0
             ? <div className="flex items-center gap-2">
                 <button onClick={doExportExcel} aria-label="Xuất Excel"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] text-sm font-semibold hover:bg-slate-200 transition-colors">
                   <FileSpreadsheet size={14} />Xuất Excel
                 </button>
                 <button onClick={doExportPdf} aria-label="Xuất PDF"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] text-sm font-semibold hover:bg-slate-200 transition-colors">
                   <FileText size={14} />Xuất PDF
                 </button>
                 <button
@@ -290,46 +290,46 @@ export function TreasurerReminders() {
       <div className="p-6 max-w-[900px] mx-auto space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-red-50 flex items-center justify-center">
                 <Bell size={14} className="text-red-500" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chưa đóng</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chưa đóng</p>
             </div>
             <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} người</p>
-            <p className="text-xs text-slate-500 mt-0.5">{formatVND(unpaidMembers.length * amount)}</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(unpaidMembers.length * amount)}</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock size={14} className="text-amber-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chờ xác nhận</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chờ xác nhận</p>
             </div>
             <p className="text-2xl font-bold text-amber-600">{pendingMembers.length} người</p>
-            <p className="text-xs text-slate-500 mt-0.5">Đã nộp tiền, chưa duyệt</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Đã nộp tiền, chưa duyệt</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle size={14} className="text-emerald-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Đã hoàn thành</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đã hoàn thành</p>
             </div>
             <p className="text-2xl font-bold text-emerald-600">
               {data.members.filter(m => m.status === 'active').length - unpaidMembers.length} người
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">Đã xác nhận đóng quỹ</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Đã xác nhận đóng quỹ</p>
           </div>
         </div>
 
         {/* Unpaid members */}
         {unpaidMembers.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
+            <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Bell size={14} className="text-red-500" />
-              <h3 className="text-sm font-semibold text-slate-800">Thành viên chưa đóng quỹ</h3>
+              <h3 className="text-sm font-semibold [color:var(--pf-text)]">Thành viên chưa đóng quỹ</h3>
               <Badge variant="red" className="ml-auto">{unpaidMembers.length}</Badge>
             </div>
             <table className="table-base">
@@ -347,8 +347,8 @@ export function TreasurerReminders() {
                   const sent = sentIds.has(m.id)
                   return (
                     <tr key={m.id}>
-                      <td className="font-medium text-slate-900">{m.fullName}</td>
-                      <td className="text-slate-500 text-xs">{m.phone ?? m.email ?? '—'}</td>
+                      <td className="font-medium [color:var(--pf-text)]">{m.fullName}</td>
+                      <td className="[color:var(--pf-color-muted)] text-xs">{m.phone ?? m.email ?? '—'}</td>
                       <td className="text-right font-semibold text-red-500">{formatVND(amount)}</td>
                       <td className="text-center">
                         {sent
@@ -365,7 +365,7 @@ export function TreasurerReminders() {
                             <Send size={11} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Chưa có tài khoản</span>
+                          <span className="text-xs [color:var(--pf-color-muted)] italic">Chưa có tài khoản</span>
                         )}
                       </td>
                     </tr>
@@ -378,10 +378,10 @@ export function TreasurerReminders() {
 
         {/* Pending confirmation */}
         {pendingMembers.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
+            <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Clock size={14} className="text-amber-500" />
-              <h3 className="text-sm font-semibold text-slate-800">Chờ xác nhận thanh toán</h3>
+              <h3 className="text-sm font-semibold [color:var(--pf-text)]">Chờ xác nhận thanh toán</h3>
               <Badge variant="yellow" className="ml-auto">{pendingMembers.length}</Badge>
             </div>
             <table className="table-base">
@@ -397,9 +397,9 @@ export function TreasurerReminders() {
                   const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
                   return (
                     <tr key={m.id}>
-                      <td className="font-medium text-slate-900">{m.fullName}</td>
+                      <td className="font-medium [color:var(--pf-text)]">{m.fullName}</td>
                       <td className="text-right font-semibold text-amber-600">{formatVND(contrib?.amount ?? amount)}</td>
-                      <td className="text-center text-slate-400 text-xs">{contrib?.notes || '—'}</td>
+                      <td className="text-center [color:var(--pf-color-muted)] text-xs">{contrib?.notes || '—'}</td>
                     </tr>
                   )
                 })}
@@ -409,10 +409,10 @@ export function TreasurerReminders() {
         )}
 
         {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
-          <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
             <CheckCircle size={36} className="mx-auto text-emerald-300 mb-3" />
-            <p className="text-sm font-semibold text-slate-600">Tất cả thành viên đã đóng quỹ!</p>
-            <p className="text-xs text-slate-400 mt-1">Không cần gửi nhắc nhở trong kỳ này.</p>
+            <p className="text-sm font-semibold [color:var(--pf-color-muted)]">Tất cả thành viên đã đóng quỹ!</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không cần gửi nhắc nhở trong kỳ này.</p>
           </div>
         )}
       </div>

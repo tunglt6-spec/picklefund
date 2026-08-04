@@ -26,7 +26,7 @@ export function ScheduleExportButtons({ onPng, onPdf, ariaScope, size = 'md' }: 
       )}
       {onPdf && (
         <button onClick={onPdf} aria-label={`Xuất PDF ${ariaScope}`} title="Xuất PDF"
-          className={`inline-flex items-center gap-1.5 rounded-lg font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors ${pad}`}>
+          className={`inline-flex items-center gap-1.5 rounded-lg font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)] transition-colors ${pad}`}>
           <FileText size={icon} /> {compact ? 'PDF' : 'Xuất PDF'}
         </button>
       )}

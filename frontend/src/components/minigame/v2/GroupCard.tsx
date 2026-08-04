@@ -83,18 +83,18 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-slate-100 border-l-4 ${borderColor} p-4 flex flex-col gap-3`}
+      className={`[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] border-l-4 ${borderColor} p-4 flex flex-col gap-3`}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className={`text-base font-bold ${labelColor}`}>{group.label}</span>
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs [color:var(--pf-color-muted)] font-medium">
           {group.completedMatches}/{group.totalExpectedMatches} trận
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${progressColor}`}
           style={{ width: `${progressPct}%` }}
@@ -109,7 +109,7 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
               {member.isSeed && (
                 <Crown size={13} className="text-amber-400 shrink-0" />
               )}
-              <span className="text-sm text-slate-700 truncate">{member.name}</span>
+              <span className="text-sm [color:var(--pf-text)] truncate">{member.name}</span>
             </div>
             <SkillBadge skill={member.skill} />
           </li>
@@ -117,14 +117,14 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
       </ul>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t border-slate-50">
-        <span className="text-xs text-slate-400">
+      <div className="flex items-center justify-between pt-1 border-t border-[color:var(--pf-border)]">
+        <span className="text-xs [color:var(--pf-color-muted)]">
           {group.members.length} thành viên
         </span>
         {onViewGroup && (
           <button
             onClick={onViewGroup}
-            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:[color:var(--pf-primary)] transition-colors"
+            className="inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"
           >
             <Eye size={13} />
             Xem chi tiết

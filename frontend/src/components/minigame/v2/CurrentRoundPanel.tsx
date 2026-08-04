@@ -28,11 +28,11 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
   const allDone = completedMatches === totalMatches && totalMatches > 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-col gap-4">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <PlayCircle size={20} className="[color:var(--pf-primary)] shrink-0" />
-          <h2 className="text-base font-semibold text-slate-800">
+          <h2 className="text-base font-semibold [color:var(--pf-text)]">
             Vòng {roundNumber} – Đang Diễn Ra
           </h2>
         </div>
@@ -42,18 +42,18 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
       </div>
 
       <div className="flex flex-col gap-1">
-        <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+        <div className="w-full h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
           <div
             className="h-2 rounded-full bg-green-500 transition-all duration-500"
             style={{ width: `${progressPct}%` }}
           />
         </div>
-        <span className="text-xs text-slate-400 text-right">{progressPct}%</span>
+        <span className="text-xs [color:var(--pf-color-muted)] text-right">{progressPct}%</span>
       </div>
 
       {sitOuts.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide text-xs">
+          <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide text-xs">
             Ngồi Nghỉ Vòng Này:
           </span>
           <div className="flex flex-wrap gap-1.5">

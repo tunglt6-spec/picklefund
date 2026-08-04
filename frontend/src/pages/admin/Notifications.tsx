@@ -25,7 +25,7 @@ function eventIcon(eventType: string) {
   if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={15} className="text-amber-500" />
   if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={15} className="[color:var(--pf-primary)]" />
   if (eventType.includes('reminder')) return <Receipt size={15} className="text-orange-500" />
-  return <Zap size={15} className="text-slate-400" />
+  return <Zap size={15} className="[color:var(--pf-color-muted)]" />
 }
 
 function eventBg(eventType: string) {
@@ -34,7 +34,7 @@ function eventBg(eventType: string) {
   if (eventType.includes('member') || eventType.includes('inactivity')) return '[background:var(--pf-primary-soft)]'
   if (eventType.includes('anomaly') || eventType.includes('health')) return 'bg-amber-50'
   if (eventType.includes('brief') || eventType.includes('report')) return '[background:var(--pf-primary-soft)]'
-  return 'bg-slate-50'
+  return '[background:var(--pf-surface-muted)]'
 }
 
 function priorityBadge(priority: string) {
@@ -62,16 +62,16 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
     return (
       <div onClick={() => !isRead && onRead(n.id)}
         className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
-          ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white [border-color:var(--pf-primary-soft)]'}`}>
+          ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)]'}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <p className={`text-[14px] font-[700] ${isRead ? 'text-slate-400' : 'text-slate-900'}`}>{n.title}</p>
+            <p className={`text-[14px] font-[700] ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
             {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
             {priorityBadge(n.priority)}
           </div>
-          <p className="text-[12px] text-slate-500 leading-relaxed">{n.body}</p>
-          <p className="text-[11px] text-slate-400 mt-1">{timeAgo(n.createdAt)}</p>
+          <p className="text-[12px] [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
+          <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
     )
@@ -80,17 +80,17 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
   return (
     <div onClick={() => !isRead && onRead(n.id)}
       className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm
-        ${isRead ? 'bg-white border-slate-100 opacity-60' : 'bg-white [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
+        ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className={`text-sm font-semibold ${isRead ? 'text-slate-400' : 'text-slate-900'}`}>{n.title}</p>
+          <p className={`text-sm font-semibold ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
           {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
           {priorityBadge(n.priority)}
         </div>
-        <p className="text-xs text-slate-500 leading-relaxed">{n.body}</p>
+        <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
       </div>
-      <p className="text-[11px] text-slate-400 shrink-0">{timeAgo(n.createdAt)}</p>
+      <p className="text-[11px] [color:var(--pf-color-muted)] shrink-0">{timeAgo(n.createdAt)}</p>
     </div>
   )
 }
@@ -208,10 +208,10 @@ export function Notifications() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Thông báo</div>
-            <div className="text-[12px] text-slate-400">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
+            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>
+            <div className="text-[12px] [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
           {unreadCount > 0 && (
             <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
@@ -222,11 +222,11 @@ export function Notifications() {
 
         <div className="px-4 pt-3 pb-24 space-y-4">
           <TabBar tab={tab} onChange={setTab} />
-          {loading && <p className="text-center text-sm text-slate-400 py-8">Đang tải...</p>}
+          {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (
             <div>
-              <p className="text-[11px] font-[700] text-slate-400 uppercase tracking-wider mb-2">Chưa đọc</p>
+              <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Chưa đọc</p>
               <div className="space-y-2">
                 {unread.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} mobile />)}
               </div>
@@ -235,7 +235,7 @@ export function Notifications() {
 
           {!loading && read.length > 0 && (
             <div>
-              <p className="text-[11px] font-[700] text-slate-400 uppercase tracking-wider mb-2">Đã đọc</p>
+              <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Đã đọc</p>
               <div className="space-y-2">
                 {read.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} mobile />)}
               </div>
@@ -243,7 +243,7 @@ export function Notifications() {
           )}
 
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-12 text-slate-400 text-[14px]">
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">
               <Bell size={32} className="mx-auto mb-3 text-slate-200" />
               Không có thông báo trong mục này
             </div>
@@ -254,7 +254,7 @@ export function Notifications() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
@@ -269,11 +269,11 @@ export function Notifications() {
 
       <div className="p-6 max-w-[800px] pf-center-x space-y-5">
         <TabBar tab={tab} onChange={setTab} />
-        {loading && <p className="text-center text-sm text-slate-400 py-8">Đang tải...</p>}
+        {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
         {!loading && unread.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Chưa đọc</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Chưa đọc</p>
             <div className="space-y-2">
               {unread.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} />)}
             </div>
@@ -282,7 +282,7 @@ export function Notifications() {
 
         {!loading && read.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Đã đọc</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Đã đọc</p>
             <div className="space-y-2">
               {read.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} />)}
             </div>
@@ -292,7 +292,7 @@ export function Notifications() {
         {!loading && filtered.length === 0 && (
           <div className="py-16 text-center">
             <Bell size={36} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Không có thông báo trong mục này</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Không có thông báo trong mục này</p>
           </div>
         )}
       </div>

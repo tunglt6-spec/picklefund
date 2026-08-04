@@ -131,13 +131,13 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(`/minigames/${minigameId}`)} className="text-slate-500">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${minigameId}`)} className="[color:var(--pf-color-muted)]">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
-            <p className="text-[11px] text-slate-400 truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
+            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
           {myRounds.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
@@ -153,8 +153,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
         {myRounds.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-            <p className="text-slate-500 font-medium text-[14px]">Chưa có lịch thi đấu</p>
-            <p className="text-slate-400 text-[12px] mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
+            <p className="[color:var(--pf-color-muted)] font-medium text-[14px]">Chưa có lịch thi đấu</p>
+            <p className="[color:var(--pf-color-muted)] text-[12px] mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
             <button onClick={() => navigate(`/minigames/${minigameId}`)}
               className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
               style={{ background: 'var(--pf-primary)' }}>
@@ -163,12 +163,12 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           </div>
         ) : (
           <>
-            <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+            <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
               {tabs.map(t => (
                 <button key={t.id} onClick={() => setFilter(t.id)}
                   className={cn(
                     'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
-                    filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
+                    filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
                   )}
                   style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
                   {t.label}
@@ -178,36 +178,36 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
             <div id={MS_DOUBLES_ID} className="px-4 py-4 space-y-3">
               {filtered.length === 0 ? (
-                <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
+                <p className="text-center [color:var(--pf-color-muted)] text-[13px] py-8">Không có trận nào</p>
               ) : filtered.map((m, idx) => {
                 const rnd = myRounds.find(r => r.id === m.roundId)
                 const team1Won = m.winningTeam === 1
                 const team2Won = m.winningTeam === 2
                 return (
-                  <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] text-slate-400">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
+                      <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
                       <span className={cn('text-[11px] font-medium',
                         m.status === 'COMPLETED' ? 'text-green-600' :
-                        m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                        m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
                       )}>
                         {m.status === 'COMPLETED' ? '✅ Hoàn thành' : m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? 'bg-green-50' : 'bg-slate-50')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? 'text-green-700' : 'text-slate-800')}>
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
                           {m.team1.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
                       <div className="shrink-0 text-center">
                         {m.status === 'COMPLETED'
-                          ? <p className="text-[16px] font-black text-slate-900 font-mono">{m.team1Score}–{m.team2Score}</p>
-                          : <p className="text-[13px] font-bold text-slate-300">vs</p>}
+                          ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.team1Score}–{m.team2Score}</p>
+                          : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                       </div>
-                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? 'bg-green-50' : 'bg-slate-50')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? 'text-green-700' : 'text-slate-800')}>
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
                           {m.team2.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
@@ -238,9 +238,9 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
         {deleteTarget && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
-            <div className="bg-white rounded-t-[20px] p-6 w-full">
-              <p className="font-semibold text-slate-800 mb-1">Xóa trận đấu?</p>
-              <p className="text-[12px] text-slate-500 mb-3">
+            <div className="[background:var(--pf-surface)] rounded-t-[20px] p-6 w-full">
+              <p className="font-semibold [color:var(--pf-text)] mb-1">Xóa trận đấu?</p>
+              <p className="text-[12px] [color:var(--pf-color-muted)] mb-3">
                 {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
               </p>
               {deleteTarget.status === 'COMPLETED' && (
@@ -249,7 +249,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 </p>
               )}
               <div className="flex gap-2">
-                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-slate-600 bg-slate-100">Hủy</button>
+                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                 <button onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
                   className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-600">Xóa</button>
               </div>
@@ -261,7 +261,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title={`Lịch Thi Đấu – ${minigameName}`}
         subtitle={`${myMatches.length} trận · ${myRounds.length} vòng`}
@@ -278,26 +278,26 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
       />
 
       <div className="p-6">
-        <button onClick={() => navigate(`/minigames/${minigameId}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors">
+        <button onClick={() => navigate(`/minigames/${minigameId}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors">
           <ArrowLeft size={14} /> {minigameName}
         </button>
 
         {myRounds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-slate-100 shadow-sm">
-            <p className="text-slate-500 font-medium">Chưa có lịch thi đấu</p>
-            <p className="text-slate-400 text-sm mt-1 mb-4">Vào trang tổng quan và bấm "Rút Thăm Vòng Mới" để tạo trận đấu</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm">
+            <p className="[color:var(--pf-color-muted)] font-medium">Chưa có lịch thi đấu</p>
+            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4">Vào trang tổng quan và bấm "Rút Thăm Vòng Mới" để tạo trận đấu</p>
             <Button onClick={() => navigate(`/minigames/${minigameId}`)}>Đi Tới Rút Thăm Vòng Mới</Button>
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1 mb-4 bg-white rounded-xl border border-slate-100 shadow-sm p-1 overflow-x-auto">
+            <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1 overflow-x-auto">
               {tabs.map(t => (
                 <button
                   key={t.id}
                   onClick={() => setFilter(t.id)}
                   className={cn(
                     'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                    filter === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    filter === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
                   )}
                 >
                   {t.label}
@@ -305,23 +305,23 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               ))}
             </div>
 
-            <div id={MS_DOUBLES_ID} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Vòng</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Team 1</th>
-                    <th className="text-center px-2 py-3 text-xs font-semibold text-slate-500 uppercase">vs</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Team 2</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Tỷ Số</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Trạng Thái</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Hành Động</th>
+                  <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 1</th>
+                    <th className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 2</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtered.length === 0 && (
-                    <tr><td colSpan={8} className="text-center py-10 text-slate-400 text-sm">Không có trận nào</td></tr>
+                    <tr><td colSpan={8} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Không có trận nào</td></tr>
                   )}
                   {filtered.map((m, idx) => {
                     const rnd = myRounds.find(r => r.id === m.roundId)
@@ -329,22 +329,22 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     const team2Won = m.winningTeam === 2
                     return (
                       <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-2.5 text-xs text-slate-400">{idx + 1}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{rnd?.roundNumber ?? '–'}</td>
-                        <td className={cn('px-4 py-2.5 text-sm font-medium', team1Won ? 'text-green-700' : 'text-slate-800')}>
+                        <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
+                        <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{rnd?.roundNumber ?? '–'}</td>
+                        <td className={cn('px-4 py-2.5 text-sm font-medium', team1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
                           {m.team1.map(p => p.memberName).join(' & ')}
                         </td>
-                        <td className="px-2 py-2.5 text-center text-xs text-slate-400 font-bold">vs</td>
-                        <td className={cn('px-4 py-2.5 text-sm font-medium', team2Won ? 'text-green-700' : 'text-slate-800')}>
+                        <td className="px-2 py-2.5 text-center text-xs [color:var(--pf-color-muted)] font-bold">vs</td>
+                        <td className={cn('px-4 py-2.5 text-sm font-medium', team2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
                           {m.team2.map(p => p.memberName).join(' & ')}
                         </td>
-                        <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold text-slate-900">
+                        <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold [color:var(--pf-text)]">
                           {m.status === 'COMPLETED' ? `${m.team1Score} – ${m.team2Score}` : '–'}
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={cn('text-xs font-medium',
                             m.status === 'COMPLETED' ? 'text-green-600' :
-                            m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                            m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
                           )}>
                             {m.status === 'COMPLETED' ? '✅ Hoàn thành' :
                              m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}
@@ -359,7 +359,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                             ) : (
                               <button
                                 onClick={() => setScoreMatch(m)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                                className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
                                 title="Sửa kết quả"
                               >
                                 <Pencil size={14} />
@@ -367,7 +367,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                             )}
                             <button
                               onClick={() => setDeleteTarget(m)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:text-red-600 hover:bg-red-50 transition-colors"
                               title="Xóa trận đấu"
                             >
                               <Trash2 size={14} />
@@ -394,14 +394,14 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
       {/* Delete confirm modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-red-600" />
               </div>
               <div>
-                <p className="font-semibold text-slate-800">Xóa trận đấu?</p>
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="font-semibold [color:var(--pf-text)]">Xóa trận đấu?</p>
+                <p className="text-sm [color:var(--pf-color-muted)] mt-0.5">
                   {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
                 </p>
               </div>
@@ -414,7 +414,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors"
               >
                 Hủy
               </button>
@@ -516,7 +516,7 @@ export function MatchSchedule() {
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-slate-500">Không tìm thấy minigame</p>
+      <p className="[color:var(--pf-color-muted)]">Không tìm thấy minigame</p>
     </div>
   )
 
@@ -553,13 +553,13 @@ export function MatchSchedule() {
     })
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-slate-800 truncate">Lịch Thi Đấu</p>
-            <p className="text-[11px] text-slate-400 truncate">{mg.name} · {myMatches.length} trận</p>
+            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{mg.name} · {myMatches.length} trận</p>
           </div>
           {myMatches.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
@@ -573,12 +573,12 @@ export function MatchSchedule() {
           </button>
         </div>
 
-        <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+        <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
           {mTabs.map(t => (
             <button key={t.id} onClick={() => setFilter(t.id)}
               className={cn(
                 'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
-                filter === t.id ? 'text-white' : 'text-slate-500 bg-slate-50'
+                filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
               )}
               style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
               {t.label}
@@ -588,34 +588,34 @@ export function MatchSchedule() {
 
         <div id={MS_GROUP_ID} className="px-4 py-4 space-y-3">
           {mFiltered.length === 0 ? (
-            <p className="text-center text-slate-400 text-[13px] py-8">Không có trận nào</p>
+            <p className="text-center [color:var(--pf-color-muted)] text-[13px] py-8">Không có trận nào</p>
           ) : mFiltered.map((m, idx) => {
             const grp = myGroups.find(g => g.id === m.groupId)
             const p1Won = m.winnerId === m.player1Id
             const p2Won = m.winnerId === m.player2Id
             return (
-              <div key={m.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+              <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] text-slate-400">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
+                  <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
                   <span className={cn('text-[11px] font-medium',
                     m.status === 'COMPLETED' ? 'text-green-600' :
-                    m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                    m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
                   )}>
                     {m.status === 'COMPLETED' ? '✅ Xong' : m.status === 'PLAYING' ? '🔴 Đấu' : '⏳ Chờ'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? 'bg-green-50' : 'bg-slate-50')}>
-                    <p className={cn('text-[12px] font-semibold', p1Won ? 'text-green-700' : 'text-slate-800')}>{m.player1Name}</p>
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
+                    <p className={cn('text-[12px] font-semibold', p1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>{m.player1Name}</p>
                   </div>
                   <div className="shrink-0">
                     {m.status === 'COMPLETED'
-                      ? <p className="text-[16px] font-black text-slate-900 font-mono">{m.player1Score}–{m.player2Score}</p>
-                      : <p className="text-[13px] font-bold text-slate-300">vs</p>}
+                      ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.player1Score}–{m.player2Score}</p>
+                      : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                   </div>
-                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? 'bg-green-50' : 'bg-slate-50')}>
-                    <p className={cn('text-[12px] font-semibold', p2Won ? 'text-green-700' : 'text-slate-800')}>{m.player2Name}</p>
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
+                    <p className={cn('text-[12px] font-semibold', p2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>{m.player2Name}</p>
                   </div>
                 </div>
 
@@ -642,7 +642,7 @@ export function MatchSchedule() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title={`Lịch Thi Đấu – ${mg.name}`}
         subtitle={`${myMatches.length} trận`}
@@ -659,19 +659,19 @@ export function MatchSchedule() {
       />
 
       <div className="p-6">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors">
+        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors">
           <ArrowLeft size={14} /> {mg.name}
         </button>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 mb-4 bg-white rounded-xl border border-slate-100 shadow-sm p-1 overflow-x-auto">
+        <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1 overflow-x-auto">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setFilter(t.id)}
               className={cn(
                 'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                filter === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                filter === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
               )}
             >
               {t.label}
@@ -679,46 +679,46 @@ export function MatchSchedule() {
           ))}
         </div>
 
-        <div id={MS_GROUP_ID} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Bảng</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Vòng</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Người Chơi 1</th>
-                <th className="text-center px-2 py-3 text-xs font-semibold text-slate-500 uppercase">vs</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Người Chơi 2</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Tỷ Số</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Trạng Thái</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Hành Động</th>
+              <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 1</th>
+                <th className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 2</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.length === 0 && (
-                <tr><td colSpan={9} className="text-center py-10 text-slate-400 text-sm">Không có trận nào</td></tr>
+                <tr><td colSpan={9} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Không có trận nào</td></tr>
               )}
               {filtered.map((m, idx) => {
                 const grp = myGroups.find(g => g.id === m.groupId)
                 return (
                   <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{idx + 1}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{grp?.groupName ?? '–'}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{m.round ?? 1}</td>
-                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player1Id ? 'text-green-700' : 'text-slate-800')}>
+                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
+                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{grp?.groupName ?? '–'}</td>
+                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{m.round ?? 1}</td>
+                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player1Id ? 'text-green-700' : '[color:var(--pf-text)]')}>
                       {m.player1Name}
                     </td>
-                    <td className="px-2 py-2.5 text-center text-xs text-slate-400 font-bold">vs</td>
-                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player2Id ? 'text-green-700' : 'text-slate-800')}>
+                    <td className="px-2 py-2.5 text-center text-xs [color:var(--pf-color-muted)] font-bold">vs</td>
+                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player2Id ? 'text-green-700' : '[color:var(--pf-text)]')}>
                       {m.player2Name}
                     </td>
-                    <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold text-slate-900">
+                    <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold [color:var(--pf-text)]">
                       {m.status === 'COMPLETED' ? `${m.player1Score} – ${m.player2Score}` : '–'}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <span className={cn('text-xs font-medium',
                         m.status === 'COMPLETED' ? 'text-green-600' :
-                        m.status === 'PLAYING' ? 'text-red-500' : 'text-slate-400'
+                        m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
                       )}>
                         {m.status === 'COMPLETED' ? '✅ Hoàn thành' :
                          m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}

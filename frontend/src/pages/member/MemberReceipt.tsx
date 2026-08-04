@@ -15,8 +15,8 @@ import { exportReceiptPDF } from '../../lib/export'
 function LiveRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className={bold ? 'font-bold text-slate-800' : 'font-semibold text-slate-700'}>{value}</span>
+      <span className="[color:var(--pf-color-muted)]">{label}</span>
+      <span className={bold ? 'font-bold [color:var(--pf-text)]' : 'font-semibold [color:var(--pf-text)]'}>{value}</span>
     </div>
   )
 }
@@ -43,7 +43,7 @@ function n(v: string | number | null | undefined) {
 function BalanceBadge({ val }: { val: number }) {
   if (val > 0) return <span className="text-xs font-semibold text-emerald-600">+{formatVND(val)}</span>
   if (val < 0) return <span className="text-xs font-semibold text-red-500">{formatVND(val)}</span>
-  return <span className="text-xs font-semibold text-slate-500">0 ₫</span>
+  return <span className="text-xs font-semibold [color:var(--pf-color-muted)]">0 ₫</span>
 }
 
 interface BankInfo { bank_code: string; bank_account_number: string; bank_account_name: string }
@@ -183,10 +183,10 @@ export function MemberReceipt() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] text-slate-900">Phiếu Thu Cá Nhân</div>
-            <div className="text-[12px] text-slate-400">{memberName}</div>
+            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
+            <div className="text-[12px] [color:var(--pf-color-muted)]">{memberName}</div>
           </div>
           <button onClick={handleExport} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
             <Download size={13} />Xuất PDF
@@ -200,17 +200,17 @@ export function MemberReceipt() {
               { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
               { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
             ].map(k => (
-              <div key={k.label} className="bg-white rounded-[14px] border border-slate-100 p-3 text-center shadow-sm">
+              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
                 <div className={`text-[13px] font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">{k.label}</div>
+                <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
               </div>
             ))}
           </div>
           {/* Kỳ hiện tại — số liệu LIVE (tạm tính) */}
           {!hasReceipts && live && activePeriod && (
-            <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm p-4">
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[14px] font-[700] text-slate-900">Kỳ hiện tại</span>
+                <span className="text-[14px] font-[700] [color:var(--pf-text)]">Kỳ hiện tại</span>
                 <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Tạm tính</span>
               </div>
               <div className="space-y-1">
@@ -219,8 +219,8 @@ export function MemberReceipt() {
                 <LiveRow label="Chi phí SH" value={formatVND(n(live.livingFee))} />
                 <LiveRow label="Tổng chi phí" value={formatVND(n(live.totalCost))} bold />
                 <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
-                <div className="flex justify-between pt-1 border-t border-slate-100">
-                  <span className="text-sm text-slate-500">Số dư</span>
+                <div className="flex justify-between pt-1 border-t border-[color:var(--pf-border)]">
+                  <span className="text-sm [color:var(--pf-color-muted)]">Số dư</span>
                   <BalanceBadge val={n(live.balance)} />
                 </div>
               </div>
@@ -229,7 +229,7 @@ export function MemberReceipt() {
 
           {/* Receipt cards */}
           {displayReceipts.length === 0 ? (
-            <div className="text-center py-10 text-slate-400 text-[13px]">Chưa có phiếu thu chính thức — số liệu trên là tạm tính; phiếu thu tạo sau khi kỳ kết thúc.</div>
+            <div className="text-center py-10 [color:var(--pf-color-muted)] text-[13px]">Chưa có phiếu thu chính thức — số liệu trên là tạm tính; phiếu thu tạo sau khi kỳ kết thúc.</div>
           ) : (
             <div className="space-y-2">
               {displayReceipts.map(r => {
@@ -240,23 +240,23 @@ export function MemberReceipt() {
                 const amountPaid = n(r.amountPaid)
                 const totalCostR = n(r.totalCost)
                 return (
-                  <div key={r.id} className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+                  <div key={r.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
                     <button onClick={() => setExpanded(isExp ? null : r.id)}
-                      className="w-full flex items-center justify-between px-4 py-3 active:bg-slate-50">
+                      className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
-                        <div className="text-[14px] font-[700] text-slate-900">Kỳ {period?.name ?? r.fundPeriodId}</div>
-                        <div className="text-[11px] text-slate-400">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                        <div className="text-[14px] font-[700] [color:var(--pf-text)]">Kỳ {period?.name ?? r.fundPeriodId}</div>
+                        <div className="text-[11px] [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
                       </div>
                       <div className="flex items-center gap-2">
                         {needToPay > 0 && <Badge variant="orange">Nợ {formatVND(needToPay)}</Badge>}
                         <span className={`text-[14px] font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {bal >= 0 ? '+' : ''}{formatVND(bal)}
                         </span>
-                        {isExp ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+                        {isExp ? <ChevronUp size={14} className="[color:var(--pf-color-muted)]" /> : <ChevronDown size={14} className="[color:var(--pf-color-muted)]" />}
                       </div>
                     </button>
                     {isExp && (
-                      <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-1.5">
+                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 bg-slate-50/50 space-y-1.5">
                         {[
                           ['Tiền sân', n(r.courtCost)],
                           ['Chi phí SH', n(r.livingCost)],
@@ -264,8 +264,8 @@ export function MemberReceipt() {
                           ['Đã đóng', amountPaid],
                         ].map(([lbl, val]) => (
                           <div key={lbl as string} className="flex justify-between text-[12px]">
-                            <span className="text-slate-500">{lbl}</span>
-                            <span className="font-[600] text-slate-700">{formatVND(val as number)}</span>
+                            <span className="[color:var(--pf-color-muted)]">{lbl}</span>
+                            <span className="font-[600] [color:var(--pf-text)]">{formatVND(val as number)}</span>
                           </div>
                         ))}
                         {needToPay > 0 && (() => {
@@ -278,12 +278,12 @@ export function MemberReceipt() {
                               {qr && (
                                 <>
                                   <div className="flex gap-3 items-center">
-                                    <img src={qr} alt="QR" className="w-24 h-24 rounded-lg bg-white border border-amber-200" />
-                                    <div className="text-[11px] text-slate-600 space-y-0.5">
+                                    <img src={qr} alt="QR" className="w-24 h-24 rounded-lg [background:var(--pf-surface)] border border-amber-200" />
+                                    <div className="text-[11px] [color:var(--pf-color-muted)] space-y-0.5">
                                       <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
                                       <p>{bankInfo!.bank_account_name}</p>
                                       <p className="text-amber-700 font-bold">{formatVND(needToPay)}</p>
-                                      <p className="text-slate-400">Quét QR để thanh toán</p>
+                                      <p className="[color:var(--pf-color-muted)]">Quét QR để thanh toán</p>
                                     </div>
                                   </div>
                                   <div className="flex gap-2">
@@ -292,7 +292,7 @@ export function MemberReceipt() {
                                       <Download size={13} />Tải QR
                                     </button>
                                     <button onClick={() => shareQr(qr, needToPay, period?.name ?? '')}
-                                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 bg-white active:bg-amber-50">
+                                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 [background:var(--pf-surface)] active:bg-amber-50">
                                       <Share2 size={13} />Chia sẻ
                                     </button>
                                   </div>
@@ -307,7 +307,7 @@ export function MemberReceipt() {
                             <span>Đóng dư <strong>{formatVND(bal)}</strong> — khấu trừ kỳ sau</span>
                           </div>
                         )}
-                        <p className="text-[11px] text-slate-400 text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
+                        <p className="text-[11px] [color:var(--pf-color-muted)] text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
                       </div>
                     )}
                   </div>
@@ -321,7 +321,7 @@ export function MemberReceipt() {
   }
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center bg-slate-50">
+    <div className="flex-1 flex items-center justify-center [background:var(--pf-surface-muted)]">
       <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )
@@ -350,8 +350,8 @@ export function MemberReceipt() {
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
               <div className="shrink-0">
                 {qr
-                  ? <img src={qr} alt="QR thanh toán" className="w-32 h-32 rounded-xl border-2 border-amber-300 bg-white shadow-sm" />
-                  : <div className="w-32 h-32 rounded-xl border-2 border-amber-200 bg-white flex items-center justify-center"><QrCode size={40} className="text-amber-300" /></div>
+                  ? <img src={qr} alt="QR thanh toán" className="w-32 h-32 rounded-xl border-2 border-amber-300 [background:var(--pf-surface)] shadow-sm" />
+                  : <div className="w-32 h-32 rounded-xl border-2 border-amber-200 [background:var(--pf-surface)] flex items-center justify-center"><QrCode size={40} className="text-amber-300" /></div>
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -360,12 +360,12 @@ export function MemberReceipt() {
                   <span className="text-sm font-bold text-amber-800">Còn nợ quỹ kỳ {period?.name}</span>
                 </div>
                 <p className="text-3xl font-extrabold text-amber-700 mb-2">{formatVND(debt)}</p>
-                <div className="text-xs text-slate-600 space-y-0.5">
-                  <p><span className="text-slate-400">Ngân hàng:</span> <strong>{bankInfo.bank_code}</strong></p>
-                  <p><span className="text-slate-400">Số TK:</span> <span className="font-mono font-semibold">{bankInfo.bank_account_number}</span></p>
-                  <p><span className="text-slate-400">Tên TK:</span> {bankInfo.bank_account_name}</p>
+                <div className="text-xs [color:var(--pf-color-muted)] space-y-0.5">
+                  <p><span className="[color:var(--pf-color-muted)]">Ngân hàng:</span> <strong>{bankInfo.bank_code}</strong></p>
+                  <p><span className="[color:var(--pf-color-muted)]">Số TK:</span> <span className="font-mono font-semibold">{bankInfo.bank_account_number}</span></p>
+                  <p><span className="[color:var(--pf-color-muted)]">Tên TK:</span> {bankInfo.bank_account_name}</p>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Mở app ngân hàng → Quét mã QR → Kiểm tra số tiền → Chuyển khoản</p>
+                <p className="text-xs [color:var(--pf-color-muted)] mt-2">Mở app ngân hàng → Quét mã QR → Kiểm tra số tiền → Chuyển khoản</p>
                 {qr && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     <button onClick={() => downloadQr(qr)}
@@ -373,7 +373,7 @@ export function MemberReceipt() {
                       <Download size={14} />Tải mã QR
                     </button>
                     <button onClick={() => shareQr(qr, debt, period?.name ?? '')}
-                      className="inline-flex items-center gap-1.5 rounded-lg px-3 min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 bg-white hover:bg-amber-50 transition-colors">
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 min-h-11 text-xs font-semibold border border-amber-300 text-amber-700 [background:var(--pf-surface)] hover:bg-amber-50 transition-colors">
                       <Share2 size={14} />Chia sẻ
                     </button>
                   </div>
@@ -385,30 +385,30 @@ export function MemberReceipt() {
 
         {/* Summary KPIs */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <DollarSign size={14} className="[color:var(--pf-primary)]" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tổng đã đóng</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Tổng đã đóng</p>
             </div>
             <p className="text-xl font-bold [color:var(--pf-primary)]">{formatVND(totalPaid)}</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <TrendingUp size={14} className="text-amber-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chi phí phân bổ</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chi phí phân bổ</p>
             </div>
             <p className="text-xl font-bold text-amber-600">{formatVND(totalCost)}</p>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <Receipt size={14} className="text-emerald-600" />
               </div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Số dư</p>
+              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Số dư</p>
             </div>
             <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
               {netBalance >= 0 ? '+' : ''}{formatVND(netBalance)}
@@ -418,9 +418,9 @@ export function MemberReceipt() {
 
         {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
         {!hasReceipts && live && activePeriod && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-5">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-slate-800">Kỳ hiện tại · {activePeriod.name}</h3>
+              <h3 className="text-sm font-bold [color:var(--pf-text)]">Kỳ hiện tại · {activePeriod.name}</h3>
               <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
             </div>
             <div className="space-y-1.5">
@@ -429,8 +429,8 @@ export function MemberReceipt() {
               <LiveRow label="Chi phí sinh hoạt" value={formatVND(n(live.livingFee))} />
               <LiveRow label="Tổng chi phí" value={formatVND(n(live.totalCost))} bold />
               <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
-              <div className="flex justify-between pt-1.5 border-t border-slate-100">
-                <span className="text-sm text-slate-500">Số dư</span>
+              <div className="flex justify-between pt-1.5 border-t border-[color:var(--pf-border)]">
+                <span className="text-sm [color:var(--pf-color-muted)]">Số dư</span>
                 <BalanceBadge val={n(live.balance)} />
               </div>
             </div>
@@ -439,10 +439,10 @@ export function MemberReceipt() {
 
         {/* Receipt cards */}
         {displayReceipts.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
             <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-500 font-medium">Chưa có phiếu thu chính thức</p>
-            <p className="text-xs text-slate-400 mt-1">Số liệu bên trên là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
+            <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có phiếu thu chính thức</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên trên là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -455,10 +455,10 @@ export function MemberReceipt() {
               const totalCostR = n(r.totalCost)
 
               return (
-                <div key={r.id} className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-hidden">
+                <div key={r.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
                   {/* Header row */}
                   <button
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+                    className="w-full flex items-center justify-between px-5 py-4 hover:[background:var(--pf-surface-muted)] transition-colors"
                     onClick={() => setExpanded(isExpanded ? null : r.id)}
                   >
                     <div className="flex items-center gap-3">
@@ -467,7 +467,7 @@ export function MemberReceipt() {
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-slate-900">
+                          <p className="text-sm font-semibold [color:var(--pf-text)]">
                             Kỳ {period?.name ?? r.fundPeriodId}
                           </p>
                           {r.fundPeriodId === activePeriod?.id && (
@@ -476,45 +476,45 @@ export function MemberReceipt() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs [color:var(--pf-color-muted)]">
                           {period ? `${formatDate(period.startDate)} – ${formatDate(period.endDate)}` : 'N/A'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-xs text-slate-400">Số buổi tham gia</p>
-                        <p className="text-sm font-semibold text-slate-700">{r.attendedSessions}/{r.totalSessions}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">Số buổi tham gia</p>
+                        <p className="text-sm font-semibold [color:var(--pf-text)]">{r.attendedSessions}/{r.totalSessions}</p>
                       </div>
                       <div className="text-right min-w-[90px]">
-                        <p className="text-xs text-slate-400">Số dư</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">Số dư</p>
                         <BalanceBadge val={bal} />
                       </div>
                       {needToPay > 0 && (
                         <Badge variant="orange">Còn nợ {formatVND(needToPay)}</Badge>
                       )}
-                      {isExpanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                      {isExpanded ? <ChevronUp size={16} className="[color:var(--pf-color-muted)]" /> : <ChevronDown size={16} className="[color:var(--pf-color-muted)]" />}
                     </div>
                   </button>
 
                   {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50/50">
+                    <div className="border-t border-[color:var(--pf-border)] px-5 py-4 space-y-3 bg-slate-50/50">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                        <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500">Tiền sân (phân bổ)</span>
-                          <span className="font-medium text-slate-700">{formatVND(n(r.courtCost))}</span>
+                        <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
+                          <span className="[color:var(--pf-color-muted)]">Tiền sân (phân bổ)</span>
+                          <span className="font-medium [color:var(--pf-text)]">{formatVND(n(r.courtCost))}</span>
                         </div>
-                        <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500">Chi phí sinh hoạt</span>
-                          <span className="font-medium text-slate-700">{formatVND(n(r.livingCost))}</span>
+                        <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
+                          <span className="[color:var(--pf-color-muted)]">Chi phí sinh hoạt</span>
+                          <span className="font-medium [color:var(--pf-text)]">{formatVND(n(r.livingCost))}</span>
                         </div>
-                        <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500 font-semibold">Tổng chi phí</span>
-                          <span className="font-bold text-slate-900">{formatVND(totalCostR)}</span>
+                        <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
+                          <span className="[color:var(--pf-color-muted)] font-semibold">Tổng chi phí</span>
+                          <span className="font-bold [color:var(--pf-text)]">{formatVND(totalCostR)}</span>
                         </div>
-                        <div className="flex justify-between py-1.5 border-b border-slate-100">
-                          <span className="text-slate-500 font-semibold">Đã đóng</span>
+                        <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
+                          <span className="[color:var(--pf-color-muted)] font-semibold">Đã đóng</span>
                           <span className="font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
                         </div>
                       </div>
@@ -529,17 +529,17 @@ export function MemberReceipt() {
                             </div>
                             {qr ? (
                               <div className="flex gap-5 items-start">
-                                <img src={qr} alt="QR thanh toán" className="w-36 h-36 rounded-lg border border-amber-200 bg-white" />
-                                <div className="text-xs text-slate-600 space-y-1">
-                                  <p><span className="text-slate-400">Ngân hàng:</span> {bankInfo!.bank_code}</p>
-                                  <p><span className="text-slate-400">Số TK:</span> <span className="font-mono font-semibold">{bankInfo!.bank_account_number}</span></p>
-                                  <p><span className="text-slate-400">Tên TK:</span> {bankInfo!.bank_account_name}</p>
-                                  <p><span className="text-slate-400">Số tiền:</span> <span className="font-bold text-amber-700">{formatVND(needToPay)}</span></p>
-                                  <p className="text-slate-400 pt-1">Mở app ngân hàng → Quét QR → Kiểm tra số tiền → Chuyển</p>
+                                <img src={qr} alt="QR thanh toán" className="w-36 h-36 rounded-lg border border-amber-200 [background:var(--pf-surface)]" />
+                                <div className="text-xs [color:var(--pf-color-muted)] space-y-1">
+                                  <p><span className="[color:var(--pf-color-muted)]">Ngân hàng:</span> {bankInfo!.bank_code}</p>
+                                  <p><span className="[color:var(--pf-color-muted)]">Số TK:</span> <span className="font-mono font-semibold">{bankInfo!.bank_account_number}</span></p>
+                                  <p><span className="[color:var(--pf-color-muted)]">Tên TK:</span> {bankInfo!.bank_account_name}</p>
+                                  <p><span className="[color:var(--pf-color-muted)]">Số tiền:</span> <span className="font-bold text-amber-700">{formatVND(needToPay)}</span></p>
+                                  <p className="[color:var(--pf-color-muted)] pt-1">Mở app ngân hàng → Quét QR → Kiểm tra số tiền → Chuyển</p>
                                 </div>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2 text-slate-500 text-xs">
+                              <div className="flex items-center gap-2 [color:var(--pf-color-muted)] text-xs">
                                 <QrCode size={14} />
                                 <span>Liên hệ thủ quỹ để lấy thông tin thanh toán.</span>
                               </div>
@@ -554,7 +554,7 @@ export function MemberReceipt() {
                         </div>
                       )}
 
-                      <p className="text-[11px] text-slate-400 text-right">
+                      <p className="text-[11px] [color:var(--pf-color-muted)] text-right">
                         Cập nhật lần cuối: {formatDate(r.snapshotAt)}
                       </p>
                     </div>

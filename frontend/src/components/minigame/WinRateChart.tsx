@@ -15,10 +15,10 @@ export function WinRateChart({ standings }: Props) {
     .map(s => ({ name: s.memberName.split(' ').pop()!, winRate: s.winRate }))
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
-      <p className="text-sm font-semibold text-slate-800 mb-3">Top Win Rate</p>
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-4">
+      <p className="text-sm font-semibold [color:var(--pf-text)] mb-3">Top Win Rate</p>
       {data.length === 0 ? (
-        <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+        <p className="text-xs [color:var(--pf-color-muted)]">Chưa có dữ liệu</p>
       ) : (
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">

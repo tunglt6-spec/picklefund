@@ -29,7 +29,7 @@ const FORMAT_LABEL: Record<string, string> = {
 
 const RANK_CLASS: Record<number, string> = {
   1: 'bg-yellow-50 border-l-2 border-yellow-400',
-  2: 'bg-slate-50 border-l-2 border-slate-400',
+  2: '[background:var(--pf-surface-muted)] border-l-2 border-slate-400',
   3: 'bg-amber-50 border-l-2 border-amber-400',
 }
 
@@ -60,7 +60,7 @@ export function StandingsPage() {
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-slate-500">Không tìm thấy minigame</p>
+      <p className="[color:var(--pf-color-muted)]">Không tìm thấy minigame</p>
     </div>
   )
 
@@ -131,13 +131,13 @@ export function StandingsPage() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-slate-800 truncate">Bảng Xếp Hạng</p>
-            <p className="text-[11px] text-slate-400 truncate">{mg.name} · {standings.length} thành viên</p>
+            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Bảng Xếp Hạng</p>
+            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
@@ -155,12 +155,12 @@ export function StandingsPage() {
         </div>
 
         {/* Scrollable group tabs */}
-        <div className="flex gap-1.5 bg-white border-b border-slate-100 px-3 py-2 overflow-x-auto">
+        <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={cn(
                 'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition-colors',
-                activeTab === t.id ? 'text-white shadow-sm' : 'text-slate-500 bg-slate-50'
+                activeTab === t.id ? 'text-white shadow-sm' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
               )}
               style={activeTab === t.id ? { background: 'var(--pf-primary)' } : {}}>
               {t.label}
@@ -171,8 +171,8 @@ export function StandingsPage() {
         <div id={EXPORT_ID} className="px-4 py-4 space-y-3">
           {/* Bar chart */}
           {sorted.length > 0 && (
-            <div className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
-              <p className="text-[13px] font-semibold text-slate-800 mb-3">Điểm Xếp Hạng</p>
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <p className="text-[13px] font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
               <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} barSize={22}>
@@ -191,42 +191,42 @@ export function StandingsPage() {
           {/* Rank cards */}
           {sorted.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-center">
-              <p className="text-slate-400 text-[13px]">Chưa có dữ liệu xếp hạng</p>
+              <p className="[color:var(--pf-color-muted)] text-[13px]">Chưa có dữ liệu xếp hạng</p>
             </div>
           ) : sorted.map(s => (
             <div key={`${s.memberId}-${s.groupId}`}
-              className={cn('bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm', RANK_CLASS[s.overallRank] ?? '')}
+              className={cn('[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm', RANK_CLASS[s.overallRank] ?? '')}
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-[13px] font-bold',
                   s.overallRank === 1 ? 'bg-yellow-400 text-white' :
                   s.overallRank === 2 ? 'bg-slate-400 text-white' :
                   s.overallRank === 3 ? 'bg-amber-500 text-white' :
-                  'bg-slate-100 text-slate-500'
+                  '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
                 )}>
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
-                  <p className="text-[11px] text-slate-400">{s.groupName}</p>
+                  <p className="font-bold [color:var(--pf-text)] text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
+                  <p className="text-[11px] [color:var(--pf-color-muted)]">{s.groupName}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[20px] font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
-                  <p className="text-[10px] text-slate-400">điểm</p>
+                  <p className="text-[10px] [color:var(--pf-color-muted)]">điểm</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-5 gap-1.5">
                 {[
-                  { label: 'Trận', value: s.played, cls: 'text-slate-900' },
+                  { label: 'Trận', value: s.played, cls: '[color:var(--pf-text)]' },
                   { label: 'Thắng', value: s.won, cls: 'text-green-700' },
                   { label: 'Hòa', value: s.drawn, cls: 'text-amber-600' },
                   { label: 'Thua', value: s.lost, cls: 'text-red-500' },
                   { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500' },
                 ].map(item => (
-                  <div key={item.label} className="bg-slate-50 rounded-[8px] py-1.5 text-center">
+                  <div key={item.label} className="[background:var(--pf-surface-muted)] rounded-[8px] py-1.5 text-center">
                     <p className={cn('text-[13px] font-bold', item.cls)}>{item.value}</p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">{item.label}</p>
+                    <p className="text-[9px] [color:var(--pf-color-muted)] mt-0.5">{item.label}</p>
                   </div>
                 ))}
               </div>
@@ -238,7 +238,7 @@ export function StandingsPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title={`Bảng Xếp Hạng – ${mg.name}`}
         subtitle={`${standings.length} thành viên`}
@@ -247,7 +247,7 @@ export function StandingsPage() {
             <button onClick={doExportPng} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:opacity-90">
               <ImageIcon size={14} />Ảnh
             </button>
-            <button onClick={doExportPdf} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50">
+            <button onClick={doExportPdf} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
               <FileText size={14} />PDF
             </button>
             {canShare() && (
@@ -260,19 +260,19 @@ export function StandingsPage() {
       />
 
       <div className="p-6">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors">
+        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors">
           <ArrowLeft size={14} /> {mg.name}
         </button>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-4 bg-white rounded-xl border border-slate-100 shadow-sm p-1">
+        <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                activeTab === t.id ? '[background:var(--pf-primary)] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                activeTab === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
               )}
             >
               {t.label}
@@ -283,8 +283,8 @@ export function StandingsPage() {
         <div id={EXPORT_ID} className="space-y-4">
         {/* Bar chart */}
         {sorted.length > 0 && (
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
-            <p className="text-sm font-semibold text-slate-800 mb-3">Điểm Xếp Hạng</p>
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-4">
+            <p className="text-sm font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} barSize={28}>
@@ -301,26 +301,26 @@ export function StandingsPage() {
         )}
 
         {/* Standings table */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Thành Viên</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Bảng</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Trận</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Thắng</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Hòa</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Thua</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Điểm+</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Điểm-</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase">Hiệu Số</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase font-bold">Điểm</th>
+              <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thành Viên</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trận</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thắng</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hòa</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thua</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm+</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm-</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hiệu Số</th>
+                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase font-bold">Điểm</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="text-center py-10 text-slate-400 text-sm">Chưa có dữ liệu</td></tr>
+                <tr><td colSpan={11} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Chưa có dữ liệu</td></tr>
               )}
               {sorted.map((s) => (
                 <tr key={`${s.memberId}-${s.groupId}`} className={cn('transition-colors', RANK_CLASS[s.overallRank] ?? 'hover:bg-slate-50/50')}>
@@ -329,19 +329,19 @@ export function StandingsPage() {
                       s.overallRank === 1 ? 'bg-yellow-400 text-white' :
                       s.overallRank === 2 ? 'bg-slate-400 text-white' :
                       s.overallRank === 3 ? 'bg-amber-500 text-white' :
-                      'text-slate-500'
+                      '[color:var(--pf-color-muted)]'
                     )}>
                       {s.overallRank}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-slate-900">{s.memberName}</td>
-                  <td className="px-3 py-2.5 text-center text-xs text-slate-500">{s.groupName}</td>
-                  <td className="px-3 py-2.5 text-center text-slate-700">{s.played}</td>
+                  <td className="px-4 py-2.5 font-medium [color:var(--pf-text)]">{s.memberName}</td>
+                  <td className="px-3 py-2.5 text-center text-xs [color:var(--pf-color-muted)]">{s.groupName}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.played}</td>
                   <td className="px-3 py-2.5 text-center text-green-700 font-semibold">{s.won}</td>
                   <td className="px-3 py-2.5 text-center text-amber-600">{s.drawn}</td>
                   <td className="px-3 py-2.5 text-center text-red-500">{s.lost}</td>
-                  <td className="px-3 py-2.5 text-center text-slate-700">{s.pointsFor}</td>
-                  <td className="px-3 py-2.5 text-center text-slate-400">{s.pointsAgainst}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.pointsFor}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-color-muted)]">{s.pointsAgainst}</td>
                   <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500')}>
                     {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                   </td>

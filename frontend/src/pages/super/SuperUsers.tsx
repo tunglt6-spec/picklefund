@@ -79,7 +79,7 @@ export function SuperUsers() {
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Quản lý Người Dùng"
         subtitle={`${users.length} tài khoản toàn hệ thống`}
@@ -91,12 +91,12 @@ export function SuperUsers() {
             { label: 'Super Admin', role: 'SUPER_ADMIN', color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', icon: <Shield size={14} className="[color:var(--pf-primary)]" /> },
             { label: 'Club Admin', role: 'CLUB_ADMIN', color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]', icon: <UserCheck size={14} className="[color:var(--pf-primary)]" /> },
             { label: 'Thủ Quỹ', role: 'CLUB_TREASURER', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <UserCheck size={14} className="text-emerald-500" /> },
-            { label: 'Thành Viên', role: 'MEMBER_VIEW', color: 'text-slate-600', bg: 'bg-slate-100', icon: <Users size={14} className="text-slate-500" /> },
+            { label: 'Thành Viên', role: 'MEMBER_VIEW', color: '[color:var(--pf-color-muted)]', bg: '[background:var(--pf-color-muted-soft)]', icon: <Users size={14} className="[color:var(--pf-color-muted)]" /> },
           ].map(item => (
-            <div key={item.role} className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] p-4">
+            <div key={item.role} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className={`h-7 w-7 rounded-lg ${item.bg} flex items-center justify-center`}>{item.icon}</div>
-                <p className="text-xs font-semibold text-slate-500">{item.label}</p>
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)]">{item.label}</p>
               </div>
               <p className={`text-2xl font-bold ${item.color}`}>
                 {users.filter(u => u.role === item.role).length}
@@ -107,7 +107,7 @@ export function SuperUsers() {
 
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -115,13 +115,13 @@ export function SuperUsers() {
               className="input-base pl-9"
             />
           </div>
-          <div className="flex gap-1 bg-white rounded-lg border border-slate-200 p-1">
+          <div className="flex gap-1 [background:var(--pf-surface)] rounded-lg border border-[color:var(--pf-border)] p-1">
             {roleOptions.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => setRoleFilter(opt.value)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  roleFilter === opt.value ? '[background:var(--pf-primary)] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  roleFilter === opt.value ? '[background:var(--pf-primary)] text-white shadow-sm' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                 }`}
               >
                 {opt.label}
@@ -130,7 +130,7 @@ export function SuperUsers() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-[var(--shadow-card)] overflow-x-auto">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
           <table className="table-base">
             <thead>
               <tr>
@@ -146,13 +146,13 @@ export function SuperUsers() {
             <tbody>
               {filtered.map(u => (
                 <tr key={u.id}>
-                  <td className="font-semibold text-slate-900 font-mono text-xs">{u.username}</td>
-                  <td className="text-slate-700">{u.fullName}</td>
-                  <td className="text-slate-500 text-xs">{u.email}</td>
+                  <td className="font-semibold [color:var(--pf-text)] font-mono text-xs">{u.username}</td>
+                  <td className="[color:var(--pf-text)]">{u.fullName}</td>
+                  <td className="[color:var(--pf-color-muted)] text-xs">{u.email}</td>
                   <td className="text-center">
                     <Badge variant={roleVariant[u.role]}>{roleLabel[u.role]}</Badge>
                   </td>
-                  <td className="text-slate-500 text-xs">{u.club ?? '— Hệ thống'}</td>
+                  <td className="[color:var(--pf-color-muted)] text-xs">{u.club ?? '— Hệ thống'}</td>
                   <td className="text-center">
                     {u.isActive
                       ? <Badge variant="green" dot>Hoạt động</Badge>
@@ -164,8 +164,8 @@ export function SuperUsers() {
                       disabled={u.role === 'SUPER_ADMIN'}
                       className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed
                         ${u.isActive
-                          ? 'text-slate-400 hover:bg-red-50 hover:text-red-500'
-                          : 'text-slate-400 hover:bg-emerald-50 hover:text-emerald-600'}`}
+                          ? '[color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500'
+                          : '[color:var(--pf-color-muted)] hover:bg-emerald-50 hover:text-emerald-600'}`}
                       title={u.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
                     >
                       {u.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
@@ -175,7 +175,7 @@ export function SuperUsers() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-sm [color:var(--pf-color-muted)]">
                     {users.length === 0 ? 'Đang tải...' : 'Không tìm thấy tài khoản phù hợp'}
                   </td>
                 </tr>

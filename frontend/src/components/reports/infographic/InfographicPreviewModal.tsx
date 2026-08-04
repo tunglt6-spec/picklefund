@@ -86,21 +86,21 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
         <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-800 border-b border-slate-700">
           <div className="flex items-center gap-2">
             <span className="text-white font-[700] text-[14px]">Infographic</span>
-            <span className="text-slate-400 text-[12px] hidden sm:block">· {data.periodLabel}</span>
+            <span className="[color:var(--pf-color-muted)] text-[12px] hidden sm:block">· {data.periodLabel}</span>
           </div>
 
           {/* Tab switcher */}
           <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1">
             <button
               onClick={() => setTab('A')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
             >
               <BarChart3 size={13} />
               Tổng quan
             </button>
             <button
               onClick={() => setTab('B')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
             >
               <Users size={13} />
               Bill thành viên
@@ -109,7 +109,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:text-white hover:bg-slate-700 transition-colors"
             aria-label="Đóng"
           >
             <X size={17} />
@@ -174,7 +174,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               <button
                 disabled
                 title="Trình duyệt hiện không hỗ trợ chia sẻ trực tiếp"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-slate-500 bg-slate-700 cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] [color:var(--pf-color-muted)] bg-slate-700 cursor-not-allowed"
               >
                 <Share2 size={14} />
                 Chia sẻ
@@ -183,7 +183,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-slate-300 bg-slate-700 hover:bg-slate-600 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] [color:var(--pf-color-muted)] bg-slate-700 hover:bg-slate-600 transition-all active:scale-95"
             >
               <X size={14} />
               Đóng
@@ -191,7 +191,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           </div>
 
           {isLoading && (
-            <p className="text-center text-[11px] text-slate-400 mt-2">
+            <p className="text-center text-[11px] [color:var(--pf-color-muted)] mt-2">
               {exporting === 'png' ? 'Đang xuất ảnh...' : exporting === 'pdf' ? 'Đang tạo PDF...' : 'Đang chuẩn bị chia sẻ...'}
             </p>
           )}

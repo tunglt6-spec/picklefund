@@ -32,13 +32,13 @@ type Subscription = {
 type AiUsage = { month: string; tokens: number; estimatedCostVnd: number }
 
 const PLAN_COLORS: Record<ServicePlan, string> = {
-  STARTER: 'bg-slate-50 border-slate-200',
+  STARTER: '[background:var(--pf-surface-muted)] border-[color:var(--pf-border)]',
   PRO: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
   CLUB_PLUS: 'bg-amber-50 border-amber-200',
 }
 
 const PLAN_BADGE: Record<ServicePlan, string> = {
-  STARTER: 'bg-slate-100 text-slate-600',
+  STARTER: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
@@ -83,7 +83,7 @@ export function Billing() {
 
   const content = (
     <div className="space-y-6 max-w-[860px]">
-      {loading && <p className="text-center text-sm text-slate-400 py-12">Đang tải...</p>}
+      {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-12">Đang tải...</p>}
 
       {!loading && sub && (
         <>
@@ -99,34 +99,34 @@ export function Billing() {
                     <span className="text-xs text-emerald-600 font-medium">● Đang hoạt động</span>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Gói hiện tại: {sub.plan.name ?? currentTier}</h2>
+                <h2 className="text-xl font-bold [color:var(--pf-text)]">Gói hiện tại: {sub.plan.name ?? currentTier}</h2>
                 {sub.daysRemaining !== null && (
-                  <p className="text-sm text-slate-600 mt-1">
+                  <p className="text-sm [color:var(--pf-color-muted)] mt-1">
                     {sub.daysRemaining > 0
                       ? `Còn ${sub.daysRemaining} ngày (hết hạn ${new Date(sub.expiresAt!).toLocaleDateString('vi-VN')})`
                       : '⚠️ Đã hết hạn'}
                   </p>
                 )}
               </div>
-              <Star size={28} className={currentTier === 'STARTER' ? 'text-slate-300' : 'text-amber-400'} />
+              <Star size={28} className={currentTier === 'STARTER' ? '[color:var(--pf-color-muted)]' : 'text-amber-400'} />
             </div>
 
             {/* Usage */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="bg-white/70 rounded-lg p-3">
-                <p className="text-xs text-slate-500">Thành viên</p>
-                <p className="text-lg font-bold text-slate-900">{sub.usage.members} <span className="text-sm font-normal text-slate-500">/ {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</span></p>
-                <div className="mt-1.5 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <p className="text-xs [color:var(--pf-color-muted)]">Thành viên</p>
+                <p className="text-lg font-bold [color:var(--pf-text)]">{sub.usage.members} <span className="text-sm font-normal [color:var(--pf-color-muted)]">/ {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</span></p>
+                <div className="mt-1.5 h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                   <div className="h-full [background:var(--pf-primary)] rounded-full transition-all"
                     style={{ width: sub.plan.maxMembers >= 9999 ? '4px' : `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
                 </div>
               </div>
               <div className="bg-white/70 rounded-lg p-3">
-                <p className="text-xs text-slate-500">Tính năng AI</p>
-                <p className="text-sm font-semibold mt-1 text-slate-900">
+                <p className="text-xs [color:var(--pf-color-muted)]">Tính năng AI</p>
+                <p className="text-sm font-semibold mt-1 [color:var(--pf-text)]">
                   {sub.plan.aiFeatures ? '✅ Đã kích hoạt' : '❌ Chưa có'}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
                   Telegram Bot: {sub.plan.telegramBot ? '✅' : '❌'}
                 </p>
               </div>
@@ -134,18 +134,18 @@ export function Billing() {
           </div>
 
           {/* Plan comparison */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-900">Bảng so sánh gói dịch vụ</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Liên hệ Admin để nâng cấp gói</p>
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[color:var(--pf-border)]">
+              <h3 className="font-semibold [color:var(--pf-text)]">Bảng so sánh gói dịch vụ</h3>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Liên hệ Admin để nâng cấp gói</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left px-4 py-3 font-medium text-slate-600">Tính năng</th>
+                  <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
+                    <th className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>
                     {plans.map(p => (
-                      <th key={p.tier} className="text-center px-4 py-3 font-medium text-slate-600 min-w-[100px]">
+                      <th key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_BADGE[p.tier]}`}>
                           {p.tier === currentTier ? `✓ ${p.tier}` : p.tier}
                         </span>
@@ -161,8 +161,8 @@ export function Billing() {
                     { label: 'Tính năng AI', fn: (p: Plan) => p.aiFeatures ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                     { label: 'Telegram Bot', fn: (p: Plan) => p.telegramBot ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                   ].map(row => (
-                    <tr key={row.label} className="border-b border-slate-50 hover:bg-slate-50/50">
-                      <td className="px-4 py-3 text-slate-700">{row.label}</td>
+                    <tr key={row.label} className="border-b border-[color:var(--pf-border)] hover:bg-slate-50/50">
+                      <td className="px-4 py-3 [color:var(--pf-text)]">{row.label}</td>
                       {plans.map(p => (
                         <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
                           {row.fn(p)}
@@ -177,18 +177,18 @@ export function Billing() {
 
           {/* AI Usage */}
           {usage.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 p-5 md:p-6">
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={18} className="[color:var(--pf-primary)]" />
-                <h3 className="font-semibold text-slate-900">Lịch sử sử dụng AI</h3>
+                <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử sử dụng AI</h3>
               </div>
               <div className="space-y-2">
                 {usage.slice(0, 6).map(u => (
-                  <div key={u.month} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <span className="text-sm text-slate-600">{fmtMonth(u.month)}</span>
+                  <div key={u.month} className="flex items-center justify-between py-2 border-b border-[color:var(--pf-border)] last:border-0">
+                    <span className="text-sm [color:var(--pf-color-muted)]">{fmtMonth(u.month)}</span>
                     <div className="text-right">
-                      <span className="text-sm font-medium text-slate-900">{u.tokens.toLocaleString('vi-VN')} tokens</span>
-                      <span className="text-xs text-slate-400 ml-2">~{u.estimatedCostVnd.toLocaleString('vi-VN')}đ</span>
+                      <span className="text-sm font-medium [color:var(--pf-text)]">{u.tokens.toLocaleString('vi-VN')} tokens</span>
+                      <span className="text-xs [color:var(--pf-color-muted)] ml-2">~{u.estimatedCostVnd.toLocaleString('vi-VN')}đ</span>
                     </div>
                   </div>
                 ))}
@@ -227,9 +227,9 @@ export function Billing() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3">
-          <p className="text-[17px] font-[800] text-slate-900">Gói dịch vụ</p>
-          <p className="text-[12px] text-slate-400">Quản lý subscription & AI usage</p>
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
+          <p className="text-[17px] font-[800] [color:var(--pf-text)]">Gói dịch vụ</p>
+          <p className="text-[12px] [color:var(--pf-color-muted)]">Quản lý subscription & AI usage</p>
         </div>
         <div className="px-4 py-4 pb-24">{content}</div>
       </div>
@@ -237,7 +237,7 @@ export function Billing() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader title="Gói dịch vụ" subtitle="Quản lý subscription và theo dõi chi phí AI" />
       <div className="p-6 mx-auto">{content}</div>
     </div>

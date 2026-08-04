@@ -46,11 +46,11 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
   const rows = compact ? rankings.slice(0, 5) : rankings;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BarChart2 size={18} className="[color:var(--pf-primary)]" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Bảng Xếp Hạng Cá Nhân
           </h2>
         </div>
@@ -67,19 +67,19 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100">
+            <tr className="border-b border-[color:var(--pf-border)]">
               {['#', 'Tên', 'Bảng', 'Played', 'W/D/L', 'PF:PA', '+/-', 'Pts', 'Win%'].map(
                 (col) => (
                   <th
                     key={col}
-                    className="text-xs font-semibold text-slate-400 uppercase tracking-wide py-2 px-2 text-right first:text-left whitespace-nowrap"
+                    className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide py-2 px-2 text-right first:text-left whitespace-nowrap"
                   >
                     {col}
                   </th>
                 )
               )}
               {(onEdit || onDelete) && (
-                <th className="text-xs font-semibold text-slate-400 uppercase tracking-wide py-2 px-2 text-right whitespace-nowrap">
+                <th className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide py-2 px-2 text-right whitespace-nowrap">
 
                 </th>
               )}
@@ -90,20 +90,20 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
               const isTop3 = r.rank <= 3;
               const rowCls = isTop3
                 ? 'bg-amber-50/30 hover:bg-amber-50/60'
-                : 'hover:bg-slate-50';
+                : 'hover:[background:var(--pf-surface-muted)]';
               const groupBorder = GROUP_BORDER[r.group] ?? 'border-slate-300';
-              const groupText = GROUP_TEXT[r.group] ?? 'text-slate-600 bg-slate-50';
+              const groupText = GROUP_TEXT[r.group] ?? '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]';
               const diffColor =
-                r.diff > 0 ? 'text-green-600' : r.diff < 0 ? 'text-red-500' : 'text-slate-500';
+                r.diff > 0 ? 'text-green-600' : r.diff < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]';
 
               return (
                 <tr
                   key={r.memberId}
-                  className={`border-b border-slate-50 transition-colors ${rowCls}`}
+                  className={`border-b border-[color:var(--pf-border)] transition-colors ${rowCls}`}
                 >
                   {/* Rank */}
                   <td className="py-2 px-2 text-left whitespace-nowrap">
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold [color:var(--pf-text)]">
                       {MEDAL[r.rank] ? (
                         <span>
                           {MEDAL[r.rank]}
@@ -117,7 +117,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
 
                   {/* Name */}
                   <td className="py-2 px-2 text-left">
-                    <span className="font-medium text-slate-800 whitespace-nowrap">{r.name}</span>
+                    <span className="font-medium [color:var(--pf-text)] whitespace-nowrap">{r.name}</span>
                   </td>
 
                   {/* Group badge */}
@@ -130,19 +130,19 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                   </td>
 
                   {/* Played */}
-                  <td className="py-2 px-2 text-right text-slate-600">{r.played}</td>
+                  <td className="py-2 px-2 text-right [color:var(--pf-color-muted)]">{r.played}</td>
 
                   {/* W/D/L */}
                   <td className="py-2 px-2 text-right whitespace-nowrap">
                     <span className="text-green-600 font-medium">{r.won}</span>
-                    <span className="text-slate-400 mx-0.5">/</span>
+                    <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
                     <span className="text-amber-500 font-medium">{r.drawn}</span>
-                    <span className="text-slate-400 mx-0.5">/</span>
+                    <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
                     <span className="text-red-500 font-medium">{r.lost}</span>
                   </td>
 
                   {/* PF:PA */}
-                  <td className="py-2 px-2 text-right whitespace-nowrap text-slate-600">
+                  <td className="py-2 px-2 text-right whitespace-nowrap [color:var(--pf-color-muted)]">
                     {r.pointsFor}:{r.pointsAgainst}
                   </td>
 
@@ -158,14 +158,14 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                   <td className="py-2 px-2 text-right min-w-[80px]">
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-slate-600">{r.winRate}%</span>
+                        <span className="text-xs [color:var(--pf-color-muted)]">{r.winRate}%</span>
                         {r.sitOutCount > 0 && (
                           <span className="text-xs text-orange-500 font-medium whitespace-nowrap">
                             (+{r.sitOutCount} nghỉ)
                           </span>
                         )}
                       </div>
-                      <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-14 h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                         <div
                           className="h-full [background:var(--pf-primary)] rounded-full"
                           style={{ width: `${Math.min(r.winRate, 100)}%` }}
@@ -181,7 +181,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                         {onEdit && (
                           <button
                             onClick={() => onEdit(r.memberId, r.name)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
                             title="Sửa thành viên"
                           >
                             <Pencil size={14} />
@@ -190,7 +190,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                         {onDelete && (
                           <button
                             onClick={() => onDelete(r.memberId, r.name)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Xóa thành viên"
                           >
                             <Trash2 size={14} />

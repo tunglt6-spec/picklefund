@@ -105,26 +105,26 @@ function BulkCreateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h2 className="text-base font-bold text-slate-900">Tạo tài khoản hàng loạt</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{available.length} thành viên chưa có tài khoản</p>
+      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
+          <h2 className="text-base font-bold [color:var(--pf-text)]">Tạo tài khoản hàng loạt</h2>
+          <p className="text-sm [color:var(--pf-color-muted)] mt-0.5">{available.length} thành viên chưa có tài khoản</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {available.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-8">Tất cả thành viên đã có tài khoản</p>
+            <p className="text-sm [color:var(--pf-color-muted)] text-center py-8">Tất cả thành viên đã có tài khoản</p>
           ) : (
             <>
               <div className="flex items-center justify-between mb-3">
                 <button onClick={() => setSelected(new Set(available.map(m => m.id)))}
                   className="text-xs [color:var(--pf-primary)] hover:underline">Chọn tất cả</button>
                 <button onClick={() => setSelected(new Set())}
-                  className="text-xs text-slate-500 hover:underline">Bỏ chọn tất cả</button>
+                  className="text-xs [color:var(--pf-color-muted)] hover:underline">Bỏ chọn tất cả</button>
               </div>
 
               {/* Header */}
-              <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 px-3 py-2 text-xs font-medium text-slate-500 bg-slate-50 rounded-lg mb-1">
+              <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] rounded-lg mb-1">
                 <span />
                 <span>Thành viên</span>
                 <span>Username dự kiến</span>
@@ -134,12 +134,12 @@ function BulkCreateModal({
               <div className="space-y-1">
                 {available.map(m => (
                   <label key={m.id}
-                    className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-center px-3 py-2.5 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent has-[:checked]:[border-color:var(--pf-primary-soft)] has-[:checked]:[background:var(--pf-primary-soft)] transition-colors">
+                    className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-center px-3 py-2.5 rounded-lg hover:[background:var(--pf-surface-muted)] cursor-pointer border border-transparent has-[:checked]:[border-color:var(--pf-primary-soft)] has-[:checked]:[background:var(--pf-primary-soft)] transition-colors">
                     <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)}
                       className="rounded [color:var(--pf-primary)]" />
-                    <span className="text-sm font-medium text-slate-800">{m.fullName}</span>
-                    <span className="text-sm text-slate-500 font-mono">{slugify(m.fullName) || 'user'}</span>
-                    <span className="text-sm text-slate-400 font-mono">123456</span>
+                    <span className="text-sm font-medium [color:var(--pf-text)]">{m.fullName}</span>
+                    <span className="text-sm [color:var(--pf-color-muted)] font-mono">{slugify(m.fullName) || 'user'}</span>
+                    <span className="text-sm [color:var(--pf-color-muted)] font-mono">123456</span>
                   </label>
                 ))}
               </div>
@@ -147,8 +147,8 @@ function BulkCreateModal({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-500">Đã chọn: <strong>{selected.size}</strong> thành viên</span>
+        <div className="px-6 py-4 border-t border-[color:var(--pf-border)] flex items-center justify-between gap-3">
+          <span className="text-sm [color:var(--pf-color-muted)]">Đã chọn: <strong>{selected.size}</strong> thành viên</span>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose} disabled={saving}>Hủy</Button>
             <Button onClick={handleCreate} disabled={selected.size === 0 || saving}>
@@ -205,14 +205,14 @@ function CreateSingleModal({
     }
   }
 
-  const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]'
-  const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5'
+  const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]'
+  const labelCls = 'block text-sm font-medium [color:var(--pf-text)] mb-1.5'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h2 className="text-base font-bold text-slate-900">Tạo tài khoản thành viên</h2>
+      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
+          <h2 className="text-base font-bold [color:var(--pf-text)]">Tạo tài khoản thành viên</h2>
         </div>
         <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
           <div>
@@ -222,7 +222,7 @@ function CreateSingleModal({
                 className={`${inputCls} pr-8 appearance-none`} required>
                 {available.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
               </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
             </div>
           </div>
 
@@ -230,13 +230,13 @@ function CreateSingleModal({
             <label className={labelCls}>Username</label>
             <input value={username} onChange={e => setUsername(e.target.value)}
               placeholder="Tự động sinh từ tên" className={inputCls} />
-            <p className="text-xs text-slate-400 mt-1">Để trống sẽ tự động sinh từ tên thành viên</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Để trống sẽ tự động sinh từ tên thành viên</p>
           </div>
 
           <div>
             <label className={labelCls}>Mật khẩu mặc định</label>
-            <input value="123456" readOnly className={`${inputCls} bg-slate-50 text-slate-500 font-mono cursor-not-allowed`} />
-            <p className="text-xs text-slate-400 mt-1">Thành viên phải đổi mật khẩu khi đăng nhập lần đầu</p>
+            <input value="123456" readOnly className={`${inputCls} [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] font-mono cursor-not-allowed`} />
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Thành viên phải đổi mật khẩu khi đăng nhập lần đầu</p>
           </div>
 
           <div className="flex items-center gap-3 py-1">
@@ -244,13 +244,13 @@ function CreateSingleModal({
               <div className="w-4 h-4 rounded [background:var(--pf-primary)] flex items-center justify-center">
                 <CheckCircle2 size={10} className="text-white" />
               </div>
-              <span className="text-sm text-slate-600">Bắt buộc đổi mật khẩu</span>
+              <span className="text-sm [color:var(--pf-color-muted)]">Bắt buộc đổi mật khẩu</span>
             </div>
             <div className="flex items-center gap-2 flex-1">
               <div className="w-4 h-4 rounded [background:var(--pf-primary)] flex items-center justify-center">
                 <CheckCircle2 size={10} className="text-white" />
               </div>
-              <span className="text-sm text-slate-600">Bật nhận thông báo</span>
+              <span className="text-sm [color:var(--pf-color-muted)]">Bật nhận thông báo</span>
             </div>
           </div>
 
@@ -272,9 +272,9 @@ function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-        <h3 className="font-bold text-slate-900">{title}</h3>
-        <p className="text-sm text-slate-600">{body}</p>
+      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+        <h3 className="font-bold [color:var(--pf-text)]">{title}</h3>
+        <p className="text-sm [color:var(--pf-color-muted)]">{body}</p>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
           <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm}>Xác nhận</Button>
@@ -368,12 +368,12 @@ export function MemberAccounts() {
   // ── Mobile card list ──────────────────────────────────────────────────────
   if (isMobile) {
     return (
-      <div className="flex-1 overflow-y-auto bg-slate-50">
-        <div className="bg-white border-b border-slate-100 px-4 py-4">
+      <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
+        <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              {!embedded && <h1 className="text-base font-bold text-slate-900">Tài khoản thành viên</h1>}
-              <p className="text-xs text-slate-500 mt-0.5">{accounts.length} tài khoản</p>
+              {!embedded && <h1 className="text-base font-bold [color:var(--pf-text)]">Tài khoản thành viên</h1>}
+              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{accounts.length} tài khoản</p>
             </div>
             <div className="flex items-center gap-1.5">
               {noAccountMembers.length > 0 && (
@@ -395,43 +395,43 @@ export function MemberAccounts() {
               { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
               { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
             ].map(s => (
-              <div key={s.label} className="bg-slate-50 rounded-[10px] py-2 text-center">
+              <div key={s.label} className="[background:var(--pf-surface-muted)] rounded-[10px] py-2 text-center">
                 <div className={`text-[14px] font-[800] ${s.color}`}>{s.value}</div>
-                <div className="text-[9px] text-slate-400 mt-0.5">{s.label}</div>
+                <div className="text-[9px] [color:var(--pf-color-muted)] mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Tìm thành viên, username..."
-              className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)]" />
+              className="w-full pl-8 pr-3 py-2 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
         </div>
 
         <div className="p-4 space-y-3">
           {loading ? (
-            <div className="text-center py-12 text-slate-400 text-sm">Đang tải...</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-sm">
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">
               {accounts.length === 0 ? 'Chưa có tài khoản nào' : 'Không tìm thấy'}
             </div>
           ) : (
             filtered.map(acc => (
-              <div key={acc.id} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+              <div key={acc.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-medium text-slate-900 text-sm">{acc.member?.fullName ?? '—'}</p>
-                    <p className="text-xs text-slate-500 font-mono mt-0.5">@{acc.username}</p>
+                    <p className="font-medium [color:var(--pf-text)] text-sm">{acc.member?.fullName ?? '—'}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] font-mono mt-0.5">@{acc.username}</p>
                   </div>
                   <StatusBadge acc={acc} />
                 </div>
-                <div className="text-xs text-slate-400 mb-3">
+                <div className="text-xs [color:var(--pf-color-muted)] mb-3">
                   Đăng nhập cuối: {formatDate(acc.lastLoginAt)}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => handleReset(acc)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[color:var(--pf-border)] text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]">
                     <RefreshCw size={12} /> Reset MK
                   </button>
                   <button onClick={() => handleToggleLock(acc)}
@@ -467,7 +467,7 @@ export function MemberAccounts() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="bg-white border-b border-[#E2E8F0] px-6 py-5">
+      <div className="[background:var(--pf-surface)] border-b border-[#E2E8F0] px-6 py-5">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             {!embedded && <h1 className="text-base font-bold text-[#0F172A]">Tài khoản thành viên</h1>}
@@ -498,7 +498,7 @@ export function MemberAccounts() {
             { label: 'Chưa kích hoạt', value: accounts.filter(a => ['pending', 'must_change'].includes(getStatus(a))).length, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Bị khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600', bg: 'bg-red-50' },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-4">
+            <div key={s.label} className="[background:var(--pf-surface)] rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-4">
               <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
                 <Users size={16} className={s.color} />
               </div>
@@ -509,22 +509,22 @@ export function MemberAccounts() {
         </div>
 
         {/* Table card (search header + table) */}
-        <div className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
+        <div className="[background:var(--pf-surface)] rounded-[18px] border border-[#E2E8F0] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-3">
             <div className="relative w-64">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm thành viên, username..."
                 className="input-base pl-8 h-8 text-xs" />
             </div>
-            <span className="text-xs text-slate-500 ml-auto">{filtered.length} tài khoản</span>
+            <span className="text-xs [color:var(--pf-color-muted)] ml-auto">{filtered.length} tài khoản</span>
           </div>
           {loading ? (
-            <div className="text-center py-16 text-slate-400 text-sm">Đang tải...</div>
+            <div className="text-center py-16 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 space-y-2">
               <Users size={40} className="mx-auto text-slate-200" />
-              <p className="text-slate-400 text-sm">
+              <p className="[color:var(--pf-color-muted)] text-sm">
                 {accounts.length === 0
                   ? 'Chưa có tài khoản nào. Nhấn "Tạo hàng loạt" để bắt đầu.'
                   : 'Không tìm thấy kết quả phù hợp'}
@@ -534,7 +534,7 @@ export function MemberAccounts() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs font-medium text-slate-500 bg-slate-50 border-b border-slate-100">
+                  <tr className="text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                     <th className="px-4 py-3 text-left">Thành viên</th>
                     <th className="px-4 py-3 text-left">Username</th>
                     <th className="px-4 py-3 text-left">Trạng thái</th>
@@ -548,17 +548,17 @@ export function MemberAccounts() {
                     <tr key={acc.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-slate-800">{acc.member?.fullName ?? '—'}</p>
-                          <p className="text-xs text-slate-400">{acc.member?.phone ?? acc.email}</p>
+                          <p className="font-medium [color:var(--pf-text)]">{acc.member?.fullName ?? '—'}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)]">{acc.member?.phone ?? acc.email}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-700">
+                        <span className="font-mono text-xs [background:var(--pf-color-muted-soft)] px-2 py-1 rounded-md [color:var(--pf-text)]">
                           {acc.username}
                         </span>
                       </td>
                       <td className="px-4 py-3"><StatusBadge acc={acc} /></td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{formatDate(acc.lastLoginAt)}</td>
+                      <td className="px-4 py-3 text-xs [color:var(--pf-color-muted)]">{formatDate(acc.lastLoginAt)}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-medium ${acc.mustChangePassword ? 'text-amber-600' : 'text-emerald-600'}`}>
                           {acc.mustChangePassword ? 'Chưa đổi' : 'Đã đổi'}
@@ -568,7 +568,7 @@ export function MemberAccounts() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => handleReset(acc)}
                             title="Reset mật khẩu"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] transition-colors">
                             <RefreshCw size={12} /> Reset MK
                           </button>
                           <button onClick={() => handleToggleLock(acc)}

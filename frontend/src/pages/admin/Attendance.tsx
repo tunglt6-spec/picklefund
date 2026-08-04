@@ -316,13 +316,13 @@ export function Attendance() {
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {activeMemberList.map(m => (
               <label key={m.id} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${
-                attendance[m.id] ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white hover:bg-slate-50'
+                attendance[m.id] ? 'border-emerald-200 bg-emerald-50' : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]'
               }`}>
                 <input type="checkbox" checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)}
                   className="h-4 w-4 rounded accent-emerald-500 shrink-0" />
                 <MemberAvatar name={m.fullName} id={m.id} />
-                <span className="font-medium text-slate-900 flex-1 text-sm">{m.fullName}</span>
-                <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : 'text-slate-300'}`}>
+                <span className="font-medium [color:var(--pf-text)] flex-1 text-sm">{m.fullName}</span>
+                <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : '[color:var(--pf-color-muted)]'}`}>
                   {attendance[m.id] ? 'Có mặt' : 'Vắng'}
                 </span>
               </label>
@@ -343,25 +343,25 @@ export function Attendance() {
       >
         <form id="form-edit-session" onSubmit={handleEditSession} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
             <input required type="date" value={editForm.sessionDate} onChange={e => setEditForm({ ...editForm, sessionDate: e.target.value })} className="input-base" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ bắt đầu</label>
               <input type="time" value={editForm.startTime} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ kết thúc</label>
               <input type="time" value={editForm.endTime} onChange={e => setEditForm({ ...editForm, endTime: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên sân <span className="text-red-500">*</span></label>
             <input required value={editForm.courtName} onChange={e => setEditForm({ ...editForm, courtName: e.target.value })} placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
             <input type="number" required min="1" value={editForm.courtFee} onChange={e => setEditForm({ ...editForm, courtFee: Number(e.target.value) })} className="input-base" />
           </div>
         </form>
@@ -379,7 +379,7 @@ export function Attendance() {
           </div>
         }
       >
-        <p className="text-sm text-slate-600">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
+        <p className="text-sm [color:var(--pf-color-muted)]">Bạn có chắc muốn xóa buổi chơi này? Toàn bộ dữ liệu điểm danh của buổi này sẽ bị xóa vĩnh viễn.</p>
       </Modal>
 
       {/* Move period modal */}
@@ -394,7 +394,7 @@ export function Attendance() {
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-slate-600">Chọn kỳ quỹ đích để chuyển toàn bộ <strong>{sessions.length}</strong> buổi đang hiển thị:</p>
+          <p className="text-sm [color:var(--pf-color-muted)]">Chọn kỳ quỹ đích để chuyển toàn bộ <strong>{sessions.length}</strong> buổi đang hiển thị:</p>
           <select value={moveToPeriodId} onChange={e => setMoveToPeriodId(e.target.value)} className="input-base">
             <option value="">— Chọn kỳ quỹ —</option>
             {allPeriods.filter(p => p.id !== selectedPeriodId).map(p => (
@@ -421,29 +421,29 @@ export function Attendance() {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
             <input required type="date" value={form.sessionDate}
               onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ bắt đầu</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ bắt đầu</label>
               <input type="time" value={form.startTime}
                 onChange={e => setForm({ ...form, startTime: e.target.value })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Giờ kết thúc</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ kết thúc</label>
               <input type="time" value={form.endTime}
                 onChange={e => setForm({ ...form, endTime: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tên sân <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên sân <span className="text-red-500">*</span></label>
             <input required value={form.courtName} onChange={e => setForm({ ...form, courtName: e.target.value })}
               placeholder="VD: Sân Mỹ Đình Indoor" className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
             <input type="number" required min="1" value={form.courtFee} placeholder="Nhập tiền sân"
               onChange={e => setForm({ ...form, courtFee: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
           </div>

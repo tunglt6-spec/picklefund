@@ -8,7 +8,7 @@ const cfg: Record<Variant, { bg: string; text: string; dot: string }> = {
   orange: { bg: 'bg-orange-50',   text: 'text-orange-700',  dot: 'bg-orange-500' },
   blue:   { bg: 'bg-blue-50',     text: 'text-blue-700',    dot: 'bg-blue-500' },
   purple: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
-  gray:   { bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400' },
+  gray:   { bg: '[background:var(--pf-color-muted-soft)]',   text: '[color:var(--pf-color-muted)]',   dot: 'bg-slate-400' },
   yellow: { bg: 'bg-yellow-50',   text: 'text-yellow-700',  dot: 'bg-yellow-500' },
   indigo: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
 }

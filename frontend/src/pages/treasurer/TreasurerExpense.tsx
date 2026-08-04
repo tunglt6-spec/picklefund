@@ -161,17 +161,17 @@ export function TreasurerExpense() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-          <div className="text-[17px] font-[800] text-slate-900">Khoản Chi</div>
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
+          <div className="text-[17px] font-[800] [color:var(--pf-text)]">Khoản Chi</div>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {expenses.length > 0 && (
               <>
                 <button onClick={doExportExcel} aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileSpreadsheet size={14} />Excel
                 </button>
                 <button onClick={doExportPdf} aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold bg-slate-100 text-slate-600 active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileText size={14} />PDF
                 </button>
               </>
@@ -184,35 +184,35 @@ export function TreasurerExpense() {
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {activePeriods.length === 0 ? (
-            <div className="bg-white rounded-[16px] border border-dashed border-slate-200 py-14 text-center">
+            <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-14 text-center">
               <Receipt size={28} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-[13px] text-slate-400">Chưa có kỳ quỹ nào đang mở</p>
+              <p className="text-[13px] [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white rounded-[14px] border border-slate-100 p-3 shadow-sm">
+                <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
                   <div className="text-[15px] font-[800] text-red-600">{formatVND(totalExpenses)}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
                 </div>
-                <div className="bg-white rounded-[14px] border border-slate-100 p-3 shadow-sm">
+                <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
                   <div className="text-[15px] font-[800] text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Thiếu hóa đơn</div>
+                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">Thiếu hóa đơn</div>
                 </div>
               </div>
 
               {expenses.length === 0 ? (
-                <div className="text-center py-12 text-[13px] text-slate-400">Chưa có khoản chi nào</div>
+                <div className="text-center py-12 text-[13px] [color:var(--pf-color-muted)]">Chưa có khoản chi nào</div>
               ) : (
                 <div className="space-y-2">
                   {expenses.map(e => {
                     const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
                     return (
-                      <div key={e.id} className="bg-white rounded-[16px] border border-slate-100 p-4 shadow-sm">
+                      <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
-                            <div className="text-[14px] font-[700] text-slate-900 truncate">{e.description}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
+                            <div className="text-[14px] font-[700] [color:var(--pf-text)] truncate">{e.description}</div>
+                            <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
                           </div>
                           <div className="text-[15px] font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>
                         </div>
@@ -224,10 +224,10 @@ export function TreasurerExpense() {
                               : <Badge variant="yellow" dot>Chưa có HĐ</Badge>}
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary)]">
+                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary)]">
                               <Edit2 size={14} />
                             </button>
-                            <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] text-slate-400 bg-slate-50 active:bg-red-50 active:text-red-500">
+                            <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:bg-red-50 active:text-red-500">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -253,41 +253,41 @@ export function TreasurerExpense() {
         >
           <form id="form-expense-m" onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Mô tả <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mô tả <span className="text-red-500">*</span></label>
               <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="VD: Tiền sân, Nước uống..."
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
               <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white">
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]">
                 <option value="">-- Chọn kỳ quỹ --</option>
                 {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
+                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi</label>
+                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
                 <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none bg-white" />
+                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-2">Quy tắc phân bổ</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-2">Quy tắc phân bổ</label>
               <div className="space-y-2">
                 {RULES.map(r => (
-                  <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200'}`}>
+                  <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-[color:var(--pf-border)]'}`}>
                     <input type="radio" name="rule-m" value={r.value} checked={form.allocationRule === r.value}
                       onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-[var(--pf-primary)]" />
                     <div>
-                      <p className="font-semibold text-sm text-slate-900">{r.label}</p>
-                      <p className="text-xs text-slate-500">{r.desc}</p>
+                      <p className="font-semibold text-sm [color:var(--pf-text)]">{r.label}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{r.desc}</p>
                     </div>
                   </label>
                 ))}
@@ -323,41 +323,41 @@ export function TreasurerExpense() {
 
       <div className="flex flex-col gap-5">
         {activePeriods.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-200 py-16 text-center">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
             <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm text-slate-400">Chưa có kỳ quỹ nào đang mở</p>
+            <p className="text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Tổng đã chi</p>
+              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Tổng đã chi</p>
                 <p className="text-2xl font-bold text-red-600">{formatVND(totalExpenses)}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{expenses.length} khoản</p>
+                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{expenses.length} khoản</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Thiếu hóa đơn</p>
+              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Thiếu hóa đơn</p>
                 <p className="text-2xl font-bold text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</p>
-                <p className="text-xs text-slate-400 mt-0.5">khoản chưa có chứng từ</p>
+                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">khoản chưa có chứng từ</p>
               </div>
             </div>
 
             {expenses.length === 0 ? (
-              <div className="bg-white rounded-xl border border-dashed border-slate-200 py-10 text-center">
-                <p className="text-sm text-slate-400">Chưa có khoản chi nào. Bấm "Thêm khoản chi" để bắt đầu.</p>
+              <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-10 text-center">
+                <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản chi nào. Bấm "Thêm khoản chi" để bắt đầu.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50">
+                  <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
-                      <th className="text-left px-4 py-3 font-semibold text-slate-600">Mô tả</th>
-                      <th className="text-left px-4 py-3 font-semibold text-slate-600">Kỳ quỹ</th>
-                      <th className="text-center px-4 py-3 font-semibold text-slate-600">Ngày chi</th>
-                      <th className="text-right px-4 py-3 font-semibold text-slate-600">Số tiền</th>
-                      <th className="text-center px-4 py-3 font-semibold text-slate-600">Phân bổ</th>
-                      <th className="text-center px-4 py-3 font-semibold text-slate-600">Hóa đơn</th>
-                      <th className="text-center px-4 py-3 font-semibold text-slate-600 w-20"></th>
+                      <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Mô tả</th>
+                      <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ</th>
+                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Ngày chi</th>
+                      <th className="text-right px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
+                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Phân bổ</th>
+                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Hóa đơn</th>
+                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-20"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -365,9 +365,9 @@ export function TreasurerExpense() {
                       const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
                       return (
                         <tr key={e.id}>
-                          <td className="px-4 py-3 font-medium text-slate-900">{e.description}</td>
-                          <td className="px-4 py-3 text-xs text-slate-500">{period?.name ?? '—'}</td>
-                          <td className="px-4 py-3 text-center text-slate-500 text-xs">{formatDate(e.expenseDate)}</td>
+                          <td className="px-4 py-3 font-medium [color:var(--pf-text)]">{e.description}</td>
+                          <td className="px-4 py-3 text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'}</td>
+                          <td className="px-4 py-3 text-center [color:var(--pf-color-muted)] text-xs">{formatDate(e.expenseDate)}</td>
                           <td className="px-4 py-3 text-right font-semibold text-red-600">{formatVND(e.amount)}</td>
                           <td className="px-4 py-3 text-center">
                             <Badge variant="gray">{ruleLabel(e.allocationRule)}</Badge>
@@ -379,10 +379,10 @@ export function TreasurerExpense() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
                                 <Edit2 size={13} />
                               </button>
-                              <button onClick={() => setDeleteId(e.id)} className="h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                              <button onClick={() => setDeleteId(e.id)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
                                 <Trash2 size={13} />
                               </button>
                             </div>
@@ -412,39 +412,39 @@ export function TreasurerExpense() {
       >
         <form id="form-expense" onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Mô tả khoản chi <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mô tả khoản chi <span className="text-red-500">*</span></label>
             <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               placeholder="VD: Tiền sân buổi 5, Nước uống, Giải thưởng..."
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
             <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white">
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
               <option value="">-- Chọn kỳ quỹ --</option>
               {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                 placeholder="VD: 450000"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Ngày chi</label>
+              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
               <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] bg-white" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">Loại chi phí</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-2">Loại chi phí</label>
             <div className="grid grid-cols-2 gap-2">
               {([['COURT', 'Tiền thuê sân'], ['LIVING', 'Chi phí sinh hoạt']] as [CostType, string][]).map(([k, v]) => (
                 <button key={k} type="button"
                   onClick={() => setForm({ ...form, costType: k, ...(k === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium ${form.costType === k ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium ${form.costType === k ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'}`}>
                   {v}
                 </button>
               ))}
@@ -456,15 +456,15 @@ export function TreasurerExpense() {
             </div>
           ) : (
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">Cách chia sinh hoạt</label>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-2">Cách chia sinh hoạt</label>
             <div className="space-y-2">
               {RULES.map(r => (
-                <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200 hover:border-slate-300'}`}>
+                <label key={r.value} className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${form.allocationRule === r.value ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-[color:var(--pf-border)] hover:border-slate-300'}`}>
                   <input type="radio" name="rule" value={r.value} checked={form.allocationRule === r.value}
                     onChange={() => setForm({ ...form, allocationRule: r.value })} className="mt-0.5 accent-[var(--pf-primary)]" />
                   <div>
-                    <p className="font-semibold text-sm text-slate-900">{r.label}</p>
-                    <p className="text-xs text-slate-500">{r.desc}</p>
+                    <p className="font-semibold text-sm [color:var(--pf-text)]">{r.label}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{r.desc}</p>
                   </div>
                 </label>
               ))}

@@ -46,30 +46,30 @@ export function ChangePassword() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] shadow-lg mb-4">
             <ShieldCheck size={32} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Đổi mật khẩu</h1>
-          <p className="text-sm text-slate-500 mt-2">
+          <h1 className="text-2xl font-bold [color:var(--pf-text)]">Đổi mật khẩu</h1>
+          <p className="text-sm [color:var(--pf-color-muted)] mt-2">
             Tài khoản của bạn đang dùng mật khẩu tạm.<br />
             Vui lòng đặt mật khẩu mới để tiếp tục.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8">
+        <div className="[background:var(--pf-surface)] rounded-2xl shadow-lg border border-[color:var(--pf-border)] p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Old password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Mật khẩu hiện tại</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu hiện tại</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
                   type={show.old ? 'text' : 'password'}
                   value={form.oldPassword}
                   onChange={e => setForm(f => ({ ...f, oldPassword: e.target.value }))}
                   placeholder="Nhập mật khẩu hiện tại"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, old: !s.old }))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.old ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -77,19 +77,19 @@ export function ChangePassword() {
 
             {/* New password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Mật khẩu mới</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu mới</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
                   type={show.new ? 'text' : 'password'}
                   value={form.newPassword}
                   onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, new: !s.new }))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.new ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -97,19 +97,19 @@ export function ChangePassword() {
 
             {/* Confirm */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Xác nhận mật khẩu mới</label>
+              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Xác nhận mật khẩu mới</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
                   type={show.confirm ? 'text' : 'password'}
                   value={form.confirm}
                   onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>

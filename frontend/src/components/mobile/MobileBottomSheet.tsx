@@ -28,7 +28,7 @@ export function MobileBottomSheet({ open, onClose, title, children, actions }: M
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="relative bg-white rounded-t-[24px] flex flex-col max-h-[90dvh] shadow-2xl"
+        className="relative [background:var(--pf-surface)] rounded-t-[24px] flex flex-col max-h-[90dvh] shadow-2xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Drag handle */}
@@ -38,8 +38,8 @@ export function MobileBottomSheet({ open, onClose, title, children, actions }: M
 
         {/* Header */}
         {title && (
-          <div className="px-5 py-3 border-b border-slate-100 flex-shrink-0">
-            <h3 className="text-[17px] font-[700] text-slate-900">{title}</h3>
+          <div className="px-5 py-3 border-b border-[color:var(--pf-border)] flex-shrink-0">
+            <h3 className="text-[17px] font-[700] [color:var(--pf-text)]">{title}</h3>
           </div>
         )}
 
@@ -50,7 +50,7 @@ export function MobileBottomSheet({ open, onClose, title, children, actions }: M
 
         {/* Sticky actions */}
         {actions && (
-          <div className="flex-shrink-0 px-5 py-4 border-t border-slate-100 bg-white">
+          <div className="flex-shrink-0 px-5 py-4 border-t border-[color:var(--pf-border)] [background:var(--pf-surface)]">
             {actions}
           </div>
         )}

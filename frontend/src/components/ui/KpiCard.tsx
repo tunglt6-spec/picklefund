@@ -23,7 +23,7 @@ const iconBgMap: Record<string, string> = {
   purple: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   cyan:   '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
   yellow: 'bg-yellow-50 text-yellow-600',
-  slate:  'bg-slate-100 text-slate-600',
+  slate:  '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   blue:   'bg-blue-50 text-blue-600',
   gray:   'bg-gray-100 text-gray-600',
 }
@@ -37,7 +37,7 @@ export function KpiCard({
 
   return (
     <div className={cn(
-      'bg-white rounded-xl border border-slate-100 p-4 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow',
+      '[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow',
       alert && 'border-red-200 ring-1 ring-red-100'
     )}>
       <div className="flex items-start justify-between mb-3">
@@ -60,10 +60,10 @@ export function KpiCard({
         ) : null}
       </div>
 
-      <p className="text-2xl font-bold text-slate-900 leading-none tabular-nums">{displayValue}</p>
-      <p className="text-xs font-medium text-slate-500 mt-1.5 uppercase tracking-wide">{title}</p>
-      {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
-      {trendLabel && <p className="text-xs text-slate-400 mt-0.5">{trendLabel}</p>}
+      <p className="text-2xl font-bold [color:var(--pf-text)] leading-none tabular-nums">{displayValue}</p>
+      <p className="text-xs font-medium [color:var(--pf-color-muted)] mt-1.5 uppercase tracking-wide">{title}</p>
+      {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
+      {trendLabel && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{trendLabel}</p>}
     </div>
   )
 }

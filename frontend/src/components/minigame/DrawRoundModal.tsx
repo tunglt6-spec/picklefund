@@ -192,7 +192,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       <div className={cn(
-        'relative w-full sm:max-w-lg bg-white shadow-2xl z-10 flex flex-col',
+        'relative w-full sm:max-w-lg [background:var(--pf-surface)] shadow-2xl z-10 flex flex-col',
         'rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[85vh]',
       )}>
         {/* Drag handle (mobile) */}
@@ -201,16 +201,16 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold [color:var(--pf-text)]">
               {step === 'config' ? 'Rút Thăm Vòng Mới' : 'Xem Trước Kết Quả'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
               {step === 'config' ? 'Cấu hình thuật toán & thành viên' : 'Kiểm tra trước khi xác nhận'}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -239,7 +239,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
               {/* Mode selector */}
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">Chế độ bốc thăm</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Chế độ bốc thăm</label>
                 <div className="space-y-2">
                   {MODES.map(m => (
                     <button
@@ -249,20 +249,20 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         'w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all',
                         drawMode === m.mode
                           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                          : 'border-slate-100 hover:border-slate-200 bg-white',
+                          : 'border-[color:var(--pf-border)] hover:border-[color:var(--pf-border)] [background:var(--pf-surface)]',
                       )}
                     >
                       <span className="text-xl shrink-0">{m.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={cn('text-sm font-semibold', drawMode === m.mode ? '[color:var(--pf-primary)]' : 'text-slate-800')}>
+                          <span className={cn('text-sm font-semibold', drawMode === m.mode ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]')}>
                             {m.label}
                           </span>
                           {m.mode === 'SMART_DRAW' && (
                             <span className="text-[10px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-1.5 py-0.5 rounded-full">MẶC ĐỊNH</span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 truncate">{m.sublabel}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)] truncate">{m.sublabel}</p>
                       </div>
                       {drawMode === m.mode && <Check size={16} className="[color:var(--pf-primary)] shrink-0" />}
                     </button>
@@ -272,27 +272,27 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
               {/* Options */}
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">Tùy chọn</label>
+                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Tùy chọn</label>
                 <div className="space-y-2">
                   {[
                     { key: 'avoidRepeatPartners', label: 'Tránh ghép cặp lặp lại', value: avoidRepeatPartners, set: setAvoidRepeatPartners },
                     { key: 'avoidRepeatOpponents', label: 'Tránh đối thủ lặp lại', value: avoidRepeatOpponents, set: setAvoidRepeatOpponents },
                     { key: 'prioritizeSitOuts', label: 'Ưu tiên người ngồi ngoài', value: prioritizeSitOuts, set: setPrioritizeSitOuts },
                   ].map(opt => (
-                    <label key={opt.key} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                    <label key={opt.key} className="flex items-center gap-3 p-3 rounded-xl [background:var(--pf-surface-muted)] cursor-pointer hover:[background:var(--pf-color-muted-soft)] transition-colors">
                       <input
                         type="checkbox"
                         checked={opt.value}
                         onChange={e => opt.set(e.target.checked)}
                         className="w-4 h-4 rounded accent-[var(--pf-primary)]"
                       />
-                      <span className="text-sm text-slate-700">{opt.label}</span>
+                      <span className="text-sm [color:var(--pf-text)]">{opt.label}</span>
                     </label>
                   ))}
 
                   {/* Gender balance segmented control */}
-                  <div className="p-3 rounded-xl bg-slate-50">
-                    <p className="text-sm text-slate-700 mb-2">Cân bằng nam/nữ</p>
+                  <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
+                    <p className="text-sm [color:var(--pf-text)] mb-2">Cân bằng nam/nữ</p>
                     <div className="flex gap-1.5">
                       {GENDER_MODES.map(g => (
                         <button
@@ -302,7 +302,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                             'flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors',
                             genderBalanceMode === g.mode
                               ? '[background:var(--pf-primary)] text-white'
-                              : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300',
+                              : '[background:var(--pf-surface)] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:border-slate-300',
                           )}
                         >
                           {g.label}
@@ -313,18 +313,18 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
                   {/* Court count / max matches */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 rounded-xl bg-slate-50">
-                      <label className="text-xs text-slate-600 block mb-1.5">Số sân đang có</label>
+                    <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
+                      <label className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số sân đang có</label>
                       <input
                         type="number"
                         min={1}
                         value={courtCount}
                         onChange={e => setCourtCount(Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                        className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
                       />
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-50">
-                      <label className="text-xs text-slate-600 block mb-1.5">Số trận tối đa</label>
+                    <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
+                      <label className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số trận tối đa</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -332,10 +332,10 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                           disabled={maxMatchesAuto}
                           value={maxMatches}
                           onChange={e => setMaxMatches(Math.max(1, Number(e.target.value) || 1))}
-                          className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:bg-slate-100 disabled:text-slate-400"
+                          className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:[background:var(--pf-color-muted-soft)] disabled:[color:var(--pf-color-muted)]"
                         />
                       </div>
-                      <label className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500 cursor-pointer">
+                      <label className="flex items-center gap-1.5 mt-1.5 text-xs [color:var(--pf-color-muted)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={maxMatchesAuto}
@@ -352,11 +352,11 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
               {/* Member selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">
                     Thành viên tham gia
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">{selectedCount}/{activeParts.length}</span>
+                    <span className="text-xs [color:var(--pf-color-muted)]">{selectedCount}/{activeParts.length}</span>
                     <button
                       onClick={() => {
                         if (selectedCount === activeParts.length) setSelectedIds(new Set())
@@ -376,7 +376,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         'flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-sm transition-all',
                         selectedIds.has(p.memberId)
                           ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200',
+                          : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:border-[color:var(--pf-border)]',
                       )}
                     >
                       <input
@@ -402,14 +402,14 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
           {step === 'preview' && preview && (
             <div className="p-5 space-y-4">
               {/* Fairness score */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+              <div className="flex items-center justify-between p-4 [background:var(--pf-surface-muted)] rounded-xl">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chỉ số công bằng</p>
-                  <p className={cn('text-3xl font-bold mt-0.5', fairnessColor)}>{preview.fairnessScore}<span className="text-lg font-normal text-slate-400">/100</span></p>
+                  <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chỉ số công bằng</p>
+                  <p className={cn('text-3xl font-bold mt-0.5', fairnessColor)}>{preview.fairnessScore}<span className="text-lg font-normal [color:var(--pf-color-muted)]">/100</span></p>
                 </div>
                 <div className="text-right space-y-1">
-                  <p className="text-xs text-slate-500">Lượt <span className="font-bold text-slate-700">#{preview.roundNumber}</span></p>
-                  <p className="text-xs text-slate-500">{preview.totalPlayers} người · {preview.totalMatches} trận</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">Lượt <span className="font-bold [color:var(--pf-text)]">#{preview.roundNumber}</span></p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">{preview.totalPlayers} người · {preview.totalMatches} trận</p>
                   {preview.sitOutCount > 0 && (
                     <p className="text-xs text-amber-600 font-medium">{preview.sitOutCount} người ngồi ngoài</p>
                   )}
@@ -441,17 +441,17 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
               {/* Matches */}
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Danh sách trận</p>
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Danh sách trận</p>
                 <div className="space-y-2">
                   {preview.matches.map((m, matchIdx) => (
-                    <div key={m.matchNumber} className="bg-white border border-slate-100 rounded-xl p-3">
+                    <div key={m.matchNumber} className="[background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-xl p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-slate-400">Trận #{m.matchNumber}</span>
+                        <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{m.matchNumber}</span>
                         <div className="flex items-center gap-1.5">
                           {m.isGenderBalanced && (
                             <span className="text-[10px] bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded-full font-semibold">Nam/Nữ</span>
                           )}
-                          <span className="text-[10px] text-slate-400">Chênh KN: {m.skillDiff}</span>
+                          <span className="text-[10px] [color:var(--pf-color-muted)]">Chênh KN: {m.skillDiff}</span>
                         </div>
                       </div>
                       {!isManualEdit ? (
@@ -459,7 +459,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                           <div className="flex-1 [background:var(--pf-primary-soft)] rounded-lg px-2.5 py-1.5">
                             <p className="text-xs font-semibold [color:var(--pf-primary)] truncate">{m.team1.map(p => p.memberName).join(' & ')}</p>
                           </div>
-                          <span className="text-xs font-bold text-slate-400 shrink-0">vs</span>
+                          <span className="text-xs font-bold [color:var(--pf-color-muted)] shrink-0">vs</span>
                           <div className="flex-1 [background:var(--pf-primary-soft)] rounded-lg px-2.5 py-1.5">
                             <p className="text-xs font-semibold [color:var(--pf-primary)] truncate">{m.team2.map(p => p.memberName).join(' & ')}</p>
                           </div>
@@ -484,7 +484,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                               )
                             })}
                           </div>
-                          <span className="text-xs font-bold text-slate-400 shrink-0">vs</span>
+                          <span className="text-xs font-bold [color:var(--pf-color-muted)] shrink-0">vs</span>
                           <div className="flex-1 flex flex-wrap gap-1">
                             {m.team2.map((p, playerIdx) => {
                               const chip: SelectedChip = { kind: 'match', matchIdx, team: 2, playerIdx }
@@ -513,12 +513,12 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
               {/* Sit outs */}
               {preview.sitOuts.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Ngồi ngoài lượt này</p>
+                  <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Ngồi ngoài lượt này</p>
                   <div className="flex flex-wrap gap-1.5">
                     {preview.sitOuts.map((p, playerIdx) => {
                       if (!isManualEdit) {
                         return (
-                          <span key={p.memberId} className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                          <span key={p.memberId} className="text-xs [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] px-2.5 py-1 rounded-full font-medium">
                             {p.memberName}
                           </span>
                         )
@@ -531,7 +531,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                           onClick={() => handleChipClick(chip)}
                           className={cn(
                             'text-xs px-2.5 py-1 rounded-full font-medium transition-colors',
-                            isSelected ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                            isSelected ? 'bg-slate-600 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:bg-slate-200',
                           )}
                         >
                           {p.memberName}
@@ -546,17 +546,17 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
           {step === 'preview' && !preview && (
             <div className="p-5 flex flex-col items-center justify-center gap-3 min-h-[200px] text-center">
-              <Users size={32} className="text-slate-300" />
-              <p className="text-sm text-slate-400">Không đủ thành viên để tạo vòng đấu</p>
+              <Users size={32} className="[color:var(--pf-color-muted)]" />
+              <p className="text-sm [color:var(--pf-color-muted)]">Không đủ thành viên để tạo vòng đấu</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 flex gap-3">
+        <div className="px-5 py-4 border-t border-[color:var(--pf-border)] flex gap-3">
           {step === 'config' && (
             <>
-              <button onClick={onClose} className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+              <button onClick={onClose} className="flex-1 py-2.5 px-4 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
                 Hủy
               </button>
               <button
@@ -566,7 +566,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   'flex-[2] py-2.5 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors',
                   canPreview
                     ? '[background:var(--pf-primary)] text-white hover:[background:var(--pf-primary-hover)]'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+                    : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] cursor-not-allowed',
                 )}
               >
                 Xem Trước
@@ -579,13 +579,13 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
             <>
               <button
                 onClick={() => setStep('config')}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
               >
                 Quay lại
               </button>
               <button
                 onClick={handleRedraw}
-                className="py-2.5 px-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                className="py-2.5 px-3 rounded-xl border border-[color:var(--pf-border)] text-sm font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw size={14} />
                 Rút lại
@@ -597,7 +597,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   'py-2.5 px-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-1.5',
                   isManualEdit
                     ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                    : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]',
                 )}
               >
                 <Pencil size={14} />
@@ -610,7 +610,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   'flex-[2] py-2.5 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors',
                   preview && !confirmBlockedByGender
                     ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+                    : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] cursor-not-allowed',
                 )}
               >
                 <Zap size={15} />

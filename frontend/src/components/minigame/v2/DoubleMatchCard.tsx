@@ -34,7 +34,7 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
       )
     }
     return (
-      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-500">
+      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">
         Sắp chơi
       </span>
     )
@@ -48,7 +48,7 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
           <span className={`text-2xl font-bold ${team1Won ? 'text-green-600' : 'text-red-500'}`}>
             {score1}
           </span>
-          <span className="text-slate-400 font-semibold text-lg">:</span>
+          <span className="[color:var(--pf-color-muted)] font-semibold text-lg">:</span>
           <span className={`text-2xl font-bold ${!team1Won ? 'text-green-600' : 'text-red-500'}`}>
             {score2}
           </span>
@@ -59,27 +59,27 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
       return (
         <div className="flex items-center justify-center gap-2 my-2">
           <span className="text-2xl font-bold text-amber-500">?</span>
-          <span className="text-slate-400 font-semibold text-lg">:</span>
+          <span className="[color:var(--pf-color-muted)] font-semibold text-lg">:</span>
           <span className="text-2xl font-bold text-amber-500">?</span>
         </div>
       )
     }
     return (
       <div className="flex items-center justify-center gap-2 my-2">
-        <span className="text-2xl font-bold text-slate-300">–</span>
-        <span className="text-slate-300 font-semibold text-lg">:</span>
-        <span className="text-2xl font-bold text-slate-300">–</span>
+        <span className="text-2xl font-bold [color:var(--pf-color-muted)]">–</span>
+        <span className="[color:var(--pf-color-muted)] font-semibold text-lg">:</span>
+        <span className="text-2xl font-bold [color:var(--pf-color-muted)]">–</span>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm flex flex-col gap-2">
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500">Trận #{matchNumber}</span>
+          <span className="text-xs font-semibold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
           {court && (
-            <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs text-slate-500 bg-slate-100">
+            <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">
               <MapPin size={10} />
               Sân {court}
             </span>
@@ -89,21 +89,21 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
       </div>
 
       <div className="flex items-stretch gap-2">
-        <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 rounded-lg p-2">
-          <span className="text-sm font-medium text-slate-700 text-center leading-tight">{team1.player1}</span>
-          <span className="text-xs text-slate-400 my-0.5">&amp;</span>
-          <span className="text-sm font-medium text-slate-700 text-center leading-tight">{team1.player2}</span>
+        <div className="flex-1 flex flex-col items-center justify-center [background:var(--pf-surface-muted)] rounded-lg p-2">
+          <span className="text-sm font-medium [color:var(--pf-text)] text-center leading-tight">{team1.player1}</span>
+          <span className="text-xs [color:var(--pf-color-muted)] my-0.5">&amp;</span>
+          <span className="text-sm font-medium [color:var(--pf-text)] text-center leading-tight">{team1.player2}</span>
         </div>
 
         <div className="flex flex-col items-center justify-center min-w-[70px]">
           {renderScore()}
-          <span className="text-xs text-slate-400 font-medium">vs</span>
+          <span className="text-xs [color:var(--pf-color-muted)] font-medium">vs</span>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 rounded-lg p-2">
-          <span className="text-sm font-medium text-slate-700 text-center leading-tight">{team2.player1}</span>
-          <span className="text-xs text-slate-400 my-0.5">&amp;</span>
-          <span className="text-sm font-medium text-slate-700 text-center leading-tight">{team2.player2}</span>
+        <div className="flex-1 flex flex-col items-center justify-center [background:var(--pf-surface-muted)] rounded-lg p-2">
+          <span className="text-sm font-medium [color:var(--pf-text)] text-center leading-tight">{team2.player1}</span>
+          <span className="text-xs [color:var(--pf-color-muted)] my-0.5">&amp;</span>
+          <span className="text-sm font-medium [color:var(--pf-text)] text-center leading-tight">{team2.player2}</span>
         </div>
       </div>
 

@@ -118,12 +118,12 @@ export function KpiMonitorPage() {
       ) : (
         <div className="flex flex-col gap-6">
           {/* Health score */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <HeartPulse size={16} className="text-slate-400" /> Sức Khỏe CLB
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <HeartPulse size={16} className="[color:var(--pf-color-muted)]" /> Sức Khỏe CLB
             </h3>
             {!health ? (
-              <p className="text-sm text-slate-400">Không tải được điểm sức khỏe.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Không tải được điểm sức khỏe.</p>
             ) : (
               <div className="flex flex-col md:flex-row md:items-center gap-6">
                 <div className="flex items-center gap-4 shrink-0">
@@ -133,18 +133,18 @@ export function KpiMonitorPage() {
                     <span className={`text-3xl font-bold ${
                       healthTone === 'emerald' ? 'text-emerald-600' : healthTone === 'amber' ? 'text-amber-600' : 'text-red-600'
                     }`}>{health.score}</span>
-                    <span className="text-[10px] text-slate-400">/100</span>
+                    <span className="text-[10px] [color:var(--pf-color-muted)]">/100</span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">{health.label ?? '—'}</p>
-                    <p className="text-[11px] text-slate-400">Điểm tổng hợp</p>
+                    <p className="text-sm font-semibold [color:var(--pf-text)]">{health.label ?? '—'}</p>
+                    <p className="text-[11px] [color:var(--pf-color-muted)]">Điểm tổng hợp</p>
                   </div>
                 </div>
                 <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(breakdown).map(([k, v]) => (
-                    <div key={k} className="rounded-xl border border-slate-100 px-3 py-2">
-                      <p className="text-[11px] text-slate-400">{BREAKDOWN_LABEL[k] ?? k}</p>
-                      <p className="text-lg font-bold text-slate-800">{v}</p>
+                    <div key={k} className="rounded-xl border border-[color:var(--pf-border)] px-3 py-2">
+                      <p className="text-[11px] [color:var(--pf-color-muted)]">{BREAKDOWN_LABEL[k] ?? k}</p>
+                      <p className="text-lg font-bold [color:var(--pf-text)]">{v}</p>
                     </div>
                   ))}
                 </div>
@@ -154,7 +154,7 @@ export function KpiMonitorPage() {
 
           {/* Member KPI */}
           <section>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Users size={13} /> Thành viên</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2 flex items-center gap-1.5"><Users size={13} /> Thành viên</p>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <MetricCard label="Đang hoạt động" value={num(snap?.activeMembers)} icon={<Users size={16} />} sub={`${num(snap?.totalMembers)} tổng`} tone="info" />
               <MetricCard label="Chưa đóng quỹ (kỳ mở)" value={num(snap?.unpaidCount)} icon={<Users size={16} />} tone={(snap?.unpaidCount ?? 0) > 0 ? 'warning' : 'success'} />
@@ -164,7 +164,7 @@ export function KpiMonitorPage() {
 
           {/* Finance KPI */}
           <section>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Wallet size={13} /> Tài chính</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2 flex items-center gap-1.5"><Wallet size={13} /> Tài chính</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} icon={<Wallet size={16} />} tone={(snap?.totalAssets ?? 0) < 0 ? 'danger' : 'success'} />
               <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} icon={<TrendingUp size={16} />} tone="success" />
@@ -174,7 +174,7 @@ export function KpiMonitorPage() {
 
           {/* Workflow + AI KPI */}
           <section>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Workflow size={13} /> Workflow & AI</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2 flex items-center gap-1.5"><Workflow size={13} /> Workflow & AI</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetricCard label="Workflow hoàn tất" value={wfDone} icon={<Workflow size={16} />} sub={`${runs.length} lượt chạy`} tone="success" />
               <MetricCard label="Workflow lỗi" value={wfFailed} icon={<Workflow size={16} />} tone={wfFailed > 0 ? 'danger' : 'success'} sub={`${wfWaiting} chờ duyệt`} />
@@ -184,12 +184,12 @@ export function KpiMonitorPage() {
           </section>
 
           {/* Xu hướng hoạt động 14 ngày */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Activity size={16} className="text-slate-400" /> Xu Hướng Hoạt Động (14 ngày)
+          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+            <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
+              <Activity size={16} className="[color:var(--pf-color-muted)]" /> Xu Hướng Hoạt Động (14 ngày)
             </h3>
             {!hasTrend ? (
-              <p className="text-sm text-slate-400">Chưa đủ dữ liệu hoạt động để vẽ xu hướng.</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa đủ dữ liệu hoạt động để vẽ xu hướng.</p>
             ) : (
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -206,7 +206,7 @@ export function KpiMonitorPage() {
             )}
           </section>
 
-          <p className="text-[11px] text-slate-400 px-1 flex items-center gap-1.5">
+          <p className="text-[11px] [color:var(--pf-color-muted)] px-1 flex items-center gap-1.5">
             <Gauge size={12} /> Số liệu tài chính đọc từ Finance Engine (nguồn tài chính duy nhất) — read-only, không tự tính.
           </p>
         </div>

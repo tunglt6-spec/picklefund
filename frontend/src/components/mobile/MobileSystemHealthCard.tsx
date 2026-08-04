@@ -29,12 +29,12 @@ export function MobileSystemHealthCard({ suspendedClubs, loginsLast24h, activeCl
   ]
 
   return (
-    <div className="bg-white rounded-[18px] border border-slate-100 p-4 shadow-sm">
-      <h3 className="text-[14px] font-[700] text-slate-800 mb-3">Tình trạng hệ thống</h3>
+    <div className="[background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+      <h3 className="text-[14px] font-[700] [color:var(--pf-text)] mb-3">Tình trạng hệ thống</h3>
       <div className="space-y-2.5">
         {rows.map(row => (
           <div key={row.label} className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-600">
+            <div className="flex items-center gap-2 [color:var(--pf-color-muted)]">
               <span className={
                 row.status === 'warn' ? 'text-amber-500' :
                 row.status === 'ok' ? 'text-emerald-500' : '[color:var(--pf-primary)]'

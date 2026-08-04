@@ -45,13 +45,13 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 const TIER_BADGE: Record<ServicePlan, string> = {
-  STARTER: 'bg-slate-100 text-slate-600',
+  STARTER: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
   CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
 
 const TIER_BORDER: Record<ServicePlan, string> = {
-  STARTER: 'border-slate-200',
+  STARTER: 'border-[color:var(--pf-border)]',
   PRO: '[border-color:var(--pf-primary-soft)]',
   CLUB_PLUS: 'border-amber-200',
 }
@@ -164,7 +164,7 @@ export function SuperClubDetail() {
   }
 
   const tabBar = (
-    <div className="flex gap-1 border-b border-slate-100 mb-4">
+    <div className="flex gap-1 border-b border-[color:var(--pf-border)] mb-4">
       {([
         { key: 'members', label: 'Thành viên', icon: <Users size={14} /> },
         { key: 'billing', label: 'Gói dịch vụ', icon: <CreditCard size={14} /> },
@@ -175,7 +175,7 @@ export function SuperClubDetail() {
           className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             tab === t.key
               ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
           }`}
         >
           {t.icon}{t.label}
@@ -187,14 +187,14 @@ export function SuperClubDetail() {
   const membersList = (
     <>
       {members.length === 0 ? (
-        <div className="text-center py-8 text-slate-400 text-sm">Chưa có thành viên</div>
+        <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên</div>
       ) : (
         <div className="space-y-2">
           {members.map(m => (
-            <div key={m.id} className="flex items-center justify-between gap-3 py-2 border-b border-slate-50 last:border-0">
+            <div key={m.id} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-slate-900 truncate">{m.username}</div>
-                <div className="text-xs text-slate-400 truncate">{m.email}</div>
+                <div className="text-sm font-medium [color:var(--pf-text)] truncate">{m.username}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] truncate">{m.email}</div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-xs px-2 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
@@ -212,7 +212,7 @@ export function SuperClubDetail() {
   const billingPanel = (
     <div className="space-y-4">
       {billingLoading ? (
-        <div className="text-center py-8 text-slate-400 text-sm">Đang tải...</div>
+        <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
       ) : (
         <>
           {/* Current subscription */}
@@ -221,7 +221,7 @@ export function SuperClubDetail() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Star size={15} className="text-amber-500" />
-                  <span className="font-semibold text-sm text-slate-800">Gói hiện tại</span>
+                  <span className="font-semibold text-sm [color:var(--pf-text)]">Gói hiện tại</span>
                 </div>
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${TIER_BADGE[sub.tier]}`}>
                   {sub.plan?.name ?? sub.tier}
@@ -229,11 +229,11 @@ export function SuperClubDetail() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-xs text-slate-400">Thành viên</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">Thành viên</div>
                   <div className="font-medium">{sub.usage.members} / {sub.plan?.maxMembers === 9999 ? '∞' : sub.plan?.maxMembers}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400">Hết hạn</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">Hết hạn</div>
                   <div className="font-medium">
                     {sub.expiresAt
                       ? `${new Date(sub.expiresAt).toLocaleDateString('vi-VN')} (còn ${sub.daysRemaining} ngày)`
@@ -241,20 +241,20 @@ export function SuperClubDetail() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400">AI Features</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">AI Features</div>
                   <div className="flex items-center gap-1">
                     {sub.plan?.aiFeatures
                       ? <CheckCircle2 size={14} className="text-green-500" />
-                      : <span className="text-xs text-slate-400">—</span>}
+                      : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
                     <span className="text-xs">{sub.plan?.aiFeatures ? 'Bật' : 'Tắt'}</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400">Telegram Bot</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">Telegram Bot</div>
                   <div className="flex items-center gap-1">
                     {sub.plan?.telegramBot
                       ? <CheckCircle2 size={14} className="text-green-500" />
-                      : <span className="text-xs text-slate-400">—</span>}
+                      : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
                     <span className="text-xs">{sub.plan?.telegramBot ? 'Bật' : 'Tắt'}</span>
                   </div>
                 </div>
@@ -263,14 +263,14 @@ export function SuperClubDetail() {
           )}
 
           {/* Upgrade form */}
-          <div className="rounded-xl border border-slate-100 p-4 space-y-3">
+          <div className="rounded-xl border border-[color:var(--pf-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Zap size={15} className="[color:var(--pf-primary)]" />
-              <span className="font-semibold text-sm text-slate-800">Nâng cấp gói</span>
+              <span className="font-semibold text-sm [color:var(--pf-text)]">Nâng cấp gói</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Gói</label>
+                <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Gói</label>
                 <select
                   value={upgradeTier}
                   onChange={e => setUpgradeTier(e.target.value as ServicePlan)}
@@ -284,7 +284,7 @@ export function SuperClubDetail() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Số tháng</label>
+                <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Số tháng</label>
                 <select
                   value={upgradeMonths}
                   onChange={e => setUpgradeMonths(Number(e.target.value))}
@@ -313,10 +313,10 @@ export function SuperClubDetail() {
 
           {/* AI Usage chart (last 6 months) */}
           {aiUsage.length > 0 && (
-            <div className="rounded-xl border border-slate-100 p-4">
+            <div className="rounded-xl border border-[color:var(--pf-border)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Zap size={14} className="[color:var(--pf-primary)]" />
-                <span className="font-semibold text-sm text-slate-800">AI Token sử dụng</span>
+                <span className="font-semibold text-sm [color:var(--pf-text)]">AI Token sử dụng</span>
               </div>
               <div className="space-y-2">
                 {aiUsage.slice(-6).map(u => {
@@ -324,11 +324,11 @@ export function SuperClubDetail() {
                   const pct = Math.round((u.tokens / maxTokens) * 100)
                   return (
                     <div key={u.month} className="flex items-center gap-2 text-xs">
-                      <div className="w-14 text-slate-400 shrink-0">{fmtMonth(u.month)}</div>
-                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-14 [color:var(--pf-color-muted)] shrink-0">{fmtMonth(u.month)}</div>
+                      <div className="flex-1 h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                         <div className="h-full [background:var(--pf-primary)] rounded-full" style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="w-28 text-right text-slate-500 shrink-0">
+                      <div className="w-28 text-right [color:var(--pf-color-muted)] shrink-0">
                         {u.tokens.toLocaleString('vi-VN')} tokens
                       </div>
                       <div className="w-20 text-right [color:var(--pf-primary)] font-medium shrink-0">
@@ -361,13 +361,13 @@ export function SuperClubDetail() {
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate('/super/clubs')} className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate('/super/clubs')} className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-slate-900 text-base truncate">{club.name}</div>
-            <div className="text-xs text-slate-400">{club.code}</div>
+            <div className="font-bold [color:var(--pf-text)] text-base truncate">{club.name}</div>
+            <div className="text-xs [color:var(--pf-color-muted)]">{club.code}</div>
           </div>
           <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
             {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
@@ -375,30 +375,30 @@ export function SuperClubDetail() {
         </div>
 
         <div className="px-4 py-4 space-y-4">
-          <div className="bg-white rounded-[16px] border border-slate-100 p-4 space-y-3">
-            <div className="text-sm font-semibold text-slate-700">Thông tin CLB</div>
+          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 space-y-3">
+            <div className="text-sm font-semibold [color:var(--pf-text)]">Thông tin CLB</div>
             {club.address && (
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <MapPin size={14} className="mt-0.5 text-slate-400 shrink-0" />{club.address}
+              <div className="flex items-start gap-2 text-sm [color:var(--pf-color-muted)]">
+                <MapPin size={14} className="mt-0.5 [color:var(--pf-color-muted)] shrink-0" />{club.address}
               </div>
             )}
             {club.contactEmail && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Mail size={14} className="text-slate-400 shrink-0" />{club.contactEmail}
+              <div className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)]">
+                <Mail size={14} className="[color:var(--pf-color-muted)] shrink-0" />{club.contactEmail}
               </div>
             )}
             {club.contactPhone && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Phone size={14} className="text-slate-400 shrink-0" />{club.contactPhone}
+              <div className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)]">
+                <Phone size={14} className="[color:var(--pf-color-muted)] shrink-0" />{club.contactPhone}
               </div>
             )}
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <Users size={14} className="text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)]">
+              <Users size={14} className="[color:var(--pf-color-muted)] shrink-0" />
               {club._count?.members ?? members.length} thành viên · {club._count?.fundPeriods ?? 0} kỳ quỹ
             </div>
           </div>
 
-          <div className="bg-white rounded-[16px] border border-slate-100 p-4">
+          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4">
             {tabBar}
             {tab === 'members' ? membersList : billingPanel}
           </div>

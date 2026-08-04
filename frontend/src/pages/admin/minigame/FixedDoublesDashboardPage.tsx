@@ -138,10 +138,10 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
   ]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: T.border }}>
-          <p className="font-bold text-slate-900">Nhập Kết Quả</p>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+          <p className="font-bold [color:var(--pf-text)]">Nhập Kết Quả</p>
+          <button onClick={onClose} className="p-1 rounded-lg hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -152,7 +152,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
               <p className="text-[11px] mb-2" style={{ color: T.txt2 }}>{side.members}</p>
               <div className="flex items-center gap-3">
                 <button onClick={() => adj(side.set, -1)}
-                  className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg text-slate-500 hover:bg-slate-50 transition-colors"
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
                   style={{ borderColor: T.border }}>−</button>
                 <input type="number" min={0} value={side.val}
                   onChange={e => side.set(Math.max(0, parseInt(e.target.value) || 0))}
@@ -190,13 +190,13 @@ function MatchMenu({ onScore, onDelete, isDone }: { onScore: () => void; onDelet
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(v => !v)}
-        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-slate-100 text-slate-400 transition-colors">
+        className="w-7 h-7 rounded-lg flex items-center justify-center hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
         <MoreVertical size={13} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-xl shadow-lg border py-1 z-30" style={{ borderColor: T.border }}>
+        <div className="absolute right-0 top-full mt-1 w-36 [background:var(--pf-surface)] rounded-xl shadow-lg border py-1 z-30" style={{ borderColor: T.border }}>
           <button onClick={() => { onScore(); setOpen(false) }}
-            className="w-full text-left text-sm px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700">
+            className="w-full text-left text-sm px-3 py-2 hover:[background:var(--pf-surface-muted)] flex items-center gap-2 [color:var(--pf-text)]">
             <Plus size={13} /> {isDone ? 'Sửa điểm' : 'Nhập điểm'}
           </button>
           <button onClick={() => { onDelete(); setOpen(false) }}
@@ -233,11 +233,11 @@ function MatchRow({
       style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderColor: T.border }}
     >
       {/* match # */}
-      <span className="text-[11px] font-bold text-slate-400 tabular-nums text-center">#{matchNumber}</span>
+      <span className="text-[11px] font-bold [color:var(--pf-color-muted)] tabular-nums text-center">#{matchNumber}</span>
 
       {/* team 1 */}
       <div className="min-w-0">
-        <p className={cn('text-sm font-bold truncate', t1Win ? 'text-green-700' : 'text-slate-900')}>
+        <p className={cn('text-sm font-bold truncate', t1Win ? 'text-green-700' : '[color:var(--pf-text)]')}>
           {t1Win && <span className="mr-1">🏆</span>}{team1.name}
         </p>
         <p className="text-[11px] truncate mt-0.5" style={{ color: T.txt2 }}>{team1.members}</p>
@@ -248,7 +248,7 @@ function MatchRow({
 
       {/* team 2 */}
       <div className="min-w-0">
-        <p className={cn('text-sm font-bold truncate', t2Win ? 'text-green-700' : 'text-slate-900')}>
+        <p className={cn('text-sm font-bold truncate', t2Win ? 'text-green-700' : '[color:var(--pf-text)]')}>
           {t2Win && <span className="mr-1">🏆</span>}{team2.name}
         </p>
         <p className="text-[11px] truncate mt-0.5" style={{ color: T.txt2 }}>{team2.members}</p>
@@ -259,11 +259,11 @@ function MatchRow({
         {isDone ? (
           <span className="font-extrabold text-sm">
             <span style={{ color: t1Win ? T.success : T.txt2 }}>{match.team1Score}</span>
-            <span className="mx-1 text-slate-300">–</span>
+            <span className="mx-1 [color:var(--pf-color-muted)]">–</span>
             <span style={{ color: t2Win ? T.success : T.txt2 }}>{match.team2Score}</span>
           </span>
         ) : (
-          <span className="text-slate-300 text-sm font-bold">– : –</span>
+          <span className="[color:var(--pf-color-muted)] text-sm font-bold">– : –</span>
         )}
       </div>
 
@@ -292,7 +292,7 @@ function MatchRow({
   const mobileCard = (
     <div className="md:hidden p-4 border-b last:border-0" style={{ borderColor: T.border }}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-bold text-slate-400">Trận #{matchNumber}</span>
+        <span className="text-[11px] font-bold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
         <div className="flex items-center gap-1.5">
           <MatchStatusBadge status={match.status} />
           <MatchMenu isDone={isDone} onScore={() => onEnterScore(match)} onDelete={() => onDelete(match.id)} />
@@ -300,7 +300,7 @@ function MatchRow({
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <p className={cn('text-sm font-bold', t1Win ? 'text-green-700' : 'text-slate-900')}>
+          <p className={cn('text-sm font-bold', t1Win ? 'text-green-700' : '[color:var(--pf-text)]')}>
             {t1Win && '🏆 '}{team1.name}
           </p>
           <p className="text-[11px]" style={{ color: T.txt2 }}>{team1.members}</p>
@@ -311,11 +311,11 @@ function MatchRow({
               {match.team1Score} – {match.team2Score}
             </p>
           ) : (
-            <p className="text-xs font-bold text-slate-300">VS</p>
+            <p className="text-xs font-bold [color:var(--pf-color-muted)]">VS</p>
           )}
         </div>
         <div className="flex-1 min-w-0 text-right">
-          <p className={cn('text-sm font-bold', t2Win ? 'text-green-700' : 'text-slate-900')}>
+          <p className={cn('text-sm font-bold', t2Win ? 'text-green-700' : '[color:var(--pf-text)]')}>
             {team2.name}{t2Win && ' 🏆'}
           </p>
           <p className="text-[11px]" style={{ color: T.txt2 }}>{team2.members}</p>
@@ -384,7 +384,7 @@ function RoundCard({
         </div>
         <div className="flex items-center gap-3">
           {/* progress bar */}
-          <div className="hidden sm:block h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+          <div className="hidden sm:block h-1.5 w-24 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500"
               style={{ width: `${pct}%`, background: `linear-gradient(90deg,${T.brand},${T.cyan})` }} />
           </div>
@@ -443,7 +443,7 @@ function ExportButtons({ onPng, onPdf, ariaScope }: {
       )}
       {onPdf && (
         <button onClick={onPdf} aria-label={`Xuất PDF ${ariaScope}`} title="Xuất PDF"
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors">
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)] transition-colors">
           <FileText size={15} /> Xuất PDF
         </button>
       )}
@@ -470,7 +470,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
         )}
       </div>
       {standings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-10 [color:var(--pf-color-muted)]">
           <Trophy size={24} className="mb-2 opacity-30" />
           <p className="text-xs">Chưa có dữ liệu</p>
         </div>
@@ -503,7 +503,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
                 </td>
                 <td className="text-center px-2 py-2.5 text-xs" style={{ color: T.txt2 }}>{s.played}</td>
                 <td className={cn('text-center px-2 py-2.5 text-xs font-bold',
-                  s.pointDifference > 0 ? 'text-green-600' : s.pointDifference < 0 ? 'text-red-500' : 'text-slate-400')}>
+                  s.pointDifference > 0 ? 'text-green-600' : s.pointDifference < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]')}>
                   {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                 </td>
                 <td className="text-center px-2 py-2.5 font-extrabold text-sm" style={{ color: T.brand }}>
@@ -538,7 +538,7 @@ function QuickStatsCard({ totalFor, totalAgainst, completedMatches }: {
       </div>
       <div className="grid grid-cols-2 gap-px" style={{ background: T.border }}>
         {stats.map((s, i) => (
-          <div key={i} className="bg-white px-4 py-3">
+          <div key={i} className="[background:var(--pf-surface)] px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.txt2 }}>{s.label}</p>
             <p className="text-xl font-extrabold mt-1 leading-none" style={{ color: s.color }}>{s.value}</p>
           </div>
@@ -574,7 +574,7 @@ function RecentActivityCard({ entries }: { entries: string[] }) {
         <span className="font-bold text-sm" style={{ color: T.txt1 }}>Hoạt Động Gần Đây</span>
       </div>
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-8 [color:var(--pf-color-muted)]">
           <Activity size={20} className="mb-2 opacity-30" />
           <p className="text-xs">Chưa có hoạt động nào được ghi lại</p>
         </div>
@@ -611,19 +611,19 @@ function DraftPanel({ minigameId, onAutoGenerate }: { minigameId: string; onAuto
     <div style={CARD} className="p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Users size={16} className="text-slate-400" />
-          <span className="font-bold text-slate-900">Người Tham Gia ({parts.length})</span>
+          <Users size={16} className="[color:var(--pf-color-muted)]" />
+          <span className="font-bold [color:var(--pf-text)]">Người Tham Gia ({parts.length})</span>
         </div>
         <Button onClick={handleAuto} disabled={loading}><Shuffle size={13} /> Ghép Cặp Tự Động</Button>
       </div>
       {parts.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-8">Chưa có người tham gia</p>
+        <p className="text-sm [color:var(--pf-color-muted)] text-center py-8">Chưa có người tham gia</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {parts.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-              <span className="w-5 h-5 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-bold text-slate-500">{i + 1}</span>
-              <span className="text-sm text-slate-800 truncate">{p.memberName}</span>
+            <div key={p.id} className="flex items-center gap-2 rounded-xl [background:var(--pf-surface-muted)] px-3 py-2">
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
+              <span className="text-sm [color:var(--pf-text)] truncate">{p.memberName}</span>
               {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
             </div>
           ))}
@@ -665,8 +665,8 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
     <div style={CARD} className="p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Users size={16} className="text-slate-400" />
-          <span className="font-bold text-slate-900">Danh Sách Đội ({teams.length})</span>
+          <Users size={16} className="[color:var(--pf-color-muted)]" />
+          <span className="font-bold [color:var(--pf-text)]">Danh Sách Đội ({teams.length})</span>
           <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đội sẽ được cố định sau khi tạo lịch</span>
         </div>
         <div className="flex gap-2">
@@ -680,7 +680,7 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
       </div>
       <div className="space-y-2">
         {teams.map((team, i) => (
-          <div key={team.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
+          <div key={team.id} className="flex items-center gap-3 [background:var(--pf-surface-muted)] rounded-xl px-4 py-3">
             <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
               style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>{i + 1}</span>
             {editId === team.id ? (
@@ -691,9 +691,9 @@ function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRege
                   if (e.key === 'Escape') setEditId(null)
                 }} />
             ) : (
-              <span className="flex-1 font-semibold text-slate-900">{team.name}</span>
+              <span className="flex-1 font-semibold [color:var(--pf-text)]">{team.name}</span>
             )}
-            <span className="text-xs text-slate-500">{team.player1.memberName} &amp; {team.player2.memberName}</span>
+            <span className="text-xs [color:var(--pf-color-muted)]">{team.player1.memberName} &amp; {team.player2.memberName}</span>
             <Button size="sm" variant="ghost" onClick={() => { setEditId(team.id); setEditName(team.name) }}><Edit2 size={12} /></Button>
             <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-50" onClick={() => handleDeleteTeam(team.id)}><Trash2 size={12} /></Button>
           </div>
@@ -732,18 +732,18 @@ function ManualPairPanel({ participants, teams, onCreateTeam, onDeleteTeam, onCr
   return (
     <div style={CARD} className="p-5 space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
-        <Users size={16} className="text-slate-400" />
-        <span className="font-bold text-slate-900">Ghép Cặp Thủ Công</span>
+        <Users size={16} className="[color:var(--pf-color-muted)]" />
+        <span className="font-bold [color:var(--pf-text)]">Ghép Cặp Thủ Công</span>
         <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">Chọn 2 người → Tạo cặp</span>
       </div>
 
       {teams.length > 0 && (
         <div className="space-y-2">
           {teams.map((t, i) => (
-            <div key={t.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-2.5">
+            <div key={t.id} className="flex items-center gap-3 [background:var(--pf-surface-muted)] rounded-xl px-4 py-2.5">
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                 style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>{i + 1}</span>
-              <span className="flex-1 text-sm font-medium text-slate-800 truncate">{t.player1.memberName} &amp; {t.player2.memberName}</span>
+              <span className="flex-1 text-sm font-medium [color:var(--pf-text)] truncate">{t.player1.memberName} &amp; {t.player2.memberName}</span>
               <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-50" onClick={() => onDeleteTeam(t.id)}><Trash2 size={12} /></Button>
             </div>
           ))}
@@ -752,17 +752,17 @@ function ManualPairPanel({ participants, teams, onCreateTeam, onDeleteTeam, onCr
 
       {unpaired.length > 0 ? (
         <>
-          <p className="text-xs text-slate-500">Người chưa ghép ({unpaired.length}) — chọn đúng 2 người:</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Người chưa ghép ({unpaired.length}) — chọn đúng 2 người:</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {unpaired.map(p => {
               const active = sel.includes(p.memberId)
               return (
                 <button key={p.id} onClick={() => toggle(p.memberId)}
                   className={cn('flex items-center gap-2 rounded-xl px-3 py-2 border text-left transition-colors',
-                    active ? 'border-[color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                    active ? 'border-[color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]')}>
                   <span className={cn('w-4 h-4 rounded-full border flex items-center justify-center text-[9px] shrink-0',
                     active ? '[background:var(--pf-primary)] text-white border-transparent' : 'border-slate-300')}>{active ? '✓' : ''}</span>
-                  <span className="text-sm text-slate-800 truncate">{p.memberName}</span>
+                  <span className="text-sm [color:var(--pf-text)] truncate">{p.memberName}</span>
                   {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[9px] font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
                 </button>
               )
@@ -774,7 +774,7 @@ function ManualPairPanel({ participants, teams, onCreateTeam, onDeleteTeam, onCr
         <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">✓ Đã ghép hết người chơi vào các cặp.</p>
       )}
 
-      <div className="pt-2 border-t border-slate-100 flex justify-end">
+      <div className="pt-2 border-t border-[color:var(--pf-border)] flex justify-end">
         <Button onClick={onCreateSchedule} disabled={!allPaired}><Calendar size={13} /> Tạo Lịch</Button>
       </div>
     </div>
@@ -915,7 +915,7 @@ export function FixedDoublesDashboardPage() {
   if (!mg) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ background: T.bg }}>
-        <p className="text-slate-500">Không tìm thấy minigame</p>
+        <p className="[color:var(--pf-color-muted)]">Không tìm thấy minigame</p>
       </div>
     )
   }
@@ -1067,11 +1067,11 @@ export function FixedDoublesDashboardPage() {
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
 
       {/* ── sticky header ── */}
-      <div className="bg-white border-b sticky top-0 z-20" style={{ borderColor: T.border }}>
+      <div className="[background:var(--pf-surface)] border-b sticky top-0 z-20" style={{ borderColor: T.border }}>
         <div className="flex items-center gap-3 px-4 sm:px-6 min-h-[56px] py-2">
           <button
             onClick={() => navigate('/minigames')}
-            className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors shrink-0"
+            className="p-2 rounded-xl hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors shrink-0"
           >
             <ArrowLeft size={18} />
           </button>
@@ -1110,17 +1110,17 @@ export function FixedDoublesDashboardPage() {
             )}
             <button
               title="Chỉnh sửa"
-              className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"
+              className="p-2 rounded-xl hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors"
               onClick={() => navigate(`/minigames/${id}/edit`)}
             >
               <Edit2 size={16} />
             </button>
             {!isMobile && (
               <>
-                <button title="Thông báo" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                <button title="Thông báo" className="p-2 rounded-xl hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
                   <Bell size={16} />
                 </button>
-                <button title="Thêm" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                <button title="Thêm" className="p-2 rounded-xl hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
                   <MoreHorizontal size={16} />
                 </button>
               </>
@@ -1245,7 +1245,7 @@ export function FixedDoublesDashboardPage() {
               )}
 
               {rounds.length === 0 && (
-                <div style={CARD} className="py-14 text-center text-slate-400">
+                <div style={CARD} className="py-14 text-center [color:var(--pf-color-muted)]">
                   <Calendar size={28} className="mx-auto mb-2 opacity-30" />
                   <p className="text-sm">Chưa có lịch thi đấu</p>
                 </div>
@@ -1294,28 +1294,28 @@ export function FixedDoublesDashboardPage() {
       {showScheduleChoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-2 mb-1">
               <Calendar size={18} style={{ color: T.brand }} />
-              <p className="font-bold text-slate-900">Tạo lịch thi đấu</p>
+              <p className="font-bold [color:var(--pf-text)]">Tạo lịch thi đấu</p>
             </div>
-            <p className="text-sm text-slate-500 mb-4">Chọn thể thức vòng tròn. Đội/đôi giữ CỐ ĐỊNH ở mọi lượt.</p>
+            <p className="text-sm [color:var(--pf-color-muted)] mb-4">Chọn thể thức vòng tròn. Đội/đôi giữ CỐ ĐỊNH ở mọi lượt.</p>
             <div className="space-y-2.5">
               <button onClick={() => doCreateSchedule(false)}
-                className="w-full text-left px-4 py-3 rounded-xl border hover:bg-slate-50 transition-colors"
+                className="w-full text-left px-4 py-3 rounded-xl border hover:[background:var(--pf-surface-muted)] transition-colors"
                 style={{ borderColor: T.border }}>
-                <div className="font-semibold text-slate-900 text-sm">1 lượt (vòng tròn)</div>
-                <div className="text-[12px] text-slate-500">Mỗi cặp đội gặp nhau 1 lần.</div>
+                <div className="font-semibold [color:var(--pf-text)] text-sm">1 lượt (vòng tròn)</div>
+                <div className="text-[12px] [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 1 lần.</div>
               </button>
               <button onClick={() => doCreateSchedule(true)}
                 className="w-full text-left px-4 py-3 rounded-xl border-2 transition-colors"
                 style={{ borderColor: T.brand, background: 'var(--pf-primary-soft)' }}>
                 <div className="font-semibold text-sm" style={{ color: T.brand }}>Lượt đi &amp; lượt về</div>
-                <div className="text-[12px] text-slate-500">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
+                <div className="text-[12px] [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
               </button>
             </div>
             <button onClick={() => setShowScheduleChoice(false)}
-              className="mt-4 w-full py-2 rounded-xl border text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="mt-4 w-full py-2 rounded-xl border text-sm font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
               style={{ borderColor: T.border }}>
               Hủy
             </button>
@@ -1327,15 +1327,15 @@ export function FixedDoublesDashboardPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 text-center">
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-xs p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
               <Trash2 size={20} className="text-red-500" />
             </div>
-            <p className="font-bold text-slate-900 mb-1">Xóa kết quả trận này?</p>
-            <p className="text-sm text-slate-500 mb-5">Hành động này không thể hoàn tác.</p>
+            <p className="font-bold [color:var(--pf-text)] mb-1">Xóa kết quả trận này?</p>
+            <p className="text-sm [color:var(--pf-color-muted)] mb-5">Hành động này không thể hoàn tác.</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2 rounded-xl border text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2 rounded-xl border text-sm font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
                 style={{ borderColor: T.border }}>
                 Hủy
               </button>

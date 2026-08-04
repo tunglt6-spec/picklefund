@@ -328,14 +328,14 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
             </button>
 
             <div
-              className="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center py-8 gap-2 cursor-pointer hover:[border-color:var(--pf-primary)]"
+              className="border-2 border-dashed border-[color:var(--pf-border)] rounded-xl flex flex-col items-center justify-center py-8 gap-2 cursor-pointer hover:[border-color:var(--pf-primary)]"
               onClick={() => document.getElementById('bulk-import-file')?.click()}
               onDragOver={e => e.preventDefault()}
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
             >
-              <Upload size={24} className="text-slate-300" />
-              <p className="text-sm text-slate-500">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file đã điền</span></p>
-              <p className="text-xs text-slate-400">.xlsx, .xls</p>
+              <Upload size={24} className="[color:var(--pf-color-muted)]" />
+              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file đã điền</span></p>
+              <p className="text-xs [color:var(--pf-color-muted)]">.xlsx, .xls</p>
               <input id="bulk-import-file" type="file" accept=".xlsx,.xls" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
             </div>
@@ -347,14 +347,14 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
             )}
 
             {fileName && !fileError && totalRows > 0 && (
-              <div className="rounded-xl border border-slate-100 divide-y divide-slate-100">
-                <div className="px-4 py-2.5 flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <FileSpreadsheet size={15} className="text-slate-400" />{fileName}
+              <div className="rounded-xl border border-[color:var(--pf-border)] divide-y divide-slate-100">
+                <div className="px-4 py-2.5 flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
+                  <FileSpreadsheet size={15} className="[color:var(--pf-color-muted)]" />{fileName}
                 </div>
                 {(Object.keys(SECTION_LABELS) as (keyof ImportResult)[]).map(key => (
                   <div key={key} className="px-4 py-2 flex items-center justify-between text-sm">
-                    <span className="text-slate-500">{SECTION_LABELS[key]}</span>
-                    <span className={parsed[key].length > 0 ? 'font-semibold text-slate-900' : 'text-slate-300'}>
+                    <span className="[color:var(--pf-color-muted)]">{SECTION_LABELS[key]}</span>
+                    <span className={parsed[key].length > 0 ? 'font-semibold [color:var(--pf-text)]' : '[color:var(--pf-color-muted)]'}>
                       {parsed[key].length} dòng
                     </span>
                   </div>
@@ -374,19 +374,19 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
               if (sec.created === 0 && (sec.matched ?? 0) === 0 && sec.errors.length === 0) return null
               const expanded = expandedErrors.has(key)
               return (
-                <div key={key} className="rounded-xl border border-slate-100 overflow-hidden">
+                <div key={key} className="rounded-xl border border-[color:var(--pf-border)] overflow-hidden">
                   <div className="px-4 py-2.5 flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-700">{SECTION_LABELS[key]}</span>
-                    <span className="text-slate-500">
+                    <span className="font-medium [color:var(--pf-text)]">{SECTION_LABELS[key]}</span>
+                    <span className="[color:var(--pf-color-muted)]">
                       <span className="text-emerald-600 font-semibold">{sec.created} tạo mới</span>
                       {typeof sec.matched === 'number' && sec.matched > 0 && <span> · {sec.matched} đã có sẵn</span>}
                       {sec.errors.length > 0 && <span className="text-red-600"> · {sec.errors.length} lỗi</span>}
                     </span>
                   </div>
                   {sec.errors.length > 0 && (
-                    <div className="border-t border-slate-100">
+                    <div className="border-t border-[color:var(--pf-border)]">
                       <button
-                        className="w-full px-4 py-2 flex items-center justify-between text-xs text-slate-500 hover:bg-slate-50"
+                        className="w-full px-4 py-2 flex items-center justify-between text-xs [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
                         onClick={() => toggleErrors(key)}
                       >
                         Xem chi tiết lỗi {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}

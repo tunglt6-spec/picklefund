@@ -32,7 +32,7 @@ function BrandingTab() {
   useEffect(() => { if (!loading) setForm(branding) }, [loading, branding])
   const set = (patch: Partial<ClubBranding>) => setForm(f => (f ? { ...f, ...patch } : f))
 
-  if (loading || !form) return <p className="text-sm text-slate-400">Đang tải…</p>
+  if (loading || !form) return <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
   if (!available) return (
     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
       Không tải được cấu hình thương hiệu (kiểm tra quyền/đăng nhập).
@@ -102,7 +102,7 @@ function BrandingTab() {
           Logo/nền/favicon nhập bằng URL ảnh. Màu áp dụng dần trên giao diện & PDF ở các bản cập nhật tiếp theo.
         </p>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6 space-y-4">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6 space-y-4">
         <h3 className="font-semibold text-gray-900">Nhận diện</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {textField('Tên hiển thị', 'displayName', 'PickleFund', 60)}
@@ -158,7 +158,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
   return (
     <div className="space-y-6">
       {/* Basic info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Thông tin cơ bản</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -216,7 +216,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
       </div>
 
       {/* Fund settings */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Cài đặt quỹ mặc định</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -291,7 +291,7 @@ function AccountTab() {
   return (
     <div className="space-y-6">
       {/* Profile */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Thông tin tài khoản</h3>
         <div className="flex items-center gap-4 mb-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl [background:var(--pf-primary)] text-2xl font-bold text-white">
@@ -323,7 +323,7 @@ function AccountTab() {
       </div>
 
       {/* Change password */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Đổi mật khẩu</h3>
         <div className="space-y-4 max-w-md">
           {[
@@ -367,7 +367,7 @@ function AccountTab() {
       </div>
 
       {/* Danger zone */}
-      <div className="bg-white rounded-xl border border-red-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-red-200 p-5 md:p-6">
         <h3 className="font-semibold text-red-700 mb-1">Vùng nguy hiểm</h3>
         <p className="text-sm text-gray-500 mb-4">Các thao tác dưới đây không thể hoàn tác.</p>
         <Button variant="danger" size="sm" onClick={() => toast.error('Liên hệ Super Admin để xoá tài khoản')}>
@@ -406,7 +406,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     <button onClick={() => onChange(!value)}
       className={cn('relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
         value ? '[background:var(--pf-primary)]' : 'bg-gray-200')}>
-      <span className={cn('inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 mt-0.5',
+      <span className={cn('inline-block h-5 w-5 transform rounded-full [background:var(--pf-surface)] shadow-sm transition-transform duration-200 mt-0.5',
         value ? 'translate-x-5' : 'translate-x-0.5')} />
     </button>
   )
@@ -456,7 +456,7 @@ function NotificationsTab(_: { clubId: string }) {
   return (
     <div className="space-y-6">
       {/* Bật/tắt thông báo */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-gray-900">Nhận thông báo</h3>
@@ -467,7 +467,7 @@ function NotificationsTab(_: { clubId: string }) {
       </div>
 
       {/* Kênh ưu tiên */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Kênh nhận thông báo ưu tiên</h3>
         <div className="space-y-2">
           {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
@@ -499,7 +499,7 @@ function NotificationsTab(_: { clubId: string }) {
 
       {/* Telegram Chat ID */}
       {pref.channels.includes('TELEGRAM') && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
           <h3 className="font-semibold text-gray-900 mb-1">Liên kết Telegram</h3>
           <p className="text-xs text-gray-500 mb-3">
             Nhắn tin cho <span className="font-mono [color:var(--pf-primary)]">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
@@ -514,7 +514,7 @@ function NotificationsTab(_: { clubId: string }) {
       )}
 
       {/* Giờ yên tĩnh */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-1">Giờ yên tĩnh</h3>
         <p className="text-xs text-gray-500 mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
         <div className="flex items-center gap-3">
@@ -539,7 +539,7 @@ function NotificationsTab(_: { clubId: string }) {
       </div>
 
       {/* Giới hạn/ngày */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Giới hạn thông báo mỗi ngày</h3>
         <div className="grid grid-cols-2 gap-4 max-w-sm">
           <div>
@@ -620,7 +620,7 @@ function TelegramTab() {
 
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-1">Kết nối Telegram Bot</h3>
         <p className="text-sm text-gray-500 mb-4">
           Liên kết bot <strong>MÍT ĐẶC BOT</strong> với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
@@ -668,7 +668,7 @@ function TelegramTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-3">Các lệnh Bot hỗ trợ</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           {[
@@ -743,7 +743,7 @@ function PaymentTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+      <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
         <h3 className="font-semibold text-gray-900 mb-1">Tài khoản ngân hàng nhận tiền quỹ</h3>
         <p className="text-xs text-gray-500 mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -777,7 +777,7 @@ function PaymentTab() {
       </div>
 
       {qrUrl && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-gray-200 p-5 md:p-6">
           <h3 className="font-semibold text-gray-900 mb-3">Xem trước mã QR</h3>
           <div className="flex items-start gap-6">
             <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-gray-200 object-contain" />
@@ -866,10 +866,10 @@ function BillingTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-800 mb-4">Chọn CLB</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5">
+        <h3 className="text-sm font-semibold [color:var(--pf-text)] mb-4">Chọn CLB</h3>
         <select
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+          className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm"
           value={selected}
           onChange={e => setSelected(e.target.value)}
         >
@@ -877,30 +877,30 @@ function BillingTab() {
         </select>
       </div>
 
-      {loading && <div className="text-center text-sm text-slate-400">Đang tải...</div>}
+      {loading && <div className="text-center text-sm [color:var(--pf-color-muted)]">Đang tải...</div>}
 
       {!loading && sub && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-800">Subscription hiện tại</h3>
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 space-y-4">
+          <h3 className="text-sm font-semibold [color:var(--pf-text)]">Subscription hiện tại</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-slate-500">Gói:</span> <span className="font-medium">{sub.plan.name}</span></div>
-            <div><span className="text-slate-500">Trạng thái:</span> <span className={sub.isActive ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{sub.isActive ? 'Hoạt động' : 'Hết hạn'}</span></div>
-            <div><span className="text-slate-500">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</div>
-            <div><span className="text-slate-500">Còn lại:</span> {sub.daysRemaining != null ? `${sub.daysRemaining} ngày` : 'Không giới hạn'}</div>
-            <div><span className="text-slate-500">AI:</span> {sub.plan.aiFeatures ? '✓' : '✗'}</div>
-            <div><span className="text-slate-500">Telegram:</span> {sub.plan.telegramBot ? '✓' : '✗'}</div>
-            {sub.expiresAt && <div className="col-span-2"><span className="text-slate-500">Hết hạn:</span> {new Date(sub.expiresAt).toLocaleDateString('vi-VN')}</div>}
+            <div><span className="[color:var(--pf-color-muted)]">Gói:</span> <span className="font-medium">{sub.plan.name}</span></div>
+            <div><span className="[color:var(--pf-color-muted)]">Trạng thái:</span> <span className={sub.isActive ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{sub.isActive ? 'Hoạt động' : 'Hết hạn'}</span></div>
+            <div><span className="[color:var(--pf-color-muted)]">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</div>
+            <div><span className="[color:var(--pf-color-muted)]">Còn lại:</span> {sub.daysRemaining != null ? `${sub.daysRemaining} ngày` : 'Không giới hạn'}</div>
+            <div><span className="[color:var(--pf-color-muted)]">AI:</span> {sub.plan.aiFeatures ? '✓' : '✗'}</div>
+            <div><span className="[color:var(--pf-color-muted)]">Telegram:</span> {sub.plan.telegramBot ? '✓' : '✗'}</div>
+            {sub.expiresAt && <div className="col-span-2"><span className="[color:var(--pf-color-muted)]">Hết hạn:</span> {new Date(sub.expiresAt).toLocaleDateString('vi-VN')}</div>}
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-slate-800">Nâng cấp gói</h3>
+      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 space-y-4">
+        <h3 className="text-sm font-semibold [color:var(--pf-text)]">Nâng cấp gói</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Gói</label>
+            <label className="text-xs [color:var(--pf-color-muted)] mb-1 block">Gói</label>
             <select
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm"
               value={upgradeForm.tier}
               onChange={e => setUpgradeForm(p => ({ ...p, tier: e.target.value as ServicePlan }))}
             >
@@ -910,12 +910,12 @@ function BillingTab() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Số tháng</label>
+            <label className="text-xs [color:var(--pf-color-muted)] mb-1 block">Số tháng</label>
             <input
               type="number"
               min={1}
               max={24}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm"
               value={upgradeForm.months}
               onChange={e => setUpgradeForm(p => ({ ...p, months: parseInt(e.target.value) || 1 }))}
             />
@@ -953,20 +953,20 @@ export function Settings() {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 py-3">
-          <p className="text-[15px] font-bold text-slate-800">Cài đặt</p>
-          <p className="text-[11px] text-slate-400">Quản lý thông tin CLB và tài khoản</p>
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
+          <p className="text-[15px] font-bold [color:var(--pf-text)]">Cài đặt</p>
+          <p className="text-[11px] [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 bg-white border-b border-slate-100 px-3 py-2">
+        <div className="flex gap-1 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-2 py-2 text-[12px] font-medium transition-colors',
                 activeTab === tab.id
                   ? 'text-white shadow-sm'
-                  : 'text-slate-500 bg-slate-50'
+                  : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
               )}
               style={activeTab === tab.id ? { background: 'var(--pf-primary)' } : {}}>
               {tab.icon}
@@ -994,7 +994,7 @@ export function Settings() {
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-4xl">
         {/* Tab bar */}
-        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+        <div className="flex gap-1 [background:var(--pf-surface)] border border-gray-200 rounded-xl p-1">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(

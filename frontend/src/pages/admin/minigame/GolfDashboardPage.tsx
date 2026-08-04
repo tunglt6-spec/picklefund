@@ -204,7 +204,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   }, [golfers, memberName])
 
   if (!mg) {
-    return <div className="flex-1 flex items-center justify-center"><p className="text-slate-500">Không tìm thấy giải đấu</p></div>
+    return <div className="flex-1 flex items-center justify-center"><p className="[color:var(--pf-color-muted)]">Không tìm thấy giải đấu</p></div>
   }
 
   const filteredMembers = members.filter(m =>
@@ -219,19 +219,19 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
-        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors w-fit">
+      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
+        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
           <ArrowLeft size={14} /> Danh Sách Minigame
         </button>
         <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl font-bold text-slate-900">{mg.name}</h1>
+              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⛳ Golf</span>
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-600">{rounds} vòng</span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{rounds} vòng</span>
             </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-slate-500">
+            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
               <span className="flex items-center gap-1.5"><Calendar size={14} />{mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}</span>
             </div>
           </div>
@@ -246,7 +246,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={cn('inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-                tab === t.key ? 'text-white [background:var(--pf-primary)]' : 'text-slate-600 bg-slate-100 hover:bg-slate-200')}>
+                tab === t.key ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200')}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -276,20 +276,20 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                   <Users size={14} /> Thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
                 </div>
                 <div className="mt-2 relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm thành viên..."
-                    className="w-full rounded-xl border border-slate-200 pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
                   {filteredMembers.map(m => (
                     <button key={m.id} onClick={() => togglePick(m.id)}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                        pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : 'text-slate-600 bg-white border-slate-200 hover:border-slate-300'
+                        pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface)] border-[color:var(--pf-border)] hover:border-slate-300'
                       }`}>
                       {pickIds.includes(m.id) && <X size={12} />} {m.fullName}
                     </button>
                   ))}
-                  {filteredMembers.length === 0 && <p className="text-xs text-slate-400 py-1">Không có thành viên phù hợp</p>}
+                  {filteredMembers.length === 0 && <p className="text-xs [color:var(--pf-color-muted)] py-1">Không có thành viên phù hợp</p>}
                 </div>
               </div>
               <div className="mt-3">
@@ -297,7 +297,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 <div className="mt-2 flex gap-2">
                   <input value={guestName} onChange={e => setGuestName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuestToForm() } }}
-                    placeholder="Tên khách" className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
                   <button onClick={addGuestToForm} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
                 </div>
                 {guests.length > 0 && (
@@ -317,11 +317,11 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-400">Đang tải danh sách golfer...</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Đang tải danh sách golfer...</p>
             ) : golfers.length === 0 ? (
-              <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
-                <Users size={28} className="mx-auto text-slate-300" />
-                <p className="mt-2 text-sm text-slate-500">Chưa có golfer nào. Thêm golfer phía trên.</p>
+              <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
+                <Users size={28} className="mx-auto [color:var(--pf-color-muted)]" />
+                <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có golfer nào. Thêm golfer phía trên.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -330,7 +330,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                     <span className="[color:var(--pf-text)] truncate text-sm font-medium">
                       {nameOf(g)}{g.guestName && <span className="ml-1.5 text-[10px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">Khách</span>}
                     </span>
-                    <button onClick={() => removeGolfer(g.id, nameOf(g))} className="text-slate-400 hover:text-red-500" title="Xóa golfer"><Trash2 size={15} /></button>
+                    <button onClick={() => removeGolfer(g.id, nameOf(g))} className="[color:var(--pf-color-muted)] hover:text-red-500" title="Xóa golfer"><Trash2 size={15} /></button>
                   </div>
                 ))}
               </div>
@@ -341,9 +341,9 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
         {/* ══ TAB: NHẬP ĐIỂM ══ */}
         {tab === 'scores' && (
           golfers.length === 0 ? (
-            <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
-              <ClipboardList size={28} className="mx-auto text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">Chưa có golfer. Thêm golfer ở tab Golfer trước.</p>
+            <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
+              <ClipboardList size={28} className="mx-auto [color:var(--pf-color-muted)]" />
+              <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có golfer. Thêm golfer ở tab Golfer trước.</p>
             </div>
           ) : (
             <>
@@ -374,7 +374,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                               <td key={r} className="px-1.5 py-1.5 text-center">
                                 <input inputMode="numeric" value={cellValue(g, r)}
                                   onChange={e => setEdits(s => ({ ...s, [`${g.id}:${r}`]: e.target.value.replace(/\D/g, '') }))}
-                                  className="w-12 rounded-lg border border-slate-200 py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                                  className="w-12 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
                               </td>
                             ))}
                             <td className="px-3 py-2 text-center font-bold [color:var(--pf-primary)]">{total || '—'}</td>
@@ -392,15 +392,15 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
         {/* ══ TAB: BẢNG XẾP HẠNG ══ */}
         {tab === 'leaderboard' && (
           golfers.length === 0 ? (
-            <div className="rounded-[18px] border border-dashed border-slate-200 p-8 text-center">
-              <BarChart2 size={28} className="mx-auto text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">Chưa có golfer để xếp hạng.</p>
+            <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
+              <BarChart2 size={28} className="mx-auto [color:var(--pf-color-muted)]" />
+              <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có golfer để xếp hạng.</p>
             </div>
           ) : (
             <>
               <div className="flex justify-end gap-2">
-                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
-                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
+                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
             <div id={`golf-lb-${id}`} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               <div className="overflow-x-auto">

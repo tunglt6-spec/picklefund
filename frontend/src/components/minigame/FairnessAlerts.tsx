@@ -20,13 +20,13 @@ interface Props {
 
 export function FairnessAlerts({ alerts }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
-        <ShieldAlert size={15} className="text-slate-500" />
-        <p className="text-sm font-semibold text-slate-800">Cảnh Báo Công Bằng</p>
+        <ShieldAlert size={15} className="[color:var(--pf-color-muted)]" />
+        <p className="text-sm font-semibold [color:var(--pf-text)]">Cảnh Báo Công Bằng</p>
       </div>
       {alerts.length === 0 ? (
-        <p className="text-xs text-slate-400">Không có cảnh báo</p>
+        <p className="text-xs [color:var(--pf-color-muted)]">Không có cảnh báo</p>
       ) : (
         <div className="space-y-2">
           {alerts.map((a, i) => (

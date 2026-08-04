@@ -78,7 +78,7 @@ export function SuperDashboard() {
           {/* Club cards */}
           {clubs.length > 0 && (
             <div>
-              <h3 className="text-[16px] font-[700] text-slate-800 mb-3">Danh sách CLB</h3>
+              <h3 className="text-[16px] font-[700] [color:var(--pf-text)] mb-3">Danh sách CLB</h3>
               <div className="space-y-3">
                 {clubs.map(club => (
                   <MobileClubCard
@@ -96,7 +96,7 @@ export function SuperDashboard() {
           )}
 
           {clubs.length === 0 && (
-            <div className="text-center py-10 text-slate-400 text-[13px]">Đang tải dữ liệu...</div>
+            <div className="text-center py-10 [color:var(--pf-color-muted)] text-[13px]">Đang tải dữ liệu...</div>
           )}
         </div>
       </div>

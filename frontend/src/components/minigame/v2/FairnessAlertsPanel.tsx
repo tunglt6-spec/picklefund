@@ -15,16 +15,16 @@ interface FairnessAlertsPanelProps {
 
 export function FairnessAlertsPanel({ alerts, onAction }: FairnessAlertsPanelProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle size={18} className="text-amber-500" />
-        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+        <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Cảnh Báo &amp; Nhắc Nhở
         </h2>
       </div>
 
       {alerts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-8 [color:var(--pf-color-muted)]">
           <span className="text-2xl mb-2">🎉</span>
           <p className="text-sm">Tất cả ổn!</p>
         </div>
@@ -60,8 +60,8 @@ export function FairnessAlertsPanel({ alerts, onAction }: FairnessAlertsPanelPro
               >
                 <IconComponent size={16} className={`mt-0.5 shrink-0 ${iconCls}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">{alert.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{alert.description}</p>
+                  <p className="text-sm font-semibold [color:var(--pf-text)]">{alert.title}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{alert.description}</p>
                 </div>
                 <button
                   onClick={() => onAction?.(alert.id)}

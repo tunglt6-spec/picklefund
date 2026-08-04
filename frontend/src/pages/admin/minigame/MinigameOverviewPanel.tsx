@@ -198,7 +198,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         </div>
       </div>
 
-      {loading && <p className="text-xs text-slate-400 px-1">Đang tải tổng quan…</p>}
+      {loading && <p className="text-xs [color:var(--pf-color-muted)] px-1">Đang tải tổng quan…</p>}
 
       {/* Lịch thi đấu (môn theo trận) */}
       {!isGolf && (
@@ -208,7 +208,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
             <button onClick={() => navigate(scheduleLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem toàn bộ <ChevronRight size={12} /></button>
           </div>
           {scheduleRows.length === 0 ? (
-            <p className="mt-2 text-xs text-slate-400">Chưa có lịch. Tạo lịch trong màn giải.</p>
+            <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có lịch. Tạo lịch trong màn giải.</p>
           ) : (
             <ul className="mt-2 flex flex-col divide-y divide-[color:var(--pf-border)]">
               {scheduleRows.map(m => (
@@ -232,7 +232,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           <button onClick={() => navigate(standingsLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem chi tiết <ChevronRight size={12} /></button>
         </div>
         {isGolf ? (
-          golfStandings.length === 0 ? <p className="mt-2 text-xs text-slate-400">Chưa có golfer.</p> : (
+          golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
             <table className="mt-2 w-full text-sm">
               <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
               <tbody>
@@ -248,7 +248,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
             </table>
           )
         ) : (
-          teamStandings.length === 0 ? <p className="mt-2 text-xs text-slate-400">Chưa có đội.</p> : (
+          teamStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có đội.</p> : (
             <table className="mt-2 w-full text-sm">
               <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
               <tbody>
@@ -291,7 +291,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           <h3 className="flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-text)]"><Activity size={16} /> Hoạt động gần đây</h3>
           <button onClick={() => navigate(dashLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem tất cả <ChevronRight size={12} /></button>
         </div>
-        {activity.length === 0 ? <p className="mt-2 text-xs text-slate-400">Chưa có hoạt động.</p> : (
+        {activity.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có hoạt động.</p> : (
           <ul className="mt-2 space-y-2">
             {activity.map((a, i) => (
               <li key={i} className="flex items-start gap-2 text-sm">

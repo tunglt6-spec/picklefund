@@ -22,7 +22,7 @@ function eventIcon(eventType: string) {
   if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={14} className="[color:var(--pf-primary)]" />
   if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={14} className="text-amber-500" />
   if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={14} className="[color:var(--pf-primary)]" />
-  return <Zap size={14} className="text-slate-400" />
+  return <Zap size={14} className="[color:var(--pf-color-muted)]" />
 }
 
 function eventBg(eventType: string) {
@@ -30,7 +30,7 @@ function eventBg(eventType: string) {
   if (eventType.includes('session') || eventType.includes('event')) return '[background:var(--pf-primary-soft)]'
   if (eventType.includes('member') || eventType.includes('inactivity')) return '[background:var(--pf-primary-soft)]'
   if (eventType.includes('anomaly') || eventType.includes('health')) return 'bg-amber-50'
-  return 'bg-slate-100'
+  return '[background:var(--pf-color-muted-soft)]'
 }
 
 function timeAgo(dateStr: string) {

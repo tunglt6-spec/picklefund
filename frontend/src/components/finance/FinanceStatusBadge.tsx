@@ -3,8 +3,8 @@ type FundStatus = 'draft' | 'active' | 'closed' | 'finalized'
 const STATUS_CONFIG: Record<FundStatus, { label: string; cls: string; dot: string }> = {
   draft:     { label: 'Chuẩn bị',  cls: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-400' },
   active:    { label: 'Đang mở',   cls: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-  closed:    { label: 'Đã đóng',   cls: 'bg-slate-100 text-slate-600',   dot: 'bg-slate-400' },
-  finalized: { label: 'Đã chốt',   cls: 'bg-slate-100 text-slate-600',   dot: 'bg-slate-400' },
+  closed:    { label: 'Đã đóng',   cls: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',   dot: 'bg-slate-400' },
+  finalized: { label: 'Đã chốt',   cls: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',   dot: 'bg-slate-400' },
 }
 
 interface FinanceStatusBadgeProps {

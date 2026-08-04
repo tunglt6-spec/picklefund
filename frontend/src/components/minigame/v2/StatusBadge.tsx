@@ -23,7 +23,7 @@ interface StatusConfig {
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   DRAFT: {
     label: 'Nháp',
-    badgeClass: 'bg-slate-100 text-slate-600',
+    badgeClass: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   },
   // ACTIVE = status backend (Prisma) cho "đang diễn ra" — map hiển thị như IN_PROGRESS.
   ACTIVE: {
@@ -62,7 +62,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
 
 const FALLBACK_CONFIG: StatusConfig = {
   label: 'Không rõ',
-  badgeClass: 'bg-slate-100 text-slate-600',
+  badgeClass: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {

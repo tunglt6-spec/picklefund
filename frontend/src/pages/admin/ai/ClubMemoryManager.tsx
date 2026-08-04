@@ -244,7 +244,7 @@ export function ClubMemoryManager() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Loại tri thức</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Loại tri thức</label>
             <select
               value={form.type}
               onChange={e => setForm(f => ({ ...f, type: e.target.value as MemoryType }))}
@@ -255,26 +255,26 @@ export function ClubMemoryManager() {
                 <option key={t} value={t}>{TYPE_META[t].label}</option>
               ))}
             </select>
-            {editing && <p className="text-xs text-slate-400 mt-1">Không đổi được loại sau khi tạo — tạo mới nếu cần loại khác.</p>}
+            {editing && <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không đổi được loại sau khi tạo — tạo mới nếu cần loại khác.</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Tiêu đề (không bắt buộc)</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tiêu đề (không bắt buộc)</label>
             <input
               value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
               className="input-base" placeholder="VD: Quy định điểm danh"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Nội dung <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nội dung <span className="text-red-500">*</span></label>
             <textarea
               value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
               rows={6} className="input-base resize-y"
               placeholder="VD: Thành viên vắng quá 50% buổi trong kỳ sẽ được nhắc nhở qua Lisa..."
             />
-            <p className="text-xs text-slate-400 mt-1">Không nhập số liệu tài chính/PII cụ thể — hệ thống sẽ tự lọc trước khi đưa vào ngữ cảnh AI, nhưng tốt nhất nên tránh từ đầu.</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không nhập số liệu tài chính/PII cụ thể — hệ thống sẽ tự lọc trước khi đưa vào ngữ cảnh AI, nhưng tốt nhất nên tránh từ đầu.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Nhãn (phân tách bằng dấu phẩy)</label>
+            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nhãn (phân tách bằng dấu phẩy)</label>
             <input
               value={form.tagsText} onChange={e => setForm(f => ({ ...f, tagsText: e.target.value }))}
               className="input-base" placeholder="VD: điểm danh, vận hành"
@@ -296,7 +296,7 @@ export function ClubMemoryManager() {
           </div>
         }
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm [color:var(--pf-color-muted)]">
           Xoá {deleteTarget?.title ? `"${deleteTarget.title}"` : 'mục tri thức này'}? Hành động không thể hoàn tác.
         </p>
       </Modal>

@@ -37,16 +37,16 @@ export function GroupAssignment() {
 
   if (!mg) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-slate-500">Không tìm thấy minigame</p>
+      <p className="[color:var(--pf-color-muted)]">Không tìm thấy minigame</p>
     </div>
   )
 
   if (mg.formatType === 'RANDOM_DOUBLES') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-6">
-        <Shuffle size={40} className="text-slate-300" />
-        <p className="text-slate-700 font-medium">Giải Đánh Đôi Ngẫu Nhiên không dùng chia bảng cố định</p>
-        <p className="text-slate-400 text-sm max-w-md">
+        <Shuffle size={40} className="[color:var(--pf-color-muted)]" />
+        <p className="[color:var(--pf-text)] font-medium">Giải Đánh Đôi Ngẫu Nhiên không dùng chia bảng cố định</p>
+        <p className="[color:var(--pf-color-muted)] text-sm max-w-md">
           Việc ghép cặp/chia đội cho từng vòng được thực hiện qua chức năng "Rút Thăm Vòng Mới" ở trang tổng quan của giải.
         </p>
         <Button onClick={() => navigate(`/minigames/${id}`)}>Đi Tới Rút Thăm Vòng Mới</Button>
@@ -114,14 +114,14 @@ export function GroupAssignment() {
   }
 
   const mobileHeader = isMobile ? (
-    <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3">
+    <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
       <div className="flex items-center gap-3 mb-2">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="text-slate-500">
+        <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]">
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-slate-800 truncate">Chia Bảng</p>
-          <p className="text-[11px] text-slate-400">{mg.name} · {myParts.length} người</p>
+          <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Chia Bảng</p>
+          <p className="text-[11px] [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
         </div>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-0.5">
@@ -132,7 +132,7 @@ export function GroupAssignment() {
         {myGroups.length > 0 && (
           <>
             <button onClick={handleLock}
-              className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-[8px]">
+              className="shrink-0 flex items-center gap-1 text-[11px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] px-3 py-1.5 rounded-[8px]">
               <Lock size={12} /> Khóa Bảng
             </button>
             <button onClick={handleCreateSchedule}
@@ -147,7 +147,7 @@ export function GroupAssignment() {
   ) : null
 
   return (
-    <div className={isMobile ? 'min-h-screen [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto bg-slate-50'}>
+    <div className={isMobile ? 'min-h-screen [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
       {isMobile ? mobileHeader : null}
       {!isMobile && <PageHeader
         title={`Chia Bảng – ${mg.name}`}
@@ -172,13 +172,13 @@ export function GroupAssignment() {
       />}
 
       <div className={isMobile ? 'px-4 py-4' : 'p-6'}>
-        {!isMobile && <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>}
+        {!isMobile && <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>}
 
         {myGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Shuffle size={48} className="text-slate-300 mb-4" />
-            <p className="text-slate-500 font-medium">Chưa có bảng đấu</p>
-            <p className="text-slate-400 text-sm mt-1 mb-4">
+            <Shuffle size={48} className="[color:var(--pf-color-muted)] mb-4" />
+            <p className="[color:var(--pf-color-muted)] font-medium">Chưa có bảng đấu</p>
+            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4">
               {myParts.length} người tham gia sẽ được chia thành các bảng
             </p>
             <Button onClick={handleAutoGenerate}>
@@ -195,7 +195,7 @@ export function GroupAssignment() {
                   {myParts
                     .filter(p => !myGroups.some(g => g.memberIds.includes(p.memberId)))
                     .map(p => (
-                      <span key={p.memberId} className="bg-white text-amber-700 border border-amber-200 text-xs px-2 py-1 rounded-lg font-medium">
+                      <span key={p.memberId} className="[background:var(--pf-surface)] text-amber-700 border border-amber-200 text-xs px-2 py-1 rounded-lg font-medium">
                         {p.memberName}
                       </span>
                     ))}
@@ -205,7 +205,7 @@ export function GroupAssignment() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myGroups.map(grp => (
-                <div key={grp.id} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                <div key={grp.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
                     <div>
                       <p className="text-sm font-bold [color:var(--pf-primary)]">{grp.groupName}</p>
@@ -223,22 +223,22 @@ export function GroupAssignment() {
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm text-slate-800 flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
+                          <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
                           {grp.status !== 'LOCKED' && (
                             <div className="relative">
                               <button
                                 onClick={() => setOpenMove(openMove === memberId ? null : memberId)}
-                                className="flex items-center gap-1 text-xs text-slate-400 hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]"
+                                className="flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]"
                               >
                                 Chuyển <ChevronDown size={12} />
                               </button>
                               {openMove === memberId && (
-                                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-lg shadow-lg z-10 py-1 min-w-28">
+                                <div className="absolute right-0 top-full mt-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg shadow-lg z-10 py-1 min-w-28">
                                   {myGroups.filter(g => g.id !== grp.id).map(target => (
                                     <button
                                       key={target.id}
                                       onClick={() => handleMove(memberId, target.id)}
-                                      className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] text-slate-700 hover:[color:var(--pf-primary)] transition-colors"
+                                      className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] [color:var(--pf-text)] hover:[color:var(--pf-primary)] transition-colors"
                                     >
                                       → {target.groupName}
                                     </button>

@@ -24,7 +24,7 @@ export function BulkActionBar({
       <div className="flex items-center gap-2">
         <button
           onClick={onClear}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 border border-slate-200 hover:bg-slate-50"
+          className="px-3 py-1.5 rounded-lg text-sm font-medium [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]"
         >Bỏ chọn</button>
         <button
           onClick={onDelete}

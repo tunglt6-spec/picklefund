@@ -71,25 +71,25 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
         {/* Players */}
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <p className="font-semibold text-slate-800 text-sm mb-2">{match.player1Name}</p>
+            <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{match.player1Name}</p>
             <input
               type="number"
               min={0}
               value={p1Score}
               onChange={e => setP1Score(e.target.value)}
               placeholder="0"
-              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
+              className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [color:var(--pf-text)]"
             />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-slate-800 text-sm mb-2">{match.player2Name}</p>
+            <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{match.player2Name}</p>
             <input
               type="number"
               min={0}
               value={p2Score}
               onChange={e => setP2Score(e.target.value)}
               placeholder="0"
-              className="w-full text-center text-3xl font-bold border border-slate-200 rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] text-slate-900"
+              className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [color:var(--pf-text)]"
             />
           </div>
         </div>
@@ -109,24 +109,24 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
 
         {/* Date */}
         <div>
-          <label className="text-xs font-medium text-slate-600 mb-1 block">Ngày thi đấu</label>
+          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
           <input
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label className="text-xs font-medium text-slate-600 mb-1 block">Ghi chú</label>
+          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ghi chú về trận đấu..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
           />
         </div>
       </div>
