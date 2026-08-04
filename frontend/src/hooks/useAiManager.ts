@@ -157,10 +157,16 @@ export function useAiManager() {
   const [executable, setExecutable] = useState<AiActionListItem[]>([])
   const [opsSignals, setOpsSignals] = useState<IntelSignal[]>([])
   const [loading, setLoading] = useState(true)
+  // refreshing = đang refetch THỦ CÔNG (nút Làm mới) — để hiện spinner + khóa nút mà KHÔNG
+  // blank skeleton (skeleton chỉ gate theo `loading` lần đầu).
+  const [refreshing, setRefreshing] = useState(false)
   const [availability, setAvailability] = useState({ policies: false, intel: false, actions: false })
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const refetch = useCallback(() => setRefreshKey((k) => k + 1), [])
+  const refetch = useCallback(() => {
+    setRefreshing(true)
+    setRefreshKey((k) => k + 1)
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -188,14 +194,17 @@ export function useAiManager() {
         })
       })
       .finally(() => {
-        if (alive) setLoading(false)
+        if (alive) {
+          setLoading(false)
+          setRefreshing(false)
+        }
       })
     return () => {
       alive = false
     }
   }, [refreshKey])
 
-  return { policies, intel, summary, pending, executable, opsSignals, loading, availability, refetch }
+  return { policies, intel, summary, pending, executable, opsSignals, loading, refreshing, availability, refetch }
 }
 
 /** Preview điều kiện duyệt (read-only) — POST /ai/maika/approval/evaluate. */

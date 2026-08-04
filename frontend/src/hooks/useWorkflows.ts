@@ -57,10 +57,15 @@ export function useWorkflows() {
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([])
   const [runStats, setRunStats] = useState<RunStats | null>(null)
   const [loading, setLoading] = useState(true)
+  // refreshing = refetch thủ công (nút Làm mới) → spinner + khóa nút, không blank skeleton.
+  const [refreshing, setRefreshing] = useState(false)
   const [available, setAvailable] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const refetch = useCallback(() => setRefreshKey((k) => k + 1), [])
+  const refetch = useCallback(() => {
+    setRefreshing(true)
+    setRefreshKey((k) => k + 1)
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -79,14 +84,17 @@ export function useWorkflows() {
         setAvailable(r.status === 'fulfilled')
       })
       .finally(() => {
-        if (alive) setLoading(false)
+        if (alive) {
+          setLoading(false)
+          setRefreshing(false)
+        }
       })
     return () => {
       alive = false
     }
   }, [refreshKey])
 
-  return { rules, runs, templates, runStats, loading, available, refetch }
+  return { rules, runs, templates, runStats, loading, refreshing, available, refetch }
 }
 
 export interface RuleExistsInfo {

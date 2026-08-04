@@ -406,9 +406,18 @@ export function AiDigitalOffice() {
                 Cập nhật {updatedAt.toLocaleTimeString('vi-VN')}
               </span>
             )}
-            <ActionButton variant="ghost" icon={<RefreshCw size={15} />} onClick={() => void load()}>
-              Làm mới
-            </ActionButton>
+            {/* Ẩn ở tab "Trung tâm điều hành AI": tab đó nhúng AiManagerDashboard vốn đã có nút
+                Làm mới runtime riêng → tránh 2 nút Làm mới trùng trên cùng màn. */}
+            {tab !== 'ops-center' && (
+              <ActionButton
+                variant="ghost"
+                icon={<RefreshCw size={15} className={loading ? 'animate-spin' : ''} />}
+                onClick={() => void load()}
+                disabled={loading}
+              >
+                {loading ? 'Đang tải…' : 'Làm mới'}
+              </ActionButton>
+            )}
           </div>
         }
       />

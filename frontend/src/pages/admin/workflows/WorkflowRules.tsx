@@ -61,7 +61,7 @@ function groupByCategory<T>(items: T[], keyFn: (x: T) => string): [string, T[]][
 }
 
 export function WorkflowRules() {
-  const { rules, runs, templates, runStats, loading, available, refetch } = useWorkflows()
+  const { rules, runs, templates, runStats, loading, refreshing, available, refetch } = useWorkflows()
   const [busy, setBusy] = useState(false)
   const [dispatchResult, setDispatchResult] = useState<DispatchSummary | null>(null)
   const [liveResult, setLiveResult] = useState<DispatchLiveResult | null>(null)
@@ -147,9 +147,10 @@ export function WorkflowRules() {
           </div>
           <button
             onClick={refetch}
-            className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
+            disabled={refreshing}
+            className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60 disabled:pointer-events-none"
           >
-            <RefreshCw size={14} /> Làm mới
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> {refreshing ? 'Đang tải…' : 'Làm mới'}
           </button>
         </div>
       </div>

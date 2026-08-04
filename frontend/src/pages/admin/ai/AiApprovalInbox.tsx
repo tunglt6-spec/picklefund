@@ -41,7 +41,7 @@ function fmtTime(iso: string): string {
 }
 
 export function AiApprovalInbox() {
-  const { policies, pending, executable, loading, availability, refetch } = useAiManager()
+  const { policies, pending, executable, loading, refreshing, availability, refetch } = useAiManager()
 
   // Detail drawer
   const [detail, setDetail] = useState<AiActionDetail | null>(null)
@@ -122,9 +122,10 @@ export function AiApprovalInbox() {
           </div>
           <button
             onClick={refetch}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]"
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60 disabled:pointer-events-none"
           >
-            <RefreshCw size={14} /> Làm mới
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> {refreshing ? 'Đang tải…' : 'Làm mới'}
           </button>
         </div>
       </div>

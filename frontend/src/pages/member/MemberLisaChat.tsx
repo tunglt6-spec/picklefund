@@ -27,6 +27,7 @@ export function MemberLisaChat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [brief, setBrief] = useState<Brief | null>(null)
+  const [briefLoading, setBriefLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const msgRef = useRef<HTMLDivElement>(null)
   const inputBarRef = useRef<HTMLDivElement>(null)
@@ -54,6 +55,7 @@ export function MemberLisaChat() {
 
   const fetchBrief = useCallback(async () => {
     if (!user) return
+    setBriefLoading(true)
     try {
       const res = await api.get('/lisa/brief')
       const data = res.data?.data ?? res.data
@@ -65,6 +67,8 @@ export function MemberLisaChat() {
         text: `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI cá nhân của bạn. Hỏi tôi bất cứ điều gì nhé!`,
         time: now(),
       }])
+    } finally {
+      setBriefLoading(false)
     }
   }, [user])
 
@@ -179,7 +183,7 @@ export function MemberLisaChat() {
               <p className="text-[11px] text-emerald-500 font-medium">● Trợ lý cá nhân</p>
             </div>
           </div>
-          <button onClick={fetchBrief} className="p-2 [color:var(--pf-color-muted)] active:opacity-60"><RefreshCw size={16} /></button>
+          <button onClick={fetchBrief} disabled={briefLoading} aria-label="Làm mới" className="p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none"><RefreshCw size={16} className={briefLoading ? 'animate-spin' : ''} /></button>
         </div>
 
         {/* Messages — scrollable, fills remaining space */}
@@ -213,8 +217,8 @@ export function MemberLisaChat() {
             <p className="text-xs text-emerald-500">● Trợ lý cá nhân thông minh</p>
           </div>
         </div>
-        <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
-          <RefreshCw size={13} />Làm mới
+        <button onClick={fetchBrief} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
+          <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-6 max-w-[760px] pf-center-x w-full">{chatContent}</div>

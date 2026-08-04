@@ -23,6 +23,7 @@ export function LisaChat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [brief, setBrief] = useState<Brief | null>(null)
+  const [briefLoading, setBriefLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const msgRef = useRef<HTMLDivElement>(null)
   const inputBarRef = useRef<HTMLDivElement>(null)
@@ -50,6 +51,7 @@ export function LisaChat() {
 
   const fetchBrief = useCallback(async () => {
     if (!user) return
+    setBriefLoading(true)
     try {
       const res = await api.get('/lisa/brief')
       const data = res.data?.data ?? res.data
@@ -70,6 +72,8 @@ export function LisaChat() {
         text: `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI của bạn. Hỏi tôi bất cứ điều gì về CLB nhé!`,
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       }])
+    } finally {
+      setBriefLoading(false)
     }
   }, [user])
 
@@ -207,8 +211,8 @@ export function LisaChat() {
               <p className="text-[11px] text-emerald-500 font-medium">● Trực tuyến</p>
             </div>
           </div>
-          <button onClick={fetchBrief} className="p-2 [color:var(--pf-color-muted)] active:opacity-60">
-            <RefreshCw size={16} />
+          <button onClick={fetchBrief} disabled={briefLoading} aria-label="Làm mới" className="p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none">
+            <RefreshCw size={16} className={briefLoading ? 'animate-spin' : ''} />
           </button>
         </div>
 
@@ -239,8 +243,8 @@ export function LisaChat() {
         title="Lisa AI"
         subtitle="Trợ lý cá nhân thông minh"
         actions={
-          <button onClick={fetchBrief} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
-            <RefreshCw size={13} />Làm mới
+          <button onClick={fetchBrief} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
+            <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
           </button>
         }
       />

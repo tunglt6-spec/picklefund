@@ -26,6 +26,8 @@ export function MemberOffice() {
   const [results, setResults] = useState<AgentResults | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [error, setError] = useState(false)
+  // refreshing = bấm Làm mới thủ công → spinner + khóa nút (poll 60s/visibility vẫn im lặng).
+  const [refreshing, setRefreshing] = useState(false)
   const loadingRef = useRef(false)
 
   const load = useCallback(async () => {
@@ -110,8 +112,16 @@ export function MemberOffice() {
                 Cập nhật {updatedAt.toLocaleTimeString('vi-VN')}
               </span>
             )}
-            <ActionButton variant="ghost" icon={<RefreshCw size={15} />} onClick={() => void load()}>
-              Làm mới
+            <ActionButton
+              variant="ghost"
+              icon={<RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />}
+              onClick={() => {
+                setRefreshing(true)
+                void load().finally(() => setRefreshing(false))
+              }}
+              disabled={refreshing}
+            >
+              {refreshing ? 'Đang tải…' : 'Làm mới'}
             </ActionButton>
           </div>
         }
