@@ -6,6 +6,7 @@ import { useBrandingStore } from '../../store/brandingStore'
 import { useNotifStore } from '../../store/notifStore'
 import { useGuideStore } from '../../store/guideStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
+import { ThemeToggle } from '../shared/ThemeToggle'
 
 interface MobileHeaderProps {
   onMenuClick?: () => void
@@ -84,6 +85,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         >
           <BookOpen size={18} />
         </button>
+        <ThemeToggle className="border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]" />
         <button
           onClick={() => navigate(notifRoute)}
           className="relative flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"

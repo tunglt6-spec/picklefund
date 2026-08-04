@@ -11,6 +11,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useNotifStore } from '../../store/notifStore'
 import { useGuideStore } from '../../store/guideStore'
 import { cn } from '../../lib/utils'
+import { ThemeToggle } from '../shared/ThemeToggle'
 
 const ROLE_LABEL: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Quản trị CLB',
@@ -92,6 +93,8 @@ export function DesktopHeader() {
           <Zap size={15} /> Nâng cấp gói
         </button>
       )}
+      <ThemeToggle className="border [border-color:var(--pf-border)]" />
+
       <button onClick={() => navigate(searchRouteByRole[user.role] ?? '/')} className={iconBtn} title="Tìm kiếm" aria-label="Tìm kiếm">
         <Search size={17} />
       </button>
