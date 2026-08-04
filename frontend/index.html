@@ -27,6 +27,16 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>PickleFund – Nền tảng quản lý CLB thể thao tích hợp AI</title>
+    <!-- No-flash: đặt data-theme TRƯỚC khi render để không nháy sáng→tối. Mặc định sáng. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('pf-theme') || 'light';
+          var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

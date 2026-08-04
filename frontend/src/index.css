@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
+/* Dark mode do [data-theme="dark"] điều khiển (toggle), KHÔNG theo OS — 'dark:' utilities
+   sẽ ăn theo data-theme. Mặc định KHÔNG có data-theme = sáng. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   /* Primary (V2.2 Clean Modern SaaS — tím) */
   --color-primary: #6D5DFB;
@@ -235,6 +239,48 @@ body {
 .pf-stagger > *:nth-child(6) { animation-delay: 200ms; }
 .pf-stagger > *:nth-child(7) { animation-delay: 240ms; }
 .pf-stagger > *:nth-child(n+8) { animation-delay: 280ms; }
+
+/* ── Dark mode (Elite) — retint TOKEN dưới [data-theme="dark"]. UI dùng var(--pf-*)/
+   var(--color-*) tự lật; chỗ hardcode bg-white/slate sẽ token-hoá dần theo lô. ───────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* Surfaces / neutrals */
+  --pf-bg:            #0B1120;
+  --pf-surface:       #131B2E;
+  --pf-surface-muted: #1C2740;
+  --pf-border:        #26324C;
+  --pf-border-soft:   #1E293B;
+  --pf-text:          #E6EDF7;
+  --pf-text-muted:    #93A2BD;
+  --pf-color-muted:   #93A2BD;
+  --pf-color-muted-soft: #1C2740;
+  /* Brand tím giữ hue; soft tối lại; chữ-trên-primary vẫn trắng */
+  --pf-primary-soft:       #241E52;
+  --pf-color-primary-soft: #241E52;
+  --pf-primary-on:         #FFFFFF;
+  --pf-text-on-primary:    #FFFFFF;
+  /* Semantic softs (nền tint) tối lại — fg giữ sáng */
+  --pf-color-success-soft: #10261B;
+  --pf-color-warning-soft: #2A1E0E;
+  --pf-color-danger-soft:  #2A1416;
+  --pf-color-info-soft:    #0E2233;
+  --pf-color-ai-soft:      #241E52;
+  --pf-green-soft:         #10261B;
+  --pf-secondary-soft:     #10261B;
+  --pf-accent-blue-soft:   #0E2233;
+  --pf-accent-violet-soft: #241E52;
+  --pf-accent-amber-soft:  #2A1E0E;
+  --pf-accent-rose-soft:   #2A1416;
+  --pf-accent-teal-soft:   #0C2622;
+  /* Legacy --color-* neutrals (vài nơi còn dùng) */
+  --color-bg:          #0B1120;
+  --color-surface:     #131B2E;
+  --color-border:      #26324C;
+  --color-border-soft: #1E293B;
+  /* Shadow đậm hơn trên nền tối */
+  --pf-shadow:       0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.5);
+  --pf-shadow-hover: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+}
 
 /* A11y (Elite): tôn trọng người dùng tắt hiệu ứng — gần như bỏ mọi animation/transition. */
 @media (prefers-reduced-motion: reduce) {
