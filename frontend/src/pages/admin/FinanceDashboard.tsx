@@ -14,7 +14,8 @@ import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
-import { exportInfographicAsPng, exportInfographicAsPdf } from '../../components/reports/infographic/infographic.utils'
+import { exportInfographicAsPng } from '../../components/reports/infographic/infographic.utils'
+import { exportReportsPDF } from '../../lib/export'
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, EmptyState, LoadingState, ErrorState,
@@ -33,6 +34,10 @@ interface Summary {
   clubAssets: number
   carryForward: number
   unpaidCount: number
+  // Dùng cho báo cáo PDF (khớp mẫu chung với tab Báo cáo)
+  memberCount: number
+  sessionCount: number
+  confirmedCount: number
 }
 
 const num = (v: unknown): number => (v == null ? 0 : Number(v) || 0)
@@ -47,7 +52,8 @@ const DONUT_MINI = '#7C3AED' // Quỹ Phụ
 export function FinanceDashboard() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const accessToken = useAuthStore((s) => s.accessToken)
-  const { fundPeriods } = useClubDataStore((s) => s.getClubData(clubId))
+  const { fundPeriods, settings } = useClubDataStore((s) => s.getClubData(clubId))
+  const clubName = (settings?.name as string | undefined)?.trim() || 'CLB Pickleball'
   const activePeriod = useMemo(
     () => getActiveChungPeriod(fundPeriods) ?? null,
     [fundPeriods],
@@ -71,6 +77,14 @@ export function FinanceDashboard() {
     try {
       const res = await api.get(`/fund-periods/${periodId}/summary`)
       const d = (res.data?.data ?? res.data) as Record<string, unknown>
+      const memberCount = num(d.memberCount)
+      const unpaidCount = num(d.unpaidCount)
+      // confirmedCount ưu tiên đếm từ danh sách members (contributionPaid) của Finance Engine;
+      // không có thì suy ra = sĩ số tính phí − số chưa đóng (khớp mẫu báo cáo tab Báo cáo).
+      const members = Array.isArray(d.members) ? (d.members as Array<{ contributionPaid?: boolean }>) : []
+      const confirmedCount = members.length
+        ? members.filter((m) => !!m.contributionPaid).length
+        : Math.max(0, memberCount - unpaidCount)
       setSummary({
         totalIncome: num(d.totalIncome),
         totalExpenses: num(d.totalExpenses),
@@ -81,7 +95,10 @@ export function FinanceDashboard() {
         // clubAssets & carryForward là OBJECT { balance, ... } từ Finance Engine → đọc .balance.
         clubAssets: num((d.clubAssets as { balance?: unknown } | undefined)?.balance),
         carryForward: num((d.carryForward as { balance?: unknown } | undefined)?.balance),
-        unpaidCount: num(d.unpaidCount),
+        unpaidCount,
+        memberCount,
+        sessionCount: num(d.totalSessions),
+        confirmedCount,
       })
     } catch {
       setError(true)
@@ -134,8 +151,23 @@ export function FinanceDashboard() {
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
-    try { await exportInfographicAsPdf(FD_EXPORT_ID, slug); toast.success('Đã tải PDF dashboard tài chính') }
-    catch { toast.error('Xuất PDF thất bại') }
+    if (!summary || !activePeriod) { toast.error('Chưa có dữ liệu để xuất'); return }
+    // PDF VECTOR chuẩn SaaS — DÙNG CHUNG mẫu với tab "Báo cáo" (buildQuyReportPDF): chữ nét,
+    // nhẹ (KB thay vì raster ~7MB), header/branding thống nhất. Thay cách chụp DOM cũ (ảnh mờ,
+    // méo tỉ lệ, dính theme dark). Tổng quan không kèm bảng kê thành viên (rows []).
+    try {
+      await exportReportsPDF({
+        periodName: activePeriod.name,
+        clubName,
+        totalIncome: summary.totalIncome,
+        totalExpense: summary.totalExpenses,
+        balance: summary.balance,
+        memberCount: summary.memberCount,
+        sessionCount: summary.sessionCount,
+        confirmedCount: summary.confirmedCount,
+      }, [])
+      toast.success('Đã tải PDF tổng quan tài chính')
+    } catch { toast.error('Xuất PDF thất bại') }
   }
 
   return (

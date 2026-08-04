@@ -16,6 +16,7 @@ import { Modal } from '../../components/ui/Modal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
+import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
@@ -1215,15 +1216,29 @@ export function FundPeriods() {
             ) : (
               <div className="space-y-2">
                 {recentTx.map(tx => {
+                  // Giao dịch có 2 loại: COMMON (Quỹ Chính, gắn thành viên + kỳ) và MINI (Quỹ Phụ,
+                  // gắn người nộp payerName + loại thu, KHÔNG có memberId/fundPeriodId) → phải xử
+                  // lý cả hai, nếu không dòng MINI hiện trống/"—" (thiếu thông tin).
+                  const isMini = tx.fundSource === 'MINI'
                   const period = periods.find(p => p.id === tx.fundPeriodId)
-                  const member = members.find(m => m.id === tx.memberId)
+                  const member = tx.member ?? members.find(m => m.id === tx.memberId)
+                  const incomeTypeLabel = tx.miniIncomeType ? MINI_INCOME_TYPE_LABELS[tx.miniIncomeType] : undefined
+                  const title = isMini
+                    ? (tx.payerName?.trim() || incomeTypeLabel || 'Thu Quỹ Phụ')
+                    : (member?.fullName?.trim() || 'Thành viên')
+                  const subLeft = isMini
+                    ? (incomeTypeLabel || 'Quỹ Phụ')
+                    : (period?.name || 'Quỹ Chính')
                   return (
-                    <div key={tx.id} className="flex items-center justify-between py-2 border-b border-[color:var(--pf-border)] last:border-0">
-                      <div>
-                        <p className="text-sm font-medium [color:var(--pf-text)]">{member?.fullName ?? tx.memberId}</p>
-                        <p className="text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(tx.paymentDate)}</p>
+                    <div key={tx.id} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium [color:var(--pf-text)] truncate">{title}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)] truncate">
+                          <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${isMini ? 'bg-violet-500' : 'bg-emerald-500'}`} />
+                          {subLeft} · {formatDate(tx.paymentDate)}
+                        </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-green-600">+{formatVND(tx.amount)}</p>
                         {tx.isConfirmed
                           ? <span className="text-xs text-green-500">Đã xác nhận</span>
