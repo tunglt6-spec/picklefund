@@ -53,8 +53,8 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-[20px] border p-5 transition-shadow',
-        '[background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] hover:[box-shadow:var(--pf-shadow-hover)]',
+        'flex flex-col gap-3 rounded-[20px] border p-5 pf-hover-lift',
+        '[background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]',
         className,
       )}
       style={t ? { background: t.bg, borderColor: t.border, borderTop: `3px solid ${t.bar}` } : undefined}

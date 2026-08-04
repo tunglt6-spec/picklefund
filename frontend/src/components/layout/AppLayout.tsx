@@ -83,7 +83,11 @@ export function AppLayout() {
                 <ArrowLeft size={16} /> Quay lại AI Operations Center
               </button>
             )}
-            <Outlet />
+            {/* Page transition (Elite): keyed theo pathname → replay hiệu ứng vào mỗi lần
+                đổi route. Đổi ?tab= KHÔNG replay (chỉ đổi search) — tránh nháy khi chuyển tab. */}
+            <div key={location.pathname} className="pf-page">
+              <Outlet />
+            </div>
           </div>
         </main>
 
