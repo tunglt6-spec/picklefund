@@ -308,7 +308,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+                  <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                     <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 1</th>
@@ -328,7 +328,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     const team1Won = m.winningTeam === 1
                     const team2Won = m.winningTeam === 2
                     return (
-                      <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                      <tr key={m.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                         <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
                         <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{rnd?.roundNumber ?? '–'}</td>
                         <td className={cn('px-4 py-2.5 text-sm font-medium', team1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
@@ -682,7 +682,7 @@ export function MatchSchedule() {
         <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+              <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                 <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
@@ -701,7 +701,7 @@ export function MatchSchedule() {
               {filtered.map((m, idx) => {
                 const grp = myGroups.find(g => g.id === m.groupId)
                 return (
-                  <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={m.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{grp?.groupName ?? '–'}</td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{m.round ?? 1}</td>

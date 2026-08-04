@@ -20,7 +20,7 @@ export function PersonalStandings({ standings }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+            <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
               <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
               <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thành Viên</th>
               <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trận</th>
@@ -38,7 +38,7 @@ export function PersonalStandings({ standings }: Props) {
               <tr><td colSpan={10} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Chưa có dữ liệu</td></tr>
             )}
             {standings.map(s => (
-              <tr key={s.memberId} className={cn('transition-colors', RANK_CLASS[s.rank] ?? 'hover:bg-slate-50/50')}>
+              <tr key={s.memberId} className={cn('transition-colors', RANK_CLASS[s.rank] ?? 'hover:[background:var(--pf-color-muted-soft)]')}>
                 <td className="px-3 py-2.5 text-center">
                   <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                     s.rank === 1 ? 'bg-yellow-400 text-white' :

@@ -342,7 +342,7 @@ export function Contributions() {
     const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>
             <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>

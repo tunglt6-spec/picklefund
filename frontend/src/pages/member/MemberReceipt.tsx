@@ -256,7 +256,7 @@ export function MemberReceipt() {
                       </div>
                     </button>
                     {isExp && (
-                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 bg-slate-50/50 space-y-1.5">
+                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)] space-y-1.5">
                         {[
                           ['Tiền sân', n(r.courtCost)],
                           ['Chi phí SH', n(r.livingCost)],
@@ -499,7 +499,7 @@ export function MemberReceipt() {
 
                   {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="border-t border-[color:var(--pf-border)] px-5 py-4 space-y-3 bg-slate-50/50">
+                    <div className="border-t border-[color:var(--pf-border)] px-5 py-4 space-y-3 [background:var(--pf-color-muted-soft)]">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                         <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
                           <span className="[color:var(--pf-color-muted)]">Tiền sân (phân bổ)</span>

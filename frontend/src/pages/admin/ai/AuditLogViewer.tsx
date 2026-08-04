@@ -151,7 +151,7 @@ export function AuditLogViewer() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50 text-[11px] [color:var(--pf-color-muted)] uppercase">
+                  <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] text-[11px] [color:var(--pf-color-muted)] uppercase">
                     <th className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
                     <th className="text-left px-4 py-3 font-semibold">Người dùng</th>
                     <th className="text-center px-4 py-3 font-semibold">Hành động</th>
@@ -160,7 +160,7 @@ export function AuditLogViewer() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {paged.map(log => (
-                    <tr key={log.id} className="hover:bg-slate-50/50">
+                    <tr key={log.id} className="hover:[background:var(--pf-color-muted-soft)]">
                       <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{fmt(log.createdAt)}</td>
                       <td className="px-4 py-2.5 text-xs font-mono [color:var(--pf-text)]">{log.user?.username ?? '—'}</td>
                       <td className="px-4 py-2.5 text-center">

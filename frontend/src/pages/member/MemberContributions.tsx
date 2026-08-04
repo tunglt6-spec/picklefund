@@ -169,7 +169,7 @@ export function MemberContributions() {
                       </div>
                     </button>
                     {isExp && (
-                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 bg-slate-50/50 space-y-1.5 text-[12px]">
+                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)] space-y-1.5 text-[12px]">
                         {[['Đã đóng quỹ', toNum(r.amountPaid), 'text-emerald-600'], ['Chi phí sân', toNum(r.courtCost), ''], ['Chi phí SH', toNum(r.livingCost), ''], ['Tổng chi phí', toNum(r.totalCost), '']].map(([lbl, val, cls]) => (
                           <div key={lbl as string} className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">{lbl}</span>
@@ -265,7 +265,7 @@ export function MemberContributions() {
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 bg-slate-50/50">
+                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)]">
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-xs">
                           <div className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">Đã đóng quỹ</span>

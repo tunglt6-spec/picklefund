@@ -70,11 +70,21 @@ const RISK_STYLE: Record<string, string> = {
 // Tông màu NHẸ theo NHÓM chức năng cho card Khu vực vận hành (phương án 1 đã duyệt) —
 // đồng bộ ngôn ngữ tint + viền trên với hàng KPI. Chỉ light theme.
 interface GroupTone { bg: string; border: string; bar: string; chip: string; fg: string }
+// Theme-aware: tint accent lên nền TOKEN (color-mix) -> tự tối ở dark, sáng ở light; chữ blend --pf-text.
+function tone(bar: string): GroupTone {
+  return {
+    bar,
+    fg: `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
+    bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+    border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
+    chip: `color-mix(in srgb, ${bar} 18%, var(--pf-surface))`,
+  }
+}
 const GROUP_TONE: Record<string, GroupTone> = {
-  'Điều phối & Duyệt': { bg: '#F5F3FF', border: '#EDE9FE', bar: '#6D5DFB', chip: '#EDE9FE', fg: '#6D5DFB' },
-  'Thông báo & Lịch': { bg: '#EFF6FF', border: '#DBEAFE', bar: '#2563EB', chip: '#DBEAFE', fg: '#2563EB' },
-  'Giám sát': { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', chip: '#FEF3C7', fg: '#D97706' },
-  'Tri thức & Nhật ký': { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', chip: '#D1FAE5', fg: '#059669' },
+  'Điều phối & Duyệt': tone('#6D5DFB'),
+  'Thông báo & Lịch': tone('#2563EB'),
+  'Giám sát': tone('#D97706'),
+  'Tri thức & Nhật ký': tone('#059669'),
 }
 
 // Tông màu DÙNG CHUNG cho MỌI card Khu vực vận hành — 1 màu tím Hermes cho đồng nhất.
@@ -138,7 +148,7 @@ function SectionCard({
         : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
   // 'soon' (chưa dùng hiện tại) → xám mờ; còn lại tô theo tông NHÓM (tint + viền trên + icon chip).
   const cardStyle: React.CSSProperties = soon
-    ? { background: '#F8FAFC', borderColor: '#E2E8F0', borderTop: '3px solid #E2E8F0' }
+    ? { background: 'var(--pf-surface-muted)', borderColor: 'var(--pf-border)', borderTop: '3px solid var(--pf-border)' }
     : { background: palette.bg, borderColor: palette.border, borderTop: `3px solid ${palette.bar}` }
   return (
     <button
@@ -153,7 +163,7 @@ function SectionCard({
       <div className="flex items-center justify-between">
         <span
           className="flex h-8 w-8 items-center justify-center rounded-lg"
-          style={soon ? { background: '#F1F5F9', color: '#94A3B8' } : { background: palette.chip, color: palette.fg }}
+          style={soon ? { background: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' } : { background: palette.chip, color: palette.fg }}
         >
           {s.icon}
         </span>
@@ -211,13 +221,19 @@ function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children
 // Phối màu NHẸ theo ngữ nghĩa (phương án A đã duyệt): nền tint rất nhạt + viền trên 3px +
 // số/icon theo màu — đồng bộ với thẻ "Kết quả hôm nay" ở Office View. Chỉ light theme.
 interface KpiPalette { bg: string; border: string; bar: string; fg: string }
+const kpiTone = (bar: string, fg?: string): KpiPalette => ({
+  bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+  border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
+  bar,
+  fg: fg ?? `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
+})
 const KPI_COLORS: Record<'emerald' | 'slate' | 'violet' | 'sky' | 'amber' | 'red', KpiPalette> = {
-  emerald: { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', fg: '#059669' },
-  slate: { bg: '#F8FAFC', border: '#E2E8F0', bar: '#94A3B8', fg: '#64748B' },
-  violet: { bg: '#F5F3FF', border: '#EDE9FE', bar: '#6D5DFB', fg: '#6D5DFB' },
-  sky: { bg: '#EFF6FF', border: '#DBEAFE', bar: '#2563EB', fg: '#2563EB' },
-  amber: { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', fg: '#D97706' },
-  red: { bg: '#FEF2F2', border: '#FEE2E2', bar: '#EF4444', fg: '#EF4444' },
+  emerald: kpiTone('#059669'),
+  slate: kpiTone('#94A3B8', 'var(--pf-color-muted)'),
+  violet: kpiTone('#6D5DFB'),
+  sky: kpiTone('#2563EB'),
+  amber: kpiTone('#D97706'),
+  red: kpiTone('#EF4444'),
 }
 interface Kpi9Def { key: string; label: string; icon: React.ReactNode; color: keyof typeof KPI_COLORS; pick: (o: RuntimeSummary['overview']) => number }
 const KPI9: Kpi9Def[] = [

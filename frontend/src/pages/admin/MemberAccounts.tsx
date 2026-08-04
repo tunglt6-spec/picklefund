@@ -545,7 +545,7 @@ export function MemberAccounts() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtered.map(acc => (
-                    <tr key={acc.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={acc.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                       <td className="px-4 py-3">
                         <div>
                           <p className="font-medium [color:var(--pf-text)]">{acc.member?.fullName ?? '—'}</p>

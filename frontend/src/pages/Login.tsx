@@ -596,6 +596,14 @@ export function Login() {
   const navigate = useNavigate()
   const formRef = useRef<HTMLFormElement>(null)
 
+  // Màn login LUÔN sáng (giữ nhận diện xanh) — bỏ data-theme=dark khi ở đây, khôi phục khi rời.
+  useEffect(() => {
+    const html = document.documentElement
+    const prev = html.getAttribute('data-theme')
+    html.removeAttribute('data-theme')
+    return () => { if (prev) html.setAttribute('data-theme', prev) }
+  }, [])
+
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)

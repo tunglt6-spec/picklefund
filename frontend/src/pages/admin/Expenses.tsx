@@ -315,7 +315,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             </div>
           </div>
 
-          <div className="flex items-center gap-3 px-5 py-4 border-t border-[color:var(--pf-border)] bg-slate-50/50">
+          <div className="flex items-center gap-3 px-5 py-4 border-t border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
             <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}>Hủy bỏ</Button>
             <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu…' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
           </div>
@@ -458,7 +458,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           <div className="px-6 pb-6">
             <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
             {exp.receiptUrl ? (
-              <div className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] bg-slate-50/60 p-3">
+              <div className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] p-3">
                 {/\.(jpe?g|png|webp)$/i.test(exp.receiptUrl) ? (
                   <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer" className="shrink-0">
                     <img src={resolveReceiptUrl(exp.receiptUrl)} alt="Hóa đơn" className="h-16 w-16 rounded-lg object-cover border border-[color:var(--pf-border)]" />
@@ -813,7 +813,7 @@ export function Expenses() {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
+        <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Chi Phí</h2>

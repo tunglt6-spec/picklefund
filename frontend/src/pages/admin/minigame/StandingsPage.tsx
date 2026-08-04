@@ -304,7 +304,7 @@ export function StandingsPage() {
         <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[color:var(--pf-border)] bg-slate-50/50">
+              <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                 <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thành Viên</th>
                 <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
@@ -323,7 +323,7 @@ export function StandingsPage() {
                 <tr><td colSpan={11} className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Chưa có dữ liệu</td></tr>
               )}
               {sorted.map((s) => (
-                <tr key={`${s.memberId}-${s.groupId}`} className={cn('transition-colors', RANK_CLASS[s.overallRank] ?? 'hover:bg-slate-50/50')}>
+                <tr key={`${s.memberId}-${s.groupId}`} className={cn('transition-colors', RANK_CLASS[s.overallRank] ?? 'hover:[background:var(--pf-color-muted-soft)]')}>
                   <td className="px-3 py-2.5 text-center">
                     <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                       s.overallRank === 1 ? 'bg-yellow-400 text-white' :

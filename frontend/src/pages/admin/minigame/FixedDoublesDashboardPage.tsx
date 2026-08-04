@@ -229,7 +229,7 @@ function MatchRow({
   // ── desktop row (grid) ─────────────────────────────────────────────────────
   const desktopRow = (
     <div
-      className="hidden md:grid items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition-colors border-b last:border-0 group"
+      className="hidden md:grid items-center gap-3 px-4 py-3 hover:[background:var(--pf-color-muted-soft)] transition-colors border-b last:border-0 group"
       style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderColor: T.border }}
     >
       {/* match # */}
@@ -363,7 +363,7 @@ function RoundCard({
     <div style={CARD} className="overflow-hidden">
       {/* header */}
       <button
-        className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-slate-50/60 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3.5 hover:[background:var(--pf-color-muted-soft)] transition-colors"
         onClick={() => setOpen(v => !v)}
       >
         <div className="flex items-center gap-3">
@@ -489,7 +489,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
           </thead>
           <tbody>
             {standings.map(s => (
-              <tr key={s.teamId} className={cn('hover:bg-slate-50/60 transition-colors', s.rank <= 3 && 'bg-amber-50/20')}
+              <tr key={s.teamId} className={cn('hover:[background:var(--pf-color-muted-soft)] transition-colors', s.rank <= 3 && 'bg-amber-50/20')}
                 style={{ borderBottom: `1px solid ${T.border}` }}>
                 <td className="text-center py-2.5 px-2 text-base leading-none w-8">
                   {s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉'

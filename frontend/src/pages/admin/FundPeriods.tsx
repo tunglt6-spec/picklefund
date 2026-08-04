@@ -1093,7 +1093,7 @@ export function FundPeriods() {
                         const days = Math.round((endMs - startMs) / 86400000)
                         const pType = p.type ?? 'chung'
                         return (
-                          <tr key={p.id} className={`border-b border-[color:var(--pf-border)] transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:bg-slate-50/60'}`}>
+                          <tr key={p.id} className={`border-b border-[color:var(--pf-border)] transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:[background:var(--pf-color-muted-soft)]'}`}>
                             {!isMember && (
                               <td className="px-4 py-3.5">
                                 <input
@@ -1742,7 +1742,7 @@ function HistoryTab({ contributions, periods, members }: {
                 const member = members.find(m => m.id === c.memberId)
                 const period = periods.find(p => p.id === c.fundPeriodId)
                 return (
-                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={c.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
@@ -1883,7 +1883,7 @@ function HighlightsTab({ contributions, periods, members }: {
                 const member = members.find(m => m.id === c.memberId)
                 const period = periods.find(p => p.id === c.fundPeriodId)
                 return (
-                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl [background:var(--pf-surface-muted)] hover:bg-slate-100/60 transition-colors">
+                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl [background:var(--pf-surface-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
                     <span className="text-sm w-5 text-center shrink-0 font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold [color:var(--pf-text)] truncate">{member?.fullName ?? c.payerName ?? '—'}</p>

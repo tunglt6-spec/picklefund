@@ -31,8 +31,11 @@
     <script>
       (function () {
         try {
+          // Pre-auth (login/pricing/demo) LUÔN sáng — không theo dark toggle (giữ nhận diện xanh).
+          var p = location.pathname;
+          var preAuth = p === '/login' || p === '/pricing' || p === '/demo';
           var t = localStorage.getItem('pf-theme') || 'light';
-          var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var dark = !preAuth && (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
           if (dark) document.documentElement.setAttribute('data-theme', 'dark');
         } catch (e) {}
       })();

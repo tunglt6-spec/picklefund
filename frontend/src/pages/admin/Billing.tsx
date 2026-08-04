@@ -113,7 +113,7 @@ export function Billing() {
 
             {/* Usage */}
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-white/70 rounded-lg p-3">
+              <div className="[background:var(--pf-surface)] rounded-lg p-3">
                 <p className="text-xs [color:var(--pf-color-muted)]">Thành viên</p>
                 <p className="text-lg font-bold [color:var(--pf-text)]">{sub.usage.members} <span className="text-sm font-normal [color:var(--pf-color-muted)]">/ {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</span></p>
                 <div className="mt-1.5 h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
@@ -121,7 +121,7 @@ export function Billing() {
                     style={{ width: sub.plan.maxMembers >= 9999 ? '4px' : `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
                 </div>
               </div>
-              <div className="bg-white/70 rounded-lg p-3">
+              <div className="[background:var(--pf-surface)] rounded-lg p-3">
                 <p className="text-xs [color:var(--pf-color-muted)]">Tính năng AI</p>
                 <p className="text-sm font-semibold mt-1 [color:var(--pf-text)]">
                   {sub.plan.aiFeatures ? '✅ Đã kích hoạt' : '❌ Chưa có'}
@@ -161,7 +161,7 @@ export function Billing() {
                     { label: 'Tính năng AI', fn: (p: Plan) => p.aiFeatures ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                     { label: 'Telegram Bot', fn: (p: Plan) => p.telegramBot ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                   ].map(row => (
-                    <tr key={row.label} className="border-b border-[color:var(--pf-border)] hover:bg-slate-50/50">
+                    <tr key={row.label} className="border-b border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]">
                       <td className="px-4 py-3 [color:var(--pf-text)]">{row.label}</td>
                       {plans.map(p => (
                         <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>

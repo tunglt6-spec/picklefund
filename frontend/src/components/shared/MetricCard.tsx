@@ -13,13 +13,20 @@ import { accentVars, type ModuleAccent } from './tokens'
  * truyền `tone` giữ nguyên giao diện.
  */
 export type MetricTone = 'success' | 'warning' | 'danger' | 'info' | 'brand' | 'neutral'
+// Theme-aware: tint accent lên nền TOKEN (color-mix) → tự tối ở dark; chữ blend --pf-text để đọc rõ.
+const mkTone = (bar: string, fg?: string) => ({
+  bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+  border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
+  bar,
+  fg: fg ?? `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
+})
 const TONE_PALETTE: Record<MetricTone, { bg: string; border: string; bar: string; fg: string }> = {
-  success: { bg: '#ECFDF5', border: '#D1FAE5', bar: '#059669', fg: '#059669' },
-  warning: { bg: '#FFFBEB', border: '#FEF3C7', bar: '#D97706', fg: '#D97706' },
-  danger: { bg: '#FEF2F2', border: '#FEE2E2', bar: '#EF4444', fg: '#EF4444' },
-  info: { bg: '#EFF6FF', border: '#DBEAFE', bar: '#2563EB', fg: '#2563EB' },
-  brand: { bg: '#F5F3FF', border: '#EDE9FE', bar: '#6D5DFB', fg: '#6D5DFB' },
-  neutral: { bg: '#F8FAFC', border: '#E2E8F0', bar: '#94A3B8', fg: '#64748B' },
+  success: mkTone('#059669'),
+  warning: mkTone('#D97706'),
+  danger: mkTone('#EF4444'),
+  info: mkTone('#2563EB'),
+  brand: mkTone('#6D5DFB'),
+  neutral: mkTone('#94A3B8', 'var(--pf-color-muted)'),
 }
 
 interface MetricCardProps {
