@@ -202,11 +202,19 @@ export class BillingCheckoutService {
       select: { plan: true, planExpiresAt: true },
     });
     const now = new Date();
-    // Gia hạn: nếu đang đúng gói & còn hạn → cộng tiếp vào ngày hết hạn; nếu không → tính từ now.
-    const sameActive =
-      club?.plan === order.planTier && club?.planExpiresAt && club.planExpiresAt > now;
-    const base = sameActive ? club!.planExpiresAt! : now;
-    const expiresAt = this.addCycle(base, order.billingCycle);
+    // Gói VÔ HẠN do Admin cấp (đúng gói + planExpiresAt=null) → GIỮ vô hạn, không "đóng khung"
+    // thành có hạn; vẫn ghi order/invoice/subscription để lưu vết. Ngược lại: gia hạn (còn hạn
+    // cộng tiếp vào ngày hết hạn; hết hạn/khác gói → tính từ now).
+    const adminUnlimited = club?.plan === order.planTier && club?.planExpiresAt == null;
+    let expiresAt: Date | null;
+    if (adminUnlimited) {
+      expiresAt = null;
+    } else {
+      const sameActive =
+        club?.plan === order.planTier && club?.planExpiresAt && club.planExpiresAt > now;
+      const base = sameActive ? club!.planExpiresAt! : now;
+      expiresAt = this.addCycle(base, order.billingCycle);
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.paymentOrder.update({
@@ -247,6 +255,7 @@ export class BillingCheckoutService {
       });
     });
 
+    const expLabel = expiresAt ? expiresAt.toLocaleDateString('vi-VN') : 'vô thời hạn (Admin cấp)';
     if (order.createdById) {
       void this.audit.log({
         clubId: order.clubId,
@@ -254,10 +263,10 @@ export class BillingCheckoutService {
         action: 'UPDATE',
         resource: 'Club',
         resourceId: order.clubId,
-        detail: `Kích hoạt gói ${order.planTier} (${order.billingCycle}) đến ${expiresAt.toLocaleDateString('vi-VN')} — đơn ${order.orderCode}`,
+        detail: `Kích hoạt gói ${order.planTier} (${order.billingCycle}) đến ${expLabel} — đơn ${order.orderCode}`,
       });
     }
-    this.logger.log(`Kích hoạt ${order.planTier} cho CLB ${order.clubId} đến ${expiresAt.toISOString()}`);
+    this.logger.log(`Kích hoạt ${order.planTier} cho CLB ${order.clubId} — hạn: ${expiresAt ? expiresAt.toISOString() : 'null (vô hạn)'}`);
   }
 
   // ── Lịch sử ─────────────────────────────────────────────────────────────────
