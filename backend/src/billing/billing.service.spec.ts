@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 const mockPrisma = {
   club: { findUnique: jest.fn() },
   member: { count: jest.fn() },
+  subscription: { findUnique: jest.fn() },
   systemSetting: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
