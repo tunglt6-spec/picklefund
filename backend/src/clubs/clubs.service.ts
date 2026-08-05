@@ -13,7 +13,7 @@ import { ScoringService } from '../scoring/scoring.service';
 
 /** Giới hạn số thành viên theo gói dịch vụ (null = không giới hạn). Nguồn duy nhất. */
 export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
-  STARTER: 20,
+  STARTER: 15,
   PRO: null,
   CLUB_PLUS: null,
 };

@@ -62,9 +62,9 @@ describe('MembersService', () => {
   describe('create — giới hạn gói dịch vụ (V2.2 Phase 6)', () => {
     const dto = { fullName: 'Người mới', joinDate: '2026-02-01' };
 
-    it('STARTER đủ 20 thành viên → chặn thêm (BadRequest)', async () => {
+    it('STARTER đủ 15 thành viên → chặn thêm (BadRequest)', async () => {
       mockPrisma.club.findUnique.mockResolvedValue({ plan: 'STARTER' });
-      mockPrisma.member.count.mockResolvedValue(20);
+      mockPrisma.member.count.mockResolvedValue(15);
       await expect(service.create('club-1', dto)).rejects.toBeInstanceOf(
         BadRequestException,
       );

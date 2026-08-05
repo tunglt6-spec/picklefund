@@ -90,10 +90,10 @@ describe('BillingService', () => {
       expect(tiers).toEqual(['CLUB_PLUS', 'PRO', 'STARTER']);
     });
 
-    it('STARTER maxMembers matches PLAN_MEMBER_LIMIT (20)', () => {
+    it('STARTER maxMembers matches PLAN_MEMBER_LIMIT (15)', () => {
       const plans = service.getPlans();
       const starter = plans.find((p) => p.tier === 'STARTER');
-      expect(starter?.maxMembers).toBe(20);
+      expect(starter?.maxMembers).toBe(15);
     });
 
     it('PRO/CLUB_PLUS are unlimited (sentinel 9999)', () => {

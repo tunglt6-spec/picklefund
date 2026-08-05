@@ -35,8 +35,8 @@ export const PLAN_CONFIGS: Record<ServicePlan, PlanConfig> = {
   PRO: {
     tier: 'PRO',
     name: 'Pro',
-    priceMonthly: 199000,
-    priceYearly: 1990000, // ~2 tháng miễn phí khi trả năm
+    priceMonthly: 99000,
+    priceYearly: 990000, // ~2 tháng miễn phí khi trả năm
     maxMembers: memberLimit('PRO'),
     maxClubs: 1,
     aiFeatures: true,
@@ -44,7 +44,7 @@ export const PLAN_CONFIGS: Record<ServicePlan, PlanConfig> = {
   },
   CLUB_PLUS: {
     tier: 'CLUB_PLUS',
-    name: 'Club+',
+    name: 'Enterprise',
     priceMonthly: null,
     priceYearly: null,
     maxMembers: memberLimit('CLUB_PLUS'),
