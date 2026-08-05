@@ -324,7 +324,7 @@ export function ExecutiveReport() {
 
         {/* ── Club Health Score (hero) ─────────────────────────────── */}
         <div
-          className="rounded-2xl border p-5 sm:flex sm:items-center sm:gap-6 [border-color:var(--pf-border)]"
+          className="rounded-2xl border p-5 lg:flex lg:items-center lg:gap-6 [border-color:var(--pf-border)]"
           style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--pf-primary, #6D5DFB) 12%, var(--pf-surface)), var(--pf-surface))' }}
         >
           <div className="flex items-center gap-4">
@@ -343,12 +343,12 @@ export function ExecutiveReport() {
               <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">Tổng hợp 6 chiều · số liệu thật từ kỳ quỹ</p>
             </div>
           </div>
-          <div className="mt-4 grid flex-1 grid-cols-2 gap-2 sm:mt-0 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-0 lg:flex-1">
             {health.dimensions.map((d: any) => (
               <div key={d.key} className="rounded-xl border p-2.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium [color:var(--pf-color-muted)]">{d.key}</span>
-                  <span className="text-xs font-bold tabular-nums" style={{ color: d.score == null ? 'var(--pf-color-muted)' : healthColor(d.score) }}>
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="min-w-0 truncate text-[11px] font-medium [color:var(--pf-color-muted)]">{d.key}</span>
+                  <span className="shrink-0 text-xs font-bold tabular-nums" style={{ color: d.score == null ? 'var(--pf-color-muted)' : healthColor(d.score) }}>
                     {d.score == null ? '—' : d.score}
                   </span>
                 </div>
@@ -600,9 +600,9 @@ function SectionTitle({ icon, title, note, compact }: { icon?: React.ReactNode; 
 }
 function FinRow({ label, value, delta, strong, negative }: { label: string; value: string; delta?: number | null; strong?: boolean; negative?: boolean }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs [color:var(--pf-color-muted)]">{label}</span>
-      <div className="text-right">
+    <div className="flex items-center justify-between gap-2">
+      <span className="min-w-0 truncate text-xs [color:var(--pf-color-muted)]">{label}</span>
+      <div className="shrink-0 text-right">
         <span className={`tabular-nums ${strong ? 'text-sm font-bold' : 'text-xs font-semibold'}`} style={{ color: negative ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-text)' }}>{value}</span>
         {delta !== undefined && <div><DeltaBadge v={delta ?? null} /></div>}
       </div>
