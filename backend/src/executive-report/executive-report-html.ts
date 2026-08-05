@@ -122,9 +122,16 @@ export function buildReportHtml(
   const fin = report.finance;
   const cmp = fin.compare;
   const hc = hcolor(s.clubHealthScore);
-  const genDate = report.generatedAt
-    ? new Date(report.generatedAt).toLocaleDateString('vi-VN')
-    : new Date().toLocaleDateString('vi-VN');
+  // Thời gian XUẤT báo cáo = thời gian THỰC lúc render (giờ VN), KHÔNG phải mốc cuối kỳ quỹ.
+  // (report.generatedAt = cuối kỳ = dùng cho "Kỳ", không dùng cho ngày xuất.)
+  const exportedAt = new Date().toLocaleString('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
   const dp = (v: number | null | undefined) =>
     v == null
@@ -377,7 +384,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
       <div class="gcard"><div class="l">Thành viên</div><div class="v">${s.activeMembers}/${s.totalMembers}</div><div class="s">đang hoạt động</div></div>
     </div>
   </div>
-  <div class="cv-foot"><span>Xuất ngày ${esc(genDate)}</span><span>Tài liệu nội bộ · Ban quản trị CLB</span></div>
+  <div class="cv-foot"><span>Xuất lúc ${esc(exportedAt)}</span><span>Tài liệu nội bộ · Ban quản trị CLB</span></div>
 </section>
 
 <div class="hero">
@@ -387,7 +394,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
     <div>
       <div class="eyb">Báo cáo điều hành · Executive Report</div>
       <h1>${esc(report.meta.clubName)}</h1>
-      <div class="sub">Kỳ: ${esc(report.meta.periodName)} · Xuất ngày ${esc(genDate)}</div>
+      <div class="sub">Kỳ: ${esc(report.meta.periodName)} · Xuất lúc ${esc(exportedAt)}</div>
     </div>
   </div>
   <div class="gauge">${ring(s.clubHealthScore)}<div class="cls">${grade(s.clubHealthScore)}</div></div>
@@ -497,7 +504,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
   <div><div class="eyebrow">12 · Khuyến nghị</div><div class="subh">Gợi ý hành động</div>${recs}</div>
 </div>
 
-<div class="foot">AIDO Executive Report v1.0 · mọi con số từ dữ liệu thật của CLB · ${esc(report.meta.clubName)} · ${esc(genDate)}</div>
+<div class="foot">AIDO Executive Report v1.0 · mọi con số từ dữ liệu thật của CLB · ${esc(report.meta.clubName)} · xuất lúc ${esc(exportedAt)}</div>
 
 </body></html>`;
 }
