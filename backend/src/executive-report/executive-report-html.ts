@@ -226,7 +226,7 @@ export function buildReportHtml(
     .slice(0, 3)
     .map(
       (p: any, i: number) =>
-        `<div class="pl"><span class="plr">${i === 0 ? '🏆' : i + 1}</span><span class="pln">${esc(p.name)}</span><span class="plw">${p.wins}T · ${p.winRate}%</span></div>`,
+        `<div class="pl"><span class="plr">${i + 1}</span><span class="pln">${esc(p.name)}</span><span class="plw">${p.wins}T · ${p.winRate}%</span></div>`,
     )
     .join('');
 
@@ -363,7 +363,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 .tld{font-weight:800;color:#0F172A;margin-right:5px}.tlx b{color:#334155}
 .alist,.rlist{list-style:none}
 .alist li{font-size:9.5px;color:#334155;padding:4px 0 4px 16px;position:relative;line-height:1.5}
-.alist li:before{content:'⚠';position:absolute;left:0;color:#F59E0B;font-size:9px}
+.alist li:before{content:'•';position:absolute;left:0;color:#F59E0B;font-weight:700}
 .rlist li{font-size:9.5px;color:#334155;padding:5px 0;line-height:1.6}
 .tag{display:inline-block;background:#EEF0FF;color:#6D5DFB;font-size:8px;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:6px}
 .foot{text-align:center;color:#B4BCC8;font-size:8.5px;margin-top:4px}
@@ -439,7 +439,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 </div>
 
 <div class="sect aibox">
-  <div class="h">✨ Tóm tắt điều hành (AI)</div>
+  <div class="h">Tóm tắt điều hành (AI)</div>
   <div class="b">${esc(aiText)}</div>
 </div>
 
@@ -496,8 +496,8 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
       ${kpi('TB người / buổi', String(act.avgPresentPerSession), '', '#0EA5E9')}
     </div>
     <div class="callout">
-      ${act.busiest ? `🔥 Đông nhất: <b>${esc(act.busiest.name)}</b> (${act.busiest.present} người)<br>` : ''}
-      ${act.emptiest ? `💤 Ít nhất: ${esc(act.emptiest.name)} (${act.emptiest.present} người)<br>` : ''}
+      ${act.busiest ? `<b style="color:#F59E0B">Đông nhất:</b> <b>${esc(act.busiest.name)}</b> (${act.busiest.present} người)<br>` : ''}
+      ${act.emptiest ? `<b style="color:#94A3B8">Ít nhất:</b> ${esc(act.emptiest.name)} (${act.emptiest.present} người)<br>` : ''}
       <i class="mut">Tỷ lệ lấp đầy tính theo sĩ số hoạt động (chưa có sức chứa/buổi).</i>
     </div>
   </div>
