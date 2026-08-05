@@ -578,7 +578,7 @@ function RecentActivityCard({ entries }: { entries: string[] }) {
           <p className="text-xs">Chưa có hoạt động nào được ghi lại</p>
         </div>
       ) : (
-        <ul className="divide-y" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
+        <ul className="divide-y divide-[color:var(--pf-border-soft)]">
           {entries.map((e, i) => (
             <li key={i} className="flex items-start gap-3 px-4 py-3">
               <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: T.brand }} />

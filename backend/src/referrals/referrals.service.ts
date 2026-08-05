@@ -123,7 +123,10 @@ export class ReferralsService {
       select: { plan: true, planExpiresAt: true },
     });
     if (!club) return;
-    if (club.plan === 'PRO' && club.planExpiresAt == null) return; // vô hạn Admin cấp → không cap
+    // KHÔNG hạ tier: Enterprise (CLUB_PLUS) giữ nguyên; Pro vô hạn (Admin cấp) giữ nguyên.
+    // Chỉ cộng tháng cho STARTER (lên Pro) hoặc PRO có hạn (gia hạn).
+    if (club.plan === 'CLUB_PLUS') return;
+    if (club.plan === 'PRO' && club.planExpiresAt == null) return;
     const now = new Date();
     const base =
       club.plan === 'PRO' && club.planExpiresAt && club.planExpiresAt > now ? club.planExpiresAt : now;

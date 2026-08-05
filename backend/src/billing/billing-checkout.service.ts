@@ -53,8 +53,8 @@ export class BillingCheckoutService {
   private genOrderCode(): string {
     const now = new Date();
     const p = (n: number, w = 2) => String(n).padStart(w, '0');
-    const ts = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
-    const rand = Math.floor(Math.random() * 9000 + 1000);
+    const ts = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}${p(now.getMilliseconds(), 3)}`;
+    const rand = Math.floor(Math.random() * 90000 + 10000); // 5 chữ số → trùng cực hiếm (ms + rand)
     return `PF${ts}${rand}`;
   }
 
@@ -220,6 +220,11 @@ export class BillingCheckoutService {
       await this.prisma.paymentOrder.update({ where: { id: order.id }, data: { status: 'FAILED' } });
       return { ok: false, reason: 'payment_failed' };
     }
+    // Defense-in-depth: nếu cổng báo số tiền → phải KHỚP order.amount (backend tính) mới kích hoạt.
+    if (verdict.amount != null && verdict.amount > 0 && Math.round(verdict.amount) !== Math.round(Number(order.amount))) {
+      this.logger.warn(`Webhook ${gateway} order ${order.orderCode}: số tiền lệch (${verdict.amount} ≠ ${order.amount}) — bỏ qua.`);
+      return { ok: false, reason: 'amount_mismatch' };
+    }
 
     await this.activate(order);
     return { ok: true };
@@ -227,6 +232,12 @@ export class BillingCheckoutService {
 
   // ── Giả lập thanh toán (chỉ gateway MOCK, sandbox) ──────────────────────────
   async simulatePayment(clubId: string, orderCode: string, userId?: string) {
+    // BẢO MẬT: chỉ cho giả lập khi BẬT cờ sandbox (env BILLING_SANDBOX=1|true). Mặc định TẮT →
+    // ở prod chưa cắm khoá MoMo (mọi đơn gateway=MOCK) KHÔNG ai tự kích hoạt Pro miễn phí được.
+    const sandboxOn = ['1', 'true'].includes((process.env.BILLING_SANDBOX || '').toLowerCase());
+    if (!sandboxOn) {
+      throw new BadRequestException('Giả lập thanh toán đang TẮT (chỉ bật khi BILLING_SANDBOX=1).');
+    }
     const order = await this.prisma.paymentOrder.findUnique({ where: { orderCode } });
     if (!order || order.clubId !== clubId) throw new NotFoundException('Không tìm thấy đơn.');
     if (order.gateway !== 'MOCK') {

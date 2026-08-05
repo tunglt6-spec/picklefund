@@ -97,6 +97,7 @@ export function CheckoutModal({
       setOrder({ orderCode: d.orderCode, amount: d.amount })
       if (d.gateway === 'MOCK') setStep('sandbox')
       else if (d.checkoutUrl) window.location.href = d.checkoutUrl
+      else toast.error('Không nhận được liên kết thanh toán từ cổng. Vui lòng thử lại.')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Không tạo được đơn thanh toán.')
     } finally {

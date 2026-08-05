@@ -53,6 +53,9 @@ type Subscription = {
 
 type AiUsage = { month: string; tokens: number; estimatedCostVnd: number }
 
+// Tên hiển thị gói (không lộ enum CLUB_PLUS ra người dùng).
+const PLAN_LABEL: Record<ServicePlan, string> = { STARTER: 'Starter', PRO: 'Pro', CLUB_PLUS: 'Enterprise' }
+
 const PLAN_COLORS: Record<ServicePlan, string> = {
   STARTER: '[background:var(--pf-surface-muted)] border-[color:var(--pf-border)]',
   PRO: '[background:var(--pf-primary-soft)] [border-color:var(--pf-primary-soft)]',
@@ -126,7 +129,7 @@ export function Billing() {
         clubName,
         invoiceNumber: `INV-${o.orderCode}`,
         orderCode: o.orderCode,
-        planLabel: o.planTier,
+        planLabel: PLAN_LABEL[o.planTier],
         cycleLabel: o.billingCycle === 'YEARLY' ? 'Theo năm' : 'Theo tháng',
         amount: Number(o.amount),
         discount: o.discountAmount ? Number(o.discountAmount) : 0,
@@ -224,7 +227,7 @@ export function Billing() {
                     {plans.map(p => (
                       <th key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_BADGE[p.tier]}`}>
-                          {p.tier === currentTier ? `✓ ${p.tier}` : p.tier}
+                          {p.tier === currentTier ? `✓ ${p.name ?? PLAN_LABEL[p.tier]}` : (p.name ?? PLAN_LABEL[p.tier])}
                         </span>
                       </th>
                     ))}
@@ -337,7 +340,7 @@ export function Billing() {
                   return (
                     <div key={o.orderCode} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium [color:var(--pf-text)] truncate">{o.planTier} · {o.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</p>
+                        <p className="text-sm font-medium [color:var(--pf-text)] truncate">{PLAN_LABEL[o.planTier]} · {o.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</p>
                         <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{o.orderCode} · {new Date(o.paidAt ?? o.createdAt).toLocaleString('vi-VN')}</p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">

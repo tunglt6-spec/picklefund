@@ -219,8 +219,12 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
   if (document.fonts?.ready) { try { await document.fonts.ready } catch { /* bỏ qua */ } }
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
   const pageEl = container.querySelector('.page') as HTMLElement
-  const canvas = await html2canvas(pageEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-  document.body.removeChild(container)
+  let canvas: HTMLCanvasElement
+  try {
+    canvas = await html2canvas(pageEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
+  } finally {
+    document.body.removeChild(container) // luôn dọn node off-screen kể cả khi html2canvas lỗi
+  }
   const blob: Blob = await new Promise((res, rej) =>
     canvas.toBlob(b => (b ? res(b) : rej(new Error('canvas toBlob failed'))), 'image/png', 1.0),
   )
@@ -291,11 +295,15 @@ export async function captureElementAsReportPng(
   document.body.appendChild(wrap)
   if (document.fonts?.ready) { try { await document.fonts.ready } catch { /* bỏ qua */ } }
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
-  const canvas = await html2canvas(wrap, {
-    scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
-    onclone: (doc) => { doc.documentElement.setAttribute('data-theme', 'light'); doc.documentElement.style.colorScheme = 'light' },
-  })
-  document.body.removeChild(wrap)
+  let canvas: HTMLCanvasElement
+  try {
+    canvas = await html2canvas(wrap, {
+      scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
+      onclone: (doc) => { doc.documentElement.setAttribute('data-theme', 'light'); doc.documentElement.style.colorScheme = 'light' },
+    })
+  } finally {
+    document.body.removeChild(wrap) // luôn dọn node off-screen kể cả khi html2canvas lỗi
+  }
   const blob: Blob = await new Promise((res, rej) =>
     canvas.toBlob(b => (b ? res(b) : rej(new Error('canvas toBlob failed'))), 'image/png', 1.0),
   )

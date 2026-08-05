@@ -609,8 +609,7 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
   const logo = branding.logo
   if (logo && logo.dataUrl) {
     try {
-      setFill(C.white)
-      rrect(M + 6, M + 4.5, 13, 13, 1.6, 'F')
+      // KHÔNG nền trắng: con-quay trắng đặt thẳng trên band màu.
       const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
       let iw = 10.6, ih = 10.6
       if (ratio > 1) ih = 10.6 / ratio; else iw = 10.6 * ratio
@@ -756,8 +755,7 @@ export function buildMiniReceiptPDF({ jsPDF, fonts, receipt, branding }) {
   const logo = branding.logo
   if (logo && logo.dataUrl) {
     try {
-      setFill([255, 255, 255])
-      rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+      // KHÔNG nền trắng: con-quay trắng đặt thẳng trên band màu.
       const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
       let iw = 13.2
       let ih = 13.2
