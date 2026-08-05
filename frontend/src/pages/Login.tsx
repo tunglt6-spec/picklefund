@@ -4,7 +4,7 @@ import { motion, AnimatePresence, type Easing } from 'framer-motion'
 import {
   Eye, EyeOff, Building2, ArrowLeft, ArrowRight,
   CheckCircle2, ChevronRight, UserPlus, Users, DollarSign,
-  BarChart3, Smartphone, ChevronDown, Lock,
+  BarChart3, Smartphone, ChevronDown, Lock, Gift,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
@@ -118,7 +118,10 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
   const { login } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const referralCode = (searchParams.get('ref') || '').trim().toUpperCase() || undefined
+  const refFromUrl = (searchParams.get('ref') || '').trim().toUpperCase()
+  const [referralInput, setReferralInput] = useState(refFromUrl)
+  const referralCode = referralInput.trim().toUpperCase() || undefined
+  const refLocked = !!refFromUrl // đến từ link giới thiệu → khoá, không cho sửa
 
   const nextClub = (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,7 +186,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
           ))}
         </div>
 
-        {referralCode && (
+        {refLocked && referralCode && (
           <div className="mb-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
             🎁 Bạn được giới thiệu bằng mã <b>{referralCode}</b> — lên Pro để cả hai nhận +1 tháng Pro.
           </div>
@@ -242,6 +245,23 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
                 )}
               </Field>
             ))}
+            <Field label="Mã giới thiệu (không bắt buộc)">
+              <div className="relative">
+                <Gift size={16} className="absolute left-3.5 top-3.5 text-indigo-400 pointer-events-none" />
+                <input
+                  value={referralInput}
+                  onChange={e => setReferralInput(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                  disabled={refLocked}
+                  placeholder="Nhập mã nếu được bạn bè giới thiệu"
+                  maxLength={20}
+                  className={`${inputBase} pl-10 font-mono uppercase ${refLocked ? 'opacity-70 cursor-not-allowed' : ''}`} />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {refLocked
+                  ? 'Đã tự điền từ link giới thiệu.'
+                  : 'Có mã? Cả bạn và người giới thiệu cùng nhận +1 tháng Pro khi bạn nâng cấp.'}
+              </p>
+            </Field>
             <div className="flex gap-2 pt-1">
               <OutlineButton onClick={() => setStep(1)}><ArrowLeft size={15} /> Quay lại</OutlineButton>
               <GradientButton type="submit" disabled={loading} className="flex-1 justify-center">
