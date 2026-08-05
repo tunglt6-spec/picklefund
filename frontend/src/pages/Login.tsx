@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, type Easing } from 'framer-motion'
-import { QRCodeSVG } from 'qrcode.react'
 import {
   Eye, EyeOff, Building2, ArrowLeft, ArrowRight,
   CheckCircle2, ChevronRight, UserPlus, Users, DollarSign,
   BarChart3, Smartphone, ChevronDown, Lock,
-  Copy, Check, Wifi, QrCode, AlertCircle, Globe,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
@@ -293,304 +291,6 @@ const badgeStyle: Record<string, string> = {
   green:  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
 }
 
-/* ─── Detect LAN IP via WebRTC ─── */
-async function detectLanIP(): Promise<string | null> {
-  return new Promise(resolve => {
-    try {
-      const pc = new RTCPeerConnection({ iceServers: [] })
-      pc.createDataChannel('')
-      pc.createOffer().then(o => pc.setLocalDescription(o))
-      const timer = setTimeout(() => { pc.close(); resolve(null) }, 1500)
-      pc.onicecandidate = e => {
-        if (!e.candidate) return
-        const m = e.candidate.candidate.match(/(\d+\.\d+\.\d+\.\d+)/)
-        if (m && !m[1].startsWith('127.')) {
-          clearTimeout(timer)
-          pc.close()
-          resolve(m[1])
-        }
-      }
-    } catch { resolve(null) }
-  })
-}
-
-/* ─── Mobile Link Widget ─── */
-function MobileLinkWidget() {
-  const [open, setOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [mobileUrl, setMobileUrl] = useState('')
-  const [isLocalhost, setIsLocalhost] = useState(false)
-  const [detecting, setDetecting] = useState(false)
-  const [tab, setTab] = useState<'lan' | 'internet'>('lan')
-  const [tunnelInput, setTunnelInput] = useState('')
-  const [tunnelCopied, setTunnelCopied] = useState(false)
-
-  useEffect(() => {
-    const host = window.location.hostname
-    const port = window.location.port
-    const isLocal = host === 'localhost' || host === '127.0.0.1'
-    setIsLocalhost(isLocal)
-    if (!isLocal) {
-      setMobileUrl(`${window.location.protocol}//${host}${port ? `:${port}` : ''}/login`)
-    }
-  }, [])
-
-  const handleOpen = async () => {
-    if (!open && isLocalhost && !mobileUrl && tab === 'lan') {
-      setDetecting(true)
-      const ip = await detectLanIP()
-      const port = window.location.port
-      setMobileUrl(ip ? `http://${ip}${port ? `:${port}` : ''}/login` : '')
-      setDetecting(false)
-    }
-    setOpen(!open)
-  }
-
-  const handleTabChange = async (t: 'lan' | 'internet') => {
-    setTab(t)
-    if (t === 'lan' && isLocalhost && !mobileUrl) {
-      setDetecting(true)
-      const ip = await detectLanIP()
-      const port = window.location.port
-      setMobileUrl(ip ? `http://${ip}${port ? `:${port}` : ''}/login` : '')
-      setDetecting(false)
-    }
-  }
-
-  const copy = (url: string, setFn: (v: boolean) => void) => {
-    navigator.clipboard.writeText(url).then(() => {
-      setFn(true)
-      setTimeout(() => setFn(false), 2000)
-    })
-  }
-
-  // Normalize tunnel URL: ensure it ends with /login
-  const tunnelQrUrl = (() => {
-    const raw = tunnelInput.trim()
-    if (!raw) return ''
-    try {
-      const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`)
-      if (!u.pathname.includes('login')) u.pathname = '/login'
-      return u.toString()
-    } catch { return '' }
-  })()
-
-  const QRBlock = ({ url }: { url: string }) => (
-    <div className="shrink-0 rounded-xl overflow-hidden border border-slate-100 p-2 bg-white shadow-sm">
-      <QRCodeSVG
-        value={url}
-        size={120}
-        bgColor="#ffffff"
-        fgColor="#0F172A"
-        level="M"
-        imageSettings={{
-          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4L6 11v12c0 10.5 7.6 20.3 18 23 10.4-2.7 18-12.5 18-23V11L24 4z' fill='%234F46E5'/%3E%3C/svg%3E",
-          height: 18, width: 18, excavate: true,
-        }}
-      />
-    </div>
-  )
-
-  return (
-    <div className="relative">
-      <motion.button
-        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-        onClick={handleOpen}
-        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium hover:border-indigo-200 dark:hover:border-indigo-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200"
-      >
-        {detecting
-          ? <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-          : <QrCode size={14} />
-        }
-        {detecting ? 'Đang tìm địa chỉ mạng...' : 'Mở trên điện thoại'}
-        <Wifi size={12} className="ml-0.5 opacity-60" />
-      </motion.button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ duration: 0.22, ease: [0.16,1,0.3,1] as unknown as Easing }}
-            className="absolute bottom-full mb-3 left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-slate-950/60 p-4 z-50"
-          >
-            {/* Arrow tip */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-r border-b border-slate-100 dark:border-slate-800 rotate-45" />
-
-            {/* Tab switcher */}
-            <div className="flex gap-1 bg-slate-50 dark:bg-slate-800 rounded-xl p-1 mb-4 border border-slate-100 dark:border-slate-700">
-              {([['lan', <Wifi key="w" size={12}/>, 'Nội bộ (LAN)'], ['internet', <Globe key="g" size={12}/>, 'Mạng ngoài']] as const).map(([id, icon, label]) => (
-                <button key={id} onClick={() => handleTabChange(id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    tab === id
-                      ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600'
-                  }`}>
-                  {icon}{label}
-                </button>
-              ))}
-            </div>
-
-            {tab === 'lan' ? (
-              /* ── LAN tab ── */
-              (mobileUrl || !isLocalhost) ? (
-                <div className="flex gap-3 items-start">
-                  <QRBlock url={mobileUrl} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Smartphone size={13} className="text-indigo-500 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Cùng mạng WiFi</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 mb-2.5 border border-slate-100 dark:border-slate-700">
-                      <span className="text-[11px] text-indigo-600 font-mono truncate flex-1">{mobileUrl}</span>
-                      <button onClick={() => copy(mobileUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-indigo-500'}`}>
-                        {copied ? <Check size={13} /> : <Copy size={13} />}
-                      </button>
-                    </div>
-                    <div className="space-y-1">
-                      {['Kết nối điện thoại vào cùng WiFi', 'Quét mã QR bằng Camera', 'Đăng nhập và dùng ngay'].map((t, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                            style={{ background: 'linear-gradient(135deg,#00C896,#4F46E5)' }}>{i+1}</span>
-                          <span className="text-[11px] text-slate-500">{t}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex gap-3 items-start">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-100">
-                    <AlertCircle size={17} className="text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-slate-800 mb-1">Không phát hiện được địa chỉ mạng</p>
-                    <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">Khởi động lại Vite với flag <code className="bg-slate-100 px-1 rounded font-mono">--host</code>:</p>
-                    <div className="bg-slate-900 rounded-xl px-3 py-2 mb-2">
-                      <code className="text-emerald-400 text-[11px] font-mono">npm run dev:mobile</code>
-                    </div>
-                    <p className="text-[11px] text-slate-400">Vite sẽ hiện địa chỉ <span className="font-mono text-indigo-500">http://192.168.x.x:5173</span></p>
-                  </div>
-                </div>
-              )
-            ) : (
-              /* ── Internet tab ── */
-              !isLocalhost ? (
-                /* Already on a public URL — show QR directly */
-                <div>
-                  <div className="flex gap-2 items-start mb-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100">
-                      <Globe size={15} className="text-emerald-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Ứng dụng đã có thể truy cập từ internet</p>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">Quét QR bên dưới từ bất kỳ mạng nào — WiFi, 4G, 5G.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <QRBlock url={mobileUrl} />
-                    <div className="flex-1">
-                      <p className="text-[11px] font-semibold text-emerald-600 mb-1 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Sẵn sàng quét!
-                      </p>
-                      <div className="flex items-center gap-1.5 bg-slate-50 rounded-xl px-2.5 py-1.5 mb-2 border border-slate-100">
-                        <span className="text-[10px] text-violet-600 font-mono truncate flex-1">{mobileUrl}</span>
-                        <button onClick={() => copy(mobileUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-violet-500'}`}>
-                          {copied ? <Check size={12} /> : <Copy size={12} />}
-                        </button>
-                      </div>
-                      <div className="space-y-1">
-                        {['Mở Camera điện thoại', 'Quét mã QR', 'Đăng nhập và dùng ngay'].map((t, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg,#00C896,#4F46E5)' }}>{i+1}</span>
-                            <span className="text-[11px] text-slate-500">{t}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* localhost — tunnel paste flow */
-                <div>
-                  <div className="flex gap-2 items-start mb-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-100">
-                      <Globe size={15} className="text-violet-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Truy cập từ bất kỳ đâu</p>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">Tạo URL công khai qua tunnel — điện thoại 4G/5G cũng vào được.</p>
-                    </div>
-                  </div>
-
-                  {/* Step 1: run tunnel */}
-                  <div className="mb-3">
-                    <p className="text-[11px] font-semibold text-slate-600 mb-1.5">① Chạy lệnh này trong terminal:</p>
-                    <div className="bg-slate-900 rounded-xl px-3 py-2 flex items-center gap-2">
-                      <code className="text-emerald-400 text-[11px] font-mono flex-1">npm run dev:tunnel:all</code>
-                      <button onClick={() => copy('npm run dev:tunnel:all', setTunnelCopied)}
-                        className={`shrink-0 transition-colors ${tunnelCopied ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'}`}>
-                        {tunnelCopied ? <Check size={13} /> : <Copy size={13} />}
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-                      Terminal sẽ hiện URL dạng <span className="font-mono text-violet-500">https://xxxx.loca.lt</span>
-                    </p>
-                    <p className="text-[10px] text-amber-500 mt-1 leading-relaxed">
-                      ⚠ Lần đầu mở URL: nhấn <strong>"Click to Continue"</strong> để vượt qua trang xác nhận tunnel.
-                    </p>
-                  </div>
-
-                  {/* Step 2: paste URL */}
-                  <div className="mb-3">
-                    <p className="text-[11px] font-semibold text-slate-600 mb-1.5">② Dán URL tunnel vào đây để tạo QR:</p>
-                    <input
-                      type="url"
-                      value={tunnelInput}
-                      onChange={e => setTunnelInput(e.target.value)}
-                      placeholder="https://xxxx.loca.lt"
-                      className="w-full text-[11px] font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 placeholder:text-slate-300 transition"
-                    />
-                  </div>
-
-                  {/* QR or placeholder */}
-                  {tunnelQrUrl ? (
-                    <div className="flex gap-3 items-start mt-3 pt-3 border-t border-slate-100">
-                      <QRBlock url={tunnelQrUrl} />
-                      <div className="flex-1">
-                        <p className="text-[11px] font-semibold text-emerald-600 mb-1 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Sẵn sàng quét!
-                        </p>
-                        <div className="flex items-center gap-1.5 bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-100">
-                          <span className="text-[10px] text-violet-600 font-mono truncate flex-1">{tunnelQrUrl}</span>
-                          <button onClick={() => copy(tunnelQrUrl, setCopied)} className={`shrink-0 ${copied ? 'text-emerald-500' : 'text-slate-400 hover:text-violet-500'}`}>
-                            {copied ? <Check size={12} /> : <Copy size={12} />}
-                          </button>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
-                          Hoạt động trên mọi mạng — WiFi, 4G, 5G.
-                          <br/>URL hết hạn khi tắt terminal.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-100 text-slate-300">
-                      <QrCode size={18} />
-                      <span className="text-[11px]">QR xuất hiện sau khi dán URL</span>
-                    </div>
-                  )}
-                </div>
-              )
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 /* ─── Main Login ─── */
 export function Login() {
   const [username, setUsername] = useState('')
@@ -660,8 +360,14 @@ export function Login() {
         {/* Animated mesh gradient background */}
         <div className="absolute inset-0 mesh-bg" />
 
+        {/* Aurora — lớp conic xoay chậm (chiều sâu động) */}
+        <div className="absolute inset-0 aurora pointer-events-none" />
+
         {/* Gradient overlay for depth */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.6) 0%, rgba(79,70,229,0.35) 50%, rgba(6,182,212,0.25) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.62) 0%, rgba(79,70,229,0.32) 50%, rgba(6,182,212,0.22) 100%)' }} />
+
+        {/* Grain — nhiễu tinh tế cao cấp */}
+        <div className="absolute inset-0 grain pointer-events-none" />
 
         {/* Floating orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -717,8 +423,8 @@ export function Login() {
               {features.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="glass-card rounded-2xl p-4 group hover:bg-white/15 transition-all duration-300 cursor-default">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/15 group-hover:bg-white/20 transition-colors">
-                      <Icon size={16} className="text-emerald-300" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-400 shadow-lg shadow-indigo-950/30 group-hover:scale-105 transition-transform">
+                      <Icon size={16} className="text-white" />
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm leading-tight">{title}</p>
@@ -875,11 +581,6 @@ export function Login() {
                     <Building2 size={16} />
                     Đăng ký CLB mới — Miễn phí
                   </motion.button>
-                </div>
-
-                {/* Mobile link widget */}
-                <div className="mt-3">
-                  <MobileLinkWidget />
                 </div>
 
                 {/* Footer links */}
