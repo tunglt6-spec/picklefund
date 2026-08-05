@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import {
   Eye, EyeOff, Building2, ArrowLeft, ArrowRight,
   CheckCircle2, ChevronRight, UserPlus, Users, DollarSign,
-  BarChart3, Smartphone, ChevronDown, Lock, ExternalLink,
+  BarChart3, Smartphone, ChevronDown, Lock,
   Copy, Check, Wifi, QrCode, AlertCircle, Globe,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
@@ -829,21 +829,6 @@ export function Login() {
                       {loading ? <><Spinner />Đang đăng nhập...</> : <><Lock size={16} />Đăng nhập</>}
                     </GradientButton>
                   </form>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3 my-3">
-                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
-                    <span className="text-xs text-slate-400">hoặc</span>
-                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
-                  </div>
-
-                  {/* SSO button */}
-                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                    className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200">
-                    <Building2 size={17} className="text-indigo-500" />
-                    Đăng nhập bằng tài khoản CLB
-                    <ExternalLink size={13} className="text-slate-400 ml-auto" />
-                  </motion.button>
 
                   {/* Demo accounts accordion — ẨN trong production (P0-1) */}
                   {SHOW_DEMO_ACCOUNTS && (
