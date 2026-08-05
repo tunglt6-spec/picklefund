@@ -31,6 +31,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { AiManagerDashboard } from './ai/AiManagerDashboard'
+import { ExecutiveReport } from './ExecutiveReport'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -361,6 +362,7 @@ export function AiDigitalOffice() {
 
   const tabs: TabItem[] = [
     { key: 'office', label: 'Tổng quan' },
+    { key: 'report', label: 'Báo cáo điều hành' },
     { key: 'operations', label: 'Vận hành', badge: pending },
     { key: 'analytics', label: 'Phân tích' },
     { key: 'ops-center', label: 'Trung tâm điều hành AI' },
@@ -621,6 +623,8 @@ export function AiDigitalOffice() {
 
         </div>
       )}
+
+      {tab === 'report' && <ExecutiveReport />}
 
       {tab === 'analytics' && (
         <div className="space-y-5">
