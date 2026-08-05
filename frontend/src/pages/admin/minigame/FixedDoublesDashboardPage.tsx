@@ -14,8 +14,7 @@ import { useClubDataStore } from '../../../store/clubDataStore'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
-import { exportStandingsPDF, exportSchedulePDF } from '../../../lib/export'
-import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
+import { exportStandingsPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 
@@ -928,7 +927,7 @@ export function FixedDoublesDashboardPage() {
 
   // ── Xuất Ảnh/PDF bảng xếp hạng (đôi cố định) — PDF vector chuẩn SaaS, PNG chụp panel ──
   const doExportPng = async () => {
-    try { await exportInfographicAsPng(FD_EXPORT_ID, `BXH_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')); toast.success('Đã tải ảnh bảng xếp hạng') }
+    try { await captureElementAsReportPng(FD_EXPORT_ID, `BXH_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Bảng xếp hạng', subtitle: mg.name }); toast.success('Đã tải ảnh bảng xếp hạng') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -1002,7 +1001,7 @@ export function FixedDoublesDashboardPage() {
 
   // ── Xuất Ảnh/PDF Lịch Thi Đấu — PNG chụp panel lịch, PDF vector bảng đầy đủ mọi trận ──
   const doExportSchedulePng = async () => {
-    try { await exportInfographicAsPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { await captureElementAsReportPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Lịch thi đấu', subtitle: mg.name }); toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportSchedulePdf = async () => {

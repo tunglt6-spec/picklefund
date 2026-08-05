@@ -10,8 +10,7 @@ import {
   ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Search,
   BarChart2, ClipboardList, Save, Crown, Flag, Image as ImageIcon, FileDown,
 } from 'lucide-react'
-import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
-import { exportStandingsPDF } from '../../../lib/export'
+import { exportStandingsPDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -182,7 +181,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
       return
     }
     try {
-      await exportInfographicAsPng(el, fname)
+      await captureElementAsReportPng(el, fname, { title: 'Bảng xếp hạng', subtitle: mg?.name ?? '' })
     } catch {
       toast.error('Xuất thất bại')
     }

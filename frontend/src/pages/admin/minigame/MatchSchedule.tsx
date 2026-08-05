@@ -15,8 +15,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
 import { ScheduleExportButtons } from '../../../components/minigame/ScheduleExportButtons'
-import { exportSchedulePDF } from '../../../lib/export'
-import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
+import { exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 
 type Filter = 'all' | 'pending' | 'completed' | string
 
@@ -46,7 +45,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
   // ── Xuất Ảnh/PDF lịch (đôi ngẫu nhiên) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
   const doExportPng = async () => {
-    try { await exportInfographicAsPng(MS_DOUBLES_ID, slugName(minigameName)); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { await captureElementAsReportPng(MS_DOUBLES_ID, slugName(minigameName), { title: 'Lịch thi đấu', subtitle: minigameName, meta: 'Đôi ngẫu nhiên' }); toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -446,7 +445,7 @@ export function MatchSchedule() {
 
   // ── Xuất Ảnh/PDF lịch (vòng bảng) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
   const doExportPng = async () => {
-    try { await exportInfographicAsPng(MS_GROUP_ID, slugName(mg?.name ?? 'lich')); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { await captureElementAsReportPng(MS_GROUP_ID, slugName(mg?.name ?? 'lich'), { title: 'Lịch thi đấu', subtitle: mg?.name ?? '' }); toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {

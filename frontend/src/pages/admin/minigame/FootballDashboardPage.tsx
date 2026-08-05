@@ -11,8 +11,7 @@ import {
   CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
   Image as ImageIcon, FileDown,
 } from 'lucide-react'
-import { exportInfographicAsPng } from '../../../components/reports/infographic/infographic.utils'
-import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF } from '../../../lib/export'
+import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
 import { useMinigameStore } from '../../../store/minigameStore'
@@ -295,9 +294,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       }
       return
     }
-    // Còn lại: xuất ẢNH (PNG) — chụp phần bảng/panel đang hiển thị.
+    // Còn lại: xuất ẢNH (PNG) — report brand chuẩn SaaS (header + bảng đóng khung + footer).
     try {
-      await exportInfographicAsPng(el, fname)
+      await captureElementAsReportPng(el, fname, { title: 'Bảng xếp hạng', subtitle: mg?.name ?? '' })
     } catch {
       toast.error('Xuất ảnh thất bại')
     }
@@ -361,7 +360,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       return
     }
     try {
-      await exportInfographicAsPng(el, fname)
+      await captureElementAsReportPng(el, fname, { title: 'Lịch thi đấu', subtitle: mg?.name ?? '' })
     } catch { toast.error('Xuất ảnh thất bại') }
   }
 

@@ -12,9 +12,9 @@ import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
 import {
-  exportInfographicAsPng, shareInfographic, canShare,
+  shareInfographic, canShare,
 } from '../../../components/reports/infographic/infographic.utils'
-import { exportStandingsPDF } from '../../../lib/export'
+import { exportStandingsPDF, captureElementAsReportPng } from '../../../lib/export'
 
 const EXPORT_ID = 'mg-standings-export'
 
@@ -66,7 +66,7 @@ export function StandingsPage() {
 
   const fileBase = `BXH_${mg.name.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')}`
   const doExportPng = async () => {
-    try { await exportInfographicAsPng(EXPORT_ID, `${fileBase}.png`); toast.success('Đã tải ảnh bảng xếp hạng') }
+    try { await captureElementAsReportPng(EXPORT_ID, fileBase, { title: 'Bảng xếp hạng', subtitle: mg.name }); toast.success('Đã tải ảnh bảng xếp hạng') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {

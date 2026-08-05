@@ -224,6 +224,64 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+/** Chụp 1 element DOM thành ẢNH REPORT chuẩn SaaS (form PDF): bọc header brand + nội dung
+   (clone, ép light, tự co đúng chiều cao → HẾT whitespace) + footer. Dùng chung cho mọi màn
+   (BXH, lịch thi đấu…). `report` bắt buộc để thống nhất khung; ép light qua onclone. */
+export async function captureElementAsReportPng(
+  elementId: string,
+  fileBase: string,
+  report: { title: string; subtitle?: string; meta?: string },
+) {
+  const { default: html2canvas } = await import('html2canvas-pro')
+  const el = document.getElementById(elementId)
+  if (!el) throw new Error('Element not found')
+  const width = Math.max(Math.round(el.getBoundingClientRect().width) || 720, 560)
+
+  const wrap = document.createElement('div')
+  wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 48}px;background:#fff;font-family:'Be Vietnam Pro','Segoe UI',Arial,sans-serif;`
+  const header = `<div style="background:#6D5DFB;color:#fff;padding:16px 24px 13px;">
+      <div style="font-size:18px;font-weight:800;line-height:1.2;">${escHtml(brandName())} · ${escHtml(report.title)}</div>
+      ${report.subtitle ? `<div style="font-size:12.5px;opacity:.9;margin-top:3px;">${escHtml(report.subtitle)}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;gap:12px;font-size:11px;opacity:.82;margin-top:9px;"><span>${escHtml(report.meta ?? '')}</span><span>Xuất ngày: ${today()}</span></div>
+    </div>`
+  const footer = `<div style="text-align:center;font-size:10.5px;color:#94a3b8;padding:12px 24px 16px;border-top:1px solid #eef1f6;margin-top:2px;">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>`
+  wrap.innerHTML = header + '<div data-pf-body style="padding:18px 24px;background:#fff;"></div>' + footer
+  const body = wrap.querySelector('[data-pf-body]') as HTMLElement
+  const clone = el.cloneNode(true) as HTMLElement
+  clone.querySelectorAll('[data-html2canvas-ignore]').forEach(n => n.remove())
+  // Bỏ mọi ràng buộc chiều cao/stretch từ layout cha → clone co đúng nội dung (hết whitespace).
+  clone.style.width = width + 'px'
+  clone.style.height = 'auto'
+  clone.style.minHeight = '0'
+  clone.style.maxHeight = 'none'
+  clone.style.flex = 'none'
+  clone.style.margin = '0'
+  body.appendChild(clone)
+  document.body.appendChild(wrap)
+  if (document.fonts?.ready) { try { await document.fonts.ready } catch { /* bỏ qua */ } }
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  const canvas = await html2canvas(wrap, {
+    scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
+    onclone: (doc) => { doc.documentElement.setAttribute('data-theme', 'light'); doc.documentElement.style.colorScheme = 'light' },
+  })
+  document.body.removeChild(wrap)
+  const blob: Blob = await new Promise((res, rej) =>
+    canvas.toBlob(b => (b ? res(b) : rej(new Error('canvas toBlob failed'))), 'image/png', 1.0),
+  )
+  const name = `${fileBase}_${today().replace(/\//g, '-')}.png`
+  if ('showSaveFilePicker' in window) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handle = await (window as any).showSaveFilePicker({ suggestedName: name, types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }] })
+      const w = await handle.createWritable(); await w.write(blob); await w.close(); return
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) { if (e?.name === 'AbortError') return }
+  }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export interface FinanceOverviewInput {
   clubName: string
   periodName: string
