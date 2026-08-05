@@ -101,10 +101,12 @@ function trendChart(
     <div class="legend"><span><i style="background:#059669"></i>Thu</span><span><i style="background:#E11D48"></i>Chi</span></div>`;
 }
 
-const stars = (n: number) =>
-  n <= 0
+const stars = (n: number) => {
+  const k = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); // clamp 0..5 (tránh repeat âm → crash)
+  return k <= 0
     ? '<span style="color:#F43F5E">⚠</span>'
-    : `<span style="color:#F59E0B;letter-spacing:-1px">${'★'.repeat(n)}</span><span style="color:#E2E8F0;letter-spacing:-1px">${'★'.repeat(5 - n)}</span>`;
+    : `<span style="color:#F59E0B;letter-spacing:-1px">${'★'.repeat(k)}</span><span style="color:#E2E8F0;letter-spacing:-1px">${'★'.repeat(5 - k)}</span>`;
+};
 
 export function buildReportHtml(
   report: any,
@@ -121,7 +123,13 @@ export function buildReportHtml(
   const s = report.summary;
   const fin = report.finance;
   const cmp = fin.compare;
-  const hc = hcolor(s.clubHealthScore);
+  const healthScore = Number.isFinite(s.clubHealthScore)
+    ? s.clubHealthScore
+    : 0;
+  const avgHealth = Number.isFinite(report.members?.avgHealth)
+    ? report.members.avgHealth
+    : 0;
+  const hc = hcolor(healthScore);
   // Thời gian XUẤT báo cáo = thời gian THỰC lúc render (giờ VN), KHÔNG phải mốc cuối kỳ quỹ.
   // (report.generatedAt = cuối kỳ = dùng cho "Kỳ", không dùng cho ngày xuất.)
   const exportedAt = new Date().toLocaleString('vi-VN', {
@@ -140,11 +148,16 @@ export function buildReportHtml(
 
   // Logo CLB (data URI) hoặc monogram chữ cái đầu (khi CLB chưa có logo).
   const mono = esc((report.meta.clubName || 'C').trim().charAt(0).toUpperCase());
-  const logoLg = logoDataUri
-    ? `<div class="logo lg"><img src="${logoDataUri}" alt=""/></div>`
+  // Chỉ nhúng khi là data:image URI hợp lệ (chống inject vào src); nếu không → monogram.
+  const safeLogo =
+    typeof logoDataUri === 'string' && /^data:image\/[a-z+]+;base64,/i.test(logoDataUri)
+      ? logoDataUri
+      : null;
+  const logoLg = safeLogo
+    ? `<div class="logo lg"><img src="${safeLogo}" alt=""/></div>`
     : `<div class="logo lg mono">${mono}</div>`;
-  const logoSm = logoDataUri
-    ? `<div class="logo sm"><img src="${logoDataUri}" alt=""/></div>`
+  const logoSm = safeLogo
+    ? `<div class="logo sm"><img src="${safeLogo}" alt=""/></div>`
     : `<div class="logo sm mono">${mono}</div>`;
 
   // KPI tile với accent trái
@@ -246,10 +259,16 @@ ${fontFace}
 *{box-sizing:border-box;margin:0;padding:0}
 @page{size:A4;margin:0}
 body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.mut{color:#94A3B8}.sm{font-size:10px}.ok{color:#059669}
+.mut{color:#64748B}.sm{font-size:10px}.ok{color:#059669}
 b{font-weight:700}
 /* Section shell */
 .sect{border:1px solid #EAEEF3;border-radius:16px;padding:15px 17px;margin-bottom:14px;page-break-inside:avoid;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.03),0 4px 12px rgba(15,23,42,.03)}
+/* Section được phép NGẮT TRANG (bảng thành viên dài) — header lặp lại, không cắt giữa dòng */
+.sect--flow{page-break-inside:auto}
+.sect--flow table{page-break-inside:auto}
+.sect--flow thead{display:table-header-group}
+.sect--flow tr{page-break-inside:avoid}
+.sect--flow .avgcard{page-break-inside:avoid}
 .shead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
 .eyebrow{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:#A9B4C4;font-weight:700}
 .stitle{font-size:15px;font-weight:800;color:#0F172A;letter-spacing:-.01em;margin-top:2px}
@@ -273,7 +292,7 @@ b{font-weight:700}
 /* KPI */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .kpi{background:#fff;border:1px solid #EAEEF3;border-left:3px solid #CBD5E1;border-radius:12px;padding:11px 13px;box-shadow:0 1px 2px rgba(15,23,42,.03)}
-.kl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#94A3B8;font-weight:700}
+.kl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#6B7280;font-weight:700}
 .kv{font-size:19px;font-weight:800;color:#0F172A;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
 .ks{font-size:9px;color:#94A3B8;margin-top:1px}
 .kpi2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -355,7 +374,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 .logo.lg{width:76px;height:76px}.logo.lg.mono{font-size:38px}
 .logo.sm{width:44px;height:44px;border-radius:12px;box-shadow:0 3px 10px rgba(15,23,42,.16)}.logo.sm.mono{font-size:22px}
 /* COVER PAGE */
-.cover{position:relative;overflow:hidden;height:272mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:26mm 20mm;page-break-after:always;
+.cover{position:relative;overflow:hidden;height:245mm;border-radius:22px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:24mm 22mm;page-break-after:always;box-shadow:0 10px 30px rgba(91,75,232,.25);
   background:radial-gradient(120% 90% at 90% 4%,rgba(255,255,255,.16),transparent 40%),radial-gradient(130% 120% at 0% 100%,rgba(167,139,250,.5),transparent 46%),linear-gradient(150deg,#5B4BE8 0%,#7C3AED 55%,#6D28D9 100%)}
 .cover .cv-top{display:flex;align-items:center;gap:14px}
 .cover .cv-brand{font-size:11px;letter-spacing:.22em;font-weight:700;opacity:.9}
@@ -379,7 +398,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
     <div class="cv-period">Kỳ báo cáo: ${esc(report.meta.periodName)}</div>
     <div class="cv-rule"></div>
     <div class="cv-stats">
-      <div class="gcard"><div class="l">Sức khỏe CLB</div><div class="v">${s.clubHealthScore}/100</div><div class="s">${grade(s.clubHealthScore)}</div></div>
+      <div class="gcard"><div class="l">Sức khỏe CLB</div><div class="v">${healthScore}/100</div><div class="s">${grade(healthScore)}</div></div>
       <div class="gcard"><div class="l">Tổng tài sản</div><div class="v">${compact(fin.clubAssets)}đ</div><div class="s">quỹ cuối kỳ</div></div>
       <div class="gcard"><div class="l">Thành viên</div><div class="v">${s.activeMembers}/${s.totalMembers}</div><div class="s">đang hoạt động</div></div>
     </div>
@@ -397,7 +416,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
       <div class="sub">Kỳ: ${esc(report.meta.periodName)} · Xuất lúc ${esc(exportedAt)}</div>
     </div>
   </div>
-  <div class="gauge">${ring(s.clubHealthScore)}<div class="cls">${grade(s.clubHealthScore)}</div></div>
+  <div class="gauge">${ring(healthScore)}<div class="cls">${grade(healthScore)}</div></div>
 </div>
 
 <div class="sect">
@@ -439,15 +458,15 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
   </div>
 </div>
 
-<div class="sect">
+<div class="sect sect--flow">
   ${head('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm')}
   <div class="avgcard">
-    <div><div class="lbl">Điểm sức khỏe TB</div><div class="big" style="color:${hcolor(report.members.avgHealth)}">${report.members.avgHealth}<small>/100</small></div></div>
+    <div><div class="lbl">Điểm sức khỏe TB</div><div class="big" style="color:${hcolor(avgHealth)}">${avgHealth}<small>/100</small></div></div>
     ${distHtml}
   </div>
   <table>
     <thead><tr><th class="c">#</th><th>Thành viên</th><th class="r">Tham gia</th><th class="c">Đóng quỹ</th><th class="c">Đánh giá</th><th class="r">Hạnh kiểm</th><th class="r">Sức khỏe</th></tr></thead>
-    <tbody>${memberRows}</tbody>
+    <tbody>${memberRows || '<tr><td colspan="7" class="c mut" style="padding:14px">Chưa có thành viên.</td></tr>'}</tbody>
   </table>
 </div>
 

@@ -176,7 +176,8 @@ export class MaikaService {
           model: this.geminiModel,
         });
         const result = await model.generateContent(prompt);
-        return result.response.text().trim();
+        const text = result.response.text().trim();
+        if (text) return text; // rỗng (bị lọc an toàn…) → coi như fail, xuống tầng dưới
       } catch (err: any) {
         this.logger.warn(
           `[Maika] Gemini error: ${err.message} — trying OpenRouter`,

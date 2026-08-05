@@ -465,3 +465,24 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: #0f172a;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* In "gọn" Báo cáo điều hành: chỉ hiện vùng #exec-report-capture, ẩn app chrome.
+   Scope theo body.pf-print-report (chỉ bật khi bấm nút "In" của báo cáo) → KHÔNG ảnh
+   hưởng Ctrl+P ở màn khác. */
+@media print {
+  body.pf-print-report * {
+    visibility: hidden !important;
+  }
+  body.pf-print-report #exec-report-capture,
+  body.pf-print-report #exec-report-capture * {
+    visibility: visible !important;
+  }
+  body.pf-print-report #exec-report-capture {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

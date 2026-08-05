@@ -8,7 +8,7 @@ import { buildExecutiveReportPdf } from './executive-report-pdf';
 import { buildReportHtml } from './executive-report-html';
 import { renderHtmlToPdf } from './render-pdf';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -1295,28 +1295,63 @@ ${facts}`;
     const src =
       (typeof b.logoUrl === 'string' && b.logoUrl) || club?.logoUrl || null;
     if (!src) return null;
+    const MAX = 2_000_000;
+    const mimeFor = (ext: string) =>
+      ext === 'svg'
+        ? 'image/svg+xml'
+        : ext === 'jpg' || ext === 'jpeg'
+          ? 'image/jpeg'
+          : ext === 'webp'
+            ? 'image/webp'
+            : ext === 'png'
+              ? 'image/png'
+              : null; // ext không hợp lệ → bỏ (không đoán)
     try {
+      if (src.startsWith('data:image/')) return src; // đã là data URI ảnh
       if (/^https?:\/\//i.test(src)) {
-        const res = await fetch(src);
-        if (!res.ok) return null;
-        const buf = Buffer.from(await res.arrayBuffer());
-        if (buf.length > 2_000_000) return null; // logo quá lớn → bỏ
-        const ct = res.headers.get('content-type') || 'image/png';
-        return `data:${ct};base64,${buf.toString('base64')}`;
+        // CHỐNG SSRF: chỉ cho phép host của chính hệ thống (không fetch nội bộ/cloud-metadata).
+        let host = '';
+        try {
+          host = new URL(src).hostname.toLowerCase();
+        } catch {
+          return null;
+        }
+        const allowed =
+          host === 'localhost' ||
+          host.endsWith('.picklefund.uk') ||
+          host === 'picklefund.uk';
+        // chặn IP literal (metadata 169.254.x, private ranges…)
+        if (!allowed || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 5000);
+        try {
+          const res = await fetch(src, {
+            redirect: 'error',
+            signal: ctl.signal,
+          });
+          if (!res.ok) return null;
+          const len = Number(res.headers.get('content-length') || 0);
+          if (len > MAX) return null;
+          const buf = Buffer.from(await res.arrayBuffer());
+          if (buf.length > MAX) return null;
+          const ct = (res.headers.get('content-type') || '').toLowerCase();
+          if (!ct.startsWith('image/')) return null;
+          return `data:${ct};base64,${buf.toString('base64')}`;
+        } finally {
+          clearTimeout(timer);
+        }
       }
+      // Đường dẫn tương đối → CHỈ trong thư mục uploads (chống path traversal '..').
+      const uploadsDir = join(process.cwd(), 'uploads');
       const fname = src.replace(/^\/?uploads\//, '').replace(/^\//, '');
-      const p = join(process.cwd(), 'uploads', fname);
+      const p = resolve(uploadsDir, fname);
+      if (p !== uploadsDir && !p.startsWith(uploadsDir + sep)) return null;
       if (!existsSync(p)) return null;
-      const ext = (fname.split('.').pop() || 'png').toLowerCase();
-      const mime =
-        ext === 'svg'
-          ? 'image/svg+xml'
-          : ext === 'jpg' || ext === 'jpeg'
-            ? 'image/jpeg'
-            : ext === 'webp'
-              ? 'image/webp'
-              : 'image/png';
-      return `data:${mime};base64,${readFileSync(p).toString('base64')}`;
+      const mime = mimeFor((fname.split('.').pop() || '').toLowerCase());
+      if (!mime) return null;
+      const buf = readFileSync(p);
+      if (buf.length > MAX) return null;
+      return `data:${mime};base64,${buf.toString('base64')}`;
     } catch {
       return null;
     }
@@ -1356,7 +1391,7 @@ ${facts}`;
       <span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
     </div>`;
     const viaChrome = await renderHtmlToPdf(html, {
-      margin: { top: '11mm', bottom: '13mm', left: '11mm', right: '11mm' },
+      margin: { top: '11mm', bottom: '16mm', left: '11mm', right: '11mm' },
       headerTemplate: '<span></span>',
       footerTemplate,
     }).catch(() => null);
@@ -1382,9 +1417,10 @@ ${facts}`;
     return { buffer, filename: this.pdfFileName(report) };
   }
 
-  /** ID các CLB đã bật tự-gửi email (cron đọc). Lọc JS vì filter JSON boolean khác nhau theo DB. */
+  /** ID các CLB đã bật tự-gửi email (cron đọc). Chỉ CLB ĐANG HOẠT ĐỘNG (bỏ suspended/deleted). */
   async monthlyReportClubIds(currentMonth: string): Promise<string[]> {
     const clubs = await this.prisma.club.findMany({
+      where: { status: 'active' },
       select: { id: true, settings: true },
     });
     return clubs
@@ -1396,6 +1432,26 @@ ${facts}`;
         );
       })
       .map((c) => c.id);
+  }
+
+  /**
+   * Đánh dấu ĐÃ GỬI tháng này TRƯỚC khi gửi (claim) — chống gửi trùng khi cron fire lại /
+   * chạy nhiều instance. Trả false nếu đã bị claim (bỏ qua). Read-modify-write giữ nguyên các
+   * key settings khác.
+   */
+  async claimMonthlySend(clubId: string, month: string): Promise<boolean> {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    const s = (club?.settings as Record<string, unknown>) ?? {};
+    if (s.autoMonthlyReportLastSent === month) return false;
+    s.autoMonthlyReportLastSent = month;
+    await this.prisma.club.update({
+      where: { id: clubId },
+      data: { settings: s as any },
+    });
+    return true;
   }
 
   /** HTML email digest (inline style — client email không đọc CSS ngoài). */

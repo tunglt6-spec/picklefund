@@ -15,7 +15,7 @@ WORKDIR /app
 # dumb-init + Chromium (cho Puppeteer render PDF Báo cáo điều hành giống web).
 # Puppeteer dùng CHROMIUM HỆ THỐNG (puppeteer-core, không tải bản riêng) — chỉ Vietnamese
 # font trong báo cáo nhúng @font-face base64 nên không phụ thuộc font hệ thống.
-RUN apk add --no-cache dumb-init chromium nss freetype harfbuzz ca-certificates ttf-freefont
+RUN apk add --no-cache dumb-init chromium nss freetype harfbuzz ca-certificates ttf-freefont font-noto font-noto-emoji
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules

@@ -27,7 +27,10 @@ export class ExecutiveReportScheduler {
     );
     for (const clubId of ids) {
       try {
-        const r = await this.report.sendMonthlyReportEmail(clubId, month);
+        // Claim tháng TRƯỚC khi gửi (chống trùng khi cron fire lại / đa-instance).
+        const claimed = await this.report.claimMonthlySend(clubId, month);
+        if (!claimed) continue;
+        const r = await this.report.sendMonthlyReportEmail(clubId);
         this.logger.log(
           `[ExecReport] CLB ${clubId}: gửi ${r.sent} email (SMTP ${r.smtpReady ? 'ON' : 'OFF'})`,
         );

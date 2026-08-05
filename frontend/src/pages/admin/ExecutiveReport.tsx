@@ -176,37 +176,53 @@ export function ExecutiveReport() {
       toast.error('Không tạo được PDF')
     }
   }
+  // In: chỉ in vùng báo cáo (thêm class body → CSS @media print ẩn app chrome). Xem index.css.
+  const printReport = () => {
+    if (!data) return
+    document.body.classList.add('pf-print-report')
+    const cleanup = () => {
+      document.body.classList.remove('pf-print-report')
+      window.removeEventListener('afterprint', cleanup)
+    }
+    window.addEventListener('afterprint', cleanup)
+    setTimeout(() => window.print(), 50)
+  }
+
   const exportXlsx = () => {
     if (!data) return
     prepBranding()
-    const f = data.finance
-    exportExcel(`BaoCao_DieuHanh_${data.meta.periodName}`, [
-      {
-        name: 'Tổng quan',
-        headers: ['Chỉ số', 'Giá trị'],
-        rows: [
-          ['Kỳ', data.meta.periodName],
-          ['Điểm sức khỏe CLB', `${data.summary.clubHealthScore}/100`],
-          ['Thành viên hoạt động', `${data.summary.activeMembers}/${data.summary.totalMembers}`],
-          ['Tỷ lệ tham gia', `${data.summary.participationRate}%`],
-          ['Tổng thu', f.totalIncome],
-          ['Tổng chi', f.totalExpense],
-          ['Cân đối', f.balance],
-          ['Quỹ đầu kỳ', f.carryForward],
-          ['Tổng tài sản (cuối kỳ)', f.clubAssets],
-          ['Công nợ (số TV)', data.summary.outstandingCount],
-        ],
-      },
-      {
-        name: 'Thành viên',
-        headers: ['#', 'Thành viên', 'Tham gia (%)', 'Đóng quỹ', 'Hạnh kiểm', 'Sức khỏe'],
-        rows: data.members.all.map((m: any, i: number) => [
-          i + 1, m.name, m.participationRate,
-          m.paymentStatus === 'paid' ? 'Đã đóng' : m.paymentStatus === 'debt' ? 'Nợ' : '—',
-          m.conductScore ?? '', m.healthScore,
-        ]),
-      },
-    ])
+    try {
+      const f = data.finance
+      exportExcel(`BaoCao_DieuHanh_${data.meta.periodName}`, [
+        {
+          name: 'Tổng quan',
+          headers: ['Chỉ số', 'Giá trị'],
+          rows: [
+            ['Kỳ', data.meta.periodName],
+            ['Điểm sức khỏe CLB', `${data.summary.clubHealthScore}/100`],
+            ['Thành viên hoạt động', `${data.summary.activeMembers}/${data.summary.totalMembers}`],
+            ['Tỷ lệ tham gia', `${data.summary.participationRate}%`],
+            ['Tổng thu', f.totalIncome],
+            ['Tổng chi', f.totalExpense],
+            ['Cân đối', f.balance],
+            ['Quỹ đầu kỳ', f.carryForward],
+            ['Tổng tài sản (cuối kỳ)', f.clubAssets],
+            ['Công nợ (số TV)', data.summary.outstandingCount],
+          ],
+        },
+        {
+          name: 'Thành viên',
+          headers: ['#', 'Thành viên', 'Tham gia (%)', 'Đóng quỹ', 'Hạnh kiểm', 'Sức khỏe'],
+          rows: (data.members?.all ?? []).map((m: any, i: number) => [
+            i + 1, m.name, m.participationRate,
+            m.paymentStatus === 'paid' ? 'Đã đóng' : m.paymentStatus === 'debt' ? 'Nợ' : '—',
+            m.conductScore ?? '', m.healthScore,
+          ]),
+        },
+      ])
+    } catch {
+      toast.error('Không xuất được Excel')
+    }
   }
 
   // ── States ────────────────────────────────────────────────────────────
@@ -223,6 +239,7 @@ export function ExecutiveReport() {
       <select
         value={periodId}
         onChange={(e) => setPeriodId(e.target.value)}
+        aria-label="Chọn kỳ quỹ để xem báo cáo"
         className="rounded-xl border px-3 py-2 text-sm font-medium [border-color:var(--pf-border)] [color:var(--pf-text)]"
         style={{ background: 'var(--pf-surface)' }}
       >
@@ -240,7 +257,7 @@ export function ExecutiveReport() {
           <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={() => void exportPdf()}>PDF</ActionButton>
           <ActionButton variant="ghost" icon={<Sheet size={15} />} onClick={exportXlsx}>Excel</ActionButton>
           <ActionButton variant="ghost" icon={<ImageIcon size={15} />} onClick={() => void exportImage()}>Ảnh</ActionButton>
-          <ActionButton variant="ghost" icon={<Printer size={15} />} onClick={() => window.print()}>In</ActionButton>
+          <ActionButton variant="ghost" icon={<Printer size={15} />} onClick={printReport}>In</ActionButton>
         </div>
       )}
     </div>
@@ -344,7 +361,7 @@ export function ExecutiveReport() {
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-0 lg:flex-1">
-            {health.dimensions.map((d: any) => (
+            {(health?.dimensions ?? []).map((d: any) => (
               <div key={d.key} className="rounded-xl border p-2.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
                 <div className="flex items-center justify-between gap-1.5">
                   <span className="min-w-0 truncate text-[11px] font-medium [color:var(--pf-color-muted)]">{d.key}</span>
@@ -411,11 +428,11 @@ export function ExecutiveReport() {
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
             <SectionTitle icon={<LineChart size={15} />} title="Dự báo 30–90 ngày" note="ước lượng theo xu hướng" compact />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[['+30 ngày', data.forecast.projected30], ['+60 ngày', data.forecast.projected60], ['+90 ngày', data.forecast.projected90]].map(([lbl, val]) => (
-                <div key={lbl as string} className="rounded-xl border px-3 py-2 text-center [border-color:var(--pf-border)]">
+                <div key={lbl as string} className="flex items-center justify-between rounded-xl border px-3 py-2 text-center [border-color:var(--pf-border)] sm:block">
                   <p className="text-[11px] [color:var(--pf-color-muted)]">{lbl}</p>
-                  <p className="text-sm font-bold tabular-nums" style={{ color: (val as number) < 0 ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-text)' }}>{formatVND(val as number)}</p>
+                  <p className="text-sm font-bold tabular-nums [font-variant-numeric:tabular-nums] sm:mt-0.5" style={{ color: (val as number) < 0 ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-text)' }}>{formatVND(val as number)}</p>
                 </div>
               ))}
             </div>
@@ -432,7 +449,7 @@ export function ExecutiveReport() {
             <SectionTitle icon={<Fingerprint size={15} />} title="Club DNA" note="phong cách vận hành" compact />
             <p className="mb-2 text-sm font-bold [color:var(--pf-primary,#6D5DFB)]">{data.dna.archetype}</p>
             <div className="space-y-1.5">
-              {data.dna.traits.map((t: any) => (
+              {(data.dna?.traits ?? []).map((t: any) => (
                 <div key={t.key}>
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="[color:var(--pf-color-muted)]">{t.key}</span>
@@ -465,7 +482,10 @@ export function ExecutiveReport() {
             <div className="overflow-hidden rounded-2xl border [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
               <div className="border-b px-4 py-2.5 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]">Top 10 thành viên</div>
               <div className="divide-y [--tw-divide-opacity:1] [&>*]:border-[color:var(--pf-border-soft,var(--pf-border))]">
-                {data.members.top10.map((m: any, i: number) => (
+                {(data.members?.top10 ?? []).length === 0 && (
+                  <p className="px-4 py-6 text-center text-xs [color:var(--pf-color-muted)]">Chưa có thành viên để xếp hạng.</p>
+                )}
+                {(data.members?.top10 ?? []).map((m: any, i: number) => (
                   <div key={m.memberId} className="flex items-center gap-3 px-4 py-2">
                     <span className="w-5 text-center text-xs font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
                     <span className="flex-1 truncate text-sm [color:var(--pf-text)]">{m.name}</span>
