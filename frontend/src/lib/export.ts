@@ -191,25 +191,111 @@ async function savePdfDoc(pdf: any, filename: string) {
   pdf.save(suggestedName)
 }
 
+/* ── Xuất ẢNH (PNG) theo ĐÚNG FORM PDF: render off-screen HTML dùng chung BASE_CSS (brand
+   header + bảng + summary + footer) rồi rasterize 1 khung ảnh sắc nét. Thay cách chụp DOM
+   dashboard sống (thưa, dính theme). ── */
+async function renderReportPng(sectionsHtml: string, fileBase: string) {
+  const { default: html2canvas } = await import('html2canvas-pro')
+  const container = document.createElement('div')
+  container.className = PDF_ROOT
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;'
+  container.innerHTML = `<style>${BASE_CSS}</style><div class="page">${sectionsHtml}</div>`
+  document.body.appendChild(container)
+  if (document.fonts?.ready) { try { await document.fonts.ready } catch { /* bỏ qua */ } }
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  const pageEl = container.querySelector('.page') as HTMLElement
+  const canvas = await html2canvas(pageEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
+  document.body.removeChild(container)
+  const blob: Blob = await new Promise((res, rej) =>
+    canvas.toBlob(b => (b ? res(b) : rej(new Error('canvas toBlob failed'))), 'image/png', 1.0),
+  )
+  const name = `${fileBase}_${today().replace(/\//g, '-')}.png`
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ('showSaveFilePicker' in window) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handle = await (window as any).showSaveFilePicker({ suggestedName: name, types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }] })
+      const w = await handle.createWritable(); await w.write(blob); await w.close(); return
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) { if (e?.name === 'AbortError') return }
+  }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+export interface FinanceOverviewInput {
+  clubName: string
+  periodName: string
+  totalIncome: number
+  totalExpense: number
+  balance: number
+  miniBalance: number
+  clubAssets: number
+  carryForward: number
+  memberCount: number
+  sessionCount: number
+  confirmedCount: number
+}
+
+/** Ảnh Tổng quan tài chính — CÙNG FORM với Xuất PDF (brand header + bảng + summary + footer). */
+export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
+  const row = (label: string, value: string, cls = '') => `<tr><td>${escHtml(label)}</td><td class="right ${cls}">${escHtml(value)}</td></tr>`
+  const sections = `
+    <div class="header">
+      <h1>${escHtml(brandName())} · Tổng quan tài chính</h1>
+      <p>Kỳ quỹ: ${escHtml(d.periodName)} · ${escHtml(d.clubName)}</p>
+      <div class="header-meta"><span>${d.memberCount} thành viên · ${d.sessionCount} buổi · đã đóng ${d.confirmedCount}/${d.memberCount}</span><span>Xuất ngày: ${today()}</span></div>
+    </div>
+    <table>
+      <thead><tr><th>Chỉ số</th><th class="right">Giá trị</th></tr></thead>
+      <tbody>
+        ${row('Tổng thu (Quỹ Chính)', formatVND(d.totalIncome), 'badge-green')}
+        ${row('Tổng chi (Quỹ Chính)', formatVND(d.totalExpense), 'badge-red')}
+        ${row('Tồn Quỹ Chính', formatVND(d.balance))}
+        ${row('Tồn Quỹ Phụ', formatVND(d.miniBalance))}
+        ${row('Tổng tài sản CLB', formatVND(d.clubAssets))}
+        ${row('Số dư chuyển kỳ', formatVND(d.carryForward))}
+      </tbody>
+    </table>
+    <div class="summary"><span class="label">Tồn quỹ hiện tại (Quỹ Chính)</span><span class="value">${escHtml(formatVND(d.balance))}</span></div>
+    <div class="footer">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>
+  `
+  return renderReportPng(sections, `Tai_chinh_${d.periodName.replace(/\s/g, '_')}`)
+}
+
 /* ════════════════════════════════════════
    EXCEL
 ════════════════════════════════════════ */
-/* ── Style bảng Excel chuẩn SaaS (xlsx-js-style): đóng khung mọi ô + header brand + hàng
-   xen kẽ + căn phải/định dạng nghìn cho cột số + auto-filter. `xlsx` community KHÔNG hỗ trợ
-   style → dùng bản fork `xlsx-js-style` (cùng API). Đổi 1 chỗ ⇒ mọi export Excel đồng bộ. */
-const XL_BORDER = { style: 'thin', color: { rgb: 'D5DCE6' } }
-const XL_BORDER_ALL = { top: XL_BORDER, bottom: XL_BORDER, left: XL_BORDER, right: XL_BORDER }
+/* ── Style bảng Excel chuẩn SaaS (xlsx-js-style) — LẤY FORM TỪ PDF: block tiêu đề brand tím
+   #6D5DFB + bảng ĐÓNG KHUNG mọi ô (border xám rõ, không lẫn gridline) + header cột tím + hàng
+   xen kẽ + cột số căn phải/định dạng nghìn + auto-filter. `xlsx` community KHÔNG hỗ trợ style →
+   dùng fork `xlsx-js-style` (cùng API). Đổi 1 chỗ ⇒ MỌI export Excel đồng bộ. */
+const XL_BRAND = '6D5DFB'
+// Border XÁM RÕ (slate-400) để đọc thành KHUNG thật, không chìm vào gridline mặc định Excel.
+const XL_BD = { style: 'thin', color: { rgb: '94A3B8' } }
+const XL_BD_ALL = { top: XL_BD, bottom: XL_BD, left: XL_BD, right: XL_BD }
+const XL_TITLE_STYLE = {
+  font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+  fill: { patternType: 'solid', fgColor: { rgb: XL_BRAND } },
+  alignment: { horizontal: 'left', vertical: 'center' },
+}
+const XL_META_STYLE = {
+  font: { sz: 10, italic: true, color: { rgb: '64748B' }, name: 'Calibri' },
+  fill: { patternType: 'solid', fgColor: { rgb: 'EEF0FB' } },
+  alignment: { horizontal: 'left', vertical: 'center' },
+}
 const XL_HEADER_STYLE = {
   font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
-  fill: { patternType: 'solid', fgColor: { rgb: '6D5DFB' } },
+  fill: { patternType: 'solid', fgColor: { rgb: XL_BRAND } },
   alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-  border: XL_BORDER_ALL,
+  border: XL_BD_ALL,
 }
 const xlCellStyle = (align: 'left' | 'right' | 'center', banded: boolean) => ({
   font: { sz: 11, color: { rgb: '1E293B' }, name: 'Calibri' },
   alignment: { horizontal: align, vertical: 'center' },
-  border: XL_BORDER_ALL,
-  ...(banded ? { fill: { patternType: 'solid', fgColor: { rgb: 'F5F7FB' } } } : {}),
+  border: XL_BD_ALL,
+  fill: { patternType: 'solid', fgColor: { rgb: banded ? 'F4F6FB' : 'FFFFFF' } },
 })
 
 export async function exportExcel(
@@ -218,36 +304,53 @@ export async function exportExcel(
 ) {
   const mod = await import('xlsx-js-style')
   const XLSX = ((mod as unknown as { default?: typeof import('xlsx-js-style') }).default ?? mod)
+  const set = (ws: Record<string, unknown>, r: number, c: number, patch: { v?: unknown; t?: string; z?: string; s?: unknown }) => {
+    const ref = XLSX.utils.encode_cell({ r, c })
+    const cur = (ws[ref] as Record<string, unknown>) ?? { t: 's', v: '' }
+    ws[ref] = { ...cur, ...patch }
+    return ws[ref] as { v?: unknown; t?: string; z?: string; s?: unknown }
+  }
   const wb = XLSX.utils.book_new()
+  const TITLE = 0, META = 1, HEAD = 2 // hàng tiêu đề brand · meta ngày · header cột
+
   for (const sheet of sheets) {
-    const data = [sheet.headers, ...sheet.rows]
-    const ws = XLSX.utils.aoa_to_sheet(data)
     const nCols = sheet.headers.length
     const nRows = sheet.rows.length
-    // Cột số = mọi ô dữ liệu đều là number → căn phải + định dạng #,##0.
+    // Đặt bảng bắt đầu từ hàng HEAD (chừa 2 hàng đầu cho brand title + ngày xuất — form PDF).
+    const data: (string | number)[][] = [
+      [], [],
+      sheet.headers,
+      ...sheet.rows,
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(data) as Record<string, unknown>
     const numCol = sheet.headers.map(
       (_, c) => nRows > 0 && sheet.rows.every(r => typeof r[c] === 'number'),
     )
-    // Duyệt TOÀN vùng (kể cả ô rỗng) để đóng khung không bị hở.
-    for (let r = 0; r <= nRows; r++) {
+    // ── Block tiêu đề brand (merge cả hàng) ──
+    set(ws, TITLE, 0, { t: 's', v: `${brandName()} · ${sheet.name}`, s: XL_TITLE_STYLE })
+    set(ws, META, 0, { t: 's', v: `Xuất ngày: ${today()}`, s: XL_META_STYLE })
+    for (let c = 1; c < nCols; c++) { set(ws, TITLE, c, { t: 's', v: '', s: XL_TITLE_STYLE }); set(ws, META, c, { t: 's', v: '', s: XL_META_STYLE }) }
+    // ── Header cột + dữ liệu (đóng khung) ──
+    for (let c = 0; c < nCols; c++) set(ws, HEAD, c, { s: XL_HEADER_STYLE })
+    for (let ri = 0; ri < nRows; ri++) {
       for (let c = 0; c < nCols; c++) {
-        const ref = XLSX.utils.encode_cell({ r, c })
-        let cell = (ws as Record<string, unknown>)[ref] as { v?: unknown; t?: string; z?: string; s?: unknown } | undefined
-        if (!cell) { cell = { t: 's', v: '' }; (ws as Record<string, unknown>)[ref] = cell }
-        if (r === 0) { cell.s = XL_HEADER_STYLE; continue }
         const align: 'left' | 'right' | 'center' = numCol[c] ? 'right' : 'left'
-        cell.s = xlCellStyle(align, r % 2 === 0)
+        const cell = set(ws, HEAD + 1 + ri, c, { s: xlCellStyle(align, ri % 2 === 1) })
         if (numCol[c] && typeof cell.v === 'number') cell.z = '#,##0'
       }
     }
-    // Bảo đảm !ref phủ hết vùng đã style.
-    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(nRows, 0), c: Math.max(nCols - 1, 0) } })
+    const lastRow = HEAD + nRows
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(lastRow, HEAD), c: Math.max(nCols - 1, 0) } })
+    ws['!merges'] = [
+      { s: { r: TITLE, c: 0 }, e: { r: TITLE, c: Math.max(nCols - 1, 0) } },
+      { s: { r: META, c: 0 }, e: { r: META, c: Math.max(nCols - 1, 0) } },
+    ]
     ws['!cols'] = sheet.headers.map((h, i) => {
       const max = Math.max(h.length, ...sheet.rows.map(r => String(r[i] ?? '').length))
-      return { wch: Math.min(Math.max(max + 4, 10), 60) }
+      return { wch: Math.min(Math.max(max + 4, 12), 60) }
     })
-    ws['!rows'] = [{ hpt: 24 }] // header cao hơn cho thoáng
-    if (nRows > 0) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: nRows, c: nCols - 1 } }) }
+    ws['!rows'] = [{ hpt: 30 }, { hpt: 18 }, { hpt: 24 }]
+    if (nRows > 0) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: HEAD, c: 0 }, e: { r: lastRow, c: nCols - 1 } }) }
     XLSX.utils.book_append_sheet(wb, ws, sheet.name)
   }
   XLSX.writeFile(wb, `${filename}_${today().replace(/\//g, '-')}.xlsx`)

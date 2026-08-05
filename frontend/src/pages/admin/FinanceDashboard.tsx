@@ -14,8 +14,7 @@ import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
-import { exportInfographicAsPng } from '../../components/reports/infographic/infographic.utils'
-import { exportReportsPDF } from '../../lib/export'
+import { exportReportsPDF, exportFinanceOverviewImage } from '../../lib/export'
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, ChartCard, EmptyState, LoadingState, ErrorState,
@@ -145,10 +144,26 @@ export function FinanceDashboard() {
     return a
   }, [summary])
 
-  const slug = `Tai_chinh_${activePeriod?.name ?? 'CLB'}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')
   const doExportPng = async () => {
-    try { await exportInfographicAsPng(FD_EXPORT_ID, slug); toast.success('Đã tải ảnh dashboard tài chính') }
-    catch { toast.error('Xuất ảnh thất bại') }
+    if (!summary || !activePeriod) { toast.error('Chưa có dữ liệu để xuất'); return }
+    // ẢNH theo ĐÚNG FORM PDF (brand header + bảng đóng khung + summary + footer), luôn sáng —
+    // thay cách chụp DOM dashboard sống (thưa, dính theme dark, không chuẩn báo cáo).
+    try {
+      await exportFinanceOverviewImage({
+        clubName,
+        periodName: activePeriod.name,
+        totalIncome: summary.totalIncome,
+        totalExpense: summary.totalExpenses,
+        balance: summary.balance,
+        miniBalance: summary.miniBalance,
+        clubAssets: summary.clubAssets,
+        carryForward: summary.carryForward,
+        memberCount: summary.memberCount,
+        sessionCount: summary.sessionCount,
+        confirmedCount: summary.confirmedCount,
+      })
+      toast.success('Đã tải ảnh tổng quan tài chính')
+    } catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
     if (!summary || !activePeriod) { toast.error('Chưa có dữ liệu để xuất'); return }
