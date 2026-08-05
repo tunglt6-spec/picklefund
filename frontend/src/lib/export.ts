@@ -32,11 +32,16 @@ const brandColor = () => exportBranding.primaryColor
 /** Bản KHÔNG dấu # cho fill của xlsx-js-style. */
 const brandColorHex = () => brandColor().replace('#', '').toUpperCase()
 
+/* Logo PickleFund MẶC ĐỊNH (con-quay indigo crop sát, nền trong suốt) — CLB chưa đặt logo
+   riêng thì mọi export dùng logo chung này. Hợp chip/ô TRẮNG của cả PDF lẫn ảnh. */
+const DEFAULT_LOGO_URL = '/logo-pf-mark.png'
+
 /* ── Logo CLB cho PDF vector: tải 1 lần / URL → dataURL + kích thước gốc.
    Best-effort: lỗi mạng/CORS/ảnh hỏng → trả null, PDF vẫn xuất bình thường không logo. ── */
 let brandLogoCache: { url: string; logo: { dataUrl: string; w: number; h: number } | null } | null = null
 async function loadBrandLogo(): Promise<{ dataUrl: string; w: number; h: number } | null> {
-  const url = exportBranding.logoUrl
+  // Không có logo CLB → dùng logo PickleFund mặc định (áp cho tất cả CLB).
+  const url = exportBranding.logoUrl || DEFAULT_LOGO_URL
   if (!url) return null
   if (brandLogoCache && brandLogoCache.url === url) return brandLogoCache.logo
   try {
@@ -237,7 +242,7 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
 function reportHeaderHtml(title: string, subtitle: string | undefined, meta: string | undefined, logo: { dataUrl: string } | null) {
   const color = brandColor()
   const logoImg = logo
-    ? `<img src="${logo.dataUrl}" style="height:42px;width:auto;max-width:130px;object-fit:contain;border-radius:8px;background:#fff;padding:3px 5px;margin-right:14px;flex-shrink:0;"/>`
+    ? `<img src="${logo.dataUrl}" style="height:46px;width:auto;max-width:150px;object-fit:contain;border-radius:10px;background:#fff;padding:5px;margin-right:14px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.12);"/>`
     : ''
   return `<div style="background:${color};color:#fff;padding:16px 24px 13px;">
       <div style="display:flex;align-items:center;">
