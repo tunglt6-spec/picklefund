@@ -505,7 +505,7 @@ export function Landing() {
             ))}
           </div>
           <p className="mx-auto mt-5 max-w-lg text-center text-xs [color:var(--pf-color-muted)]">
-            Thanh toán trực tuyến sẽ được kích hoạt sau. Hiện tại vui lòng dùng thử hoặc liên hệ đội ngũ để thiết lập gói.{' '}
+            Pro chỉ 99.000đ/tháng (hoặc 990.000đ/năm). Đăng ký & nâng cấp tự động, kích hoạt ngay.{' '}
             <button onClick={() => navigate('/pricing')} className="font-semibold [color:var(--pf-primary)]">Xem chi tiết bảng giá</button>
           </p>
         </section>

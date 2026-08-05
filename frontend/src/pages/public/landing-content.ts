@@ -300,19 +300,19 @@ export interface PricingTier {
 }
 export const PRICING_TIERS: PricingTier[] = [
   {
-    name: 'Starter', price: 'Miễn phí', period: '', desc: 'Cho CLB nhỏ mới bắt đầu.',
-    features: ['Tối đa 20 thành viên', 'Quỹ Chung & điểm danh', 'Báo cáo cơ bản', '1 tài khoản quản trị'],
-    cta: 'Dùng thử miễn phí',
+    name: 'Starter', price: 'Miễn phí', period: '', desc: 'Cho CLB mới thành lập.',
+    features: ['Tối đa 15 thành viên', 'Quỹ chung · Thu/Chi · Điểm danh', 'Lịch sinh hoạt · Báo cáo cơ bản', 'Web + Mobile'],
+    cta: 'Bắt đầu miễn phí',
   },
   {
-    name: 'Professional', price: '199k', period: '/tháng', desc: 'Cho CLB đang phát triển.', featured: true,
-    features: ['Không giới hạn thành viên', 'Quỹ Chung + Quỹ Mini', 'Minigame & giải đấu', 'Báo cáo PDF/Excel', 'Trợ lý AI (Maika/Lisa)', 'Thông báo email'],
+    name: 'Pro', price: '99k', period: '/tháng', desc: 'Cho CLB đang phát triển.', featured: true,
+    features: ['Không giới hạn thành viên', 'Quỹ Mini · Công nợ · Giải đấu · Minigame', 'AIDO · Maika · Lisa · Hermes · Telegram', 'Báo cáo PDF/Excel · Backup Cloud', 'Hỗ trợ ưu tiên'],
+    cta: '🚀 Nâng cấp ngay',
+  },
+  {
+    name: 'Enterprise', price: 'Liên hệ', period: '', desc: 'Trung tâm · Học viện · Chuỗi CLB.',
+    features: ['Tất cả tính năng Pro', 'Multi Club · White Label · Domain riêng', 'API · AI Workflow nâng cao', 'Phân quyền nhiều cấp · Đào tạo · SLA'],
     cta: 'Đăng ký tư vấn',
-  },
-  {
-    name: 'Enterprise', price: 'Liên hệ', period: '', desc: 'Cho CLB lớn / nhiều chi nhánh.',
-    features: ['Tất cả tính năng Professional', 'Nhiều CLB / thương hiệu riêng', 'AI Ops nâng cao (Hermes/Mít Đặc)', 'Ưu tiên hỗ trợ'],
-    cta: 'Liên hệ',
   },
 ]
 
