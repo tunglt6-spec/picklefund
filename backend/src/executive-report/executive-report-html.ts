@@ -106,7 +106,11 @@ const stars = (n: number) =>
     ? '<span style="color:#F43F5E">⚠</span>'
     : `<span style="color:#F59E0B;letter-spacing:-1px">${'★'.repeat(n)}</span><span style="color:#E2E8F0;letter-spacing:-1px">${'★'.repeat(5 - n)}</span>`;
 
-export function buildReportHtml(report: any, aiText: string): string {
+export function buildReportHtml(
+  report: any,
+  aiText: string,
+  logoDataUri?: string | null,
+): string {
   const fonts = loadFontsBase64();
   const fontFace = fonts
     ? `@font-face{font-family:'BVP';font-weight:400;src:url(data:font/ttf;base64,${fonts.regular}) format('truetype');}
@@ -126,6 +130,15 @@ export function buildReportHtml(report: any, aiText: string): string {
     v == null
       ? '<span class="mut">—</span>'
       : `<span class="delta" style="color:${v >= 0 ? '#059669' : '#E11D48'};background:${v >= 0 ? '#ECFDF5' : '#FFF1F2'}">${v >= 0 ? '▲' : '▼'} ${Math.abs(v)}%</span>`;
+
+  // Logo CLB (data URI) hoặc monogram chữ cái đầu (khi CLB chưa có logo).
+  const mono = esc((report.meta.clubName || 'C').trim().charAt(0).toUpperCase());
+  const logoLg = logoDataUri
+    ? `<div class="logo lg"><img src="${logoDataUri}" alt=""/></div>`
+    : `<div class="logo lg mono">${mono}</div>`;
+  const logoSm = logoDataUri
+    ? `<div class="logo sm"><img src="${logoDataUri}" alt=""/></div>`
+    : `<div class="logo sm mono">${mono}</div>`;
 
   // KPI tile với accent trái
   const kpi = (l: string, v: string, sub = '', accent = '#CBD5E1') =>
@@ -242,6 +255,7 @@ b{font-weight:700}
 .hero h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin:5px 0 4px}
 .hero .sub{font-size:11px;opacity:.9}
 .hero .brand{position:absolute;top:16px;right:24px;font-size:9px;letter-spacing:.08em;opacity:.8;font-weight:700}
+.hero-l{display:flex;align-items:center;gap:14px}
 .gauge{display:flex;flex-direction:column;align-items:center;gap:6px}
 .gauge .cls{font-size:10px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:2px 12px;border-radius:99px;letter-spacing:.02em}
 /* Health dims */
@@ -327,14 +341,54 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 .rlist li{font-size:9.5px;color:#334155;padding:5px 0;line-height:1.6}
 .tag{display:inline-block;background:#EEF0FF;color:#6D5DFB;font-size:8px;font-weight:800;padding:1px 7px;border-radius:99px;margin-right:6px}
 .foot{text-align:center;color:#B4BCC8;font-size:8.5px;margin-top:4px}
+/* Logo badge */
+.logo{background:#fff;border-radius:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.18)}
+.logo img{width:100%;height:100%;object-fit:contain}
+.logo.mono{color:#6D5DFB;font-weight:800}
+.logo.lg{width:76px;height:76px}.logo.lg.mono{font-size:38px}
+.logo.sm{width:44px;height:44px;border-radius:12px;box-shadow:0 3px 10px rgba(15,23,42,.16)}.logo.sm.mono{font-size:22px}
+/* COVER PAGE */
+.cover{position:relative;overflow:hidden;height:272mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:26mm 20mm;page-break-after:always;
+  background:radial-gradient(120% 90% at 90% 4%,rgba(255,255,255,.16),transparent 40%),radial-gradient(130% 120% at 0% 100%,rgba(167,139,250,.5),transparent 46%),linear-gradient(150deg,#5B4BE8 0%,#7C3AED 55%,#6D28D9 100%)}
+.cover .cv-top{display:flex;align-items:center;gap:14px}
+.cover .cv-brand{font-size:11px;letter-spacing:.22em;font-weight:700;opacity:.9}
+.cover .cv-eyb{font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;opacity:.85}
+.cover .cv-title{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:12px 0 10px}
+.cover .cv-period{font-size:14px;opacity:.92}
+.cover .cv-rule{width:64px;height:4px;border-radius:9px;background:rgba(255,255,255,.75);margin:20px 0}
+.cover .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:150mm}
+.cover .gcard{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:16px;padding:14px 16px}
+.cover .gcard .l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;font-weight:700}
+.cover .gcard .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums}
+.cover .gcard .s{font-size:9.5px;opacity:.85;margin-top:2px}
+.cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.85;border-top:1px solid rgba(255,255,255,.25);padding-top:14px}
 </style></head><body>
+
+<section class="cover">
+  <div class="cv-top">${logoLg}<div class="cv-brand">◆ PICKLEFUND</div></div>
+  <div>
+    <div class="cv-eyb">Báo cáo điều hành · Executive Report</div>
+    <h1 class="cv-title">${esc(report.meta.clubName)}</h1>
+    <div class="cv-period">Kỳ báo cáo: ${esc(report.meta.periodName)}</div>
+    <div class="cv-rule"></div>
+    <div class="cv-stats">
+      <div class="gcard"><div class="l">Sức khỏe CLB</div><div class="v">${s.clubHealthScore}/100</div><div class="s">${grade(s.clubHealthScore)}</div></div>
+      <div class="gcard"><div class="l">Tổng tài sản</div><div class="v">${compact(fin.clubAssets)}đ</div><div class="s">quỹ cuối kỳ</div></div>
+      <div class="gcard"><div class="l">Thành viên</div><div class="v">${s.activeMembers}/${s.totalMembers}</div><div class="s">đang hoạt động</div></div>
+    </div>
+  </div>
+  <div class="cv-foot"><span>Xuất ngày ${esc(genDate)}</span><span>Tài liệu nội bộ · Ban quản trị CLB</span></div>
+</section>
 
 <div class="hero">
   <div class="brand">◆ PICKLEFUND</div>
-  <div>
-    <div class="eyb">Báo cáo điều hành · Executive Report</div>
-    <h1>${esc(report.meta.clubName)}</h1>
-    <div class="sub">Kỳ: ${esc(report.meta.periodName)} · Xuất ngày ${esc(genDate)}</div>
+  <div class="hero-l">
+    ${logoSm}
+    <div>
+      <div class="eyb">Báo cáo điều hành · Executive Report</div>
+      <h1>${esc(report.meta.clubName)}</h1>
+      <div class="sub">Kỳ: ${esc(report.meta.periodName)} · Xuất ngày ${esc(genDate)}</div>
+    </div>
   </div>
   <div class="gauge">${ring(s.clubHealthScore)}<div class="cls">${grade(s.clubHealthScore)}</div></div>
 </div>

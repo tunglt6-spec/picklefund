@@ -7,6 +7,8 @@ import { EmailService } from '../email/email.service';
 import { buildExecutiveReportPdf } from './executive-report-pdf';
 import { buildReportHtml } from './executive-report-html';
 import { renderHtmlToPdf } from './render-pdf';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -1278,6 +1280,48 @@ ${facts}`;
     };
   }
 
+  /**
+   * Logo CLB dạng data URI để nhúng vào PDF (masthead + trang bìa). Nguồn:
+   * settings.branding.logoUrl → Club.logoUrl. URL http(s) → fetch; đường dẫn tương đối → đọc
+   * từ thư mục uploads. Lỗi/không có → null (HTML tự fallback monogram chữ cái đầu CLB).
+   */
+  private async clubLogoDataUri(clubId: string): Promise<string | null> {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { logoUrl: true, settings: true },
+    });
+    const b = ((club?.settings as Record<string, unknown> | null)?.branding ??
+      {}) as Record<string, unknown>;
+    const src =
+      (typeof b.logoUrl === 'string' && b.logoUrl) || club?.logoUrl || null;
+    if (!src) return null;
+    try {
+      if (/^https?:\/\//i.test(src)) {
+        const res = await fetch(src);
+        if (!res.ok) return null;
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > 2_000_000) return null; // logo quá lớn → bỏ
+        const ct = res.headers.get('content-type') || 'image/png';
+        return `data:${ct};base64,${buf.toString('base64')}`;
+      }
+      const fname = src.replace(/^\/?uploads\//, '').replace(/^\//, '');
+      const p = join(process.cwd(), 'uploads', fname);
+      if (!existsSync(p)) return null;
+      const ext = (fname.split('.').pop() || 'png').toLowerCase();
+      const mime =
+        ext === 'svg'
+          ? 'image/svg+xml'
+          : ext === 'jpg' || ext === 'jpeg'
+            ? 'image/jpeg'
+            : ext === 'webp'
+              ? 'image/webp'
+              : 'image/png';
+      return `data:${mime};base64,${readFileSync(p).toString('base64')}`;
+    } catch {
+      return null;
+    }
+  }
+
   /** Tên file PDF an toàn (bỏ ký tự đặc biệt, giữ chữ có dấu/chữ số). */
   private pdfFileName(report: {
     meta: { periodName: string };
@@ -1304,7 +1348,8 @@ ${facts}`;
     const aiText =
       precomputedAiText ??
       (await this.aiSummary(clubId, fundPeriodId, report)).text;
-    const html = buildReportHtml(report, aiText);
+    const logo = await this.clubLogoDataUri(clubId).catch(() => null);
+    const html = buildReportHtml(report, aiText, logo);
     // Footer chạy trang (ASCII-only để không lệ thuộc font trong container Chromium).
     const footerTemplate = `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">
       <span>PickleFund &middot; AIDO Executive Report</span>
