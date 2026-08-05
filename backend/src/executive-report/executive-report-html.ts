@@ -134,6 +134,51 @@ export function buildReportHtml(report: any, aiText: string): string {
   const act = report.activity;
   const fc = report.forecast;
 
+  // Phân bổ điểm sức khỏe thành viên
+  const di = report.members.distribution || {};
+  const distHtml = `<div class="dist">
+    <div class="d"><span><i style="background:#059669"></i>Xuất sắc (≥90)</span><b>${di.excellent ?? 0}</b></div>
+    <div class="d"><span><i style="background:#0EA5E9"></i>Tốt (80–89)</span><b>${di.good ?? 0}</b></div>
+    <div class="d"><span><i style="background:#F59E0B"></i>Khá (50–79)</span><b>${di.fair ?? 0}</b></div>
+    <div class="d"><span><i style="background:#E11D48"></i>Cần quan tâm (&lt;50)</span><b>${di.atRisk ?? 0}</b></div>
+  </div>`;
+
+  // 5 thẻ agent (đúng như web)
+  const agent = (color: string, name: string, v: string, u: string, d: string) =>
+    `<div class="agent" style="border-top-color:${color}"><div class="n" style="color:${color}">${esc(name)}</div><div class="v" style="color:${color}">${esc(v)}<span class="u"> ${esc(u)}</span></div><div class="d">${esc(d)}</div></div>`;
+  const agentsHtml = `<div class="aigrid">
+    ${agent('#6D5DFB', 'Hermes', `${ai.hermes.completed}/${ai.hermes.runs}`, 'workflow xong', `${ai.hermes.failed} lỗi · ${ai.hermes.running ?? 0} đang chạy`)}
+    ${agent('#0EA5E9', 'Lisa', String(ai.lisa.answered), 'hỏi–đáp', `${ai.lisa.reminders} lượt nhắc`)}
+    ${agent('#DB2777', 'Maika', String(ai.maika.insights), 'insight', `${ai.maika.actions} đề xuất`)}
+    ${agent('#EA580C', 'Mít Đặc', String(ai.mitdac.executed), 'tác vụ', `${ai.mitdac.failed} lỗi · TB ${ai.mitdac.avgMs}ms`)}
+    ${agent('#C026D3', 'Thông báo', String(ai.notification.sent), 'đã gửi', `In-app ${ai.notification.byChannel.IN_APP} · Email ${ai.notification.byChannel.EMAIL} · TG ${ai.notification.byChannel.TELEGRAM}`)}
+  </div>`;
+
+  // Top người chơi thi đấu
+  const topPlayers = (tour.topPlayers || [])
+    .slice(0, 3)
+    .map(
+      (p: any, i: number) =>
+        `<div class="mini" style="display:flex;justify-content:space-between;padding:2px 0"><span>${i === 0 ? '🏆 ' : i + 1 + '. '}${esc(p.name)}</span><span>${p.wins}T · ${p.winRate}%</span></div>`,
+    )
+    .join('');
+
+  // Dòng thời gian
+  const d2 = (d: any) => {
+    const x = new Date(d);
+    return isNaN(x.getTime())
+      ? ''
+      : `${String(x.getDate()).padStart(2, '0')}-${String(x.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const timelineHtml = report.timeline?.length
+    ? `<ul class="tl">${report.timeline
+        .map(
+          (t: any) =>
+            `<li><b>${d2(t.date)}</b> · ${esc(t.label)}${t.amount != null ? `<div class="a">${money(t.amount)}</div>` : ''}</li>`,
+        )
+        .join('')}</ul>`
+    : '<p class="muted">Chưa có sự kiện nổi bật.</p>';
+
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><style>
 ${fontFace}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -182,6 +227,25 @@ td.r,th.r{text-align:right}td.c,th.c{text-align:center}
 .list.warn li:before{color:#F59E0B}
 .foot{text-align:center;color:#aaa;font-size:9px;margin-top:6px}
 .badge{display:inline-block;background:#efeaff;color:#6D5DFB;font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+/* Distribution */
+.avgbox{border:1px solid #eee;border-radius:9px;padding:9px 11px;margin-bottom:8px;background:#fafaff}
+.avgbox .n{font-size:22px;font-weight:700}.avgbox .n small{font-size:11px;color:#8a8f98;font-weight:400}
+.dist{display:flex;flex-wrap:wrap;gap:6px}
+.dist .d{flex:1 1 46%;display:flex;justify-content:space-between;font-size:10px;border:1px solid #eee;border-radius:7px;padding:4px 8px}
+.dist .d i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+/* AI agent cards */
+.aigrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.agent{border:1px solid #eee;border-top-width:3px;border-radius:9px;padding:8px 9px}
+.agent .n{font-size:11px;font-weight:700}.agent .v{font-size:17px;font-weight:700;line-height:1.1;margin:2px 0}
+.agent .u{font-size:9px;color:#8a8f98;font-weight:400}.agent .d{font-size:9px;color:#8a8f98;border-top:1px solid #f0f0f4;margin-top:4px;padding-top:4px}
+/* Timeline */
+.tl{list-style:none;border-left:2px solid #eee;padding-left:12px;margin-left:3px}
+.tl li{position:relative;margin-bottom:6px;font-size:10px}
+.tl li:before{content:'';position:absolute;left:-17px;top:3px;width:7px;height:7px;border-radius:50%;background:#6D5DFB}
+.tl li .a{color:#8a8f98;font-size:9px}
+.mini{font-size:9px;color:#8a8f98}
+.kpi2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 </style></head><body>
 
 <div class="hero">
@@ -233,7 +297,11 @@ td.r,th.r{text-align:right}td.c,th.c{text-align:center}
 </div>
 
 <div class="sect">
-  <h2>Thành viên — Health Score <span class="note">· 40% tham gia · 30% đóng quỹ · 30% hạnh kiểm · TB ${report.members.avgHealth}/100</span></h2>
+  <h2>Thành viên — Health Score <span class="note">· 40% tham gia · 30% đóng quỹ · 30% hạnh kiểm</span></h2>
+  <div class="avgbox" style="display:flex;align-items:center;gap:16px">
+    <div><div class="mini">Điểm sức khỏe TB</div><div class="n" style="color:${hcolor(report.members.avgHealth)}">${report.members.avgHealth}<small>/100</small></div></div>
+    <div style="flex:1">${distHtml}</div>
+  </div>
   <table>
     <thead><tr><th class="c">#</th><th>Thành viên</th><th class="r">Tham gia</th><th class="c">Đóng quỹ</th><th class="r">Hạnh kiểm</th><th class="r">Sức khỏe</th></tr></thead>
     <tbody>${memberRows}</tbody>
@@ -257,17 +325,39 @@ td.r,th.r{text-align:right}td.c,th.c{text-align:center}
   </div>
 </div>
 
-<div class="sect">
-  <h2>Vận hành &amp; AI Office <span class="note">· trong kỳ</span></h2>
-  <div class="kpis">
-    ${kpi('Buổi hoàn thành', String(act.completed), `TB ${act.avgPresentPerSession} người/buổi`)}
-    ${kpi('Thi đấu', `${tour.tournamentsCount} giải`, `${tour.matchesCount} trận · ${tour.teamsCount} đội`)}
-    ${kpi('Workflow (Hermes)', `${ai.hermes.completed}/${ai.hermes.runs}`, `${ai.hermes.failed} lỗi`)}
-    ${kpi('Tự động hóa AI', `${ai.automationScore.score}/100`, `${ai.notification.sent} thông báo`)}
+<div class="sect half">
+  <div>
+    <h2>Hoạt động</h2>
+    <div class="kpi2">
+      ${kpi('Tổng buổi', String(act.totalSessions))}
+      ${kpi('Hoàn thành', String(act.completed))}
+      ${kpi('Bị hủy', String(act.cancelled))}
+      ${kpi('TB người/buổi', String(act.avgPresentPerSession))}
+    </div>
+    <div class="mini" style="margin-top:6px;line-height:1.6">
+      ${act.busiest ? `🔥 Đông nhất: <b>${esc(act.busiest.name)}</b> (${act.busiest.present} người)<br>` : ''}
+      ${act.emptiest ? `💤 Ít nhất: ${esc(act.emptiest.name)} (${act.emptiest.present} người)<br>` : ''}
+      <i>Tỷ lệ lấp đầy tính theo sĩ số hoạt động (chưa có sức chứa/buổi).</i>
+    </div>
+  </div>
+  <div>
+    <h2>Thi đấu / Minigame</h2>
+    <div class="tiles">
+      <div class="tile"><div class="l">Giải</div><div class="v">${tour.tournamentsCount}</div></div>
+      <div class="tile"><div class="l">Trận</div><div class="v">${tour.matchesCount}</div></div>
+      <div class="tile"><div class="l">Đội</div><div class="v">${tour.teamsCount}</div></div>
+    </div>
+    ${topPlayers ? `<div style="margin-top:6px">${topPlayers}<div class="mini" style="margin-top:2px"><i>Người dẫn đầu BXH (chưa có giải MVP chính thức).</i></div></div>` : '<p class="mini" style="margin-top:6px">Chưa có giải/minigame trong kỳ.</p>'}
   </div>
 </div>
 
-<div class="sect half">
+<div class="sect">
+  <h2>Văn phòng AI (AIDO) <span class="note">· trong kỳ · điểm tự động hóa ${ai.automationScore.score}/100</span></h2>
+  ${agentsHtml}
+</div>
+
+<div class="sect three">
+  <div><h2>Dòng thời gian</h2>${timelineHtml}</div>
   <div><h2>Cảnh báo</h2>${alerts}</div>
   <div><h2>Gợi ý hành động</h2>${recs}</div>
 </div>
