@@ -6,6 +6,7 @@ import {
   Users, UserCheck, CalendarDays, TrendingUp, TrendingDown, Wallet,
   Trophy, Bot, Sparkles, AlertTriangle, Info, ListChecks, RefreshCw,
   FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
+  Fingerprint, LineChart,
 } from 'lucide-react'
 import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -13,7 +14,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import api from '../../lib/api'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import {
-  exportGenericTablePDF, exportExcel, captureElementAsReportPng, setExportBranding,
+  exportExcel, captureElementAsReportPng, captureElementAsReportPDF, setExportBranding,
 } from '../../lib/export'
 import toast from 'react-hot-toast'
 
@@ -69,6 +70,8 @@ export function ExecutiveReport() {
   const [data, setData] = useState<Report | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+  const [aiSum, setAiSum] = useState<{ text: string; generatedBy: string } | null>(null)
+  const [aiSumLoading, setAiSumLoading] = useState(false)
 
   const load = useCallback(async (pid: string) => {
     if (!pid) return
@@ -83,9 +86,24 @@ export function ExecutiveReport() {
     setLoading(false)
   }, [])
 
+  // AI Executive Summary — tải LƯỜI riêng (LLM có độ trễ) để không chặn render báo cáo.
+  const loadAi = useCallback(async (pid: string) => {
+    if (!pid) return
+    setAiSumLoading(true)
+    setAiSum(null)
+    try {
+      const res = await api.get(`/aido/executive-report/ai-summary?fundPeriodId=${pid}`, { timeout: 45000 })
+      const d = res.data?.data ?? res.data
+      setAiSum({ text: d.text, generatedBy: d.generatedBy })
+    } catch {
+      setAiSum(null)
+    }
+    setAiSumLoading(false)
+  }, [])
+
   useEffect(() => {
-    if (periodId) void load(periodId)
-  }, [periodId, load])
+    if (periodId) { void load(periodId); void loadAi(periodId) }
+  }, [periodId, load, loadAi])
 
   // ── Export ────────────────────────────────────────────────────────────
   const prepBranding = () => {
@@ -104,33 +122,21 @@ export function ExecutiveReport() {
       toast.error('Không xuất được ảnh')
     }
   }
-  const exportPdf = () => {
+  const exportPdf = async () => {
     if (!data) return
     prepBranding()
-    exportGenericTablePDF({
-      fileBase: `BaoCao_DieuHanh_${data.meta.periodName}`,
-      title: 'Báo cáo điều hành — Bảng xếp hạng thành viên',
-      subtitle: `${data.meta.clubName} · ${data.meta.periodName}`,
-      metaLeft: `Điểm sức khỏe CLB ${data.summary.clubHealthScore}/100 · Thu ${formatVND(data.finance.totalIncome)} · Chi ${formatVND(data.finance.totalExpense)}`,
-      columns: [
-        { header: '#', align: 'center' },
-        { header: 'Thành viên' },
-        { header: 'Tham gia', align: 'right' },
-        { header: 'Đóng quỹ', align: 'center' },
-        { header: 'Hạnh kiểm', align: 'right' },
-        { header: 'Sức khỏe', align: 'right' },
-      ],
-      rows: data.members.all.map((m: any, i: number) => [
-        i + 1,
-        m.name,
-        `${m.participationRate}%`,
-        m.paymentStatus === 'paid' ? 'Đã đóng' : m.paymentStatus === 'debt' ? 'Nợ' : '—',
-        m.conductScore ?? '—',
-        m.healthScore,
-      ]),
-      summaryLabel: 'Điểm sức khỏe trung bình',
-      summaryValue: `${data.members.avgHealth}/100`,
-    })
+    const t = toast.loading('Đang tạo PDF toàn trang…')
+    try {
+      await captureElementAsReportPDF(CAPTURE_ID, `BaoCao_DieuHanh_${data.meta.periodName}`, {
+        title: 'Báo cáo điều hành',
+        subtitle: `${data.meta.clubName} · ${data.meta.periodName}`,
+        meta: `Điểm sức khỏe CLB: ${data.summary.clubHealthScore}/100`,
+      })
+      toast.dismiss(t)
+    } catch {
+      toast.dismiss(t)
+      toast.error('Không tạo được PDF')
+    }
   }
   const exportXlsx = () => {
     if (!data) return
@@ -193,7 +199,7 @@ export function ExecutiveReport() {
       </ActionButton>
       {data && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={exportPdf}>PDF</ActionButton>
+          <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={() => void exportPdf()}>PDF</ActionButton>
           <ActionButton variant="ghost" icon={<Sheet size={15} />} onClick={exportXlsx}>Excel</ActionButton>
           <ActionButton variant="ghost" icon={<ImageIcon size={15} />} onClick={() => void exportImage()}>Ảnh</ActionButton>
           <ActionButton variant="ghost" icon={<Printer size={15} />} onClick={() => window.print()}>In</ActionButton>
@@ -225,6 +231,31 @@ export function ExecutiveReport() {
       {periodPicker}
 
       <div id={CAPTURE_ID} className="space-y-5">
+        {/* ── AI Executive Summary (tải lười) ──────────────────────── */}
+        <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, #6D5DFB 8%, var(--pf-surface)), var(--pf-surface))' }}>
+          <div className="mb-2 flex items-center gap-2">
+            <Bot size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
+            <h3 className="text-sm font-bold [color:var(--pf-text)]">Tóm tắt điều hành (AI)</h3>
+            {aiSum && (
+              <span className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>
+                {aiSum.generatedBy === 'ai' ? '✨ Maika AI viết' : 'Tổng hợp tự động'}
+              </span>
+            )}
+          </div>
+          {aiSumLoading ? (
+            <div className="space-y-1.5">
+              <div className="h-3 w-3/4 animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
+              <div className="h-3 w-full animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
+              <div className="h-3 w-5/6 animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
+              <p className="pt-1 text-[11px] [color:var(--pf-color-muted)]">Maika đang soạn tóm tắt…</p>
+            </div>
+          ) : aiSum ? (
+            <p className="whitespace-pre-line text-[13px] leading-relaxed [color:var(--pf-text)]">{aiSum.text}</p>
+          ) : (
+            <p className="text-xs [color:var(--pf-color-muted)]">Chưa tạo được tóm tắt. <button className="underline" onClick={() => void loadAi(periodId)}>Thử lại</button></p>
+          )}
+        </div>
+
         {/* ── Club Health Score (hero) ─────────────────────────────── */}
         <div
           className="rounded-2xl border p-5 sm:flex sm:items-center sm:gap-6 [border-color:var(--pf-border)]"
@@ -307,6 +338,47 @@ export function ExecutiveReport() {
               <FinRow label="Thu bình quân / TV" value={formatVND(f.avgIncomePerMember)} />
               <FinRow label="Chi bình quân / lượt" value={formatVND(Math.round(f.costPerAttendance || 0))} />
             </div>
+          </div>
+        </div>
+
+        {/* ── Dự báo + Club DNA ────────────────────────────────────── */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
+            <SectionTitle icon={<LineChart size={15} />} title="Dự báo 30–90 ngày" note="ước lượng theo xu hướng" compact />
+            <div className="grid grid-cols-3 gap-2">
+              {[['+30 ngày', data.forecast.projected30], ['+60 ngày', data.forecast.projected60], ['+90 ngày', data.forecast.projected90]].map(([lbl, val]) => (
+                <div key={lbl as string} className="rounded-xl border px-3 py-2 text-center [border-color:var(--pf-border)]">
+                  <p className="text-[11px] [color:var(--pf-color-muted)]">{lbl}</p>
+                  <p className="text-sm font-bold tabular-nums" style={{ color: (val as number) < 0 ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-text)' }}>{formatVND(val as number)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-xs [color:var(--pf-color-muted)]">
+              {data.forecast.dailyNet >= 0 ? <TrendingUp size={13} className="[color:var(--pf-green)]" /> : <TrendingDown size={13} style={{ color: 'var(--pf-accent-rose,#E11D48)' }} />}
+              <span>{data.forecast.trendLabel} · dòng tiền ~{formatVND(data.forecast.dailyNet)}/ngày</span>
+            </div>
+            {data.forecast.runwayMonths != null && (
+              <p className="mt-1 text-xs font-medium" style={{ color: 'var(--pf-accent-rose,#E11D48)' }}>⚠️ Nếu tiếp tục âm, quỹ trụ được ~{data.forecast.runwayMonths} tháng.</p>
+            )}
+            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">{data.forecast.note}</p>
+          </div>
+          <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
+            <SectionTitle icon={<Fingerprint size={15} />} title="Club DNA" note="phong cách vận hành" compact />
+            <p className="mb-2 text-sm font-bold [color:var(--pf-primary,#6D5DFB)]">{data.dna.archetype}</p>
+            <div className="space-y-1.5">
+              {data.dna.traits.map((t: any) => (
+                <div key={t.key}>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="[color:var(--pf-color-muted)]">{t.key}</span>
+                    <span className="font-semibold tabular-nums" style={{ color: healthColor(t.score) }}>{t.score}</span>
+                  </div>
+                  <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--pf-border)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${t.score}%`, background: healthColor(t.score) }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">{data.dna.note}</p>
           </div>
         </div>
 

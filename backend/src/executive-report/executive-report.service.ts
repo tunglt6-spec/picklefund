@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { ScoringService } from '../scoring/scoring.service';
+import { MaikaService } from '../maika/maika.service';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -20,6 +21,7 @@ export class ExecutiveReportService {
     private readonly prisma: PrismaService,
     private readonly fundPeriods: FundPeriodsService,
     private readonly scoring: ScoringService,
+    private readonly maika: MaikaService,
   ) {}
 
   private clamp(n: number, min = 0, max = 100): number {
@@ -236,9 +238,13 @@ export class ExecutiveReportService {
     // ── Hoạt động ───────────────────────────────────────────────────────
     const completed = sessions.filter((s) => s.status === 'completed');
     const cancelled = sessions.filter((s) => s.status === 'cancelled');
-    const withPresence = sessions
+    // Buổi đông/vắng nhất CHỈ xét trong buổi ĐÃ hoàn thành (buổi mới lên lịch có 0 người
+    // không phải "vắng nhất" thật).
+    const withPresence = completed
       .map((s) => ({ ...s, present: s.presentCount }))
       .sort((a, b) => b.present - a.present);
+    // Tỉ lệ tham gia = tổng lượt điểm danh / (sĩ số hoạt động × số buổi ĐÃ hoàn thành).
+    // attendanceSummary đã trả totalSessions = số buổi hoàn thành (mẫu số chuẩn cho kỳ đang mở).
     const clubParticipation = this.pct(
       attendance.reduce((s, a) => s + a.attendedSessions, 0),
       activeMembers * (attendance[0]?.totalSessions ?? 0),
@@ -307,9 +313,24 @@ export class ExecutiveReportService {
     const financeDim = this.clamp(
       100 - outstandingRatio * 40 - (finance.balance < 0 ? 30 : 0),
     );
-    const activityDim = this.clamp(
-      clubParticipation - activity.cancelledRate * 0.5,
-    );
+    // Chiều "Hoạt động" = SỨC KHỎE VẬN HÀNH của CLB, KHÔNG phải chỉ tỉ lệ tham gia thô
+    // (tránh phạt nặng CLB xoay tua người chơi). Blend 3 phần thật:
+    //  • Độ tin cậy tổ chức: buổi hoàn thành / (hoàn thành + hủy) — chỉ tính buổi ĐÃ quyết,
+    //    KHÔNG tính buổi mới lên lịch (kỳ đang mở) để không bị tụt oan.
+    //  • Độ đông mỗi buổi: TB người/buổi ÷ sĩ số hoạt động.
+    //  • Độ phủ tham gia: tỉ lệ tham gia (đã theo buổi hoàn thành), scale nhẹ ×1.5.
+    // CLB không có buổi hoàn thành nào trong kỳ → null (loại khỏi điểm tổng, không tính 0 oan).
+    const decided = activity.completed + activity.cancelled;
+    const reliability = decided > 0 ? (activity.completed / decided) * 100 : 100;
+    const fillPerSession =
+      activity.completed > 0
+        ? Math.min(100, this.pct(activity.avgPresentPerSession, activeMembers))
+        : 0;
+    const coverage = Math.min(100, clubParticipation * 1.5);
+    const activityDim =
+      activity.completed > 0
+        ? this.clamp(0.4 * reliability + 0.35 * fillPerSession + 0.25 * coverage)
+        : null;
     const memberDim = avgMemberHealth;
     const distinctPlayers = minigamePlayed.size;
     const tournamentAvailable = minigames.length > 0;
@@ -355,6 +376,19 @@ export class ExecutiveReportService {
       tournamentAvailable,
       memberHealth,
     );
+    const forecast = this.buildForecast(finance, trends, period);
+    const dna = this.buildClubDNA({
+      financeDim,
+      activityDim,
+      memberDim,
+      tournamentDim,
+      aiDim,
+      transparency: transparency.score,
+      participationRate: clubParticipation,
+      sessionsPerMember: activeMembers > 0 ? sessions.length / activeMembers : 0,
+      minigames: minigames.length,
+      outstandingCount: finance.unpaidCount,
+    });
 
     return {
       meta: {
@@ -423,13 +457,195 @@ export class ExecutiveReportService {
       timeline,
       alerts,
       recommendations,
+      forecast,
+      dna,
       generatedAt: to, // mốc dữ liệu = cuối kỳ (hoặc hiện tại nếu kỳ đang mở)
+    };
+  }
+
+  /**
+   * AI Executive Summary — TÓM TẮT ĐIỀU HÀNH bằng ngôn ngữ tự nhiên.
+   * Dùng LLM THẬT (Gemini qua MaikaService khi có GOOGLE_API_KEY); không có key → bản
+   * rule-based (vẫn từ số thật). Endpoint riêng để FE tải lười (không chặn render báo cáo).
+   */
+  async aiSummary(clubId: string, fundPeriodId: string) {
+    const r = await this.generate(clubId, fundPeriodId);
+    const s = r.summary;
+    const fin = r.finance;
+    const money = (n: number) =>
+      new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ';
+
+    const facts = [
+      `CLB: ${r.meta.clubName}`,
+      `Kỳ: ${r.meta.periodName}`,
+      `Điểm sức khỏe CLB: ${s.clubHealthScore}/100`,
+      `Thành viên: ${s.activeMembers}/${s.totalMembers} hoạt động; tỷ lệ tham gia ${s.participationRate}%`,
+      `Buổi chơi: ${s.totalSessions} (hoàn thành ${s.completedSessions}, hủy ${s.cancelledSessions})`,
+      `Giải/minigame: ${s.tournamentsCount}`,
+      `Tài chính: thu ${money(fin.totalIncome)}, chi ${money(fin.totalExpense)}, cân đối ${money(fin.balance)}, tổng tài sản ${money(fin.clubAssets)}`,
+      fin.compare
+        ? `So kỳ trước: thu ${fin.compare.incomeDeltaPct ?? '—'}%, chi ${fin.compare.expenseDeltaPct ?? '—'}%`
+        : 'Chưa có kỳ trước để so sánh',
+      `Công nợ: ${s.outstandingCount} thành viên`,
+      `Cảnh báo: ${r.alerts.map((a: { message: string }) => a.message).join('; ') || 'không có'}`,
+      `Phong cách vận hành (Club DNA): ${r.dna.archetype}`,
+      `Dự báo tài sản ~90 ngày: ${money(r.forecast.projected90)} (${r.forecast.trendLabel})`,
+    ].join('\n');
+
+    const prompt = `Bạn là Maika — trợ lý phân tích điều hành cho câu lạc bộ thể thao. Viết BÁO CÁO ĐIỀU HÀNH ngắn gọn bằng TIẾNG VIỆT cho Ban quản trị, dựa DUY NHẤT trên số liệu dưới đây (KHÔNG bịa thêm số). Văn phong chuyên nghiệp, súc tích, hành động được. Cấu trúc:
+1) Một câu đánh giá tổng thể sức khỏe CLB.
+2) 2–3 điểm nổi bật (tài chính/hoạt động/thành viên/thi đấu).
+3) 1–2 rủi ro cần lưu ý.
+4) 2–3 khuyến nghị ưu tiên cho kỳ tới.
+Tối đa ~180 từ. Không dùng markdown heading, chỉ đoạn văn + gạch đầu dòng ngắn.
+
+SỐ LIỆU:
+${facts}`;
+
+    const fallback = this.ruleBasedSummary(r);
+    const { text, byAi } = await this.maika
+      .composeText(prompt, fallback)
+      .catch(() => ({ text: fallback, byAi: false }));
+    return {
+      periodName: r.meta.periodName,
+      clubHealthScore: s.clubHealthScore,
+      text,
+      generatedBy: byAi ? 'ai' : 'rule',
+      generatedAt: r.generatedAt,
+    };
+  }
+
+  /** Bản tóm tắt rule-based (dùng khi không có LLM) — vẫn từ số thật, trung thực. */
+  private ruleBasedSummary(r: any): string {
+    const s = r.summary;
+    const grade =
+      s.clubHealthScore >= 80
+        ? 'rất tốt'
+        : s.clubHealthScore >= 65
+          ? 'ổn định'
+          : s.clubHealthScore >= 50
+            ? 'cần cải thiện'
+            : 'đáng lo';
+    const lines = [
+      `CLB ${r.meta.clubName} kỳ ${r.meta.periodName} đang ở mức ${grade} (sức khỏe ${s.clubHealthScore}/100).`,
+      `• Tài chính: thu ${new Intl.NumberFormat('vi-VN').format(r.finance.totalIncome)}đ, chi ${new Intl.NumberFormat('vi-VN').format(r.finance.totalExpense)}đ, tổng tài sản ${new Intl.NumberFormat('vi-VN').format(r.finance.clubAssets)}đ.`,
+      `• Hoạt động: ${s.completedSessions} buổi hoàn thành, tham gia ${s.participationRate}%; ${s.tournamentsCount} giải/minigame.`,
+      `• Phong cách: ${r.dna.archetype}.`,
+    ];
+    if (r.alerts.length)
+      lines.push(
+        `• Lưu ý: ${r.alerts.map((a: { message: string }) => a.message).join('; ')}.`,
+      );
+    if (r.recommendations.length)
+      lines.push(
+        `• Nên làm: ${r.recommendations.map((x: { text: string }) => x.text).join(' ')}`,
+      );
+    return lines.join('\n');
+  }
+
+  /**
+   * Dự báo 30/60/90 ngày — ƯỚC LƯỢNG theo xu hướng thu–chi gần đây (KHÔNG phải cam kết).
+   * dòng tiền/ngày = net TB mỗi kỳ ÷ độ dài kỳ TB (ngày). Chiếu từ tổng tài sản hiện tại.
+   */
+  private buildForecast(
+    finance: { clubAssets?: { balance: number } },
+    trends: Array<{ thu: number; chi: number; startDate: Date }>,
+    period: { startDate: Date; endDate: Date | null },
+  ) {
+    const assets = finance.clubAssets?.balance ?? 0;
+    const nets = (trends || []).map((t) => t.thu - t.chi);
+    const avgNet =
+      nets.length > 0 ? nets.reduce((a, b) => a + b, 0) / nets.length : 0;
+
+    // Độ dài kỳ TB (ngày): ưu tiên khoảng cách giữa các startDate của trend; fallback 90.
+    let periodDays = 90;
+    const ds = (trends || [])
+      .map((t) => new Date(t.startDate).getTime())
+      .sort((a, b) => a - b);
+    if (ds.length >= 2) {
+      const gaps: number[] = [];
+      for (let i = 1; i < ds.length; i++)
+        gaps.push((ds[i] - ds[i - 1]) / 86400000);
+      const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+      if (avgGap > 15 && avgGap < 400) periodDays = Math.round(avgGap);
+    } else if (period.endDate) {
+      const d =
+        (new Date(period.endDate).getTime() -
+          new Date(period.startDate).getTime()) /
+        86400000;
+      if (d > 15) periodDays = Math.round(d);
+    }
+    const dailyNet = periodDays > 0 ? avgNet / periodDays : 0;
+    const project = (days: number) => Math.round(assets + dailyNet * days);
+    const runwayMonths =
+      dailyNet < 0 && assets > 0
+        ? Math.max(0, Math.round((assets / (-dailyNet * 30)) * 10) / 10)
+        : null;
+    return {
+      basedOnPeriods: nets.length,
+      avgNetPerPeriod: Math.round(avgNet),
+      dailyNet: Math.round(dailyNet),
+      current: Math.round(assets),
+      projected30: project(30),
+      projected60: project(60),
+      projected90: project(90),
+      trendLabel:
+        dailyNet > 0
+          ? 'xu hướng tăng'
+          : dailyNet < 0
+            ? 'xu hướng giảm'
+            : 'đi ngang',
+      runwayMonths, // số tháng quỹ trụ được nếu tiếp tục âm; null nếu đang dương
+      note: 'Ước lượng tuyến tính theo xu hướng thu–chi gần đây — không phải cam kết.',
+    };
+  }
+
+  /**
+   * Club DNA — phong cách vận hành, suy từ các chiều điểm THẬT. Chọn archetype theo trait
+   * trội nhất + liệt kê trait (0–100). Mô tả rule-based (không bịa).
+   */
+  private buildClubDNA(x: {
+    financeDim: number;
+    activityDim: number | null;
+    memberDim: number;
+    tournamentDim: number | null;
+    aiDim: number;
+    transparency: number;
+    participationRate: number;
+    sessionsPerMember: number;
+    minigames: number;
+    outstandingCount: number;
+  }) {
+    const traits = [
+      { key: 'Kỷ luật tài chính', score: Math.round((x.financeDim + x.transparency) / 2) },
+      { key: 'Năng động', score: x.activityDim ?? 0 },
+      { key: 'Gắn kết thành viên', score: x.memberDim },
+      { key: 'Máu lửa thi đấu', score: x.tournamentDim ?? 0 },
+      { key: 'Vận hành hiện đại (AI)', score: x.aiDim },
+    ].sort((a, b) => b.score - a.score);
+
+    const top = traits[0];
+    const archetypeMap: Record<string, string> = {
+      'Kỷ luật tài chính': 'CLB Kỷ luật — quản trị quỹ minh bạch, chặt chẽ',
+      'Năng động': 'CLB Năng động — chơi đều, lịch dày',
+      'Gắn kết thành viên': 'CLB Gắn kết — thành viên tham gia cao, đều tay',
+      'Máu lửa thi đấu': 'CLB Thi đấu — mạnh về giải/minigame',
+      'Vận hành hiện đại (AI)': 'CLB Công nghệ — tự động hóa vận hành cao',
+    };
+    return {
+      archetype: archetypeMap[top.key] ?? 'CLB Cân bằng',
+      traits,
+      note: 'Suy từ các chiều điểm thật của kỳ (không phải nhãn cố định).',
     };
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  /** Attendance per member trong kỳ (nhân bản logic AttendanceService.getMemberSummary). */
+  /**
+   * Attendance per member trong kỳ (nhân bản logic AttendanceService.getMemberSummary),
+   * NHƯNG mẫu số = số buổi ĐÃ HOÀN THÀNH (status 'completed') — buổi mới lên lịch chưa
+   * diễn ra không tính vào "tổng buổi có thể tham gia" (chuẩn cho kỳ đang mở).
+   */
   private async attendanceSummary(
     clubId: string,
     fundPeriodId: string,
@@ -440,13 +656,14 @@ export class ExecutiveReportService {
       select: { id: true },
     });
     let sessions = await this.prisma.attendanceSession.findMany({
-      where: { clubId, fundPeriodId },
+      where: { clubId, fundPeriodId, status: 'completed' },
       select: { id: true },
     });
     if (sessions.length === 0 && period.endDate) {
       sessions = await this.prisma.attendanceSession.findMany({
         where: {
           clubId,
+          status: 'completed',
           sessionDate: { gte: period.startDate, lte: period.endDate },
         },
         select: { id: true },

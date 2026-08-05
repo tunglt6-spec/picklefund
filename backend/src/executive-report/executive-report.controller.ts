@@ -30,4 +30,17 @@ export class ExecutiveReportController {
       'Báo cáo điều hành',
     );
   }
+
+  @Get('executive-report/ai-summary')
+  @ApiOperation({
+    summary:
+      'AI Executive Summary — tóm tắt điều hành bằng ngôn ngữ tự nhiên (Gemini nếu có GOOGLE_API_KEY, nếu không → rule-based từ số thật). Tải lười.',
+  })
+  async aiSummary(
+    @CurrentUser() user: JwtUser,
+    @Query('fundPeriodId') fundPeriodId?: string,
+  ) {
+    if (!fundPeriodId) throw new BadRequestException('Thiếu fundPeriodId');
+    return ok(await this.report.aiSummary(user.clubId ?? '', fundPeriodId));
+  }
 }

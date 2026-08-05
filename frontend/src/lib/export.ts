@@ -321,6 +321,75 @@ export async function captureElementAsReportPng(
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+/**
+ * Chụp TOÀN BỘ nội dung 1 element (giống Xuất ảnh) rồi đóng thành PDF nhiều trang A4.
+ * Dùng cho báo cáo dài (AIDO Executive Report): giữ NGUYÊN giao diện on-screen (Tailwind +
+ * CSS var) vì clone được gắn vào document.body nên thừa hưởng stylesheet — khác downloadPDF
+ * (render HTML rời trong container BASE_CSS). Ép light theme khi chụp.
+ */
+export async function captureElementAsReportPDF(
+  elementId: string,
+  fileBase: string,
+  report: { title: string; subtitle?: string; meta?: string },
+) {
+  const [{ default: html2canvas }, { default: jsPDF }, logo] = await Promise.all([
+    import('html2canvas-pro'),
+    import('jspdf'),
+    loadBrandLogo(),
+  ])
+  const el = document.getElementById(elementId)
+  if (!el) throw new Error('Element not found')
+  const width = Math.max(Math.round(el.getBoundingClientRect().width) || 720, 560)
+
+  const wrap = document.createElement('div')
+  wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 48}px;background:#fff;font-family:'Be Vietnam Pro','Segoe UI',Arial,sans-serif;`
+  wrap.innerHTML = reportHeaderHtml(report.title, report.subtitle, report.meta, logo) + '<div data-pf-body style="padding:18px 24px;background:#fff;"></div>' + reportFooterHtml()
+  const body = wrap.querySelector('[data-pf-body]') as HTMLElement
+  const clone = el.cloneNode(true) as HTMLElement
+  clone.querySelectorAll('[data-html2canvas-ignore]').forEach(n => n.remove())
+  clone.style.width = width + 'px'
+  clone.style.height = 'auto'
+  clone.style.minHeight = '0'
+  clone.style.maxHeight = 'none'
+  clone.style.flex = 'none'
+  clone.style.margin = '0'
+  body.appendChild(clone)
+  document.body.appendChild(wrap)
+  if (document.fonts?.ready) { try { await document.fonts.ready } catch { /* bỏ qua */ } }
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+  let canvas: HTMLCanvasElement
+  try {
+    canvas = await html2canvas(wrap, {
+      scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
+      onclone: (doc) => { doc.documentElement.setAttribute('data-theme', 'light'); doc.documentElement.style.colorScheme = 'light' },
+    })
+  } finally {
+    document.body.removeChild(wrap)
+  }
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const imgW = 210
+  const pageH = 297
+  const chunkCanvasH = Math.floor((canvas.width * pageH) / imgW)
+  let offsetY = 0
+  let first = true
+  while (offsetY < canvas.height) {
+    if (!first && canvas.height - offsetY < chunkCanvasH * 0.02) break
+    const sliceH = Math.min(chunkCanvasH, canvas.height - offsetY)
+    const slice = document.createElement('canvas')
+    slice.width = canvas.width
+    slice.height = sliceH
+    slice.getContext('2d')!.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH)
+    const sliceImgH = Math.min((sliceH / canvas.width) * imgW, pageH)
+    if (!first) pdf.addPage()
+    pdf.addImage(slice.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, imgW, sliceImgH)
+    offsetY += sliceH
+    first = false
+  }
+  return savePdfDoc(pdf, `${fileBase}_${today().replace(/\//g, '-')}`)
+}
+
 export interface FinanceOverviewInput {
   clubName: string
   periodName: string

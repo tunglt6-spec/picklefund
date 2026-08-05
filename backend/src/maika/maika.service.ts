@@ -153,6 +153,21 @@ export class MaikaService {
 
   // ─── AI call: Gemini primary → OpenRouter fallback → rule-based fallback ──
 
+  /**
+   * Public wrapper để module khác (vd ExecutiveReport) tái dùng đúng chuỗi LLM 3-tầng
+   * (Gemini → OpenRouter nếu bật → rule-based fallback). `fallback` là văn bản rule-based
+   * BẮT BUỘC truyền vào (đảm bảo luôn có kết quả trung thực khi không có GOOGLE_API_KEY).
+   * Trả kèm cờ để caller biết nội dung do AI viết hay là bản rule-based.
+   */
+  async composeText(
+    prompt: string,
+    fallback: string,
+  ): Promise<{ text: string; byAi: boolean }> {
+    const text = await this.askAI(prompt, fallback);
+    // askAI trả fallback (nguyên văn) khi mọi tầng LLM fail/không cấu hình.
+    return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
+  }
+
   private async askAI(prompt: string, fallback: string): Promise<string> {
     // 1) Gemini Free (primary)
     if (this.genAI) {
