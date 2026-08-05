@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Star, Zap, Check, TrendingUp, AlertCircle } from 'lucide-react'
+import { Star, Zap, Check, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
+import { CheckoutModal, type CheckoutPlan } from './billing/CheckoutModal'
 
 // Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, PATCH /clubs/:id/plan
 // dùng chung). Trước đây có PlanTier (FREE/STARTER/PRO/ENTERPRISE) là hệ song song
@@ -14,10 +15,22 @@ type Plan = {
   tier: ServicePlan
   name: string
   priceMonthly: number | null
+  priceYearly: number | null
   maxMembers: number
   maxClubs: number
   aiFeatures: boolean
   telegramBot: boolean
+}
+
+type OrderRow = {
+  orderCode: string
+  planTier: ServicePlan
+  billingCycle: 'MONTHLY' | 'YEARLY'
+  amount: string | number
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'EXPIRED'
+  gateway: string
+  paidAt: string | null
+  createdAt: string
 }
 
 type Subscription = {
@@ -60,19 +73,23 @@ export function Billing() {
   const [sub, setSub] = useState<Subscription | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
   const [usage, setUsage] = useState<AiUsage[]>([])
+  const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [checkout, setCheckout] = useState<CheckoutPlan | null>(null)
 
   const fetchAll = useCallback(async () => {
     if (!user) return
     try {
-      const [subRes, planRes, usageRes] = await Promise.all([
+      const [subRes, planRes, usageRes, orderRes] = await Promise.all([
         api.get('/billing/subscription'),
         api.get('/billing/plans'),
         api.get('/billing/ai-usage'),
+        api.get('/billing/orders').catch(() => null),
       ])
       setSub(subRes.data?.data ?? subRes.data)
       setPlans(planRes.data?.data ?? planRes.data)
       setUsage(usageRes.data?.data ?? usageRes.data)
+      if (orderRes) setOrders(orderRes.data?.data ?? orderRes.data ?? [])
     } catch { /* noop */ }
     finally { setLoading(false) }
   }, [user])
@@ -137,7 +154,7 @@ export function Billing() {
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] overflow-hidden">
             <div className="px-5 py-4 border-b border-[color:var(--pf-border)]">
               <h3 className="font-semibold [color:var(--pf-text)]">Bảng so sánh gói dịch vụ</h3>
-              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Liên hệ Admin để nâng cấp gói</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Chọn gói và tự nâng cấp — kích hoạt ngay sau khi thanh toán</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -170,6 +187,29 @@ export function Billing() {
                       ))}
                     </tr>
                   ))}
+                  {/* Hàng nút hành động */}
+                  <tr>
+                    <td className="px-4 py-3" />
+                    {plans.map(p => (
+                      <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
+                        {p.tier === currentTier ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600"><Check size={13} />Gói hiện tại</span>
+                        ) : p.tier === 'STARTER' ? (
+                          <span className="text-xs [color:var(--pf-color-muted)]">Miễn phí</span>
+                        ) : p.tier === 'CLUB_PLUS' ? (
+                          <button onClick={() => window.open('mailto:admin@picklefund.app?subject=Tư vấn gói Club+ PickleFund', '_blank')}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
+                            Đăng ký tư vấn
+                          </button>
+                        ) : (
+                          <button onClick={() => setCheckout(p)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold [background:var(--pf-primary)] text-white hover:[background:var(--pf-primary-hover)] transition-colors">
+                            Nâng cấp ngay
+                          </button>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -213,13 +253,49 @@ export function Billing() {
                 Gói Pro (199.000đ/tháng) mở khoá không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
               </p>
               <button
-                onClick={() => window.open('mailto:admin@picklefund.app?subject=Nâng cấp gói PickleFund', '_blank')}
+                onClick={() => { const pro = plans.find(p => p.tier === 'PRO'); if (pro) setCheckout(pro) }}
                 className="bg-white/20 hover:bg-white/30 transition-colors text-white text-sm font-semibold px-4 py-2 rounded-lg">
-                Liên hệ nâng cấp
+                Nâng cấp lên Pro
               </button>
             </div>
           )}
+
+          {/* Lịch sử thanh toán */}
+          {orders.length > 0 && (
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Receipt size={18} className="[color:var(--pf-primary)]" />
+                <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử thanh toán</h3>
+              </div>
+              <div className="space-y-1">
+                {orders.slice(0, 8).map(o => {
+                  const paid = o.status === 'PAID'
+                  const stLabel = paid ? 'Đã thanh toán' : o.status === 'PENDING' ? 'Chờ thanh toán' : o.status === 'FAILED' ? 'Thất bại' : o.status
+                  return (
+                    <div key={o.orderCode} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium [color:var(--pf-text)] truncate">{o.planTier} · {o.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</p>
+                        <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{o.orderCode} · {new Date(o.paidAt ?? o.createdAt).toLocaleString('vi-VN')}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{Number(o.amount).toLocaleString('vi-VN')}đ</p>
+                        <span className={`text-[11px] font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </>
+      )}
+
+      {checkout && (
+        <CheckoutModal
+          plan={checkout}
+          onClose={() => setCheckout(null)}
+          onActivated={() => { void fetchAll() }}
+        />
       )}
     </div>
   )

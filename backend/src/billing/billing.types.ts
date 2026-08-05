@@ -6,6 +6,8 @@ export interface PlanConfig {
   name: string;
   /** null = "Liên hệ" (không có giá cố định, khớp Pricing.tsx công khai). */
   priceMonthly: number | null;
+  /** Giá theo NĂM (thường rẻ hơn ~2 tháng). null = không bán theo năm / "Liên hệ". */
+  priceYearly: number | null;
   /** 9999 = không giới hạn — quy ước hiển thị đã dùng sẵn ở frontend. */
   maxMembers: number;
   maxClubs: number;
@@ -24,6 +26,7 @@ export const PLAN_CONFIGS: Record<ServicePlan, PlanConfig> = {
     tier: 'STARTER',
     name: 'Starter',
     priceMonthly: 0,
+    priceYearly: 0,
     maxMembers: memberLimit('STARTER'),
     maxClubs: 1,
     aiFeatures: false,
@@ -33,6 +36,7 @@ export const PLAN_CONFIGS: Record<ServicePlan, PlanConfig> = {
     tier: 'PRO',
     name: 'Pro',
     priceMonthly: 199000,
+    priceYearly: 1990000, // ~2 tháng miễn phí khi trả năm
     maxMembers: memberLimit('PRO'),
     maxClubs: 1,
     aiFeatures: true,
@@ -42,6 +46,7 @@ export const PLAN_CONFIGS: Record<ServicePlan, PlanConfig> = {
     tier: 'CLUB_PLUS',
     name: 'Club+',
     priceMonthly: null,
+    priceYearly: null,
     maxMembers: memberLimit('CLUB_PLUS'),
     maxClubs: 9999,
     aiFeatures: true,

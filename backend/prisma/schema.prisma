@@ -49,6 +49,9 @@ model Club {
   memberScoreSnapshots MemberScoreSnapshot[]
   maikaInsights        MaikaInsight[]
   lisaMessages         LisaMessage[]
+  subscription         Subscription?
+  paymentOrders        PaymentOrder[]
+  invoices             Invoice[]
 
   @@map("clubs")
 }
@@ -113,14 +116,14 @@ enum Role {
 // MEMBERS (Club member profiles)
 // ============================================================
 model Member {
-  id        String       @id @default(uuid())
-  clubId    String       @map("club_id")
-  userId    String?      @unique @map("user_id")
-  fullName  String       @map("full_name") @db.VarChar(200)
-  phone     String?      @db.VarChar(20)
-  email     String?      @db.VarChar(255)
-  joinDate  DateTime     @map("join_date") @db.Date
-  status    MemberStatus @default(active)
+  id         String       @id @default(uuid())
+  clubId     String       @map("club_id")
+  userId     String?      @unique @map("user_id")
+  fullName   String       @map("full_name") @db.VarChar(200)
+  phone      String?      @db.VarChar(20)
+  email      String?      @db.VarChar(255)
+  joinDate   DateTime     @map("join_date") @db.Date
+  status     MemberStatus @default(active)
   avatarUrl  String?      @map("avatar_url")
   notes      String?
   skillLevel Int?         @map("skill_level")
@@ -571,22 +574,22 @@ model RefreshToken {
 // MINIGAME (Tournament management)
 // ============================================================
 model Minigame {
-  id          String         @id @default(uuid())
-  clubId      String         @map("club_id")
-  name        String         @db.VarChar(200)
-  format      MinigameFormat
+  id           String         @id @default(uuid())
+  clubId       String         @map("club_id")
+  name         String         @db.VarChar(200)
+  format       MinigameFormat
   // Bộ môn (đa môn thể thao): PICKLEBALL/FOOTBALL/GOLF/TENNIS/... Mặc định PICKLEBALL cho dữ liệu cũ.
-  sport        String        @default("PICKLEBALL") @db.VarChar(30)
+  sport        String         @default("PICKLEBALL") @db.VarChar(30)
   // Mô hình tính thứ hạng: HEAD_TO_HEAD (đối kháng theo trận) | LEADERBOARD (bảng điểm theo lượt).
-  scoringModel String        @default("HEAD_TO_HEAD") @map("scoring_model") @db.VarChar(20)
-  status      MinigameStatus @default(DRAFT)
-  settings    Json?
-  scheduledAt DateTime?      @map("scheduled_at")
-  startedAt   DateTime?      @map("started_at")
-  endedAt     DateTime?      @map("ended_at")
-  createdById String         @map("created_by")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  scoringModel String         @default("HEAD_TO_HEAD") @map("scoring_model") @db.VarChar(20)
+  status       MinigameStatus @default(DRAFT)
+  settings     Json?
+  scheduledAt  DateTime?      @map("scheduled_at")
+  startedAt    DateTime?      @map("started_at")
+  endedAt      DateTime?      @map("ended_at")
+  createdById  String         @map("created_by")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
 
   club              Club                  @relation(fields: [clubId], references: [id])
   teams             MinigameTeam[]
@@ -659,27 +662,27 @@ model MinigameParticipant {
 }
 
 model MinigameTeam {
-  id         String   @id @default(uuid())
-  minigameId String   @map("minigame_id")
-  name       String   @db.VarChar(100)
+  id             String   @id @default(uuid())
+  minigameId     String   @map("minigame_id")
+  name           String   @db.VarChar(100)
   // Mỗi slot là MEMBER (playerNId FK) HOẶC KHÁCH (playerNGuestId + playerNName denormalized).
-  player1Id      String? @map("player1_id")
-  player1GuestId String? @map("player1_guest_id")
-  player1Name    String? @map("player1_name")
-  player2Id      String? @map("player2_id")
-  player2GuestId String? @map("player2_guest_id")
-  player2Name    String? @map("player2_name")
-  round      Int?
-  wins       Int      @default(0)
-  losses     Int      @default(0)
-  points     Int      @default(0)
-  createdAt  DateTime @default(now()) @map("created_at")
+  player1Id      String?  @map("player1_id")
+  player1GuestId String?  @map("player1_guest_id")
+  player1Name    String?  @map("player1_name")
+  player2Id      String?  @map("player2_id")
+  player2GuestId String?  @map("player2_guest_id")
+  player2Name    String?  @map("player2_name")
+  round          Int?
+  wins           Int      @default(0)
+  losses         Int      @default(0)
+  points         Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  minigame   Minigame        @relation(fields: [minigameId], references: [id], onDelete: Cascade)
-  player1    Member?         @relation("TeamPlayer1", fields: [player1Id], references: [id])
-  player2    Member?         @relation("TeamPlayer2", fields: [player2Id], references: [id])
-  matchesAsA MinigameMatch[] @relation("MatchTeamA")
-  matchesAsB MinigameMatch[] @relation("MatchTeamB")
+  minigame   Minigame             @relation(fields: [minigameId], references: [id], onDelete: Cascade)
+  player1    Member?              @relation("TeamPlayer1", fields: [player1Id], references: [id])
+  player2    Member?              @relation("TeamPlayer2", fields: [player2Id], references: [id])
+  matchesAsA MinigameMatch[]      @relation("MatchTeamA")
+  matchesAsB MinigameMatch[]      @relation("MatchTeamB")
   // Roster nhiều người (môn đồng đội: bóng đá...). Môn ĐÔI vẫn dùng player1/player2 (không đụng).
   members    MinigameTeamMember[]
 
@@ -1152,4 +1155,97 @@ model LisaMessage {
 
   @@index([clubId, createdAt])
   @@map("lisa_messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUBSCRIPTION / BILLING (self-service upgrade) — nền Phase 1.
+// Gói hiệu lực THẬT vẫn là Club.plan + Club.planExpiresAt (các gate member-limit
+// + scheduler hạ gói đọc đây). Thanh toán thành công (webhook đã xác minh) sẽ GHI
+// vào 2 field đó. PaymentTransaction gộp vào PaymentOrder cho gọn ở v1.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionState {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentOrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentGateway {
+  MOCK
+  MOMO
+  VNPAY
+}
+
+model Subscription {
+  id           String            @id @default(uuid())
+  clubId       String            @unique @map("club_id")
+  club         Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  planTier     ServicePlan       @map("plan_tier")
+  status       SubscriptionState @default(PENDING)
+  billingCycle BillingCycle      @default(MONTHLY) @map("billing_cycle")
+  startedAt    DateTime?         @map("started_at")
+  expiresAt    DateTime?         @map("expires_at")
+  cancelledAt  DateTime?         @map("cancelled_at")
+  autoRenew    Boolean           @default(false) @map("auto_renew")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model PaymentOrder {
+  id                String             @id @default(uuid())
+  clubId            String             @map("club_id")
+  club              Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  orderCode         String             @unique @map("order_code")
+  planTier          ServicePlan        @map("plan_tier")
+  billingCycle      BillingCycle       @map("billing_cycle")
+  amount            Decimal            @db.Decimal(15, 2)
+  currency          String             @default("VND") @db.VarChar(8)
+  gateway           PaymentGateway     @default(MOCK)
+  status            PaymentOrderStatus @default(PENDING)
+  checkoutUrl       String?            @map("checkout_url")
+  providerTxnId     String?            @map("provider_txn_id")
+  rawPayload        Json?              @map("raw_payload")
+  signatureVerified Boolean            @default(false) @map("signature_verified")
+  paidAt            DateTime?          @map("paid_at")
+  expiresAt         DateTime?          @map("expires_at")
+  createdById       String?            @map("created_by_id")
+  invoice           Invoice?
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  @@index([clubId, status])
+  @@map("payment_orders")
+}
+
+model Invoice {
+  id             String       @id @default(uuid())
+  clubId         String       @map("club_id")
+  club           Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  paymentOrderId String       @unique @map("payment_order_id")
+  paymentOrder   PaymentOrder @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
+  invoiceNumber  String       @unique @map("invoice_number")
+  amount         Decimal      @db.Decimal(15, 2)
+  billingInfo    Json?        @map("billing_info")
+  status         String       @default("ISSUED") @db.VarChar(20)
+  issuedAt       DateTime     @default(now()) @map("issued_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([clubId])
+  @@map("invoices")
 }
