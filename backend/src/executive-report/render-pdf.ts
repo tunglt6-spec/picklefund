@@ -21,7 +21,16 @@ function chromePath(): string | undefined {
   return cands.find((p) => existsSync(p));
 }
 
-export async function renderHtmlToPdf(html: string): Promise<Buffer | null> {
+export interface RenderOpts {
+  margin?: { top?: string; bottom?: string; left?: string; right?: string };
+  headerTemplate?: string;
+  footerTemplate?: string;
+}
+
+export async function renderHtmlToPdf(
+  html: string,
+  opts?: RenderOpts,
+): Promise<Buffer | null> {
   const executablePath = chromePath();
   if (!executablePath) {
     logger.warn('Không tìm thấy Chromium — bỏ qua render PDF (dùng fallback).');
@@ -43,10 +52,18 @@ export async function renderHtmlToPdf(html: string): Promise<Buffer | null> {
     });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+    const useHF = !!(opts?.headerTemplate || opts?.footerTemplate);
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      preferCSSPageSize: true,
+      ...(opts?.margin ? { margin: opts.margin } : {}),
+      ...(useHF
+        ? {
+            displayHeaderFooter: true,
+            headerTemplate: opts?.headerTemplate ?? '<span></span>',
+            footerTemplate: opts?.footerTemplate ?? '<span></span>',
+          }
+        : { preferCSSPageSize: true }),
     });
     return Buffer.from(pdf);
   } catch (err) {

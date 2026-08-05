@@ -1305,7 +1305,16 @@ ${facts}`;
       precomputedAiText ??
       (await this.aiSummary(clubId, fundPeriodId, report)).text;
     const html = buildReportHtml(report, aiText);
-    const viaChrome = await renderHtmlToPdf(html).catch(() => null);
+    // Footer chạy trang (ASCII-only để không lệ thuộc font trong container Chromium).
+    const footerTemplate = `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">
+      <span>PickleFund &middot; AIDO Executive Report</span>
+      <span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
+    </div>`;
+    const viaChrome = await renderHtmlToPdf(html, {
+      margin: { top: '11mm', bottom: '13mm', left: '11mm', right: '11mm' },
+      headerTemplate: '<span></span>',
+      footerTemplate,
+    }).catch(() => null);
     if (viaChrome) return viaChrome;
     // Fallback: jsPDF (nhẹ, không cần Chromium) — vẫn đầy đủ nội dung.
     try {
