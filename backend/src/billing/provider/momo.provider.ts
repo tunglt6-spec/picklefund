@@ -18,8 +18,14 @@ export class MomoProvider implements PaymentProvider {
   private readonly partnerCode = process.env.MOMO_PARTNER_CODE || '';
   private readonly accessKey = process.env.MOMO_ACCESS_KEY || '';
   private readonly secretKey = process.env.MOMO_SECRET_KEY || '';
+  // Endpoint: ưu tiên MOMO_ENDPOINT tường minh; nếu không, chọn theo MOMO_ENV
+  // ('production' → payment.momo.vn, còn lại → sandbox test-payment.momo.vn).
+  // Go-live = đổi MOMO_ENV=production (đã verify request/chữ ký đúng trên sandbox thật).
   private readonly endpoint =
-    process.env.MOMO_ENDPOINT || 'https://test-payment.momo.vn/v2/gateway/api/create';
+    process.env.MOMO_ENDPOINT ||
+    ((process.env.MOMO_ENV || '').toLowerCase() === 'production'
+      ? 'https://payment.momo.vn/v2/gateway/api/create'
+      : 'https://test-payment.momo.vn/v2/gateway/api/create');
 
   isConfigured(): boolean {
     return !!(this.partnerCode && this.accessKey && this.secretKey);

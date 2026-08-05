@@ -78,6 +78,13 @@ export class BillingController {
     return ok(await this.checkout.cancelSubscription(user.clubId as string, user.userId));
   }
 
+  /** Trạng thái cổng thanh toán — super-admin xác nhận đã cắm khoá MoMo. */
+  @Roles('SUPER_ADMIN')
+  @Get('gateway')
+  gatewayStatus() {
+    return ok(this.checkout.gatewayStatus());
+  }
+
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Get('orders')
   async getOrders(@CurrentUser() user: JwtUser) {

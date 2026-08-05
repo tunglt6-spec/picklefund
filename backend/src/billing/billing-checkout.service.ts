@@ -346,4 +346,9 @@ export class BillingCheckoutService {
   getOrder(clubId: string, orderCode: string) {
     return this.prisma.paymentOrder.findFirst({ where: { clubId, orderCode } });
   }
+
+  /** Trạng thái cổng thanh toán (super-admin xác nhận cắm khoá MoMo). */
+  gatewayStatus() {
+    return this.providers.status();
+  }
 }

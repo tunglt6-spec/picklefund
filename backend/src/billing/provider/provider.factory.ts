@@ -28,4 +28,15 @@ export class ProviderFactory {
   get mockProvider(): MockProvider {
     return this.mock;
   }
+
+  /** Trạng thái cấu hình cổng (để super-admin xác nhận sau khi cắm khoá env). */
+  status() {
+    const momoConfigured = this.momo.isConfigured();
+    return {
+      active: momoConfigured ? 'MOMO' : 'MOCK',
+      momoConfigured,
+      momoEnv: (process.env.MOMO_ENV || 'sandbox').toLowerCase(),
+      sandbox: !momoConfigured || (process.env.MOMO_ENV || '').toLowerCase() !== 'production',
+    };
+  }
 }
