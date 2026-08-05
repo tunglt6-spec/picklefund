@@ -355,6 +355,11 @@ select:-webkit-autofill {
 }
 [data-theme="dark"] .recharts-default-tooltip .recharts-tooltip-label { color: var(--pf-text) !important; }
 
+/* Logo PickleFund mặc định đổi theo THEME: light = tím/trắng, dark = tím/vàng. */
+.pf-logomark-dark { display: none; }
+[data-theme="dark"] .pf-logomark-light { display: none; }
+[data-theme="dark"] .pf-logomark-dark { display: inline; }
+
 /* A11y (Elite): tôn trọng người dùng tắt hiệu ứng — gần như bỏ mọi animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   *,
