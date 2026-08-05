@@ -1,8 +1,22 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { IsBoolean } from 'class-validator';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { ExecutiveReportService } from './executive-report.service';
+
+class AutoEmailDto {
+  @IsBoolean()
+  enabled!: boolean;
+}
 
 /**
  * AIDO Executive Report — báo cáo điều hành theo KỲ QUỸ cho Ban quản trị.
@@ -42,5 +56,34 @@ export class ExecutiveReportController {
   ) {
     if (!fundPeriodId) throw new BadRequestException('Thiếu fundPeriodId');
     return ok(await this.report.aiSummary(user.clubId ?? '', fundPeriodId));
+  }
+
+  @Get('executive-report/auto-email')
+  @ApiOperation({
+    summary: 'Cấu hình tự-gửi báo cáo qua email đầu mỗi tháng (opt-in) + trạng thái SMTP + người nhận.',
+  })
+  async getAutoEmail(@CurrentUser() user: JwtUser) {
+    return ok(await this.report.getAutoEmailConfig(user.clubId ?? ''));
+  }
+
+  @Patch('executive-report/auto-email')
+  @ApiOperation({ summary: 'Bật/tắt tự-gửi báo cáo qua email đầu mỗi tháng.' })
+  async setAutoEmail(
+    @CurrentUser() user: JwtUser,
+    @Body() body: AutoEmailDto,
+  ) {
+    return ok(
+      await this.report.setAutoEmail(user.clubId ?? '', body.enabled),
+      body.enabled ? 'Đã bật tự-gửi email hằng tháng' : 'Đã tắt tự-gửi email',
+    );
+  }
+
+  @Post('executive-report/auto-email/test')
+  @ApiOperation({ summary: 'Gửi thử báo cáo qua email ngay (không ghi mốc tháng).' })
+  async testEmail(@CurrentUser() user: JwtUser) {
+    return ok(
+      await this.report.sendMonthlyReportEmail(user.clubId ?? ''),
+      'Đã xử lý gửi thử',
+    );
   }
 }

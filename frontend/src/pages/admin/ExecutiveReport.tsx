@@ -6,7 +6,7 @@ import {
   Users, UserCheck, CalendarDays, TrendingUp, TrendingDown, Wallet,
   Trophy, Bot, Sparkles, AlertTriangle, Info, ListChecks, RefreshCw,
   FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
-  Fingerprint, LineChart,
+  Fingerprint, LineChart, Mail, Send,
 } from 'lucide-react'
 import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -72,6 +72,40 @@ export function ExecutiveReport() {
   const [error, setError] = useState(false)
   const [aiSum, setAiSum] = useState<{ text: string; generatedBy: string } | null>(null)
   const [aiSumLoading, setAiSumLoading] = useState(false)
+  const [emailCfg, setEmailCfg] = useState<any>(null)
+  const [emailBusy, setEmailBusy] = useState(false)
+
+  const loadEmailCfg = useCallback(async () => {
+    try {
+      const res = await api.get('/aido/executive-report/auto-email')
+      setEmailCfg(res.data?.data ?? res.data)
+    } catch { /* im lặng — chỉ là cấu hình phụ */ }
+  }, [])
+  useEffect(() => { void loadEmailCfg() }, [loadEmailCfg])
+
+  const toggleAutoEmail = async () => {
+    if (!emailCfg) return
+    setEmailBusy(true)
+    try {
+      const res = await api.patch('/aido/executive-report/auto-email', { enabled: !emailCfg.enabled })
+      setEmailCfg(res.data?.data ?? res.data)
+      toast.success(!emailCfg.enabled ? 'Đã bật tự-gửi email hằng tháng' : 'Đã tắt tự-gửi email')
+    } catch { toast.error('Không đổi được cài đặt') }
+    setEmailBusy(false)
+  }
+  const testEmail = async () => {
+    setEmailBusy(true)
+    const t = toast.loading('Đang gửi thử…')
+    try {
+      const res = await api.post('/aido/executive-report/auto-email/test')
+      const d = res.data?.data ?? res.data
+      toast.dismiss(t)
+      if (!d.smtpReady) toast.error('Server chưa cấu hình SMTP — chưa gửi được email')
+      else if (d.sent > 0) toast.success(`Đã gửi ${d.sent} email tới admin CLB`)
+      else toast('Không có email admin hợp lệ để gửi (kiểm tra email tài khoản admin)', { icon: '⚠️' })
+    } catch { toast.dismiss(t); toast.error('Gửi thử thất bại') }
+    setEmailBusy(false)
+  }
 
   const load = useCallback(async (pid: string) => {
     if (!pid) return
@@ -229,6 +263,34 @@ export function ExecutiveReport() {
   return (
     <div className="space-y-5">
       {periodPicker}
+
+      {/* Cài đặt tự-gửi email hằng tháng (ngoài vùng capture — không vào PDF/ảnh) */}
+      {emailCfg && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border p-3.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
+          <Mail size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold [color:var(--pf-text)]">Tự gửi báo cáo qua email đầu mỗi tháng</p>
+            <p className="text-[11px] [color:var(--pf-color-muted)]">
+              Gửi cho admin CLB{emailCfg.recipients?.length ? `: ${emailCfg.recipients.filter((r: any) => !r.isPlaceholder).map((r: any) => r.email).join(', ') || '(chưa có email hợp lệ)'}` : ''}
+              {emailCfg.recipients?.some((r: any) => r.isPlaceholder) && ' · một số admin chưa đặt email thật'}
+              {!emailCfg.smtpReady && ' · ⚠️ server chưa cấu hình SMTP (chưa gửi được)'}
+              {emailCfg.lastSent && ` · gửi gần nhất: ${emailCfg.lastSent}`}
+            </p>
+          </div>
+          <button onClick={() => void testEmail()} disabled={emailBusy} className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium [border-color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-50">
+            <Send size={13} /> Gửi thử
+          </button>
+          <button
+            onClick={() => void toggleAutoEmail()}
+            disabled={emailBusy}
+            className="relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50"
+            style={{ background: emailCfg.enabled ? 'var(--pf-primary,#6D5DFB)' : 'var(--pf-border)' }}
+            aria-label="Bật/tắt tự gửi email"
+          >
+            <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all" style={{ left: emailCfg.enabled ? '22px' : '2px' }} />
+          </button>
+        </div>
+      )}
 
       <div id={CAPTURE_ID} className="space-y-5">
         {/* ── AI Executive Summary (tải lười) ──────────────────────── */}
@@ -510,7 +572,7 @@ export function ExecutiveReport() {
                 ))}
               </ul>
             )}
-            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">Gợi ý suy ra từ dữ liệu thật của kỳ (AI tự viết báo cáo = v2).</p>
+            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">Gợi ý suy ra từ dữ liệu thật của kỳ · xem "Tóm tắt điều hành (AI)" ở đầu trang.</p>
           </div>
         </div>
 

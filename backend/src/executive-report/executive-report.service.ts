@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { ScoringService } from '../scoring/scoring.service';
 import { MaikaService } from '../maika/maika.service';
+import { EmailService } from '../email/email.service';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -22,6 +23,7 @@ export class ExecutiveReportService {
     private readonly fundPeriods: FundPeriodsService,
     private readonly scoring: ScoringService,
     private readonly maika: MaikaService,
+    private readonly email: EmailService,
   ) {}
 
   private clamp(n: number, min = 0, max = 100): number {
@@ -468,8 +470,12 @@ export class ExecutiveReportService {
    * Dùng LLM THẬT (Gemini qua MaikaService khi có GOOGLE_API_KEY); không có key → bản
    * rule-based (vẫn từ số thật). Endpoint riêng để FE tải lười (không chặn render báo cáo).
    */
-  async aiSummary(clubId: string, fundPeriodId: string) {
-    const r = await this.generate(clubId, fundPeriodId);
+  async aiSummary(
+    clubId: string,
+    fundPeriodId: string,
+    precomputed?: Awaited<ReturnType<ExecutiveReportService['generate']>>,
+  ) {
+    const r = precomputed ?? (await this.generate(clubId, fundPeriodId));
     const s = r.summary;
     const fin = r.finance;
     const money = (n: number) =>
@@ -1136,5 +1142,194 @@ ${facts}`;
         text: 'Chưa có minigame/giải trong kỳ — chuẩn bị giải kế tiếp để tăng gắn kết.',
       });
     return recs;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // TỰ GỬI EMAIL BÁO CÁO ĐẦU MỖI THÁNG (opt-in từng CLB)
+  // ══════════════════════════════════════════════════════════════════════
+
+  /** Kỳ để báo cáo định kỳ: kỳ 'chung' đang mở (ưu tiên), nếu không có → kỳ 'chung' mới nhất. */
+  private async resolveTargetPeriod(clubId: string) {
+    const active = await this.prisma.fundPeriod.findFirst({
+      where: { clubId, type: 'chung', status: 'active' },
+      orderBy: { startDate: 'desc' },
+      select: { id: true },
+    });
+    if (active) return active;
+    return this.prisma.fundPeriod.findFirst({
+      where: { clubId, type: 'chung' },
+      orderBy: { startDate: 'desc' },
+      select: { id: true },
+    });
+  }
+
+  /** Danh sách email admin CLB nhận báo cáo (đánh dấu email tự-sinh @picklefund.vn = chưa hợp lệ). */
+  private async recipients(clubId: string) {
+    const admins = await this.prisma.user.findMany({
+      where: { clubId, role: 'CLUB_ADMIN', isActive: true },
+      select: { email: true },
+    });
+    return admins
+      .filter((a) => !!a.email)
+      .map((a) => ({
+        email: a.email,
+        isPlaceholder: a.email.endsWith('@picklefund.vn'),
+      }));
+  }
+
+  /** Cấu hình tự-gửi email của CLB (đọc từ Club.settings). */
+  async getAutoEmailConfig(clubId: string) {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    const s = (club?.settings as Record<string, unknown>) ?? {};
+    return {
+      enabled: s.autoMonthlyReport === true,
+      lastSent: (s.autoMonthlyReportLastSent as string) ?? null,
+      smtpReady: this.email.isEnabled, // false = server chưa cấu hình SMTP → chưa gửi được
+      recipients: await this.recipients(clubId),
+    };
+  }
+
+  /** Bật/tắt tự-gửi email (ghi vào Club.settings, giữ nguyên các key khác). */
+  async setAutoEmail(clubId: string, enabled: boolean) {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    const s = (club?.settings as Record<string, unknown>) ?? {};
+    s.autoMonthlyReport = enabled;
+    await this.prisma.club.update({
+      where: { id: clubId },
+      data: { settings: s as any },
+    });
+    return this.getAutoEmailConfig(clubId);
+  }
+
+  /**
+   * Gửi email báo cáo điều hành cho admin CLB. Dùng cho cả "gửi thử" (test) lẫn cron tháng.
+   * `recordMonth` (YYYY-MM) truyền vào từ cron → ghi mốc chống gửi trùng trong tháng.
+   * KHÔNG gửi tới email tự-sinh (@picklefund.vn). Nếu SMTP chưa cấu hình → sent=0 (trung thực).
+   */
+  async sendMonthlyReportEmail(clubId: string, recordMonth?: string) {
+    const period = await this.resolveTargetPeriod(clubId);
+    if (!period)
+      return {
+        sent: 0,
+        reason: 'no_period',
+        smtpReady: this.email.isEnabled,
+        recipients: [] as string[],
+      };
+    const report = await this.generate(clubId, period.id);
+    const ai = await this.aiSummary(clubId, period.id, report);
+    const targets = (await this.recipients(clubId)).filter(
+      (r) => !r.isPlaceholder,
+    );
+    const subject = `[${report.meta.clubName}] Báo cáo điều hành — ${report.meta.periodName}`;
+    const html = this.buildEmailHtml(report, ai.text);
+
+    let sent = 0;
+    if (this.email.isEnabled) {
+      for (const r of targets) {
+        const ok = await this.email.send(r.email, subject, html, {
+          fromName: report.meta.clubName,
+        });
+        if (ok) sent++;
+      }
+    }
+    if (recordMonth) {
+      const club = await this.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { settings: true },
+      });
+      const s = (club?.settings as Record<string, unknown>) ?? {};
+      s.autoMonthlyReportLastSent = recordMonth;
+      await this.prisma.club.update({
+        where: { id: clubId },
+        data: { settings: s as any },
+      });
+    }
+    return {
+      sent,
+      smtpReady: this.email.isEnabled,
+      recipients: targets.map((r) => r.email),
+      skippedPlaceholders: (await this.recipients(clubId)).filter(
+        (r) => r.isPlaceholder,
+      ).length,
+      periodName: report.meta.periodName,
+      healthScore: report.summary.clubHealthScore,
+    };
+  }
+
+  /** ID các CLB đã bật tự-gửi email (cron đọc). Lọc JS vì filter JSON boolean khác nhau theo DB. */
+  async monthlyReportClubIds(currentMonth: string): Promise<string[]> {
+    const clubs = await this.prisma.club.findMany({
+      select: { id: true, settings: true },
+    });
+    return clubs
+      .filter((c) => {
+        const s = (c.settings as Record<string, unknown>) ?? {};
+        return (
+          s.autoMonthlyReport === true &&
+          s.autoMonthlyReportLastSent !== currentMonth // chống gửi trùng trong tháng
+        );
+      })
+      .map((c) => c.id);
+  }
+
+  /** HTML email digest (inline style — client email không đọc CSS ngoài). */
+  private buildEmailHtml(
+    r: Awaited<ReturnType<ExecutiveReportService['generate']>>,
+    aiText: string,
+  ): string {
+    const esc = (x: string) =>
+      String(x)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const money = (n: number) =>
+      new Intl.NumberFormat('vi-VN').format(Math.round(n)) + 'đ';
+    const s = r.summary;
+    const hc =
+      s.clubHealthScore >= 80
+        ? '#059669'
+        : s.clubHealthScore >= 65
+          ? '#0EA5E9'
+          : s.clubHealthScore >= 50
+            ? '#F59E0B'
+            : '#E11D48';
+    const kpi = (label: string, val: string) =>
+      `<td style="padding:10px 12px;border:1px solid #eee;"><div style="font-size:11px;color:#888;">${label}</div><div style="font-size:16px;font-weight:700;color:#111;">${val}</div></td>`;
+    const alerts = r.alerts.length
+      ? `<ul style="margin:6px 0;padding-left:18px;color:#b45309;font-size:13px;">${r.alerts.map((a: { message: string }) => `<li>${esc(a.message)}</li>`).join('')}</ul>`
+      : '<p style="color:#059669;font-size:13px;">✓ Không có cảnh báo.</p>';
+    return `<div style="max-width:640px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#111;">
+  <div style="background:linear-gradient(135deg,#6D5DFB,#5B4BE8);color:#fff;padding:20px 24px;border-radius:14px 14px 0 0;">
+    <div style="font-size:13px;opacity:.9;">Báo cáo điều hành hằng tháng</div>
+    <div style="font-size:20px;font-weight:800;">${esc(r.meta.clubName)}</div>
+    <div style="font-size:13px;opacity:.9;">${esc(r.meta.periodName)}</div>
+  </div>
+  <div style="border:1px solid #eee;border-top:none;border-radius:0 0 14px 14px;padding:20px 24px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="display:inline-block;border:6px solid ${hc};border-radius:50%;width:84px;height:84px;line-height:72px;font-size:26px;font-weight:800;color:${hc};">${s.clubHealthScore}</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">Điểm sức khỏe CLB / 100</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+      <tr>${kpi('Thành viên', `${s.activeMembers}/${s.totalMembers}`)}${kpi('Tham gia', `${s.participationRate}%`)}${kpi('Buổi chơi', String(s.completedSessions))}</tr>
+      <tr>${kpi('Tổng thu', money(r.finance.totalIncome))}${kpi('Tổng chi', money(r.finance.totalExpense))}${kpi('Tổng tài sản', money(r.finance.clubAssets))}</tr>
+    </table>
+    <div style="background:#f6f5ff;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:#6D5DFB;margin-bottom:6px;">✨ Tóm tắt điều hành (AI)</div>
+      <div style="font-size:13px;line-height:1.6;white-space:pre-line;color:#333;">${esc(aiText)}</div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px;">Cảnh báo</div>
+    ${alerts}
+    <div style="text-align:center;margin-top:18px;">
+      <a href="https://app.picklefund.uk/aido" style="display:inline-block;background:#6D5DFB;color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;">Xem báo cáo đầy đủ</a>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:16px;text-align:center;">PickleFund · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB</p>
+  </div>
+</div>`;
   }
 }
