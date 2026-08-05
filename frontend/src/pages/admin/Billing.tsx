@@ -257,7 +257,7 @@ export function Billing() {
                         ) : p.tier === 'STARTER' ? (
                           <span className="text-xs [color:var(--pf-color-muted)]">Miễn phí</span>
                         ) : p.tier === 'CLUB_PLUS' ? (
-                          <button onClick={() => window.open('mailto:admin@picklefund.app?subject=Tư vấn gói Club+ PickleFund', '_blank')}
+                          <button onClick={() => window.open('mailto:sales@picklefund.app?subject=Tư vấn gói Enterprise PickleFund', '_blank')}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
                             Đăng ký tư vấn
                           </button>
@@ -313,7 +313,7 @@ export function Billing() {
                 <h3 className="font-semibold">Nâng cấp để dùng AI đầy đủ</h3>
               </div>
               <p className="text-sm text-white/80 mb-4">
-                Gói Pro (199.000đ/tháng) mở khoá không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
+                Gói Pro (99.000đ/tháng · 990.000đ/năm) mở khoá không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
               </p>
               <button
                 onClick={() => { const pro = plans.find(p => p.tier === 'PRO'); if (pro) setCheckout(pro) }}

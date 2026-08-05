@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 const PLAN_LABEL: Record<ServicePlan, string> = {
   STARTER: 'Starter',
   PRO: 'Pro',
-  CLUB_PLUS: 'Club+',
+  CLUB_PLUS: 'Enterprise',
 }
 const PLAN_OPTIONS: ServicePlan[] = ['STARTER', 'PRO', 'CLUB_PLUS']
 
