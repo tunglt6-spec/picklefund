@@ -3,7 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
-import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
+import { effectiveMemberLimit } from '../clubs/clubs.service';
 import type {
   BulkImportDto,
   BulkImportResult,
@@ -56,9 +56,9 @@ export class BulkImportService {
     if (dto.members?.length) {
       const club = await this.prisma.club.findUnique({
         where: { id: clubId },
-        select: { plan: true },
+        select: { plan: true, createdAt: true },
       });
-      const limit = club ? PLAN_MEMBER_LIMIT[club.plan] : null;
+      const limit = club ? effectiveMemberLimit(club.plan, club.createdAt) : null;
       let memberCount = existingMembers.length;
 
       // Nếu có thành viên MỚI sẽ được tạo → chốt cứng sĩ số các kỳ cũ tại số HIỆN TẠI trước khi

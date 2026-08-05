@@ -18,6 +18,22 @@ export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
   CLUB_PLUS: null,
 };
 
+/** GRANDFATHER Starter (2026-08-05): CLB tạo TRƯỚC mốc này giữ giới hạn cũ 20; từ mốc trở đi 15.
+ * Mốc = đầu ngày 2026-08-06 (VN) → mọi CLB đang tồn tại tại thời điểm đổi giá đều được giữ 20. */
+export const STARTER_GRANDFATHER_BEFORE = new Date('2026-08-06T00:00:00+07:00');
+export const STARTER_LIMIT_LEGACY = 20;
+
+/** Giới hạn thành viên HIỆU LỰC theo gói + ngày tạo CLB (grandfather Starter). null = không giới hạn. */
+export function effectiveMemberLimit(
+  plan: ServicePlan,
+  createdAt?: Date | null,
+): number | null {
+  if (plan === 'STARTER' && createdAt && createdAt < STARTER_GRANDFATHER_BEFORE) {
+    return STARTER_LIMIT_LEGACY;
+  }
+  return PLAN_MEMBER_LIMIT[plan];
+}
+
 /** EPIC10A: branding trắng nhãn — mặc định fallback PickleFund. */
 export interface ClubBranding {
   displayName: string | null;

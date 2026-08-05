@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ProviderFactory } from './provider/provider.factory';
 import { PLAN_CONFIGS, computeDiscount } from './billing.types';
+import { ReferralsService } from '../referrals/referrals.service';
 
 /**
  * Luồng tự-thanh-toán (Phase 1 nền):
@@ -34,6 +35,7 @@ export class BillingCheckoutService {
     private prisma: PrismaService,
     private audit: AuditLogsService,
     private providers: ProviderFactory,
+    private referrals: ReferralsService,
   ) {}
 
   private planPrice(tier: ServicePlan, cycle: BillingCycle): number | null {
@@ -324,6 +326,16 @@ export class BillingCheckoutService {
       });
     }
     this.logger.log(`Kích hoạt ${order.planTier} cho CLB ${order.clubId} — hạn: ${expiresAt ? expiresAt.toISOString() : 'null (vô hạn)'}`);
+
+    // Referral: CLB được-giới-thiệu lên Pro (thanh toán thật) → thưởng +1 tháng cho cả hai.
+    // Best-effort: lỗi referral KHÔNG được làm hỏng việc kích hoạt gói đã thanh toán.
+    if (order.planTier === 'PRO') {
+      try {
+        await this.referrals.rewardForReferredClub(order.clubId);
+      } catch (e) {
+        this.logger.warn(`Referral reward lỗi (bỏ qua): ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
   }
 
   // ── Lịch sử ─────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PLAN_MEMBER_LIMIT } from '../clubs/clubs.service';
+import { effectiveMemberLimit } from '../clubs/clubs.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 
 @Injectable()
@@ -49,9 +49,9 @@ export class MembersService {
     // V2.2 SaaS: enforce giới hạn thành viên theo gói dịch vụ (STARTER giới hạn; PRO/CLUB_PLUS mở).
     const club = await this.prisma.club.findUnique({
       where: { id: clubId },
-      select: { plan: true },
+      select: { plan: true, createdAt: true },
     });
-    const limit = club ? PLAN_MEMBER_LIMIT[club.plan] : null;
+    const limit = club ? effectiveMemberLimit(club.plan, club.createdAt) : null;
     if (limit !== null) {
       const count = await this.prisma.member.count({
         where: { clubId, isDeleted: false },

@@ -7,6 +7,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { CheckoutModal, type CheckoutPlan } from './billing/CheckoutModal'
+import { ReferralCard } from './billing/ReferralCard'
 import { exportBillingReceiptPDF } from '../../lib/export'
 
 // Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, PATCH /clubs/:id/plan
@@ -273,6 +274,9 @@ export function Billing() {
               </table>
             </div>
           </div>
+
+          {/* Giới thiệu bạn bè */}
+          <ReferralCard />
 
           {/* AI Usage */}
           {usage.length > 0 && (

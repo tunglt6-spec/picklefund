@@ -21,6 +21,7 @@ model Club {
   status        ClubStatus  @default(active)
   plan          ServicePlan @default(STARTER)
   planExpiresAt DateTime?   @map("plan_expires_at")
+  referralCode  String?     @unique @map("referral_code")
   settings      Json?
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
@@ -1215,7 +1216,7 @@ model PaymentOrder {
   planTier          ServicePlan        @map("plan_tier")
   billingCycle      BillingCycle       @map("billing_cycle")
   amount            Decimal            @db.Decimal(15, 2)
-  discountAmount    Decimal            @default(0) @db.Decimal(15, 2) @map("discount_amount")
+  discountAmount    Decimal            @default(0) @map("discount_amount") @db.Decimal(15, 2)
   promoCode         String?            @map("promo_code")
   billingInfo       Json?              @map("billing_info")
   currency          String             @default("VND") @db.VarChar(8)
@@ -1251,4 +1252,27 @@ model Invoice {
 
   @@index([clubId])
   @@map("invoices")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REFERRAL — CLB giới thiệu CLB. Khi CLB được giới thiệu lên Pro (thanh toán) → cả
+// hai +1 tháng Pro. Dùng ID dạng String (không backref Club) cho gọn.
+// ─────────────────────────────────────────────────────────────────────────────
+enum ReferralStatus {
+  PENDING
+  REWARDED
+}
+
+model Referral {
+  id             String         @id @default(uuid())
+  referrerClubId String         @map("referrer_club_id")
+  referredClubId String         @unique @map("referred_club_id")
+  code           String
+  status         ReferralStatus @default(PENDING)
+  rewardMonths   Int            @default(1) @map("reward_months")
+  rewardedAt     DateTime?      @map("rewarded_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@index([referrerClubId])
+  @@map("referrals")
 }

@@ -36,6 +36,7 @@ import { MaikaModule } from './maika/maika.module';
 import { LisaModule } from './lisa/lisa.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { BillingModule } from './billing/billing.module';
+import { ReferralsModule } from './referrals/referrals.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MemberPortalModule } from './member-portal/member-portal.module';
 import { AiActionsModule } from './ai-actions/ai-actions.module';
@@ -98,6 +99,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     LisaModule,
     TelegramModule,
     BillingModule,
+    ReferralsModule,
     CategoriesModule,
     MemberPortalModule,
     AiActionsModule,

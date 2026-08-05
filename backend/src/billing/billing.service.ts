@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GRACE_DAYS, PLAN_CONFIGS, SubscriptionStatus } from './billing.types';
+import { effectiveMemberLimit } from '../clubs/clubs.service';
 
 @Injectable()
 export class BillingService {
@@ -16,7 +17,7 @@ export class BillingService {
     const [club, memberCount, sub] = await Promise.all([
       this.prisma.club.findUnique({
         where: { id: clubId },
-        select: { plan: true, planExpiresAt: true },
+        select: { plan: true, planExpiresAt: true, createdAt: true },
       }),
       this.prisma.member.count({ where: { clubId, isDeleted: false } }),
       this.prisma.subscription.findUnique({ where: { clubId }, select: { status: true } }),
@@ -24,7 +25,9 @@ export class BillingService {
     if (!club) throw new NotFoundException('CLB không tồn tại');
 
     const tier = club.plan;
-    const plan = PLAN_CONFIGS[tier];
+    // maxMembers hiệu lực: grandfather Starter (CLB cũ giữ 20). 9999 = ∞ (quy ước frontend).
+    const effLimit = effectiveMemberLimit(tier, club.createdAt);
+    const plan = { ...PLAN_CONFIGS[tier], maxMembers: effLimit ?? 9999 };
     const expiresAt = club.planExpiresAt?.toISOString() ?? null;
 
     let isActive = true;

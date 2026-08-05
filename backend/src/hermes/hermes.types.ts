@@ -12,7 +12,8 @@ export type HermesEventType =
   | 'fund_low'
   | 'subscription_expiring'
   | 'subscription_grace'
-  | 'subscription_expired';
+  | 'subscription_expired'
+  | 'referral_reward';
 
 export type HermesPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 export type HermesChannel = 'IN_APP' | 'EMAIL' | 'TELEGRAM';
@@ -45,6 +46,7 @@ export const EVENT_PRIORITY: Record<HermesEventType, HermesPriority> = {
   subscription_expired: 'HIGH',
   subscription_expiring: 'MEDIUM',
   subscription_grace: 'HIGH',
+  referral_reward: 'MEDIUM',
   payment_reminder: 'MEDIUM',
   smart_reminder: 'MEDIUM',
   event_reminder: 'MEDIUM',
@@ -62,6 +64,7 @@ export const EVENT_RECIPIENTS: Record<HermesEventType, RecipientRole[]> = {
   subscription_expiring: ['CLUB_ADMIN'],
   subscription_grace: ['CLUB_ADMIN'],
   subscription_expired: ['CLUB_ADMIN'],
+  referral_reward: ['CLUB_ADMIN'],
   daily_brief: ['CLUB_ADMIN'],
   weekly_report: ['CLUB_ADMIN', 'CLUB_TREASURER'],
   payment_reminder: ['SPECIFIC_USER'],

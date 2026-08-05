@@ -6,9 +6,10 @@ import { BillingCheckoutService } from './billing-checkout.service';
 import { ProviderFactory } from './provider/provider.factory';
 import { HermesModule } from '../hermes/hermes.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+import { ReferralsModule } from '../referrals/referrals.module';
 
 @Module({
-  imports: [HermesModule, AuditLogsModule],
+  imports: [HermesModule, AuditLogsModule, ReferralsModule],
   controllers: [BillingController],
   providers: [BillingService, BillingScheduler, BillingCheckoutService, ProviderFactory],
   exports: [BillingService],
