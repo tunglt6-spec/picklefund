@@ -87,9 +87,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     const logo = branding.logo
     if (!logo || !logo.dataUrl) return 0
     try {
-      setFill(C.white)
-      rrect(x, y, size, size, 1.8, 'F')
-      const pad = 1.4
+      // KHÔNG nền trắng: logo (con-quay trắng) đặt thẳng trên band màu brand.
+      const pad = 0.4
       const box = size - pad * 2
       const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
       let iw = box
@@ -459,14 +458,13 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
     const logo = branding.logo
     if (logo && logo.dataUrl) {
       try {
-        setFill(C.white)
-        rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+        // KHÔNG nền trắng: con-quay trắng đặt thẳng trên band màu.
         const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
-        let iw = 13.2, ih = 13.2
-        if (ratio > 1) ih = 13.2 / ratio
-        else iw = 13.2 * ratio
+        let iw = 15.4, ih = 15.4
+        if (ratio > 1) ih = 15.4 / ratio
+        else iw = 15.4 * ratio
         const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
-        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + 1.4 + (13.2 - iw) / 2, MARGIN + 5 + 1.4 + (13.2 - ih) / 2, iw, ih)
+        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + (15.4 - iw) / 2, MARGIN + 5 + (15.4 - ih) / 2, iw, ih)
         textX = MARGIN + 6 + 16 + 4
       } catch { /* bỏ logo nếu lỗi */ }
     }
@@ -906,14 +904,13 @@ export function buildExpenseReportPDF({ jsPDF, fonts, summary, rows, branding })
     const logo = branding.logo
     if (logo && logo.dataUrl) {
       try {
-        setFill(C.white)
-        rrect(MARGIN + 6, MARGIN + 5, 16, 16, 1.8, 'F')
+        // KHÔNG nền trắng: con-quay trắng đặt thẳng trên band màu.
         const ratio = logo.w > 0 && logo.h > 0 ? logo.w / logo.h : 1
-        let iw = 13.2, ih = 13.2
-        if (ratio > 1) ih = 13.2 / ratio
-        else iw = 13.2 * ratio
+        let iw = 15.4, ih = 15.4
+        if (ratio > 1) ih = 15.4 / ratio
+        else iw = 15.4 * ratio
         const fmt = /^data:image\/png/i.test(logo.dataUrl) ? 'PNG' : 'JPEG'
-        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + 1.4 + (13.2 - iw) / 2, MARGIN + 5 + 1.4 + (13.2 - ih) / 2, iw, ih)
+        doc.addImage(logo.dataUrl, fmt, MARGIN + 6 + (15.4 - iw) / 2, MARGIN + 5 + (15.4 - ih) / 2, iw, ih)
         textX = MARGIN + 6 + 16 + 4
       } catch { /* bỏ logo nếu lỗi */ }
     }
