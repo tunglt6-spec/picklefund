@@ -7,12 +7,14 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { ClubMemoryModule } from '../ai/club-memory/club-memory.module';
 import { ScoringModule } from '../scoring/scoring.module';
+import { ReferralsModule } from '../referrals/referrals.module';
 
 @Module({
   imports: [
     PassportModule,
     ClubMemoryModule,
     ScoringModule,
+    ReferralsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

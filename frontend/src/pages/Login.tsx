@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, type Easing } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import {
@@ -119,6 +119,8 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
   const [admin, setAdmin] = useState<AdminForm>({ fullName: '', username: '', email: '', password: '', confirmPassword: '' })
   const { login } = useAuthStore()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const referralCode = (searchParams.get('ref') || '').trim().toUpperCase() || undefined
 
   const nextClub = (e: React.FormEvent) => {
     e.preventDefault()
@@ -132,7 +134,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
     if (admin.password.length < 6) return toast.error('Mật khẩu phải có ít nhất 6 ký tự')
     setLoading(true)
     try {
-      const res = await api.post('/auth/register', { club, admin: { fullName: admin.fullName, username: admin.username, email: admin.email, password: admin.password } })
+      const res = await api.post('/auth/register', { club, admin: { fullName: admin.fullName, username: admin.username, email: admin.email, password: admin.password }, referralCode })
       const { accessToken, refreshToken, user: apiUser } = res.data.data ?? res.data
       const user: User = { id: apiUser.id, username: apiUser.username, email: apiUser.email, clubId: apiUser.clubId, role: apiUser.role as Role, memberId: apiUser.memberId }
       login(user, accessToken, refreshToken)
@@ -182,6 +184,12 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
             </div>
           ))}
         </div>
+
+        {referralCode && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+            🎁 Bạn được giới thiệu bằng mã <b>{referralCode}</b> — lên Pro để cả hai nhận +1 tháng Pro.
+          </div>
+        )}
 
         {step === 1 && (
           <form onSubmit={nextClub} className="space-y-4">

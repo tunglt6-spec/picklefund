@@ -11,6 +11,7 @@ import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import { ScoringService } from '../scoring/scoring.service';
+import { ReferralsService } from '../referrals/referrals.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private config: ConfigService,
     private clubMemory: ClubMemoryService,
     private scoring: ScoringService,
+    private referrals: ReferralsService,
   ) {}
 
   private hashToken(token: string): string {
@@ -210,6 +212,7 @@ export class AuthService {
       email?: string;
       password: string;
     };
+    referralCode?: string;
   }) {
     const existing = await this.prisma.user.findUnique({
       where: { username: dto.admin.username },
@@ -273,6 +276,17 @@ export class AuthService {
           `Seed quy tắc điểm mặc định thất bại cho club ${result.club.id}: ${err instanceof Error ? err.message : String(err)}`,
         ),
       );
+
+    // Auto-áp mã giới thiệu từ link ?ref= (best-effort — mã sai/thiếu KHÔNG chặn đăng ký).
+    if (dto.referralCode) {
+      this.referrals
+        .applyCode(result.club.id, dto.referralCode, result.user.id)
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Áp mã giới thiệu lúc đăng ký thất bại (bỏ qua): ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
+    }
 
     const accessToken = this.signAccess(
       result.user.id,

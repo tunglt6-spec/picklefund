@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEmail,
   MinLength,
+  MaxLength,
   IsNotEmpty,
   ValidateNested,
 } from 'class-validator';
@@ -73,6 +74,12 @@ export class RegisterClubDto {
   @ValidateNested()
   @Type(() => RegisterAdminDto)
   admin: RegisterAdminDto;
+
+  /** Mã giới thiệu (từ link ?ref=) — tùy chọn; sai/thiếu KHÔNG chặn đăng ký. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  referralCode?: string;
 }
 
 export class RefreshTokenDto {
