@@ -4,6 +4,7 @@ import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { ScoringService } from '../scoring/scoring.service';
 import { MaikaService } from '../maika/maika.service';
 import { EmailService } from '../email/email.service';
+import { buildExecutiveReportPdf } from './executive-report-pdf';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -1229,11 +1230,29 @@ ${facts}`;
     const subject = `[${report.meta.clubName}] Báo cáo điều hành — ${report.meta.periodName}`;
     const html = this.buildEmailHtml(report, ai.text);
 
+    // PDF đầy đủ đính kèm (server-side). Lỗi sinh PDF KHÔNG chặn gửi email (gửi bản HTML).
+    let attachments:
+      | Array<{ filename: string; content: Buffer }>
+      | undefined;
+    try {
+      const pdf = buildExecutiveReportPdf(report, ai.text);
+      if (pdf) {
+        const safe = `BaoCao_DieuHanh_${report.meta.periodName}`.replace(
+          /[^\p{L}\p{N}_-]+/gu,
+          '_',
+        );
+        attachments = [{ filename: `${safe}.pdf`, content: pdf }];
+      }
+    } catch {
+      attachments = undefined; // sinh PDF lỗi → gửi email không kèm file
+    }
+
     let sent = 0;
     if (this.email.isEnabled) {
       for (const r of targets) {
         const ok = await this.email.send(r.email, subject, html, {
           fromName: report.meta.clubName,
+          attachments,
         });
         if (ok) sent++;
       }

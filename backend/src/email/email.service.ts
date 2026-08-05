@@ -38,7 +38,11 @@ export class EmailService {
     to: string,
     subject: string,
     html: string,
-    opts?: { replyTo?: string; fromName?: string },
+    opts?: {
+      replyTo?: string;
+      fromName?: string;
+      attachments?: Array<{ filename: string; content: Buffer }>;
+    },
   ): Promise<boolean> {
     if (!this.transporter) return false;
     try {
@@ -56,6 +60,7 @@ export class EmailService {
         subject,
         html,
         ...(opts?.replyTo ? { replyTo: opts.replyTo } : {}),
+        ...(opts?.attachments?.length ? { attachments: opts.attachments } : {}),
       });
       this.logger.log(`[Email] Sent to ${to}: ${subject}`);
       return true;
