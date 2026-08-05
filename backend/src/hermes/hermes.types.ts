@@ -11,6 +11,7 @@ export type HermesEventType =
   | 'new_member_joined'
   | 'fund_low'
   | 'subscription_expiring'
+  | 'subscription_grace'
   | 'subscription_expired';
 
 export type HermesPriority = 'HIGH' | 'MEDIUM' | 'LOW';
@@ -43,6 +44,7 @@ export const EVENT_PRIORITY: Record<HermesEventType, HermesPriority> = {
   health_score_low: 'HIGH',
   subscription_expired: 'HIGH',
   subscription_expiring: 'MEDIUM',
+  subscription_grace: 'HIGH',
   payment_reminder: 'MEDIUM',
   smart_reminder: 'MEDIUM',
   event_reminder: 'MEDIUM',
@@ -58,6 +60,7 @@ export const EVENT_RECIPIENTS: Record<HermesEventType, RecipientRole[]> = {
   fund_low: ['CLUB_ADMIN', 'CLUB_TREASURER'],
   health_score_low: ['CLUB_ADMIN'],
   subscription_expiring: ['CLUB_ADMIN'],
+  subscription_grace: ['CLUB_ADMIN'],
   subscription_expired: ['CLUB_ADMIN'],
   daily_brief: ['CLUB_ADMIN'],
   weekly_report: ['CLUB_ADMIN', 'CLUB_TREASURER'],

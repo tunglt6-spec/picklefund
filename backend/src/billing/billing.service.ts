@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PLAN_CONFIGS, SubscriptionStatus } from './billing.types';
+import { GRACE_DAYS, PLAN_CONFIGS, SubscriptionStatus } from './billing.types';
 
 @Injectable()
 export class BillingService {
@@ -13,12 +13,13 @@ export class BillingService {
   // quan tới `Club.plan` thật mà PATCH /clubs/:id/plan + giới hạn thành viên dùng).
 
   async getSubscription(clubId: string): Promise<SubscriptionStatus> {
-    const [club, memberCount] = await Promise.all([
+    const [club, memberCount, sub] = await Promise.all([
       this.prisma.club.findUnique({
         where: { id: clubId },
         select: { plan: true, planExpiresAt: true },
       }),
       this.prisma.member.count({ where: { clubId, isDeleted: false } }),
+      this.prisma.subscription.findUnique({ where: { clubId }, select: { status: true } }),
     ]);
     if (!club) throw new NotFoundException('CLB không tồn tại');
 
@@ -28,12 +29,18 @@ export class BillingService {
 
     let isActive = true;
     let daysRemaining: number | null = null;
+    let inGrace = false;
+    let graceUntil: string | null = null;
 
     if (expiresAt) {
       const expDate = new Date(expiresAt);
       const now = new Date();
       daysRemaining = Math.ceil((expDate.getTime() - now.getTime()) / 86400000);
-      isActive = daysRemaining > 0;
+      const graceDate = new Date(expDate.getTime() + GRACE_DAYS * 86400000);
+      graceUntil = graceDate.toISOString();
+      const expired = now > expDate;
+      inGrace = expired && now <= graceDate; // quá hạn nhưng còn ân hạn
+      isActive = now <= graceDate; // còn hiệu lực đến hết ân hạn
     }
 
     return {
@@ -43,6 +50,9 @@ export class BillingService {
       expiresAt,
       isActive,
       daysRemaining,
+      inGrace,
+      graceUntil,
+      cancelled: sub?.status === 'CANCELLED',
       usage: { members: memberCount, clubs: 1 },
     };
   }

@@ -48,29 +48,44 @@ export class BillingScheduler {
     const daysLeft = sub.daysRemaining ?? 0;
 
     if (daysLeft <= 0) {
-      // Hết hạn — hạ về STARTER (gói cơ bản/miễn phí) qua Club.plan thật, không
-      // còn ghi SystemSetting song song (nguồn duy nhất = Club.plan/planExpiresAt).
+      // ÂN HẠN: đã quá hạn nhưng còn trong grace → GIỮ gói + dữ liệu, chỉ cảnh báo, CHƯA hạ.
+      if (sub.inGrace) {
+        await this.hermes.dispatch({
+          eventType: 'subscription_grace',
+          clubId,
+          title: 'Gói đã hết hạn — đang trong thời gian ân hạn',
+          body: `CLB ${clubName} — gói ${sub.plan.name} đã hết hạn. Đang trong thời gian ân hạn đến ${sub.graceUntil ? new Date(sub.graceUntil).toLocaleDateString('vi-VN') : ''}. Gia hạn ngay để không bị hạ về Starter.`,
+          metadata: { tier: sub.tier, expiredAt: sub.expiresAt, graceUntil: sub.graceUntil },
+        });
+        this.logger.log(`[Billing] Club ${clubId} trong ân hạn — chưa hạ gói`);
+        return;
+      }
+      // Quá ân hạn — hạ về STARTER (nguồn duy nhất = Club.plan/planExpiresAt) + đánh dấu sub EXPIRED.
       await Promise.all([
         this.prisma.club.update({
           where: { id: clubId },
           data: { plan: 'STARTER', planExpiresAt: null },
         }),
+        this.prisma.subscription.updateMany({
+          where: { clubId, status: { in: ['ACTIVE', 'CANCELLED'] } },
+          data: { status: 'EXPIRED' },
+        }),
         this.hermes.dispatch({
           eventType: 'subscription_expired',
           clubId,
           title: 'Gói dịch vụ đã hết hạn',
-          body: `CLB ${clubName} — gói ${sub.plan.name} đã hết hạn. Hệ thống đã chuyển về gói Starter. Vui lòng gia hạn để tiếp tục sử dụng tính năng AI và Telegram Bot.`,
+          body: `CLB ${clubName} — gói ${sub.plan.name} đã hết ân hạn. Hệ thống đã chuyển về gói Starter. Vui lòng gia hạn để tiếp tục dùng AI và Telegram Bot.`,
           metadata: { tier: sub.tier, expiredAt: sub.expiresAt },
         }),
       ]);
       this.logger.warn(
-        `[Billing] Club ${clubId} subscription expired — downgraded to STARTER`,
+        `[Billing] Club ${clubId} hết ân hạn — hạ về STARTER`,
       );
       return;
     }
 
-    // Notify at 7 days and 1 day before expiry
-    if (daysLeft === 7 || daysLeft === 1) {
+    // Nhắc trước hạn: 7 / 3 / 1 ngày
+    if (daysLeft === 7 || daysLeft === 3 || daysLeft === 1) {
       await this.hermes.dispatch({
         eventType: 'subscription_expiring',
         clubId,

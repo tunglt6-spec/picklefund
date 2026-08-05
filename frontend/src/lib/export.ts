@@ -353,6 +353,54 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
 }
 
 /* ════════════════════════════════════════
+   BIÊN NHẬN THANH TOÁN GÓI (Billing receipt) — dùng template PDF chung
+════════════════════════════════════════ */
+export interface BillingReceiptData {
+  clubName: string
+  invoiceNumber: string
+  orderCode: string
+  planLabel: string
+  cycleLabel: string
+  amount: number
+  discount?: number
+  paidAt: string // ISO
+  gateway: string
+  billingInfo?: { buyerName?: string; taxCode?: string; address?: string } | null
+}
+
+export async function exportBillingReceiptPDF(d: BillingReceiptData) {
+  const paid = new Date(d.paidAt)
+  const gross = d.amount + (d.discount ?? 0)
+  const bi = d.billingInfo
+  const infoRows = bi && (bi.buyerName || bi.taxCode || bi.address)
+    ? `<tr><td>Đơn vị mua</td><td class="right">${escHtml(bi.buyerName ?? '—')}</td></tr>
+       ${bi.taxCode ? `<tr><td>Mã số thuế</td><td class="right">${escHtml(bi.taxCode)}</td></tr>` : ''}
+       ${bi.address ? `<tr><td>Địa chỉ</td><td class="right">${escHtml(bi.address)}</td></tr>` : ''}`
+    : ''
+  return downloadPDF([`
+    <div class="header">
+      <h1>${escHtml(brandName())} · Biên nhận thanh toán</h1>
+      <p>Gói dịch vụ ${escHtml(d.planLabel)} · ${escHtml(d.cycleLabel)}</p>
+      <div class="header-meta"><span>Số: ${escHtml(d.invoiceNumber)}</span><span>Ngày: ${paid.toLocaleString('vi-VN')}</span></div>
+    </div>
+    <table>
+      <thead><tr><th>Nội dung</th><th class="right">Giá trị</th></tr></thead>
+      <tbody>
+        <tr><td>Câu lạc bộ</td><td class="right">${escHtml(d.clubName)}</td></tr>
+        <tr><td>Mã đơn</td><td class="right">${escHtml(d.orderCode)}</td></tr>
+        <tr><td>Gói · chu kỳ</td><td class="right">${escHtml(d.planLabel)} · ${escHtml(d.cycleLabel)}</td></tr>
+        <tr><td>Giá gốc</td><td class="right">${formatVND(gross)}</td></tr>
+        ${d.discount ? `<tr><td>Ưu đãi</td><td class="right badge-green">- ${formatVND(d.discount)}</td></tr>` : ''}
+        <tr><td>Hình thức</td><td class="right">${escHtml(d.gateway)}</td></tr>
+        ${infoRows}
+      </tbody>
+    </table>
+    <div class="summary"><span class="label">Đã thanh toán</span><span class="value">${formatVND(d.amount)}</span></div>
+    <div class="footer">${escHtml(brandFooter())} · Biên nhận điện tử · Xuất lúc ${todayFull()}</div>
+  `], `BienNhan_${d.invoiceNumber}`)
+}
+
+/* ════════════════════════════════════════
    EXCEL
 ════════════════════════════════════════ */
 /* ── Style bảng Excel chuẩn SaaS (xlsx-js-style) — LẤY FORM TỪ PDF: block tiêu đề brand tím

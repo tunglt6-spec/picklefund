@@ -1,4 +1,4 @@
-import { IsEnum, IsObject, IsOptional } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import type { BillingCycle, ServicePlan } from '@prisma/client';
 
 export class CreateOrderDto {
@@ -7,6 +7,11 @@ export class CreateOrderDto {
 
   @IsEnum({ MONTHLY: 'MONTHLY', YEARLY: 'YEARLY' })
   billingCycle!: BillingCycle;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  promoCode?: string;
 
   @IsOptional()
   @IsObject()

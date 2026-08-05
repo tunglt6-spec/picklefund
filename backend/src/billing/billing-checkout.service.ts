@@ -14,7 +14,7 @@ import type {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ProviderFactory } from './provider/provider.factory';
-import { PLAN_CONFIGS } from './billing.types';
+import { PLAN_CONFIGS, computeDiscount } from './billing.types';
 
 /**
  * Luồng tự-thanh-toán (Phase 1 nền):
@@ -62,15 +62,26 @@ export class BillingCheckoutService {
     userId?: string;
     planTier: ServicePlan;
     billingCycle: BillingCycle;
+    promoCode?: string;
     billingInfo?: Record<string, unknown>;
-  }): Promise<{ orderCode: string; checkoutUrl: string; amount: number; gateway: PaymentGateway }> {
-    const { clubId, userId, planTier, billingCycle } = input;
+  }): Promise<{
+    orderCode: string;
+    checkoutUrl: string;
+    amount: number;
+    discount: number;
+    gateway: PaymentGateway;
+  }> {
+    const { clubId, userId, planTier, billingCycle, promoCode, billingInfo } = input;
     if (planTier === 'STARTER') throw new BadRequestException('Gói Starter miễn phí, không cần thanh toán.');
-    const amount = this.planPrice(planTier, billingCycle);
-    if (amount == null) {
+    const base = this.planPrice(planTier, billingCycle);
+    if (base == null) {
       throw new BadRequestException('Gói này liên hệ tư vấn — chưa bán tự động.');
     }
-    if (amount <= 0) throw new BadRequestException('Số tiền không hợp lệ.');
+    if (base <= 0) throw new BadRequestException('Số tiền không hợp lệ.');
+    // Giảm giá do BACKEND tính (không tin client). Số tiền cuối = giá - giảm.
+    const { discount, promo } = computeDiscount(promoCode, base);
+    const amount = Math.max(0, base - discount);
+    if (amount <= 0) throw new BadRequestException('Số tiền sau giảm không hợp lệ.');
 
     const provider = this.providers.resolveActive();
     const orderCode = this.genOrderCode();
@@ -82,7 +93,10 @@ export class BillingCheckoutService {
         orderCode,
         planTier,
         billingCycle,
-        amount, // BACKEND tính từ PLAN_CONFIGS — không nhận từ client
+        amount, // đã trừ giảm giá — BACKEND tính, không nhận từ client
+        discountAmount: discount,
+        promoCode: promo?.code ?? null,
+        billingInfo: (billingInfo ?? undefined) as Prisma.InputJsonValue | undefined,
         currency: 'VND',
         gateway: provider.name as PaymentGateway,
         status: 'PENDING',
@@ -120,10 +134,52 @@ export class BillingCheckoutService {
         action: 'CREATE',
         resource: 'PaymentOrder',
         resourceId: orderCode,
-        detail: `Tạo đơn nâng cấp ${planTier} (${billingCycle}) — ${amount.toLocaleString('vi-VN')}đ qua ${provider.name}`,
+        detail: `Tạo đơn nâng cấp ${planTier} (${billingCycle}) — ${amount.toLocaleString('vi-VN')}đ${discount > 0 ? ` (giảm ${discount.toLocaleString('vi-VN')}đ · ${promo?.code})` : ''} qua ${provider.name}`,
       });
     }
-    return { orderCode, checkoutUrl, amount, gateway: provider.name as PaymentGateway };
+    return { orderCode, checkoutUrl, amount, discount, gateway: provider.name as PaymentGateway };
+  }
+
+  /** Kiểm mã ưu đãi (preview cho UI) — trả số giảm tính trên giá gói+chu kỳ. */
+  validatePromo(code: string, planTier: ServicePlan, billingCycle: BillingCycle) {
+    const base = this.planPrice(planTier, billingCycle);
+    if (base == null || base <= 0) return { valid: false as const };
+    const { discount, promo } = computeDiscount(code, base);
+    if (!promo) return { valid: false as const };
+    return {
+      valid: true as const,
+      code: promo.code,
+      label: promo.label,
+      discount,
+      finalAmount: Math.max(0, base - discount),
+    };
+  }
+
+  /** Hủy gia hạn — giữ quyền dùng đến hết hạn; chỉ đánh dấu không tự gia hạn. */
+  async cancelSubscription(clubId: string, userId?: string) {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { plan: true, planExpiresAt: true },
+    });
+    if (!club) throw new NotFoundException('CLB không tồn tại.');
+    if (!club.planExpiresAt) {
+      throw new BadRequestException('Gói không có hạn (Admin cấp) — không cần hủy gia hạn.');
+    }
+    await this.prisma.subscription.updateMany({
+      where: { clubId, status: 'ACTIVE' },
+      data: { status: 'CANCELLED', autoRenew: false, cancelledAt: new Date() },
+    });
+    if (userId) {
+      void this.audit.log({
+        userId,
+        clubId,
+        action: 'UPDATE',
+        resource: 'Subscription',
+        resourceId: clubId,
+        detail: `Hủy gia hạn — vẫn dùng đến ${club.planExpiresAt.toLocaleDateString('vi-VN')}`,
+      });
+    }
+    return { ok: true, activeUntil: club.planExpiresAt.toISOString() };
   }
 
   // ── Webhook/IPN — NGUỒN kích hoạt có thẩm quyền ─────────────────────────────
@@ -250,6 +306,7 @@ export class BillingCheckoutService {
           paymentOrderId: order.id,
           invoiceNumber: `INV-${order.orderCode}`,
           amount: order.amount,
+          billingInfo: (order.billingInfo ?? undefined) as Prisma.InputJsonValue | undefined,
           status: 'ISSUED',
         },
       });

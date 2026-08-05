@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { Star, Zap, Check, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
+import { useBrandingStore } from '../../store/brandingStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
+import toast from 'react-hot-toast'
 import { CheckoutModal, type CheckoutPlan } from './billing/CheckoutModal'
+import { exportBillingReceiptPDF } from '../../lib/export'
 
 // Khớp Prisma enum ServicePlan (Club.plan — nguồn duy nhất, PATCH /clubs/:id/plan
 // dùng chung). Trước đây có PlanTier (FREE/STARTER/PRO/ENTERPRISE) là hệ song song
@@ -27,6 +30,8 @@ type OrderRow = {
   planTier: ServicePlan
   billingCycle: 'MONTHLY' | 'YEARLY'
   amount: string | number
+  discountAmount?: string | number
+  billingInfo?: { buyerName?: string; taxCode?: string; address?: string } | null
   status: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'EXPIRED'
   gateway: string
   paidAt: string | null
@@ -39,6 +44,9 @@ type Subscription = {
   expiresAt: string | null
   isActive: boolean
   daysRemaining: number | null
+  inGrace: boolean
+  graceUntil: string | null
+  cancelled: boolean
   usage: { members: number; clubs: number }
 }
 
@@ -69,6 +77,7 @@ function fmtMonth(month: string) {
 
 export function Billing() {
   const { user } = useAuthStore()
+  const clubName = useBrandingStore((s) => s.branding.displayName) || 'CLB'
   const isMobile = useIsMobile()
   const [sub, setSub] = useState<Subscription | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
@@ -97,6 +106,37 @@ export function Billing() {
   useEffect(() => { fetchAll() }, [fetchAll])
 
   const currentTier = sub?.tier ?? 'STARTER'
+  const canManage = currentTier !== 'STARTER' && !!sub?.expiresAt // có hạn → gia hạn/hủy được
+
+  const doCancel = async () => {
+    if (!window.confirm('Hủy gia hạn? Bạn vẫn dùng gói đến hết hạn hiện tại, sau đó về Starter.')) return
+    try {
+      await api.post('/billing/subscription/cancel')
+      toast.success('Đã hủy gia hạn — vẫn dùng đến hết hạn.')
+      void fetchAll()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Hủy thất bại.')
+    }
+  }
+
+  const doReceipt = async (o: OrderRow) => {
+    try {
+      await exportBillingReceiptPDF({
+        clubName,
+        invoiceNumber: `INV-${o.orderCode}`,
+        orderCode: o.orderCode,
+        planLabel: o.planTier,
+        cycleLabel: o.billingCycle === 'YEARLY' ? 'Theo năm' : 'Theo tháng',
+        amount: Number(o.amount),
+        discount: o.discountAmount ? Number(o.discountAmount) : 0,
+        paidAt: o.paidAt ?? o.createdAt,
+        gateway: o.gateway,
+        billingInfo: o.billingInfo ?? null,
+      })
+    } catch {
+      toast.error('Không tạo được biên nhận.')
+    }
+  }
 
   const content = (
     <div className="space-y-6 max-w-[860px]">
@@ -117,12 +157,31 @@ export function Billing() {
                   )}
                 </div>
                 <h2 className="text-xl font-bold [color:var(--pf-text)]">Gói hiện tại: {sub.plan.name ?? currentTier}</h2>
-                {sub.daysRemaining !== null && (
-                  <p className="text-sm [color:var(--pf-color-muted)] mt-1">
-                    {sub.daysRemaining > 0
-                      ? `Còn ${sub.daysRemaining} ngày (hết hạn ${new Date(sub.expiresAt!).toLocaleDateString('vi-VN')})`
-                      : '⚠️ Đã hết hạn'}
+                {sub.expiresAt ? (
+                  <p className="text-sm mt-1" style={{ color: sub.inGrace ? 'var(--pf-accent-amber, #D97706)' : 'var(--pf-color-muted)' }}>
+                    {sub.inGrace
+                      ? `⚠️ Đã hết hạn — đang ân hạn đến ${new Date(sub.graceUntil!).toLocaleDateString('vi-VN')}`
+                      : (sub.daysRemaining ?? 0) > 0
+                        ? `Còn ${sub.daysRemaining} ngày (hết hạn ${new Date(sub.expiresAt).toLocaleDateString('vi-VN')})`
+                        : '⚠️ Đã hết hạn'}
+                    {sub.cancelled && <span className="ml-1">· Đã hủy gia hạn</span>}
                   </p>
+                ) : currentTier !== 'STARTER' ? (
+                  <p className="text-sm [color:var(--pf-color-muted)] mt-1">Không giới hạn thời hạn</p>
+                ) : null}
+                {canManage && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={() => { const p = plans.find(pl => pl.tier === currentTier); if (p) setCheckout(p) }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold [background:var(--pf-primary)] text-white hover:[background:var(--pf-primary-hover)] transition-colors">
+                      Gia hạn
+                    </button>
+                    {!sub.cancelled && (
+                      <button onClick={doCancel}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
+                        Hủy gia hạn
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
               <Star size={28} className={currentTier === 'STARTER' ? '[color:var(--pf-color-muted)]' : 'text-amber-400'} />
@@ -277,9 +336,17 @@ export function Billing() {
                         <p className="text-sm font-medium [color:var(--pf-text)] truncate">{o.planTier} · {o.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</p>
                         <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{o.orderCode} · {new Date(o.paidAt ?? o.createdAt).toLocaleString('vi-VN')}</p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{Number(o.amount).toLocaleString('vi-VN')}đ</p>
-                        <span className={`text-[11px] font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{Number(o.amount).toLocaleString('vi-VN')}đ</p>
+                          <span className={`text-[11px] font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
+                        </div>
+                        {paid && (
+                          <button onClick={() => doReceipt(o)} title="Tải biên nhận"
+                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
+                            Biên nhận
+                          </button>
+                        )}
                       </div>
                     </div>
                   )

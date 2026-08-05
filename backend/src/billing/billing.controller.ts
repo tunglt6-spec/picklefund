@@ -48,9 +48,34 @@ export class BillingController {
         userId: user.userId,
         planTier: dto.planTier,
         billingCycle: dto.billingCycle,
+        promoCode: dto.promoCode,
         billingInfo: dto.billingInfo,
       }),
     );
+  }
+
+  /** Kiểm mã ưu đãi (preview) trước khi thanh toán. */
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Get('promo/:code')
+  validatePromo(
+    @Param('code') code: string,
+    @Query('planTier') planTier?: string,
+    @Query('billingCycle') billingCycle?: string,
+  ) {
+    return ok(
+      this.checkout.validatePromo(
+        code,
+        (planTier || 'PRO') as import('@prisma/client').ServicePlan,
+        (billingCycle || 'MONTHLY') as import('@prisma/client').BillingCycle,
+      ),
+    );
+  }
+
+  /** Hủy gia hạn — vẫn dùng đến hết hạn. */
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Post('subscription/cancel')
+  async cancel(@CurrentUser() user: JwtUser) {
+    return ok(await this.checkout.cancelSubscription(user.clubId as string, user.userId));
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
