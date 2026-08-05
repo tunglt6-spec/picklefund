@@ -5,6 +5,8 @@ import { ScoringService } from '../scoring/scoring.service';
 import { MaikaService } from '../maika/maika.service';
 import { EmailService } from '../email/email.service';
 import { buildExecutiveReportPdf } from './executive-report-pdf';
+import { buildReportHtml } from './executive-report-html';
+import { renderHtmlToPdf } from './render-pdf';
 
 /**
  * AIDO Executive Report v1.0 — báo cáo điều hành cho Ban quản trị CLB.
@@ -1230,19 +1232,14 @@ ${facts}`;
     const subject = `[${report.meta.clubName}] Báo cáo điều hành — ${report.meta.periodName}`;
     const html = this.buildEmailHtml(report, ai.text);
 
-    // PDF đầy đủ đính kèm (server-side). Lỗi sinh PDF KHÔNG chặn gửi email (gửi bản HTML).
+    // PDF đầy đủ đính kèm (server-side, GIỐNG web). Lỗi sinh PDF KHÔNG chặn gửi (gửi bản HTML).
     let attachments:
       | Array<{ filename: string; content: Buffer }>
       | undefined;
     try {
-      const pdf = buildExecutiveReportPdf(report, ai.text);
-      if (pdf) {
-        const safe = `BaoCao_DieuHanh_${report.meta.periodName}`.replace(
-          /[^\p{L}\p{N}_-]+/gu,
-          '_',
-        );
-        attachments = [{ filename: `${safe}.pdf`, content: pdf }];
-      }
+      const pdf = await this.buildReportPdf(clubId, period.id, report, ai.text);
+      if (pdf)
+        attachments = [{ filename: this.pdfFileName(report), content: pdf }];
     } catch {
       attachments = undefined; // sinh PDF lỗi → gửi email không kèm file
     }
@@ -1279,6 +1276,56 @@ ${facts}`;
       periodName: report.meta.periodName,
       healthScore: report.summary.clubHealthScore,
     };
+  }
+
+  /** Tên file PDF an toàn (bỏ ký tự đặc biệt, giữ chữ có dấu/chữ số). */
+  private pdfFileName(report: {
+    meta: { periodName: string };
+  }): string {
+    const safe = `BaoCao_DieuHanh_${report.meta.periodName}`.replace(
+      /[^\p{L}\p{N}_-]+/gu,
+      '_',
+    );
+    return `${safe}.pdf`;
+  }
+
+  /**
+   * Sinh PDF Báo cáo điều hành — DÙNG CHUNG cho email đính kèm và nút "PDF" trên web
+   * (1 bản chuẩn duy nhất). Chính: HTML in-ấn render headless Chrome (giống web, chia trang
+   * A4 sạch). Fallback: jsPDF (khi không có Chromium) để LUÔN có PDF. Trả {buffer, filename}.
+   */
+  async buildReportPdf(
+    clubId: string,
+    fundPeriodId: string,
+    precomputed?: Awaited<ReturnType<ExecutiveReportService['generate']>>,
+    precomputedAiText?: string,
+  ): Promise<Buffer | null> {
+    const report = precomputed ?? (await this.generate(clubId, fundPeriodId));
+    const aiText =
+      precomputedAiText ??
+      (await this.aiSummary(clubId, fundPeriodId, report)).text;
+    const html = buildReportHtml(report, aiText);
+    const viaChrome = await renderHtmlToPdf(html).catch(() => null);
+    if (viaChrome) return viaChrome;
+    // Fallback: jsPDF (nhẹ, không cần Chromium) — vẫn đầy đủ nội dung.
+    try {
+      return buildExecutiveReportPdf(report, aiText);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Cho endpoint web: trả PDF + tên file. */
+  async pdfForDownload(clubId: string, fundPeriodId: string) {
+    const report = await this.generate(clubId, fundPeriodId);
+    const ai = await this.aiSummary(clubId, fundPeriodId, report);
+    const buffer = await this.buildReportPdf(
+      clubId,
+      fundPeriodId,
+      report,
+      ai.text,
+    );
+    return { buffer, filename: this.pdfFileName(report) };
   }
 
   /** ID các CLB đã bật tự-gửi email (cron đọc). Lọc JS vì filter JSON boolean khác nhau theo DB. */

@@ -12,7 +12,11 @@ RUN npm prune --omit=dev && npx prisma generate
 FROM node:20-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
-RUN apk add --no-cache dumb-init
+# dumb-init + Chromium (cho Puppeteer render PDF Báo cáo điều hành giống web).
+# Puppeteer dùng CHROMIUM HỆ THỐNG (puppeteer-core, không tải bản riêng) — chỉ Vietnamese
+# font trong báo cáo nhúng @font-face base64 nên không phụ thuộc font hệ thống.
+RUN apk add --no-cache dumb-init chromium nss freetype harfbuzz ca-certificates ttf-freefont
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma

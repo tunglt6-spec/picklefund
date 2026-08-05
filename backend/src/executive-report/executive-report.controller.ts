@@ -5,8 +5,11 @@ import {
   Post,
   Body,
   Query,
+  Res,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
+import { type Response } from 'express';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { IsBoolean } from 'class-validator';
 import { CurrentUser, Roles, type JwtUser } from '../common/decorators';
@@ -56,6 +59,31 @@ export class ExecutiveReportController {
   ) {
     if (!fundPeriodId) throw new BadRequestException('Thiếu fundPeriodId');
     return ok(await this.report.aiSummary(user.clubId ?? '', fundPeriodId));
+  }
+
+  @Get('executive-report/pdf')
+  @ApiOperation({
+    summary:
+      'Tải PDF Báo cáo điều hành (server render headless Chrome — dùng chung web & email).',
+  })
+  async pdf(
+    @CurrentUser() user: JwtUser,
+    @Res() res: Response,
+    @Query('fundPeriodId') fundPeriodId?: string,
+  ) {
+    if (!fundPeriodId) throw new BadRequestException('Thiếu fundPeriodId');
+    const { buffer, filename } = await this.report.pdfForDownload(
+      user.clubId ?? '',
+      fundPeriodId,
+    );
+    if (!buffer)
+      throw new InternalServerErrorException('Không tạo được PDF');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${encodeURIComponent(filename)}"`,
+    );
+    res.end(buffer);
   }
 
   @Get('executive-report/auto-email')

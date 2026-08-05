@@ -14,7 +14,7 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import api from '../../lib/api'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import {
-  exportExcel, captureElementAsReportPng, captureElementAsReportPDF, setExportBranding,
+  exportExcel, captureElementAsReportPng, setExportBranding,
 } from '../../lib/export'
 import toast from 'react-hot-toast'
 
@@ -156,16 +156,20 @@ export function ExecutiveReport() {
       toast.error('Không xuất được ảnh')
     }
   }
+  // PDF: tải bản render SERVER (headless Chrome) — GIỐNG HỆT bản đính kèm email, chia trang A4 sạch.
   const exportPdf = async () => {
     if (!data) return
-    prepBranding()
-    const t = toast.loading('Đang tạo PDF toàn trang…')
+    const t = toast.loading('Đang tạo PDF…')
     try {
-      await captureElementAsReportPDF(CAPTURE_ID, `BaoCao_DieuHanh_${data.meta.periodName}`, {
-        title: 'Báo cáo điều hành',
-        subtitle: `${data.meta.clubName} · ${data.meta.periodName}`,
-        meta: `Điểm sức khỏe CLB: ${data.summary.clubHealthScore}/100`,
+      const res = await api.get(`/aido/executive-report/pdf?fundPeriodId=${periodId}`, {
+        responseType: 'blob', timeout: 60000,
       })
+      const url = URL.createObjectURL(res.data as Blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `BaoCao_DieuHanh_${data.meta.periodName}.pdf`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1500)
       toast.dismiss(t)
     } catch {
       toast.dismiss(t)
