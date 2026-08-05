@@ -194,21 +194,60 @@ async function savePdfDoc(pdf: any, filename: string) {
 /* ════════════════════════════════════════
    EXCEL
 ════════════════════════════════════════ */
+/* ── Style bảng Excel chuẩn SaaS (xlsx-js-style): đóng khung mọi ô + header brand + hàng
+   xen kẽ + căn phải/định dạng nghìn cho cột số + auto-filter. `xlsx` community KHÔNG hỗ trợ
+   style → dùng bản fork `xlsx-js-style` (cùng API). Đổi 1 chỗ ⇒ mọi export Excel đồng bộ. */
+const XL_BORDER = { style: 'thin', color: { rgb: 'D5DCE6' } }
+const XL_BORDER_ALL = { top: XL_BORDER, bottom: XL_BORDER, left: XL_BORDER, right: XL_BORDER }
+const XL_HEADER_STYLE = {
+  font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
+  fill: { patternType: 'solid', fgColor: { rgb: '6D5DFB' } },
+  alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+  border: XL_BORDER_ALL,
+}
+const xlCellStyle = (align: 'left' | 'right' | 'center', banded: boolean) => ({
+  font: { sz: 11, color: { rgb: '1E293B' }, name: 'Calibri' },
+  alignment: { horizontal: align, vertical: 'center' },
+  border: XL_BORDER_ALL,
+  ...(banded ? { fill: { patternType: 'solid', fgColor: { rgb: 'F5F7FB' } } } : {}),
+})
+
 export async function exportExcel(
   filename: string,
   sheets: { name: string; headers: string[]; rows: (string | number)[][] }[]
 ) {
-  const mod = await import('xlsx')
-  const XLSX = ((mod as unknown as { default?: typeof mod }).default ?? mod)
+  const mod = await import('xlsx-js-style')
+  const XLSX = ((mod as unknown as { default?: typeof import('xlsx-js-style') }).default ?? mod)
   const wb = XLSX.utils.book_new()
   for (const sheet of sheets) {
     const data = [sheet.headers, ...sheet.rows]
     const ws = XLSX.utils.aoa_to_sheet(data)
-    const colWidths = sheet.headers.map((h, i) => {
+    const nCols = sheet.headers.length
+    const nRows = sheet.rows.length
+    // Cột số = mọi ô dữ liệu đều là number → căn phải + định dạng #,##0.
+    const numCol = sheet.headers.map(
+      (_, c) => nRows > 0 && sheet.rows.every(r => typeof r[c] === 'number'),
+    )
+    // Duyệt TOÀN vùng (kể cả ô rỗng) để đóng khung không bị hở.
+    for (let r = 0; r <= nRows; r++) {
+      for (let c = 0; c < nCols; c++) {
+        const ref = XLSX.utils.encode_cell({ r, c })
+        let cell = (ws as Record<string, unknown>)[ref] as { v?: unknown; t?: string; z?: string; s?: unknown } | undefined
+        if (!cell) { cell = { t: 's', v: '' }; (ws as Record<string, unknown>)[ref] = cell }
+        if (r === 0) { cell.s = XL_HEADER_STYLE; continue }
+        const align: 'left' | 'right' | 'center' = numCol[c] ? 'right' : 'left'
+        cell.s = xlCellStyle(align, r % 2 === 0)
+        if (numCol[c] && typeof cell.v === 'number') cell.z = '#,##0'
+      }
+    }
+    // Bảo đảm !ref phủ hết vùng đã style.
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(nRows, 0), c: Math.max(nCols - 1, 0) } })
+    ws['!cols'] = sheet.headers.map((h, i) => {
       const max = Math.max(h.length, ...sheet.rows.map(r => String(r[i] ?? '').length))
-      return { wch: Math.min(max + 4, 50) }
+      return { wch: Math.min(Math.max(max + 4, 10), 60) }
     })
-    ws['!cols'] = colWidths
+    ws['!rows'] = [{ hpt: 24 }] // header cao hơn cho thoáng
+    if (nRows > 0) ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: nRows, c: nCols - 1 } }) }
     XLSX.utils.book_append_sheet(wb, ws, sheet.name)
   }
   XLSX.writeFile(wb, `${filename}_${today().replace(/\//g, '-')}.xlsx`)

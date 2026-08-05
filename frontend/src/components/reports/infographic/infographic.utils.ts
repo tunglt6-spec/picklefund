@@ -83,6 +83,14 @@ export function mapToInfographicData(src: ReportSource): InfographicReportData {
   }
 }
 
+/* Ép LIGHT theme trên bản clone (html2canvas render ngoài màn) → ảnh/PDF luôn sáng-sạch
+   chuẩn SaaS dù người dùng đang ở dark mode, KHÔNG gây nháy màn hình thật. */
+const forceLightClone = (doc: Document) => {
+  doc.documentElement.removeAttribute('data-theme')
+  doc.documentElement.setAttribute('data-theme', 'light')
+  doc.documentElement.style.colorScheme = 'light'
+}
+
 /* ── Export PNG ── */
 export async function exportInfographicAsPng(elementId: string, fileName: string): Promise<void> {
   const { default: html2canvas } = await import('html2canvas-pro')
@@ -99,6 +107,7 @@ export async function exportInfographicAsPng(elementId: string, fileName: string
     height: el.scrollHeight,
     windowWidth: el.scrollWidth,
     windowHeight: el.scrollHeight,
+    onclone: (doc) => forceLightClone(doc),
   })
 
   const link = document.createElement('a')
@@ -124,6 +133,7 @@ export async function exportInfographicAsPdf(elementId: string, fileName: string
     height: el.scrollHeight,
     windowWidth: el.scrollWidth,
     windowHeight: el.scrollHeight,
+    onclone: (doc) => forceLightClone(doc),
   })
 
   const imgData = canvas.toDataURL('image/png', 1.0)
@@ -149,7 +159,7 @@ export async function shareInfographic(elementId: string, title: string): Promis
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
 
-  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false })
+  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false, onclone: (doc) => forceLightClone(doc) })
   const blob = await new Promise<Blob>((res, rej) =>
     canvas.toBlob(b => b ? res(b) : rej(new Error('Canvas to blob failed')), 'image/png', 1.0)
   )
