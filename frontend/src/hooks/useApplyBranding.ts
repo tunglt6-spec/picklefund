@@ -26,6 +26,7 @@ export function useApplyBranding() {
       displayName: branding.displayName,
       pdfFooter: branding.pdfFooter,
       logoUrl: branding.logoUrl,
+      primaryColor: branding.primaryColor,
     })
 
     const root = document.documentElement

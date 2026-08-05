@@ -5,7 +5,6 @@ import {
   FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag, Paperclip,
   Landmark, Coffee, Check, FileDown,
 } from 'lucide-react'
-import * as XLSX from 'xlsx'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
@@ -18,7 +17,7 @@ import { useBulkSelection } from '../../hooks/useBulkSelection'
 import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
-import { exportExpensesPDF } from '../../lib/export'
+import { exportExpensesPDF, exportGenericExcel } from '../../lib/export'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
@@ -743,19 +742,20 @@ export function Expenses() {
   }
 
   const exportExcel = () => {
-    const rows = filtered.map(e => ({
-      'Mã chi': e.code,
-      'Nội dung': e.description,
-      'Nguồn quỹ': e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính',
-      'Ngày chi': e.expenseDate ?? '',
-      'Số tiền (VNĐ)': e.amount,
-      'Phân bổ': e.allocationRule ?? '',
-      'Trạng thái': e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối',
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Chi phí')
-    XLSX.writeFile(wb, `chi-phi-${new Date().toISOString().slice(0, 10)}.xlsx`)
+    // Excel chuẩn SaaS dùng chung (đóng khung + header brand màu CLB) qua exportGenericExcel.
+    exportGenericExcel(
+      'Chi_phi', 'Chi phí',
+      ['Mã chi', 'Nội dung', 'Nguồn quỹ', 'Ngày chi', 'Số tiền (VNĐ)', 'Phân bổ', 'Trạng thái'],
+      filtered.map(e => [
+        e.code,
+        e.description,
+        e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính',
+        e.expenseDate ?? '',
+        e.amount,
+        e.allocationRule ?? '',
+        e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối',
+      ]),
+    )
   }
 
   const ruleShort: Record<AllocationRule, string> = {

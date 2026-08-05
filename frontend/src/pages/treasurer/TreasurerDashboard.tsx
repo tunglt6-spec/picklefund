@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
-import * as XLSX from 'xlsx'
+import { exportGenericExcel } from '../../lib/export'
 import toast from 'react-hot-toast'
 
 type LedgerRow = {
@@ -145,19 +145,19 @@ export function TreasurerDashboard() {
 
   const exportLedger = useCallback(() => {
     if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }
-    const rows = ledger.map(r => ({
-      'Ngày': formatDate(r.date),
-      'Loại': r.type === 'income' ? 'Thu' : 'Chi',
-      'Mô tả': r.description,
-      'Số tiền': r.type === 'income' ? r.amount : -r.amount,
-      'Số dư': r.balance,
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows)
-    ws['!cols'] = [{ wch: 14 }, { wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 14 }]
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Sổ Quỹ')
     const name = activePeriod ? `SoQuy_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy'
-    XLSX.writeFile(wb, `${name}.xlsx`)
+    // Excel chuẩn SaaS dùng chung (đóng khung + header brand màu CLB).
+    exportGenericExcel(
+      name, 'Sổ Quỹ',
+      ['Ngày', 'Loại', 'Mô tả', 'Số tiền (VNĐ)', 'Số dư (VNĐ)'],
+      ledger.map(r => [
+        formatDate(r.date),
+        r.type === 'income' ? 'Thu' : 'Chi',
+        r.description,
+        r.type === 'income' ? r.amount : -r.amount,
+        r.balance,
+      ]),
+    )
     toast.success('Đã xuất sổ quỹ Excel!')
   }, [ledger, activePeriod])
 

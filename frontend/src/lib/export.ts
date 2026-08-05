@@ -4,24 +4,33 @@
 /* ─── EPIC10C: branding cho PDF/export ───
  * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
  * Bỏ trống → fallback PickleFund. */
+const DEFAULT_BRAND_COLOR = '#6D5DFB'
 let exportBranding = {
   displayName: 'PickleFund',
   pdfFooter: 'PickleFund',
   logoUrl: null as string | null,
+  primaryColor: DEFAULT_BRAND_COLOR,
 }
 export function setExportBranding(b: {
   displayName?: string | null
   pdfFooter?: string | null
   logoUrl?: string | null
+  primaryColor?: string | null
 }) {
+  const hex = (b.primaryColor ?? '').trim()
   exportBranding = {
     displayName: b.displayName ? b.displayName : 'PickleFund',
     pdfFooter: b.pdfFooter ? b.pdfFooter : 'PickleFund',
     logoUrl: b.logoUrl ?? null,
+    primaryColor: /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : DEFAULT_BRAND_COLOR,
   }
 }
 const brandName = () => exportBranding.displayName
 const brandFooter = () => exportBranding.pdfFooter
+/** Màu chủ đạo cho header export (theo CLB, mặc định tím PickleFund). */
+const brandColor = () => exportBranding.primaryColor
+/** Bản KHÔNG dấu # cho fill của xlsx-js-style. */
+const brandColorHex = () => brandColor().replace('#', '').toUpperCase()
 
 /* ── Logo CLB cho PDF vector: tải 1 lần / URL → dataURL + kích thước gốc.
    Best-effort: lỗi mạng/CORS/ảnh hỏng → trả null, PDF vẫn xuất bình thường không logo. ── */
@@ -224,28 +233,43 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-/** Chụp 1 element DOM thành ẢNH REPORT chuẩn SaaS (form PDF): bọc header brand + nội dung
-   (clone, ép light, tự co đúng chiều cao → HẾT whitespace) + footer. Dùng chung cho mọi màn
-   (BXH, lịch thi đấu…). `report` bắt buộc để thống nhất khung; ép light qua onclone. */
+/** Header report dùng chung cho ẢNH (brand màu CLB + logo nếu có + tiêu đề + meta + ngày). */
+function reportHeaderHtml(title: string, subtitle: string | undefined, meta: string | undefined, logo: { dataUrl: string } | null) {
+  const color = brandColor()
+  const logoImg = logo
+    ? `<img src="${logo.dataUrl}" style="height:42px;width:auto;max-width:130px;object-fit:contain;border-radius:8px;background:#fff;padding:3px 5px;margin-right:14px;flex-shrink:0;"/>`
+    : ''
+  return `<div style="background:${color};color:#fff;padding:16px 24px 13px;">
+      <div style="display:flex;align-items:center;">
+        ${logoImg}
+        <div style="min-width:0;">
+          <div style="font-size:18px;font-weight:800;line-height:1.2;">${escHtml(brandName())} · ${escHtml(title)}</div>
+          ${subtitle ? `<div style="font-size:12.5px;opacity:.9;margin-top:3px;">${escHtml(subtitle)}</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;font-size:11px;opacity:.82;margin-top:9px;"><span>${escHtml(meta ?? '')}</span><span>Xuất ngày: ${today()}</span></div>
+    </div>`
+}
+function reportFooterHtml() {
+  return `<div style="text-align:center;font-size:10.5px;color:#94a3b8;padding:12px 24px 16px;border-top:1px solid #eef1f6;margin-top:2px;">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>`
+}
+
+/** Chụp 1 element DOM thành ẢNH REPORT chuẩn SaaS (form PDF): bọc header brand (màu CLB + logo)
+   + nội dung (clone, ép light, tự co đúng chiều cao → HẾT whitespace) + footer. Dùng chung cho
+   mọi màn (BXH, lịch thi đấu…). `report` bắt buộc để thống nhất khung; ép light qua onclone. */
 export async function captureElementAsReportPng(
   elementId: string,
   fileBase: string,
   report: { title: string; subtitle?: string; meta?: string },
 ) {
-  const { default: html2canvas } = await import('html2canvas-pro')
+  const [{ default: html2canvas }, logo] = await Promise.all([import('html2canvas-pro'), loadBrandLogo()])
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
   const width = Math.max(Math.round(el.getBoundingClientRect().width) || 720, 560)
 
   const wrap = document.createElement('div')
   wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 48}px;background:#fff;font-family:'Be Vietnam Pro','Segoe UI',Arial,sans-serif;`
-  const header = `<div style="background:#6D5DFB;color:#fff;padding:16px 24px 13px;">
-      <div style="font-size:18px;font-weight:800;line-height:1.2;">${escHtml(brandName())} · ${escHtml(report.title)}</div>
-      ${report.subtitle ? `<div style="font-size:12.5px;opacity:.9;margin-top:3px;">${escHtml(report.subtitle)}</div>` : ''}
-      <div style="display:flex;justify-content:space-between;gap:12px;font-size:11px;opacity:.82;margin-top:9px;"><span>${escHtml(report.meta ?? '')}</span><span>Xuất ngày: ${today()}</span></div>
-    </div>`
-  const footer = `<div style="text-align:center;font-size:10.5px;color:#94a3b8;padding:12px 24px 16px;border-top:1px solid #eef1f6;margin-top:2px;">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>`
-  wrap.innerHTML = header + '<div data-pf-body style="padding:18px 24px;background:#fff;"></div>' + footer
+  wrap.innerHTML = reportHeaderHtml(report.title, report.subtitle, report.meta, logo) + '<div data-pf-body style="padding:18px 24px;background:#fff;"></div>' + reportFooterHtml()
   const body = wrap.querySelector('[data-pf-body]') as HTMLElement
   const clone = el.cloneNode(true) as HTMLElement
   clone.querySelectorAll('[data-html2canvas-ignore]').forEach(n => n.remove())
@@ -296,17 +320,16 @@ export interface FinanceOverviewInput {
   confirmedCount: number
 }
 
-/** Ảnh Tổng quan tài chính — CÙNG FORM với Xuất PDF (brand header + bảng + summary + footer). */
+/** Ảnh Tổng quan tài chính — CÙNG FORM với Xuất PDF (brand header màu CLB + logo + bảng +
+   summary + footer). */
 export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
+  const logo = await loadBrandLogo()
+  const color = brandColor()
   const row = (label: string, value: string, cls = '') => `<tr><td>${escHtml(label)}</td><td class="right ${cls}">${escHtml(value)}</td></tr>`
   const sections = `
-    <div class="header">
-      <h1>${escHtml(brandName())} · Tổng quan tài chính</h1>
-      <p>Kỳ quỹ: ${escHtml(d.periodName)} · ${escHtml(d.clubName)}</p>
-      <div class="header-meta"><span>${d.memberCount} thành viên · ${d.sessionCount} buổi · đã đóng ${d.confirmedCount}/${d.memberCount}</span><span>Xuất ngày: ${today()}</span></div>
-    </div>
-    <table>
-      <thead><tr><th>Chỉ số</th><th class="right">Giá trị</th></tr></thead>
+    ${reportHeaderHtml('Tổng quan tài chính', `Kỳ quỹ: ${d.periodName} · ${d.clubName}`, `${d.memberCount} thành viên · ${d.sessionCount} buổi · đã đóng ${d.confirmedCount}/${d.memberCount}`, logo)}
+    <table style="margin-top:16px;">
+      <thead><tr><th style="background:${color};">Chỉ số</th><th class="right" style="background:${color};">Giá trị</th></tr></thead>
       <tbody>
         ${row('Tổng thu (Quỹ Chính)', formatVND(d.totalIncome), 'badge-green')}
         ${row('Tổng chi (Quỹ Chính)', formatVND(d.totalExpense), 'badge-red')}
@@ -316,8 +339,8 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
         ${row('Số dư chuyển kỳ', formatVND(d.carryForward))}
       </tbody>
     </table>
-    <div class="summary"><span class="label">Tồn quỹ hiện tại (Quỹ Chính)</span><span class="value">${escHtml(formatVND(d.balance))}</span></div>
-    <div class="footer">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>
+    <div class="summary" style="background:color-mix(in srgb, ${color} 12%, #fff);"><span class="label" style="color:${color};">Tồn quỹ hiện tại (Quỹ Chính)</span><span class="value" style="color:${color};">${escHtml(formatVND(d.balance))}</span></div>
+    ${reportFooterHtml()}
   `
   return renderReportPng(sections, `Tai_chinh_${d.periodName.replace(/\s/g, '_')}`)
 }
@@ -329,26 +352,26 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
    #6D5DFB + bảng ĐÓNG KHUNG mọi ô (border xám rõ, không lẫn gridline) + header cột tím + hàng
    xen kẽ + cột số căn phải/định dạng nghìn + auto-filter. `xlsx` community KHÔNG hỗ trợ style →
    dùng fork `xlsx-js-style` (cùng API). Đổi 1 chỗ ⇒ MỌI export Excel đồng bộ. */
-const XL_BRAND = '6D5DFB'
 // Border XÁM RÕ (slate-400) để đọc thành KHUNG thật, không chìm vào gridline mặc định Excel.
 const XL_BD = { style: 'thin', color: { rgb: '94A3B8' } }
 const XL_BD_ALL = { top: XL_BD, bottom: XL_BD, left: XL_BD, right: XL_BD }
-const XL_TITLE_STYLE = {
+// Tiêu đề + header cột theo MÀU CLB (brand) — build theo màu hiện tại lúc xuất.
+const xlTitleStyle = (brand: string) => ({
   font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
-  fill: { patternType: 'solid', fgColor: { rgb: XL_BRAND } },
+  fill: { patternType: 'solid', fgColor: { rgb: brand } },
   alignment: { horizontal: 'left', vertical: 'center' },
-}
+})
 const XL_META_STYLE = {
   font: { sz: 10, italic: true, color: { rgb: '64748B' }, name: 'Calibri' },
   fill: { patternType: 'solid', fgColor: { rgb: 'EEF0FB' } },
   alignment: { horizontal: 'left', vertical: 'center' },
 }
-const XL_HEADER_STYLE = {
+const xlHeaderStyle = (brand: string) => ({
   font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
-  fill: { patternType: 'solid', fgColor: { rgb: XL_BRAND } },
+  fill: { patternType: 'solid', fgColor: { rgb: brand } },
   alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
   border: XL_BD_ALL,
-}
+})
 const xlCellStyle = (align: 'left' | 'right' | 'center', banded: boolean) => ({
   font: { sz: 11, color: { rgb: '1E293B' }, name: 'Calibri' },
   alignment: { horizontal: align, vertical: 'center' },
@@ -369,6 +392,9 @@ export async function exportExcel(
     return ws[ref] as { v?: unknown; t?: string; z?: string; s?: unknown }
   }
   const wb = XLSX.utils.book_new()
+  const brand = brandColorHex() // màu CLB cho tiêu đề + header cột
+  const titleStyle = xlTitleStyle(brand)
+  const headerStyle = xlHeaderStyle(brand)
   const TITLE = 0, META = 1, HEAD = 2 // hàng tiêu đề brand · meta ngày · header cột
 
   for (const sheet of sheets) {
@@ -385,11 +411,11 @@ export async function exportExcel(
       (_, c) => nRows > 0 && sheet.rows.every(r => typeof r[c] === 'number'),
     )
     // ── Block tiêu đề brand (merge cả hàng) ──
-    set(ws, TITLE, 0, { t: 's', v: `${brandName()} · ${sheet.name}`, s: XL_TITLE_STYLE })
+    set(ws, TITLE, 0, { t: 's', v: `${brandName()} · ${sheet.name}`, s: titleStyle })
     set(ws, META, 0, { t: 's', v: `Xuất ngày: ${today()}`, s: XL_META_STYLE })
-    for (let c = 1; c < nCols; c++) { set(ws, TITLE, c, { t: 's', v: '', s: XL_TITLE_STYLE }); set(ws, META, c, { t: 's', v: '', s: XL_META_STYLE }) }
+    for (let c = 1; c < nCols; c++) { set(ws, TITLE, c, { t: 's', v: '', s: titleStyle }); set(ws, META, c, { t: 's', v: '', s: XL_META_STYLE }) }
     // ── Header cột + dữ liệu (đóng khung) ──
-    for (let c = 0; c < nCols; c++) set(ws, HEAD, c, { s: XL_HEADER_STYLE })
+    for (let c = 0; c < nCols; c++) set(ws, HEAD, c, { s: headerStyle })
     for (let ri = 0; ri < nRows; ri++) {
       for (let c = 0; c < nCols; c++) {
         const align: 'left' | 'right' | 'center' = numCol[c] ? 'right' : 'left'
