@@ -57,6 +57,16 @@ export class LisaService {
     }
   }
 
+  /** Chạy promise với hạn thời gian — quá hạn thì reject để rơi xuống tầng fallback (không treo request). */
+  private withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+    return Promise.race([
+      p,
+      new Promise<T>((_, rej) =>
+        setTimeout(() => rej(new Error(`timeout ${ms}ms`)), ms),
+      ),
+    ]);
+  }
+
   private async askAI(
     systemCtx: string,
     userMsg: string,
@@ -80,8 +90,12 @@ export class LisaService {
           // Đủ dài cho câu trả lời kiến thức ngoài CLB (vai trò AI hiểu biết rộng).
           generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
         });
-        const result = await model.generateContent(fullPrompt);
-        return result.response.text().trim();
+        const result = await this.withTimeout(
+          model.generateContent(fullPrompt),
+          15000,
+        );
+        const text = result.response.text().trim();
+        if (text) return text; // rỗng (bị lọc an toàn/timeout) → coi như fail, xuống tầng dưới
       } catch (err: any) {
         this.logger.warn(
           `[Lisa] Gemini error: ${err.message} — trying OpenRouter`,
@@ -128,6 +142,7 @@ export class LisaService {
                 ],
                 max_tokens: 1024,
               }),
+              signal: AbortSignal.timeout(12000), // không treo request nếu OpenRouter chậm
             },
           );
           if (res.ok) {

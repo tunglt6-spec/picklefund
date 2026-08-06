@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Send, Bot, User, RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { Send, Bot, User, RefreshCw, ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -23,7 +25,8 @@ function now() {
 
 export function MemberLisaChat() {
   const { user } = useAuthStore()
-  const isMobile = useIsMobile()
+  const navigate = useNavigate()
+  const isMobile = useIsMobile(768) // khớp mốc `md` app shell → không lệch dải 640–767
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,26 +57,42 @@ export function MemberLisaChat() {
     return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
   }, [isMobile])
 
-  const fetchBrief = useCallback(async () => {
+  // initial=true (mở màn) mới đặt lời chào; "Làm mới" chỉ cập nhật thẻ tóm tắt, KHÔNG xoá chat.
+  const fetchBrief = useCallback(async (initial = false) => {
     if (!user) return
     setBriefLoading(true)
     try {
       const res = await api.get('/lisa/brief')
       const data = res.data?.data ?? res.data
       setBrief(data)
-      setMessages([{ id: 'welcome', role: 'lisa', text: data.greeting, time: now() }])
+      if (initial) {
+        setMessages([{ id: 'welcome', role: 'lisa', text: data.greeting, time: now() }])
+      } else {
+        toast.success('Đã cập nhật thông tin')
+      }
     } catch {
-      setMessages([{
-        id: 'welcome', role: 'lisa',
-        text: `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI cá nhân của bạn. Hỏi tôi bất cứ điều gì nhé!`,
-        time: now(),
-      }])
+      toast.error('Không tải được tóm tắt từ Lisa.')
+      if (initial) {
+        setMessages([{
+          id: 'welcome', role: 'lisa',
+          text: `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI cá nhân của bạn. Hỏi tôi bất cứ điều gì nhé!`,
+          time: now(),
+        }])
+      }
     } finally {
       setBriefLoading(false)
     }
   }, [user])
 
-  useEffect(() => { fetchBrief() }, [fetchBrief])
+  useEffect(() => { fetchBrief(true) }, [fetchBrief])
+
+  // Khoá cuộn nền khi mở chat toàn màn (mobile portal).
+  useEffect(() => {
+    if (!isMobile) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [isMobile])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   const sendMessage = async (text: string) => {
@@ -125,7 +144,7 @@ export function MemberLisaChat() {
               {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary)]" /> : <User size={14} className="[color:var(--pf-color-muted)]" />}
             </div>
             <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${m.role === 'lisa' ? '[background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-text)] rounded-tl-sm' : '[background:var(--pf-primary)] text-white rounded-tr-sm'}`}>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{m.text}</p>
               <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? '[color:var(--pf-color-muted)]' : 'text-white/70'}`}>{m.time}</p>
             </div>
           </div>
@@ -176,21 +195,24 @@ export function MemberLisaChat() {
         }}
       >
         {/* Header */}
-        <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 border-white">
+        <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button onClick={() => navigate('/member/dashboard')} aria-label="Đóng chat" className="p-2 -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 [border-color:var(--pf-surface)]">
               <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
             </div>
-            <div>
-              <p className="text-[15px] font-[800] [color:var(--pf-text)]">Lisa AI</p>
+            <div className="min-w-0">
+              <p className="text-[15px] font-[800] [color:var(--pf-text)] truncate">Lisa AI</p>
               <p className="text-[11px] text-emerald-500 font-medium">● Trợ lý cá nhân</p>
             </div>
           </div>
-          <button onClick={fetchBrief} disabled={briefLoading} aria-label="Làm mới" className="p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none"><RefreshCw size={16} className={briefLoading ? 'animate-spin' : ''} /></button>
+          <button onClick={() => fetchBrief()} disabled={briefLoading} aria-label="Làm mới thông tin" className="shrink-0 p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none"><RefreshCw size={16} className={briefLoading ? 'animate-spin' : ''} /></button>
         </div>
 
         {/* Messages — scrollable, fills remaining space */}
-        <div ref={msgRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4 pb-2">{chatContent}</div>
+        <div ref={msgRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 pb-2">{chatContent}</div>
 
         {/* Input — stays at bottom, translates up with keyboard */}
         <div ref={inputBarRef} className="shrink-0 [background:var(--pf-surface)] border-t border-[color:var(--pf-border)] px-4 py-3">
@@ -221,7 +243,7 @@ export function MemberLisaChat() {
             <p className="text-xs text-emerald-500">● Trợ lý cá nhân thông minh</p>
           </div>
         </div>
-        <button onClick={fetchBrief} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
+        <button onClick={() => fetchBrief()} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
           <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
         </button>
       </div>

@@ -6,11 +6,20 @@ import {
   Param,
   NotFoundException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { LisaService } from './lisa.service';
 import { CurrentUser, Roles} from '../common/decorators';
 import { ok } from '../common/response';
 import { AgentActivityService } from '../aido/agent-activity.service';
+
+class AskLisaDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  question!: string;
+}
 
 @ApiTags('Lisa AI')
 @ApiBearerAuth()
@@ -36,7 +45,8 @@ export class LisaController {
   }
 
   @Post('ask')
-  async ask(@CurrentUser() user: any, @Body() body: { question: string }) {
+  @Throttle({ short: { ttl: 60000, limit: 12 } }) // chặn lạm dụng LLM (chi phí token bên thứ ba)
+  async ask(@CurrentUser() user: any, @Body() body: AskLisaDto) {
     if (!user.memberId) {
       return ok({
         answer:
