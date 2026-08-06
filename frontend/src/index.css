@@ -206,6 +206,13 @@ select:-webkit-autofill {
 }
 .pf-page { animation: pfPageEnter var(--pf-dur-slow) var(--pf-ease) both; }
 
+/* Trang cần CHIẾM TRỌN chiều cao vùng nội dung (vd. Lisa chat: khung cố định + tự cuộn nội bộ).
+   .pf-page mặc định cao theo nội dung → con dùng h-full sẽ KHÔNG ràng buộc được chiều cao (khi
+   nhiều tin nhắn thì ô nhập trôi khỏi màn). Chỉ ép .pf-page = 100% KHI nó chứa .pf-fill (scope
+   qua :has) → không ảnh hưởng các trang khác. Trình duyệt cũ không hỗ trợ :has thì bỏ qua an toàn. */
+.pf-page:has(> .pf-fill) { height: 100%; }
+.pf-fill { height: 100%; min-height: 0; }
+
 /* Card nhấc nhẹ khi hover (desktop) — micro-interaction đồng bộ toàn app. */
 .pf-hover-lift {
   transition:

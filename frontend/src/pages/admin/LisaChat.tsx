@@ -220,17 +220,15 @@ export function LisaChat() {
         className="flex flex-col overflow-hidden [background:var(--pf-bg)]"
         style={{
           position: 'fixed',
-          top: 64, // dưới mobile header (64px)
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 40,
+          // Full-screen: header Lisa (kèm nút back) luôn ở đỉnh, không lẫn với app-header mobile.
+          inset: 0,
+          zIndex: 50,
         }}
       >
         {/* Header */}
-        <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between">
+        <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-1.5 min-w-0">
-            <button onClick={() => navigate('/dashboard')} aria-label="Đóng chat" className="p-2 -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
+            <button onClick={() => navigate('/aido')} aria-label="Quay lại AI Digital Office" className="p-2 -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
               <ArrowLeft size={20} />
             </button>
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 [border-color:var(--pf-surface)]">
@@ -255,10 +253,10 @@ export function LisaChat() {
             <input
               value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
-              className="flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+              className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
             />
             <button type="submit" disabled={!input.trim() || loading}
-              className="w-10 h-10 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
+              className="shrink-0 w-10 h-10 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
               <Send size={15} className="text-white" />
             </button>
           </form>
@@ -269,25 +267,30 @@ export function LisaChat() {
   }
 
   return (
-    <div className="flex flex-col h-full [background:var(--pf-surface-muted)]">
+    <div className="pf-fill flex flex-col h-full [background:var(--pf-surface-muted)]">
       <PageHeader
         title="Lisa AI"
         subtitle="Trợ lý cá nhân thông minh"
         actions={
-          <button onClick={() => fetchBrief()} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
-            <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/aido')} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
+              <ArrowLeft size={13} /> AI Office
+            </button>
+            <button onClick={() => fetchBrief()} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
+              <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
+            </button>
+          </div>
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-6 max-w-[760px] mx-auto w-full">{chatContent}</div>
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 max-w-[760px] mx-auto w-full">{chatContent}</div>
 
       <div className="[background:var(--pf-surface)] border-t border-[color:var(--pf-border)] p-4 max-w-[760px] mx-auto w-full">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <input
             value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa bất cứ điều gì về CLB của bạn..."
-            className="flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all"
+            className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all"
           />
           <button type="submit" disabled={!input.trim() || loading}
             className="px-5 py-3 rounded-xl [background:var(--pf-primary)] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:[background:var(--pf-primary-hover)] transition-colors">
