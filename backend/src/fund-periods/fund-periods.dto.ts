@@ -20,6 +20,10 @@ export class CreateFundPeriodDto {
   @IsDateString()
   endDate: string;
 
+  @IsOptional()
+  @IsDateString()
+  dueDate?: string;
+
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
@@ -64,6 +68,10 @@ export class UpdateFundPeriodDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dueDate?: string;
 
   @IsOptional()
   @IsNumber()

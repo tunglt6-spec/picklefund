@@ -101,6 +101,9 @@ export class CommandCenterService {
     const totalIncome = n(incomeAll._sum.amount);
     const totalExpense = n(expenseAll._sum.amount);
 
+    // Công nợ / quá hạn / thu đúng hạn (dựa trên FundPeriod.dueDate + roster FundPeriodMember).
+    const debtMetrics = await this.buildDebtMetrics(clubId, now);
+
     // Xu hướng thu/chi 6 tháng gần nhất (theo paymentDate/expenseDate).
     const months: { label: string; start: Date; end: Date }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -232,7 +235,7 @@ export class CommandCenterService {
         totalIncome, totalExpense, totalBalance: totalIncome - totalExpense,
         incomeInRange: n(incomeRange._sum.amount), expenseInRange: n(expenseRange._sum.amount),
         pendingExpenses,
-        debt: null, overdueCount: null, onTimeRatio: null, // không lưu dueDate/công nợ → chưa có dữ liệu
+        debt: debtMetrics.debt, overdueCount: debtMetrics.overdueCount, overdueAmount: debtMetrics.overdueAmount, onTimeRatio: debtMetrics.onTimeRatio,
         trend: trendRows,
       },
       ai: {
@@ -253,6 +256,68 @@ export class CommandCenterService {
       alerts,
       leaderboards,
     };
+  }
+
+  /**
+   * Công nợ = Σ (kỳ đang mở) max(0, expected − đã đóng) theo từng thành viên trong roster.
+   * Quá hạn = phần công nợ thuộc kỳ có dueDate đã qua. Thu đúng hạn = tỷ lệ khoản đóng
+   * (đã xác nhận) có paymentDate ≤ dueDate, tính trên các kỳ CÓ đặt dueDate.
+   * Kỳ chưa đặt dueDate → không tính quá hạn/đúng hạn cho kỳ đó (trung thực).
+   */
+  private async buildDebtMetrics(clubId: string | null | undefined, now: Date) {
+    const scope = this.clubScope(clubId);
+    // Kỳ đang mở (draft/active) — công nợ chỉ tính cho kỳ chưa đóng.
+    const openPeriods = await this.prisma.fundPeriod.findMany({
+      where: { status: { in: ['draft', 'active'] }, ...scope },
+      select: { id: true, dueDate: true },
+    });
+    let debt = 0;
+    let overdueCount = 0;
+    let overdueAmount = 0;
+
+    if (openPeriods.length) {
+      const openIds = openPeriods.map((p) => p.id);
+      const dueMap = new Map(openPeriods.map((p) => [p.id, p.dueDate]));
+      const [roster, paidGroups] = await Promise.all([
+        this.prisma.fundPeriodMember.findMany({ where: { fundPeriodId: { in: openIds } }, select: { fundPeriodId: true, memberId: true, expectedAmount: true } }),
+        this.prisma.fundContribution.groupBy({ by: ['fundPeriodId', 'memberId'], where: { isConfirmed: true, fundPeriodId: { in: openIds }, memberId: { not: null } }, _sum: { amount: true } }),
+      ]);
+      const paidMap = new Map<string, number>();
+      for (const g of paidGroups) paidMap.set(`${g.fundPeriodId}|${g.memberId}`, n(g._sum.amount));
+      for (const r of roster) {
+        const expected = n(r.expectedAmount);
+        const paid = paidMap.get(`${r.fundPeriodId}|${r.memberId}`) ?? 0;
+        const outstanding = Math.max(0, expected - paid);
+        if (outstanding <= 0) continue;
+        debt += outstanding;
+        const due = dueMap.get(r.fundPeriodId);
+        if (due && due < now) { overdueCount++; overdueAmount += outstanding; }
+      }
+    }
+
+    // Thu đúng hạn — trên các kỳ CÓ dueDate (mọi trạng thái trong phạm vi).
+    const duePeriods = await this.prisma.fundPeriod.findMany({
+      where: { dueDate: { not: null }, ...scope },
+      select: { id: true, dueDate: true },
+    });
+    let onTimeRatio: number | null = null;
+    if (duePeriods.length) {
+      const dueMap2 = new Map(duePeriods.map((p) => [p.id, p.dueDate as Date]));
+      const contribs = await this.prisma.fundContribution.findMany({
+        where: { isConfirmed: true, fundPeriodId: { in: duePeriods.map((p) => p.id) } },
+        select: { fundPeriodId: true, paymentDate: true },
+      });
+      if (contribs.length) {
+        let onTime = 0;
+        for (const c of contribs) {
+          const due = c.fundPeriodId ? dueMap2.get(c.fundPeriodId) : null;
+          if (due && c.paymentDate && c.paymentDate <= due) onTime++;
+        }
+        onTimeRatio = Math.round((onTime / contribs.length) * 100);
+      }
+    }
+
+    return { debt, overdueCount, overdueAmount, onTimeRatio };
   }
 
   private async buildLeaderboards(start: Date, end: Date) {

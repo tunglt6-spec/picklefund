@@ -302,8 +302,8 @@ function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[
           <MetricCard label="Tổng chi ghi nhận" value={vnd(fin.totalExpense)} icon={<Wallet size={16} />} tone="danger" />
           <MetricCard label="Tổng số dư quỹ" value={vnd(fin.totalBalance)} icon={<Wallet size={16} />} tone={fin.totalBalance >= 0 ? 'success' : 'danger'} />
           <MetricCard label="Chi chờ duyệt" value={num(fin.pendingExpenses)} icon={<ClipboardList size={16} />} tone={fin.pendingExpenses > 0 ? 'warning' : 'success'} />
-          <MetricCard label="Tổng công nợ" value={<NoData hint="Không lưu dueDate/công nợ tập trung" />} icon={<CircleAlert size={16} />} tone="neutral" />
-          <MetricCard label="Thu đúng hạn" value={<NoData hint="Không lưu hạn thu → chưa tính được tỷ lệ" />} icon={<Gauge size={16} />} tone="neutral" />
+          <MetricCard label="Tổng công nợ" value={vnd(fin.debt)} sub={fin.overdueCount > 0 ? `${num(fin.overdueCount)} khoản quá hạn · ${vnd(fin.overdueAmount)}` : 'Không có quá hạn'} icon={<CircleAlert size={16} />} tone={fin.debt > 0 ? 'warning' : 'success'} />
+          <MetricCard label="Thu đúng hạn" value={fin.onTimeRatio != null ? `${fin.onTimeRatio}%` : <NoData hint="Chưa kỳ nào đặt hạn đóng (dueDate)" />} icon={<Gauge size={16} />} tone={fin.onTimeRatio == null ? 'neutral' : fin.onTimeRatio >= 80 ? 'success' : fin.onTimeRatio >= 50 ? 'warning' : 'danger'} />
         </div>
       </Section>
 

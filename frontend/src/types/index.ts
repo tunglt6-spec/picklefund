@@ -101,6 +101,8 @@ export interface FundPeriod {
   name: string
   startDate: string
   endDate: string
+  /** Hạn đóng quỹ (tùy chọn) — dùng tính công nợ quá hạn / thu đúng hạn. */
+  dueDate?: string
   contributionAmount: number
   totalSessions: number
   status: FundPeriodStatus

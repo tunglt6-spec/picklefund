@@ -125,6 +125,7 @@ export class FundPeriodsService {
       name: string;
       startDate: string;
       endDate: string;
+      dueDate?: string;
       contributionAmount: number;
       totalSessions?: number;
       notes?: string;
@@ -135,7 +136,7 @@ export class FundPeriodsService {
     if (new Date(dto.endDate) <= new Date(dto.startDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
     }
-    const { type, copyMembersFromPreviousPeriod, ...safeDto } = dto;
+    const { type, copyMembersFromPreviousPeriod, dueDate, ...safeDto } = dto;
     const periodType = type ?? 'chung';
     const data = {
       ...safeDto,
@@ -144,6 +145,7 @@ export class FundPeriodsService {
       type: periodType,
       startDate: new Date(dto.startDate),
       endDate: new Date(dto.endDate),
+      dueDate: dueDate ? new Date(dueDate) : null,
       contributionAmount: new Decimal(dto.contributionAmount),
       totalSessions: dto.totalSessions ?? 0,
       status: (new Date(dto.startDate) > new Date()
@@ -270,6 +272,9 @@ export class FundPeriodsService {
           ? { startDate: new Date(safeDto.startDate) }
           : {}),
         ...(safeDto.endDate ? { endDate: new Date(safeDto.endDate) } : {}),
+        ...(safeDto.dueDate !== undefined
+          ? { dueDate: safeDto.dueDate ? new Date(safeDto.dueDate) : null }
+          : {}),
         ...(safeDto.contributionAmount
           ? { contributionAmount: new Decimal(safeDto.contributionAmount) }
           : {}),

@@ -33,7 +33,7 @@ const statusVariant: Record<FundPeriodStatus, 'gray' | 'green' | 'yellow' | 'ind
 const DONUT_COLORS = ['var(--pf-primary)', '#7c3aed']
 
 const emptyForm = {
-  name: '', startDate: '', endDate: '',
+  name: '', startDate: '', endDate: '', dueDate: '',
   contributionAmount: 1000000, totalSessions: 13, notes: '',
   // FUND-IMPL-01: chỉ dùng cho modal Tạo Quỹ Phụ (create, không áp dụng khi sửa).
   copyMembersFromPreviousPeriod: false,
@@ -46,6 +46,7 @@ function periodToForm(p: FundPeriod): FormData {
     name: p.name,
     startDate: p.startDate,
     endDate: p.endDate,
+    dueDate: p.dueDate?.slice(0, 10) ?? '',
     contributionAmount: p.contributionAmount,
     totalSessions: p.totalSessions,
     notes: p.notes ?? '',
@@ -443,7 +444,7 @@ export function FundPeriods() {
       // này ở backend (UpdateFundPeriodDto), tách riêng để tránh gửi field lạ.
       const { copyMembersFromPreviousPeriod, ...formRest } = form
       if (editing) {
-        const payload = { ...formRest, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
+        const payload = { ...formRest, dueDate: form.dueDate || undefined, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions) }
         const res = await api.put(`/fund-periods/${editing.id}`, payload)
         const d = res.data?.data
         const updated: FundPeriod = { ...editing, ...payload, ...(d ?? {}), contributionAmount: Number((d ?? payload).contributionAmount) }
@@ -451,7 +452,7 @@ export function FundPeriods() {
         onClose()
         toast.success(`Đã cập nhật kỳ quỹ "${form.name}"`)
       } else {
-        const payload = { ...formRest, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions), copyMembersFromPreviousPeriod }
+        const payload = { ...formRest, dueDate: form.dueDate || undefined, type, contributionAmount: Number(form.contributionAmount), totalSessions: Number(form.totalSessions), copyMembersFromPreviousPeriod }
         const res = await api.post('/fund-periods', payload)
         const d = res.data?.data
         const newPeriod: FundPeriod = { ...d, contributionAmount: Number(d.contributionAmount), createdBy: d.createdById ?? user?.id ?? '' }
@@ -532,6 +533,7 @@ export function FundPeriods() {
         id: fp.id, clubId: fp.clubId, name: fp.name,
         startDate: fp.startDate?.slice(0, 10) ?? '',
         endDate: fp.endDate?.slice(0, 10) ?? '',
+        dueDate: fp.dueDate?.slice(0, 10) ?? undefined,
         contributionAmount: Number(fp.contributionAmount ?? 0),
         totalSessions: fp.totalSessions ?? 0,
         status: fp.status,
@@ -2116,6 +2118,11 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
             <input required type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="input-base" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hạn đóng quỹ</label>
+            <input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
+            <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ) <span className="text-red-500">*</span></label>

@@ -165,6 +165,9 @@ model FundPeriod {
   name               String           @db.VarChar(100)
   startDate          DateTime         @map("start_date") @db.Date
   endDate            DateTime         @map("end_date") @db.Date
+  /// Hạn đóng quỹ của kỳ (tùy chọn). Dùng để tính CÔNG NỢ QUÁ HẠN + TỶ LỆ THU ĐÚNG HẠN
+  /// (Command Center). null = kỳ chưa đặt hạn → không tính quá hạn/đúng hạn cho kỳ đó.
+  dueDate            DateTime?        @map("due_date") @db.Date
   contributionAmount Decimal          @map("contribution_amount") @db.Decimal(15, 2)
   totalSessions      Int              @default(0) @map("total_sessions")
   status             FundPeriodStatus @default(draft)
