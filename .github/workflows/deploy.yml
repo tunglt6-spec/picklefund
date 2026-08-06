@@ -159,6 +159,20 @@ jobs:
             docker logout ghcr.io >/dev/null 2>&1 || true
             export IMAGE_TAG="$GIT_SHA"
             echo "Pulling images at IMAGE_TAG=$IMAGE_TAG"
+
+            # ── Dọn image cũ TRƯỚC KHI PULL (chống "no space left" lúc giải nén) ──
+            # Chạy trong khi container CŨ vẫn đang chạy (down xảy ra SAU pull) → image
+            # của app đang chạy được tham chiếu nên KHÔNG bị xoá; chỉ dọn image deploy cũ
+            # không còn dùng. Deploy dồn dập trong ngày (image <72h) vẫn được giải phóng.
+            docker image prune -f >/dev/null 2>&1 || true   # dangling: luôn dọn
+            DISK_PRE=$(df / | awk 'NR==2{gsub(/%/,"",$5); print $5}')
+            echo "Disk trước pull: ${DISK_PRE}%"
+            if [ "${DISK_PRE:-0}" -ge 70 ]; then
+              echo "Disk ${DISK_PRE}% >= 70% — dọn MẠNH mọi image không dùng trước khi pull (rollback vẫn re-pull GHCR được)"
+              docker image prune -af >/dev/null 2>&1 || true
+              docker builder prune -af >/dev/null 2>&1 || true
+            fi
+
             docker compose pull backend frontend
             docker compose down --remove-orphans
             docker compose up -d
