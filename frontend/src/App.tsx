@@ -73,6 +73,9 @@ const PublicAbout = lz(() => import('./pages/public/About'), 'About')
 const LegalTerms = lz(() => import('./pages/public/legal/Legal'), 'Terms')
 const LegalPrivacy = lz(() => import('./pages/public/legal/Legal'), 'Privacy')
 const LegalCookie = lz(() => import('./pages/public/legal/Legal'), 'Cookie')
+const PublicReleaseNotes = lz(() => import('./pages/public/resources/ReleaseNotes'), 'ReleaseNotes')
+const PublicNews = lz(() => import('./pages/public/resources/News'), 'News')
+const PublicPartners = lz(() => import('./pages/public/Partners'), 'Partners')
 
 // Super Admin pages
 const SuperDashboard = lz(() => import('./pages/super/SuperDashboard'), 'SuperDashboard')
@@ -244,6 +247,9 @@ export default function App() {
           <Route path="/legal/terms" element={<LegalTerms />} />
           <Route path="/legal/privacy" element={<LegalPrivacy />} />
           <Route path="/legal/cookie" element={<LegalCookie />} />
+          <Route path="/resources/release-notes" element={<PublicReleaseNotes />} />
+          <Route path="/resources/news" element={<PublicNews />} />
+          <Route path="/partners" element={<PublicPartners />} />
           <Route path="/contact" element={<PublicContact />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
