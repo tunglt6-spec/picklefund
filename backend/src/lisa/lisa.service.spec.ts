@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
+import { AiUsageService } from '../ai-usage/ai-usage.service';
 import { LisaService } from './lisa.service';
 
 const mockPrisma = {
@@ -16,6 +17,7 @@ const mockPrisma = {
 };
 const mockHermes = { dispatch: jest.fn() };
 const mockConfig = { get: jest.fn().mockReturnValue(undefined) };
+const mockAiUsage = { record: jest.fn() };
 
 describe('LisaService', () => {
   let service: LisaService;
@@ -28,6 +30,7 @@ describe('LisaService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConfigService, useValue: mockConfig },
         { provide: HermesService, useValue: mockHermes },
+        { provide: AiUsageService, useValue: mockAiUsage },
       ],
     }).compile();
     service = module.get<LisaService>(LisaService);
