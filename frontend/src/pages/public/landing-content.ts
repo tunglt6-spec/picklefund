@@ -117,6 +117,7 @@ export const RESOURCES_MENU: MegaMenu = {
         { icon: BookOpen, title: 'Hướng dẫn sử dụng', desc: 'Tài liệu từng bước để bắt đầu và vận hành PickleFund.', href: '/resources/guide' },
         { icon: PlayCircle, title: 'Video Demo', desc: 'Xem nhanh cách các chức năng chính hoạt động.', href: '/resources/video' },
         { icon: HelpCircle, title: 'Câu hỏi thường gặp', desc: 'Giải đáp các vấn đề phổ biến về sản phẩm và triển khai.', href: '/resources/faq' },
+        { icon: GraduationCap, title: 'PickleFund Academy', desc: 'Hub học tập: hướng dẫn, cẩm nang, demo và giải đáp.', href: '/academy' },
       ],
     },
     {
@@ -125,16 +126,17 @@ export const RESOURCES_MENU: MegaMenu = {
         { icon: Rss, title: 'Blog', desc: 'Cẩm nang vận hành CLB: tài chính, vận hành và ứng dụng AI.', href: '/resources/blog' },
         { icon: LineChart, title: 'Máy tính ROI', desc: 'Ước lượng thời gian và chi phí tiết kiệm theo số liệu CLB của bạn.', href: '/roi' },
         { icon: Newspaper, title: 'Tin tức PickleFund', desc: 'Cập nhật sản phẩm, hoạt động và các phiên bản mới.', soon: true },
-        { icon: Sparkles, title: 'AI & Chuyển đổi số', desc: 'Kiến thức ứng dụng AI vào vận hành tổ chức thể thao.', soon: true },
-        { icon: BookOpen, title: 'Kinh nghiệm vận hành CLB', desc: 'Các bài viết thực tế về tài chính, thành viên và hoạt động.', soon: true },
+        { icon: Sparkles, title: 'AI & Chuyển đổi số', desc: 'Kiến thức ứng dụng AI vào vận hành tổ chức thể thao.', href: '/resources/blog' },
+        { icon: BookOpen, title: 'Kinh nghiệm vận hành CLB', desc: 'Các bài viết thực tế về tài chính, thành viên và hoạt động.', href: '/resources/blog' },
+        { icon: CalendarCheck, title: 'Webinar & sự kiện', desc: 'Đăng ký nhận thông báo các buổi webinar hướng dẫn vận hành.', href: '/webinar' },
       ],
     },
     {
       title: 'Tải xuống',
       items: [
-        { icon: Download, title: 'Brochure', soon: true },
+        { icon: Download, title: 'Tải & cài đặt', href: '/download' },
         { icon: Tag, title: 'Bảng giá', href: '/pricing' },
-        { icon: FileText, title: 'Chính sách', soon: true },
+        { icon: ShieldCheck, title: 'Trung tâm Tin cậy', href: '/trust' },
         { icon: FileText, title: 'Release Notes', soon: true },
       ],
     },
@@ -149,9 +151,9 @@ export const ABOUT_MENU: MegaMenu = {
   groups: [
     {
       items: [
-        { icon: BookOpen, title: 'Câu chuyện PickleFund', desc: 'Hành trình xây dựng nền tảng quản trị cộng đồng thể thao tích hợp AI.', soon: true },
-        { icon: Target, title: 'Tầm nhìn & Sứ mệnh', desc: 'Giúp các CLB thể thao vận hành minh bạch, chuyên nghiệp và bền vững.', soon: true },
-        { icon: Route, title: 'Lộ trình phát triển', desc: 'Định hướng phát triển sản phẩm theo nhu cầu thực tế của cộng đồng.', soon: true },
+        { icon: BookOpen, title: 'Câu chuyện PickleFund', desc: 'Hành trình xây dựng nền tảng quản trị cộng đồng thể thao tích hợp AI.', href: '/about' },
+        { icon: Target, title: 'Tầm nhìn & Sứ mệnh', desc: 'Giúp các CLB thể thao vận hành minh bạch, chuyên nghiệp và bền vững.', href: '/about' },
+        { icon: Route, title: 'Lộ trình phát triển', desc: 'Định hướng phát triển sản phẩm theo nhu cầu thực tế của cộng đồng.', href: '/roadmap' },
         { icon: Bot, title: 'Đội ngũ AI', desc: 'Giới thiệu Maika, Lisa, Hermes, Mít Đặc và Notification AI.', href: '/product/aido' },
       ],
     },
@@ -363,17 +365,20 @@ export const FOOTER_GROUPS: { title: string; items: MenuItem[] }[] = [
       { title: 'FAQ', href: '/resources/faq' },
       { title: 'Blog', href: '/resources/blog' },
       { title: 'Máy tính ROI', href: '/roi' },
-      { title: 'Tin tức', soon: true },
+      { title: 'PickleFund Academy', href: '/academy' },
+      { title: 'Webinar & sự kiện', href: '/webinar' },
+      { title: 'Trung tâm Tin cậy', href: '/trust' },
+      { title: 'Tải & cài đặt', href: '/download' },
       { title: 'Release Notes', soon: true },
-      { title: 'Brochure', soon: true },
       { title: 'Bảng giá', href: '/pricing' },
     ],
   },
   {
     title: 'Về chúng tôi',
     items: [
-      { title: 'Câu chuyện PickleFund', soon: true },
-      { title: 'Tầm nhìn & Sứ mệnh', soon: true },
+      { title: 'Câu chuyện PickleFund', href: '/about' },
+      { title: 'Tầm nhìn & Sứ mệnh', href: '/about' },
+      { title: 'Lộ trình phát triển', href: '/roadmap' },
       { title: 'Đội ngũ AI', href: '/product/aido' },
       { title: 'Khách hàng', href: '/success-stories' },
       { title: 'Đối tác', soon: true },
@@ -383,9 +388,9 @@ export const FOOTER_GROUPS: { title: string; items: MenuItem[] }[] = [
 ]
 
 export const FOOTER_LEGAL: MenuItem[] = [
-  { title: 'Điều khoản sử dụng', soon: true },
-  { title: 'Chính sách bảo mật', soon: true },
-  { title: 'Chính sách cookie', soon: true },
+  { title: 'Điều khoản sử dụng', href: '/legal/terms' },
+  { title: 'Chính sách bảo mật', href: '/legal/privacy' },
+  { title: 'Chính sách cookie', href: '/legal/cookie' },
 ]
 
 /** Thông tin liên hệ — chỉ dùng giá trị THẬT đã có trong cấu hình dự án. */

@@ -64,6 +64,15 @@ const PublicBlog = lz(() => import('./pages/public/resources/Blog'), 'Blog')
 const PublicBlogArticle = lz(() => import('./pages/public/resources/Blog'), 'BlogArticle')
 const PublicSuccessStories = lz(() => import('./pages/public/SuccessStories'), 'SuccessStories')
 const PublicRoi = lz(() => import('./pages/public/RoiCalculator'), 'RoiCalculator')
+const PublicRoadmap = lz(() => import('./pages/public/Roadmap'), 'Roadmap')
+const PublicTrust = lz(() => import('./pages/public/TrustCenter'), 'TrustCenter')
+const PublicAcademy = lz(() => import('./pages/public/Academy'), 'Academy')
+const PublicWebinar = lz(() => import('./pages/public/Webinar'), 'Webinar')
+const PublicDownload = lz(() => import('./pages/public/Download'), 'Download')
+const PublicAbout = lz(() => import('./pages/public/About'), 'About')
+const LegalTerms = lz(() => import('./pages/public/legal/Legal'), 'Terms')
+const LegalPrivacy = lz(() => import('./pages/public/legal/Legal'), 'Privacy')
+const LegalCookie = lz(() => import('./pages/public/legal/Legal'), 'Cookie')
 
 // Super Admin pages
 const SuperDashboard = lz(() => import('./pages/super/SuperDashboard'), 'SuperDashboard')
@@ -226,6 +235,15 @@ export default function App() {
           <Route path="/resources/blog/:slug" element={<PublicBlogArticle />} />
           <Route path="/success-stories" element={<PublicSuccessStories />} />
           <Route path="/roi" element={<PublicRoi />} />
+          <Route path="/roadmap" element={<PublicRoadmap />} />
+          <Route path="/trust" element={<PublicTrust />} />
+          <Route path="/academy" element={<PublicAcademy />} />
+          <Route path="/webinar" element={<PublicWebinar />} />
+          <Route path="/download" element={<PublicDownload />} />
+          <Route path="/about" element={<PublicAbout />} />
+          <Route path="/legal/terms" element={<LegalTerms />} />
+          <Route path="/legal/privacy" element={<LegalPrivacy />} />
+          <Route path="/legal/cookie" element={<LegalCookie />} />
           <Route path="/contact" element={<PublicContact />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
