@@ -146,6 +146,20 @@ export class CommandCenterService {
     const aiRequests = aiActionsTotal + lisaMessages;
     const aiSuccessRate = aiExecuted + aiFailed > 0 ? Math.round((aiExecuted / (aiExecuted + aiFailed)) * 100) : null;
 
+    // Token/chi phí AI thật (AiUsageLog). Chưa có dòng nào trong kỳ → giữ null ("chưa có dữ liệu").
+    const [usageAgg, usageCount, usageFallback, providerGroups] = await Promise.all([
+      this.prisma.aiUsageLog.aggregate({ _sum: { totalTokens: true, estimatedCostUsd: true }, _avg: { latencyMs: true }, where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiUsageLog.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiUsageLog.count({ where: { fallback: true, createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiUsageLog.groupBy({ by: ['provider'], where: { createdAt: { gte: start, lte: end }, ...scope }, _count: { _all: true } }),
+    ]);
+    const hasUsage = usageCount > 0;
+    const aiTokens = hasUsage ? n(usageAgg._sum.totalTokens) : null;
+    const aiCostUsd = hasUsage ? Math.round(n(usageAgg._sum.estimatedCostUsd) * 1e6) / 1e6 : null;
+    const aiAvgLatency = hasUsage && usageAgg._avg.latencyMs != null ? Math.round(n(usageAgg._avg.latencyMs)) : null;
+    const aiFallbacks = hasUsage ? usageFallback : null;
+    const aiProviders = hasUsage ? providerGroups.map((g) => g.provider).join(' · ') : null;
+
     // ── Khối 6: Hạ tầng (Node os/process + ping DB) ──
     const cores = os.cpus().length || 1;
     const load1 = os.loadavg()[0] ?? 0;
@@ -194,7 +208,7 @@ export class CommandCenterService {
         totalClubs, activeClubs, suspendedClubs,
         totalMembers, activeUsers, logins24h,
         mrr, revenueInRange: n(revRange._sum.amount), paidSubscribers,
-        aiRequests, aiCost: null, uptimeSeconds: infra.uptimeSeconds,
+        aiRequests, aiCost: aiCostUsd, uptimeSeconds: infra.uptimeSeconds,
       },
       summary,
       business: {
@@ -225,7 +239,7 @@ export class CommandCenterService {
         totals: {
           requests: aiRequests, successRate: aiSuccessRate, avgActionMs: avgAction._avg.executionDuration ? Math.round(n(avgAction._avg.executionDuration)) : null,
           errors: aiFailed + wf('FAILED') + notiFailed,
-          tokens: null, cost: null, provider: null, model: null, fallbacks: null, avgLatencyMs: null,
+          tokens: aiTokens, cost: aiCostUsd, provider: aiProviders, fallbacks: aiFallbacks, avgLatencyMs: aiAvgLatency,
         },
         agents: {
           maika: { insights: maikaInsights, actions: aiActionsTotal },

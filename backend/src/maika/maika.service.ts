@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
+import { AiUsageService } from '../ai-usage/ai-usage.service';
 import type {
   ClubSnapshot,
   DailyBrief,
@@ -25,6 +26,7 @@ export class MaikaService {
     private config: ConfigService,
     private hermes: HermesService,
     private fundPeriods: FundPeriodsService,
+    private aiUsage: AiUsageService,
   ) {
     this.geminiModel =
       this.config.get<string>('GEMINI_MODEL') ?? 'gemini-3.5-flash';
@@ -162,22 +164,28 @@ export class MaikaService {
   async composeText(
     prompt: string,
     fallback: string,
+    clubId?: string,
   ): Promise<{ text: string; byAi: boolean }> {
-    const text = await this.askAI(prompt, fallback);
+    const text = await this.askAI(prompt, fallback, clubId);
     // askAI trả fallback (nguyên văn) khi mọi tầng LLM fail/không cấu hình.
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 
-  private async askAI(prompt: string, fallback: string): Promise<string> {
+  private async askAI(prompt: string, fallback: string, clubId?: string): Promise<string> {
     // 1) Gemini Free (primary)
     if (this.genAI) {
+      const t0 = Date.now();
       try {
         const model = this.genAI.getGenerativeModel({
           model: this.geminiModel,
         });
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
-        if (text) return text; // rỗng (bị lọc an toàn…) → coi như fail, xuống tầng dưới
+        if (text) {
+          const u = AiUsageService.readGeminiUsage(result);
+          void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'gemini', model: this.geminiModel, ...u, latencyMs: Date.now() - t0, success: true });
+          return text; // rỗng (bị lọc an toàn…) → coi như fail, xuống tầng dưới
+        }
       } catch (err: any) {
         this.logger.warn(
           `[Maika] Gemini error: ${err.message} — trying OpenRouter`,
@@ -214,7 +222,11 @@ export class MaikaService {
         if (res.ok) {
           const data: any = await res.json();
           const text = data?.choices?.[0]?.message?.content?.trim();
-          if (text) return text;
+          if (text) {
+            const usage = data?.usage ?? {};
+            void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'openrouter', model: 'deepseek/deepseek-chat-v3-0324:free', promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens, totalTokens: usage.total_tokens, success: true, fallback: true });
+            return text;
+          }
         }
       } catch (err: any) {
         this.logger.warn(
@@ -223,7 +235,8 @@ export class MaikaService {
       }
     }
 
-    // 3) Rule-based fallback
+    // 3) Rule-based fallback — ghi nhận để đếm số lần fallback (0 token).
+    void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'rule-based', model: null, success: true, fallback: true });
     return fallback;
   }
 

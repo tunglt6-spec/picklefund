@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
+import { AiUsageService } from '../ai-usage/ai-usage.service';
 import { APP_GUIDE } from '../common/app-guide';
 import type {
   MemberContext,
@@ -44,6 +45,7 @@ export class LisaService {
     private prisma: PrismaService,
     private config: ConfigService,
     private hermes: HermesService,
+    private aiUsage: AiUsageService,
   ) {
     this.geminiModel =
       this.config.get<string>('GEMINI_MODEL_LITE') ?? 'gemini-3.1-flash-lite';
@@ -71,6 +73,7 @@ export class LisaService {
     systemCtx: string,
     userMsg: string,
     fallback: string,
+    clubId?: string,
   ): Promise<string> {
     // M3 — chống prompt-injection: chuẩn hoá câu hỏi (bỏ ký tự thoát chuỗi), giới hạn độ dài,
     // và đóng khung rõ đây là DỮ LIỆU không phải chỉ thị hệ thống.
@@ -84,6 +87,7 @@ export class LisaService {
 
     // 1) Gemini
     if (this.genAI) {
+      const t0 = Date.now();
       try {
         const model = this.genAI.getGenerativeModel({
           model: this.geminiModel,
@@ -95,7 +99,11 @@ export class LisaService {
           15000,
         );
         const text = result.response.text().trim();
-        if (text) return text; // rỗng (bị lọc an toàn/timeout) → coi như fail, xuống tầng dưới
+        if (text) {
+          const u = AiUsageService.readGeminiUsage(result);
+          void this.aiUsage.record({ clubId, agent: 'LISA', provider: 'gemini', model: this.geminiModel, ...u, latencyMs: Date.now() - t0, success: true });
+          return text; // rỗng (bị lọc an toàn/timeout) → coi như fail, xuống tầng dưới
+        }
       } catch (err: any) {
         this.logger.warn(
           `[Lisa] Gemini error: ${err.message} — trying OpenRouter`,
@@ -148,7 +156,11 @@ export class LisaService {
           if (res.ok) {
             const data: any = await res.json();
             const text = data?.choices?.[0]?.message?.content?.trim();
-            if (text) return text;
+            if (text) {
+              const usage = data?.usage ?? {};
+              void this.aiUsage.record({ clubId, agent: 'LISA', provider: 'openrouter', model, promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens, totalTokens: usage.total_tokens, success: true, fallback: true });
+              return text;
+            }
           } else {
             const err = await res.json().catch(() => ({}));
             this.logger.warn(
@@ -163,6 +175,8 @@ export class LisaService {
       }
     }
 
+    // 3) Rule-based fallback — ghi nhận để đếm fallback (0 token).
+    void this.aiUsage.record({ clubId, agent: 'LISA', provider: 'rule-based', model: null, success: true, fallback: true });
     return fallback;
   }
 
@@ -419,6 +433,7 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
       contextStr,
       'Viết lời chào ngắn (2-3 câu) bằng tiếng Việt, thân thiện, đề cập điểm nổi bật nhất từ dữ liệu.',
       fallback,
+      ctx.clubId,
     );
 
     return {
@@ -451,7 +466,7 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
     // hallucinate sang VNeID/hosting/học ngoại ngữ. Lisa chỉ neo vào DỮ LIỆU CLB + phạm vi
     // PickleFund (system prompt đã ràng buộc). Ngoài phạm vi → từ chối lịch sự, không bịa.
     const fallback = `Xin chào ${ctx.memberName}! Lisa đang tạm thời gián đoạn kết nối trí tuệ nên chưa trả lời chi tiết được. Tạm thời: số dư quỹ CLB hiện tại ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ, bạn ${ctx.currentPeriodPaid ? 'đã' : 'chưa'} đóng quỹ kỳ này. Bạn thử hỏi lại sau giây lát nhé.`;
-    const answer = await this.askAI(contextStr, question, fallback);
+    const answer = await this.askAI(contextStr, question, fallback, clubId ?? ctx.clubId);
 
     const actions: string[] = [];
     if (!ctx.currentPeriodPaid) actions.push('Đóng quỹ kỳ hiện tại');

@@ -214,7 +214,7 @@ function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[
     { label: `Doanh thu (${rangeLabel})`, value: vnd(k.revenueInRange), icon: <Wallet size={18} />, tone: 'success' },
     { label: 'Thuê bao trả phí', value: num(k.paidSubscribers), icon: <CreditCard size={18} />, tone: 'brand' },
     { label: 'AI Request', value: num(k.aiRequests), icon: <Bot size={18} />, tone: 'brand' },
-    { label: 'Chi phí AI', value: <NoData hint="Token/chi phí AI chưa được ghi nhận" />, icon: <Cpu size={18} />, tone: 'neutral' },
+    { label: 'Chi phí AI (ước tính)', value: k.aiCost != null ? `$${Number(k.aiCost).toFixed(4)}` : <NoData hint="Chưa có lượt gọi AI trong kỳ" />, icon: <Cpu size={18} />, tone: k.aiCost != null ? 'success' : 'neutral' },
     { label: 'Uptime', value: fmtUptime(k.uptimeSeconds), icon: <Server size={18} />, tone: 'success' },
   ]
 
@@ -321,8 +321,8 @@ function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[
           <MetricCard label="Tỷ lệ thành công" value={pctStr(ai.totals.successRate)} icon={<Gauge size={16} />} tone="success" />
           <MetricCard label="TG thực thi TB" value={ai.totals.avgActionMs != null ? `${num(ai.totals.avgActionMs)} ms` : '—'} icon={<Clock size={16} />} tone="info" />
           <MetricCard label="Lỗi AI" value={num(ai.totals.errors)} icon={<AlertTriangle size={16} />} tone={ai.totals.errors > 0 ? 'danger' : 'success'} />
-          <MetricCard label="Token / Chi phí" value={<NoData hint="Chưa ghi nhận token/chi phí LLM" />} icon={<Cpu size={16} />} tone="neutral" />
-          <MetricCard label="Provider / Fallback" value={<NoData hint="Chưa ghi nhận provider/model/fallback" />} icon={<Server size={16} />} tone="neutral" />
+          <MetricCard label="Token AI" value={ai.totals.tokens != null ? num(ai.totals.tokens) : <NoData hint="Chưa có lượt gọi AI trong kỳ" />} sub={ai.totals.cost != null ? `~$${Number(ai.totals.cost).toFixed(4)} (ước tính)` : undefined} icon={<Cpu size={16} />} tone={ai.totals.tokens != null ? 'brand' : 'neutral'} />
+          <MetricCard label="Provider / Fallback" value={ai.totals.provider ?? <NoData hint="Chưa có lượt gọi AI trong kỳ" />} sub={ai.totals.provider ? `${num(ai.totals.fallbacks)} fallback${ai.totals.avgLatencyMs != null ? ` · ${num(ai.totals.avgLatencyMs)}ms` : ''}` : undefined} icon={<Server size={16} />} tone={ai.totals.provider ? 'info' : 'neutral'} />
         </div>
       </Section>
 
