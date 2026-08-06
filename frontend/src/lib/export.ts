@@ -11,6 +11,13 @@ let exportBranding = {
   logoUrl: null as string | null,
   primaryColor: DEFAULT_BRAND_COLOR,
 }
+/** Ghi nhận 1 lần XUẤT báo cáo (best-effort, fire-and-forget) → Command Center đếm "báo cáo đã xuất". */
+export function logReportExport(type: string, format: string) {
+  void import('./api')
+    .then((m) => m.default.post('/report-exports', { type, format }).catch(() => {}))
+    .catch(() => {})
+}
+
 export function setExportBranding(b: {
   displayName?: string | null
   pdfFooter?: string | null
@@ -273,6 +280,7 @@ export async function captureElementAsReportPng(
   fileBase: string,
   report: { title: string; subtitle?: string; meta?: string },
 ) {
+  logReportExport(fileBase, 'image')
   const [{ default: html2canvas }, logo] = await Promise.all([import('html2canvas-pro'), loadBrandLogo()])
   const el = document.getElementById(elementId)
   if (!el) throw new Error('Element not found')
@@ -332,6 +340,7 @@ export async function captureElementAsReportPDF(
   fileBase: string,
   report: { title: string; subtitle?: string; meta?: string },
 ) {
+  logReportExport(fileBase, 'pdf')
   const [{ default: html2canvas }, { default: jsPDF }, logo] = await Promise.all([
     import('html2canvas-pro'),
     import('jspdf'),
@@ -515,6 +524,7 @@ export async function exportExcel(
   filename: string,
   sheets: { name: string; headers: string[]; rows: (string | number)[][] }[]
 ) {
+  logReportExport(filename, 'excel')
   const mod = await import('xlsx-js-style')
   const XLSX = ((mod as unknown as { default?: typeof import('xlsx-js-style') }).default ?? mod)
   const set = (ws: Record<string, unknown>, r: number, c: number, patch: { v?: unknown; t?: string; z?: string; s?: unknown }) => {

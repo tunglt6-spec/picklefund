@@ -121,13 +121,14 @@ export class CommandCenterService {
     }));
 
     // ── Khối 4: Hoạt động nghiệp vụ (trong kỳ) ──
-    const [fundPeriods, sessions, registrations, attendancePresent, minigames, matches] = await Promise.all([
+    const [fundPeriods, sessions, registrations, attendancePresent, minigames, matches, reportsExported] = await Promise.all([
       this.prisma.fundPeriod.count({ where: scope }),
       this.prisma.attendanceSession.count({ where: { sessionDate: { gte: start, lte: end }, ...scope } }),
       this.prisma.sessionRegistration.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
       this.prisma.attendanceRecord.count({ where: { status: 'PRESENT', createdAt: { gte: start, lte: end }, ...scope } }),
       this.prisma.minigame.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
       this.prisma.minigameMatch.count({ where: { createdAt: { gte: start, lte: end }, ...(clubId ? { minigame: { clubId } } : {}) } }),
+      this.prisma.reportExportLog.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
     ]);
 
     // ── Khối 5: AI Operations (đếm toàn hệ thống trong kỳ) ──
@@ -177,13 +178,25 @@ export class CommandCenterService {
     } catch {
       dbStatus = 'down';
     }
+    // Trạng thái sao lưu DB (BackupService ghi vào SystemSetting `db_backup_last`).
+    let backup: { at: string; success: boolean; sizeMb: number | null; error: string | null } | null = null;
+    try {
+      const bs = await this.prisma.systemSetting.findUnique({ where: { key: 'db_backup_last' } });
+      if (bs?.value) {
+        const v = JSON.parse(bs.value);
+        backup = { at: v.at, success: !!v.success, sizeMb: v.sizeBytes ? Math.round((v.sizeBytes / 1048576) * 10) / 10 : null, error: v.error ?? null };
+      }
+    } catch { /* giữ null */ }
+    const backupEnabled = process.env.BACKUP_ENABLED === '1' || process.env.BACKUP_ENABLED === 'true';
+
     const infra = {
       cpu: { load1: Math.round(load1 * 100) / 100, cores, pct: Math.min(100, Math.round((load1 / cores) * 100)) },
       memory: { usedMb: Math.round((totalMem - freeMem) / 1048576), totalMb: Math.round(totalMem / 1048576), pct: Math.round(((totalMem - freeMem) / totalMem) * 100) },
       uptimeSeconds: Math.round(process.uptime()),
       db: { status: dbStatus, latencyMs: dbLatency },
+      backup, backupEnabled,
       // Chưa có nguồn dữ liệu thật → null (frontend hiển thị "chưa có dữ liệu"):
-      disk: null, queue: null, storage: null, backup: null,
+      disk: null, queue: null, storage: null,
       errorRate: null, requestsPerMin: null, activeSessions: null, dbConnections: null,
     };
 
@@ -229,7 +242,7 @@ export class CommandCenterService {
       operations: {
         clubs: { total: totalClubs, new: newClubs, active: activeClubs, suspended: suspendedClubs, expiringSoon },
         members: { total: totalMembers, new: newMembers, active: activeMembers, registrations, checkins: attendancePresent, attendance: attendancePresent },
-        business: { fundPeriods, sessions, minigames, matches, reportsExported: null }, // reportsExported: chưa có bảng đếm
+        business: { fundPeriods, sessions, minigames, matches, reportsExported },
       },
       finance: {
         totalIncome, totalExpense, totalBalance: totalIncome - totalExpense,

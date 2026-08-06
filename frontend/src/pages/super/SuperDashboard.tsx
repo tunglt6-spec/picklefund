@@ -139,6 +139,18 @@ export function SuperDashboard() {
       toast.success('Đã xuất PDF')
     } catch { toast.error('Không tạo được PDF') }
   }
+  const runBackup = async () => {
+    const t = toast.loading('Đang sao lưu cơ sở dữ liệu…')
+    try {
+      const r = await api.post('/backup/run')
+      const st = r.data?.data
+      if (st?.success) toast.success(`Sao lưu thành công${st.sizeBytes ? ` (${Math.round((st.sizeBytes / 1048576) * 10) / 10}MB)` : ''}`, { id: t })
+      else toast.error(`Sao lưu lỗi: ${st?.error ?? 'không rõ'}`, { id: t })
+      load()
+    } catch {
+      toast.error('Không chạy được sao lưu', { id: t })
+    }
+  }
 
   const rangeLabel = RANGES.find((r) => r.key === range)?.label ?? ''
 
@@ -185,7 +197,7 @@ export function SuperDashboard() {
         </div>
       ) : data ? (
         <div id="command-center-capture" className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <CommandCenterBody data={data} audit={audit} rangeLabel={rangeLabel} />
+          <CommandCenterBody data={data} audit={audit} rangeLabel={rangeLabel} onRunBackup={runBackup} />
         </div>
       ) : null}
     </PageShell>
@@ -194,7 +206,7 @@ export function SuperDashboard() {
 
 /* ────────────────────────────── Nội dung các khối ────────────────────────────── */
 
-function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[]; rangeLabel: string }) {
+function CommandCenterBody({ data, audit, rangeLabel, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; onRunBackup: () => void }) {
   const k = data.kpi
   const biz = data.business
   const ops = data.operations
@@ -291,7 +303,7 @@ function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[
           <MetricCard label="Buổi chơi" value={num(ops.business.sessions)} icon={<Activity size={16} />} tone="info" />
           <MetricCard label="Giải đấu / Minigame" value={num(ops.business.minigames)} icon={<Trophy size={16} />} tone="warning" />
           <MetricCard label="Trận đấu" value={num(ops.business.matches)} icon={<Trophy size={16} />} tone="warning" />
-          <MetricCard label="Báo cáo đã xuất" value={<NoData hint="Chưa có bảng ghi nhận số báo cáo xuất" />} icon={<ClipboardList size={16} />} tone="neutral" />
+          <MetricCard label="Báo cáo đã xuất" value={num(ops.business.reportsExported)} icon={<ClipboardList size={16} />} tone="info" />
         </div>
       </Section>
 
@@ -333,12 +345,25 @@ function CommandCenterBody({ data, audit, rangeLabel }: { data: any; audit: any[
           <MetricCard label="RAM" value={pctStr(infra.memory?.pct)} sub={`${num(infra.memory?.usedMb)}/${num(infra.memory?.totalMb)} MB`} icon={<Gauge size={16} />} tone={infra.memory?.pct >= 90 ? 'danger' : infra.memory?.pct >= 70 ? 'warning' : 'success'} />
           <MetricCard label="Uptime" value={fmtUptime(infra.uptimeSeconds)} icon={<Server size={16} />} tone="success" />
           <MetricCard label="Database" value={infra.db?.status === 'up' ? 'Bình thường' : 'Lỗi'} sub={infra.db?.latencyMs != null ? `${infra.db.latencyMs} ms` : undefined} icon={<Database size={16} />} tone={infra.db?.status === 'up' ? 'success' : 'danger'} />
+          <MetricCard
+            label="Backup"
+            value={infra.backup ? (infra.backup.success ? 'Bình thường' : 'Lỗi') : (infra.backupEnabled ? 'Chờ chạy' : 'Chưa bật')}
+            sub={infra.backup
+              ? `${new Date(infra.backup.at).toLocaleString('vi-VN')}${infra.backup.sizeMb != null ? ` · ${infra.backup.sizeMb}MB` : ''}`
+              : (infra.backupEnabled ? 'Lịch tự động đã bật' : 'Đặt BACKUP_ENABLED=1 để tự động')}
+            icon={<ShieldCheck size={16} />}
+            tone={infra.backup ? (infra.backup.success ? 'success' : 'danger') : 'neutral'}
+          />
           <MetricCard label="Disk" value={<NoData />} icon={<Database size={16} />} tone="neutral" />
           <MetricCard label="Queue" value={<NoData />} icon={<Server size={16} />} tone="neutral" />
           <MetricCard label="Storage" value={<NoData />} icon={<Database size={16} />} tone="neutral" />
-          <MetricCard label="Backup" value={<NoData />} icon={<ShieldCheck size={16} />} tone="neutral" />
         </div>
-        <p className="mt-2 text-[11px] [color:var(--pf-color-muted)]">CPU/RAM/Uptime/DB lấy trực tiếp từ tiến trình máy chủ (Node os/process + ping DB). Các mục xám chưa có nguồn giám sát → chưa hiển thị.</p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] [color:var(--pf-color-muted)]">CPU/RAM/Uptime/DB lấy trực tiếp từ tiến trình máy chủ (Node os/process + ping DB). Disk/Queue/Storage chưa có nguồn giám sát.</p>
+          <button onClick={onRunBackup} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]">
+            <ShieldCheck size={13} /> Chạy sao lưu ngay
+          </button>
+        </div>
       </Section>
 
       {/* Cảnh báo + Bảng xếp hạng */}

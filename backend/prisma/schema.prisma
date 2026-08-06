@@ -1302,3 +1302,18 @@ model AiUsageLog {
   @@index([createdAt])
   @@map("ai_usage_logs")
 }
+
+/// Đếm số lần XUẤT báo cáo (Excel/PDF/Ảnh) toàn hệ thống cho Command Center. Frontend gọi
+/// POST /report-exports (best-effort) mỗi lần xuất. clubId/userId lấy từ JWT (null cho super).
+model ReportExportLog {
+  id        String   @id @default(uuid())
+  clubId    String?  @map("club_id")
+  userId    String?  @map("user_id")
+  type      String   @db.VarChar(60)
+  format    String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([clubId, createdAt])
+  @@index([createdAt])
+  @@map("report_export_logs")
+}

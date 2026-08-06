@@ -46,6 +46,8 @@ import { NotificationRuntimeModule } from './notification-runtime/notification-r
 import { ScoringModule } from './scoring/scoring.module';
 import { CommandCenterModule } from './command-center/command-center.module';
 import { AiUsageModule } from './ai-usage/ai-usage.module';
+import { ReportExportsModule } from './report-exports/report-exports.module';
+import { BackupModule } from './backup/backup.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -112,6 +114,8 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     ScoringModule,
     CommandCenterModule,
     AiUsageModule,
+    ReportExportsModule,
+    BackupModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
