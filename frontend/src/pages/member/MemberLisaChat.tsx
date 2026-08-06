@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Send, Bot, User, RefreshCw } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -160,7 +161,9 @@ export function MemberLisaChat() {
   )
 
   if (isMobile) {
-    return (
+    // Portal ra document.body: tránh ancestor .pf-page (transform → containing block) làm
+    // position:fixed bị giam/cắt → trắng màn. Xem LisaChat.tsx.
+    return createPortal(
       <div
         className="flex flex-col overflow-hidden [background:var(--pf-bg)]"
         style={{
@@ -168,8 +171,8 @@ export function MemberLisaChat() {
           top: 64,
           left: 0,
           right: 0,
-          bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
-          zIndex: 20,
+          bottom: 0,
+          zIndex: 40,
         }}
       >
         {/* Header */}
@@ -201,7 +204,8 @@ export function MemberLisaChat() {
             </button>
           </form>
         </div>
-      </div>
+      </div>,
+      document.body,
     )
   }
 

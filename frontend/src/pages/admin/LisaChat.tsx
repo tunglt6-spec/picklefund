@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Send, Bot, User, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -188,16 +189,18 @@ export function LisaChat() {
   )
 
   if (isMobile) {
-    return (
+    // Portal ra document.body: tránh ancestor .pf-page (page-transition có transform +
+    // fill-mode both → thành containing block cho position:fixed) làm chat bị giam/cắt → trắng màn.
+    return createPortal(
       <div
         className="flex flex-col overflow-hidden [background:var(--pf-bg)]"
         style={{
           position: 'fixed',
-          top: 64,
+          top: 64, // dưới mobile header (64px)
           left: 0,
           right: 0,
-          bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
-          zIndex: 20,
+          bottom: 0,
+          zIndex: 40,
         }}
       >
         {/* Header */}
@@ -233,7 +236,8 @@ export function LisaChat() {
             </button>
           </form>
         </div>
-      </div>
+      </div>,
+      document.body,
     )
   }
 
