@@ -58,6 +58,12 @@ const AidoShowcase = lz(() => import('./pages/public/product/AidoShowcase'), 'Ai
 const PublicGuide = lz(() => import('./pages/public/resources/Guide'), 'Guide')
 const PublicFaq = lz(() => import('./pages/public/resources/Faq'), 'Faq')
 const PublicContact = lz(() => import('./pages/public/Contact'), 'Contact')
+const ExecReportShowcase = lz(() => import('./pages/public/product/ExecutiveReportShowcase'), 'ExecutiveReportShowcase')
+const PublicVideoDemo = lz(() => import('./pages/public/resources/VideoDemo'), 'VideoDemo')
+const PublicBlog = lz(() => import('./pages/public/resources/Blog'), 'Blog')
+const PublicBlogArticle = lz(() => import('./pages/public/resources/Blog'), 'BlogArticle')
+const PublicSuccessStories = lz(() => import('./pages/public/SuccessStories'), 'SuccessStories')
+const PublicRoi = lz(() => import('./pages/public/RoiCalculator'), 'RoiCalculator')
 
 // Super Admin pages
 const SuperDashboard = lz(() => import('./pages/super/SuperDashboard'), 'SuperDashboard')
@@ -212,8 +218,14 @@ export default function App() {
           <Route path="/demo" element={<DemoSelector />} />
           {/* Landing v2 — trang nội dung công khai (Phase 1) */}
           <Route path="/product/aido" element={<AidoShowcase />} />
+          <Route path="/product/executive-report" element={<ExecReportShowcase />} />
           <Route path="/resources/guide" element={<PublicGuide />} />
           <Route path="/resources/faq" element={<PublicFaq />} />
+          <Route path="/resources/video" element={<PublicVideoDemo />} />
+          <Route path="/resources/blog" element={<PublicBlog />} />
+          <Route path="/resources/blog/:slug" element={<PublicBlogArticle />} />
+          <Route path="/success-stories" element={<PublicSuccessStories />} />
+          <Route path="/roi" element={<PublicRoi />} />
           <Route path="/contact" element={<PublicContact />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
