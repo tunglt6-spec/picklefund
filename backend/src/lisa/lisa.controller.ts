@@ -44,6 +44,12 @@ export class LisaController {
     return ok(await this.svc.getPersonalBrief(user.memberId));
   }
 
+  @Get('history')
+  async history(@CurrentUser() user: any) {
+    if (!user.memberId || !user.clubId) return ok([]);
+    return ok(await this.svc.getHistory(user.memberId, user.clubId));
+  }
+
   @Post('ask')
   @Throttle({ short: { ttl: 60000, limit: 12 } }) // chặn lạm dụng LLM (chi phí token bên thứ ba)
   async ask(@CurrentUser() user: any, @Body() body: AskLisaDto) {

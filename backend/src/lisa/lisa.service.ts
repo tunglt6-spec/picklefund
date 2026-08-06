@@ -477,6 +477,21 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
     return { question, answer, suggestedActions: actions };
   }
 
+  /**
+   * Lịch sử hội thoại Lisa của CHÍNH thành viên (scope memberId + clubId từ JWT — chống IDOR).
+   * Trả theo thứ tự thời gian tăng dần (cũ → mới) để FE dựng lại đúng dòng chat.
+   */
+  async getHistory(memberId: string, clubId: string, limit = 40) {
+    const take = Math.min(Math.max(limit, 1), 100);
+    const rows = await this.prisma.lisaMessage.findMany({
+      where: { memberId, clubId },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: { question: true, answer: true, createdAt: true },
+    });
+    return rows.reverse();
+  }
+
   // ─── Smart Reminders ──────────────────────────────────────────────────────
 
   async generateRemindersForClub(clubId: string): Promise<SmartReminder[]> {

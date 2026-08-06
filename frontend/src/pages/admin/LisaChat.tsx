@@ -52,41 +52,49 @@ export function LisaChat() {
     return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
   }, [isMobile])
 
-  // `initial=true` (lúc mở màn) mới đặt lời chào; nút "Làm mới" chỉ cập nhật thẻ tóm tắt,
-  // KHÔNG xoá hội thoại đang có.
-  const fetchBrief = useCallback(async (initial = false) => {
+  const hhmm = (d?: string | Date) =>
+    new Date(d ?? Date.now()).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+
+  // Nút "Làm mới": CHỈ cập nhật thẻ tóm tắt, KHÔNG đụng hội thoại.
+  const fetchBrief = useCallback(async () => {
     if (!user) return
     setBriefLoading(true)
     try {
       const res = await api.get('/lisa/brief')
-      const data = res.data?.data ?? res.data
-      setBrief(data)
-      if (initial) {
-        setMessages([{
-          id: 'welcome',
-          role: 'lisa',
-          text: data.greeting,
-          time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        }])
-      } else {
-        toast.success('Đã cập nhật thông tin CLB')
-      }
+      setBrief(res.data?.data ?? res.data)
+      toast.success('Đã cập nhật thông tin CLB')
     } catch {
       toast.error('Không tải được tóm tắt từ Lisa.')
-      if (initial) {
-        setMessages([{
-          id: 'welcome',
-          role: 'lisa',
-          text: `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI của bạn. Hỏi tôi bất cứ điều gì về CLB nhé!`,
-          time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        }])
-      }
     } finally {
       setBriefLoading(false)
     }
   }, [user])
 
-  useEffect(() => { fetchBrief(true) }, [fetchBrief])
+  // Mở màn: tải tóm tắt + LỊCH SỬ hội thoại (server). Có lịch sử → dựng lại dòng chat;
+  // chưa có → hiện lời chào.
+  const initChat = useCallback(async () => {
+    if (!user) return
+    setBriefLoading(true)
+    let greeting = `Xin chào${user?.username ? ` ${user.username}` : ''}! Tôi là Lisa, trợ lý AI của bạn. Hỏi tôi bất cứ điều gì về CLB nhé!`
+    try {
+      const b = (await api.get('/lisa/brief')).data?.data
+      if (b) { setBrief(b); if (b.greeting) greeting = b.greeting }
+    } catch { toast.error('Không tải được tóm tắt từ Lisa.') }
+    finally { setBriefLoading(false) }
+    try {
+      const hist = (await api.get('/lisa/history?limit=40')).data?.data ?? []
+      if (Array.isArray(hist) && hist.length) {
+        setMessages(hist.flatMap((h: any, i: number) => [
+          { id: `h-u-${i}`, role: 'user' as const, text: h.question, time: hhmm(h.createdAt) },
+          { id: `h-l-${i}`, role: 'lisa' as const, text: h.answer, time: hhmm(h.createdAt) },
+        ]))
+        return
+      }
+    } catch { /* lỗi lịch sử → hiện lời chào */ }
+    setMessages([{ id: 'welcome', role: 'lisa', text: greeting, time: hhmm() }])
+  }, [user])
+
+  useEffect(() => { initChat() }, [initChat])
 
   // Khoá cuộn nền khi mở chat toàn màn (mobile portal) — tránh cuộn chồng ra trang dưới.
   useEffect(() => {
