@@ -54,6 +54,10 @@ const NotFound = lz(() => import('./pages/NotFound'), 'NotFound')
 const Landing = lz(() => import('./pages/public/Landing'), 'Landing')
 const Pricing = lz(() => import('./pages/public/Pricing'), 'Pricing')
 const DemoSelector = lz(() => import('./pages/public/DemoSelector'), 'DemoSelector')
+const AidoShowcase = lz(() => import('./pages/public/product/AidoShowcase'), 'AidoShowcase')
+const PublicGuide = lz(() => import('./pages/public/resources/Guide'), 'Guide')
+const PublicFaq = lz(() => import('./pages/public/resources/Faq'), 'Faq')
+const PublicContact = lz(() => import('./pages/public/Contact'), 'Contact')
 
 // Super Admin pages
 const SuperDashboard = lz(() => import('./pages/super/SuperDashboard'), 'SuperDashboard')
@@ -206,6 +210,11 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/demo" element={<DemoSelector />} />
+          {/* Landing v2 — trang nội dung công khai (Phase 1) */}
+          <Route path="/product/aido" element={<AidoShowcase />} />
+          <Route path="/resources/guide" element={<PublicGuide />} />
+          <Route path="/resources/faq" element={<PublicFaq />} />
+          <Route path="/contact" element={<PublicContact />} />
           <Route path="/change-password" element={<ProtectedRoute allowMustChangePassword><ChangePassword /></ProtectedRoute>} />
           <Route path="/" element={<RootRedirect />} />
 

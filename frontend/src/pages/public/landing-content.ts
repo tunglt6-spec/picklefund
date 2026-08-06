@@ -49,7 +49,7 @@ export const PRODUCT_MENU: MegaMenu = {
     {
       items: [
         { icon: LayoutGrid, title: 'Tổng quan nền tảng', desc: 'Khám phá toàn bộ hệ sinh thái quản trị CLB thể thao trên một nền tảng duy nhất.', href: '/#features' },
-        { icon: Cpu, title: 'AIDO – AI Digital Office', desc: 'Không gian vận hành AI với Maika, Lisa, Hermes, Mít Đặc và Notification AI.', href: '/#aido' },
+        { icon: Cpu, title: 'AIDO – AI Digital Office', desc: 'Không gian vận hành AI với Maika, Lisa, Hermes, Mít Đặc và Notification AI.', href: '/product/aido' },
         { icon: Wallet, title: 'Quỹ & Tài chính', desc: 'Quản lý thu, chi, công nợ, quỹ chung, quỹ mini và báo cáo tài chính minh bạch.', href: '/#features' },
         { icon: Users, title: 'Thành viên & Tài khoản', desc: 'Quản lý hồ sơ thành viên, quyền truy cập, chuyên cần và lịch sử tham gia.', href: '/#features' },
       ],
@@ -114,9 +114,9 @@ export const RESOURCES_MENU: MegaMenu = {
     {
       title: 'Hướng dẫn',
       items: [
-        { icon: BookOpen, title: 'Hướng dẫn sử dụng', desc: 'Tài liệu từng bước để bắt đầu và vận hành PickleFund.', soon: true },
+        { icon: BookOpen, title: 'Hướng dẫn sử dụng', desc: 'Tài liệu từng bước để bắt đầu và vận hành PickleFund.', href: '/resources/guide' },
         { icon: PlayCircle, title: 'Video Demo', desc: 'Xem nhanh cách các chức năng chính hoạt động.', soon: true },
-        { icon: HelpCircle, title: 'Câu hỏi thường gặp', desc: 'Giải đáp các vấn đề phổ biến về sản phẩm và triển khai.', href: '/#faq' },
+        { icon: HelpCircle, title: 'Câu hỏi thường gặp', desc: 'Giải đáp các vấn đề phổ biến về sản phẩm và triển khai.', href: '/resources/faq' },
       ],
     },
     {
@@ -151,14 +151,14 @@ export const ABOUT_MENU: MegaMenu = {
         { icon: BookOpen, title: 'Câu chuyện PickleFund', desc: 'Hành trình xây dựng nền tảng quản trị cộng đồng thể thao tích hợp AI.', soon: true },
         { icon: Target, title: 'Tầm nhìn & Sứ mệnh', desc: 'Giúp các CLB thể thao vận hành minh bạch, chuyên nghiệp và bền vững.', soon: true },
         { icon: Route, title: 'Lộ trình phát triển', desc: 'Định hướng phát triển sản phẩm theo nhu cầu thực tế của cộng đồng.', soon: true },
-        { icon: Bot, title: 'Đội ngũ AI', desc: 'Giới thiệu Maika, Lisa, Hermes, Mít Đặc và Notification AI.', href: '/#aido' },
+        { icon: Bot, title: 'Đội ngũ AI', desc: 'Giới thiệu Maika, Lisa, Hermes, Mít Đặc và Notification AI.', href: '/product/aido' },
       ],
     },
     {
       items: [
         { icon: HeartHandshake, title: 'Khách hàng tiêu biểu', desc: 'Các CLB và cộng đồng đang đồng hành cùng PickleFund.', href: '/#testimonials' },
         { icon: Briefcase, title: 'Đối tác', desc: 'Các tổ chức, cộng đồng và đơn vị hợp tác.', soon: true },
-        { icon: Phone, title: 'Liên hệ', desc: 'Thông tin liên hệ và kênh hỗ trợ chính thức.', href: '/#contact' },
+        { icon: Phone, title: 'Liên hệ', desc: 'Thông tin liên hệ và kênh hỗ trợ chính thức.', href: '/contact' },
         { icon: Info, title: 'Bảng giá', desc: 'Các gói dịch vụ và cách bắt đầu.', href: '/pricing' },
       ],
     },
@@ -357,9 +357,9 @@ export const FOOTER_GROUPS: { title: string; items: MenuItem[] }[] = [
   {
     title: 'Tài nguyên',
     items: [
-      { title: 'Hướng dẫn sử dụng', soon: true },
+      { title: 'Hướng dẫn sử dụng', href: '/resources/guide' },
       { title: 'Video Demo', soon: true },
-      { title: 'FAQ', href: '/#faq' },
+      { title: 'FAQ', href: '/resources/faq' },
       { title: 'Blog', soon: true },
       { title: 'Tin tức', soon: true },
       { title: 'Release Notes', soon: true },
@@ -372,10 +372,10 @@ export const FOOTER_GROUPS: { title: string; items: MenuItem[] }[] = [
     items: [
       { title: 'Câu chuyện PickleFund', soon: true },
       { title: 'Tầm nhìn & Sứ mệnh', soon: true },
-      { title: 'Đội ngũ AI', href: '/#aido' },
+      { title: 'Đội ngũ AI', href: '/product/aido' },
       { title: 'Khách hàng', href: '/#testimonials' },
       { title: 'Đối tác', soon: true },
-      { title: 'Liên hệ', href: '/#contact' },
+      { title: 'Liên hệ', href: '/contact' },
     ],
   },
 ]
