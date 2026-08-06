@@ -13,12 +13,23 @@ function LegalBody({ doc }: { doc: LegalDoc }) {
       <PageHero eyebrow="Pháp lý" title={doc.title} desc={doc.intro} />
       <section className={`${PUBLIC_CONTAINER} py-10`}>
         <div className="mx-auto max-w-3xl">
-          <div className="mb-8 flex items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-color-warning)]" style={{ background: 'var(--pf-color-warning-soft)' }}>
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-color-warning)]" style={{ background: 'var(--pf-color-warning-soft)' }}>
             <AlertTriangle size={18} className="mt-0.5 shrink-0 [color:var(--pf-color-warning)]" />
             <p className="text-[13px] leading-relaxed [color:var(--pf-text)]">
               <b>Bản nháp tham khảo — chưa có hiệu lực pháp lý.</b> Nội dung đang trong quá trình hoàn thiện và sẽ được rà soát trước khi công bố chính thức. Vui lòng liên hệ đội ngũ hỗ trợ nếu cần thông tin ràng buộc.
             </p>
           </div>
+
+          {doc.placeholders.length > 0 && (
+            <div className="mb-8 rounded-2xl border border-dashed p-4 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] [color:var(--pf-color-muted)]">Thông tin cần hoàn thiện trước khi công bố</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {doc.placeholders.map((ph) => (
+                  <span key={ph} className="rounded-full border px-2.5 py-1 text-[11px] font-medium [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">{ph}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6">
             {doc.sections.map((s) => (
