@@ -269,6 +269,8 @@ b{font-weight:700}
 .sect--flow thead{display:table-header-group}
 .sect--flow tr{page-break-inside:avoid}
 .sect--flow .avgcard{page-break-inside:avoid}
+/* Cụm tiêu đề+điểm-TB của mục Thành viên: KHÔNG tách, KHÔNG mồ côi ở đáy trang (đè footer) */
+.mhead{page-break-inside:avoid;break-inside:avoid;page-break-after:avoid;break-after:avoid}
 .shead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
 .eyebrow{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:#A9B4C4;font-weight:700}
 .stitle{font-size:15px;font-weight:800;color:#0F172A;letter-spacing:-.01em;margin-top:2px}
@@ -374,7 +376,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 .logo.lg{width:76px;height:76px}.logo.lg.mono{font-size:38px}
 .logo.sm{width:44px;height:44px;border-radius:12px;box-shadow:0 3px 10px rgba(15,23,42,.16)}.logo.sm.mono{font-size:22px}
 /* COVER PAGE */
-.cover{position:relative;overflow:hidden;height:245mm;border-radius:22px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:24mm 22mm;page-break-after:always;box-shadow:0 10px 30px rgba(91,75,232,.25);
+.cover{position:relative;overflow:hidden;height:263mm;border-radius:22px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:26mm 22mm;page-break-after:always;box-shadow:0 10px 30px rgba(91,75,232,.25);
   background:radial-gradient(120% 90% at 90% 4%,rgba(255,255,255,.16),transparent 40%),radial-gradient(130% 120% at 0% 100%,rgba(167,139,250,.5),transparent 46%),linear-gradient(150deg,#5B4BE8 0%,#7C3AED 55%,#6D28D9 100%)}
 .cover .cv-top{display:flex;align-items:center;gap:14px}
 .cover .cv-brand{font-size:11px;letter-spacing:.22em;font-weight:700;opacity:.9}
@@ -459,10 +461,12 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 </div>
 
 <div class="sect sect--flow">
-  ${head('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm')}
-  <div class="avgcard">
-    <div><div class="lbl">Điểm sức khỏe TB</div><div class="big" style="color:${hcolor(avgHealth)}">${avgHealth}<small>/100</small></div></div>
-    ${distHtml}
+  <div class="mhead">
+    ${head('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm')}
+    <div class="avgcard">
+      <div><div class="lbl">Điểm sức khỏe TB</div><div class="big" style="color:${hcolor(avgHealth)}">${avgHealth}<small>/100</small></div></div>
+      ${distHtml}
+    </div>
   </div>
   <table>
     <thead><tr><th class="c">#</th><th>Thành viên</th><th class="r">Tham gia</th><th class="c">Đóng quỹ</th><th class="c">Đánh giá</th><th class="r">Hạnh kiểm</th><th class="r">Sức khỏe</th></tr></thead>
