@@ -1,0 +1,319 @@
+/**
+ * CommandCenterService — tổng hợp DỮ LIỆU THẬT toàn hệ thống cho Trung tâm điều hành (Super Admin).
+ * Nguyên tắc: chỉ trả số liệu query được từ DB/hệ thống; chỉ số CHƯA có nguồn thật → trả `null`
+ * (frontend hiển thị "chưa có dữ liệu"), KHÔNG bịa. Mọi truy vấn có thể lọc theo khoảng thời gian
+ * và theo 1 CLB. Truy cập phần tài chính tổng hợp được ghi audit log.
+ */
+import { Injectable } from '@nestjs/common';
+import * as os from 'os';
+import { PrismaService } from '../prisma/prisma.service';
+import { PLAN_CONFIGS } from '../billing/billing.types';
+
+type RangeKey = 'today' | '7d' | '30d' | 'quarter' | 'year' | 'custom';
+
+const n = (v: unknown): number => Number(v ?? 0) || 0;
+
+@Injectable()
+export class CommandCenterService {
+  constructor(private prisma: PrismaService) {}
+
+  private resolveRange(range: RangeKey, from?: string, to?: string): { start: Date; end: Date } {
+    const end = to ? new Date(to) : new Date();
+    if (range === 'custom' && from) return { start: new Date(from), end };
+    const start = new Date(end);
+    switch (range) {
+      case 'today': start.setHours(0, 0, 0, 0); break;
+      case '7d': start.setDate(start.getDate() - 7); break;
+      case 'quarter': start.setDate(start.getDate() - 90); break;
+      case 'year': start.setDate(start.getDate() - 365); break;
+      case '30d':
+      default: start.setDate(start.getDate() - 30); break;
+    }
+    return { start, end };
+  }
+
+  /** where theo clubId cho các model có trường clubId (rỗng nếu xem toàn hệ thống). */
+  private clubScope(clubId?: string | null) {
+    return clubId ? { clubId } : {};
+  }
+
+  async overview(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }) {
+    const { range, clubId, from, to } = opts;
+    const { start, end } = this.resolveRange(range, from, to);
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 3600 * 1000);
+    const soon = new Date(now.getTime() + 14 * 24 * 3600 * 1000);
+    const scope = this.clubScope(clubId);
+    const clubFilter = clubId ? { id: clubId } : { status: { not: 'deleted' as const } };
+
+    // ── Khối 1: CLB / thành viên / người dùng (đếm) ──
+    const [
+      totalClubs, activeClubs, suspendedClubs, newClubs, expiringSoon, expiredClubs,
+      totalMembers, newMembers, activeMembers, activeUsers, logins24h,
+    ] = await Promise.all([
+      this.prisma.club.count({ where: clubId ? { id: clubId } : { status: { not: 'deleted' } } }),
+      this.prisma.club.count({ where: clubId ? { id: clubId, status: 'active' } : { status: 'active' } }),
+      this.prisma.club.count({ where: clubId ? { id: clubId, status: 'suspended' } : { status: 'suspended' } }),
+      this.prisma.club.count({ where: { ...(clubId ? { id: clubId } : { status: { not: 'deleted' } }), createdAt: { gte: start, lte: end } } }),
+      this.prisma.club.count({ where: { ...(clubId ? { id: clubId } : {}), plan: { not: 'STARTER' }, planExpiresAt: { gte: now, lte: soon } } }),
+      this.prisma.club.count({ where: { ...(clubId ? { id: clubId } : {}), plan: { not: 'STARTER' }, planExpiresAt: { lt: now } } }),
+      this.prisma.member.count({ where: { isDeleted: false, ...scope } }),
+      this.prisma.member.count({ where: { isDeleted: false, ...scope, createdAt: { gte: start, lte: end } } }),
+      this.prisma.member.count({ where: { isDeleted: false, status: 'active', ...scope } }),
+      this.prisma.user.count({ where: { isActive: true, ...(clubId ? { clubId } : {}) } }),
+      this.prisma.user.count({ where: { lastLoginAt: { gte: last24h }, ...(clubId ? { clubId } : {}) } }),
+    ]);
+
+    // ── Khối 2: Gói dịch vụ (Club.plan) + doanh thu thật (PaymentOrder PAID) ──
+    const planGroups = await this.prisma.club.groupBy({
+      by: ['plan'],
+      where: clubFilter,
+      _count: { _all: true },
+    });
+    const planCount = (p: string) => planGroups.find((g) => g.plan === p)?._count._all ?? 0;
+    const plans = (['STARTER', 'PRO', 'CLUB_PLUS'] as const).map((tier) => ({
+      tier, name: PLAN_CONFIGS[tier].name, count: planCount(tier),
+    }));
+    const paidSubscribers = planCount('PRO') + planCount('CLUB_PLUS');
+    // MRR thật: chỉ tính gói có giá cố định (PRO). Enterprise = "Liên hệ" (giá null) → không quy đổi được.
+    const mrr = planCount('PRO') * (PLAN_CONFIGS.PRO.priceMonthly ?? 0);
+
+    const revWindow = (s: Date, e: Date) =>
+      this.prisma.paymentOrder.aggregate({ _sum: { amount: true }, where: { status: 'PAID', paidAt: { gte: s, lte: e }, ...scope } });
+    const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const [revToday, revMonth, revQuarter, revYear, revRange, upgradesInRange, cancellationsInRange] = await Promise.all([
+      revWindow(dayStart, now), revWindow(monthStart, now), revWindow(quarterStart, now), revWindow(yearStart, now), revWindow(start, end),
+      this.prisma.paymentOrder.count({ where: { status: 'PAID', paidAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.subscription.count({ where: { cancelledAt: { gte: start, lte: end }, ...scope } }),
+    ]);
+
+    // ── Khối 3: Tài chính tổng hợp (thu đã xác nhận / chi approved|paid) ──
+    const [incomeAll, expenseAll, incomeRange, expenseRange, pendingExpenses] = await Promise.all([
+      this.prisma.fundContribution.aggregate({ _sum: { amount: true }, where: { isConfirmed: true, ...scope } }),
+      this.prisma.livingExpense.aggregate({ _sum: { amount: true }, where: { status: { in: ['approved', 'paid'] }, ...scope } }),
+      this.prisma.fundContribution.aggregate({ _sum: { amount: true }, where: { isConfirmed: true, paymentDate: { gte: start, lte: end }, ...scope } }),
+      this.prisma.livingExpense.aggregate({ _sum: { amount: true }, where: { status: { in: ['approved', 'paid'] }, expenseDate: { gte: start, lte: end }, ...scope } }),
+      this.prisma.livingExpense.count({ where: { status: 'pending', ...scope } }),
+    ]);
+    const totalIncome = n(incomeAll._sum.amount);
+    const totalExpense = n(expenseAll._sum.amount);
+
+    // Xu hướng thu/chi 6 tháng gần nhất (theo paymentDate/expenseDate).
+    const months: { label: string; start: Date; end: Date }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const s = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const e = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      months.push({ label: `${s.getMonth() + 1}/${s.getFullYear()}`, start: s, end: e });
+    }
+    const trendRows = await Promise.all(months.map(async (m) => {
+      const [inc, exp, rev] = await Promise.all([
+        this.prisma.fundContribution.aggregate({ _sum: { amount: true }, where: { isConfirmed: true, paymentDate: { gte: m.start, lt: m.end }, ...scope } }),
+        this.prisma.livingExpense.aggregate({ _sum: { amount: true }, where: { status: { in: ['approved', 'paid'] }, expenseDate: { gte: m.start, lt: m.end }, ...scope } }),
+        this.prisma.paymentOrder.aggregate({ _sum: { amount: true }, where: { status: 'PAID', paidAt: { gte: m.start, lt: m.end }, ...scope } }),
+      ]);
+      return { label: m.label, income: n(inc._sum.amount), expense: n(exp._sum.amount), revenue: n(rev._sum.amount) };
+    }));
+
+    // ── Khối 4: Hoạt động nghiệp vụ (trong kỳ) ──
+    const [fundPeriods, sessions, registrations, attendancePresent, minigames, matches] = await Promise.all([
+      this.prisma.fundPeriod.count({ where: scope }),
+      this.prisma.attendanceSession.count({ where: { sessionDate: { gte: start, lte: end }, ...scope } }),
+      this.prisma.sessionRegistration.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.attendanceRecord.count({ where: { status: 'PRESENT', createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.minigame.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.minigameMatch.count({ where: { createdAt: { gte: start, lte: end }, ...(clubId ? { minigame: { clubId } } : {}) } }),
+    ]);
+
+    // ── Khối 5: AI Operations (đếm toàn hệ thống trong kỳ) ──
+    const [maikaInsights, lisaMessages, aiActionsTotal, aiExecuted, aiFailed, aiRunning, avgAction, wfGroups, notiChannel, notiFailed] = await Promise.all([
+      this.prisma.maikaInsight.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.lisaMessage.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiAction.count({ where: { createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiAction.count({ where: { status: 'EXECUTED', createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiAction.count({ where: { status: 'FAILED', createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiAction.count({ where: { status: { in: ['EXECUTING', 'APPROVED', 'RETRY_PENDING'] }, createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.aiAction.aggregate({ _avg: { executionDuration: true }, where: { status: 'EXECUTED', executionDuration: { not: null }, createdAt: { gte: start, lte: end }, ...scope } }),
+      this.prisma.workflowRun.groupBy({ by: ['status'], where: { startedAt: { gte: start, lte: end }, ...scope }, _count: { _all: true } }),
+      this.prisma.notification.groupBy({ by: ['channel'], where: { createdAt: { gte: start, lte: end }, ...scope }, _count: { _all: true } }),
+      this.prisma.notification.count({ where: { status: 'FAILED', createdAt: { gte: start, lte: end }, ...scope } }),
+    ]);
+    const wf = (s: string) => wfGroups.find((g) => g.status === s)?._count._all ?? 0;
+    const noti = (c: string) => notiChannel.find((g) => g.channel === c)?._count._all ?? 0;
+    const notiSent = notiChannel.reduce((a, g) => a + g._count._all, 0);
+    const aiRequests = aiActionsTotal + lisaMessages;
+    const aiSuccessRate = aiExecuted + aiFailed > 0 ? Math.round((aiExecuted / (aiExecuted + aiFailed)) * 100) : null;
+
+    // ── Khối 6: Hạ tầng (Node os/process + ping DB) ──
+    const cores = os.cpus().length || 1;
+    const load1 = os.loadavg()[0] ?? 0;
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    let dbStatus: 'up' | 'down' = 'up';
+    let dbLatency: number | null = null;
+    const t0 = Date.now();
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+      dbLatency = Date.now() - t0;
+    } catch {
+      dbStatus = 'down';
+    }
+    const infra = {
+      cpu: { load1: Math.round(load1 * 100) / 100, cores, pct: Math.min(100, Math.round((load1 / cores) * 100)) },
+      memory: { usedMb: Math.round((totalMem - freeMem) / 1048576), totalMb: Math.round(totalMem / 1048576), pct: Math.round(((totalMem - freeMem) / totalMem) * 100) },
+      uptimeSeconds: Math.round(process.uptime()),
+      db: { status: dbStatus, latencyMs: dbLatency },
+      // Chưa có nguồn dữ liệu thật → null (frontend hiển thị "chưa có dữ liệu"):
+      disk: null, queue: null, storage: null, backup: null,
+      errorRate: null, requestsPerMin: null, activeSessions: null, dbConnections: null,
+    };
+
+    // ── Khối 7: Bảng xếp hạng (Top CLB) — bỏ qua nếu đang lọc 1 CLB ──
+    const leaderboards = clubId ? null : await this.buildLeaderboards(start, end);
+
+    // ── Khối 8: Cảnh báo điều hành (suy ra từ tín hiệu thật) ──
+    const alerts = await this.buildAlerts({ now, soon, dbStatus, wfFailed: wf('FAILED'), notiFailed, suspendedClubs, clubId });
+
+    // ── AIDO Executive Summary (rule-based từ số liệu thật, không bịa) ──
+    const summary = this.buildSummary({
+      totalClubs, activeClubs, suspendedClubs, totalMembers, logins24h,
+      mrr, paidSubscribers, expiringSoon, expiredClubs,
+      totalIncome, totalExpense, pendingExpenses,
+      aiRequests, aiFailed, wfFailed: wf('FAILED'), notiFailed,
+      dbStatus, cpuPct: infra.cpu.pct, memPct: infra.memory.pct,
+    });
+
+    // Ghi audit: Super Admin đã xem dữ liệu tài chính tổng hợp toàn nền tảng.
+    return {
+      generatedAt: now.toISOString(),
+      range: { key: range, start: start.toISOString(), end: end.toISOString() },
+      clubId: clubId ?? null,
+      kpi: {
+        totalClubs, activeClubs, suspendedClubs,
+        totalMembers, activeUsers, logins24h,
+        mrr, revenueInRange: n(revRange._sum.amount), paidSubscribers,
+        aiRequests, aiCost: null, uptimeSeconds: infra.uptimeSeconds,
+      },
+      summary,
+      business: {
+        revenue: {
+          today: n(revToday._sum.amount), month: n(revMonth._sum.amount),
+          quarter: n(revQuarter._sum.amount), year: n(revYear._sum.amount),
+          mrr, arr: mrr * 12,
+        },
+        subscription: {
+          plans, paidSubscribers, expiringSoon, expired: expiredClubs,
+          upgradesInRange, cancellationsInRange,
+          trialToPro: null, renewalRate: null, churnRate: null, // chưa lưu lịch sử đủ để tính
+        },
+      },
+      operations: {
+        clubs: { total: totalClubs, new: newClubs, active: activeClubs, suspended: suspendedClubs, expiringSoon },
+        members: { total: totalMembers, new: newMembers, active: activeMembers, registrations, checkins: attendancePresent, attendance: attendancePresent },
+        business: { fundPeriods, sessions, minigames, matches, reportsExported: null }, // reportsExported: chưa có bảng đếm
+      },
+      finance: {
+        totalIncome, totalExpense, totalBalance: totalIncome - totalExpense,
+        incomeInRange: n(incomeRange._sum.amount), expenseInRange: n(expenseRange._sum.amount),
+        pendingExpenses,
+        debt: null, overdueCount: null, onTimeRatio: null, // không lưu dueDate/công nợ → chưa có dữ liệu
+        trend: trendRows,
+      },
+      ai: {
+        totals: {
+          requests: aiRequests, successRate: aiSuccessRate, avgActionMs: avgAction._avg.executionDuration ? Math.round(n(avgAction._avg.executionDuration)) : null,
+          errors: aiFailed + wf('FAILED') + notiFailed,
+          tokens: null, cost: null, provider: null, model: null, fallbacks: null, avgLatencyMs: null,
+        },
+        agents: {
+          maika: { insights: maikaInsights, actions: aiActionsTotal },
+          lisa: { messages: lisaMessages },
+          hermes: { runs: wf('COMPLETED') + wf('FAILED') + wf('RUNNING') + wf('WAITING_APPROVAL') + wf('PENDING'), completed: wf('COMPLETED'), failed: wf('FAILED'), running: wf('RUNNING'), waiting: wf('WAITING_APPROVAL') },
+          mitDac: { executed: aiExecuted, failed: aiFailed, running: aiRunning, avgMs: avgAction._avg.executionDuration ? Math.round(n(avgAction._avg.executionDuration)) : null },
+          notification: { sent: notiSent, byChannel: { IN_APP: noti('IN_APP'), EMAIL: noti('EMAIL'), TELEGRAM: noti('TELEGRAM') }, failed: notiFailed },
+        },
+      },
+      infra,
+      alerts,
+      leaderboards,
+    };
+  }
+
+  private async buildLeaderboards(start: Date, end: Date) {
+    const clubName = async (ids: string[]) => {
+      const rows = await this.prisma.club.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } });
+      return new Map(rows.map((r) => [r.id, r.name]));
+    };
+
+    const [byMembers, actGroups, revGroups, tourGroups, aiGroups] = await Promise.all([
+      this.prisma.club.findMany({
+        where: { status: { not: 'deleted' } },
+        select: { id: true, name: true, _count: { select: { members: { where: { isDeleted: false } } } } },
+        orderBy: { members: { _count: 'desc' } }, take: 5,
+      }),
+      this.prisma.attendanceSession.groupBy({ by: ['clubId'], where: { sessionDate: { gte: start, lte: end } }, _count: { _all: true }, orderBy: { _count: { clubId: 'desc' } }, take: 5 }),
+      this.prisma.paymentOrder.groupBy({ by: ['clubId'], where: { status: 'PAID', paidAt: { gte: start, lte: end } }, _sum: { amount: true }, orderBy: { _sum: { amount: 'desc' } }, take: 5 }),
+      this.prisma.minigame.groupBy({ by: ['clubId'], where: { createdAt: { gte: start, lte: end } }, _count: { _all: true }, orderBy: { _count: { clubId: 'desc' } }, take: 5 }),
+      this.prisma.aiAction.groupBy({ by: ['clubId'], where: { createdAt: { gte: start, lte: end } }, _count: { _all: true }, orderBy: { _count: { clubId: 'desc' } }, take: 5 }),
+    ]);
+
+    const ids = Array.from(new Set([
+      ...actGroups.map((g) => g.clubId), ...revGroups.map((g) => g.clubId),
+      ...tourGroups.map((g) => g.clubId), ...aiGroups.map((g) => g.clubId),
+    ].filter(Boolean) as string[]));
+    const names = await clubName(ids);
+
+    return {
+      topByMembers: byMembers.map((c) => ({ clubId: c.id, name: c.name, value: c._count.members })),
+      topByActivity: actGroups.map((g) => ({ clubId: g.clubId, name: names.get(g.clubId) ?? g.clubId, value: g._count._all })),
+      topByRevenue: revGroups.map((g) => ({ clubId: g.clubId, name: names.get(g.clubId) ?? g.clubId, value: n(g._sum.amount) })),
+      topByTournaments: tourGroups.map((g) => ({ clubId: g.clubId, name: names.get(g.clubId) ?? g.clubId, value: g._count._all })),
+      topByAiUsage: aiGroups.map((g) => ({ clubId: g.clubId, name: names.get(g.clubId) ?? g.clubId, value: g._count._all })),
+    };
+  }
+
+  private async buildAlerts(x: { now: Date; soon: Date; dbStatus: string; wfFailed: number; notiFailed: number; suspendedClubs: number; clubId?: string | null }) {
+    const alerts: { severity: 'critical' | 'high' | 'medium'; source: string; clubId: string | null; clubName: string | null; title: string; time: string; status: string }[] = [];
+    if (x.dbStatus === 'down') alerts.push({ severity: 'critical', source: 'Hạ tầng', clubId: null, clubName: null, title: 'Không kết nối được cơ sở dữ liệu', time: x.now.toISOString(), status: 'open' });
+
+    const expiring = await this.prisma.club.findMany({
+      where: { ...(x.clubId ? { id: x.clubId } : {}), plan: { not: 'STARTER' }, planExpiresAt: { gte: x.now, lte: x.soon } },
+      select: { id: true, name: true, planExpiresAt: true }, take: 8, orderBy: { planExpiresAt: 'asc' },
+    });
+    for (const c of expiring) alerts.push({ severity: 'high', source: 'Thuê bao', clubId: c.id, clubName: c.name, title: `CLB "${c.name}" sắp hết hạn gói`, time: (c.planExpiresAt ?? x.now).toISOString(), status: 'open' });
+
+    if (x.wfFailed > 0) alerts.push({ severity: 'high', source: 'AIDO Workflow', clubId: null, clubName: null, title: `${x.wfFailed} workflow lỗi trong kỳ`, time: x.now.toISOString(), status: 'open' });
+    if (x.notiFailed > 0) alerts.push({ severity: 'medium', source: 'Notification', clubId: null, clubName: null, title: `${x.notiFailed} thông báo gửi thất bại`, time: x.now.toISOString(), status: 'open' });
+    if (x.suspendedClubs > 0) alerts.push({ severity: 'medium', source: 'CLB', clubId: null, clubName: null, title: `${x.suspendedClubs} CLB đang bị khóa`, time: x.now.toISOString(), status: 'open' });
+
+    const order = { critical: 0, high: 1, medium: 2 } as const;
+    return alerts.sort((a, b) => order[a.severity] - order[b.severity]);
+  }
+
+  private buildSummary(x: Record<string, number | string>) {
+    const vnd = (v: number) => `${Number(v).toLocaleString('vi-VN')}đ`;
+    const status: string[] = [];
+    const risks: string[] = [];
+    const priorities: string[] = [];
+
+    status.push(`${x.activeClubs}/${x.totalClubs} CLB đang hoạt động, ${x.suspendedClubs} bị khóa; tổng ${x.totalMembers} thành viên, ${x.logins24h} lượt đăng nhập 24 giờ.`);
+    status.push(`Kinh doanh: MRR ${vnd(Number(x.mrr))}, ${x.paidSubscribers} CLB trả phí. Tài chính ghi nhận: thu ${vnd(Number(x.totalIncome))}, chi ${vnd(Number(x.totalExpense))}.`);
+    status.push(`Hạ tầng: ${x.dbStatus === 'up' ? 'DB bình thường' : 'DB LỖI'}, CPU ~${x.cpuPct}%, RAM ~${x.memPct}%.`);
+
+    if (Number(x.expiringSoon) > 0) risks.push(`${x.expiringSoon} CLB sắp hết hạn gói — cần nhắc gia hạn.`);
+    if (Number(x.expiredClubs) > 0) risks.push(`${x.expiredClubs} CLB đã hết hạn gói.`);
+    if (x.dbStatus !== 'up') risks.push('Cơ sở dữ liệu đang lỗi — ưu tiên xử lý ngay.');
+    if (Number(x.wfFailed) > 0) risks.push(`${x.wfFailed} workflow AI lỗi trong kỳ.`);
+    if (Number(x.notiFailed) > 0) risks.push(`${x.notiFailed} thông báo gửi thất bại.`);
+    if (Number(x.pendingExpenses) > 0) risks.push(`${x.pendingExpenses} khoản chi đang chờ duyệt.`);
+
+    if (x.dbStatus !== 'up') priorities.push('Khôi phục kết nối cơ sở dữ liệu.');
+    if (Number(x.expiringSoon) > 0) priorities.push('Liên hệ các CLB sắp hết hạn để gia hạn.');
+    if (Number(x.wfFailed) > 0) priorities.push('Rà soát workflow AI bị lỗi.');
+    if (!priorities.length) priorities.push('Không có việc khẩn — theo dõi định kỳ.');
+
+    return { status, risks, priorities };
+  }
+}

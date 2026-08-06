@@ -44,6 +44,7 @@ import { AiActionsModule } from './ai-actions/ai-actions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 import { NotificationRuntimeModule } from './notification-runtime/notification-runtime.module';
 import { ScoringModule } from './scoring/scoring.module';
+import { CommandCenterModule } from './command-center/command-center.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -108,6 +109,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     WorkflowsModule,
     NotificationRuntimeModule,
     ScoringModule,
+    CommandCenterModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
