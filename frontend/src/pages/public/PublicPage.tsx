@@ -4,6 +4,7 @@
  * Tự cuộn lên đầu khi đổi route + đặt tiêu đề tab.
  */
 import { useEffect, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { LandingHeader } from './LandingHeader'
 import { LandingFooter } from './LandingFooter'
 
@@ -73,19 +74,19 @@ export function PageHero({
 export function CtaButtons() {
   return (
     <>
-      <a
-        href="/login"
+      <Link
+        to="/login"
         className="rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
         style={{ background: 'var(--pf-primary)' }}
       >
         Dùng thử miễn phí
-      </a>
-      <a
-        href="/pricing"
+      </Link>
+      <Link
+        to="/pricing"
         className="rounded-full border px-6 py-3 text-sm font-semibold transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]"
       >
         Xem bảng giá
-      </a>
+      </Link>
     </>
   )
 }

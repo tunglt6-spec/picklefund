@@ -3,6 +3,7 @@
  * thêm câu về giá & bảo mật. Dùng <details> native → accessible, không cần JS.
  */
 import { ChevronDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PublicPage, PageHero, PUBLIC_CONTAINER } from '../PublicPage'
 import { FAQS } from '../landing-content'
 
@@ -59,7 +60,7 @@ export function Faq() {
           <div className="rounded-2xl border p-6 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
             <p className="text-[15px] font-bold">Vẫn còn thắc mắc?</p>
             <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Đội ngũ hỗ trợ sẵn sàng đồng hành cùng bạn.</p>
-            <a href="/contact" className="mt-4 inline-block rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Liên hệ hỗ trợ</a>
+            <Link to="/contact" className="mt-4 inline-block rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Liên hệ hỗ trợ</Link>
           </div>
         </div>
       </section>

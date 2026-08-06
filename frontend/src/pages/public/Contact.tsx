@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { Mail, MessageSquare, Send, LifeBuoy } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PublicPage, PageHero, PUBLIC_CONTAINER } from './PublicPage'
 import { CONTACT } from './landing-content'
 
@@ -46,7 +47,7 @@ export function Contact() {
               <div>
                 <p className="text-sm font-bold">Hỗ trợ trong app</p>
                 <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">Đã là khách hàng? Dùng trợ lý Lisa AI và mục “Hướng dẫn” ngay trong ứng dụng.</p>
-                <a href="/login" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Đăng nhập →</a>
+                <Link to="/login" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Đăng nhập →</Link>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
@@ -54,7 +55,7 @@ export function Contact() {
               <div>
                 <p className="text-sm font-bold">Dùng thử trước khi hỏi</p>
                 <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">Trải nghiệm đầy đủ tính năng miễn phí — nhiều câu hỏi sẽ được giải đáp ngay khi dùng.</p>
-                <a href="/pricing" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Xem bảng giá →</a>
+                <Link to="/pricing" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Xem bảng giá →</Link>
               </div>
             </div>
           </div>

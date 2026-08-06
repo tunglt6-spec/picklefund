@@ -4,6 +4,7 @@
  * sản phẩm thật, không bịa số liệu khách hàng.
  */
 import { ShieldCheck, Workflow, Sparkles, ArrowRight, FileBarChart } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PublicPage, PageHero, PUBLIC_CONTAINER, CtaButtons } from '../PublicPage'
 import { AGENTS } from '../landing-content'
 
@@ -88,9 +89,9 @@ export function AidoShowcase() {
               <p className="mt-3 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                 Một cú nhấp: tổng hợp sức khỏe CLB, tài chính, thành viên, hoạt động, thi đấu và hiệu suất AI theo từng kỳ quỹ — kèm tóm tắt do AI viết, dự báo và xuất PDF/Excel. Có thể tự gửi email đầu mỗi tháng.
               </p>
-              <a href="/login" className="mt-5 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>
+              <Link to="/login" className="mt-5 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>
                 Trải nghiệm trong app <ArrowRight size={15} />
-              </a>
+              </Link>
             </div>
             <ul className="space-y-2 text-sm">
               {['Điểm sức khỏe CLB (6 chiều)', 'Tóm tắt điều hành do AI viết', 'Dự báo 30–90 ngày', 'Xuất PDF · Excel · Ảnh', 'Tự gửi email hằng tháng'].map((x) => (

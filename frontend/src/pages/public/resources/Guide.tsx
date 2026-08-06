@@ -4,6 +4,7 @@
  */
 import { UserPlus, Users, Wallet, CalendarCheck, Trophy, FileBarChart, Cpu, ArrowRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PublicPage, PageHero, PUBLIC_CONTAINER, CtaButtons } from '../PublicPage'
 
 const STEPS: { icon: LucideIcon; title: string; desc: string; points: string[] }[] = [
@@ -79,8 +80,8 @@ export function Guide() {
           <p className="text-[15px] font-bold [color:var(--pf-text)]">Cần hỗ trợ khi triển khai?</p>
           <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Hướng dẫn chi tiết từng màn hình có sẵn ngay trong app (nút “Hướng dẫn”). Bạn cũng có thể liên hệ đội ngũ hỗ trợ.</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <a href="/login" className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Dùng thử ngay <ArrowRight size={15} /></a>
-            <a href="/contact" className="rounded-full border px-5 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">Liên hệ hỗ trợ</a>
+            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Dùng thử ngay <ArrowRight size={15} /></Link>
+            <Link to="/contact" className="rounded-full border px-5 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">Liên hệ hỗ trợ</Link>
           </div>
         </div>
       </section>
