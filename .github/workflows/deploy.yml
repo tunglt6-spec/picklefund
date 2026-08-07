@@ -167,6 +167,17 @@ jobs:
               echo "(Không có nginx/ssl để sao lưu — bỏ qua)"
             fi
 
+            # ── 4c. Stage bản backup MỚI NHẤT (DB + SSL) cho offsite. Bước sau (chạy trên
+            #        runner) sẽ scp thư mục này về & upload GitHub Artifact (giữ 30 ngày).
+            #        Stage NGAY sau khi tạo backup (trước khi đổi container) → dù deploy có
+            #        rollback thì vẫn có bản snapshot tiền-deploy để đẩy offsite.
+            OFFSITE_DIR="$REPO_DIR/backups/_offsite"
+            rm -rf "$OFFSITE_DIR"; mkdir -p "$OFFSITE_DIR"
+            cp -f "$BACKUP_FILE" "$OFFSITE_DIR"/ 2>/dev/null || true
+            LATEST_SSL=$(ls -1t "$REPO_DIR"/backups/ssl_*.tgz 2>/dev/null | head -1)
+            [ -n "$LATEST_SSL" ] && cp -f "$LATEST_SSL" "$OFFSITE_DIR"/ 2>/dev/null || true
+            echo "Offsite staged: $(ls -1 "$OFFSITE_DIR" 2>/dev/null | wc -l) file(s) trong $OFFSITE_DIR"
+
             # ── 5. Pull prebuilt images & restart (no compile on VPS) ─
             # Images are PUBLIC on GHCR -> pull anonymously; a stale credential
             # would make GHCR deny a public pull, so clear it first.
@@ -283,3 +294,29 @@ jobs:
             fi
 
             exit 1
+
+      # ── (2) OFFSITE BACKUP: kéo bản backup mới nhất (DB + SSL) từ VPS về runner rồi
+      #        upload GitHub Artifact (giữ 30 ngày). Chạy dù deploy thành công hay rollback
+      #        (if: always) để luôn có 1 bản snapshot tiền-deploy nằm NGOÀI máy chủ.
+      #        LƯU Ý: artifact chứa dữ liệu thành viên thật — chỉ người có quyền đọc Actions
+      #        của repo (private) tải được; giữ 30 ngày, không phải kho lưu trữ dài hạn.
+      - name: Kéo backup mới nhất từ VPS về runner (offsite)
+        if: always()
+        env:
+          SSHPASS: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          mkdir -p offsite
+          sshpass -e scp -o StrictHostKeyChecking=no -P "${{ secrets.VPS_PORT || 22 }}" \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/picklefund/backups/_offsite/*" offsite/ \
+            || echo "Không kéo được file offsite (có thể deploy abort trước khi tạo backup)."
+          echo "Offsite files on runner:"; ls -lh offsite/ 2>/dev/null || true
+
+      - name: Upload backup offsite lên GitHub Artifact (giữ 30 ngày)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pf-backup-${{ github.sha }}
+          path: offsite/
+          retention-days: 30
+          if-no-files-found: warn
