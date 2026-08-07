@@ -6,6 +6,8 @@
  */
 import { Injectable } from '@nestjs/common';
 import * as os from 'os';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { PLAN_CONFIGS } from '../billing/billing.types';
 
@@ -189,15 +191,48 @@ export class CommandCenterService {
     } catch { /* giữ null */ }
     const backupEnabled = process.env.BACKUP_ENABLED === '1' || process.env.BACKUP_ENABLED === 'true';
 
+    // Disk (FS của container = đĩa host trên overlay) qua fs.statfs.
+    let disk: { usedGb: number; totalGb: number; pct: number } | null = null;
+    try {
+      const st: any = await fs.promises.statfs('/');
+      const total = st.blocks * st.bsize;
+      const free = st.bavail * st.bsize;
+      const used = total - free;
+      if (total > 0) disk = { usedGb: Math.round((used / 1073741824) * 10) / 10, totalGb: Math.round((total / 1073741824) * 10) / 10, pct: Math.round((used / total) * 100) };
+    } catch { /* null */ }
+
+    // Storage: dung lượng thư mục uploads (driver local). Không có/không đọc được → null.
+    let storage: { usedMb: number } | null = null;
+    try {
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (fs.existsSync(uploadsDir)) storage = { usedMb: Math.round((this.dirSize(uploadsDir) / 1048576) * 10) / 10 };
+    } catch { /* null */ }
+
+    // Queue: app không có message-queue riêng → đo VIỆC ĐANG CHỜ trong hệ thống (thật từ DB).
+    const [notiPending, wfPending, aiPending] = await Promise.all([
+      this.prisma.notificationJob.count({ where: { status: 'READY', ...scope } }),
+      this.prisma.workflowRun.count({ where: { status: { in: ['PENDING', 'RUNNING', 'WAITING_APPROVAL'] }, ...scope } }),
+      this.prisma.aiAction.count({ where: { status: { in: ['PENDING_APPROVAL', 'RETRY_PENDING'] }, ...scope } }),
+    ]);
+    const queue = { pending: notiPending + wfPending + aiPending, notifications: notiPending, workflows: wfPending, aiActions: aiPending };
+
+    // Kết nối DB hiện tại (pg_stat_activity) + phiên đăng nhập còn hiệu lực (RefreshToken).
+    let dbConnections: number | null = null;
+    try {
+      const r: any = await this.prisma.$queryRaw`SELECT count(*)::int AS c FROM pg_stat_activity WHERE datname = current_database()`;
+      dbConnections = Array.isArray(r) ? Number(r[0]?.c ?? 0) : null;
+    } catch { /* null */ }
+    const activeSessions = await this.prisma.refreshToken.count({ where: { revokedAt: null, expiresAt: { gt: now } } });
+
     const infra = {
       cpu: { load1: Math.round(load1 * 100) / 100, cores, pct: Math.min(100, Math.round((load1 / cores) * 100)) },
       memory: { usedMb: Math.round((totalMem - freeMem) / 1048576), totalMb: Math.round(totalMem / 1048576), pct: Math.round(((totalMem - freeMem) / totalMem) * 100) },
       uptimeSeconds: Math.round(process.uptime()),
       db: { status: dbStatus, latencyMs: dbLatency },
       backup, backupEnabled,
-      // Chưa có nguồn dữ liệu thật → null (frontend hiển thị "chưa có dữ liệu"):
-      disk: null, queue: null, storage: null,
-      errorRate: null, requestsPerMin: null, activeSessions: null, dbConnections: null,
+      disk, storage, queue, dbConnections, activeSessions,
+      // Chưa có telemetry mức request → null (frontend hiển thị "chưa có dữ liệu"):
+      errorRate: null, requestsPerMin: null,
     };
 
     // ── Khối 7: Bảng xếp hạng (Top CLB) — bỏ qua nếu đang lọc 1 CLB ──
@@ -331,6 +366,21 @@ export class CommandCenterService {
     }
 
     return { debt, overdueCount, overdueAmount, onTimeRatio };
+  }
+
+  /** Tổng dung lượng thư mục (đệ quy, best-effort). Bỏ qua lỗi/symlink để không treo. */
+  private dirSize(dir: string): number {
+    let total = 0;
+    let entries: fs.Dirent[];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return 0; }
+    for (const e of entries) {
+      const p = path.join(dir, e.name);
+      try {
+        if (e.isDirectory()) total += this.dirSize(p);
+        else if (e.isFile()) total += fs.statSync(p).size;
+      } catch { /* bỏ qua file lỗi */ }
+    }
+    return total;
   }
 
   private async buildLeaderboards(start: Date, end: Date) {

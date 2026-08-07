@@ -340,7 +340,7 @@ function CommandCenterBody({ data, audit, rangeLabel, onRunBackup }: { data: any
 
       {/* Sức khỏe hạ tầng */}
       <Section title="Sức khỏe hạ tầng" icon={<HeartPulse size={16} />}>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <MetricCard label="CPU" value={pctStr(infra.cpu?.pct)} sub={`load ${infra.cpu?.load1} · ${infra.cpu?.cores} core`} icon={<Cpu size={16} />} tone={infra.cpu?.pct >= 85 ? 'danger' : infra.cpu?.pct >= 60 ? 'warning' : 'success'} />
           <MetricCard label="RAM" value={pctStr(infra.memory?.pct)} sub={`${num(infra.memory?.usedMb)}/${num(infra.memory?.totalMb)} MB`} icon={<Gauge size={16} />} tone={infra.memory?.pct >= 90 ? 'danger' : infra.memory?.pct >= 70 ? 'warning' : 'success'} />
           <MetricCard label="Uptime" value={fmtUptime(infra.uptimeSeconds)} icon={<Server size={16} />} tone="success" />
@@ -354,12 +354,14 @@ function CommandCenterBody({ data, audit, rangeLabel, onRunBackup }: { data: any
             icon={<ShieldCheck size={16} />}
             tone={infra.backup ? (infra.backup.success ? 'success' : 'danger') : 'neutral'}
           />
-          <MetricCard label="Disk" value={<NoData />} icon={<Database size={16} />} tone="neutral" />
-          <MetricCard label="Queue" value={<NoData />} icon={<Server size={16} />} tone="neutral" />
-          <MetricCard label="Storage" value={<NoData />} icon={<Database size={16} />} tone="neutral" />
+          <MetricCard label="Disk" value={infra.disk ? pctStr(infra.disk.pct) : <NoData />} sub={infra.disk ? `${infra.disk.usedGb}/${infra.disk.totalGb} GB` : undefined} icon={<Database size={16} />} tone={!infra.disk ? 'neutral' : infra.disk.pct >= 90 ? 'danger' : infra.disk.pct >= 75 ? 'warning' : 'success'} />
+          <MetricCard label="Storage (uploads)" value={infra.storage ? `${infra.storage.usedMb >= 1024 ? `${Math.round(infra.storage.usedMb / 102.4) / 10} GB` : `${infra.storage.usedMb} MB`}` : <NoData hint="Không có thư mục uploads local (có thể dùng S3)" />} icon={<Database size={16} />} tone={infra.storage ? 'info' : 'neutral'} />
+          <MetricCard label="Hàng đợi việc" value={num(infra.queue?.pending)} sub={infra.queue ? `noti ${infra.queue.notifications} · wf ${infra.queue.workflows} · ai ${infra.queue.aiActions}` : undefined} icon={<Server size={16} />} tone={!infra.queue ? 'neutral' : infra.queue.pending > 20 ? 'warning' : 'success'} />
+          <MetricCard label="Kết nối DB" value={infra.dbConnections != null ? num(infra.dbConnections) : <NoData />} icon={<Database size={16} />} tone="info" />
+          <MetricCard label="Phiên đăng nhập" value={num(infra.activeSessions)} sub="còn hiệu lực" icon={<UserCheck size={16} />} tone="info" />
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] [color:var(--pf-color-muted)]">CPU/RAM/Uptime/DB lấy trực tiếp từ tiến trình máy chủ (Node os/process + ping DB). Disk/Queue/Storage chưa có nguồn giám sát.</p>
+          <p className="text-[11px] [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ: CPU/RAM/Disk (Node os/statfs), Uptime (process), DB (ping + pg_stat_activity), Storage (thư mục uploads), Hàng đợi = việc chờ xử lý (DB). Error-rate / req-per-phút cần telemetry mức request — chưa có.</p>
           <button onClick={onRunBackup} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]">
             <ShieldCheck size={13} /> Chạy sao lưu ngay
           </button>
