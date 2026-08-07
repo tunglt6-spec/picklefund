@@ -153,6 +153,20 @@ jobs:
             BACKUP_SIZE=$(du -sh "$BACKUP_FILE" | cut -f1)
             echo "Backup OK: $(basename "$BACKUP_FILE") ($BACKUP_SIZE)"
 
+            # ── 4b. Sao lưu chứng chỉ SSL nginx (KHÔNG nằm trong git/volume; mất là phải
+            #        xin cấp lại). Tar vào cùng thư mục backups để rotate & (bước 6) đẩy offsite.
+            SSL_DIR="$REPO_DIR/nginx/ssl"
+            if [ -d "$SSL_DIR" ] && [ -n "$(ls -A "$SSL_DIR" 2>/dev/null)" ]; then
+              SSL_BACKUP="$REPO_DIR/backups/ssl_$(date +%Y%m%d_%H%M%S).tgz"
+              if tar czf "$SSL_BACKUP" -C "$REPO_DIR/nginx" ssl 2>/dev/null && [ -s "$SSL_BACKUP" ]; then
+                echo "SSL backup OK: $(basename "$SSL_BACKUP") ($(du -sh "$SSL_BACKUP" | cut -f1))"
+              else
+                rm -f "$SSL_BACKUP"; echo "(SSL backup bỏ qua — không tar được, không chặn deploy)"
+              fi
+            else
+              echo "(Không có nginx/ssl để sao lưu — bỏ qua)"
+            fi
+
             # ── 5. Pull prebuilt images & restart (no compile on VPS) ─
             # Images are PUBLIC on GHCR -> pull anonymously; a stale credential
             # would make GHCR deny a public pull, so clear it first.
@@ -228,6 +242,8 @@ jobs:
               # không xoá nên phình đĩa dần). Best-effort, không chặn deploy.
               echo "Trimming old DB backups (keep last 14)..."
               ls -1t "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | tail -n +15 | xargs -r rm -f || true
+              echo "Trimming old SSL backups (keep last 14)..."
+              ls -1t "$REPO_DIR"/backups/ssl_*.tgz 2>/dev/null | tail -n +15 | xargs -r rm -f || true
               echo "=== Disk after cleanup (root + ổ image Docker) ==="; df -h / /var/lib/containerd /var/lib/docker 2>/dev/null | awk 'NR==1 || !seen[$1]++'
               echo "Backups dir: $(du -sh "$REPO_DIR"/backups 2>/dev/null | cut -f1) ($(ls -1 "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | wc -l) files)"
               send_telegram "$(printf '✅ PickleFund deploy success\nCommit: %s\nAPI: OK\nFrontend: OK\nBackup: %s' "$SHORT_SHA" "$BACKUP_NAME")"
