@@ -360,6 +360,11 @@ export class CommandCenterService {
     return { generatedAt: data.generatedAt, sections, byAi, data };
   }
 
+  /** Chẩn đoán đường AI của Maika (model nào chạy). */
+  aiSelfTest() {
+    return this.maika.selfTest();
+  }
+
   /** Tách nội dung Maika theo marker [[key]] → { key: đoạn văn }. */
   private parseMarkers(text: string): Partial<ReviewSections> | null {
     if (!text || text.includes('§NO_LLM§')) return null;

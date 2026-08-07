@@ -153,9 +153,22 @@ export function SuperDashboard() {
     try {
       const res = await api.get('/command-center/ai-review', { params: params(), timeout: 60000 })
       setReview({ sections: res.data?.data?.sections ?? {}, byAi: !!res.data?.data?.byAi })
+      if (!res.data?.data?.byAi) toast('Maika chưa viết được (dùng bản tóm tắt). Bấm "Kiểm tra AI" để xem lý do.', { icon: '⚠️' })
     } catch {
       toast.error('Không tạo được đánh giá Maika')
     } finally { setReviewLoading(false) }
+  }
+
+  const selfTestAi = async () => {
+    const t = toast.loading('Đang kiểm tra AI…')
+    try {
+      const res = await api.get('/command-center/ai-selftest', { timeout: 30000 })
+      const d = res.data?.data
+      toast.dismiss(t)
+      alert(d?.okModel
+        ? `AI OK ✓\nModel dùng được: ${d.okModel}\nVí dụ: ${d.preview}`
+        : `AI KHÔNG chạy ✗ (configured=${d?.configured})\n` + (d?.attempts ?? []).map((a: any) => `• ${a.model}: ${a.ok ? 'OK' : 'lỗi — ' + a.error}`).join('\n'))
+    } catch { toast.error('Không gọi được self-test', { id: t }) }
   }
 
   const rangeLabel = RANGES.find((r) => r.key === range)?.label ?? ''
@@ -201,7 +214,7 @@ export function SuperDashboard() {
         </div>
       ) : data ? (
         <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <Body data={data} audit={audit} rangeLabel={rangeLabel} review={review} reviewLoading={reviewLoading} onRunReview={runReview} onRunBackup={async () => {
+          <Body data={data} audit={audit} rangeLabel={rangeLabel} review={review} reviewLoading={reviewLoading} onRunReview={runReview} onSelfTest={selfTestAi} onRunBackup={async () => {
             const t = toast.loading('Đang sao lưu…')
             try { const r = await api.post('/backup/run'); const st = r.data?.data; toast.success(st?.success ? 'Sao lưu thành công' : `Sao lưu lỗi: ${st?.error ?? '—'}`, { id: t }); load() }
             catch { toast.error('Không chạy được sao lưu', { id: t }) }
@@ -227,7 +240,7 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
   )
 }
 
-function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; review: { sections: any; byAi: boolean } | null; reviewLoading: boolean; onRunReview: () => void; onRunBackup: () => void }) {
+function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onSelfTest, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; review: { sections: any; byAi: boolean } | null; reviewLoading: boolean; onRunReview: () => void; onSelfTest: () => void; onRunBackup: () => void }) {
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards
 
   return (
@@ -250,7 +263,10 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onR
         </div>
 
         <ChartCard title="AIDO Executive Summary" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}
-          actions={<button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>}>
+          actions={<div className="flex items-center gap-1.5">
+            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
+            <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
+          </div>}>
           <SummaryBlock summary={data.summary} />
           {reviewText(review, 'overview') && <MaikaNote review={review} k="overview" />}
         </ChartCard>

@@ -57,6 +57,12 @@ export class CommandCenterController {
     return ok({ generatedAt: r.generatedAt, sections: r.sections, byAi: r.byAi });
   }
 
+  /** Chẩn đoán đường AI của Maika (model nào chạy / lỗi) — để soi vì sao đánh giá rơi rule-based. */
+  @Get('ai-selftest')
+  async aiSelfTest() {
+    return ok(await this.service.aiSelfTest());
+  }
+
   /** Xuất PDF (bìa + 9 mục + đánh giá Maika) — server-side (headless Chrome), A4 chuẩn. */
   @Get('pdf')
   async pdf(

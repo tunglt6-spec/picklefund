@@ -171,6 +171,23 @@ export class MaikaService {
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 
+  /** Chẩn đoán đường Gemini: thử lần lượt các model, trả về model nào chạy + lỗi từng model. */
+  async selfTest(): Promise<{ configured: boolean; okModel: string | null; preview: string; attempts: { model: string; ok: boolean; error?: string }[] }> {
+    if (!this.genAI) return { configured: false, okModel: null, preview: '', attempts: [] };
+    const candidates = [this.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter((m, i, a) => !!m && a.indexOf(m) === i);
+    const attempts: { model: string; ok: boolean; error?: string }[] = [];
+    for (const m of candidates) {
+      try {
+        const model = this.genAI.getGenerativeModel({ model: m });
+        const result = await model.generateContent('Trả lời đúng một câu tiếng Việt: "Xin chào từ Maika".');
+        const text = result.response.text().trim();
+        if (text) { attempts.push({ model: m, ok: true }); return { configured: true, okModel: m, preview: text.slice(0, 160), attempts }; }
+        attempts.push({ model: m, ok: false, error: 'empty response' });
+      } catch (e: any) { attempts.push({ model: m, ok: false, error: String(e?.message ?? e).slice(0, 180) }); }
+    }
+    return { configured: true, okModel: null, preview: '', attempts };
+  }
+
   /** Như composeText nhưng cho phép ĐẦU RA DÀI (nâng maxOutputTokens) — báo cáo điều hành nhiều mục. */
   async composeLong(
     prompt: string,
@@ -182,26 +199,30 @@ export class MaikaService {
   }
 
   private async askAI(prompt: string, fallback: string, clubId?: string, maxTokens?: number): Promise<string> {
-    // 1) Gemini Free (primary)
+    // 1) Gemini — thử lần lượt danh sách model (tự chữa khi model cấu hình sai/không tồn tại):
+    //    model cấu hình → gemini-2.5-flash → gemini-2.0-flash → gemini-1.5-flash.
     if (this.genAI) {
-      const t0 = Date.now();
-      try {
-        const model = this.genAI.getGenerativeModel({
-          model: this.geminiModel,
-          ...(maxTokens ? { generationConfig: { maxOutputTokens: maxTokens } } : {}),
-        });
-        const result = await model.generateContent(prompt);
-        const text = result.response.text().trim();
-        if (text) {
-          const u = AiUsageService.readGeminiUsage(result);
-          void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'gemini', model: this.geminiModel, ...u, latencyMs: Date.now() - t0, success: true });
-          return text; // rỗng (bị lọc an toàn…) → coi như fail, xuống tầng dưới
+      const candidates = [this.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+        .filter((m, i, a) => !!m && a.indexOf(m) === i);
+      for (const modelName of candidates) {
+        const t0 = Date.now();
+        try {
+          const model = this.genAI.getGenerativeModel({
+            model: modelName,
+            ...(maxTokens ? { generationConfig: { maxOutputTokens: maxTokens } } : {}),
+          });
+          const result = await model.generateContent(prompt);
+          const text = result.response.text().trim();
+          if (text) {
+            const u = AiUsageService.readGeminiUsage(result);
+            void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'gemini', model: modelName, ...u, latencyMs: Date.now() - t0, success: true });
+            return text;
+          }
+        } catch (err: any) {
+          this.logger.warn(`[Maika] Gemini model ${modelName} lỗi: ${err.message}`);
         }
-      } catch (err: any) {
-        this.logger.warn(
-          `[Maika] Gemini error: ${err.message} — trying OpenRouter`,
-        );
       }
+      this.logger.warn('[Maika] Mọi model Gemini đều lỗi — trying OpenRouter/fallback');
     }
 
     // 2) OpenRouter Free (DeepSeek / Qwen) — T4 privacy: prompt Maika chứa số liệu tài chính CLB.
