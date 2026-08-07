@@ -40,6 +40,13 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      # Bật sao lưu DB tự động (03:00 hằng ngày) của BackupService. Bản dump gzip lưu ở
+      # /app/backups (named volume 'backups' bên dưới → bền qua redeploy). Giữ tối đa BACKUP_KEEP.
+      BACKUP_ENABLED: "1"
+      BACKUP_KEEP: "7"
+    volumes:
+      - backups:/app/backups
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,3 +84,4 @@ volumes:
   pgdata:
   redisdata:
   nginx-logs:
+  backups:
