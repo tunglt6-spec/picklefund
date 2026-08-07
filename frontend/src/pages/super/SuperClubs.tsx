@@ -442,27 +442,28 @@ export function SuperClubs() {
                   {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
                 </StatusBadge>
               </div>
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[color:var(--pf-border)]">
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-[color:var(--pf-border)]">
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.members ?? 0}</span> TV</div>
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
                 <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
-                <div className="flex-1" />
-                <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
-                  <Pencil size={14} />
-                </button>
-                <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
-                  <ShieldCheck size={14} />
-                </button>
-                <button
-                  onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
-                  className="p-2 rounded-lg"
-                  style={{ background: club.status === 'active' ? 'var(--pf-color-warning-soft)' : 'var(--pf-color-success-soft)', color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
-                >
-                  {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
-                </button>
-                <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
-                  <Trash2 size={14} />
-                </button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
+                    <ShieldCheck size={14} />
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
+                    className="p-2 rounded-lg"
+                    style={{ background: club.status === 'active' ? 'var(--pf-color-warning-soft)' : 'var(--pf-color-success-soft)', color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
+                  >
+                    {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -501,8 +502,8 @@ export function SuperClubs() {
           />
         </div>
 
-        <div className="rounded-2xl border overflow-hidden [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border overflow-x-auto [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>

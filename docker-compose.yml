@@ -47,6 +47,9 @@ services:
       BACKUP_KEEP: "7"
     volumes:
       - backups:/app/backups
+      # Ảnh hóa đơn (expense receipts) upload vào /app/uploads. PHẢI mount volume bền vững,
+      # nếu không mỗi lần deploy tạo container mới sẽ MẤT SẠCH file đã upload.
+      - uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,3 +88,4 @@ volumes:
   redisdata:
   nginx-logs:
   backups:
+  uploads:

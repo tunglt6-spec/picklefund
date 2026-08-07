@@ -81,7 +81,7 @@ const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string;
       <p className="text-xs [color:var(--pf-color-muted)]">{desc}</p>
     </div>
     <button onClick={() => onChange(!value)}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : 'bg-slate-200'}`}>
+      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : '[background:var(--pf-border)]'}`}>
       <span className={`absolute top-0.5 left-0.5 h-5 w-5 [background:var(--pf-surface)] rounded-full shadow-sm transition-transform duration-300 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   </div>
@@ -175,7 +175,7 @@ export function SuperSettings() {
 
       <div className="space-y-5">
         <Section icon={<Globe size={14} className="[color:var(--pf-primary)]" />} title="Thông tin hệ thống">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <S id="siteName" label="Tên nền tảng" value={settings.siteName} onChange={v => setSettings(p => ({ ...p, siteName: v }))} />
             <S id="email" label="Email hỗ trợ" type="email" value={settings.supportEmail} onChange={v => setSettings(p => ({ ...p, supportEmail: v }))} />
             <S id="maxClubs" label="Số CLB tối đa" type="number" value={settings.maxClubs} onChange={v => setSettings(p => ({ ...p, maxClubs: v }))} />
@@ -216,7 +216,7 @@ export function SuperSettings() {
 
         <Section icon={<KeyRound size={14} className="[color:var(--pf-primary)]" />} title="Tài khoản & Mật khẩu">
           <div className="space-y-4 max-w-md">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
                 <input className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.username ?? ''} readOnly />
@@ -249,7 +249,7 @@ export function SuperSettings() {
               </div>
             ))}
             {pw.new && pw.confirm && (
-              <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${pw.new === pw.confirm ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2" style={{ background: pw.new === pw.confirm ? 'var(--pf-color-success-soft)' : 'var(--pf-color-danger-soft)', color: pw.new === pw.confirm ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
                 <CheckCircle size={14} />
                 {pw.new === pw.confirm ? 'Mật khẩu khớp' : 'Mật khẩu không khớp'}
               </div>
@@ -262,7 +262,7 @@ export function SuperSettings() {
 
         <div className="[background:var(--pf-color-muted-soft)] rounded-xl p-4 text-xs [color:var(--pf-color-muted)] space-y-1">
           <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold [color:var(--pf-text)]">v{__APP_VERSION__}</span></div>
-          <div className="flex justify-between"><span>Môi trường</span><span className="font-mono text-emerald-600">{import.meta.env.PROD ? 'production' : 'development'}</span></div>
+          <div className="flex justify-between"><span>Môi trường</span><span className="font-mono" style={{ color: 'var(--pf-color-success)' }}>{import.meta.env.PROD ? 'production' : 'development'}</span></div>
           <div className="flex justify-between"><span>Build</span><span className="font-mono [color:var(--pf-color-muted)]">{__BUILD_DATE__}</span></div>
         </div>
       </div>

@@ -93,7 +93,7 @@ export function AuditLogs() {
 
       <div className="mb-4 flex flex-col gap-3">
         <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
-        <div className="flex gap-1 self-start rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <div className="flex gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
           {ACTION_OPTIONS.map((opt) => (
             <button
               key={opt}

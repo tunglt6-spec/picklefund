@@ -322,16 +322,15 @@ export function SuperClubDetail() {
                   const maxTokens = Math.max(...aiUsage.map(x => x.tokens), 1)
                   const pct = Math.round((u.tokens / maxTokens) * 100)
                   return (
-                    <div key={u.month} className="flex items-center gap-2 text-xs">
-                      <div className="w-14 [color:var(--pf-color-muted)] shrink-0">{fmtMonth(u.month)}</div>
-                      <div className="flex-1 h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
+                    <div key={u.month} className="text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 mb-1">
+                        <span className="[color:var(--pf-color-muted)]">{fmtMonth(u.month)}</span>
+                        <span className="[color:var(--pf-color-muted)]">
+                          {u.tokens.toLocaleString('vi-VN')} tokens · <span className="[color:var(--pf-primary)] font-medium">{u.estimatedCostVnd.toLocaleString('vi-VN')}đ</span>
+                        </span>
+                      </div>
+                      <div className="h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                         <div className="h-full [background:var(--pf-primary)] rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="w-28 text-right [color:var(--pf-color-muted)] shrink-0">
-                        {u.tokens.toLocaleString('vi-VN')} tokens
-                      </div>
-                      <div className="w-20 text-right [color:var(--pf-primary)] font-medium shrink-0">
-                        {u.estimatedCostVnd.toLocaleString('vi-VN')}đ
                       </div>
                     </div>
                   )

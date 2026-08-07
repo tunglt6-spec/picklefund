@@ -204,17 +204,19 @@ jobs:
               BACKUP_NAME=$(basename "$BACKUP_FILE")
               # Tự dọn ảnh cũ (>3 ngày) để tránh ĐẦY ĐĨA VPS 38G (chung với AICP) — giữ vài
               # bản gần nhất cho rollback. Best-effort, không chặn deploy nếu lỗi.
-              # Đĩa căng (>=85%) → prune MẠNH (mọi image/build-cache không dùng) để giải phóng
-              # ngay; rollback vẫn re-pull được từ GHCR (public). Bình thường giữ cửa sổ 72h.
+              # Đĩa căng (>=75%) → prune MẠNH (mọi image/build-cache không dùng) để giải phóng
+              # ngay; rollback vẫn re-pull được từ GHCR (public). Hạ ngưỡng 85→75 vì nhiều lần
+              # deploy/ngày làm image tích lũy nhanh (đĩa 38G dùng chung). Bình thường giữ cửa sổ 24h.
               DISK_USE=$(df / | awk 'NR==2{gsub(/%/,"",$5); print $5}')
-              if [ "${DISK_USE:-0}" -ge 85 ]; then
-                echo "Disk ${DISK_USE}% >= 85% — aggressive prune (all unused images + build cache)"
+              if [ "${DISK_USE:-0}" -ge 75 ]; then
+                echo "Disk ${DISK_USE}% >= 75% — aggressive prune (all unused images + build cache)"
                 docker image prune -af >/dev/null 2>&1 || true
                 docker builder prune -af >/dev/null 2>&1 || true
+                docker container prune -f >/dev/null 2>&1 || true
               else
-                echo "Pruning old images (keep last 72h)..."
-                docker image prune -af --filter "until=72h" >/dev/null 2>&1 || true
-                docker builder prune -f --filter "until=72h" >/dev/null 2>&1 || true
+                echo "Pruning old images (keep last 24h)..."
+                docker image prune -af --filter "until=24h" >/dev/null 2>&1 || true
+                docker builder prune -f --filter "until=24h" >/dev/null 2>&1 || true
               fi
               # Dọn backup DB cũ — giữ 14 bản gần nhất (mỗi deploy tạo 1 file ~3M, TRƯỚC ĐÂY
               # không xoá nên phình đĩa dần). Best-effort, không chặn deploy.

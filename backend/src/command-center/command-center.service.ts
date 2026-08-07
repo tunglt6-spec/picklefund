@@ -219,13 +219,16 @@ export class CommandCenterService {
       if (fs.existsSync(uploadsDir)) storage = { usedMb: Math.round((this.dirSize(uploadsDir) / 1048576) * 10) / 10 };
     } catch { /* null */ }
 
-    // Queue: app không có message-queue riêng → đo VIỆC ĐANG CHỜ trong hệ thống (thật từ DB).
-    const [notiPending, wfPending, aiPending] = await Promise.all([
-      this.prisma.notificationJob.count({ where: { status: 'READY', ...scope } }),
+    // Queue: app không có message-queue riêng → đo VIỆC ĐANG CHỜ thật trong hệ thống.
+    // LƯU Ý: NotificationJob KHÔNG có trạng thái "đang chờ" (dispatch đồng bộ; enum chỉ có
+    // DRY_RUN/READY/FAILED, trong đó READY = ĐÃ GỬI). Nên KHÔNG tính notification vào hàng đợi.
+    // Notification lỗi (FAILED) đưa ra như chỉ số riêng để giám sát, không phải "chờ xử lý".
+    const [notiFailedJobs, wfPending, aiPending] = await Promise.all([
+      this.prisma.notificationJob.count({ where: { status: 'FAILED', ...scope } }),
       this.prisma.workflowRun.count({ where: { status: { in: ['PENDING', 'RUNNING', 'WAITING_APPROVAL'] }, ...scope } }),
       this.prisma.aiAction.count({ where: { status: { in: ['PENDING_APPROVAL', 'RETRY_PENDING'] }, ...scope } }),
     ]);
-    const queue = { pending: notiPending + wfPending + aiPending, notifications: notiPending, workflows: wfPending, aiActions: aiPending };
+    const queue = { pending: wfPending + aiPending, workflows: wfPending, aiActions: aiPending, notificationsFailed: notiFailedJobs };
 
     // Kết nối DB hiện tại (pg_stat_activity) + phiên đăng nhập còn hiệu lực (RefreshToken).
     let dbConnections: number | null = null;
