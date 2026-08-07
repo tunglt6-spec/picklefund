@@ -322,11 +322,11 @@ function CommandCenterBody({ data, audit, rangeLabel, onRunBackup }: { data: any
       {/* AIDO AI Operations */}
       <Section title="AIDO AI Operations" desc={rangeLabel} icon={<Bot size={16} />}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <AgentCard name="Maika" role="Phân tích & Khuyến nghị" icon={<Sparkles size={16} />} rows={[['Insight', ai.agents.maika.insights], ['Action', ai.agents.maika.actions]]} />
-          <AgentCard name="Lisa" role="Hội thoại & Hỏi đáp" icon={<MessageSquare size={16} />} rows={[['Tin nhắn', ai.agents.lisa.messages]]} />
-          <AgentCard name="Hermes" role="Workflow & Điều phối" icon={<Workflow size={16} />} rows={[['Chạy', ai.agents.hermes.runs], ['Hoàn tất', ai.agents.hermes.completed], ['Chờ duyệt', ai.agents.hermes.waiting], ['Lỗi', ai.agents.hermes.failed]]} />
-          <AgentCard name="Mít Đặc" role="Thực thi tác vụ" icon={<Zap size={16} />} rows={[['Đã chạy', ai.agents.mitDac.executed], ['Thất bại', ai.agents.mitDac.failed], ['TB (ms)', ai.agents.mitDac.avgMs ?? '—']]} />
-          <AgentCard name="Notification AI" role="Thông báo" icon={<Bell size={16} />} rows={[['In-app', ai.agents.notification.byChannel.IN_APP], ['Email', ai.agents.notification.byChannel.EMAIL], ['Telegram', ai.agents.notification.byChannel.TELEGRAM], ['Lỗi', ai.agents.notification.failed]]} />
+          <AgentCard name="Maika" role="Phân tích & Khuyến nghị" accent="var(--pf-color-ai)" icon={<Sparkles size={16} />} rows={[['Insight', ai.agents.maika.insights], ['Action', ai.agents.maika.actions]]} />
+          <AgentCard name="Lisa" role="Hội thoại & Hỏi đáp" accent="var(--pf-color-info)" icon={<MessageSquare size={16} />} rows={[['Tin nhắn', ai.agents.lisa.messages]]} />
+          <AgentCard name="Hermes" role="Workflow & Điều phối" accent="var(--pf-color-success)" icon={<Workflow size={16} />} rows={[['Chạy', ai.agents.hermes.runs], ['Hoàn tất', ai.agents.hermes.completed], ['Chờ duyệt', ai.agents.hermes.waiting], ['Lỗi', ai.agents.hermes.failed]]} />
+          <AgentCard name="Mít Đặc" role="Thực thi tác vụ" accent="var(--pf-color-warning)" icon={<Zap size={16} />} rows={[['Đã chạy', ai.agents.mitDac.executed], ['Thất bại', ai.agents.mitDac.failed], ['TB (ms)', ai.agents.mitDac.avgMs ?? '—']]} />
+          <AgentCard name="Notification AI" role="Thông báo" accent="var(--pf-primary)" icon={<Bell size={16} />} rows={[['In-app', ai.agents.notification.byChannel.IN_APP], ['Email', ai.agents.notification.byChannel.EMAIL], ['Telegram', ai.agents.notification.byChannel.TELEGRAM], ['Lỗi', ai.agents.notification.failed]]} />
         </div>
         <div className="mt-3 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           <MetricCard label="Tổng request" value={num(ai.totals.requests)} icon={<Bot size={16} />} tone="brand" />
@@ -456,20 +456,32 @@ function Mini({ label, value, tone }: { label: string; value: React.ReactNode; t
   )
 }
 
-function AgentCard({ name, role, icon, rows }: { name: string; role: string; icon: React.ReactNode; rows: [string, React.ReactNode][] }) {
+function AgentCard({ name, role, icon, rows, accent }: { name: string; role: string; icon: React.ReactNode; rows: [string, React.ReactNode][]; accent: string }) {
   return (
-    <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{icon}</span>
-        <div className="min-w-0"><p className="text-sm font-extrabold [color:var(--pf-text)]">{name}</p><p className="truncate text-[10px] [color:var(--pf-color-muted)]">{role}</p></div>
-      </div>
-      <div className="grid grid-cols-2 gap-1.5">
-        {rows.map(([lbl, val]) => (
-          <div key={lbl} className="rounded-lg [background:var(--pf-surface-muted)] px-2 py-1.5">
-            <p className="text-[10px] [color:var(--pf-color-muted)]">{lbl}</p>
-            <p className="text-[13px] font-bold [color:var(--pf-text)]">{typeof val === 'number' ? formatNumber(val) : val}</p>
+    <div
+      className="overflow-hidden rounded-[18px] border [box-shadow:var(--pf-shadow)]"
+      style={{
+        borderColor: `color-mix(in srgb, ${accent} 30%, var(--pf-border))`,
+        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 6%, var(--pf-surface)), var(--pf-surface))`,
+      }}
+    >
+      <div className="h-1" style={{ background: accent }} />
+      <div className="p-4">
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${accent} 18%, var(--pf-surface))`, color: accent }}>{icon}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-extrabold" style={{ color: accent }}>{name}</p>
+            <p className="truncate text-[10px] [color:var(--pf-color-muted)]">{role}</p>
           </div>
-        ))}
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          {rows.map(([lbl, val]) => (
+            <div key={lbl} className="rounded-lg border px-2 py-1.5" style={{ borderColor: `color-mix(in srgb, ${accent} 16%, var(--pf-border))`, background: `color-mix(in srgb, ${accent} 5%, var(--pf-surface-muted))` }}>
+              <p className="text-[10px] [color:var(--pf-color-muted)]">{lbl}</p>
+              <p className="text-[15px] font-extrabold [color:var(--pf-text)]">{typeof val === 'number' ? formatNumber(val) : val}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
