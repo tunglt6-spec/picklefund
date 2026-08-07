@@ -24,13 +24,14 @@ interface NavItem {
   desc?: string
 }
 
-// UI Consolidation v2.1 — cụm AI (AIDO/Operations/Workflows/Nhật ký AI) gộp về 1 mục "AIDO".
+// Super Admin: AI toàn hệ thống đã nằm trong Trung tâm điều hành (/super/dashboard — khối AIDO
+// AI Operations + Maika). Bỏ mục "AIDO" (màn /aido là AI Office THEO CLB — rỗng với super admin
+// vì clubId=null). Không xoá tính năng /aido của Club Admin.
 const superAdminNav: NavItem[] = [
   { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard', desc: 'Bảng điều khiển hệ thống' },
   { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs',     desc: 'Danh sách & chi tiết CLB' },
   { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users',     desc: 'Tài khoản toàn hệ thống' },
   { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs', desc: 'Nhật ký kiểm toán' },
-  { label: 'AIDO',         icon: <Cpu size={18} />,             to: '/aido',            desc: 'AI Digital Office' },
   { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings',  desc: 'Cấu hình hệ thống' },
 ]
 
