@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { PLAN_CONFIGS } from '../billing/billing.types';
+import { MetricsService } from '../metrics/metrics.service';
 
 type RangeKey = 'today' | '7d' | '30d' | 'quarter' | 'year' | 'custom';
 
@@ -17,7 +18,10 @@ const n = (v: unknown): number => Number(v ?? 0) || 0;
 
 @Injectable()
 export class CommandCenterService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private metrics: MetricsService,
+  ) {}
 
   private resolveRange(range: RangeKey, from?: string, to?: string): { start: Date; end: Date } {
     const end = to ? new Date(to) : new Date();
@@ -231,8 +235,8 @@ export class CommandCenterService {
       db: { status: dbStatus, latencyMs: dbLatency },
       backup, backupEnabled,
       disk, storage, queue, dbConnections, activeSessions,
-      // Chưa có telemetry mức request → null (frontend hiển thị "chưa có dữ liệu"):
-      errorRate: null, requestsPerMin: null,
+      // Telemetry request (MetricsMiddleware, cửa sổ 5 phút): req/phút TB + tỷ lệ lỗi 5xx.
+      ...this.metrics.snapshot(),
     };
 
     // ── Khối 7: Bảng xếp hạng (Top CLB) — bỏ qua nếu đang lọc 1 CLB ──

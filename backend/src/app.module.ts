@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
@@ -48,6 +48,8 @@ import { CommandCenterModule } from './command-center/command-center.module';
 import { AiUsageModule } from './ai-usage/ai-usage.module';
 import { ReportExportsModule } from './report-exports/report-exports.module';
 import { BackupModule } from './backup/backup.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { MetricsMiddleware } from './metrics/metrics.middleware';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -116,6 +118,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     AiUsageModule,
     ReportExportsModule,
     BackupModule,
+    MetricsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
@@ -125,4 +128,8 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     { provide: APP_GUARD, useClass: MemberScopeGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

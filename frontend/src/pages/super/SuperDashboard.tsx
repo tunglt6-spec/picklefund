@@ -359,9 +359,11 @@ function CommandCenterBody({ data, audit, rangeLabel, onRunBackup }: { data: any
           <MetricCard label="Hàng đợi việc" value={num(infra.queue?.pending)} sub={infra.queue ? `noti ${infra.queue.notifications} · wf ${infra.queue.workflows} · ai ${infra.queue.aiActions}` : undefined} icon={<Server size={16} />} tone={!infra.queue ? 'neutral' : infra.queue.pending > 20 ? 'warning' : 'success'} />
           <MetricCard label="Kết nối DB" value={infra.dbConnections != null ? num(infra.dbConnections) : <NoData />} icon={<Database size={16} />} tone="info" />
           <MetricCard label="Phiên đăng nhập" value={num(infra.activeSessions)} sub="còn hiệu lực" icon={<UserCheck size={16} />} tone="info" />
+          <MetricCard label="Req / phút" value={num(infra.requestsPerMin)} sub="TB 5 phút" icon={<Activity size={16} />} tone="info" />
+          <MetricCard label="Lỗi (5xx)" value={infra.errorRate != null ? `${infra.errorRate}%` : <NoData hint="Chưa có request nào trong 5 phút gần đây" />} icon={<AlertTriangle size={16} />} tone={infra.errorRate == null ? 'neutral' : infra.errorRate >= 5 ? 'danger' : infra.errorRate > 0 ? 'warning' : 'success'} />
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ: CPU/RAM/Disk (Node os/statfs), Uptime (process), DB (ping + pg_stat_activity), Storage (thư mục uploads), Hàng đợi = việc chờ xử lý (DB). Error-rate / req-per-phút cần telemetry mức request — chưa có.</p>
+          <p className="text-[11px] [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ: CPU/RAM/Disk (Node os/statfs), Uptime (process), DB (ping + pg_stat_activity), Storage (thư mục uploads), Hàng đợi = việc chờ xử lý (DB), Req/phút & Lỗi 5xx (telemetry request, cửa sổ 5 phút, reset khi restart).</p>
           <button onClick={onRunBackup} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]">
             <ShieldCheck size={13} /> Chạy sao lưu ngay
           </button>
