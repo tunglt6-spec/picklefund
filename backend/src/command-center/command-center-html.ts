@@ -83,6 +83,27 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
     <div class="cv-foot"><span>Tổng quan kinh doanh · vận hành · AI · hạ tầng</span><span>Xuất: ${esc(exportedAt)}</span></div>
   </section>`;
 
+  // Mục lục (trang 2)
+  const tocItems: Array<[string, string]> = [
+    ['Tổng quan hệ thống', 'Chỉ số KPI toàn nền tảng'],
+    ['Kinh doanh & Thuê bao', 'Doanh thu, MRR/ARR, cơ cấu gói dịch vụ'],
+    ['Hoạt động toàn hệ thống', 'CLB, thành viên, buổi chơi, giải đấu'],
+    ['Tổng hợp tài chính toàn nền tảng', 'Thu/chi, số dư quỹ, công nợ'],
+    ['AIDO AI Operations', 'Hoạt động & chi phí các trợ lý AI'],
+    ['Sức khỏe hạ tầng', 'CPU, RAM, database, disk, hàng đợi, backup'],
+    ['Cảnh báo điều hành', 'Rủi ro & việc cần xử lý trong kỳ'],
+    ['Bảng xếp hạng điều hành', 'Top CLB theo nhiều tiêu chí'],
+    ['Nhật ký hệ thống & Kiểm toán', 'Audit log & phân tích an toàn hệ thống'],
+  ];
+  const toc = `<section class="toc">
+    <div class="toc-eyb">Nội dung báo cáo</div>
+    <div class="toc-h">Mục lục</div>
+    <div class="toc-sub">Phạm vi dữ liệu: ${esc(rangeLabel)}${data.clubId ? ' · 1 CLB' : ' · Toàn hệ thống'} · Xuất ${esc(exportedAt)}</div>
+    <ol class="toc-list">
+      ${tocItems.map(([t, d], i) => `<li class="toc-item"><span class="toc-n">${String(i + 1).padStart(2, '0')}</span><span class="toc-tx"><div class="toc-t">${esc(t)}</div><div class="toc-d">${esc(d)}</div></span></li>`).join('')}
+    </ol>
+  </section>`;
+
   // 1. Tổng quan (KPI)
   const overviewBody = `<div class="grid4">
     ${kpi('Tổng CLB', num(k.totalClubs))}${kpi('CLB hoạt động', num(k.activeClubs))}${kpi('CLB bị khóa', num(k.suspendedClubs))}${kpi('Tổng thành viên', num(k.totalMembers))}
@@ -165,8 +186,8 @@ html,body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.55;-we
 p{orphans:3;widows:3}
 .mut{color:#94A3B8}.r{text-align:right}
 /* ===== TRANG BÌA — full-width vừa khít khung in đối xứng ===== */
-.cover{position:relative;overflow:hidden;height:262mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22mm 18mm;page-break-after:always;background:radial-gradient(120% 90% at 100% 0%,#B39CFF 0%,rgba(179,156,255,0) 55%),linear-gradient(135deg,#5B4BE8 0%,#6D5DFB 45%,#8B7BFF 100%)}
-.cover .cv-glow{position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,0) 70%)}
+.cover{position:relative;overflow:hidden;height:262mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22mm 18mm;page-break-after:always;background:radial-gradient(130% 90% at 100% 0%,rgba(124,109,251,.55) 0%,rgba(124,109,251,0) 52%),linear-gradient(135deg,#1E1B4B 0%,#312E81 38%,#4338CA 74%,#6D5DFB 100%)}
+.cover .cv-glow{position:absolute;right:-80px;bottom:-100px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(139,123,255,.38),rgba(139,123,255,0) 70%)}
 .cover .cv-head{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
 .cover .cv-brand{font-size:12px;letter-spacing:.24em;font-weight:800;display:flex;align-items:center;gap:8px}
 .cover .cv-mark{font-size:12px;opacity:.9}
@@ -182,9 +203,20 @@ p{orphans:3;widows:3}
 .cover .gcard .v{font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
 .cover .gcard .s{font-size:9.5px;opacity:.88;margin-top:3px}
 .cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.9;border-top:1px solid rgba(255,255,255,.28);padding-top:14px;position:relative;z-index:1}
-/* ===== SECTION — không viền, chảy qua trang mượt (không cắt viền/đè dòng) ===== */
-.sect{padding:0;margin:0 14mm 20px;page-break-inside:auto}
-.sect:first-of-type{margin-top:2mm}
+/* ===== MỤC LỤC (trang 2) ===== */
+.toc{margin:0 14mm}
+.toc-eyb{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#6D5DFB;margin-bottom:6px}
+.toc-h{font-size:30px;font-weight:800;letter-spacing:-.02em;color:#1E293B;margin-bottom:6px}
+.toc-sub{font-size:11px;color:#94A3B8;margin-bottom:22px}
+.toc-list{list-style:none;counter-reset:toc}
+.toc-item{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid #EEF1F6;page-break-inside:avoid}
+.toc-item:last-child{border-bottom:none}
+.toc-n{flex:none;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#4338CA,#6D5DFB);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:-.01em}
+.toc-tx{flex:1}
+.toc-t{font-size:13px;font-weight:800;color:#1E293B;letter-spacing:-.01em}
+.toc-d{font-size:10px;color:#94A3B8;margin-top:2px}
+/* ===== SECTION — mỗi mục bắt đầu ở trang mới; nội dung dài vẫn chảy mượt qua trang ===== */
+.sect{padding:0;margin:0 14mm;page-break-inside:auto;page-break-before:always;break-before:page}
 .sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:12px;padding-left:11px;border-left:4px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
 /* Đơn vị nhỏ giữ nguyên khối, không tách qua trang. */
 .k,.rank,.tbl thead,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
@@ -210,6 +242,7 @@ p{orphans:3;widows:3}
 .maika-body p:last-child{margin-bottom:0}
 </style></head><body>
 ${cover}
+${toc}
 ${section('1 · Tổng quan hệ thống', overviewBody, sections.overview)}
 ${section('2 · Kinh doanh & Thuê bao', businessBody, sections.business)}
 ${section('3 · Hoạt động toàn hệ thống', operationsBody, sections.operations)}
