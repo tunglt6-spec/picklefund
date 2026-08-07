@@ -33,10 +33,16 @@ const RANGE_LABEL: Record<string, string> = { today: 'Hôm nay', '7d': '7 ngày'
 
 type Sections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog', string>;
 
-/** Ô nhận định của Maika (AI). */
+/** Ô nhận định của Maika (AI). Tách thành nhiều đoạn <p> block để ngắt trang an toàn (không đè dòng). */
 function maikaBox(text: string): string {
   if (!text) return '';
-  return `<div class="maika"><div class="maika-h"><span class="maika-dot"></span>Maika nhận định</div><p>${esc(text)}</p></div>`;
+  const paras = String(text)
+    .split(/\n{2,}/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${esc(p).replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+  return `<div class="maika"><div class="maika-h"><span class="maika-dot"></span>Maika nhận định</div><div class="maika-body">${paras || `<p>${esc(text)}</p>`}</div></div>`;
 }
 function kpi(label: string, value: string, sub?: string): string {
   return `<div class="k"><div class="k-l">${esc(label)}</div><div class="k-v">${esc(value)}</div>${sub ? `<div class="k-s">${esc(sub)}</div>` : ''}</div>`;
@@ -56,12 +62,16 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards;
   const rangeLabel = RANGE_LABEL[data.range?.key] ?? '';
 
-  // Cover
-  const cover = `<div class="cover">
-    <div>
-      <div class="cv-top"><span class="cv-brand">PICKLEFUND</span></div>
-      <div class="cv-eyb">Trung tâm điều hành · Command Center</div>
-      <div class="cv-title">Báo cáo điều hành<br/>toàn hệ thống</div>
+  // Cover — full-width vừa khít khung in đối xứng (không full-bleed lệch).
+  const cover = `<section class="cover">
+    <div class="cv-glow"></div>
+    <div class="cv-head">
+      <span class="cv-brand"><span class="cv-mark">◆</span>PICKLEFUND</span>
+      <span class="cv-tag">Command Center</span>
+    </div>
+    <div class="cv-mid">
+      <div class="cv-eyb">Trung tâm điều hành · Báo cáo định kỳ</div>
+      <h1 class="cv-title">Báo cáo điều hành<br/>toàn hệ thống</h1>
       <div class="cv-rule"></div>
       <div class="cv-period">Phạm vi dữ liệu: ${esc(rangeLabel)}${data.clubId ? ' · 1 CLB' : ' · Toàn hệ thống'}</div>
       <div class="cv-stats">
@@ -71,7 +81,7 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
       </div>
     </div>
     <div class="cv-foot"><span>Tổng quan kinh doanh · vận hành · AI · hạ tầng</span><span>Xuất: ${esc(exportedAt)}</span></div>
-  </div>`;
+  </section>`;
 
   // 1. Tổng quan (KPI)
   const overviewBody = `<div class="grid4">
@@ -150,46 +160,54 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"/><style>
 ${fontFace}
 *{margin:0;padding:0;box-sizing:border-box}
-@page{size:A4;margin:0}
-body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0}
-.page{padding:12mm 11mm}
+@page{size:A4}
+html,body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+p{orphans:3;widows:3}
 .mut{color:#94A3B8}.r{text-align:right}
-.cover{position:relative;overflow:hidden;height:263mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:26mm 22mm;page-break-after:always;background:linear-gradient(135deg,#6D5DFB,#8B7BFF 55%,#B39CFF)}
-.cover .cv-brand{font-size:11px;letter-spacing:.22em;font-weight:700;opacity:.9}
-.cover .cv-eyb{font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;opacity:.85;margin-top:22px}
-.cover .cv-title{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:12px 0 10px}
-.cover .cv-rule{width:64px;height:4px;border-radius:9px;background:rgba(255,255,255,.75);margin:20px 0}
-.cover .cv-period{font-size:14px;opacity:.92}
-.cover .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:150mm;margin-top:26px}
-.cover .gcard{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:16px;padding:14px 16px}
-.cover .gcard .l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;font-weight:700}
-.cover .gcard .v{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:5px}
-.cover .gcard .s{font-size:9.5px;opacity:.85;margin-top:2px}
-.cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.85;border-top:1px solid rgba(255,255,255,.25);padding-top:14px}
-/* Section KHÔNG viền/nền để nội dung dài co giãn qua trang không bị cắt viền/chèn. */
-.sect{padding:0;margin:0 11mm 16px;page-break-inside:auto}
-.sect:first-of-type{margin-top:12mm}
-.sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:10px;padding-left:9px;border-left:3px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
+/* ===== TRANG BÌA — full-width vừa khít khung in đối xứng ===== */
+.cover{position:relative;overflow:hidden;height:262mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22mm 18mm;page-break-after:always;background:radial-gradient(120% 90% at 100% 0%,#B39CFF 0%,rgba(179,156,255,0) 55%),linear-gradient(135deg,#5B4BE8 0%,#6D5DFB 45%,#8B7BFF 100%)}
+.cover .cv-glow{position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,0) 70%)}
+.cover .cv-head{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+.cover .cv-brand{font-size:12px;letter-spacing:.24em;font-weight:800;display:flex;align-items:center;gap:8px}
+.cover .cv-mark{font-size:12px;opacity:.9}
+.cover .cv-tag{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;opacity:.85;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:5px 12px}
+.cover .cv-mid{position:relative;z-index:1}
+.cover .cv-eyb{font-size:11px;letter-spacing:.3em;text-transform:uppercase;font-weight:700;opacity:.9}
+.cover .cv-title{font-size:46px;font-weight:800;letter-spacing:-.025em;line-height:1.04;margin:14px 0 0}
+.cover .cv-rule{width:72px;height:4px;border-radius:9px;background:rgba(255,255,255,.8);margin:22px 0}
+.cover .cv-period{font-size:14px;opacity:.94}
+.cover .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.cover .gcard{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:16px;padding:15px 17px;backdrop-filter:blur(2px)}
+.cover .gcard .l{font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:700}
+.cover .gcard .v{font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.cover .gcard .s{font-size:9.5px;opacity:.88;margin-top:3px}
+.cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.9;border-top:1px solid rgba(255,255,255,.28);padding-top:14px;position:relative;z-index:1}
+/* ===== SECTION — không viền, chảy qua trang mượt (không cắt viền/đè dòng) ===== */
+.sect{padding:0;margin:0 14mm 20px;page-break-inside:auto}
+.sect:first-of-type{margin-top:2mm}
+.sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:12px;padding-left:11px;border-left:4px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
 /* Đơn vị nhỏ giữ nguyên khối, không tách qua trang. */
-.k,.rank,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
+.k,.rank,.tbl thead,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chip{font-size:9px;font-weight:700;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:999px;padding:3px 9px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.k{border:1px solid #EEF1F6;border-radius:10px;padding:8px 10px;background:#FAFBFF}
-.k-l{font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;color:#94A3B8;font-weight:700}
-.k-v{font-size:15px;font-weight:800;color:#1E293B;margin-top:3px}
-.k-s{font-size:8.5px;color:#94A3B8;margin-top:1px}
-.tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:10px}
-.tbl th{text-align:left;color:#94A3B8;font-weight:700;text-transform:uppercase;font-size:8.5px;padding:6px 8px;border-bottom:1px solid #EAEEF3}
-.tbl td{padding:6px 8px;border-bottom:1px solid #F1F5F9;color:#334155}
-.tbl.sm td{padding:4px 6px}
-.rank-t{font-size:10px;font-weight:800;color:#475569;margin-bottom:2px}
-.maika{margin-top:10px;border-left:3px solid #6D5DFB;border-radius:0 10px 10px 0;padding:10px 14px;background:#F8F6FF;page-break-inside:auto}
-.maika-h{font-size:9.5px;font-weight:800;color:#6D5DFB;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.k{border:1px solid #ECEFF6;border-radius:11px;padding:9px 11px;background:linear-gradient(180deg,#FEFEFF,#F7F8FE)}
+.k-l{font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:#94A3B8;font-weight:700}
+.k-v{font-size:15px;font-weight:800;color:#1E293B;margin-top:4px}
+.k-s{font-size:8.5px;color:#94A3B8;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;margin-top:11px;font-size:10px}
+.tbl th{text-align:left;color:#94A3B8;font-weight:700;text-transform:uppercase;font-size:8.5px;padding:7px 9px;border-bottom:1.5px solid #E7EBF2}
+.tbl td{padding:7px 9px;border-bottom:1px solid #F1F5F9;color:#334155;vertical-align:top}
+.tbl.sm td{padding:5px 7px}
+.rank-t{font-size:10px;font-weight:800;color:#475569;margin-bottom:3px}
+/* ===== Ô Maika — nhiều đoạn <p> block, ngắt trang an toàn ===== */
+.maika{margin-top:12px;border-left:4px solid #6D5DFB;border-radius:0 12px 12px 0;padding:12px 16px;background:linear-gradient(180deg,#F8F6FF,#F3F0FF);page-break-inside:auto}
+.maika-h{font-size:9.5px;font-weight:800;color:#6D5DFB;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:7px;margin-bottom:7px;page-break-after:avoid}
 .maika-dot{width:7px;height:7px;border-radius:50%;background:#6D5DFB;display:inline-block}
-.maika p{font-size:10.5px;color:#475569;line-height:1.6;white-space:pre-line}
+.maika-body p{font-size:10.5px;color:#42526E;line-height:1.62;margin-bottom:7px}
+.maika-body p:last-child{margin-bottom:0}
 </style></head><body>
 ${cover}
 ${section('1 · Tổng quan hệ thống', overviewBody, sections.overview)}

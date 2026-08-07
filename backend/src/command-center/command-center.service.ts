@@ -401,9 +401,15 @@ export class CommandCenterService {
     const exportedAt = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
     const html = buildCommandCenterHtml(review.data, review.sections, exportedAt);
     const footerTemplate =
-      `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">` +
-      `<span>Trung tâm điều hành PickleFund</span><span>Trang <span class="pageNumber"></span>/<span class="totalPages"></span></span></div>`;
-    return renderHtmlToPdf(html, { margin: { top: '11mm', bottom: '15mm', left: '0mm', right: '0mm' }, footerTemplate });
+      `<div style="width:100%;font-size:7.5px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 14mm;display:flex;justify-content:space-between;align-items:center;">` +
+      `<span>Trung tâm điều hành · PickleFund</span><span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
+    const headerTemplate = `<div style="width:100%;font-size:7.5px;color:#B4BECD;font-family:Arial,sans-serif;padding:0 14mm;display:flex;justify-content:space-between;align-items:center;">` +
+      `<span style="letter-spacing:.14em;text-transform:uppercase;font-weight:700;">PickleFund</span><span>Báo cáo điều hành toàn hệ thống</span></div>`;
+    return renderHtmlToPdf(html, {
+      margin: { top: '16mm', bottom: '16mm', left: '0mm', right: '0mm' },
+      headerTemplate,
+      footerTemplate,
+    });
   }
 
   private buildDigest(d: any): string {
