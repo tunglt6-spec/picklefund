@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { Check, ChevronLeft, ChevronRight, Building2, UserCog, PartyPopper } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
+import { PageShell, PageHeader } from '../../components/shared'
 
 const STEPS = ['Thông tin CLB', 'Tài khoản admin', 'Hoàn tất'] as const
 
@@ -75,11 +76,8 @@ export function Onboarding() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold [color:var(--pf-text)]">Tạo CLB mới</h1>
-        <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Thiết lập câu lạc bộ và tài khoản quản trị trong vài bước.</p>
-      </div>
+    <PageShell maxWidth={760}>
+      <PageHeader title="Tạo CLB mới" subtitle="Thiết lập câu lạc bộ và tài khoản quản trị trong vài bước." />
 
       {/* Stepper */}
       <div className="mb-6 flex items-center">
@@ -179,7 +177,7 @@ export function Onboarding() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }
 
