@@ -50,6 +50,7 @@ import { ReportExportsModule } from './report-exports/report-exports.module';
 import { BackupModule } from './backup/backup.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { MetricsMiddleware } from './metrics/metrics.middleware';
+import { RetentionModule } from './retention/retention.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
@@ -119,6 +120,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     ReportExportsModule,
     BackupModule,
     MetricsModule,
+    RetentionModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -11,6 +11,12 @@ import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { PLAN_CONFIGS } from '../billing/billing.types';
 import { MetricsService } from '../metrics/metrics.service';
+import { MaikaService } from '../maika/maika.service';
+import { buildCommandCenterHtml } from './command-center-html';
+import { renderHtmlToPdf } from '../executive-report/render-pdf';
+
+const money = (v: unknown) => `${Number(v ?? 0).toLocaleString('vi-VN')}đ`;
+type ReviewSections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog', string>;
 
 type RangeKey = 'today' | '7d' | '30d' | 'quarter' | 'year' | 'custom';
 
@@ -21,6 +27,7 @@ export class CommandCenterService {
   constructor(
     private prisma: PrismaService,
     private metrics: MetricsService,
+    private maika: MaikaService,
   ) {}
 
   private resolveRange(range: RangeKey, from?: string, to?: string): { start: Date; end: Date } {
@@ -308,6 +315,85 @@ export class CommandCenterService {
       alerts,
       leaderboards,
     };
+  }
+
+  /** Maika viết đánh giá điều hành cho 9 mục (1 lần gọi LLM → JSON; fallback rule-based). */
+  async aiReview(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<{ generatedAt: string; sections: ReviewSections; byAi: boolean; data: any }> {
+    const data = await this.overview(opts);
+    const fallback = this.ruleBasedReview(data);
+    const digest = this.buildDigest(data);
+    const prompt =
+      `Bạn là Maika — trợ lý phân tích điều hành của PickleFund. Dựa DUY NHẤT trên SỐ LIỆU THẬT dưới đây, ` +
+      `viết đánh giá điều hành chuẩn SaaS (giọng chuyên nghiệp, súc tích, nêu xu hướng/rủi ro/khuyến nghị hành động; ` +
+      `KHÔNG bịa thêm số liệu). Trả về DUY NHẤT một JSON object hợp lệ (không kèm markdown/giải thích), gồm ĐÚNG 9 khóa: ` +
+      `"overview","business","operations","finance","ai","infra","alerts","leaderboards","syslog". Mỗi giá trị là 2–4 câu tiếng Việt.\n\nSỐ LIỆU:\n${digest}`;
+    let byAi = false;
+    let sections = fallback;
+    try {
+      const res = await this.maika.composeText(prompt, JSON.stringify(fallback));
+      const parsed = this.parseReview(res.text);
+      if (parsed) { sections = { ...fallback, ...parsed }; byAi = res.byAi; }
+    } catch { /* giữ fallback */ }
+    return { generatedAt: data.generatedAt, sections, byAi, data };
+  }
+
+  /** Xuất PDF Command Center (bìa + 9 mục + đánh giá Maika) qua headless Chrome. null nếu không render được. */
+  async pdf(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<Buffer | null> {
+    const review = await this.aiReview(opts);
+    const exportedAt = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const html = buildCommandCenterHtml(review.data, review.sections, exportedAt);
+    const footerTemplate =
+      `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">` +
+      `<span>Trung tâm điều hành PickleFund</span><span>Trang <span class="pageNumber"></span>/<span class="totalPages"></span></span></div>`;
+    return renderHtmlToPdf(html, { margin: { top: '11mm', bottom: '15mm', left: '0mm', right: '0mm' }, footerTemplate });
+  }
+
+  private buildDigest(d: any): string {
+    const k = d.kpi, biz = d.business, ops = d.operations, fin = d.finance, ai = d.ai, infra = d.infra, lb = d.leaderboards;
+    const ag = ai.agents;
+    const topStr = (rows: any[], m = false) => (rows ?? []).slice(0, 3).map((r) => `${r.name}(${m ? money(r.value) : r.value})`).join(', ') || '—';
+    return [
+      `CLB: tổng ${k.totalClubs}, hoạt động ${k.activeClubs}, bị khóa ${k.suspendedClubs}, mới ${ops.clubs.new}, sắp hết hạn ${biz.subscription.expiringSoon}, đã hết hạn ${biz.subscription.expired}.`,
+      `Người dùng: tổng thành viên ${k.totalMembers}, mới ${ops.members.new}, đăng nhập 24h ${k.logins24h}, người dùng hoạt động ${k.activeUsers}.`,
+      `Kinh doanh: MRR ${money(biz.revenue.mrr)}, ARR ${money(biz.revenue.arr)}, doanh thu tháng ${money(biz.revenue.month)}/quý ${money(biz.revenue.quarter)}/năm ${money(biz.revenue.year)}; thuê bao trả phí ${biz.subscription.paidSubscribers}, nâng cấp trong kỳ ${biz.subscription.upgradesInRange}, hủy ${biz.subscription.cancellationsInRange}.`,
+      `Hoạt động: kỳ quỹ ${ops.business.fundPeriods}, buổi chơi ${ops.business.sessions}, đăng ký ${ops.members.registrations}, điểm danh ${ops.members.attendance}, giải đấu ${ops.business.minigames}, trận ${ops.business.matches}, báo cáo xuất ${ops.business.reportsExported}.`,
+      `Tài chính: tổng thu ${money(fin.totalIncome)}, tổng chi ${money(fin.totalExpense)}, số dư ${money(fin.totalBalance)}, chi chờ duyệt ${fin.pendingExpenses}, công nợ ${money(fin.debt)}, quá hạn ${fin.overdueCount} khoản (${money(fin.overdueAmount)}), thu đúng hạn ${fin.onTimeRatio == null ? 'chưa có dữ liệu' : fin.onTimeRatio + '%'}.`,
+      `AI: request ${ai.totals.requests}, tỷ lệ thành công ${ai.totals.successRate == null ? '—' : ai.totals.successRate + '%'}, lỗi ${ai.totals.errors}, token ${ai.totals.tokens ?? 'chưa có'}, chi phí ${ai.totals.cost == null ? 'chưa có' : '$' + ai.totals.cost}; Maika insight ${ag.maika.insights}, Lisa tin nhắn ${ag.lisa.messages}, Hermes chạy ${ag.hermes.runs}/lỗi ${ag.hermes.failed}, Mít Đặc chạy ${ag.mitDac.executed}/lỗi ${ag.mitDac.failed}, Notification gửi ${ag.notification.sent}/lỗi ${ag.notification.failed}.`,
+      `Hạ tầng: CPU ${infra.cpu?.pct}%, RAM ${infra.memory?.pct}%, DB ${infra.db?.status}, disk ${infra.disk ? infra.disk.pct + '%' : 'chưa có'}, storage ${infra.storage ? infra.storage.usedMb + 'MB' : 'chưa có'}, hàng đợi việc ${infra.queue?.pending}, kết nối DB ${infra.dbConnections ?? '—'}, phiên đăng nhập ${infra.activeSessions}, req/phút ${infra.requestsPerMin ?? '—'}, lỗi 5xx ${infra.errorRate == null ? 'chưa có' : infra.errorRate + '%'}, backup ${infra.backup ? (infra.backup.success ? 'bình thường' : 'lỗi') : (infra.backupEnabled ? 'chờ chạy' : 'chưa bật')}.`,
+      `Cảnh báo: ${(d.alerts ?? []).length} mục${(d.alerts ?? []).length ? ' — ' + (d.alerts as any[]).map((a) => `${a.severity}:${a.title}`).join('; ') : ''}.`,
+      lb ? `Xếp hạng CLB — nhiều thành viên: ${topStr(lb.topByMembers)}; hoạt động: ${topStr(lb.topByActivity)}; doanh thu: ${topStr(lb.topByRevenue, true)}; giải đấu: ${topStr(lb.topByTournaments)}; dùng AI: ${topStr(lb.topByAiUsage)}.` : 'Xếp hạng: đang lọc theo 1 CLB (không có bảng xếp hạng toàn hệ thống).',
+    ].join('\n');
+  }
+
+  private ruleBasedReview(d: any): ReviewSections {
+    const k = d.kpi, biz = d.business, ops = d.operations, fin = d.finance, ai = d.ai, infra = d.infra;
+    const alertsN = (d.alerts ?? []).length;
+    return {
+      overview: `Hệ thống hiện có ${k.activeClubs}/${k.totalClubs} CLB hoạt động (${k.suspendedClubs} bị khóa), ${k.totalMembers} thành viên và ${k.logins24h} lượt đăng nhập trong 24h. MRR ${money(k.mrr)} với ${k.paidSubscribers} CLB trả phí.`,
+      business: `MRR ${money(biz.revenue.mrr)}, ARR ${money(biz.revenue.arr)}; doanh thu năm ${money(biz.revenue.year)}. ${biz.subscription.expiringSoon} CLB sắp hết hạn và ${biz.subscription.expired} đã hết hạn — cần ưu tiên nhắc gia hạn.`,
+      operations: `Trong kỳ: ${ops.business.sessions} buổi chơi, ${ops.members.attendance} lượt điểm danh, ${ops.business.minigames} giải/minigame và ${ops.members.new} thành viên mới. Kỳ quỹ đang quản lý: ${ops.business.fundPeriods}.`,
+      finance: `Tổng thu ghi nhận ${money(fin.totalIncome)}, tổng chi ${money(fin.totalExpense)}, số dư ${money(fin.totalBalance)}. Công nợ ${money(fin.debt)} với ${fin.overdueCount} khoản quá hạn; ${fin.pendingExpenses} khoản chi đang chờ duyệt.`,
+      ai: `AI xử lý ${ai.totals.requests} request${ai.totals.successRate != null ? `, tỷ lệ thành công ${ai.totals.successRate}%` : ''}; ${ai.totals.errors} lỗi. Lisa trả lời ${ai.agents.lisa.messages} tin, Hermes chạy ${ai.agents.hermes.runs} workflow.`,
+      infra: `CPU ~${infra.cpu?.pct}%, RAM ~${infra.memory?.pct}%, DB ${infra.db?.status === 'up' ? 'bình thường' : 'LỖI'}. Hàng đợi việc: ${infra.queue?.pending}; ${infra.activeSessions} phiên đăng nhập còn hiệu lực.`,
+      alerts: alertsN ? `Có ${alertsN} cảnh báo cần theo dõi; ưu tiên xử lý các mục mức Critical/High trước.` : `Không có cảnh báo — hệ thống đang vận hành ổn định.`,
+      leaderboards: d.leaderboards ? `Bảng xếp hạng phản ánh các CLB dẫn đầu về quy mô, hoạt động, doanh thu và mức dùng AI — hữu ích để xác định CLB tiêu biểu và CLB cần hỗ trợ.` : `Đang lọc theo 1 CLB nên không hiển thị bảng xếp hạng toàn hệ thống.`,
+      syslog: `Nhật ký kiểm toán ghi nhận các thao tác quản trị quan trọng; theo dõi định kỳ để phát hiện bất thường về truy cập và thay đổi cấu hình.`,
+    };
+  }
+
+  private parseReview(text: string): Partial<ReviewSections> | null {
+    if (!text) return null;
+    try {
+      const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const s = cleaned.indexOf('{');
+      const e = cleaned.lastIndexOf('}');
+      if (s < 0 || e <= s) return null;
+      const obj = JSON.parse(cleaned.slice(s, e + 1));
+      const out: Partial<ReviewSections> = {};
+      const keys: (keyof ReviewSections)[] = ['overview', 'business', 'operations', 'finance', 'ai', 'infra', 'alerts', 'leaderboards', 'syslog'];
+      for (const key of keys) if (typeof obj[key] === 'string' && obj[key].trim()) out[key] = String(obj[key]).trim();
+      return Object.keys(out).length ? out : null;
+    } catch { return null; }
   }
 
   /**
