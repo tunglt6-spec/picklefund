@@ -268,13 +268,11 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
             <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
           </div>}>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <SummaryBlock summary={data.summary} />
-            <div>
-              {reviewText(review, 'overview')
-                ? <MaikaNote review={review} k="overview" />
-                : <p className="text-[12px] leading-relaxed [color:var(--pf-color-muted)]">Bấm <b>"Maika đánh giá"</b> để Maika viết nhận định điều hành chi tiết (theo giọng chuyên gia từng lĩnh vực) cho cả 9 mục.</p>}
-            </div>
+          <SummaryBlock summary={data.summary} />
+          <div className="mt-4 border-t pt-4 [border-color:var(--pf-border)]">
+            {reviewText(review, 'overview')
+              ? <MaikaNote review={review} k="overview" />
+              : <p className="text-[12px] leading-relaxed [color:var(--pf-color-muted)]">Bấm <b>"Maika đánh giá"</b> để Maika viết nhận định điều hành chi tiết (theo giọng chuyên gia từng lĩnh vực) cho cả 9 mục — hiển thị đầy đủ tại đây và dưới mỗi khối.</p>}
           </div>
         </ChartCard>
       </div>
@@ -468,7 +466,7 @@ function SummaryBlock({ summary }: { summary: { status: string[]; risks: string[
     </div>
   )
   return (
-    <div className="space-y-3">
+    <div className="grid gap-4 sm:grid-cols-3">
       <Group title="Tình trạng hệ thống" items={summary?.status ?? []} tone="info" />
       <Group title="Rủi ro cần xử lý" items={summary?.risks ?? []} tone="danger" />
       <Group title="Ưu tiên của Super Admin" items={summary?.priorities ?? []} tone="success" />
