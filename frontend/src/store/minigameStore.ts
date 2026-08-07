@@ -934,6 +934,9 @@ interface MinigameStore {
   enterScore: (matchId: string, p1Score: number, p2Score: number, notes?: string) => void
   moveParticipant: (minigameId: string, memberId: string, targetGroupId: string) => void
   lockGroups: (minigameId: string) => void
+  addGroup: (minigameId: string) => void
+  removeGroup: (minigameId: string, groupId: string) => void
+  renameGroup: (minigameId: string, groupId: string, name: string) => void
 
   getStandings: (minigameId: string) => MiniGameStanding[]
   getDashboard: (minigameId: string) => MinigameDashboard | null
@@ -1183,6 +1186,35 @@ export const useMinigameStore = create<MinigameStore>()(
           groups: s.groups.map(g => g.minigameId === minigameId ? { ...g, status: 'LOCKED' } : g),
         }))
         get().updateMinigame(minigameId, { status: 'GROUPED' })
+      },
+
+      // Xếp bảng THỦ CÔNG "từ đầu" (M2a): tạo bảng rỗng / xóa / đổi tên. Kết hợp moveParticipant
+      // (gán người từ nhóm chưa xếp vào bảng) → dựng bảng không cần auto trước.
+      addGroup: (minigameId) => {
+        set(s => {
+          const order = s.groups.filter(g => g.minigameId === minigameId).length
+          const newGroup: MiniGameGroup = {
+            id: `grp-${minigameId}-${order}-${Date.now()}`,
+            minigameId,
+            groupName: `Bảng ${String.fromCharCode(65 + (order % 26))}`,
+            groupOrder: order,
+            status: 'ACTIVE',
+            memberIds: [],
+          }
+          return { groups: [...s.groups, newGroup] }
+        })
+        get().updateMinigame(minigameId, { status: 'GROUPED' })
+      },
+      removeGroup: (minigameId, groupId) => {
+        set(s => ({
+          groups: s.groups.filter(g => !(g.minigameId === minigameId && g.id === groupId)),
+          matches: s.matches.filter(m => !(m.minigameId === minigameId && m.groupId === groupId)),
+        }))
+      },
+      renameGroup: (minigameId, groupId, name) => {
+        set(s => ({
+          groups: s.groups.map(g => (g.minigameId === minigameId && g.id === groupId) ? { ...g, groupName: name } : g),
+        }))
       },
 
       getStandings: (minigameId) => {

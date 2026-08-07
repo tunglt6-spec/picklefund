@@ -1,6 +1,14 @@
+/**
+ * GroupAssignment — Xếp bảng cho GROUP_STAGE. M2a: manual builder song song auto.
+ *
+ * Auto ("Chia Tự Động") = SEED tạo đội đơn + bảng trên server (cần cho sinh lịch). Sau đó manual
+ * toàn quyền: THÊM bảng rỗng, XÓA bảng, ĐỔI TÊN bảng, GÁN người (kể cả từ nhóm "chưa xếp") vào
+ * bảng bất kỳ. Mỗi thao tác lưu `PUT /:id/groups` (backend validate không cho 1 người ở 2 bảng)
+ * rồi dựng lại lịch. Không phá auto; giữ Khóa bảng + Xem lịch.
+ */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown, Plus, Trash2, Pencil, Check } from 'lucide-react'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
@@ -17,18 +25,17 @@ export function GroupAssignment() {
   const navigate = useNavigate()
   const {
     getMinigame, participants, groups, generateGroups,
-    generateSchedule, lockGroups, moveParticipant,
+    generateSchedule, lockGroups, moveParticipant, addGroup, removeGroup, renameGroup,
   } = useMinigameStore()
 
   const mg = getMinigame(id!)
   const myParts = participants.filter(p => p.minigameId === id && p.status === 'ACTIVE')
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
   const [openMove, setOpenMove] = useState<string | null>(null)
+  const [editingGroup, setEditingGroup] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
   const isMobile = useIsMobile()
 
-  // Chia bảng chỉ dành cho GROUP_STAGE (RANDOM_DOUBLES có thông báo riêng bên dưới). Format đội
-  // (đôi cố định/bóng đá/bóng rổ) & golf KHÔNG chia bảng → điều hướng về dashboard (tránh dead-end
-  // "Chia Bảng Tự Động" báo lỗi). Chặn #5 trong audit.
   useEffect(() => {
     if (mg && mg.formatType !== 'GROUP_STAGE' && mg.formatType !== 'RANDOM_DOUBLES') {
       navigate(`/minigames/${id}`, { replace: true })
@@ -54,151 +61,145 @@ export function GroupAssignment() {
     )
   }
 
-  // Payload lưu bảng lên server (memberKeys = memberId|guestId).
   const groupsPayload = (mgId: string) =>
     useMinigameStore.getState().groups
       .filter(g => g.minigameId === mgId)
       .sort((a, b) => a.groupOrder - b.groupOrder)
       .map(g => ({ id: g.id, name: g.groupName, order: g.groupOrder, status: g.status, memberKeys: g.memberIds }))
 
+  const unassigned = myParts.filter(p => !myGroups.some(g => g.memberIds.includes(p.memberId)))
+
+  // Lưu cách chia bảng lên server + dựng lại lịch (server bảo toàn nếu đã có kết quả).
+  const persistGroups = async (rebuildSchedule = true) => {
+    try {
+      await api.put(`/minigames/${id}/groups`, { groups: groupsPayload(id!) })
+      if (rebuildSchedule) { generateSchedule(id!); await api.post(`/minigames/${id}/generate-schedule`) }
+      resync()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Đồng bộ server thất bại (đã lưu cục bộ)')
+    }
+  }
+
   const handleAutoGenerate = async () => {
-    generateGroups(id!)
-    generateSchedule(id!)
+    generateGroups(id!); generateSchedule(id!)
     try {
       await api.post(`/minigames/${id}/generate-teams`)
       await api.post(`/minigames/${id}/generate-schedule`)
-      resync() // lấy bảng/đội/lịch chuẩn từ server (id thật) đè lên bản cục bộ
+      resync()
       toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Lưu bảng đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
+      toast.error(err?.response?.data?.message ?? 'Lưu bảng đấu lên server thất bại')
     }
   }
 
   const handleLock = async () => {
-    lockGroups(id!)
-    generateSchedule(id!)
-    try {
-      await api.post(`/minigames/${id}/generate-schedule`)
-      resync()
-      toast.success('Đã khóa bảng đấu và cập nhật lịch thi đấu!')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Lưu lịch thi đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
-    }
+    lockGroups(id!); generateSchedule(id!)
+    try { await api.post(`/minigames/${id}/generate-schedule`); resync(); toast.success('Đã khóa bảng đấu và cập nhật lịch!') }
+    catch (err: any) { toast.error(err?.response?.data?.message ?? 'Lưu lịch lên server thất bại') }
   }
 
   const handleCreateSchedule = async () => {
     generateSchedule(id!)
-    try {
-      await api.post(`/minigames/${id}/generate-schedule`)
-      resync()
-      toast.success('Đã cập nhật lịch thi đấu!')
-      navigate(`/minigames/${id}/schedule`)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Lưu lịch thi đấu lên server thất bại — dữ liệu chỉ lưu cục bộ')
-    }
+    try { await api.post(`/minigames/${id}/generate-schedule`); resync(); toast.success('Đã cập nhật lịch thi đấu!'); navigate(`/minigames/${id}/schedule`) }
+    catch (err: any) { toast.error(err?.response?.data?.message ?? 'Lưu lịch lên server thất bại') }
   }
 
   const handleMove = async (memberId: string, targetGroupId: string) => {
-    moveParticipant(id!, memberId, targetGroupId)
-    generateSchedule(id!)
-    setOpenMove(null)
-    try {
-      // Lưu cách chia bảng mới rồi dựng lại lịch (chỉ khi CHƯA có kết quả — server tự bảo toàn).
-      await api.put(`/minigames/${id}/groups`, { groups: groupsPayload(id!) })
-      await api.post(`/minigames/${id}/generate-schedule`)
-      resync()
-      toast.success('Đã chuyển thành viên và cập nhật lịch thi đấu!')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Đã chuyển (cục bộ) — đồng bộ server thất bại')
-    }
+    moveParticipant(id!, memberId, targetGroupId); setOpenMove(null)
+    await persistGroups()
+    toast.success('Đã cập nhật xếp bảng!')
   }
 
-  const mobileHeader = isMobile ? (
-    <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-      <div className="flex items-center gap-3 mb-2">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]">
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Chia Bảng</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
+  const handleAddGroup = async () => { addGroup(id!); await persistGroups(false); toast.success('Đã thêm bảng mới') }
+  const handleRemoveGroup = async (groupId: string) => { removeGroup(id!, groupId); await persistGroups(); toast.success('Đã xóa bảng (người chơi về nhóm chưa xếp)') }
+  const startRename = (groupId: string, name: string) => { setEditingGroup(groupId); setEditName(name) }
+  const saveRename = async (groupId: string) => {
+    const name = editName.trim(); setEditingGroup(null)
+    if (name) { renameGroup(id!, groupId, name); await persistGroups(false) }
+  }
+
+  // Dropdown gán/chuyển vào 1 bảng (dùng cho cả người chưa xếp lẫn người đang trong bảng khác).
+  const MoveMenu = ({ memberId, excludeGroupId }: { memberId: string; excludeGroupId?: string }) => (
+    <div className="relative">
+      <button onClick={() => setOpenMove(openMove === memberId ? null : memberId)}
+        className="flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]">
+        {excludeGroupId ? 'Chuyển' : 'Gán vào'} <ChevronDown size={12} />
+      </button>
+      {openMove === memberId && (
+        <div className="absolute right-0 top-full mt-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg shadow-lg z-10 py-1 min-w-28 max-h-56 overflow-y-auto">
+          {myGroups.filter(g => g.id !== excludeGroupId).length === 0 && <span className="block px-3 py-1.5 text-xs [color:var(--pf-color-muted)]">Chưa có bảng — bấm "Thêm bảng"</span>}
+          {myGroups.filter(g => g.id !== excludeGroupId).map(target => (
+            <button key={target.id} onClick={() => handleMove(memberId, target.id)}
+              className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] [color:var(--pf-text)] hover:[color:var(--pf-primary)] transition-colors">
+              → {target.groupName}
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-0.5">
-        <button onClick={handleAutoGenerate}
-          className="shrink-0 flex items-center gap-1 text-[11px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] px-3 py-1.5 rounded-[8px]">
-          <Shuffle size={12} /> Chia Tự Động
-        </button>
-        {myGroups.length > 0 && (
-          <>
-            <button onClick={handleLock}
-              className="shrink-0 flex items-center gap-1 text-[11px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] px-3 py-1.5 rounded-[8px]">
-              <Lock size={12} /> Khóa Bảng
-            </button>
-            <button onClick={handleCreateSchedule}
-              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-white px-3 py-1.5 rounded-[8px]"
-              style={{ background: 'var(--pf-primary)' }}>
-              <Calendar size={12} /> Tạo Lịch
-            </button>
-          </>
-        )}
-      </div>
+      )}
     </div>
-  ) : null
+  )
+
+  const toolbar = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Button size="sm" variant="outline" onClick={handleAutoGenerate}><Shuffle size={14} /> Chia Tự Động</Button>
+      <Button size="sm" variant="outline" onClick={handleAddGroup}><Plus size={14} /> Thêm bảng</Button>
+      {myGroups.length > 0 && (
+        <>
+          <Button size="sm" variant="outline" onClick={handleLock}><Lock size={14} /> Khóa Bảng</Button>
+          <Button size="sm" onClick={handleCreateSchedule}><Calendar size={14} /> Xem Lịch Thi Đấu</Button>
+        </>
+      )}
+    </div>
+  )
 
   return (
     <div className={isMobile ? 'min-h-screen [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
-      {isMobile ? mobileHeader : null}
-      {!isMobile && <PageHeader
-        title={`Chia Bảng – ${mg.name}`}
-        subtitle={`${myParts.length} người tham gia`}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handleAutoGenerate}>
-              <Shuffle size={14} /> Chia Tự Động
-            </Button>
-            {myGroups.length > 0 && (
-              <>
-                <Button size="sm" variant="outline" onClick={handleLock}>
-                  <Lock size={14} /> Khóa Bảng
-                </Button>
-                <Button size="sm" onClick={handleCreateSchedule}>
-                  <Calendar size={14} /> Xem Lịch Thi Đấu
-                </Button>
-              </>
-            )}
+      {isMobile ? (
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
+          <div className="flex items-center gap-3 mb-2">
+            <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]"><ArrowLeft size={18} /></button>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Xếp Bảng</p>
+              <p className="text-[11px] [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
+            </div>
           </div>
-        }
-      />}
+          <div className="flex gap-2 overflow-x-auto pb-0.5">{toolbar}</div>
+        </div>
+      ) : (
+        <PageHeader title={`Xếp Bảng – ${mg.name}`} subtitle={`${myParts.length} người tham gia · tự động hoặc thủ công`} actions={toolbar} />
+      )}
 
       <div className={isMobile ? 'px-4 py-4' : 'p-6'}>
         {!isMobile && <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>}
 
         {myGroups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Shuffle size={48} className="[color:var(--pf-color-muted)] mb-4" />
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Shuffle size={44} className="[color:var(--pf-color-muted)] mb-4" />
             <p className="[color:var(--pf-color-muted)] font-medium">Chưa có bảng đấu</p>
-            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4">
-              {myParts.length} người tham gia sẽ được chia thành các bảng
+            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4 max-w-sm">
+              {myParts.length} người tham gia. Chọn <b>Chia Tự Động</b> để hệ thống chia + tạo lịch, rồi tinh chỉnh thủ công; hoặc <b>Thêm bảng</b> rồi tự gán người.
             </p>
-            <Button onClick={handleAutoGenerate}>
-              <Shuffle size={16} /> Chia Bảng Tự Động
-            </Button>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button onClick={handleAutoGenerate}><Shuffle size={16} /> Chia Bảng Tự Động</Button>
+              <Button variant="outline" onClick={handleAddGroup}><Plus size={16} /> Thêm bảng thủ công</Button>
+            </div>
           </div>
         ) : (
           <>
-            {/* Participant list without group (unassigned) */}
-            {myParts.filter(p => !myGroups.some(g => g.memberIds.includes(p.memberId))).length > 0 && (
+            {/* Người chưa xếp bảng — có thể GÁN thủ công vào bảng */}
+            {unassigned.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                <p className="text-sm font-semibold text-amber-700 mb-2">⚠️ Thành viên chưa được xếp bảng</p>
-                <div className="flex flex-wrap gap-2">
-                  {myParts
-                    .filter(p => !myGroups.some(g => g.memberIds.includes(p.memberId)))
-                    .map(p => (
-                      <span key={p.memberId} className="[background:var(--pf-surface)] text-amber-700 border border-amber-200 text-xs px-2 py-1 rounded-lg font-medium">
+                <p className="text-sm font-semibold text-amber-700 mb-2">⚠️ {unassigned.length} người chưa được xếp bảng</p>
+                <div className="flex flex-col divide-y divide-amber-100">
+                  {unassigned.map(p => (
+                    <div key={p.memberId} className="flex items-center justify-between py-1.5">
+                      <span className="text-sm text-amber-800 flex items-center gap-1.5">
                         {p.memberName}
+                        {(p.isGuest || isGuestId(p.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white text-amber-700 border border-amber-200">Khách</span>}
                       </span>
-                    ))}
+                      <MoveMenu memberId={p.memberId} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -206,47 +207,40 @@ export function GroupAssignment() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myGroups.map(grp => (
                 <div key={grp.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
-                    <div>
-                      <p className="text-sm font-bold [color:var(--pf-primary)]">{grp.groupName}</p>
-                      <p className="text-xs [color:var(--pf-primary)]">{grp.memberIds.length} thành viên</p>
+                  <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)] gap-2">
+                    {editingGroup === grp.id ? (
+                      <input autoFocus value={editName} onChange={e => setEditName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveRename(grp.id); if (e.key === 'Escape') setEditingGroup(null) }}
+                        onBlur={() => saveRename(grp.id)}
+                        className="flex-1 min-w-0 text-sm font-bold [color:var(--pf-primary)] bg-white/70 border border-[color:var(--pf-primary-soft)] rounded px-2 py-1" />
+                    ) : (
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold [color:var(--pf-primary)] truncate">{grp.groupName}</p>
+                        <p className="text-xs [color:var(--pf-primary)]">{grp.memberIds.length} thành viên</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {grp.status !== 'LOCKED' && editingGroup !== grp.id && (
+                        <>
+                          <button onClick={() => startRename(grp.id, grp.groupName)} title="Đổi tên" className="p-1 rounded [color:var(--pf-primary)] hover:bg-white/50"><Pencil size={13} /></button>
+                          <button onClick={() => handleRemoveGroup(grp.id)} title="Xóa bảng" className="p-1 rounded text-red-500 hover:bg-white/50"><Trash2 size={13} /></button>
+                        </>
+                      )}
+                      {editingGroup === grp.id && <button onMouseDown={e => e.preventDefault()} onClick={() => saveRename(grp.id)} className="p-1 rounded text-green-600 hover:bg-white/50"><Check size={14} /></button>}
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', grp.status === 'LOCKED' ? 'bg-green-100 text-green-700' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]')}>
+                        {grp.status === 'LOCKED' ? '🔒' : 'Mở'}
+                      </span>
                     </div>
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
-                      grp.status === 'LOCKED' ? 'bg-green-100 text-green-700' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                    )}>
-                      {grp.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
-                    </span>
                   </div>
-                  <div className="divide-y divide-[color:var(--pf-border-soft)]">
+                  <div className="divide-y divide-[color:var(--pf-border-soft)] min-h-[44px]">
+                    {grp.memberIds.length === 0 && <p className="px-4 py-3 text-xs italic [color:var(--pf-color-muted)]">Bảng trống — gán người từ nhóm "chưa xếp".</p>}
                     {grp.memberIds.map(memberId => {
                       const part = myParts.find(p => p.memberId === memberId)
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
                           <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
-                          {grp.status !== 'LOCKED' && (
-                            <div className="relative">
-                              <button
-                                onClick={() => setOpenMove(openMove === memberId ? null : memberId)}
-                                className="flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]"
-                              >
-                                Chuyển <ChevronDown size={12} />
-                              </button>
-                              {openMove === memberId && (
-                                <div className="absolute right-0 top-full mt-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg shadow-lg z-10 py-1 min-w-28">
-                                  {myGroups.filter(g => g.id !== grp.id).map(target => (
-                                    <button
-                                      key={target.id}
-                                      onClick={() => handleMove(memberId, target.id)}
-                                      className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] [color:var(--pf-text)] hover:[color:var(--pf-primary)] transition-colors"
-                                    >
-                                      → {target.groupName}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {grp.status !== 'LOCKED' && <MoveMenu memberId={memberId} excludeGroupId={grp.id} />}
                         </div>
                       )
                     })}

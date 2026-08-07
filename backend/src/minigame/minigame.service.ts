@@ -1211,6 +1211,18 @@ export class MinigameService {
       select: { settings: true },
     });
     const settings = this.asSettings(row?.settings);
+
+    // Validate integrity của xếp bảng thủ công (M2): mỗi memberKey chỉ được ở 1 bảng — tránh
+    // 1 người/đội lọt 2 bảng làm sai lịch/BXH. (Chỉ kiểm uniqueness; không chặn existence để
+    // không false-reject khách/đội khi id chưa đồng bộ hoàn toàn.)
+    const seen = new Set<string>();
+    for (const g of groups) {
+      for (const key of g.memberKeys ?? []) {
+        if (seen.has(key)) throw new BadRequestException(`Một thành viên/đội không thể ở 2 bảng (trùng: ${key}).`);
+        seen.add(key);
+      }
+    }
+
     await this.prisma.minigame.update({
       where: { id },
       data: {
