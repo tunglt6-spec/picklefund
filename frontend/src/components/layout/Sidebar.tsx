@@ -41,7 +41,7 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Thành viên',    icon: <Users size={18} />,        to: '/thanh-vien',  desc: 'Quản lý thành viên & tài khoản' },
   { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh',   desc: 'Quỹ · Thu · Chi · Công nợ · Báo cáo' },
   { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong',   desc: 'Lịch · Đăng ký · Check-in · Điểm danh' },
-  { label: 'Tạo Giải đấu',  icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Tạo giải · Tổng quan · Danh sách · Lịch sử' },
+  { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
   { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 
@@ -60,7 +60,7 @@ const memberNav: NavItem[] = [
   { label: 'Cá nhân',     icon: <Receipt size={18} />,         to: '/member/ca-nhan',       desc: 'Phiếu thu · Đóng quỹ · Tham gia · Công nợ' },
   { label: 'Tài chính',   icon: <Wallet size={18} />,          to: '/member/tai-chinh',     desc: 'Quỹ · Thu · Chi · Báo cáo (xem)' },
   { label: 'Hoạt động',   icon: <CalendarDays size={18} />,    to: '/member/hoat-dong',     desc: 'Lịch · Đăng ký · Check-in · Tuần' },
-  { label: 'Giải đấu',    icon: <Trophy size={18} />,          to: '/member/thi-dau',       desc: 'Tổng quan · Danh sách · Lịch sử' },
+  { label: 'Thi đấu',     icon: <Trophy size={18} />,          to: '/member/thi-dau',       desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
   { label: 'Thông báo',   icon: <Bell size={18} />,            to: '/member/notifications', desc: 'Tin & nhắc nhở' },
 ]
 

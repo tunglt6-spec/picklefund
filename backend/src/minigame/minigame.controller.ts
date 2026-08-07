@@ -30,6 +30,7 @@ import { MinigameDelegateGuard } from './minigame-delegate.guard';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
 import { MinigameFormat } from '@prisma/client';
+import { listSportPresets } from './sport-presets';
 
 /** Payload user từ JWT (CurrentUser) — chỉ các field controller minigame dùng. */
 interface RequestUser {
@@ -161,6 +162,13 @@ export class MinigameController {
   @Get()
   async list(@CurrentUser() user: RequestUser) {
     return ok(await this.svc.findAll(user.clubId));
+  }
+
+  /** Sport Preset registry — nguồn tùy chọn cho wizard (môn/nội dung/thể thức/luật). Static route
+   *  PHẢI đặt trước ':id' để không bị param bắt nhầm. Không cần scope club (config tĩnh). */
+  @Get('sport-presets')
+  sportPresets() {
+    return ok(listSportPresets());
   }
 
   @Get(':id')

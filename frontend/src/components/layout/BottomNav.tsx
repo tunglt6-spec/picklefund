@@ -17,7 +17,7 @@ const adminNav: NavItem[] = [
   { label: 'AIDO',       icon: <Cpu size={22} />,          to: '/aido' },
   { label: 'Tài chính',  icon: <Wallet size={22} />,       to: '/tai-chinh' },
   { label: 'Hoạt động',  icon: <CalendarDays size={22} />, to: '/hoat-dong' },
-  { label: 'Giải đấu',   icon: <Trophy size={22} />,       to: '/thi-dau' },
+  { label: 'Thi đấu',    icon: <Trophy size={22} />,       to: '/thi-dau' },
 ]
 
 const treasurerNav: NavItem[] = [

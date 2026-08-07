@@ -586,6 +586,10 @@ model Minigame {
   sport        String         @default("PICKLEBALL") @db.VarChar(30)
   // Mô hình tính thứ hạng: HEAD_TO_HEAD (đối kháng theo trận) | LEADERBOARD (bảng điểm theo lượt).
   scoringModel String         @default("HEAD_TO_HEAD") @map("scoring_model") @db.VarChar(20)
+  // Sports Tournament Engine (M1): loại VĐV & chế độ ghép cặp — suy từ format/sport cho dữ liệu cũ.
+  // participantType: INDIVIDUAL | PAIR | TEAM. partnerMode (chỉ PAIR): FIXED | ROTATING | RANDOM.
+  participantType String?     @map("participant_type") @db.VarChar(20)
+  partnerMode     String?     @map("partner_mode") @db.VarChar(20)
   status       MinigameStatus @default(DRAFT)
   settings     Json?
   scheduledAt  DateTime?      @map("scheduled_at")
@@ -724,6 +728,9 @@ model MinigameMatch {
   /// Lượt đấu: 1 = lượt đi, 2 = lượt về (double round-robin). round đánh lại 1..N mỗi lượt.
   leg        Int         @default(1)
   courtNo    Int?        @map("court_no")
+  // Sports Tournament Engine (M1): chi tiết điểm đặc thù môn (set/game/tie-break/goals/time...).
+  // Giữ scoreA/scoreB làm điểm tổng hợp (tương thích ngược); scoreDetail chứa breakdown khi cần.
+  scoreDetail Json?      @map("score_detail")
   status     MatchStatus @default(PENDING)
   playedAt   DateTime?   @map("played_at")
   note       String?     @map("note") @db.VarChar(300)
