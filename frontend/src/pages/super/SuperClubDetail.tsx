@@ -5,8 +5,7 @@ import {
   Star, Zap, CheckCircle2, CreditCard,
 } from 'lucide-react'
 import api from '../../lib/api'
-import { PageShell, PageHeader } from '../../components/shared'
-import { Badge } from '../../components/ui/Badge'
+import { PageShell, PageHeader, StatusBadge } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -200,7 +199,7 @@ export function SuperClubDetail() {
                 <span className="text-xs px-2 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
                   {ROLE_LABEL[m.role] ?? m.role}
                 </span>
-                {!m.isActive && <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600">Tắt</span>}
+                {!m.isActive && <StatusBadge tone="neutral">Tắt</StatusBadge>}
               </div>
             </div>
           ))}
@@ -244,7 +243,7 @@ export function SuperClubDetail() {
                   <div className="text-xs [color:var(--pf-color-muted)]">AI Features</div>
                   <div className="flex items-center gap-1">
                     {sub.plan?.aiFeatures
-                      ? <CheckCircle2 size={14} className="text-green-500" />
+                      ? <CheckCircle2 size={14} className="[color:var(--pf-color-success)]" />
                       : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
                     <span className="text-xs">{sub.plan?.aiFeatures ? 'Bật' : 'Tắt'}</span>
                   </div>
@@ -253,7 +252,7 @@ export function SuperClubDetail() {
                   <div className="text-xs [color:var(--pf-color-muted)]">Telegram Bot</div>
                   <div className="flex items-center gap-1">
                     {sub.plan?.telegramBot
-                      ? <CheckCircle2 size={14} className="text-green-500" />
+                      ? <CheckCircle2 size={14} className="[color:var(--pf-color-success)]" />
                       : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
                     <span className="text-xs">{sub.plan?.telegramBot ? 'Bật' : 'Tắt'}</span>
                   </div>
@@ -369,9 +368,9 @@ export function SuperClubDetail() {
             <div className="font-bold [color:var(--pf-text)] text-base truncate">{club.name}</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{club.code}</div>
           </div>
-          <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
+          <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
             {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
-          </Badge>
+          </StatusBadge>
         </div>
 
         <div className="px-4 py-4 space-y-4">
@@ -429,9 +428,9 @@ export function SuperClubDetail() {
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="[color:var(--pf-color-muted)]">Trạng thái</span>
-              <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
+              <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
                 {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
-              </Badge>
+              </StatusBadge>
             </div>
             {club.address && (
               <div className="flex items-start gap-2 [color:var(--pf-color-muted)]">
@@ -485,9 +484,9 @@ export function SuperClubDetail() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Badge variant={m.isActive ? 'green' : 'orange'}>
+                        <StatusBadge tone={m.isActive ? 'success' : 'neutral'} dot>
                           {m.isActive ? 'Hoạt động' : 'Tắt'}
-                        </Badge>
+                        </StatusBadge>
                       </td>
                     </tr>
                   ))}

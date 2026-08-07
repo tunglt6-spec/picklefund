@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -154,15 +154,17 @@ export function SuperSettings() {
   }
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center [background:var(--pf-surface-muted)]">
-      <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
-    </div>
+    <PageShell maxWidth={880}>
+      <div className="flex items-center justify-center py-24">
+        <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
+      </div>
+    </PageShell>
   )
 
   return (
-    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
+    <PageShell maxWidth={880}>
       <PageHeader
-        title="Cài Đặt Hệ Thống"
+        title="Cài đặt hệ thống"
         subtitle="Cấu hình toàn bộ nền tảng PickleFund"
         actions={
           <Button onClick={handleSave} disabled={saving}>
@@ -171,7 +173,7 @@ export function SuperSettings() {
         }
       />
 
-      <div className="p-6 max-w-[800px] mx-auto space-y-5">
+      <div className="space-y-5">
         <Section icon={<Globe size={14} className="[color:var(--pf-primary)]" />} title="Thông tin hệ thống">
           <div className="grid grid-cols-2 gap-4">
             <S id="siteName" label="Tên nền tảng" value={settings.siteName} onChange={v => setSettings(p => ({ ...p, siteName: v }))} />
@@ -264,6 +266,6 @@ export function SuperSettings() {
           <div className="flex justify-between"><span>Build</span><span className="font-mono [color:var(--pf-color-muted)]">{__BUILD_DATE__}</span></div>
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

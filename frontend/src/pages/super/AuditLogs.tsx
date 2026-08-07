@@ -1,9 +1,14 @@
+/**
+ * AuditLogs (Super Admin) — nhật ký kiểm toán toàn hệ thống. Elite 2026: PageShell + PageHeader
+ * + FilterBar + DataTable + StatusBadge + Loading/Empty states (design-system UDP-01).
+ */
 import { useState, useEffect } from 'react'
-import { Search, ScrollText } from 'lucide-react'
+import { ScrollText } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageHeader } from '../../components/layout/PageHeader'
-import { Badge } from '../../components/ui/Badge'
-import { ExportActions } from '../../components/shared'
+import {
+  PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState,
+  ExportActions, ChartCard, type Column, type StatusTone,
+} from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import api from '../../lib/api'
@@ -18,8 +23,8 @@ interface AuditLog {
   detail?: string | null
 }
 
-const ACTION_COLORS: Record<string, 'green' | 'blue' | 'red' | 'purple' | 'orange'> = {
-  CREATE: 'green', UPDATE: 'blue', DELETE: 'red', EXPORT: 'purple', LOCK: 'orange',
+const ACTION_TONE: Record<string, StatusTone> = {
+  CREATE: 'success', UPDATE: 'info', DELETE: 'danger', EXPORT: 'ai', LOCK: 'warning', BACKUP: 'ai', VIEW: 'neutral',
 }
 const ACTION_OPTIONS = ['Tất cả', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'LOCK']
 
@@ -38,16 +43,14 @@ export function AuditLogs() {
     if (action !== 'Tất cả') params.set('action', action)
     if (search) params.set('search', search)
     params.set('limit', '200')
-
     setLoading(true)
-    api.get(`/audit-logs?${params.toString()}`).then(res => {
-      setLogs(res.data?.data ?? [])
-    }).catch(() => {}).finally(() => setLoading(false))
+    api.get(`/audit-logs?${params.toString()}`)
+      .then((res) => setLogs(res.data?.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [accessToken, action, search, isLocal])
 
-  const filtered = isLocal
-    ? []
-    : logs
+  const rows = isLocal ? [] : logs
 
   const formatTime = (iso: string) => {
     const d = new Date(iso)
@@ -57,7 +60,7 @@ export function AuditLogs() {
   const doExportExcel = () => {
     exportGenericExcel('Audit_Log_He_Thong', 'Audit Log',
       ['Thời gian', 'Người dùng', 'Hành động', 'Chi tiết', 'CLB'],
-      filtered.map((l) => [formatTime(l.createdAt), l.user?.username ?? '', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+      rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
     )
     toast.success('Đã xuất Excel nhật ký')
   }
@@ -65,87 +68,55 @@ export function AuditLogs() {
     exportGenericTablePDF({
       fileBase: 'Audit_Log_He_Thong',
       title: 'Nhật Ký Kiểm Toán Hệ Thống',
-      metaLeft: `${filtered.length} thao tác`,
-      columns: [
-        { header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' }, { header: 'CLB' },
-      ],
-      rows: filtered.map((l) => [formatTime(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+      metaLeft: `${rows.length} thao tác`,
+      columns: [{ header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' }, { header: 'CLB' }],
+      rows: rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
     })
     toast.success('Đã xuất PDF nhật ký')
   }
 
+  const columns: Column<AuditLog>[] = [
+    { key: 'time', header: 'Thời gian', className: 'whitespace-nowrap text-xs [color:var(--pf-color-muted)]', render: (l) => formatTime(l.createdAt) },
+    { key: 'user', header: 'Người dùng', className: 'font-mono text-xs', render: (l) => l.user?.username ?? '—' },
+    { key: 'action', header: 'Hành động', align: 'center', render: (l) => <StatusBadge tone={ACTION_TONE[l.action] ?? 'neutral'}>{l.action}</StatusBadge> },
+    { key: 'detail', header: 'Chi tiết', className: 'text-xs [color:var(--pf-color-muted)]', render: (l) => l.detail ?? l.resource },
+    { key: 'club', header: 'CLB', className: 'text-xs [color:var(--pf-color-muted)]', render: (l) => l.club?.name ?? 'System' },
+  ]
+
   return (
-    <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
+    <PageShell maxWidth={1200}>
       <PageHeader
-        title="Audit Logs"
-        subtitle={`${filtered.length} thao tác · Lịch sử hoạt động toàn hệ thống`}
-        actions={filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        title="Nhật ký kiểm toán"
+        subtitle={`${rows.length} thao tác · lịch sử hoạt động toàn hệ thống`}
+        actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
-      <div className="p-6 max-w-[1100px] mx-auto space-y-5">
-        {/* Filters */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm theo người dùng, mô tả, CLB..."
-              className="input-base pl-9 w-full"
-            />
-          </div>
-          <div className="flex gap-1 [background:var(--pf-surface)] rounded-lg border border-[color:var(--pf-border)] p-1 overflow-x-auto">
-            {ACTION_OPTIONS.map(opt => (
-              <button
-                key={opt}
-                onClick={() => setAction(opt)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-                  action === opt ? '[background:var(--pf-primary)] text-white shadow-sm' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
-          {loading ? (
-            <div className="py-16 text-center [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
-          ) : filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <ScrollText size={32} className="mx-auto text-slate-200 mb-3" />
-              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có log nào</p>
-            </div>
-          ) : (
-            <table className="table-base">
-              <thead>
-                <tr>
-                  <th className="w-36">Thời gian</th>
-                  <th>Người dùng</th>
-                  <th className="text-center w-20">Action</th>
-                  <th>Chi tiết</th>
-                  <th className="w-28">CLB</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(log => (
-                  <tr key={log.id}>
-                    <td className="text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatTime(log.createdAt)}</td>
-                    <td className="[color:var(--pf-text)] text-xs font-mono">{log.user?.username ?? '—'}</td>
-                    <td className="text-center">
-                      <Badge variant={ACTION_COLORS[log.action] ?? 'gray'}>{log.action}</Badge>
-                    </td>
-                    <td className="[color:var(--pf-color-muted)] text-xs">{log.detail ?? `${log.resource}`}</td>
-                    <td className="text-xs [color:var(--pf-color-muted)]">{log.club?.name ?? 'System'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+      <div className="mb-4 flex flex-col gap-3">
+        <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
+        <div className="flex gap-1 self-start rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+          {ACTION_OPTIONS.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setAction(opt)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+                action === opt ? 'text-white shadow-sm [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
         </div>
       </div>
-    </div>
+
+      <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} bodyClassName="!p-0">
+        {loading ? (
+          <LoadingState variant="table" rows={8} />
+        ) : rows.length === 0 ? (
+          <EmptyState icon={<ScrollText size={24} />} title="Chưa có nhật ký" description="Hoạt động quản trị sẽ xuất hiện tại đây." />
+        ) : (
+          <DataTable columns={columns} rows={rows} rowKey={(l) => l.id} />
+        )}
+      </ChartCard>
+    </PageShell>
   )
 }

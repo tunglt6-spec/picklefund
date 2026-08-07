@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
-import { PageShell, PageHeader } from '../../components/shared'
+import { PageShell, PageHeader, StatusBadge } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
-import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import type { Club, ServicePlan } from '../../types'
@@ -439,9 +438,9 @@ export function SuperClubs() {
                   <div className="font-semibold [color:var(--pf-text)] truncate">{club.name}</div>
                   <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{club.code}{club.contactEmail ? ` · ${club.contactEmail}` : ''}</div>
                 </div>
-                <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
+                <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
                   {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
-                </Badge>
+                </StatusBadge>
               </div>
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[color:var(--pf-border)]">
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.members ?? 0}</span> TV</div>
@@ -456,11 +455,12 @@ export function SuperClubs() {
                 </button>
                 <button
                   onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
-                  className={`p-2 rounded-lg ${club.status === 'active' ? 'text-orange-500 bg-orange-50' : 'text-green-600 bg-green-50'}`}
+                  className="p-2 rounded-lg"
+                  style={{ background: club.status === 'active' ? 'var(--pf-color-warning-soft)' : 'var(--pf-color-success-soft)', color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
                 >
                   {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
                 </button>
-                <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} className="p-2 rounded-lg text-red-500 bg-red-50">
+                <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -528,13 +528,13 @@ export function SuperClubs() {
                     <PlanSelect club={club} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <Badge variant={club.status === 'active' ? 'green' : 'orange'}>
-                      {club.status === 'active' ? '✓ Hoạt động' : '✗ Bị khóa'}
-                    </Badge>
+                    <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
+                      {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
+                    </StatusBadge>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button className="text-blue-600 hover:text-blue-800 p-1.5 rounded hover:bg-blue-50" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
+                      <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
                       </button>
                       <button className="[color:var(--pf-primary)] hover:[color:var(--pf-primary)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
@@ -545,12 +545,13 @@ export function SuperClubs() {
                       </button>
                       <button
                         onClick={() => setPendingAction({ club, kind: 'status' })}
-                        className={club.status === 'active' ? 'text-orange-500 hover:text-orange-700 p-1.5 rounded hover:bg-orange-50' : 'text-green-600 hover:text-green-800 p-1.5 rounded hover:bg-green-50'}
+                        className="p-1.5 rounded"
+                        style={{ color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
                         title={club.status === 'active' ? 'Khóa CLB' : 'Mở khóa'}
                       >
                         {club.status === 'active' ? <Lock size={15} /> : <Unlock size={15} />}
                       </button>
-                      <button className="text-red-500 hover:text-red-700 p-1.5 rounded hover:bg-red-50" title="Xóa CLB" onClick={() => setDeleteClub(club)}>
+                      <button className="p-1.5 rounded [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]" title="Xóa CLB" onClick={() => setDeleteClub(club)}>
                         <Trash2 size={15} />
                       </button>
                     </div>
