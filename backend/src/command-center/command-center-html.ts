@@ -137,6 +137,16 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
       </div>`
     : `<p class="mut">Đang lọc theo 1 CLB — bảng xếp hạng chỉ hiển thị ở chế độ toàn hệ thống.</p>`;
 
+  // 9. Nhật ký kiểm toán (audit) — dữ liệu thật cho Chuyên gia Bảo mật phân tích.
+  const sys = data.syslog ?? { total: 0, byAction: [], recent: [] };
+  const sysChips = (sys.byAction ?? []).map((a: any) => `<span class="chip">${esc(a.action)}: ${num(a.count)}</span>`).join('') || '<span class="chip">—</span>';
+  const sysRows = (sys.recent ?? []).length
+    ? (sys.recent as any[]).map((r) => `<tr><td>${esc(new Date(r.at).toLocaleString('vi-VN'))}</td><td>${esc(r.action)}</td><td>${esc(r.resource)}${r.detail ? ' — ' + esc(r.detail) : ''}</td><td>${esc(r.user ?? '—')}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="mut">Chưa có nhật ký trong kỳ.</td></tr>';
+  const syslogBody = `<p class="mut" style="margin:0 0 4px">Tổng ${num(sys.total)} bản ghi kiểm toán trong kỳ. Phân bố theo hành động:</p>
+    <div class="chips">${sysChips}</div>
+    <table class="tbl"><thead><tr><th>Thời gian</th><th>Hành động</th><th>Nội dung</th><th>Người thực hiện</th></tr></thead><tbody>${sysRows}</tbody></table>`;
+
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"/><style>
 ${fontFace}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -156,11 +166,14 @@ body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.5;-webkit-p
 .cover .gcard .v{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:5px}
 .cover .gcard .s{font-size:9.5px;opacity:.85;margin-top:2px}
 .cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.85;border-top:1px solid rgba(255,255,255,.25);padding-top:14px}
-.sect{border:1px solid #EAEEF3;border-radius:14px;padding:14px 16px;margin:0 11mm 12px;page-break-inside:auto;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.03),0 4px 12px rgba(15,23,42,.03)}
+/* Section KHÔNG viền/nền để nội dung dài co giãn qua trang không bị cắt viền/chèn. */
+.sect{padding:0;margin:0 11mm 16px;page-break-inside:auto}
 .sect:first-of-type{margin-top:12mm}
 .sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:10px;padding-left:9px;border-left:3px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
-.k,.rank,.tbl tr{page-break-inside:avoid;break-inside:avoid}
-.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
+/* Đơn vị nhỏ giữ nguyên khối, không tách qua trang. */
+.k,.rank,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:9px;font-weight:700;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:999px;padding:3px 9px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -173,7 +186,7 @@ body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.5;-webkit-p
 .tbl td{padding:6px 8px;border-bottom:1px solid #F1F5F9;color:#334155}
 .tbl.sm td{padding:4px 6px}
 .rank-t{font-size:10px;font-weight:800;color:#475569;margin-bottom:2px}
-.maika{margin-top:11px;border:1px solid #E4DEFF;border-radius:11px;padding:10px 12px;background:linear-gradient(180deg,#F6F3FF,#FFFFFF)}
+.maika{margin-top:10px;border-left:3px solid #6D5DFB;border-radius:0 10px 10px 0;padding:10px 14px;background:#F8F6FF;page-break-inside:auto}
 .maika-h{font-size:9.5px;font-weight:800;color:#6D5DFB;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:4px}
 .maika-dot{width:7px;height:7px;border-radius:50%;background:#6D5DFB;display:inline-block}
 .maika p{font-size:10.5px;color:#475569;line-height:1.6;white-space:pre-line}
@@ -187,6 +200,6 @@ ${section('5 · AIDO AI Operations', aiBody, sections.ai)}
 ${section('6 · Sức khỏe hạ tầng', infraBody, sections.infra)}
 ${section('7 · Cảnh báo điều hành', alertsBody, sections.alerts)}
 ${section('8 · Bảng xếp hạng điều hành', leaderboardsBody, sections.leaderboards)}
-${section('9 · Nhật ký hệ thống', '<p class="mut">Chi tiết nhật ký kiểm toán xem tại màn Nhật ký hệ thống (Audit Logs) trên ứng dụng.</p>', sections.syslog)}
+${section('9 · Nhật ký hệ thống & Kiểm toán', syslogBody, sections.syslog)}
 </body></html>`;
 }

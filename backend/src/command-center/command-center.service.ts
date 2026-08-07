@@ -252,6 +252,19 @@ export class CommandCenterService {
     // ── Khối 8: Cảnh báo điều hành (suy ra từ tín hiệu thật) ──
     const alerts = await this.buildAlerts({ now, soon, dbStatus, wfFailed: wf('FAILED'), notiFailed, suspendedClubs, clubId });
 
+    // ── Nhật ký kiểm toán (audit) trong kỳ — cho mục 9 + để Chuyên gia Bảo mật phân tích số liệu thật ──
+    const auditWhere = { createdAt: { gte: start, lte: end }, ...(clubId ? { clubId } : {}) };
+    const [auditTotal, auditByAction, auditRecent] = await Promise.all([
+      this.prisma.auditLog.count({ where: auditWhere }),
+      this.prisma.auditLog.groupBy({ by: ['action'], where: auditWhere, _count: { _all: true }, orderBy: { _count: { action: 'desc' } }, take: 8 }),
+      this.prisma.auditLog.findMany({ where: auditWhere, orderBy: { createdAt: 'desc' }, take: 8, select: { action: true, resource: true, detail: true, createdAt: true, user: { select: { username: true } }, club: { select: { name: true } } } }),
+    ]);
+    const syslog = {
+      total: auditTotal,
+      byAction: auditByAction.map((g) => ({ action: g.action, count: g._count._all })),
+      recent: auditRecent.map((r) => ({ action: r.action, resource: r.resource, detail: r.detail ?? null, at: r.createdAt, user: r.user?.username ?? null, club: r.club?.name ?? null })),
+    };
+
     // ── AIDO Executive Summary (rule-based từ số liệu thật, không bịa) ──
     const summary = this.buildSummary({
       totalClubs, activeClubs, suspendedClubs, totalMembers, logins24h,
@@ -314,6 +327,7 @@ export class CommandCenterService {
       infra,
       alerts,
       leaderboards,
+      syslog,
     };
   }
 
@@ -406,7 +420,8 @@ export class CommandCenterService {
       `Hạ tầng: CPU ${infra.cpu?.pct}%, RAM ${infra.memory?.pct}%, DB ${infra.db?.status}, disk ${infra.disk ? infra.disk.pct + '%' : 'chưa có'}, storage ${infra.storage ? infra.storage.usedMb + 'MB' : 'chưa có'}, hàng đợi việc ${infra.queue?.pending}, kết nối DB ${infra.dbConnections ?? '—'}, phiên đăng nhập ${infra.activeSessions}, req/phút ${infra.requestsPerMin ?? '—'}, lỗi 5xx ${infra.errorRate == null ? 'chưa có' : infra.errorRate + '%'}, backup ${infra.backup ? (infra.backup.success ? 'bình thường' : 'lỗi') : (infra.backupEnabled ? 'chờ chạy' : 'chưa bật')}.`,
       `Cảnh báo: ${(d.alerts ?? []).length} mục${(d.alerts ?? []).length ? ' — ' + (d.alerts as any[]).map((a) => `${a.severity}:${a.title}`).join('; ') : ''}.`,
       lb ? `Xếp hạng CLB — nhiều thành viên: ${topStr(lb.topByMembers)}; hoạt động: ${topStr(lb.topByActivity)}; doanh thu: ${topStr(lb.topByRevenue, true)}; giải đấu: ${topStr(lb.topByTournaments)}; dùng AI: ${topStr(lb.topByAiUsage)}.` : 'Xếp hạng: đang lọc theo 1 CLB (không có bảng xếp hạng toàn hệ thống).',
-    ].join('\n');
+      d.syslog ? `Nhật ký kiểm toán (audit): ${d.syslog.total} bản ghi trong kỳ. Theo hành động: ${(d.syslog.byAction ?? []).map((a: any) => `${a.action}=${a.count}`).join(', ') || '—'}. Sự kiện gần nhất: ${(d.syslog.recent ?? []).slice(0, 5).map((r: any) => `${r.action} ${r.resource}${r.user ? ' bởi ' + r.user : ''}`).join('; ') || '—'}.` : '',
+    ].filter(Boolean).join('\n');
   }
 
   private ruleBasedReview(d: any): ReviewSections {
@@ -421,7 +436,7 @@ export class CommandCenterService {
       infra: `CPU ~${infra.cpu?.pct}%, RAM ~${infra.memory?.pct}%, DB ${infra.db?.status === 'up' ? 'bình thường' : 'LỖI'}. Hàng đợi việc: ${infra.queue?.pending}; ${infra.activeSessions} phiên đăng nhập còn hiệu lực.`,
       alerts: alertsN ? `Có ${alertsN} cảnh báo cần theo dõi; ưu tiên xử lý các mục mức Critical/High trước.` : `Không có cảnh báo — hệ thống đang vận hành ổn định.`,
       leaderboards: d.leaderboards ? `Bảng xếp hạng phản ánh các CLB dẫn đầu về quy mô, hoạt động, doanh thu và mức dùng AI — hữu ích để xác định CLB tiêu biểu và CLB cần hỗ trợ.` : `Đang lọc theo 1 CLB nên không hiển thị bảng xếp hạng toàn hệ thống.`,
-      syslog: `Nhật ký kiểm toán ghi nhận các thao tác quản trị quan trọng; theo dõi định kỳ để phát hiện bất thường về truy cập và thay đổi cấu hình.`,
+      syslog: `Nhật ký kiểm toán ghi nhận ${d.syslog?.total ?? 0} thao tác trong kỳ (${(d.syslog?.byAction ?? []).map((a: any) => `${a.action}: ${a.count}`).join(', ') || 'chưa có'}). Cần theo dõi định kỳ để phát hiện bất thường về truy cập, phân quyền và thao tác dữ liệu nhạy cảm.`,
     };
   }
 

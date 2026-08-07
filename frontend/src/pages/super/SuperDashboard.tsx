@@ -245,30 +245,37 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
 
   return (
     <>
-      {/* 12 KPI + Executive Summary */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)]">
-        <div className={`${GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`}>
-          <Kpi label="Tổng CLB" value={num(k.totalClubs)} icon={<Building2 size={16} />} />
-          <Kpi label="CLB hoạt động" value={num(k.activeClubs)} icon={<Activity size={16} />} />
-          <Kpi label="CLB bị khóa" value={num(k.suspendedClubs)} icon={<Lock size={16} />} alert={k.suspendedClubs > 0 ? 'warning' : undefined} />
-          <Kpi label="Tổng thành viên" value={num(k.totalMembers)} icon={<Users size={16} />} />
-          <Kpi label="Người dùng hoạt động" value={num(k.activeUsers)} icon={<UserCheck size={16} />} />
-          <Kpi label="Đăng nhập 24h" value={num(k.logins24h)} icon={<LogIn size={16} />} />
-          <Kpi label="MRR" value={vnd(k.mrr)} icon={<TrendingUp size={16} />} />
-          <Kpi label={`Doanh thu (${rangeLabel})`} value={vnd(k.revenueInRange)} icon={<Wallet size={16} />} />
-          <Kpi label="Thuê bao trả phí" value={num(k.paidSubscribers)} icon={<CreditCard size={16} />} />
-          <Kpi label="AI Request" value={num(k.aiRequests)} icon={<Bot size={16} />} />
-          <Kpi label="Chi phí AI (ước tính)" value={k.aiCost != null ? `$${Number(k.aiCost).toFixed(4)}` : <NoData hint="Chưa có lượt gọi AI trong kỳ" />} icon={<Cpu size={16} />} />
-          <Kpi label="Uptime" value={fmtUptime(k.uptimeSeconds)} icon={<Server size={16} />} />
-        </div>
+      {/* 12 KPI — 6 cột × 2 hàng */}
+      <div className={`${GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
+        <Kpi label="Tổng CLB" value={num(k.totalClubs)} icon={<Building2 size={16} />} />
+        <Kpi label="CLB hoạt động" value={num(k.activeClubs)} icon={<Activity size={16} />} />
+        <Kpi label="CLB bị khóa" value={num(k.suspendedClubs)} icon={<Lock size={16} />} alert={k.suspendedClubs > 0 ? 'warning' : undefined} />
+        <Kpi label="Tổng thành viên" value={num(k.totalMembers)} icon={<Users size={16} />} />
+        <Kpi label="Người dùng hoạt động" value={num(k.activeUsers)} icon={<UserCheck size={16} />} />
+        <Kpi label="Đăng nhập 24h" value={num(k.logins24h)} icon={<LogIn size={16} />} />
+        <Kpi label="MRR" value={vnd(k.mrr)} icon={<TrendingUp size={16} />} />
+        <Kpi label={`Doanh thu (${rangeLabel})`} value={vnd(k.revenueInRange)} icon={<Wallet size={16} />} />
+        <Kpi label="Thuê bao trả phí" value={num(k.paidSubscribers)} icon={<CreditCard size={16} />} />
+        <Kpi label="AI Request" value={num(k.aiRequests)} icon={<Bot size={16} />} />
+        <Kpi label="Chi phí AI (ước tính)" value={k.aiCost != null ? `$${Number(k.aiCost).toFixed(4)}` : <NoData hint="Chưa có lượt gọi AI trong kỳ" />} icon={<Cpu size={16} />} />
+        <Kpi label="Uptime" value={fmtUptime(k.uptimeSeconds)} icon={<Server size={16} />} />
+      </div>
 
+      {/* AIDO Executive Summary — full-width, ngay dưới 12 KPI */}
+      <div className="mt-4">
         <ChartCard title="AIDO Executive Summary" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}
           actions={<div className="flex items-center gap-1.5">
             <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
             <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
           </div>}>
-          <SummaryBlock summary={data.summary} />
-          {reviewText(review, 'overview') && <MaikaNote review={review} k="overview" />}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <SummaryBlock summary={data.summary} />
+            <div>
+              {reviewText(review, 'overview')
+                ? <MaikaNote review={review} k="overview" />
+                : <p className="text-[12px] leading-relaxed [color:var(--pf-color-muted)]">Bấm <b>"Maika đánh giá"</b> để Maika viết nhận định điều hành chi tiết (theo giọng chuyên gia từng lĩnh vực) cho cả 9 mục.</p>}
+            </div>
+          </div>
         </ChartCard>
       </div>
 
