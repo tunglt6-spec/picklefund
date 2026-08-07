@@ -317,23 +317,51 @@ export class CommandCenterService {
     };
   }
 
-  /** Maika viết đánh giá điều hành cho 9 mục (1 lần gọi LLM → JSON; fallback rule-based). */
+  /**
+   * Maika viết đánh giá điều hành CHI TIẾT cho 9 mục — MỖI mục một lời gọi riêng với PERSONA
+   * chuyên gia của mảng đó (giọng chuyên gia tự nhiên), yêu cầu: hiện trạng → xu hướng/nguyên nhân
+   * → rủi ro → khuyến nghị hành động → định hướng tương lai. Chạy song song; fallback rule-based
+   * nếu không có LLM. KHÔNG bịa số ngoài dữ liệu.
+   */
   async aiReview(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<{ generatedAt: string; sections: ReviewSections; byAi: boolean; data: any }> {
     const data = await this.overview(opts);
     const fallback = this.ruleBasedReview(data);
     const digest = this.buildDigest(data);
-    const prompt =
-      `Bạn là Maika — trợ lý phân tích điều hành của PickleFund. Dựa DUY NHẤT trên SỐ LIỆU THẬT dưới đây, ` +
-      `viết đánh giá điều hành chuẩn SaaS (giọng chuyên nghiệp, súc tích, nêu xu hướng/rủi ro/khuyến nghị hành động; ` +
-      `KHÔNG bịa thêm số liệu). Trả về DUY NHẤT một JSON object hợp lệ (không kèm markdown/giải thích), gồm ĐÚNG 9 khóa: ` +
-      `"overview","business","operations","finance","ai","infra","alerts","leaderboards","syslog". Mỗi giá trị là 2–4 câu tiếng Việt.\n\nSỐ LIỆU:\n${digest}`;
+
+    const specs: { key: keyof ReviewSections; persona: string; title: string; guide: string }[] = [
+      { key: 'overview', persona: 'một Giám đốc điều hành (CEO) dày dạn của nền tảng SaaS thể thao', title: 'Tổng quan điều hành toàn hệ thống', guide: 'Nhìn bức tranh lớn: quy mô, đà tăng trưởng, sức khỏe tổng thể và 2–3 ưu tiên điều hành quan trọng nhất kỳ tới.' },
+      { key: 'business', persona: 'một Giám đốc Tăng trưởng & Doanh thu (Head of Growth/Revenue)', title: 'Kinh doanh & Thuê bao', guide: 'Phân tích MRR/ARR, cơ cấu gói, tỷ lệ trả phí, rủi ro hết hạn/rời bỏ; đề xuất chiến thuật tăng chuyển đổi & giữ chân, gia hạn.' },
+      { key: 'operations', persona: 'một Giám đốc Vận hành (Head of Operations) am hiểu cộng đồng CLB', title: 'Hoạt động toàn hệ thống', guide: 'Đánh giá mức độ sôi động (buổi chơi, điểm danh, giải đấu, kỳ quỹ), CLB ít hoạt động; đề xuất cách kích hoạt tương tác & giữ nhịp vận hành.' },
+      { key: 'finance', persona: 'một Giám đốc Tài chính (CFO) thận trọng', title: 'Tổng hợp tài chính toàn nền tảng', guide: 'Đánh giá thu/chi/số dư, công nợ & quá hạn, chi chờ duyệt, kỷ luật dòng tiền; khuyến nghị kiểm soát rủi ro tài chính & thu hồi công nợ.' },
+      { key: 'ai', persona: 'một Trưởng nhóm AI (Head of AI) thực dụng', title: 'AIDO AI Operations', guide: 'Đánh giá khối lượng & độ tin cậy của 5 agent (request, tỷ lệ thành công, lỗi, token/chi phí, fallback); khuyến nghị tối ưu chi phí/độ ổn định và mở rộng năng lực AI.' },
+      { key: 'infra', persona: 'một Kỹ sư Độ tin cậy trưởng (Head of SRE/Infrastructure)', title: 'Sức khỏe hạ tầng', guide: 'Đánh giá CPU/RAM/Disk/DB/hàng đợi/uptime/backup/lỗi 5xx; cảnh báo ngưỡng nguy hiểm; khuyến nghị nâng cấp năng lực, sao lưu, giám sát và kế hoạch dự phòng.' },
+      { key: 'alerts', persona: 'một Trưởng bộ phận Ứng phó sự cố (Incident/Reliability Lead)', title: 'Cảnh báo điều hành', guide: 'Phân loại cảnh báo theo mức độ; nêu tác động & thứ tự ưu tiên xử lý; đề xuất quy trình phản ứng và phòng ngừa tái diễn.' },
+      { key: 'leaderboards', persona: 'một Chuyên gia Phân tích dữ liệu (BI/Data Analyst)', title: 'Bảng xếp hạng điều hành', guide: 'Đọc các CLB dẫn đầu về quy mô/hoạt động/doanh thu/AI; rút ra insight về CLB tiêu biểu để nhân rộng và CLB cần hỗ trợ.' },
+      { key: 'syslog', persona: 'một Chuyên gia Bảo mật & Tuân thủ (Security/Compliance)', title: 'Nhật ký hệ thống & Kiểm toán', guide: 'Đánh giá tính minh bạch & khả năng truy vết của nhật ký kiểm toán; khuyến nghị chính sách giám sát truy cập, phân quyền và lưu vết thao tác nhạy cảm.' },
+    ];
+
+    const results = await Promise.all(
+      specs.map(async (spec) => {
+        const prompt =
+          `Bạn là ${spec.persona}, đang viết một phần trong BÁO CÁO ĐIỀU HÀNH CẤP HỆ THỐNG của nền tảng PickleFund cho Ban lãnh đạo. ` +
+          `Hãy viết phần "${spec.title}" bằng tiếng Việt, giọng CHUYÊN GIA tự nhiên, mạch lạc và CHI TIẾT (khoảng 180–320 từ, 3–5 đoạn ngắn). ` +
+          `Trình bày theo mạch: (1) nhận định hiện trạng dựa CHẶT trên số liệu, (2) phân tích xu hướng & nguyên nhân, (3) rủi ro/điểm cần chú ý, ` +
+          `(4) KHUYẾN NGHỊ hành động CỤ THỂ, (5) định hướng/hướng xử lý trong tương lai. ${spec.guide} ` +
+          `TUYỆT ĐỐI không bịa thêm con số nào ngoài dữ liệu; nếu một chỉ số "chưa có dữ liệu" thì nêu rõ và khuyến nghị bổ sung đo lường. ` +
+          `Không dùng markdown, không tiêu đề, chỉ trả về đoạn văn.\n\nBỐI CẢNH SỐ LIỆU TOÀN HỆ THỐNG:\n${digest}`;
+        try {
+          const r = await this.maika.composeText(prompt, fallback[spec.key]);
+          const text = (r.text ?? '').trim();
+          return { key: spec.key, text: text || fallback[spec.key], byAi: r.byAi && text.length > 0 };
+        } catch {
+          return { key: spec.key, text: fallback[spec.key], byAi: false };
+        }
+      }),
+    );
+
+    const sections = { ...fallback } as ReviewSections;
     let byAi = false;
-    let sections = fallback;
-    try {
-      const res = await this.maika.composeText(prompt, JSON.stringify(fallback));
-      const parsed = this.parseReview(res.text);
-      if (parsed) { sections = { ...fallback, ...parsed }; byAi = res.byAi; }
-    } catch { /* giữ fallback */ }
+    for (const r of results) { sections[r.key] = r.text; if (r.byAi) byAi = true; }
     return { generatedAt: data.generatedAt, sections, byAi, data };
   }
 
@@ -379,21 +407,6 @@ export class CommandCenterService {
       leaderboards: d.leaderboards ? `Bảng xếp hạng phản ánh các CLB dẫn đầu về quy mô, hoạt động, doanh thu và mức dùng AI — hữu ích để xác định CLB tiêu biểu và CLB cần hỗ trợ.` : `Đang lọc theo 1 CLB nên không hiển thị bảng xếp hạng toàn hệ thống.`,
       syslog: `Nhật ký kiểm toán ghi nhận các thao tác quản trị quan trọng; theo dõi định kỳ để phát hiện bất thường về truy cập và thay đổi cấu hình.`,
     };
-  }
-
-  private parseReview(text: string): Partial<ReviewSections> | null {
-    if (!text) return null;
-    try {
-      const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const s = cleaned.indexOf('{');
-      const e = cleaned.lastIndexOf('}');
-      if (s < 0 || e <= s) return null;
-      const obj = JSON.parse(cleaned.slice(s, e + 1));
-      const out: Partial<ReviewSections> = {};
-      const keys: (keyof ReviewSections)[] = ['overview', 'business', 'operations', 'finance', 'ai', 'infra', 'alerts', 'leaderboards', 'syslog'];
-      for (const key of keys) if (typeof obj[key] === 'string' && obj[key].trim()) out[key] = String(obj[key]).trim();
-      return Object.keys(out).length ? out : null;
-    } catch { return null; }
   }
 
   /**

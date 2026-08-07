@@ -222,7 +222,7 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
   return (
     <div className="mt-3 rounded-xl border p-3" style={{ borderColor: 'color-mix(in srgb, var(--pf-primary) 24%, var(--pf-border))', background: 'color-mix(in srgb, var(--pf-primary) 5%, var(--pf-surface))' }}>
       <p className="mb-1 inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider [color:var(--pf-primary)]"><Sparkles size={12} /> Maika nhận định</p>
-      <p className="text-[13px] leading-relaxed [color:var(--pf-text)]">{t}</p>
+      <p className="whitespace-pre-line text-[13px] leading-relaxed [color:var(--pf-text)]">{t}</p>
     </div>
   )
 }
