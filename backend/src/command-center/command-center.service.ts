@@ -16,7 +16,7 @@ import { buildCommandCenterHtml } from './command-center-html';
 import { renderHtmlToPdf } from '../executive-report/render-pdf';
 
 const money = (v: unknown) => `${Number(v ?? 0).toLocaleString('vi-VN')}đ`;
-type ReviewSections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog', string>;
+type ReviewSections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog' | 'conclusion', string>;
 
 type RangeKey = 'today' | '7d' | '30d' | 'quarter' | 'year' | 'custom';
 
@@ -346,7 +346,7 @@ export class CommandCenterService {
       `Bạn là HỘI ĐỒNG CHUYÊN GIA điều hành của nền tảng SaaS thể thao PickleFund, gồm: CEO, Giám đốc Tăng trưởng & Doanh thu, ` +
       `Giám đốc Vận hành, Giám đốc Tài chính (CFO), Trưởng nhóm AI, Trưởng Kỹ sư Độ tin cậy (SRE/Hạ tầng), Trưởng Ứng phó sự cố, ` +
       `Chuyên gia Phân tích dữ liệu (BI) và Chuyên gia Bảo mật & Tuân thủ. Hãy soạn BÁO CÁO ĐIỀU HÀNH CẤP HỆ THỐNG cho Ban lãnh đạo, ` +
-      `gồm 9 phần theo ĐÚNG thứ tự và định dạng bên dưới.\n` +
+      `gồm 10 phần theo ĐÚNG thứ tự và định dạng bên dưới.\n` +
       `Với MỖI phần: viết bằng tiếng Việt, giọng CHUYÊN GIA phụ trách mảng đó, CHI TIẾT 150–260 từ (2–4 đoạn), theo mạch: ` +
       `(1) nhận định hiện trạng bám CHẶT số liệu (có trích số cụ thể), (2) phân tích xu hướng & nguyên nhân, (3) rủi ro/điểm cần chú ý, ` +
       `(4) KHUYẾN NGHỊ hành động CỤ THỂ, (5) định hướng/hướng xử lý trong tương lai. ` +
@@ -361,7 +361,10 @@ export class CommandCenterService {
       `[[infra]]     — Sức khỏe hạ tầng (Trưởng SRE)\n` +
       `[[alerts]]    — Cảnh báo điều hành (Trưởng Ứng phó sự cố)\n` +
       `[[leaderboards]] — Bảng xếp hạng (Chuyên gia BI)\n` +
-      `[[syslog]]    — Nhật ký & Kiểm toán (Chuyên gia Bảo mật)\n\n` +
+      `[[syslog]]    — Nhật ký & Kiểm toán (Chuyên gia Bảo mật)\n` +
+      `[[conclusion]] — Kết luận & Khuyến nghị ưu tiên (Ban điều hành tổng hợp): 220–340 từ, TỔNG HỢP toàn bộ 9 mục trên thành ` +
+      `(1) một đoạn KẾT LUẬN CHUNG về sức khỏe & triển vọng toàn hệ thống, sau đó (2) DANH SÁCH 4–6 KHUYẾN NGHỊ ƯU TIÊN xếp theo thứ tự ` +
+      `quan trọng — MỖI khuyến nghị viết trên MỘT DÒNG RIÊNG bắt đầu bằng "P1: ", "P2: ", "P3: "… nêu rõ HÀNH ĐỘNG cụ thể + LÝ DO bám số liệu + tác động kỳ vọng.\n\n` +
       `SỐ LIỆU TOÀN HỆ THỐNG:\n${digest}`;
 
     let sections = { ...fallback } as ReviewSections;
@@ -382,7 +385,7 @@ export class CommandCenterService {
   /** Tách nội dung Maika theo marker [[key]] → { key: đoạn văn }. */
   private parseMarkers(text: string): Partial<ReviewSections> | null {
     if (!text || text.includes('§NO_LLM§')) return null;
-    const keys = new Set<string>(['overview', 'business', 'operations', 'finance', 'ai', 'infra', 'alerts', 'leaderboards', 'syslog']);
+    const keys = new Set<string>(['overview', 'business', 'operations', 'finance', 'ai', 'infra', 'alerts', 'leaderboards', 'syslog', 'conclusion']);
     const parts = text.split(/\[\[(\w+)\]\]/);
     const out: Partial<ReviewSections> = {};
     for (let i = 1; i < parts.length; i += 2) {
@@ -443,7 +446,26 @@ export class CommandCenterService {
       alerts: alertsN ? `Có ${alertsN} cảnh báo cần theo dõi; ưu tiên xử lý các mục mức Critical/High trước.` : `Không có cảnh báo — hệ thống đang vận hành ổn định.`,
       leaderboards: d.leaderboards ? `Bảng xếp hạng phản ánh các CLB dẫn đầu về quy mô, hoạt động, doanh thu và mức dùng AI — hữu ích để xác định CLB tiêu biểu và CLB cần hỗ trợ.` : `Đang lọc theo 1 CLB nên không hiển thị bảng xếp hạng toàn hệ thống.`,
       syslog: `Nhật ký kiểm toán ghi nhận ${d.syslog?.total ?? 0} thao tác trong kỳ (${(d.syslog?.byAction ?? []).map((a: any) => `${a.action}: ${a.count}`).join(', ') || 'chưa có'}). Cần theo dõi định kỳ để phát hiện bất thường về truy cập, phân quyền và thao tác dữ liệu nhạy cảm.`,
+      conclusion: this.ruleBasedConclusion(d),
     };
+  }
+
+  /** Kết luận + khuyến nghị ưu tiên (fallback rule-based) — suy ra P1..Pn từ dữ liệu thật. */
+  private ruleBasedConclusion(d: any): string {
+    const k = d.kpi, biz = d.business, fin = d.finance, infra = d.infra, ai = d.ai;
+    const alertsN = (d.alerts ?? []).length;
+    const health = infra.db?.status === 'up' && !alertsN ? 'ổn định' : alertsN ? 'cơ bản ổn định, còn điểm cần xử lý' : 'cần theo dõi';
+    const intro = `Tổng thể, hệ thống đang vận hành ${health}: ${k.activeClubs}/${k.totalClubs} CLB hoạt động, ${k.totalMembers} thành viên, MRR ${money(biz.revenue.mrr)} (ARR ${money(biz.revenue.arr)}), số dư quỹ ${money(fin.totalBalance)}; hạ tầng CPU ${infra.cpu?.pct}% / RAM ${infra.memory?.pct}%, AI ${ai.totals.requests} request${ai.totals.successRate != null ? ` (thành công ${ai.totals.successRate}%)` : ''}. Dưới đây là các khuyến nghị ưu tiên:`;
+    const recs: string[] = [];
+    if (biz.subscription.expiringSoon || biz.subscription.expired) recs.push(`Chăm sóc gia hạn: ${biz.subscription.expiringSoon} CLB sắp hết hạn, ${biz.subscription.expired} đã hết hạn — chủ động nhắc/gia hạn để giữ MRR.`);
+    if (fin.pendingExpenses) recs.push(`Duyệt ${fin.pendingExpenses} khoản chi đang chờ để không tồn đọng dòng tiền và số liệu tài chính phản ánh đúng thực tế.`);
+    if (fin.overdueCount) recs.push(`Thu hồi công nợ quá hạn: ${fin.overdueCount} khoản (${money(fin.overdueAmount)}) — đôn đốc để cải thiện dòng tiền.`);
+    if (alertsN) recs.push(`Xử lý ${alertsN} cảnh báo điều hành, ưu tiên mức Critical/High trước.`);
+    if (fin.onTimeRatio == null) recs.push(`Bổ sung hạn đóng quỹ (dueDate) cho các kỳ để đo được tỷ lệ thu đúng hạn — hiện chưa có dữ liệu.`);
+    recs.push(`Tăng tần suất tương tác & chuyển đổi thuê bao trả phí: đẩy giá trị tính năng AI (đang được dùng tốt) tới nhóm CLB miễn phí.`);
+    recs.push(`Duy trì giám sát hạ tầng & backup định kỳ để bảo đảm độ tin cậy khi mở rộng quy mô.`);
+    const lines = recs.slice(0, 6).map((r, i) => `P${i + 1}: ${r}`).join('\n');
+    return `${intro}\n\n${lines}`;
   }
 
   /**

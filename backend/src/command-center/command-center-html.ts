@@ -31,7 +31,7 @@ const num = (n: number | null | undefined) => (n == null ? '—' : new Intl.Numb
 const pct = (n: number | null | undefined) => (n == null ? '—' : `${n}%`);
 const RANGE_LABEL: Record<string, string> = { today: 'Hôm nay', '7d': '7 ngày', '30d': '30 ngày', quarter: 'Quý', year: 'Năm', custom: 'Tùy chỉnh' };
 
-type Sections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog', string>;
+type Sections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog' | 'conclusion', string>;
 
 /** Ô nhận định của Maika (AI). Tách thành nhiều đoạn <p> block để ngắt trang an toàn (không đè dòng). */
 function maikaBox(text: string): string {
@@ -49,6 +49,30 @@ function kpi(label: string, value: string, sub?: string): string {
 }
 function section(title: string, bodyHtml: string, narrative: string): string {
   return `<div class="sect"><h2>${esc(title)}</h2>${bodyHtml}${maikaBox(narrative)}</div>`;
+}
+
+/** Trang kết: tách phần mở đầu (prose) và các dòng khuyến nghị "P1:/P2:…" thành danh sách ưu tiên. */
+function buildConclusion(text: string): string {
+  if (!text) return '';
+  const lines = String(text).split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  const intro: string[] = [];
+  const recs: Array<{ p: string; body: string }> = [];
+  const pRe = /^P\s*(\d+)\s*[:.\-)]\s*(.*)$/i;
+  for (const line of lines) {
+    const m = line.match(pRe);
+    if (m && m[2]) recs.push({ p: `P${m[1]}`, body: m[2] });
+    else if (!recs.length) intro.push(line);
+  }
+  const introHtml = intro.map((p) => `<p>${esc(p)}</p>`).join('') || `<p>${esc(text)}</p>`;
+  const recsHtml = recs
+    .map((r) => `<div class="rec"><span class="rec-p">${esc(r.p)}</span><div class="rec-tx">${esc(r.body)}</div></div>`)
+    .join('');
+  return `<section class="concl">
+    <div class="concl-eyb">Tổng kết</div>
+    <div class="concl-h">Kết luận &amp; Khuyến nghị ưu tiên</div>
+    <div class="concl-intro">${introHtml}</div>
+    ${recs.length ? `<div class="concl-recs-t">Khuyến nghị ưu tiên</div>${recsHtml}` : ''}
+  </section>`;
 }
 
 export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt: string): string {
@@ -204,7 +228,7 @@ p{orphans:3;widows:3}
 .cover .gcard .s{font-size:9.5px;opacity:.88;margin-top:3px}
 .cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.9;border-top:1px solid rgba(255,255,255,.28);padding-top:14px;position:relative;z-index:1}
 /* ===== MỤC LỤC (trang 2) ===== */
-.toc{margin:0 14mm}
+.toc{margin:0 14mm;page-break-after:always}
 .toc-eyb{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#6D5DFB;margin-bottom:6px}
 .toc-h{font-size:30px;font-weight:800;letter-spacing:-.02em;color:#1E293B;margin-bottom:6px}
 .toc-sub{font-size:11px;color:#94A3B8;margin-bottom:22px}
@@ -215,8 +239,9 @@ p{orphans:3;widows:3}
 .toc-tx{flex:1}
 .toc-t{font-size:13px;font-weight:800;color:#1E293B;letter-spacing:-.01em}
 .toc-d{font-size:10px;color:#94A3B8;margin-top:2px}
-/* ===== SECTION — mỗi mục bắt đầu ở trang mới; nội dung dài vẫn chảy mượt qua trang ===== */
-.sect{padding:0;margin:0 14mm;page-break-inside:auto;page-break-before:always;break-before:page}
+/* ===== SECTION — nội dung CHẢY LIỀN lấp đầy trang (không ép mỗi mục 1 trang) ===== */
+.sect{padding:0;margin:0 14mm 22px;page-break-inside:auto}
+.sect:first-of-type{margin-top:2mm}
 .sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:12px;padding-left:11px;border-left:4px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
 /* Đơn vị nhỏ giữ nguyên khối, không tách qua trang. */
 .k,.rank,.tbl thead,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
@@ -240,6 +265,18 @@ p{orphans:3;widows:3}
 .maika-dot{width:7px;height:7px;border-radius:50%;background:#6D5DFB;display:inline-block}
 .maika-body p{font-size:10.5px;color:#42526E;line-height:1.62;margin-bottom:7px}
 .maika-body p:last-child{margin-bottom:0}
+/* ===== TRANG KẾT — Kết luận & Khuyến nghị ưu tiên ===== */
+.concl{margin:0 14mm;page-break-before:always;break-before:page}
+.concl-eyb{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#6D5DFB;margin-bottom:6px}
+.concl-h{font-size:26px;font-weight:800;letter-spacing:-.02em;color:#1E293B;margin-bottom:14px}
+.concl-intro{border-left:4px solid #6D5DFB;background:linear-gradient(180deg,#F8F6FF,#F3F0FF);border-radius:0 12px 12px 0;padding:13px 16px;margin-bottom:18px;page-break-inside:auto}
+.concl-intro p{font-size:11px;color:#42526E;line-height:1.62;margin-bottom:7px}
+.concl-intro p:last-child{margin-bottom:0}
+.concl-recs-t{font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.rec{display:flex;align-items:flex-start;gap:13px;padding:12px 0;border-bottom:1px solid #EEF1F6;page-break-inside:avoid}
+.rec:last-child{border-bottom:none}
+.rec-p{flex:none;width:38px;height:26px;border-radius:8px;background:linear-gradient(135deg,#4338CA,#6D5DFB);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.rec-tx{flex:1;font-size:10.5px;color:#334155;line-height:1.55;padding-top:2px}
 </style></head><body>
 ${cover}
 ${toc}
@@ -252,5 +289,6 @@ ${section('6 · Sức khỏe hạ tầng', infraBody, sections.infra)}
 ${section('7 · Cảnh báo điều hành', alertsBody, sections.alerts)}
 ${section('8 · Bảng xếp hạng điều hành', leaderboardsBody, sections.leaderboards)}
 ${section('9 · Nhật ký hệ thống & Kiểm toán', syslogBody, sections.syslog)}
+${buildConclusion(sections.conclusion)}
 </body></html>`;
 }
