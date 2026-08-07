@@ -165,8 +165,13 @@ jobs:
             # của app đang chạy được tham chiếu nên KHÔNG bị xoá; chỉ dọn image deploy cũ
             # không còn dùng. Deploy dồn dập trong ngày (image <72h) vẫn được giải phóng.
             docker image prune -f >/dev/null 2>&1 || true   # dangling: luôn dọn
-            DISK_PRE=$(df / | awk 'NR==2{gsub(/%/,"",$5); print $5}')
-            echo "Disk trước pull: ${DISK_PRE}%"
+            # Đo phân vùng ĐẦY NHẤT trong số /, /var/lib/containerd, /var/lib/docker. Box này
+            # bind-mount /var/lib/containerd sang Hetzner Volume 40G (/dev/sdb) — image Docker
+            # nằm ở đó, KHÔNG phải sda1 ('/'). Trước đây chỉ canh 'df /' (sda1) nên prune mạnh
+            # không bao giờ chạy dù ổ image thật đầy → phải lấy MAX các phân vùng liên quan.
+            disk_use() { df -P / /var/lib/containerd /var/lib/docker 2>/dev/null | awk 'NR>1{gsub(/%/,"",$5); if($5+0>m)m=$5+0} END{print m+0}'; }
+            DISK_PRE=$(disk_use)
+            echo "Disk (phân vùng đầy nhất) trước pull: ${DISK_PRE}%"
             if [ "${DISK_PRE:-0}" -ge 70 ]; then
               echo "Disk ${DISK_PRE}% >= 70% — dọn MẠNH mọi image không dùng trước khi pull (rollback vẫn re-pull GHCR được)"
               docker image prune -af >/dev/null 2>&1 || true
@@ -207,9 +212,10 @@ jobs:
               # Đĩa căng (>=75%) → prune MẠNH (mọi image/build-cache không dùng) để giải phóng
               # ngay; rollback vẫn re-pull được từ GHCR (public). Hạ ngưỡng 85→75 vì nhiều lần
               # deploy/ngày làm image tích lũy nhanh (đĩa 38G dùng chung). Bình thường giữ cửa sổ 24h.
-              DISK_USE=$(df / | awk 'NR==2{gsub(/%/,"",$5); print $5}')
+              disk_use() { df -P / /var/lib/containerd /var/lib/docker 2>/dev/null | awk 'NR>1{gsub(/%/,"",$5); if($5+0>m)m=$5+0} END{print m+0}'; }
+              DISK_USE=$(disk_use)
               if [ "${DISK_USE:-0}" -ge 75 ]; then
-                echo "Disk ${DISK_USE}% >= 75% — aggressive prune (all unused images + build cache)"
+                echo "Disk (phân vùng đầy nhất) ${DISK_USE}% >= 75% — aggressive prune (all unused images + build cache)"
                 docker image prune -af >/dev/null 2>&1 || true
                 docker builder prune -af >/dev/null 2>&1 || true
                 docker container prune -f >/dev/null 2>&1 || true
@@ -222,7 +228,7 @@ jobs:
               # không xoá nên phình đĩa dần). Best-effort, không chặn deploy.
               echo "Trimming old DB backups (keep last 14)..."
               ls -1t "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | tail -n +15 | xargs -r rm -f || true
-              echo "=== Disk after cleanup ==="; df -h /
+              echo "=== Disk after cleanup (root + ổ image Docker) ==="; df -h / /var/lib/containerd /var/lib/docker 2>/dev/null | awk 'NR==1 || !seen[$1]++'
               echo "Backups dir: $(du -sh "$REPO_DIR"/backups 2>/dev/null | cut -f1) ($(ls -1 "$REPO_DIR"/backups/picklefund_*.sql 2>/dev/null | wc -l) files)"
               send_telegram "$(printf '✅ PickleFund deploy success\nCommit: %s\nAPI: OK\nFrontend: OK\nBackup: %s' "$SHORT_SHA" "$BACKUP_NAME")"
               echo "Deployment successful."
