@@ -171,13 +171,24 @@ export class MaikaService {
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 
-  private async askAI(prompt: string, fallback: string, clubId?: string): Promise<string> {
+  /** Như composeText nhưng cho phép ĐẦU RA DÀI (nâng maxOutputTokens) — báo cáo điều hành nhiều mục. */
+  async composeLong(
+    prompt: string,
+    fallback: string,
+    clubId?: string,
+  ): Promise<{ text: string; byAi: boolean }> {
+    const text = await this.askAI(prompt, fallback, clubId, 8192);
+    return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
+  }
+
+  private async askAI(prompt: string, fallback: string, clubId?: string, maxTokens?: number): Promise<string> {
     // 1) Gemini Free (primary)
     if (this.genAI) {
       const t0 = Date.now();
       try {
         const model = this.genAI.getGenerativeModel({
           model: this.geminiModel,
+          ...(maxTokens ? { generationConfig: { maxOutputTokens: maxTokens } } : {}),
         });
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
@@ -215,7 +226,7 @@ export class MaikaService {
             body: JSON.stringify({
               model: 'deepseek/deepseek-chat-v3-0324:free',
               messages: [{ role: 'user', content: prompt }],
-              max_tokens: 512,
+              max_tokens: maxTokens ?? 512,
             }),
           },
         );

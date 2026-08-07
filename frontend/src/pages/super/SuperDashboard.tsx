@@ -137,7 +137,7 @@ export function SuperDashboard() {
     setPdfLoading(true)
     const t = toast.loading('Đang tạo PDF (bìa + đánh giá Maika)…')
     try {
-      const res = await api.get('/command-center/pdf', { params: params(), responseType: 'blob' })
+      const res = await api.get('/command-center/pdf', { params: params(), responseType: 'blob', timeout: 60000 })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
       a.href = url; a.download = 'trung-tam-dieu-hanh.pdf'; a.click()
@@ -151,7 +151,7 @@ export function SuperDashboard() {
   const runReview = async () => {
     setReviewLoading(true)
     try {
-      const res = await api.get('/command-center/ai-review', { params: params() })
+      const res = await api.get('/command-center/ai-review', { params: params(), timeout: 60000 })
       setReview({ sections: res.data?.data?.sections ?? {}, byAi: !!res.data?.data?.byAi })
     } catch {
       toast.error('Không tạo được đánh giá Maika')
