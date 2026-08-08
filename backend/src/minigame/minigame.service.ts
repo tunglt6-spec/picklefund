@@ -1575,7 +1575,7 @@ export class MinigameService {
     clubId: string,
     scoreA: number,
     scoreB: number,
-    opts?: { playedAt?: string; note?: string },
+    opts?: { playedAt?: string; note?: string; scoreDetail?: unknown },
   ) {
     const match = await this.prisma.minigameMatch.findUnique({
       where: { id: matchId },
@@ -1651,6 +1651,10 @@ export class MinigameService {
         playedAt: opts?.playedAt ? new Date(opts.playedAt) : new Date(),
         // Ghi chú trận (tùy chọn) — rỗng → null.
         note: opts?.note?.trim() ? opts.note.trim() : null,
+        // M9: chi tiết điểm đặc thù môn (set-by-set/tie-break...) — lưu JSON, scoreA/scoreB là tổng hợp (set thắng).
+        ...(opts?.scoreDetail !== undefined
+          ? { scoreDetail: (opts.scoreDetail ?? Prisma.JsonNull) as Prisma.InputJsonValue }
+          : {}),
       },
     });
 

@@ -44,6 +44,9 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   const [golfers, setGolfers] = useState<Golfer[]>([])
   const [rounds, setRounds] = useState(1)
   const [loading, setLoading] = useState(true)
+  // M8: Stableford = điểm cao nhất thắng (ngược stroke-play). Đọc từ settings.formatCode.
+  const [stableford, setStableford] = useState(false)
+  const scoreWord = stableford ? 'điểm' : 'gậy'
 
   // Thêm golfer
   const [pickIds, setPickIds] = useState<string[]>([])
@@ -63,6 +66,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
       const m = res.data?.data ?? res.data
       setGolfers((m?.golfers ?? []) as Golfer[])
       setRounds(Math.max(1, Number(m?.settings?.rounds) || 1))
+      setStableford(m?.settings?.formatCode === 'GOLF_STABLEFORD')
       // Đồng bộ trạng thái vào store để badge header không kẹt "Nháp" sau khi nhập điểm.
       if (m?.status) updateMinigame(id, { status: normalizeMinigameStatus(m.status) })
     } catch {
@@ -197,10 +201,10 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
       })
       .sort((a, b) => {
         if ((a.played > 0) !== (b.played > 0)) return a.played > 0 ? -1 : 1 // chưa có điểm xuống cuối
-        return a.total - b.total // tổng gậy nhỏ hơn đứng trên
+        return stableford ? b.total - a.total : a.total - b.total // Stableford: điểm cao trên; stroke: gậy thấp trên
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [golfers, memberName])
+  }, [golfers, memberName, stableford])
 
   if (!mg) {
     return <div className="flex-1 flex items-center justify-center"><p className="[color:var(--pf-color-muted)]">Không tìm thấy giải đấu</p></div>
@@ -227,7 +231,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⛳ Golf</span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⛳ Golf · {stableford ? 'Stableford' : 'Stroke-play'}</span>
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{rounds} vòng</span>
             </div>
             <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
@@ -347,7 +351,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           ) : (
             <>
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-sm [color:var(--pf-color-muted)]">Nhập số gậy mỗi golfer theo từng vòng.</p>
+                <p className="text-sm [color:var(--pf-color-muted)]">Nhập {stableford ? 'điểm Stableford' : 'số gậy'} mỗi golfer theo từng vòng.</p>
                 <button onClick={saveScores} disabled={savingScores}
                   className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-60 transition-colors">
                   <Save size={15} /> {savingScores ? 'Đang lưu...' : 'Lưu điểm'}
@@ -409,7 +413,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                       <th className="text-left font-semibold px-3 py-2.5">#</th>
                       <th className="text-left font-semibold px-3 py-2.5">Golfer</th>
                       <th className="text-center font-semibold px-2 py-2.5" title="Số vòng đã ghi">Vòng</th>
-                      <th className="text-center font-semibold px-3 py-2.5" title="Tổng gậy">Tổng gậy</th>
+                      <th className="text-center font-semibold px-3 py-2.5" title={`Tổng ${scoreWord}`}>Tổng {scoreWord}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -427,7 +431,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 </table>
               </div>
               <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
-                Stroke-play: <b>tổng gậy nhỏ nhất</b> đứng đầu. Golfer chưa ghi điểm xếp cuối.
+                {stableford ? <>Stableford: <b>tổng điểm cao nhất</b> đứng đầu.</> : <>Stroke-play: <b>tổng gậy nhỏ nhất</b> đứng đầu.</>} Golfer chưa ghi điểm xếp cuối.
               </p>
             </div>
             </>

@@ -123,6 +123,8 @@ class UpdateMatchScoreDto {
   // Ngày thi đấu (override playedAt tự set) + ghi chú trận — tùy chọn.
   @IsOptional() @IsDateString() playedAt?: string;
   @IsOptional() @IsString() @MaxLength(300) note?: string;
+  // M9: chi tiết set/tie-break (mảng {a,b} theo set). scoreA/scoreB = tổng hợp (số set thắng).
+  @IsOptional() @IsArray() scoreDetail?: Array<{ a: number; b: number }>;
 }
 
 class GenerateScheduleDto {
@@ -529,6 +531,7 @@ export class MinigameController {
       await this.svc.updateMatchScore(matchId, user.clubId, body.scoreA, body.scoreB, {
         playedAt: body.playedAt,
         note: body.note,
+        scoreDetail: body.scoreDetail,
       }),
     );
   }
