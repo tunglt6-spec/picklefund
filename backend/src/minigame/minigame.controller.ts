@@ -351,6 +351,17 @@ export class MinigameController {
     return ok(await this.svc.advanceKnockout(id, user.clubId), 'Đã tạo vòng kế tiếp');
   }
 
+  // M7: Group → Knockout — lấy top-N mỗi bảng sinh nhánh loại trực tiếp trong cùng giải.
+  @Post(':id/knockout-from-groups')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async knockoutFromGroups(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: { topN?: number },
+  ) {
+    return ok(await this.svc.generateKnockoutFromGroups(id, user.clubId, body?.topN ?? 2), 'Đã tạo nhánh loại trực tiếp từ vòng bảng');
+  }
+
   // ── GOLF (Pha 2) ──
   @Post(':id/golfers')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')

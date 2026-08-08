@@ -135,7 +135,7 @@ const TEAM_FORMATS_LIVE: FormatDef[] = [
   { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Knockout', dbFormat: 'GROUP_STAGE', implemented: true },
 ];
 const TEAM_FORMATS_PLANNED: FormatDef[] = [
-  { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại trực tiếp', sub: 'Group + Knockout', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có — tự nối bảng sang bracket' },
+  { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại trực tiếp', sub: 'Group + Knockout (tự nối top-N sang nhánh)', dbFormat: 'GROUP_STAGE', implemented: true },
   { code: 'LEAGUE', label: 'League', sub: 'Vòng tròn lượt đi/lượt về', dbFormat: 'GROUP_STAGE', implemented: true },
 ];
 

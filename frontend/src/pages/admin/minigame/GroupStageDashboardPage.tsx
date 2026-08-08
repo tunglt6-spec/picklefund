@@ -56,6 +56,23 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
     }
   }
 
+  // M7: Group → Knockout — khi vòng bảng xong, sinh nhánh loại trực tiếp top-N mỗi bảng.
+  const handleKnockoutFromGroups = async () => {
+    if (!id) return
+    if (!window.confirm('Tạo nhánh loại trực tiếp từ Top 2 mỗi bảng? (Vòng bảng phải đã nhập đủ kết quả)')) return
+    try {
+      await api.post(`/minigames/${id}/knockout-from-groups`, { topN: 2 })
+      resync?.()
+      toast.success('Đã tạo nhánh loại trực tiếp! Xem/nhập kết quả ở Lịch thi đấu.')
+      navigate(`/minigames/${id}/schedule`)
+    } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Tạo nhánh thất bại') }
+  }
+  const handleAdvanceKo = async () => {
+    if (!id) return
+    try { await api.post(`/minigames/${id}/knockout/advance`); resync?.(); toast.success('Đã tạo vòng KO kế tiếp!') }
+    catch (e: any) { toast.error(e?.response?.data?.message ?? 'Không tạo được vòng kế tiếp') }
+  }
+
   const navCards = [
     {
       label: 'Chia Bảng', desc: 'Chia/khóa bảng, kéo-chuyển người',
@@ -102,7 +119,24 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center">
+          <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center flex-wrap">
+            {allDone && (
+              <button
+                onClick={handleKnockoutFromGroups}
+                title="Lấy Top 2 mỗi bảng tạo nhánh loại trực tiếp"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
+                style={{ background: 'var(--pf-primary)' }}
+              >
+                <Trophy size={16} /> Tạo nhánh loại trực tiếp
+              </button>
+            )}
+            <button
+              onClick={handleAdvanceKo}
+              title="Sinh vòng KO kế tiếp (khi vòng KO hiện tại đủ kết quả)"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors md:w-auto"
+            >
+              Vòng KO kế tiếp
+            </button>
             {canFinish && (
               <button
                 onClick={handleEndTournament}

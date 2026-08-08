@@ -963,6 +963,70 @@ export class MinigameService {
     return this.findOne(id, clubId);
   }
 
+  /**
+   * M7: GROUP → KNOCKOUT — sau khi vòng bảng xong, lấy TOP-N mỗi bảng sinh nhánh loại trực tiếp
+   * trong CÙNG giải. Trận KO có groupId=null, round = (round bảng lớn nhất)+1 → advanceKnockout
+   * xử lý tiếp. Yêu cầu: format GROUP_STAGE, mọi trận bảng đã COMPLETED, chưa sinh KO trước đó.
+   * Seed chéo bảng (nhất bảng phân bố đều) + BYE walkover. Idempotent: chặn nếu đã có trận KO.
+   */
+  async generateKnockoutFromGroups(id: string, clubId: string, topN = 2) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.format !== 'GROUP_STAGE')
+      throw new BadRequestException('Chỉ áp dụng cho giải Vòng bảng.');
+    const n = Math.max(1, Math.min(4, Math.floor(topN) || 2));
+
+    const row = await this.prisma.minigame.findUnique({ where: { id }, select: { settings: true } });
+    const settings = this.asSettings(row?.settings);
+    const groups = (settings.groups as Array<{ id: string; name: string; memberKeys: string[] }> | undefined) ?? [];
+    if (groups.length === 0) throw new BadRequestException('Chưa chia bảng.');
+
+    const all = await this.prisma.minigameMatch.findMany({ where: { minigameId: id } });
+    const groupMatches = all.filter((m) => m.groupId);
+    if (groupMatches.length === 0) throw new BadRequestException('Chưa có lịch vòng bảng.');
+    if (groupMatches.some((m) => m.status !== 'COMPLETED'))
+      throw new BadRequestException('Vòng bảng chưa xong — còn trận chưa nhập kết quả.');
+    if (all.some((m) => !m.groupId)) throw new BadRequestException('Đã sinh nhánh loại trực tiếp rồi.');
+
+    const teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id } });
+    const teamByKey = new Map<string, (typeof teams)[number]>();
+    for (const t of teams) {
+      if (t.player1Id) teamByKey.set(t.player1Id, t);
+      if (t.player1GuestId) teamByKey.set(t.player1GuestId, t);
+      teamByKey.set(t.id, t); // môn đội: memberKey = id đội
+    }
+
+    // Xếp hạng trong từng bảng (points desc, wins desc) → lấy top-N (theo hàng ngang: nhất tất cả bảng, rồi nhì...).
+    const rankedPerGroup = groups.map((g) => {
+      const gTeams = g.memberKeys
+        .map((k) => teamByKey.get(k))
+        .filter((t): t is (typeof teams)[number] => !!t)
+        .sort((a, b) => b.points - a.points || b.wins - a.wins || a.losses - b.losses);
+      return gTeams.slice(0, n).map((t) => t.id);
+    });
+    const qualifiers: string[] = [];
+    for (let rank = 0; rank < n; rank++)
+      for (const g of rankedPerGroup) if (g[rank]) qualifiers.push(g[rank]);
+    if (qualifiers.length < 2) throw new BadRequestException('Không đủ đội đi tiếp để tạo nhánh.');
+
+    // Dựng nhánh vòng 1 (seed chuẩn + BYE) — round nối tiếp sau vòng bảng.
+    const maxGroupRound = Math.max(...groupMatches.map((m) => m.round));
+    const koRound = maxGroupRound + 1;
+    const size = this.nextPow2(qualifiers.length);
+    const bracket = this.seedOrder(size).map((seed) => (seed - 1 < qualifiers.length ? qualifiers[seed - 1] : null));
+    const koMatches: Prisma.MinigameMatchCreateManyInput[] = [];
+    for (let i = 0; i < size; i += 2) {
+      const a = bracket[i], b = bracket[i + 1], court = i / 2 + 1;
+      if (a && b) koMatches.push({ minigameId: id, teamAId: a, teamBId: b, round: koRound, leg: 1, courtNo: court });
+      else if (a || b) koMatches.push({ minigameId: id, teamAId: (a ?? b) as string, teamBId: null, round: koRound, leg: 1, courtNo: court, status: 'COMPLETED', winnerId: (a ?? b) as string });
+    }
+    await this.prisma.minigameMatch.createMany({ data: koMatches });
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...settings, knockoutStage: true, koTopN: n } as Prisma.InputJsonValue },
+    });
+    return this.findOne(id, clubId);
+  }
+
   // ── GOLF / LEADERBOARD (Pha 2) — stroke-play: golfer cá nhân + điểm gậy theo vòng ──
 
   /** Thêm golfer (thành viên CLB + khách tự do) vào giải golf. */
