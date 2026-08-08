@@ -6,6 +6,7 @@ import { FixedDoublesDashboardPage } from './FixedDoublesDashboardPage'
 import { GroupStageDashboardPage } from './GroupStageDashboardPage'
 import { FootballDashboardPage } from './FootballDashboardPage'
 import { GolfDashboardPage } from './GolfDashboardPage'
+import { KnockoutDashboardPage } from './KnockoutDashboardPage'
 
 export function MinigameDashboard() {
   const { id } = useParams<{ id: string }>()
@@ -26,6 +27,10 @@ export function MinigameDashboard() {
   }
   if (mg?.formatType === 'GROUP_STAGE') {
     return <GroupStageDashboardPage resync={resync} />
+  }
+  // M3: Loại trực tiếp nhóm vợt/đơn (single-elimination).
+  if (mg?.formatType === 'KNOCKOUT') {
+    return <KnockoutDashboardPage />
   }
   return <MinigameDashboardPage resync={resync} />
 }

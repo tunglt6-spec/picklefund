@@ -45,6 +45,7 @@ const RACKET_FMTS: FmtDef[] = [
   { code: 'AMERICANO', label: 'Đánh đôi ngẫu nhiên', sub: 'Random Doubles — đổi cặp mỗi vòng', dbFormat: 'RANDOM_DOUBLES', implemented: true },
   { code: 'ROUND_ROBIN', label: 'Vòng tròn (đôi cố định)', sub: 'Fixed Doubles Round Robin', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: true },
   { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng', sub: '1v1 theo bảng', dbFormat: 'GROUP_STAGE', implemented: true },
+  { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Single Elimination — nhánh đấu loại (đơn)', dbFormat: 'KNOCKOUT', implemented: true },
 ]
 const racket = (code: string, name: string, icon: string): Preset => ({
   code, name, icon, participantTypes: ['INDIVIDUAL', 'PAIR'], competitions: RACKET_COMPS, formats: RACKET_FMTS,

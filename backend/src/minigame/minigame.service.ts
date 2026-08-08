@@ -839,11 +839,8 @@ export class MinigameService {
    */
   async generateKnockout(id: string, clubId: string) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
-      throw new BadRequestException(
-        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
-      );
-
+    // M3: knockout TỔNG QUÁT cho mọi môn (bỏ khóa cứng football/basketball). Nhóm vợt/đơn chưa
+    // có đội → tự tạo "đội-đơn" từ người chơi (member + khách) rồi mới dựng nhánh.
     const existing = await this.prisma.minigameMatch.count({
       where: { minigameId: id },
     });
@@ -852,12 +849,20 @@ export class MinigameService {
         'Lịch thi đấu đã được cố định. Hãy xoá lịch hiện tại trước khi tạo lại.',
       );
 
-    const teams = await this.prisma.minigameTeam.findMany({
+    let teams = await this.prisma.minigameTeam.findMany({
       where: { minigameId: id },
       orderBy: { createdAt: 'asc' },
     });
+    // Nhóm vợt/đơn CHƯA có đội (0 đội) → tạo đội-đơn từ người chơi rồi mới dựng nhánh.
+    if (teams.length === 0) {
+      await this.ensureSinglePlayerTeams(id);
+      teams = await this.prisma.minigameTeam.findMany({
+        where: { minigameId: id },
+        orderBy: { createdAt: 'asc' },
+      });
+    }
     if (teams.length < 2)
-      throw new BadRequestException('Cần ít nhất 2 đội để tạo nhánh đấu.');
+      throw new BadRequestException('Cần ít nhất 2 đội/người chơi để tạo nhánh đấu.');
 
     const n = teams.length;
     const size = this.nextPow2(n);
@@ -913,11 +918,7 @@ export class MinigameService {
    * Chặn nếu vòng hiện tại còn trận chưa phân thắng bại (hòa → phải nhập tỉ số quyết định).
    */
   async advanceKnockout(id: string, clubId: string) {
-    const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
-      throw new BadRequestException(
-        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
-      );
+    await this.assertOwnership(id, clubId); // M3: knockout tổng quát — không khóa theo môn.
 
     const all = await this.prisma.minigameMatch.findMany({
       where: { minigameId: id },
@@ -1049,6 +1050,26 @@ export class MinigameService {
         status: { notIn: ['ACTIVE', 'COMPLETED', 'CANCELLED'] },
       },
       data: { status: 'ACTIVE', startedAt: new Date() },
+    });
+  }
+
+  /**
+   * M3: đảm bảo có "đội-đơn" (MinigameTeam chỉ player1) cho từng người chơi (member + khách) —
+   * để nhóm vợt/đơn dùng chung hạ tầng team/match cho knockout. No-op nếu đã có đội.
+   */
+  private async ensureSinglePlayerTeams(id: string) {
+    const count = await this.prisma.minigameTeam.count({
+      where: { minigameId: id },
+    });
+    if (count > 0) return;
+    const pool = await this.getPlayerPool(id);
+    if (pool.length === 0) return;
+    await this.prisma.minigameTeam.createMany({
+      data: pool.map((p) => ({
+        minigameId: id,
+        name: p.name || 'Người chơi',
+        ...this.slotCols('player1', p),
+      })),
     });
   }
 

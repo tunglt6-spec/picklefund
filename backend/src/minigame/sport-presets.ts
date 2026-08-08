@@ -104,8 +104,8 @@ const RACKET_RANDOM: FormatDef = {
 };
 /** Các thể thức nhóm vợt sẽ bật ở M2+ (engine chưa có). */
 const RACKET_FORMATS_PLANNED: FormatDef[] = [
-  { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Single Elimination', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có — engine bracket cho nhóm vợt đang phát triển' },
-  { code: 'DOUBLE_ELIMINATION', label: 'Loại kép', sub: 'Double Elimination', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M2)' },
+  { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Single Elimination — nhánh loại trực tiếp (đơn)', dbFormat: 'KNOCKOUT', implemented: true },
+  { code: 'DOUBLE_ELIMINATION', label: 'Loại kép', sub: 'Double Elimination', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M4)' },
   { code: 'LEAGUE', label: 'League', sub: 'Lượt đi/lượt về', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: false, note: 'Sắp có (M2)' },
   { code: 'MEXICANO', label: 'Mexicano', sub: 'Ghép cặp theo BXH mỗi vòng', dbFormat: 'RANDOM_DOUBLES', implemented: false, note: 'Sắp có (M2)' },
 ];

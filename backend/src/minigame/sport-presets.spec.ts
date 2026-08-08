@@ -53,6 +53,9 @@ describe('sport-presets registry', () => {
     expect(isImplementedCombo('PICKLEBALL', 'RANDOM_DOUBLES')).toBe(true);
     expect(isImplementedCombo('FOOTBALL', 'GROUP_STAGE')).toBe(true);
     expect(isImplementedCombo('GOLF', 'SINGLES')).toBe(true);
+    // M3: single-elimination nhóm vợt (dbFormat KNOCKOUT) đã có engine
+    expect(isImplementedCombo('PICKLEBALL', 'KNOCKOUT')).toBe(true);
+    expect(isImplementedCombo('TENNIS', 'KNOCKOUT')).toBe(true);
     // Chưa có engine (M2+) → phải là false để wizard không cho tạo invalid
     expect(isImplementedCombo('VOLLEYBALL', 'GROUP_STAGE')).toBe(false);
     expect(isImplementedCombo('CHESS', 'KNOCKOUT')).toBe(false);

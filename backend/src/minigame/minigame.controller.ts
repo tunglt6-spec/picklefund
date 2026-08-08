@@ -331,6 +331,26 @@ export class MinigameController {
     );
   }
 
+  // M3: KNOCKOUT TỔNG QUÁT (mọi môn — nhóm vợt/đơn/đội). Alias dùng chung engine đã tổng quát hóa;
+  // nhóm vợt tự tạo đội-đơn từ người chơi. Route football/* giữ nguyên (backward-compat).
+  @Post(':id/knockout')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async generateKnockoutGeneric(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.generateKnockout(id, user.clubId), 'Đã tạo nhánh đấu');
+  }
+
+  @Post(':id/knockout/advance')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async advanceKnockoutGeneric(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.advanceKnockout(id, user.clubId), 'Đã tạo vòng kế tiếp');
+  }
+
   // ── GOLF (Pha 2) ──
   @Post(':id/golfers')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
