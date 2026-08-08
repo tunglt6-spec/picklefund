@@ -62,8 +62,11 @@ describe('sport-presets registry', () => {
     expect(isImplementedCombo('CHESS', 'GROUP_STAGE')).toBe(true);
     expect(isImplementedCombo('VOLLEYBALL', 'GROUP_STAGE')).toBe(true);
     expect(isImplementedCombo('BILLIARDS', 'KNOCKOUT')).toBe(true);
-    // Chưa có engine (M5+): Running (time), tổ hợp/không tồn tại.
-    expect(isImplementedCombo('RUNNING', 'SINGLES')).toBe(false);
+    // M5: Chạy bộ (leaderboard thời gian) đã bật.
+    expect(isImplementedCombo('RUNNING', 'SINGLES')).toBe(true);
+    // Tổ hợp không hợp lệ / không tồn tại → false.
+    expect(isImplementedCombo('GOLF', 'GROUP_STAGE')).toBe(false);
+    expect(isImplementedCombo('FOOTBALL', 'RANDOM_DOUBLES')).toBe(false);
     expect(isImplementedCombo('KHONG_CO', 'GROUP_STAGE')).toBe(false);
   });
 });

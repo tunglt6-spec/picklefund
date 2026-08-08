@@ -6,6 +6,7 @@ import { FixedDoublesDashboardPage } from './FixedDoublesDashboardPage'
 import { GroupStageDashboardPage } from './GroupStageDashboardPage'
 import { FootballDashboardPage } from './FootballDashboardPage'
 import { GolfDashboardPage } from './GolfDashboardPage'
+import { RunningDashboardPage } from './RunningDashboardPage'
 import { KnockoutDashboardPage } from './KnockoutDashboardPage'
 
 export function MinigameDashboard() {
@@ -21,6 +22,10 @@ export function MinigameDashboard() {
   // Golf: dashboard bảng điểm (golfer cá nhân + tổng gậy).
   if (mg?.sport === 'GOLF') {
     return <GolfDashboardPage resync={resync} />
+  }
+  // Chạy bộ: leaderboard theo thời gian (M5).
+  if (mg?.sport === 'RUNNING') {
+    return <RunningDashboardPage />
   }
   if (mg?.formatType === 'FIXED_DOUBLES_ROUND_ROBIN') {
     return <FixedDoublesDashboardPage />

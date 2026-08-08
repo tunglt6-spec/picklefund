@@ -227,10 +227,12 @@ const PRESETS: SportPreset[] = [
     participantTypes: ['INDIVIDUAL'],
     competitions: [{ code: 'DISTANCE', label: 'Theo cự ly / nhóm', participantType: 'INDIVIDUAL' }],
     formats: [
-      { code: 'GOLF_STROKE_PLAY', label: 'Xếp hạng theo thời gian', sub: 'Time-based leaderboard', dbFormat: 'SINGLES', implemented: false, note: 'Sắp có (M2) — chấm theo thời gian về đích' },
+      { code: 'GOLF_STROKE_PLAY', label: 'Xếp hạng theo thời gian', sub: 'Tổng thời gian nhỏ nhất thắng', dbFormat: 'SINGLES', implemented: true },
     ],
     scoringModels: ['TIME_BASED'], dbScoringModel: 'LEADERBOARD', resourceTerm: 'Đường chạy / Làn',
-    matchRules: [], implemented: false,
+    matchRules: [
+      { key: 'rounds', label: 'Số lần chạy / cự ly', type: 'int', default: 1, min: 1, max: 8 },
+    ], implemented: true,
   },
   {
     code: 'CHESS', name: 'Cờ vua', icon: '♟️',

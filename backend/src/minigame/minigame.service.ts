@@ -972,8 +972,9 @@ export class MinigameService {
     dto: { memberIds?: string[]; guests?: { name: string }[] },
   ) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'GOLF')
-      throw new BadRequestException('Chức năng này chỉ dành cho giải golf.');
+    // M5: leaderboard cá nhân dùng chung cho Golf (tổng gậy) & Chạy bộ (tổng thời gian) — nhỏ nhất thắng.
+    if (mg.sport !== 'GOLF' && mg.sport !== 'RUNNING')
+      throw new BadRequestException('Chức năng này chỉ dành cho giải leaderboard (golf/chạy bộ).');
     const ids = [...new Set(dto.memberIds ?? [])];
     await this.assertMembersInClub(clubId, ids);
     const guestNames = this.cleanGuestNames(dto.guests);

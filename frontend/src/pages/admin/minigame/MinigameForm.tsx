@@ -65,7 +65,7 @@ const STEP_LABEL: Record<StepKey, string> = {
   participants: 'VĐV / Cặp / Đội', schedule: 'Lịch & địa điểm', confirm: 'Xác nhận',
 }
 
-type SportType = 'PICKLEBALL' | 'TENNIS' | 'BADMINTON' | 'TABLE_TENNIS' | 'FOOTBALL' | 'BASKETBALL' | 'GOLF'
+type SportType = 'PICKLEBALL' | 'TENNIS' | 'BADMINTON' | 'TABLE_TENNIS' | 'FOOTBALL' | 'BASKETBALL' | 'GOLF' | 'RUNNING' | 'CHESS' | 'XIANGQI' | 'BILLIARDS' | 'VOLLEYBALL' | 'AIR_VOLLEYBALL'
 const RACKET_SPORTS: SportType[] = ['PICKLEBALL', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS']
 
 interface FormState {
@@ -115,8 +115,10 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
   const [form, setForm] = useState<FormState>(DEFAULT)
   const isFootball = form.sport === 'FOOTBALL'
   const isBasketball = form.sport === 'BASKETBALL'
-  const isTeamSport = isFootball || isBasketball
+  const isTeamSport = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(form.sport)
   const isGolf = form.sport === 'GOLF'
+  const isRunning = form.sport === 'RUNNING'
+  const isLeaderboard = isGolf || isRunning // môn cá nhân leaderboard: golfer/VĐV thêm ở dashboard
   const [creating, setCreating] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [guestName, setGuestName] = useState('')
@@ -126,7 +128,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
   const selectedComp = preset.competitions.find(c => c.code === form.competition) ?? preset.competitions[0]
 
   // Danh sách bước áp dụng theo môn: team/golf không chọn thành viên lúc tạo (dựng đội/golfer sau).
-  const steps: StepKey[] = isTeamSport || isGolf
+  const steps: StepKey[] = isTeamSport || isLeaderboard
     ? ['info', 'competition', 'format', 'rules', 'schedule', 'confirm']
     : ['info', 'competition', 'format', 'rules', 'participants', 'schedule', 'confirm']
   const step = steps[Math.min(stepIdx, steps.length - 1)]
@@ -190,7 +192,14 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
     if (opt === 'FOOTBALL') set({ sport: 'FOOTBALL', formatType: 'GROUP_STAGE', formatCode: 'ROUND_ROBIN', allowDraw: true, winPoints: 3, drawPoints: 1 })
     else if (opt === 'BASKETBALL') set({ sport: 'BASKETBALL', formatType: 'GROUP_STAGE', formatCode: 'ROUND_ROBIN', allowDraw: false, winPoints: 2, drawPoints: 0 })
     else if (opt === 'GOLF') set({ sport: 'GOLF', formatType: 'SINGLES', formatCode: 'GOLF_STROKE_PLAY', allowDraw: false })
-    else set({ sport: opt, formatType: 'RANDOM_DOUBLES', formatCode: 'AMERICANO', allowDraw: false })
+    else if (opt === 'RUNNING') set({ sport: 'RUNNING', formatType: 'SINGLES', formatCode: 'GOLF_STROKE_PLAY', allowDraw: false })
+    else {
+      // Môn còn lại (racket/cờ/billiards/bóng chuyền): chọn thể thức implemented ĐẦU TIÊN của preset.
+      const p = presets.find(x => x.code === opt)
+      const f = p?.formats.find(x => x.implemented) ?? { dbFormat: 'RANDOM_DOUBLES', code: 'AMERICANO' }
+      const isTeam = ['VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(opt)
+      set({ sport: opt, formatType: f.dbFormat as MinigameFormatType, formatCode: f.code, allowDraw: isTeam })
+    }
   }
 
   const handleSubmit = async () => {
@@ -212,19 +221,19 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
       } catch (err: any) { toast.error(err?.response?.data?.message ?? `Tạo giải ${sportLabel} thất bại`) } finally { setCreating(false) }
       return
     }
-    if (isGolf && !isEdit) {
+    if (isLeaderboard && !isEdit) {
       setCreating(true)
       try {
         const res = await api.post('/minigames', {
-          name: form.name, format: 'SINGLES', sport: 'GOLF', scoringModel: 'LEADERBOARD',
+          name: form.name, format: 'SINGLES', sport: form.sport, scoringModel: 'LEADERBOARD',
           scheduledAt: form.scheduledAt || undefined,
           settings: { rounds: form.rounds, ...presetMeta },
         })
         const mgId: string = res.data?.data?.id
-        createMinigame({ id: mgId, clubId, name: form.name, startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT', groupSize: form.groupSize, allowDraw: false, winPoints: 0, drawPoints: 0, lossPoints: 0, notes: form.notes || undefined, createdBy: user?.id ?? 'user-1', formatType: 'SINGLES', sport: 'GOLF', scoringModel: 'LEADERBOARD', drawMode: form.drawMode })
-        toast.success('Đã tạo giải golf! Hãy thêm golfer.')
+        createMinigame({ id: mgId, clubId, name: form.name, startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT', groupSize: form.groupSize, allowDraw: false, winPoints: 0, drawPoints: 0, lossPoints: 0, notes: form.notes || undefined, createdBy: user?.id ?? 'user-1', formatType: 'SINGLES', sport: form.sport, scoringModel: 'LEADERBOARD', drawMode: form.drawMode })
+        toast.success(isRunning ? 'Đã tạo giải chạy bộ! Hãy thêm vận động viên.' : 'Đã tạo giải golf! Hãy thêm golfer.')
         navigate(`/minigames/${mgId}`)
-      } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Tạo giải golf thất bại') } finally { setCreating(false) }
+      } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Tạo giải thất bại') } finally { setCreating(false) }
       return
     }
     if (!isEdit && form.selectedMemberIds.length < 4) { toast.error('Cần ít nhất 4 thành viên'); return }
@@ -239,7 +248,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
     if (isEdit && id) {
       try {
         await api.put(`/minigames/${id}`, { name: form.name, settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, ...presetMeta } })
-        if (!isTeamSport && !isGolf) { await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload }); syncParticipants(id, selectedMembers) }
+        if (!isTeamSport && !isLeaderboard) { await api.post(`/minigames/${id}/participants`, { memberIds: realMemberIds, guests: guestPayload }); syncParticipants(id, selectedMembers) }
         updateMinigame(id, { name: form.name, description: form.description, startDate: form.startDate, endDate: form.endDate || undefined, notes: form.notes, groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, lossPoints: 0, formatType: form.formatType, drawMode: form.drawMode })
         toast.success('Đã cập nhật minigame!')
       } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Cập nhật minigame thất bại'); return }
@@ -382,16 +391,16 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {/* 4 · Luật thi đấu */}
           {step === 'rules' && (
             <div className="space-y-5">
-              {isGolf ? (
+              {isLeaderboard ? (
                 <div>
-                  <Label>Số vòng đấu ({form.rounds})</Label>
+                  <Label>{isRunning ? `Số lần chạy / cự ly (${form.rounds})` : `Số vòng đấu (${form.rounds})`}</Label>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {[{ r: 1, label: '1 vòng (18 hố)' }, { r: 2, label: '2 vòng' }, { r: 4, label: '4 vòng (giải lớn)' }].map(p => (
+                    {(isRunning ? [{ r: 1, label: '1 lần' }, { r: 2, label: '2 lần' }, { r: 3, label: '3 lần' }] : [{ r: 1, label: '1 vòng (18 hố)' }, { r: 2, label: '2 vòng' }, { r: 4, label: '4 vòng (giải lớn)' }]).map(p => (
                       <button key={p.r} type="button" onClick={() => set({ rounds: p.r })} className={cn('rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors', form.rounds === p.r ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]')}>{p.label}</button>
                     ))}
                   </div>
                   <input type="range" min={1} max={8} value={form.rounds} onChange={e => set({ rounds: +e.target.value })} className="w-full accent-[var(--pf-primary)]" />
-                  <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Mỗi vòng golfer ghi 1 số gậy. BXH tính <b>tổng gậy</b> — nhỏ nhất đứng đầu.</p>
+                  <p className="mt-2 text-xs [color:var(--pf-color-muted)]">{isRunning ? <>Mỗi lần ghi 1 thời gian về đích. BXH tính <b>tổng thời gian</b> — nhỏ nhất đứng đầu.</> : <>Mỗi vòng golfer ghi 1 số gậy. BXH tính <b>tổng gậy</b> — nhỏ nhất đứng đầu.</>}</p>
                 </div>
               ) : (
                 <>
@@ -506,9 +515,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   ['Thể thức', preset.formats.find(f => f.code === form.formatCode)?.label ?? form.formatType],
                   ['Tên giải', form.name || '—'],
                   ['Thời gian', form.startDate + (form.endDate ? ` → ${form.endDate}` : '')],
-                  ...(isGolf ? [['Số vòng', String(form.rounds)]] : []),
-                  ...(!isTeamSport && !isGolf ? [['Số VĐV/khách', String(form.selectedMemberIds.length)]] : []),
-                  ...(isTeamSport || isGolf ? [['Lưu ý', isGolf ? 'Golfer thêm sau khi tạo' : 'Đội & cầu thủ dựng sau khi tạo']] : []),
+                  ...(isLeaderboard ? [[isRunning ? 'Số lần chạy' : 'Số vòng', String(form.rounds)]] : []),
+                  ...(!isTeamSport && !isLeaderboard ? [['Số VĐV/khách', String(form.selectedMemberIds.length)]] : []),
+                  ...(isTeamSport || isLeaderboard ? [['Lưu ý', isRunning ? 'Vận động viên thêm sau khi tạo' : isGolf ? 'Golfer thêm sau khi tạo' : 'Đội & cầu thủ dựng sau khi tạo']] : []),
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between px-3 py-2">
                     <span className="[color:var(--pf-color-muted)]">{k}</span>
@@ -516,7 +525,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   </div>
                 ))}
               </div>
-              {!isTeamSport && !isGolf && form.selectedMemberIds.length < 4 && <p className="text-xs text-amber-700">Cần tối thiểu 4 VĐV/khách — quay lại bước "VĐV / Cặp / Đội".</p>}
+              {!isTeamSport && !isLeaderboard && form.selectedMemberIds.length < 4 && <p className="text-xs text-amber-700">Cần tối thiểu 4 VĐV/khách — quay lại bước "VĐV / Cặp / Đội".</p>}
             </div>
           )}
         </div>
@@ -529,8 +538,8 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {stepIdx < steps.length - 1 ? (
             <Button onClick={() => setStepIdx(s => s + 1)} disabled={!canNext()}>Tiếp theo <ChevronRight size={16} /></Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={creating || (!isTeamSport && !isGolf && form.selectedMemberIds.length < 4)}>
-              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isBasketball ? 'Tạo Giải Bóng Rổ' : isGolf ? 'Tạo Giải Golf' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Giải Đấu'}
+            <Button onClick={handleSubmit} disabled={creating || (!isTeamSport && !isLeaderboard && form.selectedMemberIds.length < 4)}>
+              <Check size={16} /> {isFootball ? 'Tạo Giải Bóng Đá' : isBasketball ? 'Tạo Giải Bóng Rổ' : isGolf ? 'Tạo Giải Golf' : isRunning ? 'Tạo Giải Chạy Bộ' : isEdit ? 'Lưu Thay Đổi' : 'Tạo Giải Đấu'}
             </Button>
           )}
         </div>
