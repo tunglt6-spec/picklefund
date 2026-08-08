@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Calendar, Users, Trophy, ClipboardList,
@@ -11,9 +12,9 @@ import { cn } from '../../../lib/utils'
 import api from '../../../lib/api'
 
 const RANK_ROW: Record<number, string> = {
-  1: 'bg-yellow-50',
+  1: '[background:var(--pf-color-warning-soft)]',
   2: '[background:var(--pf-surface-muted)]',
-  3: 'bg-amber-50',
+  3: '[background:var(--pf-color-warning-soft)]',
 }
 
 /** Dashboard riêng cho GROUP_STAGE (Vòng bảng): KPI đúng theo bảng/trận + điều hướng
@@ -25,6 +26,16 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
   const { getMinigame, getDashboard } = useMinigameStore()
   const mg = getMinigame(id!)
   const data = getDashboard(id!)
+  const [busy, setBusy] = useState(false)
+  // Nhánh loại trực tiếp tồn tại khi backend đã set settings.knockoutStage (POST /knockout-from-groups).
+  // KHÔNG suy từ store.matches: hydrate vòng bảng lọc bỏ trận KO (groupId=null) nên luôn thiếu.
+  const [hasKnockout, setHasKnockout] = useState(false)
+  useEffect(() => {
+    if (!id) return
+    api.get(`/minigames/${id}`)
+      .then(r => setHasKnockout(!!(r.data?.data ?? r.data)?.settings?.knockoutStage))
+      .catch(() => {/* non-critical: chỉ để quyết định hiển thị nút "Vòng KO kế tiếp" */})
+  }, [id])
 
   if (!mg || !data) {
     return (
@@ -47,12 +58,15 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
       ? `Còn ${remaining} trận chưa có kết quả. Vẫn kết thúc giải đấu?`
       : 'Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.'
     if (!window.confirm(msg)) return
+    setBusy(true)
     try {
       await api.post(`/minigames/${id}/end`)
       resync?.()
       toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -60,17 +74,21 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
   const handleKnockoutFromGroups = async () => {
     if (!id) return
     if (!window.confirm('Tạo nhánh loại trực tiếp từ Top 2 mỗi bảng? (Vòng bảng phải đã nhập đủ kết quả)')) return
+    setBusy(true)
     try {
       await api.post(`/minigames/${id}/knockout-from-groups`, { topN: 2 })
       resync?.()
       toast.success('Đã tạo nhánh loại trực tiếp! Xem/nhập kết quả ở Lịch thi đấu.')
       navigate(`/minigames/${id}/schedule`)
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Tạo nhánh thất bại') }
+    finally { setBusy(false) }
   }
   const handleAdvanceKo = async () => {
     if (!id) return
+    setBusy(true)
     try { await api.post(`/minigames/${id}/knockout/advance`); resync?.(); toast.success('Đã tạo vòng KO kế tiếp!') }
     catch (e: any) { toast.error(e?.response?.data?.message ?? 'Không tạo được vòng kế tiếp') }
+    finally { setBusy(false) }
   }
 
   const navCards = [
@@ -81,12 +99,12 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
     },
     {
       label: 'Lịch Thi Đấu', desc: 'Xem lịch & nhập kết quả',
-      icon: <CalendarDays size={18} className="text-white" />, bg: 'bg-sky-500',
+      icon: <CalendarDays size={18} className="text-white" />, bg: '[background:var(--pf-color-info)]',
       to: `/minigames/${id}/schedule`,
     },
     {
       label: 'Bảng Xếp Hạng', desc: 'BXH từng bảng + xuất ảnh/PDF',
-      icon: <BarChart2 size={18} className="text-white" />, bg: 'bg-amber-500',
+      icon: <BarChart2 size={18} className="text-white" />, bg: '[background:var(--pf-color-warning)]',
       to: `/minigames/${id}/standings`,
     },
   ]
@@ -123,26 +141,31 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
             {allDone && (
               <button
                 onClick={handleKnockoutFromGroups}
+                disabled={busy}
                 title="Lấy Top 2 mỗi bảng tạo nhánh loại trực tiếp"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
                 style={{ background: 'var(--pf-primary)' }}
               >
                 <Trophy size={16} /> Tạo nhánh loại trực tiếp
               </button>
             )}
-            <button
-              onClick={handleAdvanceKo}
-              title="Sinh vòng KO kế tiếp (khi vòng KO hiện tại đủ kết quả)"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors md:w-auto"
-            >
-              Vòng KO kế tiếp
-            </button>
+            {hasKnockout && (
+              <button
+                onClick={handleAdvanceKo}
+                disabled={busy}
+                title="Sinh vòng KO kế tiếp (khi vòng KO hiện tại đủ kết quả)"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
+              >
+                Vòng KO kế tiếp
+              </button>
+            )}
             {canFinish && (
               <button
                 onClick={handleEndTournament}
+                disabled={busy}
                 title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
-                style={{ background: allDone ? '#16A34A' : 'var(--pf-color-muted)' }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
+                style={{ background: allDone ? 'var(--pf-color-success)' : 'var(--pf-color-muted)' }}
               >
                 <Trophy size={16} /> Kết thúc giải đấu
               </button>
@@ -177,8 +200,8 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Trận Hoàn Thành</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
-                <Trophy size={18} className="text-green-600" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-success-soft)]">
+                <Trophy size={18} className="[color:var(--pf-color-success)]" />
               </span>
             </div>
             <div>
@@ -187,7 +210,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                 <span className="text-base font-normal [color:var(--pf-color-muted)]">/{kpi.totalMatches}</span>
               </p>
               <div className="mt-2 w-full rounded-full [background:var(--pf-color-muted-soft)] h-1.5">
-                <div className="h-1.5 rounded-full bg-green-500 transition-all duration-300"
+                <div className="h-1.5 rounded-full [background:var(--pf-color-success)] transition-all duration-300"
                   style={{ width: `${Math.min(kpi.completionRate, 100)}%` }} />
               </div>
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">{kpi.completionRate}% hoàn thành</p>
@@ -197,14 +220,14 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Chờ Nhập Điểm</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
-                <ClipboardList size={18} className="text-amber-600" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-warning-soft)]">
+                <ClipboardList size={18} className="[color:var(--pf-color-warning)]" />
               </span>
             </div>
             <div>
               <p className="text-3xl font-bold [color:var(--pf-text)]">{kpi.pendingMatches}</p>
               {kpi.pendingMatches > 0 && (
-                <span className="mt-1 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                <span className="mt-1 inline-flex items-center rounded-full [background:var(--pf-color-warning-soft)] px-2.5 py-0.5 text-xs font-medium [color:var(--pf-color-warning)]">
                   Cần xử lý
                 </span>
               )}
@@ -214,8 +237,8 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Dẫn Đầu</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100">
-                <Crown size={18} className="text-yellow-600" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-warning-soft)]">
+                <Crown size={18} className="[color:var(--pf-color-warning)]" />
               </span>
             </div>
             <div>
@@ -264,7 +287,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                     <p className="text-xs [color:var(--pf-primary)]">{group.memberIds.length} người chơi</p>
                   </div>
                   <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
-                    group.status === 'LOCKED' ? 'bg-green-100 text-green-700' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+                    group.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
                   )}>
                     {group.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
                   </span>
@@ -296,7 +319,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                         </td>
                         <td className="px-2 py-2 text-center [color:var(--pf-color-muted)]">{s.played}</td>
                         <td className="px-2 py-2 text-center [color:var(--pf-text)] font-medium">{s.won}</td>
-                        <td className={cn('px-2 py-2 text-center font-medium', s.pointDifference > 0 ? 'text-green-600' : s.pointDifference < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]')}>
+                        <td className={cn('px-2 py-2 text-center font-medium', s.pointDifference > 0 ? '[color:var(--pf-color-success)]' : s.pointDifference < 0 ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]')}>
                           {s.pointDifference > 0 ? `+${s.pointDifference}` : s.pointDifference}
                         </td>
                         <td className="px-3 py-2 text-center font-bold [color:var(--pf-text)]">{s.rankingPoints}</td>

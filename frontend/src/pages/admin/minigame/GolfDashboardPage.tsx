@@ -58,6 +58,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   // Nhập điểm: map `${golferId}:${round}` → chuỗi số gậy
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [savingScores, setSavingScores] = useState(false)
+  const [busy, setBusy] = useState(false) // guard cho hành động kết thúc giải
 
   const fetchDetail = useCallback(async () => {
     if (!id) return
@@ -141,13 +142,14 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   const handleEnd = async () => {
     if (!id) return
     if (!window.confirm('Kết thúc giải golf? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.')) return
+    setBusy(true)
     try {
       await api.post(`/minigames/${id}/end`)
       resync?.()
       toast.success('Đã kết thúc giải — đã lưu vào lịch sử CLB!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải')
-    }
+    } finally { setBusy(false) }
   }
 
   // ── Xuất ảnh/PDF bảng xếp hạng ──
@@ -231,7 +233,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
               <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700">⛳ Golf · {stableford ? 'Stableford' : 'Stroke-play'}</span>
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">⛳ Golf · {stableford ? 'Stableford' : 'Stroke-play'}</span>
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{rounds} vòng</span>
             </div>
             <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
@@ -239,7 +241,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
           {canFinish && (
-            <button onClick={handleEnd} className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto" style={{ background: '#16A34A' }}>
+            <button onClick={handleEnd} disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 md:w-auto" style={{ background: 'var(--pf-color-success)' }}>
               <Trophy size={16} /> Kết thúc giải đấu
             </button>
           )}
@@ -249,7 +251,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={cn('inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-                tab === t.key ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200')}>
+                tab === t.key ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)]')}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -287,7 +289,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                   {filteredMembers.map(m => (
                     <button key={m.id} onClick={() => togglePick(m.id)}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                        pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface)] border-[color:var(--pf-border)] hover:border-slate-300'
+                        pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface)] border-[color:var(--pf-border)] hover:border-[color:var(--pf-border)]'
                       }`}>
                       {pickIds.includes(m.id) && <X size={12} />} {m.fullName}
                     </button>
@@ -306,7 +308,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 {guests.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {guests.map((g, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs">
+                      <span key={i} className="inline-flex items-center gap-1 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] px-3 py-1 text-xs">
                         {g}<button onClick={() => setGuests(gs => gs.filter((_, j) => j !== i))}><X size={12} /></button>
                       </span>
                     ))}
@@ -331,9 +333,9 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 {golfers.map(g => (
                   <div key={g.id} className="rounded-[14px] border p-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center justify-between gap-2">
                     <span className="[color:var(--pf-text)] truncate text-sm font-medium">
-                      {nameOf(g)}{g.guestName && <span className="ml-1.5 text-[10px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">Khách</span>}
+                      {nameOf(g)}{g.guestName && <span className="ml-1.5 text-[10px] rounded [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] px-1.5 py-0.5">Khách</span>}
                     </span>
-                    <button onClick={() => removeGolfer(g.id, nameOf(g))} className="[color:var(--pf-color-muted)] hover:text-red-500" title="Xóa golfer"><Trash2 size={15} /></button>
+                    <button onClick={() => removeGolfer(g.id, nameOf(g))} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)]" title="Xóa golfer"><Trash2 size={15} /></button>
                   </div>
                 ))}
               </div>
@@ -402,8 +404,8 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           ) : (
             <>
               <div className="flex justify-end gap-2">
-                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200 transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
-                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:bg-slate-200 transition-colors"><FileDown size={14} /> Xuất PDF</button>
+                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
             <div id={`golf-lb-${id}`} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
               <div className="overflow-x-auto">
@@ -418,9 +420,9 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                   </thead>
                   <tbody>
                     {leaderboard.map((s, i) => (
-                      <tr key={s.id} className={cn('border-b last:border-0 border-[color:var(--pf-border)]', i === 0 && s.played > 0 && 'bg-amber-50/50')}>
+                      <tr key={s.id} className={cn('border-b last:border-0 border-[color:var(--pf-border)]', i === 0 && s.played > 0 && '[background:var(--pf-color-warning-soft)]')}>
                         <td className="px-3 py-2.5 [color:var(--pf-color-muted)]">
-                          {i === 0 && s.played > 0 ? <Crown size={16} className="text-amber-500" /> : i + 1}
+                          {i === 0 && s.played > 0 ? <Crown size={16} className="[color:var(--pf-color-warning)]" /> : i + 1}
                         </td>
                         <td className="px-3 py-2.5 font-medium [color:var(--pf-text)]">{s.name}</td>
                         <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.played}/{rounds}</td>

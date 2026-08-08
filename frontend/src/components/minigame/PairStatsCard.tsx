@@ -27,7 +27,7 @@ export function PairStatsCard({ pairStats }: Props) {
                 <span className="text-xs font-bold [color:var(--pf-color-muted)]">#{i + 1}</span>
                 <span className="text-sm font-medium [color:var(--pf-text)]">{p.memberAName} & {p.memberBName}</span>
               </div>
-              <span className="text-xs font-semibold text-green-600">{p.winRateTogether}% ({p.wonTogether}/{p.pairedCount})</span>
+              <span className="text-xs font-semibold [color:var(--pf-color-success)]">{p.winRateTogether}% ({p.wonTogether}/{p.pairedCount})</span>
             </div>
           ))}
         </div>
@@ -36,8 +36,8 @@ export function PairStatsCard({ pairStats }: Props) {
       {overusedPairs.length > 0 && (
         <div className="pt-3 border-t border-[color:var(--pf-border)] space-y-1.5">
           <div className="flex items-center gap-1.5 mb-1">
-            <AlertTriangle size={12} className="text-amber-500" />
-            <p className="text-xs font-semibold text-amber-700">Nên tránh ghép lại</p>
+            <AlertTriangle size={12} className="[color:var(--pf-color-warning)]" />
+            <p className="text-xs font-semibold [color:var(--pf-color-warning)]">Nên tránh ghép lại</p>
           </div>
           {overusedPairs.map(p => (
             <div key={`${p.memberAId}-${p.memberBId}-warn`} className="text-xs [color:var(--pf-color-muted)]">

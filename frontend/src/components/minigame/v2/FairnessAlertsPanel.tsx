@@ -17,7 +17,7 @@ export function FairnessAlertsPanel({ alerts, onAction }: FairnessAlertsPanelPro
   return (
     <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
       <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle size={18} className="text-amber-500" />
+        <AlertTriangle size={18} className="[color:var(--pf-color-warning)]" />
         <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Cảnh Báo &amp; Nhắc Nhở
         </h2>
@@ -35,23 +35,23 @@ export function FairnessAlertsPanel({ alerts, onAction }: FairnessAlertsPanelPro
             const isMed = alert.level === 'MED';
 
             const containerCls = isHigh
-              ? 'bg-red-50 border-l-4 border-red-500'
+              ? '[background:var(--pf-color-danger-soft)] border-l-4 [border-color:var(--pf-color-danger)]'
               : isMed
-              ? 'bg-amber-50 border-l-4 border-amber-400'
-              : 'bg-sky-50 border-l-4 border-sky-400';
+              ? '[background:var(--pf-color-warning-soft)] border-l-4 [border-color:var(--pf-color-warning)]'
+              : '[background:var(--pf-color-info-soft)] border-l-4 [border-color:var(--pf-color-info)]';
 
             const IconComponent = isHigh ? AlertOctagon : isMed ? AlertTriangle : Info;
             const iconCls = isHigh
-              ? 'text-red-500'
+              ? '[color:var(--pf-color-danger)]'
               : isMed
-              ? 'text-amber-500'
-              : 'text-sky-500';
+              ? '[color:var(--pf-color-warning)]'
+              : '[color:var(--pf-color-info)]';
 
             const buttonCls = isHigh
-              ? 'text-red-600 hover:text-red-800'
+              ? '[color:var(--pf-color-danger)]'
               : isMed
-              ? 'text-amber-600 hover:text-amber-800'
-              : 'text-sky-600 hover:text-sky-800';
+              ? '[color:var(--pf-color-warning)]'
+              : '[color:var(--pf-color-info)]';
 
             return (
               <li

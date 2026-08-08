@@ -37,6 +37,8 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   // Mốc thời gian ổn định: tính 1 lần qua lazy initializer khi mount
   // (không gọi Date.now() trực tiếp trong render path, không recalculate mỗi render).
   const [now] = useState(() => Date.now())
+  // Chặn double-submit cho các thao tác async (bốc vòng / kết thúc / lưu điểm).
+  const [busy, setBusy] = useState(false)
 
   const { getMinigame, getTournamentDashboard, getRecentActivity, lockRound, enterDoublesMatchResult, removeParticipant, updateParticipant } = useMinigameStore()
 
@@ -72,12 +74,15 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       ? `Còn ${remaining} trận chưa có kết quả. Vẫn kết thúc giải đấu?`
       : 'Kết thúc giải đấu? Trạng thái chuyển "Hoàn Thành" và lưu vào lịch sử CLB.'
     if (!window.confirm(msg)) return
+    setBusy(true)
     try {
       await api.post(`/minigames/${id}/end`)
       resync?.()
       toast.success('Đã kết thúc giải đấu — đã lưu vào lịch sử CLB!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi kết thúc giải đấu')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -202,15 +207,20 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
   const handleSaveScore = async () => {
     if (scoreEntryMatchId) {
-      if (backend) {
-        try {
-          await api.patch(`/minigames/matches/${scoreEntryMatchId}/score`, { scoreA: score1, scoreB: score2 })
-          resync?.()
-        } catch (e: any) {
-          toast.error(e?.response?.data?.message ?? 'Lưu kết quả thất bại')
+      setBusy(true)
+      try {
+        if (backend) {
+          try {
+            await api.patch(`/minigames/matches/${scoreEntryMatchId}/score`, { scoreA: score1, scoreB: score2 })
+            resync?.()
+          } catch (e: any) {
+            toast.error(e?.response?.data?.message ?? 'Lưu kết quả thất bại')
+          }
+        } else {
+          enterDoublesMatchResult(scoreEntryMatchId, score1, score2)
         }
-      } else {
-        enterDoublesMatchResult(scoreEntryMatchId, score1, score2)
+      } finally {
+        setBusy(false)
       }
     }
     setScoreEntryMatchId(null)
@@ -220,18 +230,23 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
   // Đánh đôi ngẫu nhiên: backend bốc vòng mới (persist) rồi đồng bộ; local dùng modal mock.
   const handleDrawRound = async (mode: 'random' | 'mexicano' = 'random') => {
-    if (backend) {
-      try {
-        const ep = mode === 'mexicano' ? `/minigames/${id}/draw-round-mexicano` : `/minigames/${id}/draw-round`
-        const res = await api.post(ep)
-        const d = res.data?.data
-        resync?.()
-        toast.success(d ? `Đã bốc vòng ${d.round} — ${d.matches} trận${d.sitOut ? `, ${d.sitOut} nghỉ` : ''}` : 'Đã bốc vòng mới')
-      } catch (e: any) {
-        toast.error(e?.response?.data?.message ?? 'Bốc vòng thất bại')
+    setBusy(true)
+    try {
+      if (backend) {
+        try {
+          const ep = mode === 'mexicano' ? `/minigames/${id}/draw-round-mexicano` : `/minigames/${id}/draw-round`
+          const res = await api.post(ep)
+          const d = res.data?.data
+          resync?.()
+          toast.success(d ? `Đã bốc vòng ${d.round} — ${d.matches} trận${d.sitOut ? `, ${d.sitOut} nghỉ` : ''}` : 'Đã bốc vòng mới')
+        } catch (e: any) {
+          toast.error(e?.response?.data?.message ?? 'Bốc vòng thất bại')
+        }
+      } else {
+        setIsDrawModalOpen(true)
       }
-    } else {
-      setIsDrawModalOpen(true)
+    } finally {
+      setBusy(false)
     }
   }
   // Hoàn thành lượt: persist server (settings.lockedRounds) rồi resync — trước đây chỉ set store
@@ -338,9 +353,10 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             {canFinish && (
               <button
                 onClick={handleEndTournament}
+                disabled={busy}
                 title={allDone ? 'Kết thúc giải đấu — chuyển Hoàn Thành & lưu lịch sử CLB' : 'Còn trận chưa xong — vẫn có thể kết thúc'}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors md:w-auto"
-                style={{ background: allDone ? '#16A34A' : 'var(--pf-color-muted)' }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[filter:brightness(0.92)] disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
+                style={{ background: allDone ? 'var(--pf-color-success)' : 'var(--pf-color-muted)' }}
               >
                 <Trophy size={16} /> Kết thúc giải đấu
               </button>
@@ -348,7 +364,8 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             {/* Primary CTA — bốc vòng mới. Backend → persist qua API + resync; local → modal. */}
             <button
               onClick={() => handleDrawRound('random')}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
+              disabled={busy}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
             >
               <Shuffle size={16} />
               Bốc ngẫu nhiên (Americano)
@@ -356,7 +373,8 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             {/* M6: Mexicano — bốc vòng ghép theo BXH (yêu cầu vòng trước đủ kết quả). */}
             <button
               onClick={() => handleDrawRound('mexicano')}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors hover:[background:var(--pf-primary)] hover:text-white md:w-auto"
+              disabled={busy}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
             >
               <Shuffle size={16} />
               Bốc theo BXH (Mexicano)
@@ -428,7 +446,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
                 <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 1</p>
                 <p className="text-sm font-medium [color:var(--pf-text)]">
-                  {scoreEntryMatch.team1[0].memberName} &amp; {scoreEntryMatch.team1[1].memberName}
+                  {scoreEntryMatch.team1?.[0]?.memberName ?? 'VĐV'} &amp; {scoreEntryMatch.team1?.[1]?.memberName ?? 'VĐV'}
                 </p>
               </div>
 
@@ -461,7 +479,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
                 <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 2</p>
                 <p className="text-sm font-medium [color:var(--pf-text)]">
-                  {scoreEntryMatch.team2[0].memberName} &amp; {scoreEntryMatch.team2[1].memberName}
+                  {scoreEntryMatch.team2?.[0]?.memberName ?? 'VĐV'} &amp; {scoreEntryMatch.team2?.[1]?.memberName ?? 'VĐV'}
                 </p>
               </div>
             </div>
@@ -475,7 +493,8 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               </button>
               <button
                 onClick={handleSaveScore}
-                className="flex-1 py-2.5 px-4 rounded-xl [background:var(--pf-primary)] text-white text-sm font-medium hover:[background:var(--pf-primary-hover)] transition-colors"
+                disabled={busy}
+                className="flex-1 py-2.5 px-4 rounded-xl [background:var(--pf-primary)] text-white text-sm font-medium hover:[background:var(--pf-primary-hover)] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 Lưu Kết Quả
               </button>
@@ -495,8 +514,8 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <UserMinus size={18} className="text-red-600" />
+              <div className="w-10 h-10 rounded-full [background:var(--pf-color-danger-soft)] flex items-center justify-center shrink-0">
+                <UserMinus size={18} className="[color:var(--pf-color-danger)]" />
               </div>
               <div>
                 <h3 className="text-base font-bold [color:var(--pf-text)]">Xóa thành viên</h3>
@@ -505,7 +524,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                 </p>
               </div>
             </div>
-            <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-5">
+            <p className="text-xs [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-lg px-3 py-2 mb-5">
               Lịch sử trận đấu của thành viên này vẫn được giữ nguyên.
             </p>
             <div className="flex gap-3">
@@ -517,7 +536,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-500 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl [background:var(--pf-color-danger)] text-white text-sm font-medium hover:[filter:brightness(0.92)] transition-colors"
               >
                 Xóa
               </button>

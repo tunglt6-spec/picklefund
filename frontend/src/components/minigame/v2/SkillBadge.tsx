@@ -12,16 +12,16 @@ interface SkillConfig {
 
 const SKILL_CONFIG: Record<SkillLevel, SkillConfig> = {
   Cao: {
-    badgeClass: 'bg-red-100 text-red-700',
-    dotClass: 'bg-red-500',
+    badgeClass: '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]',
+    dotClass: '[background:var(--pf-color-danger)]',
   },
   TB: {
-    badgeClass: 'bg-amber-100 text-amber-700',
-    dotClass: 'bg-amber-500',
+    badgeClass: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
+    dotClass: '[background:var(--pf-color-warning)]',
   },
   Thấp: {
-    badgeClass: 'bg-sky-100 text-sky-700',
-    dotClass: 'bg-sky-500',
+    badgeClass: '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
+    dotClass: '[background:var(--pf-color-info)]',
   },
 };
 

@@ -7,9 +7,9 @@ const STATUS_LABEL: Record<MiniGameRound['status'], string> = {
 }
 const STATUS_CLASS: Record<MiniGameRound['status'], string> = {
   DRAFT: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
-  ACTIVE: 'bg-amber-100 text-amber-700',
+  ACTIVE: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
   LOCKED: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
-  COMPLETED: 'bg-green-100 text-green-700',
+  COMPLETED: '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]',
 }
 
 interface Props {

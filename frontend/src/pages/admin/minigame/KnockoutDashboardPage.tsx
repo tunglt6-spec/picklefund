@@ -49,7 +49,7 @@ export function KnockoutDashboardPage() {
   const [edits, setEdits] = useState<Record<string, { a: string; b: string }>>({})
   const [formatCode, setFormatCode] = useState<string>('')
   // Đọc formatCode để biết là Loại kép (DE) hay Loại đơn khi CHƯA có trận.
-  useEffect(() => { if (id) api.get(`/minigames/${id}`).then(r => setFormatCode((r.data?.data ?? r.data)?.settings?.formatCode ?? '')).catch(() => {}) }, [id])
+  useEffect(() => { if (id) api.get(`/minigames/${id}`).then(r => setFormatCode((r.data?.data ?? r.data)?.settings?.formatCode ?? '')).catch(() => {/* non-critical: formatCode chỉ để hiển thị nhãn */}) }, [id])
 
   // DE nếu có trận gắn bracket WB/LB/GF, hoặc formatCode = DOUBLE_ELIMINATION (trước khi tạo).
   const de = matches.some(m => DE_BRACKETS.includes(m.groupId ?? '')) || formatCode === 'DOUBLE_ELIMINATION'
@@ -108,8 +108,8 @@ export function KnockoutDashboardPage() {
     return (
       <div key={m.id} className="rounded-xl border [background:var(--pf-surface)] border-[color:var(--pf-border)] shadow-sm overflow-hidden">
         {[{ tid: m.teamAId, sc: m.scoreA, key: 'a' as const }, { tid: m.teamBId, sc: m.scoreB, key: 'b' as const }].map((side, i) => (
-          <div key={i} className={cn('flex items-center justify-between gap-2 px-3 py-2', i === 0 && 'border-b border-[color:var(--pf-border-soft)]', done && m.winnerId === side.tid && 'bg-green-50')}>
-            <span className={cn('text-sm truncate', done && m.winnerId === side.tid ? 'font-bold text-green-700' : '[color:var(--pf-text)]')}>{side.tid ? nameOf(side.tid) : (bye ? 'BYE' : 'Chờ...')}</span>
+          <div key={i} className={cn('flex items-center justify-between gap-2 px-3 py-2', i === 0 && 'border-b border-[color:var(--pf-border-soft)]', done && m.winnerId === side.tid && '[background:var(--pf-color-success-soft)]')}>
+            <span className={cn('text-sm truncate', done && m.winnerId === side.tid ? 'font-bold [color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{side.tid ? nameOf(side.tid) : (bye ? 'BYE' : 'Chờ...')}</span>
             {bye ? <span className="text-xs [color:var(--pf-color-muted)]">—</span>
               : done ? <span className="text-sm font-bold [color:var(--pf-text)]">{side.sc}</span>
               : side.tid ? <input inputMode="numeric" value={e[side.key]} onChange={ev => setEdits(s => ({ ...s, [m.id]: { ...e, [side.key]: ev.target.value.replace(/\D/g, '') } }))}
@@ -143,9 +143,9 @@ export function KnockoutDashboardPage() {
         <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>
 
         {champion && (
-          <div className="mb-5 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 text-center">
-            <Crown size={32} className="mx-auto text-amber-500" />
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-amber-700">Nhà vô địch</p>
+          <div className="mb-5 rounded-2xl border [border-color:var(--pf-color-warning-soft)] [background:var(--pf-color-warning-soft)] p-5 text-center">
+            <Crown size={32} className="mx-auto [color:var(--pf-color-warning)]" />
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-warning)]">Nhà vô địch</p>
             <p className="text-xl font-bold [color:var(--pf-text)]">{champion}</p>
           </div>
         )}

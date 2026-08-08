@@ -16,8 +16,8 @@ const typeConfig: Record<
   { dotColor: string; icon: React.ReactNode }
 > = {
   score: {
-    dotColor: 'bg-green-500',
-    icon: <Trophy size={14} className="text-green-500" />,
+    dotColor: '[background:var(--pf-color-success)]',
+    icon: <Trophy size={14} className="[color:var(--pf-color-success)]" />,
   },
   round: {
     dotColor: '[background:var(--pf-primary)]',
@@ -28,7 +28,7 @@ const typeConfig: Record<
     icon: <Users size={14} className="[color:var(--pf-primary)]" />,
   },
   system: {
-    dotColor: 'bg-slate-400',
+    dotColor: '[background:var(--pf-color-muted)]',
     icon: <Settings size={14} className="[color:var(--pf-color-muted)]" />,
   },
 }

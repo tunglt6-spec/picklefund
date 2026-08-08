@@ -21,14 +21,14 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
   const statusChip = () => {
     if (status === 'COMPLETED') {
       return (
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">
           ✓ Xong
         </span>
       )
     }
     if (status === 'PENDING_RESULT') {
       return (
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">
           ⏳ Chờ điểm
         </span>
       )
@@ -45,11 +45,11 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
       const team1Won = score1 > score2
       return (
         <div className="flex items-center justify-center gap-2 my-2">
-          <span className={`text-2xl font-bold ${team1Won ? 'text-green-600' : 'text-red-500'}`}>
+          <span className={`text-2xl font-bold ${team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]'}`}>
             {score1}
           </span>
           <span className="[color:var(--pf-color-muted)] font-semibold text-lg">:</span>
-          <span className={`text-2xl font-bold ${!team1Won ? 'text-green-600' : 'text-red-500'}`}>
+          <span className={`text-2xl font-bold ${!team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]'}`}>
             {score2}
           </span>
         </div>
@@ -58,9 +58,9 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
     if (status === 'PENDING_RESULT') {
       return (
         <div className="flex items-center justify-center gap-2 my-2">
-          <span className="text-2xl font-bold text-amber-500">?</span>
+          <span className="text-2xl font-bold [color:var(--pf-color-warning)]">?</span>
           <span className="[color:var(--pf-color-muted)] font-semibold text-lg">:</span>
-          <span className="text-2xl font-bold text-amber-500">?</span>
+          <span className="text-2xl font-bold [color:var(--pf-color-warning)]">?</span>
         </div>
       )
     }

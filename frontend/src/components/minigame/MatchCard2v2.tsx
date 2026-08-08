@@ -22,7 +22,7 @@ export function MatchCard2v2({ match, onEnterScore }: Props) {
         {/* Team 1 */}
         <div className={cn(
           'rounded-lg px-3 py-2.5 text-center transition-colors',
-          team1Won ? 'bg-green-50 border border-green-200' : '[background:var(--pf-surface-muted)] border border-transparent'
+          team1Won ? '[background:var(--pf-color-success-soft)] border [border-color:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)] border border-transparent'
         )}>
           {team1Won && <p className="text-xs mb-1">🏆</p>}
           <p className="text-sm font-semibold [color:var(--pf-text)] leading-tight">{teamName(match.team1)}</p>
@@ -37,13 +37,13 @@ export function MatchCard2v2({ match, onEnterScore }: Props) {
           ) : (
             <p className="text-sm font-semibold [color:var(--pf-color-muted)]">VS</p>
           )}
-          {isDraw && <p className="text-xs text-amber-600 font-medium mt-0.5">Hòa</p>}
+          {isDraw && <p className="text-xs [color:var(--pf-color-warning)] font-medium mt-0.5">Hòa</p>}
         </div>
 
         {/* Team 2 */}
         <div className={cn(
           'rounded-lg px-3 py-2.5 text-center transition-colors',
-          team2Won ? 'bg-green-50 border border-green-200' : '[background:var(--pf-surface-muted)] border border-transparent'
+          team2Won ? '[background:var(--pf-color-success-soft)] border [border-color:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)] border border-transparent'
         )}>
           {team2Won && <p className="text-xs mb-1">🏆</p>}
           <p className="text-sm font-semibold [color:var(--pf-text)] leading-tight">{teamName(match.team2)}</p>

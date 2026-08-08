@@ -24,44 +24,44 @@ interface GroupCardProps {
 const BORDER_COLORS = [
   '[border-color:var(--pf-primary)]',
   '[border-color:var(--pf-primary)]',
-  'border-emerald-500',
-  'border-amber-500',
-  'border-rose-500',
+  '[border-color:var(--pf-color-success)]',
+  '[border-color:var(--pf-color-warning)]',
+  '[border-color:var(--pf-color-danger)]',
 ] as const
 
 const LABEL_COLORS = [
   '[color:var(--pf-primary)]',
   '[color:var(--pf-primary)]',
-  'text-emerald-600',
-  'text-amber-600',
-  'text-rose-600',
+  '[color:var(--pf-color-success)]',
+  '[color:var(--pf-color-warning)]',
+  '[color:var(--pf-color-danger)]',
 ] as const
 
 const PROGRESS_COLORS = [
   '[background:var(--pf-primary)]',
   '[background:var(--pf-primary)]',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
+  '[background:var(--pf-color-success)]',
+  '[background:var(--pf-color-warning)]',
+  '[background:var(--pf-color-danger)]',
 ] as const
 
 function SkillBadge({ skill }: { skill: 'Cao' | 'TB' | 'Thấp' }) {
   if (skill === 'Cao') {
     return (
-      <span className="text-xs bg-red-100 text-red-700 rounded-full px-1.5 py-0.5">
+      <span className="text-xs [background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)] rounded-full px-1.5 py-0.5">
         Cao
       </span>
     )
   }
   if (skill === 'TB') {
     return (
-      <span className="text-xs bg-amber-100 text-amber-700 rounded-full px-1.5 py-0.5">
+      <span className="text-xs [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] rounded-full px-1.5 py-0.5">
         TB
       </span>
     )
   }
   return (
-    <span className="text-xs bg-sky-100 text-sky-700 rounded-full px-1.5 py-0.5">
+    <span className="text-xs [background:var(--pf-color-info-soft)] [color:var(--pf-color-info)] rounded-full px-1.5 py-0.5">
       Thấp
     </span>
   )
@@ -107,7 +107,7 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
           <li key={member.id} className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               {member.isSeed && (
-                <Crown size={13} className="text-amber-400 shrink-0" />
+                <Crown size={13} className="[color:var(--pf-color-warning)] shrink-0" />
               )}
               <span className="text-sm [color:var(--pf-text)] truncate">{member.name}</span>
             </div>

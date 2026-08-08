@@ -3,15 +3,15 @@ import type { FairnessAlert } from '../../types/minigame'
 import { cn } from '../../lib/utils'
 
 const LEVEL_CLASS: Record<FairnessAlert['level'], string> = {
-  HIGH: 'bg-red-50 border-red-200 text-red-700',
-  MED: 'bg-orange-50 border-orange-200 text-orange-700',
-  LOW: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+  HIGH: '[background:var(--pf-color-danger-soft)] border-[color:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]',
+  MED: '[background:var(--pf-color-warning-soft)] border-[color:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
+  LOW: '[background:var(--pf-color-warning-soft)] border-[color:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
 }
 
 const LEVEL_DOT: Record<FairnessAlert['level'], string> = {
-  HIGH: 'bg-red-500',
-  MED: 'bg-orange-500',
-  LOW: 'bg-yellow-500',
+  HIGH: '[background:var(--pf-color-danger)]',
+  MED: '[background:var(--pf-color-warning)]',
+  LOW: '[background:var(--pf-color-warning)]',
 }
 
 interface Props {

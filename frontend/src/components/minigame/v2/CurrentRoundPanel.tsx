@@ -44,7 +44,7 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
       <div className="flex flex-col gap-1">
         <div className="w-full h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
           <div
-            className="h-2 rounded-full bg-green-500 transition-all duration-500"
+            className="h-2 rounded-full [background:var(--pf-color-success)] transition-all duration-500"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -60,7 +60,7 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
             {sitOuts.map((member) => (
               <span
                 key={member.id}
-                className="bg-orange-100 text-orange-700 rounded-full px-2 py-0.5 text-xs font-medium"
+                className="[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] rounded-full px-2 py-0.5 text-xs font-medium"
               >
                 {member.name}
               </span>
@@ -82,7 +82,7 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
       {allDone && onCompleteRound && (
         <button
           onClick={onCompleteRound}
-          className="mt-1 w-full flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-500 text-white text-sm font-semibold py-2.5 px-4 transition-colors"
+          className="mt-1 w-full flex items-center justify-center gap-2 rounded-xl [background:var(--pf-color-success)] hover:[background:var(--pf-color-success)] text-white text-sm font-semibold py-2.5 px-4 transition-colors"
         >
           <CheckCircle2 size={18} />
           Hoàn Thành Vòng

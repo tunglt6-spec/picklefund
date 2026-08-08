@@ -257,8 +257,8 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
                     <td className="py-1.5 [color:var(--pf-color-muted)]">{i + 1}</td>
                     <td className="py-1.5 font-medium [color:var(--pf-text)] truncate">{s.name}</td>
                     <td className="py-1.5 text-center">{s.P}</td>
-                    <td className="py-1.5 text-center text-emerald-600 font-medium">{s.W}</td>
-                    <td className="py-1.5 text-center text-red-500">{s.L}</td>
+                    <td className="py-1.5 text-center [color:var(--pf-color-success)] font-medium">{s.W}</td>
+                    <td className="py-1.5 text-center [color:var(--pf-color-danger)]">{s.L}</td>
                     <td className="py-1.5 text-right font-bold [color:var(--pf-primary)]">{s.Pts}</td>
                   </tr>
                 ))}
@@ -279,7 +279,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
             <>
               <li>• {featured.allowDraw ? 'Có Thắng / Hòa / Thua' : 'Chỉ có Thắng / Thua, không Hòa'}</li>
               <li>• Thắng: {featured.winPoints} điểm{featured.allowDraw ? ` · Hòa: ${featured.drawPoints}` : ''} · Thua: {featured.lossPoints}</li>
-              <li className="flex items-center gap-1 text-amber-600">🏆 Điểm cao nhất đoạt CUP</li>
+              <li className="flex items-center gap-1 [color:var(--pf-color-warning)]">🏆 Điểm cao nhất đoạt CUP</li>
             </>
           )}
         </ul>

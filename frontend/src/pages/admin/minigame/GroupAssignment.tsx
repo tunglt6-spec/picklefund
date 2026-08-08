@@ -34,6 +34,7 @@ export function GroupAssignment() {
   const [openMove, setOpenMove] = useState<string | null>(null)
   const [editingGroup, setEditingGroup] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [busy, setBusy] = useState(false)
   const isMobile = useIsMobile()
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export function GroupAssignment() {
   }
 
   const handleAutoGenerate = async () => {
+    setBusy(true)
     generateGroups(id!); generateSchedule(id!)
     try {
       await api.post(`/minigames/${id}/generate-teams`)
@@ -89,19 +91,25 @@ export function GroupAssignment() {
       toast.success('Đã chia bảng và tạo lịch thi đấu tự động!')
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Lưu bảng đấu lên server thất bại')
+    } finally {
+      setBusy(false)
     }
   }
 
   const handleLock = async () => {
+    setBusy(true)
     lockGroups(id!); generateSchedule(id!)
     try { await api.post(`/minigames/${id}/generate-schedule`); resync(); toast.success('Đã khóa bảng đấu và cập nhật lịch!') }
     catch (err: any) { toast.error(err?.response?.data?.message ?? 'Lưu lịch lên server thất bại') }
+    finally { setBusy(false) }
   }
 
   const handleCreateSchedule = async () => {
+    setBusy(true)
     generateSchedule(id!)
     try { await api.post(`/minigames/${id}/generate-schedule`); resync(); toast.success('Đã cập nhật lịch thi đấu!'); navigate(`/minigames/${id}/schedule`) }
     catch (err: any) { toast.error(err?.response?.data?.message ?? 'Lưu lịch lên server thất bại') }
+    finally { setBusy(false) }
   }
 
   const handleMove = async (memberId: string, targetGroupId: string) => {
@@ -111,7 +119,10 @@ export function GroupAssignment() {
   }
 
   const handleAddGroup = async () => { addGroup(id!); await persistGroups(false); toast.success('Đã thêm bảng mới') }
-  const handleRemoveGroup = async (groupId: string) => { removeGroup(id!, groupId); await persistGroups(); toast.success('Đã xóa bảng (người chơi về nhóm chưa xếp)') }
+  const handleRemoveGroup = async (groupId: string) => {
+    if (!window.confirm('Xóa bảng này? Các đội trong bảng sẽ trở lại danh sách chưa xếp.')) return
+    removeGroup(id!, groupId); await persistGroups(); toast.success('Đã xóa bảng (người chơi về nhóm chưa xếp)')
+  }
   const startRename = (groupId: string, name: string) => { setEditingGroup(groupId); setEditName(name) }
   const saveRename = async (groupId: string) => {
     const name = editName.trim(); setEditingGroup(null)
@@ -141,12 +152,12 @@ export function GroupAssignment() {
 
   const toolbar = (
     <div className="flex items-center gap-2 flex-wrap">
-      <Button size="sm" variant="outline" onClick={handleAutoGenerate}><Shuffle size={14} /> Chia Tự Động</Button>
+      <Button size="sm" variant="outline" onClick={handleAutoGenerate} disabled={busy}><Shuffle size={14} /> Chia Tự Động</Button>
       <Button size="sm" variant="outline" onClick={handleAddGroup}><Plus size={14} /> Thêm bảng</Button>
       {myGroups.length > 0 && (
         <>
-          <Button size="sm" variant="outline" onClick={handleLock}><Lock size={14} /> Khóa Bảng</Button>
-          <Button size="sm" onClick={handleCreateSchedule}><Calendar size={14} /> Xem Lịch Thi Đấu</Button>
+          <Button size="sm" variant="outline" onClick={handleLock} disabled={busy}><Lock size={14} /> Khóa Bảng</Button>
+          <Button size="sm" onClick={handleCreateSchedule} disabled={busy}><Calendar size={14} /> Xem Lịch Thi Đấu</Button>
         </>
       )}
     </div>
@@ -180,7 +191,7 @@ export function GroupAssignment() {
               {myParts.length} người tham gia. Chọn <b>Chia Tự Động</b> để hệ thống chia + tạo lịch, rồi tinh chỉnh thủ công; hoặc <b>Thêm bảng</b> rồi tự gán người.
             </p>
             <div className="flex gap-2 flex-wrap justify-center">
-              <Button onClick={handleAutoGenerate}><Shuffle size={16} /> Chia Bảng Tự Động</Button>
+              <Button onClick={handleAutoGenerate} disabled={busy}><Shuffle size={16} /> Chia Bảng Tự Động</Button>
               <Button variant="outline" onClick={handleAddGroup}><Plus size={16} /> Thêm bảng thủ công</Button>
             </div>
           </div>
@@ -188,14 +199,14 @@ export function GroupAssignment() {
           <>
             {/* Người chưa xếp bảng — có thể GÁN thủ công vào bảng */}
             {unassigned.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                <p className="text-sm font-semibold text-amber-700 mb-2">⚠️ {unassigned.length} người chưa được xếp bảng</p>
-                <div className="flex flex-col divide-y divide-amber-100">
+              <div className="[background:var(--pf-color-warning-soft)] border [border-color:var(--pf-color-warning-soft)] rounded-xl p-4 mb-4">
+                <p className="text-sm font-semibold [color:var(--pf-color-warning)] mb-2">⚠️ {unassigned.length} người chưa được xếp bảng</p>
+                <div className="flex flex-col divide-y divide-[color:var(--pf-color-warning-soft)]">
                   {unassigned.map(p => (
                     <div key={p.memberId} className="flex items-center justify-between py-1.5">
-                      <span className="text-sm text-amber-800 flex items-center gap-1.5">
+                      <span className="text-sm [color:var(--pf-color-warning)] flex items-center gap-1.5">
                         {p.memberName}
-                        {(p.isGuest || isGuestId(p.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white text-amber-700 border border-amber-200">Khách</span>}
+                        {(p.isGuest || isGuestId(p.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-surface)] [color:var(--pf-color-warning)] border [border-color:var(--pf-color-warning-soft)]">Khách</span>}
                       </span>
                       <MoveMenu memberId={p.memberId} />
                     </div>
@@ -223,11 +234,11 @@ export function GroupAssignment() {
                       {grp.status !== 'LOCKED' && editingGroup !== grp.id && (
                         <>
                           <button onClick={() => startRename(grp.id, grp.groupName)} title="Đổi tên" className="p-1 rounded [color:var(--pf-primary)] hover:bg-white/50"><Pencil size={13} /></button>
-                          <button onClick={() => handleRemoveGroup(grp.id)} title="Xóa bảng" className="p-1 rounded text-red-500 hover:bg-white/50"><Trash2 size={13} /></button>
+                          <button onClick={() => handleRemoveGroup(grp.id)} title="Xóa bảng" className="p-1 rounded [color:var(--pf-color-danger)] hover:bg-white/50"><Trash2 size={13} /></button>
                         </>
                       )}
-                      {editingGroup === grp.id && <button onMouseDown={e => e.preventDefault()} onClick={() => saveRename(grp.id)} className="p-1 rounded text-green-600 hover:bg-white/50"><Check size={14} /></button>}
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', grp.status === 'LOCKED' ? 'bg-green-100 text-green-700' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]')}>
+                      {editingGroup === grp.id && <button onMouseDown={e => e.preventDefault()} onClick={() => saveRename(grp.id)} className="p-1 rounded [color:var(--pf-color-success)] hover:bg-white/50"><Check size={14} /></button>}
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', grp.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]')}>
                         {grp.status === 'LOCKED' ? '🔒' : 'Mở'}
                       </span>
                     </div>

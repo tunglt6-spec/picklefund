@@ -1,13 +1,13 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import type { MiniGamePersonalStanding } from '../../types/minigame'
-
-const BAR_COLORS = ['#f59e0b', 'var(--pf-color-muted)', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
+import { pfChartPalette } from '../../lib/pfColor'
 
 interface Props {
   standings: MiniGamePersonalStanding[]
 }
 
 export function WinRateChart({ standings }: Props) {
+  const BAR_COLORS = pfChartPalette()
   const data = [...standings]
     .filter(s => s.played > 0)
     .sort((a, b) => b.winRate - a.winRate)

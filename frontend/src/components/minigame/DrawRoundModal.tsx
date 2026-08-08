@@ -182,7 +182,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
   const canPreview = selectedCount >= 4 && (!showInProgressGuard || acknowledgeInProgress)
 
   const fairnessColor = preview
-    ? preview.fairnessScore >= 80 ? 'text-emerald-600' : preview.fairnessScore >= 60 ? 'text-amber-600' : 'text-red-500'
+    ? preview.fairnessScore >= 80 ? '[color:var(--pf-color-success)]' : preview.fairnessScore >= 60 ? '[color:var(--pf-color-warning)]' : '[color:var(--pf-color-danger)]'
     : ''
 
   const confirmBlockedByGender = !!preview && preview.genderBalanceMode === 'REQUIRED' && !preview.genderRequirementMet
@@ -197,7 +197,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
       )}>
         {/* Drag handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 rounded-full bg-slate-200" />
+          <div className="w-10 h-1 rounded-full [background:var(--pf-color-muted-soft)]" />
         </div>
 
         {/* Header */}
@@ -220,17 +220,17 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
           {step === 'config' && (
             <div className="p-5 space-y-5">
               {showInProgressGuard && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-                  <p className="text-xs text-amber-700 flex items-start gap-1.5">
+                <div className="p-3 [background:var(--pf-color-warning-soft)] border [border-color:var(--pf-color-warning-soft)] rounded-xl space-y-2">
+                  <p className="text-xs [color:var(--pf-color-warning)] flex items-start gap-1.5">
                     <AlertCircle size={14} className="shrink-0 mt-0.5" />
                     ⚠ Vòng hiện tại còn {pendingCount} trận chưa hoàn thành. Tạo vòng mới sẽ không xóa lượt cũ nhưng nên hoàn thành lượt trước.
                   </p>
-                  <label className="flex items-center gap-2 text-xs text-amber-800 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs [color:var(--pf-color-warning)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={acknowledgeInProgress}
                       onChange={e => setAcknowledgeInProgress(e.target.checked)}
-                      className="w-3.5 h-3.5 accent-amber-600"
+                      className="w-3.5 h-3.5 accent-[var(--pf-color-warning)]"
                     />
                     Tôi hiểu, vẫn tiếp tục
                   </label>
@@ -302,7 +302,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                             'flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors',
                             genderBalanceMode === g.mode
                               ? '[background:var(--pf-primary)] text-white'
-                              : '[background:var(--pf-surface)] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:border-slate-300',
+                              : '[background:var(--pf-surface)] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] hover:border-[color:var(--pf-border)]',
                           )}
                         >
                           {g.label}
@@ -391,7 +391,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   ))}
                 </div>
                 {selectedCount < 4 && (
-                  <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs [color:var(--pf-color-danger)] mt-2 flex items-center gap-1">
                     <AlertCircle size={12} /> Cần chọn tối thiểu 4 thành viên
                   </p>
                 )}
@@ -411,7 +411,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   <p className="text-xs [color:var(--pf-color-muted)]">Lượt <span className="font-bold [color:var(--pf-text)]">#{preview.roundNumber}</span></p>
                   <p className="text-xs [color:var(--pf-color-muted)]">{preview.totalPlayers} người · {preview.totalMatches} trận</p>
                   {preview.sitOutCount > 0 && (
-                    <p className="text-xs text-amber-600 font-medium">{preview.sitOutCount} người ngồi ngoài</p>
+                    <p className="text-xs [color:var(--pf-color-warning)] font-medium">{preview.sitOutCount} người ngồi ngoài</p>
                   )}
                 </div>
               </div>
@@ -420,18 +420,18 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
               {preview.warnings.length > 0 && (
                 <div className="space-y-1.5">
                   {preview.warnings.map((w, i) => (
-                    <div key={i} className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg">
-                      <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-700">{w}</p>
+                    <div key={i} className="flex items-start gap-2 p-3 [background:var(--pf-color-warning-soft)] rounded-lg">
+                      <AlertCircle size={14} className="[color:var(--pf-color-warning)] shrink-0 mt-0.5" />
+                      <p className="text-xs [color:var(--pf-color-warning)]">{w}</p>
                     </div>
                   ))}
                 </div>
               )}
 
               {confirmBlockedByGender && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg">
-                  <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-600">Không thể xác nhận: chưa đạt yêu cầu cân bằng nam/nữ bắt buộc.</p>
+                <div className="flex items-start gap-2 p-3 [background:var(--pf-color-danger-soft)] rounded-lg">
+                  <AlertCircle size={14} className="[color:var(--pf-color-danger)] shrink-0 mt-0.5" />
+                  <p className="text-xs [color:var(--pf-color-danger)]">Không thể xác nhận: chưa đạt yêu cầu cân bằng nam/nữ bắt buộc.</p>
                 </div>
               )}
 
@@ -449,7 +449,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{m.matchNumber}</span>
                         <div className="flex items-center gap-1.5">
                           {m.isGenderBalanced && (
-                            <span className="text-[10px] bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded-full font-semibold">Nam/Nữ</span>
+                            <span className="text-[10px] [background:var(--pf-color-info-soft)] [color:var(--pf-color-info)] px-1.5 py-0.5 rounded-full font-semibold">Nam/Nữ</span>
                           )}
                           <span className="text-[10px] [color:var(--pf-color-muted)]">Chênh KN: {m.skillDiff}</span>
                         </div>
@@ -531,7 +531,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                           onClick={() => handleChipClick(chip)}
                           className={cn(
                             'text-xs px-2.5 py-1 rounded-full font-medium transition-colors',
-                            isSelected ? 'bg-slate-600 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:bg-slate-200',
+                            isSelected ? '[background:var(--pf-color-muted)] text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
                           )}
                         >
                           {p.memberName}
@@ -609,7 +609,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                 className={cn(
                   'flex-[2] py-2.5 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors',
                   preview && !confirmBlockedByGender
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-500'
+                    ? '[background:var(--pf-color-success)] text-white hover:[background:var(--pf-color-success)]'
                     : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] cursor-not-allowed',
                 )}
               >

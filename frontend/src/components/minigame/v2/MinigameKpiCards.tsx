@@ -40,8 +40,8 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Trận Hoàn Thành
           </span>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
-            <Trophy size={18} className="text-green-600" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-success-soft)]">
+            <Trophy size={18} className="[color:var(--pf-color-success)]" />
           </span>
         </div>
         <div>
@@ -53,7 +53,7 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
           </p>
           <div className="mt-2 w-full rounded-full [background:var(--pf-color-muted-soft)] h-1.5">
             <div
-              className="h-1.5 rounded-full bg-green-500 transition-all duration-300"
+              className="h-1.5 rounded-full [background:var(--pf-color-success)] transition-all duration-300"
               style={{ width: `${Math.min(kpi.completionRate, 100)}%` }}
             />
           </div>
@@ -67,14 +67,14 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Chờ Nhập Điểm
           </span>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
-            <ClipboardList size={18} className="text-amber-600" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-warning-soft)]">
+            <ClipboardList size={18} className="[color:var(--pf-color-warning)]" />
           </span>
         </div>
         <div>
           <p className="text-3xl font-bold [color:var(--pf-text)]">{kpi.pendingResultMatches}</p>
           {kpi.pendingResultMatches > 0 && (
-            <span className="mt-1 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+            <span className="mt-1 inline-flex items-center rounded-full [background:var(--pf-color-warning-soft)] px-2.5 py-0.5 text-xs font-medium [color:var(--pf-color-warning)]">
               Cần xử lý
             </span>
           )}

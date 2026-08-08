@@ -13,6 +13,7 @@ import { useClubDataStore } from '../../../store/clubDataStore'
 import { useAuthStore } from '../../../store/authStore'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
+import { LoadingState } from '../../../components/shared/LoadingState'
 import api from '../../../lib/api'
 import { cn } from '../../../lib/utils'
 
@@ -71,6 +72,7 @@ export function RunningDashboardPage() {
     } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Thêm VĐV thất bại') } finally { setBusy(false) }
   }
   const removeRunner = async (rid: string) => {
+    if (!window.confirm('Xóa VĐV này?')) return
     setBusy(true)
     try { await api.delete(`/minigames/golfers/${rid}`); await fetchDetail(); toast.success('Đã xóa') }
     catch (err: any) { toast.error(err?.response?.data?.message ?? 'Xóa thất bại') } finally { setBusy(false) }
@@ -91,6 +93,9 @@ export function RunningDashboardPage() {
       <PageHeader title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu" />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
         <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> {mg.name}</button>
+
+        {/* Đang tải lần đầu: hiện skeleton trước khi có dữ liệu VĐV */}
+        {loading && runners.length === 0 && <LoadingState variant="list" rows={4} />}
 
         {/* Thêm VĐV */}
         <div className="rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
@@ -134,7 +139,7 @@ export function RunningDashboardPage() {
                       </td>
                     })}
                     <td className="py-2 px-1 text-right font-bold [color:var(--pf-text)]">{completedCount(r) > 0 ? fmt(totalOf(r)) : '–'}</td>
-                    <td><button onClick={() => removeRunner(r.id)} className="text-red-500"><Trash2 size={14} /></button></td>
+                    <td><button onClick={() => removeRunner(r.id)} className="[color:var(--pf-color-danger)]"><Trash2 size={14} /></button></td>
                   </tr>
                 ))}
               </tbody>
@@ -150,7 +155,7 @@ export function RunningDashboardPage() {
               {leaderboard.map((r, i) => (
                 <div key={r.id} className={cn('flex items-center justify-between py-2', i === 0 && 'font-bold')}>
                   <span className="flex items-center gap-2 [color:var(--pf-text)]">
-                    {i === 0 ? <Crown size={16} className="text-amber-500" /> : <span className="w-6 text-center [color:var(--pf-color-muted)]">{i + 1}</span>}
+                    {i === 0 ? <Crown size={16} className="[color:var(--pf-color-warning)]" /> : <span className="w-6 text-center [color:var(--pf-color-muted)]">{i + 1}</span>}
                     {runnerName(r)}
                   </span>
                   <span className="[color:var(--pf-text)]">{fmt(totalOf(r))}</span>

@@ -28,17 +28,17 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   // ACTIVE = status backend (Prisma) cho "đang diễn ra" — map hiển thị như IN_PROGRESS.
   ACTIVE: {
     label: 'Đang Diễn Ra',
-    badgeClass: 'bg-amber-100 text-amber-700',
-    dotClass: 'bg-amber-500',
+    badgeClass: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
+    dotClass: '[background:var(--pf-color-warning)]',
     pulse: true,
   },
   GROUPED: {
     label: 'Đã Chia Bảng',
-    badgeClass: 'bg-sky-100 text-sky-700',
+    badgeClass: '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
   },
   PAIRED: {
     label: 'Đã Bốc Thăm',
-    badgeClass: 'bg-sky-100 text-sky-700',
+    badgeClass: '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
   },
   SCHEDULED: {
     label: 'Có Lịch',
@@ -46,17 +46,17 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
   IN_PROGRESS: {
     label: 'Đang Diễn Ra',
-    badgeClass: 'bg-amber-100 text-amber-700',
-    dotClass: 'bg-amber-500',
+    badgeClass: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
+    dotClass: '[background:var(--pf-color-warning)]',
     pulse: true,
   },
   COMPLETED: {
     label: 'Hoàn Thành',
-    badgeClass: 'bg-green-100 text-green-700',
+    badgeClass: '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]',
   },
   CANCELLED: {
     label: 'Đã Hủy',
-    badgeClass: 'bg-red-100 text-red-700',
+    badgeClass: '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]',
   },
 };
 

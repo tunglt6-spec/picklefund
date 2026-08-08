@@ -11,6 +11,7 @@ import { isGuestId } from '../../../types/minigame'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { cn } from '../../../lib/utils'
+import { pfChartPalette } from '../../../lib/pfColor'
 import {
   shareInfographic, canShare,
 } from '../../../components/reports/infographic/infographic.utils'
@@ -28,14 +29,14 @@ const FORMAT_LABEL: Record<string, string> = {
 }
 
 const RANK_CLASS: Record<number, string> = {
-  1: 'bg-yellow-50 border-l-2 border-yellow-400',
-  2: '[background:var(--pf-surface-muted)] border-l-2 border-slate-400',
-  3: 'bg-amber-50 border-l-2 border-amber-400',
+  1: '[background:var(--pf-color-warning-soft)] border-l-2 border-[color:var(--pf-color-warning-soft)]',
+  2: '[background:var(--pf-surface-muted)] border-l-2 border-[color:var(--pf-border)]',
+  3: '[background:var(--pf-color-warning-soft)] border-l-2 border-[color:var(--pf-color-warning-soft)]',
 }
 
-const BAR_COLORS = ['#f59e0b', 'var(--pf-color-muted)', '#f97316', '#6D5DFB', '#22c55e', '#06b6d4', '#ec4899', '#8b5cf6']
-
 export function StandingsPage() {
+  // Resolve token→màu cụ thể: var() không hợp lệ trong SVG fill của recharts <Cell>.
+  const BAR_COLORS = pfChartPalette()
   const { id } = useParams<{ id: string }>()
   useMinigameDetailSync(id)
   const navigate = useNavigate()
@@ -199,9 +200,9 @@ export function StandingsPage() {
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-[13px] font-bold',
-                  s.overallRank === 1 ? 'bg-yellow-400 text-white' :
-                  s.overallRank === 2 ? 'bg-slate-400 text-white' :
-                  s.overallRank === 3 ? 'bg-amber-500 text-white' :
+                  s.overallRank === 1 ? '[background:var(--pf-color-warning)] text-white' :
+                  s.overallRank === 2 ? '[background:var(--pf-color-muted)] text-white' :
+                  s.overallRank === 3 ? '[background:var(--pf-color-warning)] text-white' :
                   '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
                 )}>
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
@@ -219,10 +220,10 @@ export function StandingsPage() {
               <div className="grid grid-cols-5 gap-1.5">
                 {[
                   { label: 'Trận', value: s.played, cls: '[color:var(--pf-text)]' },
-                  { label: 'Thắng', value: s.won, cls: 'text-green-700' },
-                  { label: 'Hòa', value: s.drawn, cls: 'text-amber-600' },
-                  { label: 'Thua', value: s.lost, cls: 'text-red-500' },
-                  { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500' },
+                  { label: 'Thắng', value: s.won, cls: '[color:var(--pf-color-success)]' },
+                  { label: 'Hòa', value: s.drawn, cls: '[color:var(--pf-color-warning)]' },
+                  { label: 'Thua', value: s.lost, cls: '[color:var(--pf-color-danger)]' },
+                  { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]' },
                 ].map(item => (
                   <div key={item.label} className="[background:var(--pf-surface-muted)] rounded-[8px] py-1.5 text-center">
                     <p className={cn('text-[13px] font-bold', item.cls)}>{item.value}</p>
@@ -301,7 +302,7 @@ export function StandingsPage() {
         )}
 
         {/* Standings table */}
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
@@ -326,9 +327,9 @@ export function StandingsPage() {
                 <tr key={`${s.memberId}-${s.groupId}`} className={cn('transition-colors', RANK_CLASS[s.overallRank] ?? 'hover:[background:var(--pf-color-muted-soft)]')}>
                   <td className="px-3 py-2.5 text-center">
                     <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-                      s.overallRank === 1 ? 'bg-yellow-400 text-white' :
-                      s.overallRank === 2 ? 'bg-slate-400 text-white' :
-                      s.overallRank === 3 ? 'bg-amber-500 text-white' :
+                      s.overallRank === 1 ? '[background:var(--pf-color-warning)] text-white' :
+                      s.overallRank === 2 ? '[background:var(--pf-color-muted)] text-white' :
+                      s.overallRank === 3 ? '[background:var(--pf-color-warning)] text-white' :
                       '[color:var(--pf-color-muted)]'
                     )}>
                       {s.overallRank}
@@ -337,12 +338,12 @@ export function StandingsPage() {
                   <td className="px-4 py-2.5 font-medium [color:var(--pf-text)]">{s.memberName}</td>
                   <td className="px-3 py-2.5 text-center text-xs [color:var(--pf-color-muted)]">{s.groupName}</td>
                   <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.played}</td>
-                  <td className="px-3 py-2.5 text-center text-green-700 font-semibold">{s.won}</td>
-                  <td className="px-3 py-2.5 text-center text-amber-600">{s.drawn}</td>
-                  <td className="px-3 py-2.5 text-center text-red-500">{s.lost}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-color-success)] font-semibold">{s.won}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-color-warning)]">{s.drawn}</td>
+                  <td className="px-3 py-2.5 text-center [color:var(--pf-color-danger)]">{s.lost}</td>
                   <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.pointsFor}</td>
                   <td className="px-3 py-2.5 text-center [color:var(--pf-color-muted)]">{s.pointsAgainst}</td>
-                  <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500')}>
+                  <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]')}>
                     {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                   </td>
                   <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary)] text-base">{s.rankingPoints}</td>

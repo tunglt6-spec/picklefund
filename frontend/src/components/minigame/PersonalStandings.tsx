@@ -2,9 +2,9 @@ import type { MiniGamePersonalStanding } from '../../types/minigame'
 import { cn } from '../../lib/utils'
 
 const RANK_CLASS: Record<number, string> = {
-  1: 'bg-yellow-50 border-l-2 border-yellow-400',
-  2: '[background:var(--pf-surface-muted)] border-l-2 border-slate-400',
-  3: 'bg-amber-50 border-l-2 border-amber-400',
+  1: '[background:var(--pf-color-warning-soft)] border-l-2 border-[color:var(--pf-color-warning-soft)]',
+  2: '[background:var(--pf-surface-muted)] border-l-2 border-[color:var(--pf-border)]',
+  3: '[background:var(--pf-color-warning-soft)] border-l-2 border-[color:var(--pf-color-warning-soft)]',
 }
 
 interface Props {
@@ -41,9 +41,9 @@ export function PersonalStandings({ standings }: Props) {
               <tr key={s.memberId} className={cn('transition-colors', RANK_CLASS[s.rank] ?? 'hover:[background:var(--pf-color-muted-soft)]')}>
                 <td className="px-3 py-2.5 text-center">
                   <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-                    s.rank === 1 ? 'bg-yellow-400 text-white' :
-                    s.rank === 2 ? 'bg-slate-400 text-white' :
-                    s.rank === 3 ? 'bg-amber-500 text-white' :
+                    s.rank === 1 ? '[background:var(--pf-color-warning)] text-white' :
+                    s.rank === 2 ? '[background:var(--pf-color-muted)] text-white' :
+                    s.rank === 3 ? '[background:var(--pf-color-warning)] text-white' :
                     '[color:var(--pf-color-muted)]'
                   )}>
                     {s.rank}
@@ -52,15 +52,15 @@ export function PersonalStandings({ standings }: Props) {
                 <td className="px-4 py-2.5 font-medium [color:var(--pf-text)]">{s.memberName}</td>
                 <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.played}</td>
                 <td className="px-3 py-2.5 text-center text-xs">
-                  <span className="text-green-700 font-semibold">{s.won}</span>
+                  <span className="[color:var(--pf-color-success)] font-semibold">{s.won}</span>
                   <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
-                  <span className="text-amber-600">{s.drawn}</span>
+                  <span className="[color:var(--pf-color-warning)]">{s.drawn}</span>
                   <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
-                  <span className="text-red-500">{s.lost}</span>
+                  <span className="[color:var(--pf-color-danger)]">{s.lost}</span>
                 </td>
                 <td className="px-3 py-2.5 text-center [color:var(--pf-text)]">{s.pointsFor}</td>
                 <td className="px-3 py-2.5 text-center [color:var(--pf-color-muted)]">{s.pointsAgainst}</td>
-                <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? 'text-green-600' : 'text-red-500')}>
+                <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]')}>
                   {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                 </td>
                 <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary)] text-base">{s.rankingPoints}</td>

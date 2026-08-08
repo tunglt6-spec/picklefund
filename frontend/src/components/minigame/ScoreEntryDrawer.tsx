@@ -67,7 +67,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
     <div className="flex items-center justify-center gap-3">
       <button
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:bg-slate-200 flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
+        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
       >
         <Minus size={14} />
       </button>
@@ -80,7 +80,7 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
       />
       <button
         onClick={() => onChange(value + 1)}
-        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:bg-slate-200 flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
+        className="h-8 w-8 rounded-lg [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] flex items-center justify-center [color:var(--pf-color-muted)] transition-colors"
       >
         <Plus size={14} />
       </button>
@@ -116,9 +116,9 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         </div>
 
         <div className={`rounded-xl py-3 px-3 text-center font-semibold text-xs ${
-          noDrawAllowed ? 'bg-red-50 text-red-600 border border-red-200' :
-          isDraw ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-          'bg-green-50 text-green-700 border border-green-200'
+          noDrawAllowed ? '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)] border border-[color:var(--pf-color-danger-soft)]' :
+          isDraw ? '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] border border-[color:var(--pf-color-warning-soft)]' :
+          '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)] border border-[color:var(--pf-color-success-soft)]'
         }`}>
           {noDrawAllowed
             ? '⚠️ Minigame này không cho phép kết quả hòa'

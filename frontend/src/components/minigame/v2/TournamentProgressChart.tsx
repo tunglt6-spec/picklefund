@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { pfColor } from '../../../lib/pfColor'
 
 interface TournamentKpi {
   totalMembers: number
@@ -21,10 +22,11 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
     kpi.totalExpectedMatches - kpi.completedMatches - kpi.pendingResultMatches
   )
 
+  // Resolve token→màu cụ thể: var() không hợp lệ trong SVG fill của recharts <Cell>.
   const data = [
-    { name: 'Hoàn Thành', value: kpi.completedMatches, color: '#22C55E' },
-    { name: 'Chờ Điểm', value: kpi.pendingResultMatches, color: '#F59E0B' },
-    { name: 'Còn Lại', value: remaining, color: 'var(--pf-border)' },
+    { name: 'Hoàn Thành', value: kpi.completedMatches, color: pfColor('--pf-color-success') },
+    { name: 'Chờ Điểm', value: kpi.pendingResultMatches, color: pfColor('--pf-color-warning') },
+    { name: 'Còn Lại', value: remaining, color: pfColor('--pf-border', '#E2E8F0') },
   ]
 
   const percentage = Math.round(kpi.completionRate)

@@ -27,17 +27,17 @@ interface PersonalRankingTableProps {
 const GROUP_BORDER: Record<string, string> = {
   A: '[border-color:var(--pf-primary)]',
   B: '[border-color:var(--pf-primary)]',
-  C: 'border-emerald-400',
-  D: 'border-amber-400',
-  E: 'border-rose-400',
+  C: '[border-color:var(--pf-color-success)]',
+  D: '[border-color:var(--pf-color-warning)]',
+  E: '[border-color:var(--pf-color-danger)]',
 };
 
 const GROUP_TEXT: Record<string, string> = {
   A: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
   B: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
-  C: 'text-emerald-700 bg-emerald-50',
-  D: 'text-amber-700 bg-amber-50',
-  E: 'text-rose-700 bg-rose-50',
+  C: '[color:var(--pf-color-success)] [background:var(--pf-color-success-soft)]',
+  D: '[color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)]',
+  E: '[color:var(--pf-color-danger)] [background:var(--pf-color-danger-soft)]',
 };
 
 const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -89,12 +89,12 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
             {rows.map((r) => {
               const isTop3 = r.rank <= 3;
               const rowCls = isTop3
-                ? 'bg-amber-50/30 hover:bg-amber-50/60'
+                ? '[background:var(--pf-color-warning-soft)] hover:[background:var(--pf-color-warning-soft)]'
                 : 'hover:[background:var(--pf-surface-muted)]';
-              const groupBorder = GROUP_BORDER[r.group] ?? 'border-slate-300';
+              const groupBorder = GROUP_BORDER[r.group] ?? '[border-color:var(--pf-border)]';
               const groupText = GROUP_TEXT[r.group] ?? '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]';
               const diffColor =
-                r.diff > 0 ? 'text-green-600' : r.diff < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]';
+                r.diff > 0 ? '[color:var(--pf-color-success)]' : r.diff < 0 ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]';
 
               return (
                 <tr
@@ -134,11 +134,11 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
 
                   {/* W/D/L */}
                   <td className="py-2 px-2 text-right whitespace-nowrap">
-                    <span className="text-green-600 font-medium">{r.won}</span>
+                    <span className="[color:var(--pf-color-success)] font-medium">{r.won}</span>
                     <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
-                    <span className="text-amber-500 font-medium">{r.drawn}</span>
+                    <span className="[color:var(--pf-color-warning)] font-medium">{r.drawn}</span>
                     <span className="[color:var(--pf-color-muted)] mx-0.5">/</span>
-                    <span className="text-red-500 font-medium">{r.lost}</span>
+                    <span className="[color:var(--pf-color-danger)] font-medium">{r.lost}</span>
                   </td>
 
                   {/* PF:PA */}
@@ -160,7 +160,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                       <div className="flex items-center gap-1">
                         <span className="text-xs [color:var(--pf-color-muted)]">{r.winRate}%</span>
                         {r.sitOutCount > 0 && (
-                          <span className="text-xs text-orange-500 font-medium whitespace-nowrap">
+                          <span className="text-xs [color:var(--pf-color-warning)] font-medium whitespace-nowrap">
                             (+{r.sitOutCount} nghỉ)
                           </span>
                         )}
@@ -190,7 +190,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                         {onDelete && (
                           <button
                             onClick={() => onDelete(r.memberId, r.name)}
-                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] transition-colors"
                             title="Xóa thành viên"
                           >
                             <Trash2 size={14} />

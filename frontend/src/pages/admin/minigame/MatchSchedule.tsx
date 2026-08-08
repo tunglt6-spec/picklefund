@@ -187,16 +187,16 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
                       <span className={cn('text-[11px] font-medium',
-                        m.status === 'COMPLETED' ? 'text-green-600' :
-                        m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
+                        m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
+                        m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                       )}>
                         {m.status === 'COMPLETED' ? '✅ Hoàn thành' : m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team1.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
@@ -205,8 +205,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                           ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.team1Score}–{m.team2Score}</p>
                           : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                       </div>
-                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                      <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
+                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team2.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
@@ -221,7 +221,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                       </button>
                       <button
                         onClick={() => setDeleteTarget(m)}
-                        className="px-3 py-2 text-red-500 bg-red-50 rounded-[10px]"
+                        className="px-3 py-2 [color:var(--pf-color-danger)] [background:var(--pf-color-danger-soft)] rounded-[10px]"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -243,14 +243,14 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
               </p>
               {deleteTarget.status === 'COMPLETED' && (
-                <p className="text-[11px] text-amber-600 bg-amber-50 rounded-[10px] px-3 py-2 mb-3">
+                <p className="text-[11px] [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-[10px] px-3 py-2 mb-3">
                   Trận này đã có kết quả. Xóa sẽ hủy kết quả.
                 </p>
               )}
               <div className="flex gap-2">
                 <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                 <button onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
-                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white bg-red-500">Xóa</button>
+                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white [background:var(--pf-color-danger)] hover:[filter:brightness(0.92)]">Xóa</button>
               </div>
             </div>
           </div>
@@ -304,7 +304,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               ))}
             </div>
 
-            <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+            <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
@@ -330,11 +330,11 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                       <tr key={m.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
                         <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
                         <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{rnd?.roundNumber ?? '–'}</td>
-                        <td className={cn('px-4 py-2.5 text-sm font-medium', team1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                        <td className={cn('px-4 py-2.5 text-sm font-medium', team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team1.map(p => p.memberName).join(' & ')}
                         </td>
                         <td className="px-2 py-2.5 text-center text-xs [color:var(--pf-color-muted)] font-bold">vs</td>
-                        <td className={cn('px-4 py-2.5 text-sm font-medium', team2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                        <td className={cn('px-4 py-2.5 text-sm font-medium', team2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team2.map(p => p.memberName).join(' & ')}
                         </td>
                         <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold [color:var(--pf-text)]">
@@ -342,8 +342,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={cn('text-xs font-medium',
-                            m.status === 'COMPLETED' ? 'text-green-600' :
-                            m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
+                            m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
+                            m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                           )}>
                             {m.status === 'COMPLETED' ? '✅ Hoàn thành' :
                              m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}
@@ -366,7 +366,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                             )}
                             <button
                               onClick={() => setDeleteTarget(m)}
-                              className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] transition-colors"
                               title="Xóa trận đấu"
                             >
                               <Trash2 size={14} />
@@ -395,8 +395,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <Trash2 size={18} className="text-red-600" />
+              <div className="w-10 h-10 rounded-full [background:var(--pf-color-danger-soft)] flex items-center justify-center shrink-0">
+                <Trash2 size={18} className="[color:var(--pf-color-danger)]" />
               </div>
               <div>
                 <p className="font-semibold [color:var(--pf-text)]">Xóa trận đấu?</p>
@@ -406,7 +406,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               </div>
             </div>
             {deleteTarget.status === 'COMPLETED' && (
-              <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-4">
+              <p className="text-xs [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-lg px-3 py-2 mb-4">
                 Trận này đã có kết quả. Xóa sẽ hủy kết quả và xóa khỏi lịch thi đấu.
               </p>
             )}
@@ -419,7 +419,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               </button>
               <button
                 onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-500 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium [background:var(--pf-color-danger)] text-white hover:[filter:brightness(0.92)] transition-colors"
               >
                 Xóa
               </button>
@@ -597,24 +597,24 @@ export function MatchSchedule() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
                   <span className={cn('text-[11px] font-medium',
-                    m.status === 'COMPLETED' ? 'text-green-600' :
-                    m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
+                    m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
+                    m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                   )}>
                     {m.status === 'COMPLETED' ? '✅ Xong' : m.status === 'PLAYING' ? '🔴 Đấu' : '⏳ Chờ'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
-                    <p className={cn('text-[12px] font-semibold', p1Won ? 'text-green-700' : '[color:var(--pf-text)]')}>{m.player1Name}</p>
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
+                    <p className={cn('text-[12px] font-semibold', p1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player1Name}</p>
                   </div>
                   <div className="shrink-0">
                     {m.status === 'COMPLETED'
                       ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.player1Score}–{m.player2Score}</p>
                       : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                   </div>
-                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? 'bg-green-50' : '[background:var(--pf-surface-muted)]')}>
-                    <p className={cn('text-[12px] font-semibold', p2Won ? 'text-green-700' : '[color:var(--pf-text)]')}>{m.player2Name}</p>
+                  <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
+                    <p className={cn('text-[12px] font-semibold', p2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player2Name}</p>
                   </div>
                 </div>
 
@@ -678,7 +678,7 @@ export function MatchSchedule() {
           ))}
         </div>
 
-        <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+        <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
@@ -704,11 +704,11 @@ export function MatchSchedule() {
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{idx + 1}</td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{grp?.groupName ?? '–'}</td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{m.round ?? 1}</td>
-                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player1Id ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player1Id ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                       {m.player1Name}
                     </td>
                     <td className="px-2 py-2.5 text-center text-xs [color:var(--pf-color-muted)] font-bold">vs</td>
-                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player2Id ? 'text-green-700' : '[color:var(--pf-text)]')}>
+                    <td className={cn('px-4 py-2.5 text-sm font-medium', m.winnerId === m.player2Id ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                       {m.player2Name}
                     </td>
                     <td className="px-4 py-2.5 text-center text-sm font-mono font-semibold [color:var(--pf-text)]">
@@ -716,8 +716,8 @@ export function MatchSchedule() {
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <span className={cn('text-xs font-medium',
-                        m.status === 'COMPLETED' ? 'text-green-600' :
-                        m.status === 'PLAYING' ? 'text-red-500' : '[color:var(--pf-color-muted)]'
+                        m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
+                        m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                       )}>
                         {m.status === 'COMPLETED' ? '✅ Hoàn thành' :
                          m.status === 'PLAYING' ? '🔴 Đang đấu' : '⏳ Chờ đấu'}

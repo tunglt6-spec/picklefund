@@ -24,6 +24,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
   const [notes, setNotes] = useState('')
   // M9: nhập theo SET cho môn set-based (Tennis/Cầu lông/Bóng bàn/Bóng chuyền).
   const [sets, setSets] = useState<Array<{ a: string; b: string }>>([{ a: '', b: '' }])
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (match) {
@@ -57,6 +58,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
     if (!bothEntered) { toast.error('Vui lòng nhập điểm cho cả hai người chơi'); return }
     if (noDrawAllowed) { toast.error('Không cho phép hòa trong giải đấu này'); return }
     enterScore(match.id, s1!, s2!, notes || undefined)
+    setSaving(true)
     try {
       await api.patch(`/minigames/matches/${match.id}/score`, {
         scoreA: s1!, scoreB: s2!, playedAt: matchDate || undefined, note: notes || undefined,
@@ -65,6 +67,8 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
       toast.success('Đã lưu kết quả trận đấu!')
     } catch {
       toast.error('Kết quả đã lưu cục bộ nhưng không thể đồng bộ lên server')
+    } finally {
+      setSaving(false)
     }
     onClose()
   }
@@ -79,7 +83,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Hủy</Button>
-          <Button onClick={handleSave} disabled={noDrawAllowed}>Lưu Kết Quả</Button>
+          <Button onClick={handleSave} disabled={noDrawAllowed || saving}>{saving ? 'Đang lưu…' : 'Lưu Kết Quả'}</Button>
         </>
       }
     >
@@ -100,7 +104,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
                 <span className="[color:var(--pf-color-muted)]">-</span>
                 <input inputMode="numeric" value={st.b} onChange={e => setSets(s => s.map((x, j) => j === i ? { ...x, b: e.target.value.replace(/\D/g, '') } : x))}
                   className="flex-1 text-center text-lg font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
-                {sets.length > 1 && <button onClick={() => setSets(s => s.filter((_, j) => j !== i))} className="text-red-500 text-xs px-1">✕</button>}
+                {sets.length > 1 && <button onClick={() => setSets(s => s.filter((_, j) => j !== i))} className="[color:var(--pf-color-danger)] text-xs px-1">✕</button>}
               </div>
             ))}
             <button onClick={() => setSets(s => [...s, { a: '', b: '' }])} className="text-xs font-semibold [color:var(--pf-primary)]">+ Thêm set</button>
@@ -125,9 +129,9 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
         {/* Result banner */}
         {bothEntered && (
           <div className={`rounded-xl py-3 text-center font-semibold text-sm ${
-            noDrawAllowed ? 'bg-red-50 text-red-600 border border-red-200' :
-            isDraw ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-            'bg-green-50 text-green-700 border border-green-200'
+            noDrawAllowed ? '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)] border border-[color:var(--pf-color-danger-soft)]' :
+            isDraw ? '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] border border-[color:var(--pf-color-warning-soft)]' :
+            '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)] border border-[color:var(--pf-color-success-soft)]'
           }`}>
             {noDrawAllowed ? '⚠️ Không cho phép hòa trong giải đấu này' :
              isDraw ? '🤝 Hòa!' :
