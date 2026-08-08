@@ -118,7 +118,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
   const isTeamSport = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(form.sport)
   const isGolf = form.sport === 'GOLF'
   const isRunning = form.sport === 'RUNNING'
-  const isLeaderboard = isGolf || isRunning // môn cá nhân leaderboard: golfer/VĐV thêm ở dashboard
+  // Golf Match-Play = loại trực tiếp (participants + KNOCKOUT), KHÔNG leaderboard.
+  const isGolfMatchPlay = isGolf && form.formatCode === 'GOLF_MATCH_PLAY'
+  const isLeaderboard = (isGolf && !isGolfMatchPlay) || isRunning // Golf stroke/stableford + Chạy bộ: golfer/VĐV thêm ở dashboard
   const [creating, setCreating] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [guestName, setGuestName] = useState('')

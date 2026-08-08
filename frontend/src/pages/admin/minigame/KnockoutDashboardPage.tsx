@@ -130,7 +130,7 @@ export function KnockoutDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader title={`${de ? 'Loại kép' : 'Loại trực tiếp'} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : 'Single-elimination · nhánh đấu tìm nhà vô địch'}
+      <PageHeader title={`${de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Match Play · loại trực tiếp — nhập số HỐ THẮNG mỗi trận' : 'Single-elimination · nhánh đấu tìm nhà vô địch')}
         actions={
           <div className="flex items-center gap-2">
             {matches.length === 0

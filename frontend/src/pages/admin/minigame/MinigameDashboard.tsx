@@ -19,8 +19,8 @@ export function MinigameDashboard() {
   if (['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(mg?.sport ?? '')) {
     return <FootballDashboardPage resync={resync} />
   }
-  // Golf: dashboard bảng điểm (golfer cá nhân + tổng gậy).
-  if (mg?.sport === 'GOLF') {
+  // Golf leaderboard (stroke/stableford). Golf Match-Play (format KNOCKOUT) → xuống nhánh knockout.
+  if (mg?.sport === 'GOLF' && mg?.formatType !== 'KNOCKOUT') {
     return <GolfDashboardPage resync={resync} />
   }
   // Chạy bộ: leaderboard theo thời gian (M5).

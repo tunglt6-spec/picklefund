@@ -214,7 +214,7 @@ const PRESETS: SportPreset[] = [
     formats: [
       { code: 'GOLF_STROKE_PLAY', label: 'Stroke Play', sub: 'Tính tổng gậy — thấp nhất thắng', dbFormat: 'SINGLES', implemented: true },
       { code: 'GOLF_STABLEFORD', label: 'Stableford', sub: 'Nhập điểm Stableford mỗi vòng — tổng CAO nhất thắng', dbFormat: 'SINGLES', implemented: true },
-      { code: 'GOLF_MATCH_PLAY', label: 'Match Play', sub: 'Thắng theo từng hố (cần dữ liệu theo hố)', dbFormat: 'SINGLES', implemented: false, note: 'Cần data-model theo hố — lộ trình sau' },
+      { code: 'GOLF_MATCH_PLAY', label: 'Match Play', sub: 'Đối đầu loại trực tiếp — chấm theo số hố thắng', dbFormat: 'KNOCKOUT', implemented: true },
     ],
     scoringModels: ['STROKE_BASED', 'POINT_BASED'], dbScoringModel: 'LEADERBOARD', resourceTerm: 'Sân / Tee time',
     matchRules: [
