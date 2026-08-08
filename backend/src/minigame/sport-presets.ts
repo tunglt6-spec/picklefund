@@ -106,8 +106,8 @@ const RACKET_RANDOM: FormatDef = {
 const RACKET_FORMATS_PLANNED: FormatDef[] = [
   { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Single Elimination — nhánh loại trực tiếp (đơn)', dbFormat: 'KNOCKOUT', implemented: true },
   { code: 'DOUBLE_ELIMINATION', label: 'Loại kép', sub: 'Double Elimination', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M4)' },
-  { code: 'LEAGUE', label: 'League', sub: 'Lượt đi/lượt về', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: false, note: 'Sắp có (M2)' },
-  { code: 'MEXICANO', label: 'Mexicano', sub: 'Ghép cặp theo BXH mỗi vòng', dbFormat: 'RANDOM_DOUBLES', implemented: false, note: 'Sắp có (M2)' },
+  { code: 'LEAGUE', label: 'League (đôi cố định)', sub: 'Vòng tròn lượt đi/lượt về', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: true },
+  { code: 'MEXICANO', label: 'Mexicano', sub: 'Ghép cặp theo BXH mỗi vòng', dbFormat: 'RANDOM_DOUBLES', implemented: false, note: 'Sắp có (M5)' },
 ];
 
 const RACKET_RULES: MatchRuleField[] = [
@@ -135,8 +135,8 @@ const TEAM_FORMATS_LIVE: FormatDef[] = [
   { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Knockout', dbFormat: 'GROUP_STAGE', implemented: true },
 ];
 const TEAM_FORMATS_PLANNED: FormatDef[] = [
-  { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại trực tiếp', sub: 'Group + Knockout', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2) — tự nối bảng sang bracket' },
-  { code: 'LEAGUE', label: 'League', sub: 'Lượt đi/lượt về', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2)' },
+  { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại trực tiếp', sub: 'Group + Knockout', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có — tự nối bảng sang bracket' },
+  { code: 'LEAGUE', label: 'League', sub: 'Vòng tròn lượt đi/lượt về', dbFormat: 'GROUP_STAGE', implemented: true },
 ];
 
 // ── REGISTRY 13 môn ─────────────────────────────────────────────────────────
@@ -177,8 +177,9 @@ const PRESETS: SportPreset[] = [
     participantTypes: ['TEAM'],
     competitions: [{ code: 'TEAM', label: 'Đội', participantType: 'TEAM' }],
     formats: [
-      { code: 'ROUND_ROBIN', label: 'Vòng tròn', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2) — chấm theo set' },
-      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2)' },
+      { code: 'ROUND_ROBIN', label: 'Vòng tròn', sub: 'Chấm theo số set thắng', dbFormat: 'GROUP_STAGE', implemented: true },
+      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
+      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có' },
     ],
     scoringModels: ['SET_BASED', 'POINT_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Sân',
     matchRules: [
@@ -192,8 +193,9 @@ const PRESETS: SportPreset[] = [
     participantTypes: ['TEAM'],
     competitions: [{ code: 'TEAM', label: 'Đội', participantType: 'TEAM' }],
     formats: [
-      { code: 'ROUND_ROBIN', label: 'Vòng tròn', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2)' },
-      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có (M2)' },
+      { code: 'ROUND_ROBIN', label: 'Vòng tròn', sub: 'Chấm theo số set thắng', dbFormat: 'GROUP_STAGE', implemented: true },
+      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
+      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có' },
     ],
     scoringModels: ['SET_BASED', 'POINT_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Sân',
     matchRules: [
@@ -232,14 +234,13 @@ const PRESETS: SportPreset[] = [
   },
   {
     code: 'CHESS', name: 'Cờ vua', icon: '♟️',
-    participantTypes: ['INDIVIDUAL', 'TEAM'],
+    participantTypes: ['INDIVIDUAL'],
     competitions: [
       { code: 'INDIVIDUAL', label: 'Cá nhân', participantType: 'INDIVIDUAL' },
-      { code: 'TEAM', label: 'Đồng đội', participantType: 'TEAM' },
     ],
     formats: [
-      { code: 'ROUND_ROBIN', label: 'Vòng tròn', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: false, note: 'Sắp có (M2) — thắng/hòa/thua' },
-      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M2)' },
+      { code: 'ROUND_ROBIN', label: 'Vòng tròn (theo bảng)', sub: 'Thắng/hòa/thua theo điểm', dbFormat: 'GROUP_STAGE', implemented: true },
+      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
     ],
     scoringModels: ['RANK_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Bàn thi đấu',
     matchRules: [
@@ -250,14 +251,13 @@ const PRESETS: SportPreset[] = [
   },
   {
     code: 'XIANGQI', name: 'Cờ tướng', icon: '♟️',
-    participantTypes: ['INDIVIDUAL', 'TEAM'],
+    participantTypes: ['INDIVIDUAL'],
     competitions: [
       { code: 'INDIVIDUAL', label: 'Cá nhân', participantType: 'INDIVIDUAL' },
-      { code: 'TEAM', label: 'Đồng đội', participantType: 'TEAM' },
     ],
     formats: [
-      { code: 'ROUND_ROBIN', label: 'Vòng tròn', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: false, note: 'Sắp có (M2)' },
-      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M2)' },
+      { code: 'ROUND_ROBIN', label: 'Vòng tròn (theo bảng)', sub: 'Thắng/hòa/thua theo điểm', dbFormat: 'GROUP_STAGE', implemented: true },
+      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
     ],
     scoringModels: ['RANK_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Bàn thi đấu',
     matchRules: [
@@ -268,14 +268,13 @@ const PRESETS: SportPreset[] = [
   },
   {
     code: 'BILLIARDS', name: 'Billiards', icon: '🎱',
-    participantTypes: ['INDIVIDUAL', 'PAIR'],
+    participantTypes: ['INDIVIDUAL'],
     competitions: [
       { code: 'INDIVIDUAL', label: 'Cá nhân', participantType: 'INDIVIDUAL' },
-      { code: 'DOUBLES', label: 'Đôi', participantType: 'PAIR', partnerModes: ['FIXED'] },
     ],
     formats: [
-      { code: 'ROUND_ROBIN', label: 'Vòng tròn', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: false, note: 'Sắp có (M2) — race-to-N' },
-      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M2)' },
+      { code: 'ROUND_ROBIN', label: 'Vòng tròn (theo bảng)', sub: 'Race-to-N tính theo điểm ván', dbFormat: 'GROUP_STAGE', implemented: true },
+      { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
     ],
     scoringModels: ['POINT_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Bàn',
     matchRules: [

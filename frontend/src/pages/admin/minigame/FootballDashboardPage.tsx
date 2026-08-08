@@ -28,6 +28,8 @@ const SPORT_UI: Record<string, {
 }> = {
   FOOTBALL: { emoji: '⚽', name: 'Bóng Đá', teamTab: 'Đội bóng', player: 'cầu thủ', scoreWord: 'bàn thắng', gfgaShort: 'BT-BB', gfgaTitle: 'Bàn thắng - Bàn thua' },
   BASKETBALL: { emoji: '🏀', name: 'Bóng Rổ', teamTab: 'Đội', player: 'vận động viên', scoreWord: 'điểm', gfgaShort: 'Đ+/Đ−', gfgaTitle: 'Điểm ghi - Điểm thua' },
+  VOLLEYBALL: { emoji: '🏐', name: 'Bóng Chuyền', teamTab: 'Đội', player: 'vận động viên', scoreWord: 'set', gfgaShort: 'Set+/Set−', gfgaTitle: 'Set thắng - Set thua' },
+  AIR_VOLLEYBALL: { emoji: '🏐', name: 'Bóng Chuyền Hơi', teamTab: 'Đội', player: 'vận động viên', scoreWord: 'set', gfgaShort: 'Set+/Set−', gfgaTitle: 'Set thắng - Set thua' },
 }
 
 interface RosterMember { id: string; memberId?: string | null; guestName?: string | null; role?: string | null }

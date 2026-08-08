@@ -751,9 +751,11 @@ export class MinigameService {
     doubleRoundRobin = false,
   ) {
     const mg = await this.assertOwnership(id, clubId);
-    if (mg.sport !== 'FOOTBALL' && mg.sport !== 'BASKETBALL')
+    // M4: mọi môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi). Điểm diễn giải theo môn.
+    const TEAM_SPORTS = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'];
+    if (!TEAM_SPORTS.includes(mg.sport))
       throw new BadRequestException(
-        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ).',
+        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ/bóng chuyền).',
       );
 
     const existing = await this.prisma.minigameMatch.count({

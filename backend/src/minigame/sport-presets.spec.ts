@@ -57,9 +57,13 @@ describe('sport-presets registry', () => {
     expect(isImplementedCombo('PICKLEBALL', 'KNOCKOUT')).toBe(true);
     expect(isImplementedCombo('TENNIS', 'KNOCKOUT')).toBe(true);
     // Chưa có engine (M2+) → phải là false để wizard không cho tạo invalid
-    expect(isImplementedCombo('VOLLEYBALL', 'GROUP_STAGE')).toBe(false);
-    expect(isImplementedCombo('CHESS', 'KNOCKOUT')).toBe(false);
-    expect(isImplementedCombo('BILLIARDS', 'KNOCKOUT')).toBe(false);
+    // M4: Cờ vua/Cờ tướng/Billiards/Bóng chuyền đã bật (reuse GroupStage/Knockout đội).
+    expect(isImplementedCombo('CHESS', 'KNOCKOUT')).toBe(true);
+    expect(isImplementedCombo('CHESS', 'GROUP_STAGE')).toBe(true);
+    expect(isImplementedCombo('VOLLEYBALL', 'GROUP_STAGE')).toBe(true);
+    expect(isImplementedCombo('BILLIARDS', 'KNOCKOUT')).toBe(true);
+    // Chưa có engine (M5+): Running (time), tổ hợp/không tồn tại.
+    expect(isImplementedCombo('RUNNING', 'SINGLES')).toBe(false);
     expect(isImplementedCombo('KHONG_CO', 'GROUP_STAGE')).toBe(false);
   });
 });
