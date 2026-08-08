@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
+import { ArrowLeft, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
 
-import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
+import { PageHeader } from '../../../components/layout/PageHeader'
 import { MinigameKpiCards } from '../../../components/minigame/v2/MinigameKpiCards'
 import { GroupAssignmentPanel } from '../../../components/minigame/v2/GroupAssignmentPanel'
 import { CurrentRoundPanel } from '../../../components/minigame/v2/CurrentRoundPanel'
@@ -316,39 +316,10 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      {/* Header / Top bar */}
-      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
-        <button
-          onClick={() => navigate('/minigames')}
-          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
-        >
-          <ArrowLeft size={14} />
-          Danh Sách Minigame
-        </button>
-
-        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
-              <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
-                🏓 Đánh Đôi Ngẫu Nhiên
-              </span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
-              <span className="flex items-center gap-1.5">
-                <Calendar size={14} />
-                {mg.startDate} — {mg.endDate}
-              </span>
-              {mg.description && (
-                <>
-                  <span className="[color:var(--pf-color-muted)]">·</span>
-                  <span className="truncate">{mg.description}</span>
-                </>
-              )}
-            </div>
-          </div>
-
+      <PageHeader
+        title={`🏓 Đánh Đôi Ngẫu Nhiên – ${mg.name}`}
+        subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
+        actions={
           <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center">
             {canFinish && (
               <button
@@ -380,11 +351,18 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
               Bốc theo BXH (Mexicano)
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main content */}
       <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
+        <button
+          onClick={() => navigate('/minigames')}
+          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
+        >
+          <ArrowLeft size={14} /> Danh Sách Minigame
+        </button>
+
         <MinigameKpiCards kpi={kpi} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

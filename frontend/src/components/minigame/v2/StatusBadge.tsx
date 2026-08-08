@@ -1,3 +1,11 @@
+/**
+ * StatusBadge (minigame) — WRAPPER mỏng bọc shared StatusBadge để THỐNG NHẤT pill trạng thái
+ * toàn app (một nguồn màu semantic --pf-color-*). Giữ nguyên API `status` (string) nên mọi
+ * call-site cũ không đổi; map status → tone + nhãn tiếng Việt. Status lạ (backend thêm/đổi)
+ * → tone neutral, KHÔNG crash.
+ */
+import { StatusBadge as SharedStatusBadge, type StatusTone } from '../../shared/StatusBadge'
+
 export type MinigameStatus =
   | 'DRAFT'
   | 'ACTIVE'
@@ -6,79 +14,32 @@ export type MinigameStatus =
   | 'SCHEDULED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
-  | 'CANCELLED';
+  | 'CANCELLED'
 
 interface StatusBadgeProps {
   // string (không chỉ MinigameStatus) để KHÔNG BAO GIỜ crash nếu backend đổi/thêm status.
-  status: MinigameStatus | string;
+  status: MinigameStatus | string
 }
 
-interface StatusConfig {
-  label: string;
-  badgeClass: string;
-  dotClass?: string;
-  pulse?: boolean;
+/** status → { nhãn hiển thị, tone semantic, có chấm nhấp nháy (đang diễn ra) }. */
+const STATUS_MAP: Record<string, { label: string; tone: StatusTone; dot?: boolean }> = {
+  DRAFT: { label: 'Nháp', tone: 'neutral' },
+  ACTIVE: { label: 'Đang Diễn Ra', tone: 'warning', dot: true },
+  IN_PROGRESS: { label: 'Đang Diễn Ra', tone: 'warning', dot: true },
+  GROUPED: { label: 'Đã Chia Bảng', tone: 'info' },
+  PAIRED: { label: 'Đã Bốc Thăm', tone: 'info' },
+  SCHEDULED: { label: 'Có Lịch', tone: 'info' },
+  COMPLETED: { label: 'Hoàn Thành', tone: 'success' },
+  CANCELLED: { label: 'Đã Hủy', tone: 'danger' },
 }
 
-const STATUS_CONFIG: Record<string, StatusConfig> = {
-  DRAFT: {
-    label: 'Nháp',
-    badgeClass: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
-  },
-  // ACTIVE = status backend (Prisma) cho "đang diễn ra" — map hiển thị như IN_PROGRESS.
-  ACTIVE: {
-    label: 'Đang Diễn Ra',
-    badgeClass: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
-    dotClass: '[background:var(--pf-color-warning)]',
-    pulse: true,
-  },
-  GROUPED: {
-    label: 'Đã Chia Bảng',
-    badgeClass: '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
-  },
-  PAIRED: {
-    label: 'Đã Bốc Thăm',
-    badgeClass: '[background:var(--pf-color-info-soft)] [color:var(--pf-color-info)]',
-  },
-  SCHEDULED: {
-    label: 'Có Lịch',
-    badgeClass: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
-  },
-  IN_PROGRESS: {
-    label: 'Đang Diễn Ra',
-    badgeClass: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
-    dotClass: '[background:var(--pf-color-warning)]',
-    pulse: true,
-  },
-  COMPLETED: {
-    label: 'Hoàn Thành',
-    badgeClass: '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]',
-  },
-  CANCELLED: {
-    label: 'Đã Hủy',
-    badgeClass: '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]',
-  },
-};
-
-const FALLBACK_CONFIG: StatusConfig = {
-  label: 'Không rõ',
-  badgeClass: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
-};
+const FALLBACK = { label: 'Không rõ', tone: 'neutral' as StatusTone }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  // Fallback: status lạ (backend thêm/đổi) KHÔNG được ném lỗi → tránh màn trắng toàn dashboard.
-  const config = STATUS_CONFIG[status] ?? FALLBACK_CONFIG;
-
+  const cfg = STATUS_MAP[status] ?? FALLBACK
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${config.badgeClass}`}
-    >
-      {config.dotClass && (
-        <span
-          className={`inline-block h-1.5 w-1.5 rounded-full ${config.dotClass} ${config.pulse ? 'animate-pulse' : ''}`}
-        />
-      )}
-      {config.label}
-    </span>
-  );
+    <SharedStatusBadge tone={cfg.tone} dot={cfg.dot}>
+      {cfg.label}
+    </SharedStatusBadge>
+  )
 }

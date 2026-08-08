@@ -7,13 +7,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Calendar, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
+  ArrowLeft, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
   CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
   Image as ImageIcon, FileDown,
 } from 'lucide-react'
 import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
-import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
+import { PageHeader } from '../../../components/layout/PageHeader'
+import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
+import { MetricCard } from '../../../components/shared/MetricCard'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { normalizeMinigameStatus } from '../../../types/minigame'
 import { useClubDataStore } from '../../../store/clubDataStore'
@@ -524,61 +526,33 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      {/* Header */}
-      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
+      <PageHeader
+        title={`${ui.emoji} ${ui.name} – ${mg.name}`}
+        subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
+        actions={canFinish ? (
+          <button onClick={handleEnd} disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 hover:[filter:brightness(0.92)]" style={{ background: 'var(--pf-color-success)' }}>
+            <Trophy size={16} /> Kết thúc giải đấu
+          </button>
+        ) : undefined}
+      />
+
+      <div className="p-4 sm:p-6 max-w-[1280px] mx-auto flex flex-col gap-5">
         <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
           <ArrowLeft size={14} /> Danh Sách Minigame
         </button>
-        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
-              <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">{ui.emoji} {ui.name}</span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
-              <span className="flex items-center gap-1.5"><Calendar size={14} />{mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}</span>
-            </div>
-          </div>
-          {canFinish && (
-            <button onClick={handleEnd} disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 md:w-auto" style={{ background: 'var(--pf-color-success)' }}>
-              <Trophy size={16} /> Kết thúc giải đấu
-            </button>
-          )}
-        </div>
 
-        {/* Tab pills */}
-        <div className="mt-3 flex gap-2 flex-wrap">
-          {TABS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-                tab === t.key ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)]',
-              )}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+        <ResponsiveTabs
+          tabs={TABS.map(t => ({ key: t.key, label: t.label }))}
+          active={tab}
+          onChange={(k) => setTab(k as Tab)}
+          className="sm:max-w-xl"
+        />
 
-      <div className="p-4 sm:p-6 max-w-[1280px] mx-auto flex flex-col gap-5">
         {/* KPI */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-xl">
-          <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Shield size={16} /> Số đội</div>
-            <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{teams.length}</p>
-          </div>
-          <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)] capitalize"><Users size={16} /> {ui.player}</div>
-            <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{totalPlayers}</p>
-          </div>
-          <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-            <div className="flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><ListChecks size={16} /> Trận</div>
-            <p className="mt-1 text-2xl font-bold [color:var(--pf-text)]">{completedMatches}/{matches.length}</p>
-          </div>
+          <MetricCard icon={<Shield size={18} />} label="Số đội" value={teams.length} accent="blue" />
+          <MetricCard icon={<Users size={18} />} label={ui.player} value={totalPlayers} accent="teal" />
+          <MetricCard icon={<ListChecks size={18} />} label="Trận" value={`${completedMatches}/${matches.length}`} accent="violet" />
         </div>
 
         {/* ══ TAB: ĐỘI BÓNG ══ */}

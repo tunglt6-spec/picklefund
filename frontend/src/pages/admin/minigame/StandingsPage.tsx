@@ -4,6 +4,7 @@ import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/layout/PageHeader'
+import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
@@ -266,20 +267,12 @@ export function StandingsPage() {
         </button>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                activeTab === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <ResponsiveTabs
+          className="mb-4"
+          tabs={tabs.map(t => ({ key: t.id, label: t.label }))}
+          active={activeTab}
+          onChange={(k) => setActiveTab(k)}
+        />
 
         <div id={EXPORT_ID} className="space-y-4">
         {/* Bar chart */}

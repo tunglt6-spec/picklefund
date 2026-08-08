@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { ArrowLeft, ClipboardEdit, Pencil, Trash2 } from 'lucide-react'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
+import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
 import { Button } from '../../../components/ui/Button'
 import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
 import { ScoreEntryDrawer } from '../../../components/minigame/ScoreEntryDrawer'
@@ -289,20 +290,12 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1 overflow-x-auto">
-              {tabs.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setFilter(t.id)}
-                  className={cn(
-                    'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                    filter === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            <ResponsiveTabs
+              className="mb-4"
+              tabs={tabs.map(t => ({ key: t.id, label: t.label }))}
+              active={filter}
+              onChange={(k) => setFilter(k)}
+            />
 
             <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
               <table className="w-full text-sm">
@@ -663,20 +656,12 @@ export function MatchSchedule() {
         </button>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 mb-4 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-1 overflow-x-auto">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setFilter(t.id)}
-              className={cn(
-                'whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0',
-                filter === t.id ? '[background:var(--pf-primary)] text-white' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <ResponsiveTabs
+          className="mb-4"
+          tabs={tabs.map(t => ({ key: t.id, label: t.label }))}
+          active={filter}
+          onChange={(k) => setFilter(k)}
+        />
 
         <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
           <table className="w-full text-sm">

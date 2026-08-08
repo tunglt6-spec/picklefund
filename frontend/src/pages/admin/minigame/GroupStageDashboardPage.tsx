@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Calendar, Users, Trophy, ClipboardList,
+  ArrowLeft, Users, Trophy, ClipboardList,
   LayoutGrid, CalendarDays, BarChart2, Crown,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { StatusBadge } from '../../../components/minigame/v2/StatusBadge'
+import { PageHeader } from '../../../components/layout/PageHeader'
+import { MetricCard } from '../../../components/shared/MetricCard'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { isGuestId } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
@@ -111,33 +112,11 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      {/* Header */}
-      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
-        <button
-          onClick={() => navigate('/minigames')}
-          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
-        >
-          <ArrowLeft size={14} /> Danh Sách Minigame
-        </button>
-
-        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mg.name}</h1>
-              <StatusBadge status={mg.status as 'IN_PROGRESS' | 'COMPLETED' | 'DRAFT' | 'GROUPED' | 'SCHEDULED' | 'CANCELLED'} />
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
-                👥 Vòng Bảng
-              </span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm [color:var(--pf-color-muted)]">
-              <span className="flex items-center gap-1.5">
-                <Calendar size={14} />
-                {mg.startDate}{mg.endDate ? ` — ${mg.endDate}` : ''}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 shrink-0 md:flex-row md:items-center flex-wrap">
+      <PageHeader
+        title={`👥 Vòng Bảng – ${mg.name}`}
+        subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
+        actions={
+          <>
             {allDone && (
               <button
                 onClick={handleKnockoutFromGroups}
@@ -170,84 +149,49 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                 <Trophy size={16} /> Kết thúc giải đấu
               </button>
             )}
-            <button
-              onClick={() => navigate(`/minigames/${id}/groups`)}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
-            >
-              <LayoutGrid size={16} /> Chia Bảng
-            </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Content */}
-      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
+      <div className="p-4 sm:p-6 max-w-[1280px] mx-auto space-y-6">
+        <button
+          onClick={() => navigate('/minigames')}
+          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
+        >
+          <ArrowLeft size={14} /> Danh Sách Minigame
+        </button>
+
         {/* KPI */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Người Chơi</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
-                <Users size={18} className="[color:var(--pf-primary)]" />
-              </span>
-            </div>
-            <div>
-              <p className="text-3xl font-bold [color:var(--pf-text)]">{kpi.totalParticipants}</p>
-              <p className="text-xs [color:var(--pf-color-muted)] mt-1">{kpi.totalGroups} bảng đấu</p>
-            </div>
-          </div>
-
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Trận Hoàn Thành</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-success-soft)]">
-                <Trophy size={18} className="[color:var(--pf-color-success)]" />
-              </span>
-            </div>
-            <div>
-              <p className="text-3xl font-bold [color:var(--pf-text)]">
-                {kpi.completedMatches}
-                <span className="text-base font-normal [color:var(--pf-color-muted)]">/{kpi.totalMatches}</span>
-              </p>
-              <div className="mt-2 w-full rounded-full [background:var(--pf-color-muted-soft)] h-1.5">
-                <div className="h-1.5 rounded-full [background:var(--pf-color-success)] transition-all duration-300"
-                  style={{ width: `${Math.min(kpi.completionRate, 100)}%` }} />
-              </div>
-              <p className="text-xs [color:var(--pf-color-muted)] mt-1">{kpi.completionRate}% hoàn thành</p>
-            </div>
-          </div>
-
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Chờ Nhập Điểm</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-warning-soft)]">
-                <ClipboardList size={18} className="[color:var(--pf-color-warning)]" />
-              </span>
-            </div>
-            <div>
-              <p className="text-3xl font-bold [color:var(--pf-text)]">{kpi.pendingMatches}</p>
-              {kpi.pendingMatches > 0 && (
-                <span className="mt-1 inline-flex items-center rounded-full [background:var(--pf-color-warning-soft)] px-2.5 py-0.5 text-xs font-medium [color:var(--pf-color-warning)]">
-                  Cần xử lý
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Dẫn Đầu</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full [background:var(--pf-color-warning-soft)]">
-                <Crown size={18} className="[color:var(--pf-color-warning)]" />
-              </span>
-            </div>
-            <div>
-              <p className="text-lg font-bold [color:var(--pf-text)] truncate">{kpi.leader?.name ?? '—'}</p>
-              <p className="text-xs [color:var(--pf-color-muted)] mt-1">
-                {kpi.leader ? `${kpi.leader.points} điểm xếp hạng` : 'Chưa có kết quả'}
-              </p>
-            </div>
-          </div>
+          <MetricCard
+            icon={<Users size={18} />}
+            label="Người Chơi"
+            value={kpi.totalParticipants}
+            sub={`${kpi.totalGroups} bảng đấu`}
+            accent="blue"
+          />
+          <MetricCard
+            icon={<Trophy size={18} />}
+            label="Trận Hoàn Thành"
+            value={`${kpi.completedMatches}/${kpi.totalMatches}`}
+            sub={`${kpi.completionRate}% hoàn thành`}
+            tone="success"
+          />
+          <MetricCard
+            icon={<ClipboardList size={18} />}
+            label="Chờ Nhập Điểm"
+            value={kpi.pendingMatches}
+            sub={kpi.pendingMatches > 0 ? 'Cần xử lý' : undefined}
+            tone={kpi.pendingMatches > 0 ? 'warning' : 'success'}
+          />
+          <MetricCard
+            icon={<Crown size={18} />}
+            label="Dẫn Đầu"
+            value={kpi.leader?.name ?? '—'}
+            sub={kpi.leader ? `${kpi.leader.points} điểm xếp hạng` : 'Chưa có kết quả'}
+            accent="amber"
+          />
         </div>
 
         {/* Điều hướng nhanh */}

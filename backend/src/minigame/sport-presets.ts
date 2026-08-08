@@ -179,14 +179,14 @@ const PRESETS: SportPreset[] = [
     formats: [
       { code: 'ROUND_ROBIN', label: 'Vòng tròn', sub: 'Chấm theo số set thắng', dbFormat: 'GROUP_STAGE', implemented: true },
       { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
-      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có' },
+      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', sub: 'Group + Knockout (tự nối top-N sang nhánh)', dbFormat: 'GROUP_STAGE', implemented: true },
     ],
     scoringModels: ['SET_BASED', 'POINT_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Sân',
     matchRules: [
       { key: 'bestOf', label: 'Số set', type: 'select', default: 3, options: [{ value: 3, label: 'Best of 3' }, { value: 5, label: 'Best of 5' }] },
       { key: 'pointsPerSet', label: 'Điểm mỗi set', type: 'int', default: 25, min: 5, max: 50 },
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     code: 'AIR_VOLLEYBALL', name: 'Bóng chuyền hơi', icon: '🏐',
@@ -195,14 +195,14 @@ const PRESETS: SportPreset[] = [
     formats: [
       { code: 'ROUND_ROBIN', label: 'Vòng tròn', sub: 'Chấm theo số set thắng', dbFormat: 'GROUP_STAGE', implemented: true },
       { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Nhánh loại trực tiếp', dbFormat: 'KNOCKOUT', implemented: true },
-      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', dbFormat: 'GROUP_STAGE', implemented: false, note: 'Sắp có' },
+      { code: 'GROUP_KNOCKOUT', label: 'Vòng bảng + loại', sub: 'Group + Knockout (tự nối top-N sang nhánh)', dbFormat: 'GROUP_STAGE', implemented: true },
     ],
     scoringModels: ['SET_BASED', 'POINT_BASED'], dbScoringModel: 'HEAD_TO_HEAD', resourceTerm: 'Sân',
     matchRules: [
       { key: 'bestOf', label: 'Số set', type: 'select', default: 3, options: [{ value: 3, label: 'Best of 3' }, { value: 5, label: 'Best of 5' }] },
       { key: 'pointsPerSet', label: 'Điểm mỗi set', type: 'int', default: 21, min: 5, max: 40 },
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     code: 'GOLF', name: 'Golf', icon: '⛳',
@@ -249,7 +249,7 @@ const PRESETS: SportPreset[] = [
       { key: 'winPoints', label: 'Điểm thắng', type: 'int', default: 1, min: 0, max: 3 },
       { key: 'drawPoints', label: 'Điểm hòa', type: 'int', default: 0, min: 0, max: 3 },
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     code: 'XIANGQI', name: 'Cờ tướng', icon: '♟️',
@@ -266,7 +266,7 @@ const PRESETS: SportPreset[] = [
       { key: 'winPoints', label: 'Điểm thắng', type: 'int', default: 1, min: 0, max: 3 },
       { key: 'drawPoints', label: 'Điểm hòa', type: 'int', default: 0, min: 0, max: 3 },
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     code: 'BILLIARDS', name: 'Billiards', icon: '🎱',
@@ -282,7 +282,7 @@ const PRESETS: SportPreset[] = [
     matchRules: [
       { key: 'raceTo', label: 'Race to', type: 'int', default: 5, min: 1, max: 20 },
     ],
-    implemented: false,
+    implemented: true,
   },
 ];
 

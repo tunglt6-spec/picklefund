@@ -11,7 +11,9 @@ import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
-import { useIsMobile } from '../../../hooks/useIsMobile'
+import { PageHeader } from '../../../components/layout/PageHeader'
+import { MetricCard } from '../../../components/shared/MetricCard'
+import { StatusBadge, type StatusTone } from '../../../components/shared/StatusBadge'
 import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
 import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
 import { exportStandingsPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
@@ -47,71 +49,11 @@ const CARD = {
   boxShadow: 'var(--pf-shadow)',
 }
 
-// ── status config ──────────────────────────────────────────────────────────────
-const STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
-  DRAFT:       { label: 'Nháp',          bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' },
-  PAIRED:      { label: 'Đã Ghép Cặp',  bg: 'var(--pf-color-primary-soft)', color: 'var(--pf-color-primary)' },
-  SCHEDULED:   { label: 'Có Lịch',      bg: 'var(--pf-primary-soft)', color: 'var(--pf-color-primary)' },
-  IN_PROGRESS: { label: 'Đang Diễn Ra', bg: 'var(--pf-color-success-soft)', color: 'var(--pf-color-success)' },
-  COMPLETED:   { label: 'Hoàn Thành',   bg: 'var(--pf-color-success-soft)', color: 'var(--pf-color-success)' },
-  CANCELLED:   { label: 'Đã Hủy',       bg: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' },
-}
-
-const MATCH_STATUS_CFG: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:   { label: 'Chờ',     bg: 'var(--pf-color-warning-soft)', color: 'var(--pf-color-warning)' },
-  COMPLETED: { label: 'Đã xong', bg: 'var(--pf-color-success-soft)', color: 'var(--pf-color-success)' },
-  CANCELLED: { label: 'Đã hủy',  bg: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' },
-}
-
-// ── small helpers ──────────────────────────────────────────────────────────────
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }
-  return (
-    <span
-      className="text-[11px] font-semibold rounded-full px-2.5 py-0.5 inline-flex items-center gap-1"
-      style={{ background: cfg.bg, color: cfg.color }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
-      {cfg.label}
-    </span>
-  )
-}
-
-function MatchStatusBadge({ status }: { status: string }) {
-  const cfg = MATCH_STATUS_CFG[status] ?? { label: status, bg: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }
-  return (
-    <span
-      className="text-[10px] font-semibold rounded-full px-2 py-0.5 inline-flex items-center gap-1 whitespace-nowrap"
-      style={{ background: cfg.bg, color: cfg.color }}
-    >
-      {cfg.label}
-    </span>
-  )
-}
-
-// ── KPI card ───────────────────────────────────────────────────────────────────
-function KpiCard({
-  label, value, sub, accent, icon,
-}: {
-  label: string; value: string | number; sub?: string; accent?: string; icon: React.ReactNode
-}) {
-  return (
-    <div
-      className="flex flex-col justify-between p-[18px]"
-      style={{ ...CARD, minHeight: 96 }}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.txt2 }}>{label}</p>
-        <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--pf-surface-muted)' }}>
-          {icon}
-        </span>
-      </div>
-      <div>
-        <p className="text-2xl font-extrabold leading-none mt-2" style={{ color: accent ?? T.txt1 }}>{value}</p>
-        {sub && <p className="text-[11px] mt-1" style={{ color: T.txt2 }}>{sub}</p>}
-      </div>
-    </div>
-  )
+// ── match status → shared StatusBadge (tone + nhãn) ─────────────────────────────
+const MATCH_STATUS: Record<string, { tone: StatusTone; label: string }> = {
+  PENDING:   { tone: 'warning', label: 'Chờ' },
+  COMPLETED: { tone: 'success', label: 'Đã xong' },
+  CANCELLED: { tone: 'danger',  label: 'Đã hủy' },
 }
 
 // ── score modal ────────────────────────────────────────────────────────────────
@@ -224,6 +166,7 @@ function MatchRow({
   const isDone   = match.status === 'COMPLETED'
   const t1Win    = isDone && match.winningTeamId === match.team1Id
   const t2Win    = isDone && match.winningTeamId === match.team2Id
+  const st       = MATCH_STATUS[match.status] ?? { tone: 'neutral' as StatusTone, label: match.status }
 
   // ── desktop row (grid) ─────────────────────────────────────────────────────
   const desktopRow = (
@@ -276,7 +219,7 @@ function MatchRow({
             Nhập điểm
           </button>
         ) : (
-          <MatchStatusBadge status={match.status} />
+          <StatusBadge tone={st.tone}>{st.label}</StatusBadge>
         )}
       </div>
 
@@ -293,7 +236,7 @@ function MatchRow({
       <div className="flex items-center justify-between mb-2">
         <span className="text-[11px] font-bold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
         <div className="flex items-center gap-1.5">
-          <MatchStatusBadge status={match.status} />
+          <StatusBadge tone={st.tone}>{st.label}</StatusBadge>
           <MatchMenu isDone={isDone} onScore={() => onEnterScore(match)} onDelete={() => onDelete(match.id)} />
         </div>
       </div>
@@ -796,7 +739,6 @@ export function FixedDoublesDashboardPage() {
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [showScheduleChoice, setShowScheduleChoice] = useState(false)
-  const isMobile = useIsMobile()
 
   const hydrateFromApi = useCallback(async () => {
     if (!id) return
@@ -1067,38 +1009,11 @@ export function FixedDoublesDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
-
-      {/* ── sticky header ── */}
-      <div className="[background:var(--pf-surface)] border-b sticky top-0 z-20" style={{ borderColor: T.border }}>
-        <div className="flex items-center gap-3 px-4 sm:px-6 min-h-[56px] py-2">
-          <button
-            onClick={() => navigate('/minigames')}
-            className="p-2 rounded-xl hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors shrink-0"
-          >
-            <ArrowLeft size={18} />
-          </button>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-sm font-extrabold truncate leading-tight" style={{ color: T.txt1 }}>
-                {mg.name}
-              </h1>
-              {!isMobile && (mg.startDate || mg.endDate) && (
-                <p className="text-[11px] leading-none" style={{ color: T.txt2 }}>
-                  {mg.startDate}{mg.endDate ? ` → ${mg.endDate}` : ''}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <span className="text-[11px] font-semibold rounded-full px-2 py-0.5"
-                style={{ background: 'var(--pf-color-warning-soft)', color: 'var(--pf-color-warning)' }}>
-                🤝 Đôi Cố Định
-              </span>
-              <StatusBadge status={mg.status} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
+      <PageHeader
+        title={`🤝 Đôi Cố Định – ${mg.name}`}
+        subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
+        actions={
+          <>
             {canFinish && (
               <button
                 onClick={handleEndTournament}
@@ -1117,12 +1032,15 @@ export function FixedDoublesDashboardPage() {
             >
               <Edit2 size={16} />
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ── page body ── */}
       <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-5">
+        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
+          <ArrowLeft size={14} /> Danh Sách Minigame
+        </button>
 
         {/* champion banner */}
         {mg.status === 'COMPLETED' && standings.length > 0 && (
@@ -1139,17 +1057,10 @@ export function FixedDoublesDashboardPage() {
         {/* KPI — 4 columns */}
         {showSched && kpi && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <KpiCard label="Số đội"     value={kpi.totalTeams}     accent={T.brand}
-              sub="cặp đôi tham gia"   icon={<Users size={14} style={{ color: T.brand }} />} />
-            <KpiCard label="Tổng trận"  value={kpi.totalMatches}
-              sub="trận đấu"           icon={<Calendar size={14} style={{ color: T.cyan }} />} />
-            <KpiCard label="Đã xong"    value={`${kpi.completedMatches}/${kpi.totalMatches}`}
-              accent={T.success}       sub="trận hoàn thành"
-              icon={<Check size={14} style={{ color: T.success }} />} />
-            <KpiCard label="Hoàn thành" value={`${kpi.completionRate}%`}
-              accent={kpi.completionRate === 100 ? T.success : T.brand}
-              sub={`${kpi.pendingMatches} trận còn lại`}
-              icon={<Target size={14} style={{ color: T.warning }} />} />
+            <MetricCard icon={<Users size={18} />} label="Số đội" value={kpi.totalTeams} sub="cặp đôi tham gia" accent="blue" />
+            <MetricCard icon={<Calendar size={18} />} label="Tổng trận" value={kpi.totalMatches} sub="trận đấu" accent="teal" />
+            <MetricCard icon={<Check size={18} />} label="Đã xong" value={`${kpi.completedMatches}/${kpi.totalMatches}`} sub="trận hoàn thành" accent="green" />
+            <MetricCard icon={<Target size={18} />} label="Hoàn thành" value={`${kpi.completionRate}%`} sub={`${kpi.pendingMatches} trận còn lại`} accent="violet" />
           </div>
         )}
 
