@@ -15,8 +15,10 @@ export function MinigameDashboard() {
   const { resync } = useMinigameDetailSync(id)
   const mg = getMinigame(id!)
 
-  // Môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi): dùng chung dashboard đội-roster.
-  if (['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(mg?.sport ?? '')) {
+  // Môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi) HOẶC nội dung ĐÔI (cặp = đội 2 người):
+  // dùng chung dashboard đội-roster (tạo cặp/đội + chia bảng + RR/knockout + BXH theo cặp/đội).
+  if (['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(mg?.sport ?? '')
+    || (mg as unknown as { participantType?: string })?.participantType === 'PAIR') {
     return <FootballDashboardPage resync={resync} />
   }
   // Golf leaderboard (stroke/stableford). Golf Match-Play (format KNOCKOUT) → xuống nhánh knockout.

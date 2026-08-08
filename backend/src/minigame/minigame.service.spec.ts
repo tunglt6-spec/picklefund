@@ -929,11 +929,11 @@ describe('MinigameService', () => {
       expect(data).toHaveLength(12);
     });
 
-    it('không phải môn đồng đội → chặn', async () => {
-      mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg); // sport mặc định PICKLEBALL
+    it('không phải môn đồng đội / nội dung đôi → chặn', async () => {
+      mockPrisma.minigame.findUnique.mockResolvedValueOnce(baseMg); // sport PICKLEBALL, đơn (không PAIR)
       await expect(
         service.generateFootballSchedule('mg-1', 'club-1', false),
-      ).rejects.toThrow('bóng đá');
+      ).rejects.toThrow('đồng đội');
     });
 
     it('bóng rổ (BASKETBALL) dùng chung engine vòng tròn', async () => {

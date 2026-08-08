@@ -53,6 +53,9 @@ class CreateMinigameDto {
   // Đa bộ môn (Pha 0): tuỳ chọn, mặc định do DB đặt (PICKLEBALL/HEAD_TO_HEAD) → không phá luồng cũ.
   @IsOptional() @IsString() @MaxLength(30) sport?: string;
   @IsOptional() @IsIn(['HEAD_TO_HEAD', 'LEADERBOARD']) scoringModel?: string;
+  // Loại VĐV: INDIVIDUAL | PAIR (đôi) | TEAM. Quyết định GROUP_STAGE/KNOCKOUT tạo đội-đơn hay cặp.
+  @IsOptional() @IsIn(['INDIVIDUAL', 'PAIR', 'TEAM']) participantType?: string;
+  @IsOptional() @IsIn(['FIXED', 'ROTATING', 'RANDOM']) partnerMode?: string;
   @IsOptional() @IsDateString() scheduledAt?: string;
   @IsOptional() settings?: Record<string, unknown>;
 }

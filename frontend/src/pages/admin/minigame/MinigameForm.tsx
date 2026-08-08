@@ -113,14 +113,6 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
   const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS)
   const [stepIdx, setStepIdx] = useState(0)
   const [form, setForm] = useState<FormState>(DEFAULT)
-  const isFootball = form.sport === 'FOOTBALL'
-  const isBasketball = form.sport === 'BASKETBALL'
-  const isTeamSport = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(form.sport)
-  const isGolf = form.sport === 'GOLF'
-  const isRunning = form.sport === 'RUNNING'
-  // Golf Match-Play = loại trực tiếp (participants + KNOCKOUT), KHÔNG leaderboard.
-  const isGolfMatchPlay = isGolf && form.formatCode === 'GOLF_MATCH_PLAY'
-  const isLeaderboard = (isGolf && !isGolfMatchPlay) || isRunning // Golf stroke/stableford + Chạy bộ: golfer/VĐV thêm ở dashboard
   const [creating, setCreating] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [guestName, setGuestName] = useState('')
@@ -128,6 +120,20 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
 
   const preset = presets.find(p => p.code === form.sport) ?? FALLBACK_PRESETS[0]
   const selectedComp = preset.competitions.find(c => c.code === form.competition) ?? preset.competitions[0]
+  const participantType = selectedComp?.participantType ?? 'INDIVIDUAL'
+  const isPairComp = participantType === 'PAIR' // nội dung Đôi (cặp)
+  const isFootball = form.sport === 'FOOTBALL'
+  const isBasketball = form.sport === 'BASKETBALL'
+  // Đôi + Vòng bảng/Loại trực tiếp → dùng LUỒNG ĐỘI (cặp = đội 2 người) để chia bảng/RR/knockout/BXH
+  // đúng theo cặp; ghép cặp thủ công = tạo đội 2 người ở màn quản lý. (FIXED_DOUBLES_ROUND_ROBIN &
+  // RANDOM_DOUBLES giữ luồng đôi cũ.)
+  const isPairTeamFlow = isPairComp && (form.formatType === 'GROUP_STAGE' || form.formatType === 'KNOCKOUT')
+  const isTeamSport = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(form.sport) || isPairTeamFlow
+  const isGolf = form.sport === 'GOLF'
+  const isRunning = form.sport === 'RUNNING'
+  const isGolfMatchPlay = isGolf && form.formatCode === 'GOLF_MATCH_PLAY'
+  const isLeaderboard = (isGolf && !isGolfMatchPlay) || isRunning
+  const needPairing = form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' && !isEdit // đôi group/knockout ghép ở màn đội
 
   // Danh sách bước áp dụng theo môn: team/golf không chọn thành viên lúc tạo (dựng đội/golfer sau).
   const steps: StepKey[] = isTeamSport || isLeaderboard
@@ -208,19 +214,20 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
     // Bổ sung metadata preset vào settings (an toàn — backend merge Json settings).
     const presetMeta = { competition: form.competition || undefined, formatCode: form.formatCode || undefined }
     if (isTeamSport && !isEdit) {
-      const sportLabel = isBasketball ? 'bóng rổ' : 'bóng đá'
+      const unit = isPairTeamFlow ? 'cặp đôi' : 'đội'
       setCreating(true)
       try {
         const res = await api.post('/minigames', {
           name: form.name, format: 'GROUP_STAGE', sport: form.sport, scoringModel: 'HEAD_TO_HEAD',
+          participantType: isPairTeamFlow ? 'PAIR' : 'TEAM',
           scheduledAt: form.scheduledAt || undefined,
-          settings: { allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, ...presetMeta },
+          settings: { allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, koIntent: form.formatType === 'KNOCKOUT', ...presetMeta },
         })
         const mgId: string = res.data?.data?.id
         createMinigame({ id: mgId, clubId, name: form.name, startDate: form.startDate, endDate: form.endDate || undefined, status: 'DRAFT', groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, lossPoints: 0, notes: form.notes || undefined, createdBy: user?.id ?? 'user-1', formatType: 'GROUP_STAGE', sport: form.sport, scoringModel: 'HEAD_TO_HEAD', drawMode: form.drawMode })
-        toast.success(`Đã tạo giải ${sportLabel}! Hãy tạo đội & thành viên.`)
+        toast.success(`Đã tạo giải! Hãy tạo ${unit} & thành viên ở màn quản lý.`)
         navigate(`/minigames/${mgId}`)
-      } catch (err: any) { toast.error(err?.response?.data?.message ?? `Tạo giải ${sportLabel} thất bại`) } finally { setCreating(false) }
+      } catch (err: any) { toast.error(err?.response?.data?.message ?? 'Tạo giải thất bại') } finally { setCreating(false) }
       return
     }
     if (isLeaderboard && !isEdit) {
@@ -258,8 +265,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
       try {
         const res = await api.post('/minigames', {
           name: form.name, format: form.formatType, sport: form.sport, scoringModel: 'HEAD_TO_HEAD',
+          participantType,
           scheduledAt: form.scheduledAt || undefined,
-          settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, pairingMode: form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' ? form.pairingMode : undefined, ...presetMeta },
+          settings: { groupSize: form.groupSize, allowDraw: form.allowDraw, winPoints: form.winPoints, drawPoints: form.drawPoints, pairingMode: isPairComp ? form.pairingMode : undefined, ...presetMeta },
         })
         const mgId: string = res.data?.data?.id
         await api.post(`/minigames/${mgId}/participants`, { memberIds: realMemberIds, guests: guestPayload })
@@ -371,9 +379,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   )
                 })}
               </div>
-              {form.formatType === 'FIXED_DOUBLES_ROUND_ROBIN' && !isEdit && (
+              {needPairing && (
                 <div className="mt-1">
-                  <Label>Cách Ghép Cặp</Label>
+                  <Label>Cách Ghép Cặp (nội dung đôi)</Label>
                   <div className="grid grid-cols-1 gap-2">
                     {([{ value: 'RANDOM_PAIRING', label: '🎲 Ngẫu Nhiên', sub: 'Ghép cặp tự động ngẫu nhiên' }, { value: 'BALANCED_SKILL_PAIRING', label: '⚖️ Cân Bằng Trình Độ', sub: 'Cân bằng skill giữa các đội' }, { value: 'MANUAL_PAIRING', label: '✋ Thủ Công', sub: 'Tự chọn cặp trong dashboard' }] as const).map(opt => (
                       <label key={opt.value} className={cn('flex flex-col gap-0.5 rounded-lg px-3 py-2 cursor-pointer border transition-colors', form.pairingMode === opt.value ? 'bg-orange-50 border-orange-300' : '[background:var(--pf-surface-muted)] border-transparent hover:[background:var(--pf-color-muted-soft)]')}>

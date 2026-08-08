@@ -48,3 +48,32 @@ describe('double-elimination plan', () => {
     expect(gf.bFrom.take).toBe('W');
   });
 });
+
+describe('splitIntoGroups (chia bảng entrant — dùng cho cả cặp lẫn người)', () => {
+  const svc = new MinigameService(null as never, null as never);
+  const split = (n: number, size: number) => {
+    const keys = Array.from({ length: n }, (_, i) => `k${i}`);
+    return (svc as unknown as { splitIntoGroups(k: string[], s: number): Array<{ memberKeys: string[] }> }).splitIntoGroups(keys, size);
+  };
+
+  it('8 entrant / bảng 4 → 2 bảng, mỗi bảng 4', () => {
+    const g = split(8, 4);
+    expect(g).toHaveLength(2);
+    expect(g.map((x) => x.memberKeys.length)).toEqual([4, 4]);
+  });
+  it('6 entrant / bảng 4 → 2 bảng 3-3 (chia đều)', () => {
+    const g = split(6, 4);
+    expect(g).toHaveLength(2);
+    expect(g.map((x) => x.memberKeys.length)).toEqual([3, 3]);
+  });
+  it('5 entrant / bảng 2 → 3 bảng 2-2-1 (dư dồn bảng đầu)', () => {
+    const g = split(5, 2);
+    expect(g).toHaveLength(3);
+    expect(g.map((x) => x.memberKeys.length)).toEqual([2, 2, 1]);
+  });
+  it('không trùng entrant giữa các bảng', () => {
+    const g = split(8, 4);
+    const all = g.flatMap((x) => x.memberKeys);
+    expect(new Set(all).size).toBe(8);
+  });
+});

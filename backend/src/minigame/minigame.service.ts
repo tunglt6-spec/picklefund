@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { MinigameFormat, Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
+import { deriveParticipantModel } from './sport-presets';
 
 @Injectable()
 export class MinigameService {
@@ -136,11 +137,21 @@ export class MinigameService {
       scoringModel?: string;
       scheduledAt?: Date;
       settings?: any;
+      participantType?: string;
+      partnerMode?: string;
     },
   ) {
     // sport/scoringModel bỏ trống → DB default PICKLEBALL/HEAD_TO_HEAD (không phá giải cũ).
+    // participantType chưa gửi → suy từ (sport, format) để engine biết đôi/đơn/đội (dữ liệu cũ an toàn).
+    const derived = deriveParticipantModel(dto.sport ?? 'PICKLEBALL', dto.format);
     return this.prisma.minigame.create({
-      data: { clubId, createdById, ...dto },
+      data: {
+        clubId,
+        createdById,
+        ...dto,
+        participantType: dto.participantType ?? derived.participantType,
+        partnerMode: dto.partnerMode ?? derived.partnerMode ?? undefined,
+      },
     });
   }
 
@@ -751,11 +762,11 @@ export class MinigameService {
     doubleRoundRobin = false,
   ) {
     const mg = await this.assertOwnership(id, clubId);
-    // M4: mọi môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi). Điểm diễn giải theo môn.
+    // M4: môn đồng đội. Fix đôi: nội dung ĐÔI (participantType=PAIR) cũng dùng engine đội (cặp = đội 2 người).
     const TEAM_SPORTS = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'];
-    if (!TEAM_SPORTS.includes(mg.sport))
+    if (!TEAM_SPORTS.includes(mg.sport) && mg.participantType !== 'PAIR')
       throw new BadRequestException(
-        'Chức năng này chỉ dành cho môn đồng đội (bóng đá/bóng rổ/bóng chuyền).',
+        'Chức năng này chỉ dành cho môn đồng đội / nội dung đôi.',
       );
 
     const existing = await this.prisma.minigameMatch.count({
@@ -876,7 +887,7 @@ export class MinigameService {
     const existing = await this.prisma.minigameMatch.count({ where: { minigameId: id } });
     if (existing > 0) throw new BadRequestException('Đã có lịch. Hãy xoá lịch trước khi tạo lại.');
     let teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } });
-    if (teams.length === 0) { await this.ensureSinglePlayerTeams(id); teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } }); }
+    if (teams.length === 0) { await this.ensureEntrantTeams(id, mg.participantType, this.asSettings(mg.settings).pairingMode as string | undefined); teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } }); }
     const n = teams.length;
     if (n < 2) throw new BadRequestException('Cần ít nhất 2 đội/người.');
     if ((n & (n - 1)) !== 0) throw new BadRequestException('Loại kép hiện cần số đội/người là lũy thừa của 2 (4, 8, 16...).');
@@ -943,9 +954,9 @@ export class MinigameService {
       where: { minigameId: id },
       orderBy: { createdAt: 'asc' },
     });
-    // Nhóm vợt/đơn CHƯA có đội (0 đội) → tạo đội-đơn từ người chơi rồi mới dựng nhánh.
+    // CHƯA có đội (0 đội) → tạo entrant (đơn = đội-đơn; đôi = cặp) từ người chơi rồi mới dựng nhánh.
     if (teams.length === 0) {
-      await this.ensureSinglePlayerTeams(id);
+      await this.ensureEntrantTeams(id, mg.participantType, this.asSettings(mg.settings).pairingMode as string | undefined);
       teams = await this.prisma.minigameTeam.findMany({
         where: { minigameId: id },
         orderBy: { createdAt: 'asc' },
@@ -1209,22 +1220,28 @@ export class MinigameService {
   }
 
   /**
-   * M3: đảm bảo có "đội-đơn" (MinigameTeam chỉ player1) cho từng người chơi (member + khách) —
-   * để nhóm vợt/đơn dùng chung hạ tầng team/match cho knockout. No-op nếu đã có đội.
+   * M3/fix: đảm bảo có ĐỘI ENTRANT cho knockout. No-op nếu đã có đội (ví dụ cặp tạo tay).
+   * - ĐÔI (PAIR): tự ghép cặp (đội 2 người) từ pool theo pairingMode; MANUAL → phải tạo cặp trước.
+   * - ĐƠN (INDIVIDUAL): mỗi người 1 đội-đơn.
    */
-  private async ensureSinglePlayerTeams(id: string) {
-    const count = await this.prisma.minigameTeam.count({
-      where: { minigameId: id },
-    });
+  private async ensureEntrantTeams(id: string, participantType?: string | null, pairingMode?: string) {
+    const count = await this.prisma.minigameTeam.count({ where: { minigameId: id } });
     if (count > 0) return;
     const pool = await this.getPlayerPool(id);
     if (pool.length === 0) return;
+    if (participantType === 'PAIR') {
+      if (pairingMode === 'MANUAL_PAIRING')
+        throw new BadRequestException('Ghép cặp thủ công: hãy tạo các cặp (ở màn quản lý) trước khi tạo nhánh.');
+      if (pool.length < 4) throw new BadRequestException('Cần ít nhất 4 người (2 cặp) cho nhánh đôi.');
+      const ordered = this.orderPoolForPairing(pool, pairingMode);
+      const pairs: Prisma.MinigameTeamCreateManyInput[] = [];
+      for (let i = 0; i + 1 < ordered.length; i += 2)
+        pairs.push({ minigameId: id, name: `Đôi ${Math.floor(i / 2) + 1}`, ...this.slotCols('player1', ordered[i]), ...this.slotCols('player2', ordered[i + 1]) });
+      await this.prisma.minigameTeam.createMany({ data: pairs });
+      return;
+    }
     await this.prisma.minigameTeam.createMany({
-      data: pool.map((p) => ({
-        minigameId: id,
-        name: p.name || 'Người chơi',
-        ...this.slotCols('player1', p),
-      })),
+      data: pool.map((p) => ({ minigameId: id, name: p.name || 'Người chơi', ...this.slotCols('player1', p) })),
     });
   }
 
@@ -1234,10 +1251,36 @@ export class MinigameService {
    * team/match/score/standings đã có. Bảng lưu vào settings.groups (memberKeys = memberId|guestId).
    * Chặn chia lại nếu đã có lịch (giống doubles) — phải xoá lịch trước.
    */
+  /** Sắp thứ tự pool theo chế độ ghép cặp (BALANCED = mạnh↔yếu; else ngẫu nhiên). Dùng chung. */
+  private orderPoolForPairing<T extends { skill: number }>(pool: T[], pairingMode?: string): T[] {
+    if (pairingMode === 'BALANCED_SKILL_PAIRING') {
+      const sorted = this.shuffle(pool).sort((a, b) => b.skill - a.skill);
+      const out: T[] = []; let lo = 0; let hi = sorted.length - 1;
+      while (lo <= hi) { out.push(sorted[lo]); if (lo !== hi) out.push(sorted[hi]); lo++; hi--; }
+      return out;
+    }
+    return this.shuffle(pool);
+  }
+
+  /** Chia danh sách "entrant key" (người hoặc id-đội) thành N bảng cân đối theo groupSize. */
+  private splitIntoGroups(keys: string[], groupSize: number) {
+    const numGroups = Math.max(1, Math.ceil(keys.length / groupSize));
+    const base = Math.floor(keys.length / numGroups);
+    const extra = keys.length % numGroups;
+    const groups: Array<{ id: string; name: string; order: number; status: string; memberKeys: string[] }> = [];
+    let offset = 0;
+    for (let i = 0; i < numGroups; i++) {
+      const size = base + (i < extra ? 1 : 0);
+      groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(i), order: i, status: 'ACTIVE', memberKeys: keys.slice(offset, offset + size) });
+      offset += size;
+    }
+    return groups;
+  }
+
   private async generateGroupStageTeams(
     id: string,
     clubId: string,
-    mg: { settings: Prisma.JsonValue | null },
+    mg: { settings: Prisma.JsonValue | null; participantType?: string | null },
   ) {
     const existingMatches = await this.prisma.minigameMatch.count({
       where: { minigameId: id },
@@ -1247,49 +1290,50 @@ export class MinigameService {
         'Đã có lịch thi đấu. Hãy xoá lịch trước khi chia lại bảng.',
       );
 
-    const pool = await this.getPlayerPool(id);
-    if (pool.length < 2)
-      throw new BadRequestException('Cần ít nhất 2 người chơi để chia bảng');
-
     const settings = this.asSettings(mg.settings);
     const rawSize = Number(settings.groupSize);
     const groupSize =
       Number.isFinite(rawSize) && rawSize >= 2 ? Math.floor(rawSize) : 4;
 
-    // Xáo ngẫu nhiên rồi chia đều: numGroups = ceil(n/size); dư phân bổ vào các bảng đầu.
-    const shuffled = this.shuffle(pool);
-    const numGroups = Math.max(1, Math.ceil(shuffled.length / groupSize));
-    const base = Math.floor(shuffled.length / numGroups);
-    const extra = shuffled.length % numGroups;
-
-    const groups: Array<{
-      id: string;
-      name: string;
-      order: number;
-      status: string;
-      memberKeys: string[];
-    }> = [];
-    let offset = 0;
-    for (let i = 0; i < numGroups; i++) {
-      const size = base + (i < extra ? 1 : 0);
-      const slice = shuffled.slice(offset, offset + size);
-      offset += size;
-      groups.push({
-        id: `grp-${randomUUID()}`,
-        name: this.groupLabel(i),
-        order: i,
-        status: 'ACTIVE',
-        memberKeys: slice.map((p) => (p.memberId ?? p.guestId) as string),
-      });
+    // ĐÔI (PAIR): entrant = CẶP (đội 2 người). Ghép cặp thủ công (đã tạo qua /teams) hoặc tự động,
+    // rồi chia bảng theo ID CẶP (memberKeys = id đội). Đơn (INDIVIDUAL): entrant = người (đội-đơn).
+    if (mg.participantType === 'PAIR') {
+      const pairingMode = settings.pairingMode as string | undefined;
+      let teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } });
+      const existingPairs = teams.filter((t) => t.player2Id || t.player2GuestId);
+      if (pairingMode === 'MANUAL_PAIRING') {
+        if (existingPairs.length < 2)
+          throw new BadRequestException('Ghép cặp thủ công: hãy tạo ít nhất 2 cặp (ở màn quản lý) trước khi chia bảng.');
+        teams = existingPairs;
+      } else if (existingPairs.length < 2) {
+        // Tự động ghép cặp từ pool người chơi.
+        const pool = await this.getPlayerPool(id);
+        if (pool.length < 4) throw new BadRequestException('Cần ít nhất 4 người chơi (2 cặp) để chia bảng đôi.');
+        const ordered = this.orderPoolForPairing(pool, pairingMode);
+        const pairTeams: Prisma.MinigameTeamCreateManyInput[] = [];
+        for (let i = 0; i + 1 < ordered.length; i += 2)
+          pairTeams.push({ minigameId: id, name: `Đôi ${Math.floor(i / 2) + 1}`, ...this.slotCols('player1', ordered[i]), ...this.slotCols('player2', ordered[i + 1]) });
+        await this.prisma.minigameTeam.deleteMany({ where: { minigameId: id } });
+        await this.prisma.minigameTeam.createMany({ data: pairTeams });
+        teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } });
+      } else {
+        teams = existingPairs; // đã có cặp (tạo tay dù không phải MANUAL) → dùng luôn
+      }
+      const groups = this.splitIntoGroups(this.shuffle(teams.map((t) => t.id)), groupSize);
+      await this.prisma.minigame.update({ where: { id }, data: { settings: { ...settings, groups } as Prisma.InputJsonValue } });
+      return this.findOne(id, clubId);
     }
 
-    // Đội-đơn cho từng người chơi (player1 = member|khách; player2 rỗng).
+    // ĐƠN — mỗi người 1 đội-đơn; chia bảng theo key người.
+    const pool = await this.getPlayerPool(id);
+    if (pool.length < 2)
+      throw new BadRequestException('Cần ít nhất 2 người chơi để chia bảng');
+    const groups = this.splitIntoGroups(this.shuffle(pool).map((p) => (p.memberId ?? p.guestId) as string), groupSize);
     const teams: Prisma.MinigameTeamCreateManyInput[] = pool.map((p) => ({
       minigameId: id,
       name: p.name || 'Người chơi',
       ...this.slotCols('player1', p),
     }));
-
     await this.prisma.minigameTeam.deleteMany({ where: { minigameId: id } });
     await this.prisma.minigameTeam.createMany({ data: teams });
     await this.prisma.minigame.update({
@@ -1328,9 +1372,10 @@ export class MinigameService {
     });
     if (teams.length === 0)
       throw new BadRequestException('Chưa có đội. Hãy chia bảng trước.');
-    // playerKey (memberId|guestId) → teamId của đội-đơn.
+    // memberKey → teamId. Đơn: key = playerKey (đội-đơn). Đôi: key = id CẶP (memberKeys lưu id đội).
     const teamOf = new Map<string, string>();
     for (const t of teams) {
+      teamOf.set(t.id, t.id); // ĐÔI: memberKeys là id cặp → resolve về chính đội đó
       const key = t.player1Id ?? t.player1GuestId;
       if (key) teamOf.set(key, t.id);
     }
