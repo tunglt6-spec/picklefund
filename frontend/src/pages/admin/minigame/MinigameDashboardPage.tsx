@@ -219,10 +219,11 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   const handleCloseModal = () => setScoreEntryMatchId(null)
 
   // Đánh đôi ngẫu nhiên: backend bốc vòng mới (persist) rồi đồng bộ; local dùng modal mock.
-  const handleDrawRound = async () => {
+  const handleDrawRound = async (mode: 'random' | 'mexicano' = 'random') => {
     if (backend) {
       try {
-        const res = await api.post(`/minigames/${id}/draw-round`)
+        const ep = mode === 'mexicano' ? `/minigames/${id}/draw-round-mexicano` : `/minigames/${id}/draw-round`
+        const res = await api.post(ep)
         const d = res.data?.data
         resync?.()
         toast.success(d ? `Đã bốc vòng ${d.round} — ${d.matches} trận${d.sitOut ? `, ${d.sitOut} nghỉ` : ''}` : 'Đã bốc vòng mới')
@@ -346,11 +347,19 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             )}
             {/* Primary CTA — bốc vòng mới. Backend → persist qua API + resync; local → modal. */}
             <button
-              onClick={handleDrawRound}
+              onClick={() => handleDrawRound('random')}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl [background:var(--pf-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:[background:var(--pf-primary-hover)] md:w-auto"
             >
               <Shuffle size={16} />
-              Đánh Đôi Ngẫu Nhiên
+              Bốc ngẫu nhiên (Americano)
+            </button>
+            {/* M6: Mexicano — bốc vòng ghép theo BXH (yêu cầu vòng trước đủ kết quả). */}
+            <button
+              onClick={() => handleDrawRound('mexicano')}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors hover:[background:var(--pf-primary)] hover:text-white md:w-auto"
+            >
+              <Shuffle size={16} />
+              Bốc theo BXH (Mexicano)
             </button>
           </div>
         </div>

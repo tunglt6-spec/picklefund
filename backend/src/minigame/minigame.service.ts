@@ -1349,6 +1349,74 @@ export class MinigameService {
   }
 
   /**
+   * MEXICANO (M6) — bốc vòng mới GHÉP THEO BXH: xếp người chơi theo hạng hiện tại, chia nhóm 4
+   * (trình độ gần nhau), ghép 1&4 vs 2&3 trong mỗi nhóm. Vòng 1 (chưa có trận) → ngẫu nhiên.
+   * CHẶN sinh vòng mới nếu vòng hiện tại chưa nhập đủ kết quả (đúng luật Mexicano). Deterministic.
+   */
+  async drawRoundMexicano(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    if (mg.format !== 'RANDOM_DOUBLES')
+      throw new BadRequestException('Mexicano chỉ áp dụng cho định dạng Đánh đôi.');
+    const pool = await this.getPlayerPool(id);
+    if (pool.length < 4)
+      throw new BadRequestException('Cần ít nhất 4 người chơi để bốc 1 trận đôi.');
+
+    const agg = await this.prisma.minigameTeam.aggregate({
+      where: { minigameId: id },
+      _max: { round: true },
+    });
+    const curRound = agg._max.round ?? 0;
+    if (curRound > 0) {
+      const pending = await this.prisma.minigameMatch.count({
+        where: { minigameId: id, round: curRound, status: { not: 'COMPLETED' } },
+      });
+      if (pending > 0)
+        throw new BadRequestException(
+          'Vòng hiện tại chưa nhập đủ kết quả — không thể sinh vòng Mexicano mới.',
+        );
+    }
+    const nextRound = curRound + 1;
+
+    // Thứ tự người chơi: theo BXH nếu đã có trận; vòng 1 → ngẫu nhiên.
+    const byKey = new Map(pool.map((p) => [(p.memberId ?? p.guestId) as string, p]));
+    let ordered: typeof pool;
+    if (curRound === 0) {
+      ordered = this.shuffle(pool);
+    } else {
+      const standings = await this.getPlayerStandings(id, clubId);
+      ordered = standings.map((s) => byKey.get(s.memberId)).filter(Boolean) as typeof pool;
+      for (const p of pool) if (!ordered.includes(p)) ordered.push(p); // người chưa có trận → cuối
+    }
+
+    const matchCount = Math.floor(ordered.length / 4);
+    for (let i = 0; i < matchCount; i++) {
+      const g = ordered.slice(i * 4, i * 4 + 4); // 4 người gần trình độ
+      const teamA = await this.prisma.minigameTeam.create({
+        data: {
+          minigameId: id, round: nextRound, name: `V${nextRound}-T${i + 1}A`,
+          ...this.slotCols('player1', g[0]), ...this.slotCols('player2', g[3]), // 1 & 4
+        },
+      });
+      const teamB = await this.prisma.minigameTeam.create({
+        data: {
+          minigameId: id, round: nextRound, name: `V${nextRound}-T${i + 1}B`,
+          ...this.slotCols('player1', g[1]), ...this.slotCols('player2', g[2]), // 2 & 3
+        },
+      });
+      await this.prisma.minigameMatch.create({
+        data: { minigameId: id, teamAId: teamA.id, teamBId: teamB.id, round: nextRound, courtNo: i + 1 },
+      });
+    }
+    if (mg.status === 'DRAFT') {
+      await this.prisma.minigame.update({
+        where: { id },
+        data: { status: 'ACTIVE', startedAt: mg.startedAt ?? new Date() },
+      });
+    }
+    return { round: nextRound, matches: matchCount, sitOut: ordered.length - matchCount * 4 };
+  }
+
+  /**
    * BXH cấp CÁ NHÂN (dùng cho RANDOM_DOUBLES): tính ĐỘNG từ các trận COMPLETED —
    * mỗi người cộng theo đội mình ở từng vòng. Tránh double-count vì tính lại từ đầu.
    */

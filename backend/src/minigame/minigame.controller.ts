@@ -412,6 +412,16 @@ export class MinigameController {
     return ok(await this.svc.drawRound(id, user.clubId), 'Đã bốc vòng mới');
   }
 
+  // M6: Mexicano — bốc vòng mới ghép theo BXH (chỉ khi vòng trước đã đủ kết quả).
+  @Post(':id/draw-round-mexicano')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async drawRoundMexicano(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.drawRoundMexicano(id, user.clubId), 'Đã bốc vòng Mexicano');
+  }
+
   @Get(':id/player-standings')
   async playerStandings(
     @Param('id') id: string,
