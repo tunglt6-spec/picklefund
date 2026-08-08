@@ -105,7 +105,7 @@ const RACKET_RANDOM: FormatDef = {
 /** Các thể thức nhóm vợt sẽ bật ở M2+ (engine chưa có). */
 const RACKET_FORMATS_PLANNED: FormatDef[] = [
   { code: 'SINGLE_ELIMINATION', label: 'Loại trực tiếp', sub: 'Single Elimination — nhánh loại trực tiếp (đơn)', dbFormat: 'KNOCKOUT', implemented: true },
-  { code: 'DOUBLE_ELIMINATION', label: 'Loại kép', sub: 'Double Elimination', dbFormat: 'KNOCKOUT', implemented: false, note: 'Sắp có (M4)' },
+  { code: 'DOUBLE_ELIMINATION', label: 'Loại kép', sub: 'Double Elimination — WB/LB/GF (số đội 4/8/16)', dbFormat: 'KNOCKOUT', implemented: true },
   { code: 'LEAGUE', label: 'League (đôi cố định)', sub: 'Vòng tròn lượt đi/lượt về', dbFormat: 'FIXED_DOUBLES_ROUND_ROBIN', implemented: true },
   { code: 'MEXICANO', label: 'Mexicano', sub: 'Ghép cặp theo BXH mỗi vòng (trình độ gần nhau)', dbFormat: 'RANDOM_DOUBLES', implemented: true },
 ];

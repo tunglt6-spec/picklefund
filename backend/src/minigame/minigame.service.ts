@@ -834,6 +834,94 @@ export class MinigameService {
     return seeds;
   }
 
+  // ── M10: DOUBLE ELIMINATION (loại kép) ─────────────────────────────────────
+  /**
+   * Dựng KẾ HOẠCH nhánh loại kép: Winners Bracket + Losers Bracket + Grand Final (1 trận, KHÔNG
+   * bracket-reset). teamIds đã seed vào vị trí nhánh (độ dài = lũy thừa 2, không BYE). Trả danh sách
+   * "slot" (trận) với nguồn team (seed sẵn hoặc "W/L của slot khác") — chưa gắn matchId.
+   */
+  private buildDoubleElimPlan(teamIds: string[]) {
+    type Src = { slot: string; take: 'W' | 'L' };
+    type Slot = { id: string; bracket: 'WB' | 'LB' | 'GF'; roundNo: number; a?: string; b?: string; aFrom?: Src; bFrom?: Src };
+    const slots: Slot[] = [];
+    // WB vòng 1 từ seed
+    const wbRounds: string[][] = [];
+    let r1: string[] = [];
+    for (let i = 0; i < teamIds.length / 2; i++) { const id = `WB1_${i}`; slots.push({ id, bracket: 'WB', roundNo: 1, a: teamIds[2 * i], b: teamIds[2 * i + 1] }); r1.push(id); }
+    wbRounds.push(r1); let wbPrev = r1; let r = 2;
+    while (wbPrev.length > 1) {
+      const cur: string[] = [];
+      for (let i = 0; i < wbPrev.length / 2; i++) { const id = `WB${r}_${i}`; slots.push({ id, bracket: 'WB', roundNo: r, aFrom: { slot: wbPrev[2 * i], take: 'W' }, bFrom: { slot: wbPrev[2 * i + 1], take: 'W' } }); cur.push(id); }
+      wbRounds.push(cur); wbPrev = cur; r++;
+    }
+    const wbFinal = wbPrev[0];
+    // LB
+    let lb = 1; let lbPrev: string[] = [];
+    { const cur: string[] = []; const wr1 = wbRounds[0]; for (let i = 0; i < wr1.length / 2; i++) { const id = `LB${lb}_${i}`; slots.push({ id, bracket: 'LB', roundNo: lb, aFrom: { slot: wr1[2 * i], take: 'L' }, bFrom: { slot: wr1[2 * i + 1], take: 'L' } }); cur.push(id); } lbPrev = cur; lb++; }
+    for (let wi = 1; wi < wbRounds.length; wi++) {
+      const wbRound = wbRounds[wi];
+      const major: string[] = []; // LB survivor vs WB-round loser
+      for (let i = 0; i < lbPrev.length; i++) { const id = `LB${lb}_${i}`; slots.push({ id, bracket: 'LB', roundNo: lb, aFrom: { slot: lbPrev[i], take: 'W' }, bFrom: { slot: wbRound[i], take: 'L' } }); major.push(id); }
+      lbPrev = major; lb++;
+      if (lbPrev.length > 1) { const minor: string[] = []; for (let i = 0; i < lbPrev.length / 2; i++) { const id = `LB${lb}_${i}`; slots.push({ id, bracket: 'LB', roundNo: lb, aFrom: { slot: lbPrev[2 * i], take: 'W' }, bFrom: { slot: lbPrev[2 * i + 1], take: 'W' } }); minor.push(id); } lbPrev = minor; lb++; }
+    }
+    const lbFinal = lbPrev[0];
+    slots.push({ id: 'GF', bracket: 'GF', roundNo: 99, aFrom: { slot: wbFinal, take: 'W' }, bFrom: { slot: lbFinal, take: 'W' } });
+    return slots;
+  }
+
+  /** Sinh nhánh loại kép. Yêu cầu số đội/người = lũy thừa 2 (4/8/16...) để không cần BYE. */
+  async generateDoubleElimination(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    const existing = await this.prisma.minigameMatch.count({ where: { minigameId: id } });
+    if (existing > 0) throw new BadRequestException('Đã có lịch. Hãy xoá lịch trước khi tạo lại.');
+    let teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } });
+    if (teams.length === 0) { await this.ensureSinglePlayerTeams(id); teams = await this.prisma.minigameTeam.findMany({ where: { minigameId: id }, orderBy: { createdAt: 'asc' } }); }
+    const n = teams.length;
+    if (n < 2) throw new BadRequestException('Cần ít nhất 2 đội/người.');
+    if ((n & (n - 1)) !== 0) throw new BadRequestException('Loại kép hiện cần số đội/người là lũy thừa của 2 (4, 8, 16...).');
+
+    const seeded = this.seedOrder(n).map((s) => teams[s - 1].id); // không BYE (n là 2^k)
+    const slots = this.buildDoubleElimPlan(seeded);
+
+    const slotToMatch: Record<string, string> = {};
+    let court = 1;
+    for (const sl of slots) {
+      const m = await this.prisma.minigameMatch.create({
+        data: { minigameId: id, groupId: sl.bracket, round: sl.roundNo, courtNo: court++, teamAId: sl.a ?? null, teamBId: sl.b ?? null },
+      });
+      slotToMatch[sl.id] = m.id;
+    }
+    const routing: Record<string, Array<{ to: string; pos: 'A' | 'B'; take: 'W' | 'L' }>> = {};
+    for (const sl of slots) {
+      if (sl.aFrom) (routing[slotToMatch[sl.aFrom.slot]] ??= []).push({ to: slotToMatch[sl.id], pos: 'A', take: sl.aFrom.take });
+      if (sl.bFrom) (routing[slotToMatch[sl.bFrom.slot]] ??= []).push({ to: slotToMatch[sl.id], pos: 'B', take: sl.bFrom.take });
+    }
+    const prev = this.asSettings(mg.settings);
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...prev, deRouting: routing, deActive: true } as Prisma.InputJsonValue, status: 'ACTIVE', startedAt: mg.startedAt ?? new Date() },
+    });
+    return this.findOne(id, clubId);
+  }
+
+  /** Đẩy winner/loser của 1 trận loại kép vừa xong sang các slot kế tiếp (theo settings.deRouting). */
+  private async propagateDoubleElim(
+    settings: Record<string, unknown>,
+    match: { id: string; teamAId: string | null; teamBId: string | null; winnerId: string | null },
+  ) {
+    const routing = (settings.deRouting as Record<string, Array<{ to: string; pos: 'A' | 'B'; take: 'W' | 'L' }>> | undefined)?.[match.id];
+    if (!routing || !match.winnerId) return;
+    const loserId = match.teamAId === match.winnerId ? match.teamBId : match.teamAId;
+    for (const t of routing) {
+      const teamId = t.take === 'W' ? match.winnerId : loserId;
+      await this.prisma.minigameMatch.update({
+        where: { id: t.to },
+        data: t.pos === 'A' ? { teamAId: teamId } : { teamBId: teamId },
+      });
+    }
+  }
+
   /**
    * BÓNG ĐÁ (Pha 1d) — sinh nhánh LOẠI TRỰC TIẾP (single elimination) vòng 1.
    * Đội lẻ/không đủ 2^k → thêm BYE (đội mạnh được đi tiếp không đấu = walkover COMPLETED).
@@ -1682,6 +1770,12 @@ export class MinigameService {
 
     // Nhập điểm = giải đang diễn ra → nâng status nếu còn "Nháp" (không mở lại giải đã kết thúc).
     await this.activateIfPending(match.minigame.id);
+
+    // M10: nhánh loại kép → đẩy winner/loser sang slot kế tiếp (WB/LB/GF).
+    const deSettings = this.asSettings(match.minigame.settings);
+    if (deSettings.deActive && winnerId) {
+      await this.propagateDoubleElim(deSettings, { id: matchId, teamAId: match.teamAId, teamBId: match.teamBId, winnerId });
+    }
 
     return this.prisma.minigameMatch.findUnique({ where: { id: matchId } });
   }

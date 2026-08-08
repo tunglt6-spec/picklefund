@@ -4,7 +4,7 @@
  * nhập tỉ số từng trận → "Vòng kế tiếp" (advance). Hiển thị bracket theo vòng + nhà vô địch.
  * Tái dùng store detail (matches/teams) + endpoint generic /knockout. BYE = walkover tự đi tiếp.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Swords, Crown, ChevronRight, Save } from 'lucide-react'
 import api from '../../../lib/api'
@@ -22,8 +22,9 @@ interface KoMatch {
   teamB?: { id: string; name: string } | null
   scoreA?: number | null; scoreB?: number | null
   winnerId?: string | null
-  round: number; status: string
+  round: number; status: string; groupId?: string | null
 }
+const DE_BRACKETS = ['WB', 'LB', 'GF']
 
 function roundLabel(countInRound: number): string {
   if (countInRound === 1) return 'Chung kết'
@@ -46,6 +47,12 @@ export function KnockoutDashboardPage() {
 
   const [busy, setBusy] = useState(false)
   const [edits, setEdits] = useState<Record<string, { a: string; b: string }>>({})
+  const [formatCode, setFormatCode] = useState<string>('')
+  // Đọc formatCode để biết là Loại kép (DE) hay Loại đơn khi CHƯA có trận.
+  useEffect(() => { if (id) api.get(`/minigames/${id}`).then(r => setFormatCode((r.data?.data ?? r.data)?.settings?.formatCode ?? '')).catch(() => {}) }, [id])
+
+  // DE nếu có trận gắn bracket WB/LB/GF, hoặc formatCode = DOUBLE_ELIMINATION (trước khi tạo).
+  const de = matches.some(m => DE_BRACKETS.includes(m.groupId ?? '')) || formatCode === 'DOUBLE_ELIMINATION'
 
   if (!mg) return <div className="flex-1 flex items-center justify-center"><p className="[color:var(--pf-color-muted)]">Không tìm thấy giải</p></div>
 
@@ -53,14 +60,17 @@ export function KnockoutDashboardPage() {
   const byRound = (r: number) => matches.filter(m => m.round === r)
   const maxRound = rounds.length ? rounds[rounds.length - 1] : 0
   const finalMatches = byRound(maxRound)
-  const champion = finalMatches.length === 1 && finalMatches[0].status === 'COMPLETED' && finalMatches[0].winnerId
-    ? nameOf(finalMatches[0].winnerId) : null
+  // Nhà vô địch: DE → thắng trận GF; đơn → thắng trận chung kết (vòng cuối, 1 trận).
+  const gfMatch = matches.find(m => m.groupId === 'GF')
+  const champion = de
+    ? (gfMatch?.status === 'COMPLETED' && gfMatch.winnerId ? nameOf(gfMatch.winnerId) : null)
+    : (finalMatches.length === 1 && finalMatches[0].status === 'COMPLETED' && finalMatches[0].winnerId ? nameOf(finalMatches[0].winnerId) : null)
   const currentDecided = maxRound > 0 && finalMatches.every(m => m.status === 'COMPLETED' && m.winnerId)
-  const canAdvance = maxRound > 0 && finalMatches.length > 1 && currentDecided
+  const canAdvance = !de && maxRound > 0 && finalMatches.length > 1 && currentDecided // DE tự đẩy nhánh, không cần advance
 
   const generate = async () => {
     setBusy(true)
-    try { await api.post(`/minigames/${id}/knockout`); resync(); toast.success('Đã tạo nhánh loại trực tiếp!') }
+    try { await api.post(`/minigames/${id}/${de ? 'double-elimination' : 'knockout'}`); resync(); toast.success(de ? 'Đã tạo nhánh loại kép!' : 'Đã tạo nhánh loại trực tiếp!') }
     catch (err: any) { toast.error(err?.response?.data?.message ?? 'Tạo nhánh thất bại') }
     finally { setBusy(false) }
   }
@@ -81,9 +91,46 @@ export function KnockoutDashboardPage() {
     finally { setBusy(false) }
   }
 
+  // Cột hiển thị: DE nhóm theo bracket (WB/LB/GF)+vòng; đơn theo vòng.
+  const bracketLabel = (g?: string | null) => (g === 'WB' ? 'Nhánh thắng' : g === 'LB' ? 'Nhánh thua' : g === 'GF' ? 'Chung kết' : '')
+  const columns: Array<{ key: string; label: string; ms: KoMatch[] }> = de
+    ? DE_BRACKETS.flatMap(bk => {
+        const bms = matches.filter(m => (m.groupId ?? '') === bk)
+        const rs = Array.from(new Set(bms.map(m => m.round))).sort((a, b) => a - b)
+        return rs.map(r => ({ key: `${bk}-${r}`, label: `${bracketLabel(bk)}${bk === 'GF' ? '' : ' · V' + r}`, ms: bms.filter(m => m.round === r) }))
+      })
+    : rounds.map(r => ({ key: String(r), label: roundLabel(byRound(r).length), ms: byRound(r) }))
+
+  const renderCard = (m: KoMatch) => {
+    const done = m.status === 'COMPLETED'
+    const bye = !m.teamBId
+    const e = edits[m.id] ?? { a: done ? String(m.scoreA ?? '') : '', b: done ? String(m.scoreB ?? '') : '' }
+    return (
+      <div key={m.id} className="rounded-xl border [background:var(--pf-surface)] border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+        {[{ tid: m.teamAId, sc: m.scoreA, key: 'a' as const }, { tid: m.teamBId, sc: m.scoreB, key: 'b' as const }].map((side, i) => (
+          <div key={i} className={cn('flex items-center justify-between gap-2 px-3 py-2', i === 0 && 'border-b border-[color:var(--pf-border-soft)]', done && m.winnerId === side.tid && 'bg-green-50')}>
+            <span className={cn('text-sm truncate', done && m.winnerId === side.tid ? 'font-bold text-green-700' : '[color:var(--pf-text)]')}>{side.tid ? nameOf(side.tid) : (bye ? 'BYE' : 'Chờ...')}</span>
+            {bye ? <span className="text-xs [color:var(--pf-color-muted)]">—</span>
+              : done ? <span className="text-sm font-bold [color:var(--pf-text)]">{side.sc}</span>
+              : side.tid ? <input inputMode="numeric" value={e[side.key]} onChange={ev => setEdits(s => ({ ...s, [m.id]: { ...e, [side.key]: ev.target.value.replace(/\D/g, '') } }))}
+                  className="w-10 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
+          </div>
+        ))}
+        {!done && !bye && m.teamAId && m.teamBId && (
+          <button onClick={() => saveScore(m)} disabled={busy}
+            className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
+            <Save size={12} /> Lưu tỉ số
+          </button>
+        )}
+        {bye && <div className="px-3 py-1 text-[11px] italic [color:var(--pf-color-muted)]">BYE — tự vào vòng trong</div>}
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader title={`Loại trực tiếp – ${mg.name}`} subtitle="Single-elimination · nhánh đấu tìm nhà vô địch"
+      <PageHeader title={`${de ? 'Loại kép' : 'Loại trực tiếp'} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : 'Single-elimination · nhánh đấu tìm nhà vô địch'}
         actions={
           <div className="flex items-center gap-2">
             {matches.length === 0
@@ -107,47 +154,21 @@ export function KnockoutDashboardPage() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Swords size={44} className="[color:var(--pf-color-muted)] mb-4" />
             <p className="[color:var(--pf-color-muted)] font-medium">Chưa có nhánh đấu</p>
-            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4 max-w-sm">Bấm <b>Tạo nhánh đấu</b> — hệ thống xếp hạt giống từ người chơi đã đăng ký (số lẻ → có suất BYE tự vào vòng trong).</p>
-            <Button onClick={generate} disabled={busy}><Swords size={16} /> Tạo nhánh đấu</Button>
+            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4 max-w-sm">
+              {de
+                ? <>Bấm <b>Tạo nhánh loại kép</b> — cần số đội/người là lũy thừa 2 (4/8/16). Thua ở nhánh thắng sẽ rơi xuống nhánh thua; thắng/thua tự đẩy khi nhập kết quả.</>
+                : <>Bấm <b>Tạo nhánh đấu</b> — hệ thống xếp hạt giống từ người chơi đã đăng ký (số lẻ → có suất BYE tự vào vòng trong).</>}
+            </p>
+            <Button onClick={generate} disabled={busy}><Swords size={16} /> {de ? 'Tạo nhánh loại kép' : 'Tạo nhánh đấu'}</Button>
           </div>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {rounds.map(r => {
-              const ms = byRound(r)
-              return (
-                <div key={r} className="shrink-0 w-64">
-                  <div className="text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)] mb-2 px-1">{roundLabel(ms.length)}</div>
-                  <div className="flex flex-col gap-3">
-                    {ms.map(m => {
-                      const done = m.status === 'COMPLETED'
-                      const bye = !m.teamBId
-                      const e = edits[m.id] ?? { a: done ? String(m.scoreA ?? '') : '', b: done ? String(m.scoreB ?? '') : '' }
-                      return (
-                        <div key={m.id} className="rounded-xl border [background:var(--pf-surface)] border-[color:var(--pf-border)] shadow-sm overflow-hidden">
-                          {[{ tid: m.teamAId, sc: m.scoreA, key: 'a' as const }, { tid: m.teamBId, sc: m.scoreB, key: 'b' as const }].map((side, i) => (
-                            <div key={i} className={cn('flex items-center justify-between gap-2 px-3 py-2', i === 0 && 'border-b border-[color:var(--pf-border-soft)]',
-                              done && m.winnerId === side.tid && 'bg-green-50')}>
-                              <span className={cn('text-sm truncate', done && m.winnerId === side.tid ? 'font-bold text-green-700' : '[color:var(--pf-text)]')}>{nameOf(side.tid)}</span>
-                              {bye ? <span className="text-xs [color:var(--pf-color-muted)]">—</span>
-                                : done ? <span className="text-sm font-bold [color:var(--pf-text)]">{side.sc}</span>
-                                : <input inputMode="numeric" value={e[side.key]} onChange={ev => setEdits(s => ({ ...s, [m.id]: { ...e, [side.key]: ev.target.value.replace(/\D/g, '') } }))}
-                                    className="w-10 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />}
-                            </div>
-                          ))}
-                          {!done && !bye && (
-                            <button onClick={() => saveScore(m)} disabled={busy}
-                              className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
-                              <Save size={12} /> Lưu tỉ số
-                            </button>
-                          )}
-                          {bye && <div className="px-3 py-1 text-[11px] italic [color:var(--pf-color-muted)]">BYE — tự vào vòng trong</div>}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
+            {columns.map(col => (
+              <div key={col.key} className="shrink-0 w-64">
+                <div className="text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)] mb-2 px-1">{col.label}</div>
+                <div className="flex flex-col gap-3">{col.ms.map(renderCard)}</div>
+              </div>
+            ))}
           </div>
         )}
       </div>

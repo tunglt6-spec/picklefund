@@ -353,6 +353,16 @@ export class MinigameController {
     return ok(await this.svc.advanceKnockout(id, user.clubId), 'Đã tạo vòng kế tiếp');
   }
 
+  // M10: Double elimination — sinh nhánh loại kép (WB/LB/GF). Số đội = lũy thừa 2.
+  @Post(':id/double-elimination')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async generateDoubleElim(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.generateDoubleElimination(id, user.clubId), 'Đã tạo nhánh loại kép');
+  }
+
   // M7: Group → Knockout — lấy top-N mỗi bảng sinh nhánh loại trực tiếp trong cùng giải.
   @Post(':id/knockout-from-groups')
   @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
