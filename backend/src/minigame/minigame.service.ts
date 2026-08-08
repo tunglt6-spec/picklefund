@@ -771,18 +771,34 @@ export class MinigameService {
     if (teams.length < 2)
       throw new BadRequestException('Cần ít nhất 2 đội để tạo lịch thi đấu.');
 
-    const matches = this.buildRoundRobinMatches(
-      id,
-      teams.map((t) => t.id),
-      doubleRoundRobin,
-    );
+    const prev = this.asSettings(mg.settings);
+    // M2b — xếp bảng thủ công cho môn đội: nếu settings.groups có (memberKeys = id đội) →
+    // sinh round-robin TRONG TỪNG BẢNG (tag groupId); ngược lại round-robin toàn giải (như cũ).
+    const teamIdSet = new Set(teams.map((t) => t.id));
+    const rawGroups = Array.isArray(prev.groups) ? (prev.groups as any[]) : [];
+    const groups = rawGroups
+      .map((g) => ({ id: String(g.id), teamIds: (Array.isArray(g.memberKeys) ? g.memberKeys : []).filter((k: string) => teamIdSet.has(k)) }))
+      .filter((g) => g.teamIds.length >= 2);
+
+    let matches: any[];
+    let footballFormat: string;
+    if (groups.length > 0) {
+      matches = groups.flatMap((g) =>
+        this.buildRoundRobinMatches(id, g.teamIds, doubleRoundRobin).map((m) => ({ ...m, groupId: g.id })),
+      );
+      footballFormat = 'GROUP_ROUND_ROBIN';
+    } else {
+      matches = this.buildRoundRobinMatches(id, teams.map((t) => t.id), doubleRoundRobin);
+      footballFormat = 'ROUND_ROBIN';
+    }
+    if (matches.length === 0)
+      throw new BadRequestException('Không sinh được trận nào — kiểm tra lại xếp bảng (mỗi bảng cần ≥2 đội).');
     await this.prisma.minigameMatch.createMany({ data: matches });
 
-    const prev = this.asSettings(mg.settings);
     await this.prisma.minigame.update({
       where: { id },
       data: {
-        settings: { ...prev, doubleRoundRobin, footballFormat: 'ROUND_ROBIN' },
+        settings: { ...prev, doubleRoundRobin, footballFormat },
         status: 'ACTIVE',
         startedAt: mg.startedAt ?? new Date(),
       },

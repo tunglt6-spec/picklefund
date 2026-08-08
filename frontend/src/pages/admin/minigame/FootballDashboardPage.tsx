@@ -40,6 +40,7 @@ interface FbMatch {
   scoreA?: number | null; scoreB?: number | null
   winnerId?: string | null
   round: number; leg: number; status: string; playedAt?: string | null
+  groupId?: string | null
 }
 type Tab = 'teams' | 'schedule' | 'standings'
 
@@ -83,6 +84,8 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const [doubleLeg, setDoubleLeg] = useState(false)
   const [genLoading, setGenLoading] = useState(false)
   const [scoreEdits, setScoreEdits] = useState<Record<string, { a: string; b: string }>>({})
+  // M2b — xếp bảng đội thủ công (tùy chọn). Trống = vòng tròn toàn giải; có bảng = RR trong từng bảng.
+  const [teamGroups, setTeamGroups] = useState<Array<{ id: string; name: string; memberKeys: string[] }>>([])
 
   const fetchDetail = useCallback(async () => {
     if (!id) return
@@ -92,6 +95,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
       setTeams((m?.teams ?? []) as RosterTeam[])
       setMatches((m?.matches ?? []) as FbMatch[])
       setMode((m?.settings?.footballFormat as string) ?? null)
+      setTeamGroups(((m?.settings?.groups ?? []) as any[]).map(g => ({ id: String(g.id), name: String(g.name ?? 'Bảng'), memberKeys: Array.isArray(g.memberKeys) ? g.memberKeys : [] })))
       // Đồng bộ trạng thái vào store để badge header không kẹt "Nháp" sau khi tạo lịch/nhập điểm.
       if (m?.status) updateMinigame(id, { status: normalizeMinigameStatus(m.status) })
     } catch {
@@ -158,6 +162,25 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     if (matches.length > 0) { toast.error('Hãy xóa lịch thi đấu trước khi đổi danh sách đội.'); return }
     try { await api.delete(`/minigames/${id}/teams/${teamId}`); toast.success('Đã xóa đội'); await fetchDetail() }
     catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa đội thất bại') }
+  }
+
+  // ── M2b: xếp bảng đội thủ công ──
+  const saveTeamGroups = async (next: Array<{ id: string; name: string; memberKeys: string[] }>) => {
+    setTeamGroups(next)
+    try {
+      await api.put(`/minigames/${id}/groups`, { groups: next.map((g, i) => ({ id: g.id, name: g.name, order: i, status: 'ACTIVE', memberKeys: g.memberKeys })) })
+    } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Lưu xếp bảng thất bại') }
+  }
+  const addTeamGroup = () => {
+    const order = teamGroups.length
+    void saveTeamGroups([...teamGroups, { id: `grp-${id}-${order}-${Date.now()}`, name: `Bảng ${String.fromCharCode(65 + (order % 26))}`, memberKeys: [] }])
+  }
+  const removeTeamGroup = (groupId: string) => void saveTeamGroups(teamGroups.filter(g => g.id !== groupId))
+  const groupOfTeam = (teamId: string) => teamGroups.find(g => g.memberKeys.includes(teamId))?.id ?? ''
+  const assignTeamToGroup = (teamId: string, groupId: string) => {
+    const next = teamGroups.map(g => ({ ...g, memberKeys: g.memberKeys.filter(k => k !== teamId) }))
+    if (groupId) { const g = next.find(x => x.id === groupId); if (g) g.memberKeys = [...g.memberKeys, teamId] }
+    void saveTeamGroups(next)
   }
 
   // ── Lịch thi đấu ──
@@ -365,10 +388,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   }
 
   // ── Bảng xếp hạng (tính client từ matches đã hoàn thành) ──
-  const standings = useMemo(() => {
+  // computeTable: tính BXH cho 1 tập đội + 1 tập trận (dùng chung cho toàn giải & từng bảng).
+  const computeTable = useCallback((teamIds: string[], subset: FbMatch[]) => {
     const stat: Record<string, { id: string; name: string; P: number; W: number; D: number; L: number; GF: number; GA: number }> = {}
-    teams.forEach(t => { stat[t.id] = { id: t.id, name: t.name, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0 } })
-    matches
+    teamIds.forEach(tid => { const t = teams.find(x => x.id === tid); if (t) stat[tid] = { id: t.id, name: t.name, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0 } })
+    subset
       .filter(m => m.status === 'COMPLETED' && m.teamAId && m.teamBId && m.scoreA != null && m.scoreB != null)
       .forEach(m => {
         const a = stat[m.teamAId!]; const b = stat[m.teamBId!]
@@ -381,7 +405,14 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     return Object.values(stat)
       .map(s => ({ ...s, GD: s.GF - s.GA, Pts: s.W * win + s.D * draw + s.L * loss }))
       .sort((x, y) => y.Pts - x.Pts || y.GD - x.GD || y.GF - x.GF || x.name.localeCompare(y.name))
-  }, [teams, matches, mg])
+  }, [teams, mg])
+  const standings = useMemo(() => computeTable(teams.map(t => t.id), matches), [teams, matches, computeTable])
+  // Khi có xếp bảng thủ công → BXH theo TỪNG BẢNG (RR trong bảng); null = 1 bảng tổng.
+  const groupTables = useMemo(() => (
+    teamGroups.length > 0
+      ? teamGroups.map(g => ({ name: g.name, rows: computeTable(g.memberKeys, matches.filter(m => m.groupId === g.id)) }))
+      : null
+  ), [teamGroups, matches, computeTable])
 
   // Nhóm trận theo lượt → vòng để hiển thị
   const matchGroups = useMemo(() => {
@@ -421,6 +452,41 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
         ? currentRoundMatches[0].teamA?.name
         : currentRoundMatches[0].teamB?.name) ?? null
     : null
+
+  // Bảng BXH (dùng cho toàn giải & từng bảng)
+  const renderTable = (rows: typeof standings) => (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
+          <th className="text-left font-semibold px-3 py-2.5">#</th>
+          <th className="text-left font-semibold px-3 py-2.5">Đội</th>
+          <th className="text-center font-semibold px-2 py-2.5" title="Số trận">T</th>
+          <th className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
+          <th className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
+          <th className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
+          <th className="text-center font-semibold px-2 py-2.5" title={ui.gfgaTitle}>{ui.gfgaShort}</th>
+          <th className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
+          <th className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s, i) => (
+          <tr key={s.id} className={cn('border-b last:border-0 border-[color:var(--pf-border)]', i < 2 && 'bg-emerald-50/40')}>
+            <td className="px-3 py-2.5 [color:var(--pf-color-muted)]">{i + 1}</td>
+            <td className="px-3 py-2.5 font-medium [color:var(--pf-text)]">{s.name}</td>
+            <td className="text-center px-2 py-2.5">{s.P}</td>
+            <td className="text-center px-2 py-2.5 text-emerald-600 font-medium">{s.W}</td>
+            <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.D}</td>
+            <td className="text-center px-2 py-2.5 text-red-500">{s.L}</td>
+            <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.GF}-{s.GA}</td>
+            <td className={cn('text-center px-2 py-2.5 font-medium', s.GD > 0 ? 'text-emerald-600' : s.GD < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]')}>{s.GD > 0 ? `+${s.GD}` : s.GD}</td>
+            <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary)]">{s.Pts}</td>
+          </tr>
+        ))}
+        {rows.length === 0 && <tr><td colSpan={9} className="px-3 py-3 text-center text-xs [color:var(--pf-color-muted)]">Chưa có trận hoàn thành</td></tr>}
+      </tbody>
+    </table>
+  )
 
   if (!mg) {
     return (
@@ -613,6 +679,39 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 ))}
               </div>
             )}
+
+            {/* M2b — Xếp bảng đội thủ công (tùy chọn) */}
+            {teams.length >= 2 && matches.length === 0 && (
+              <div className="rounded-[18px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Users size={18} /> Xếp bảng đội (tùy chọn)</h2>
+                  <button onClick={addTeamGroup} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors"><Plus size={14} /> Thêm bảng</button>
+                </div>
+                <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Để trống = vòng tròn toàn giải. Có bảng = vòng tròn <b>trong từng bảng</b> khi bấm "Tạo lịch vòng tròn".</p>
+                {teamGroups.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {teamGroups.map(g => (
+                      <span key={g.id} className="inline-flex items-center gap-1.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-3 py-1 text-xs font-semibold">
+                        {g.name} ({g.memberKeys.length})
+                        <button onClick={() => removeTeamGroup(g.id)} className="hover:text-red-500" title="Xóa bảng"><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex flex-col gap-2">
+                  {teams.map(team => (
+                    <div key={team.id} className="flex items-center justify-between gap-2 rounded-lg [background:var(--pf-surface-muted)] px-3 py-2">
+                      <span className="text-sm [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={14} className="text-emerald-600" /> {team.name}</span>
+                      <select value={groupOfTeam(team.id)} onChange={e => assignTeamToGroup(team.id, e.target.value)}
+                        className="rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-xs outline-none focus:border-[color:var(--pf-primary)]">
+                        <option value="">Chưa xếp</option>
+                        {teamGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -761,42 +860,24 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
               )}
             </div>
               ) : (
-            <div id={`std-${id}`} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
-                      <th className="text-left font-semibold px-3 py-2.5">#</th>
-                      <th className="text-left font-semibold px-3 py-2.5">Đội</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Số trận">T</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title={ui.gfgaTitle}>{ui.gfgaShort}</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
-                      <th className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {standings.map((s, i) => (
-                      <tr key={s.id} className={cn('border-b last:border-0 border-[color:var(--pf-border)]', i < 3 && 'bg-emerald-50/40')}>
-                        <td className="px-3 py-2.5 [color:var(--pf-color-muted)]">{i + 1}</td>
-                        <td className="px-3 py-2.5 font-medium [color:var(--pf-text)]">{s.name}</td>
-                        <td className="text-center px-2 py-2.5">{s.P}</td>
-                        <td className="text-center px-2 py-2.5 text-emerald-600 font-medium">{s.W}</td>
-                        <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.D}</td>
-                        <td className="text-center px-2 py-2.5 text-red-500">{s.L}</td>
-                        <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.GF}-{s.GA}</td>
-                        <td className={cn('text-center px-2 py-2.5 font-medium', s.GD > 0 ? 'text-emerald-600' : s.GD < 0 ? 'text-red-500' : '[color:var(--pf-color-muted)]')}>{s.GD > 0 ? `+${s.GD}` : s.GD}</td>
-                        <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary)]">{s.Pts}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
-                Xếp theo: Điểm → Hiệu số → {ui.scoreWord}. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
-              </p>
+            <div id={`std-${id}`} className="flex flex-col gap-4">
+              {groupTables ? (
+                groupTables.map(gt => (
+                  <div key={gt.name} className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                    <div className="px-4 py-2.5 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
+                      <p className="text-sm font-bold [color:var(--pf-primary)]">{gt.name}</p>
+                    </div>
+                    <div className="overflow-x-auto">{renderTable(gt.rows)}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+                  <div className="overflow-x-auto">{renderTable(standings)}</div>
+                  <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
+                    Xếp theo: Điểm → Hiệu số → {ui.scoreWord}. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
+                  </p>
+                </div>
+              )}
             </div>
               )}
             </>
