@@ -425,8 +425,9 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                     </div>
                   )}
                   {form.formatType === 'GROUP_STAGE' ? (
-                    <div><Label>Số người mỗi bảng ({form.groupSize})</Label>
-                      <input type="range" min={2} max={6} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })} className="w-full accent-[var(--pf-primary)]" /></div>
+                    <div><Label>Số {isPairComp ? 'cặp' : 'người'} mỗi bảng ({form.groupSize})</Label>
+                      <input type="range" min={2} max={16} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })} className="w-full accent-[var(--pf-primary)]" />
+                      <div className="mt-1 flex justify-between text-[10px] [color:var(--pf-color-muted)]"><span>2</span><span>16</span></div></div>
                   ) : (
                     <div><Label>Chế độ bốc thăm mặc định</Label>
                       <select value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]">
