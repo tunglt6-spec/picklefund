@@ -141,7 +141,7 @@ export function KnockoutDashboardPage() {
         } />
 
       <div className="p-4 sm:p-6">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> {mg.name}</button>
+        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 
         {champion && (
           <div className="mb-5 rounded-2xl border [border-color:var(--pf-color-warning-soft)] [background:var(--pf-color-warning-soft)] p-5 text-center">

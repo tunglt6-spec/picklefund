@@ -92,7 +92,7 @@ export function RunningDashboardPage() {
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu" />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
-        <button onClick={() => navigate(`/minigames/${id}`)} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> {mg.name}</button>
+        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 
         {/* Đang tải lần đầu: hiện skeleton trước khi có dữ liệu VĐV */}
         {loading && runners.length === 0 && <LoadingState variant="list" rows={4} />}

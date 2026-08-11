@@ -558,7 +558,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
       <div className="p-4 sm:p-6 max-w-[1280px] mx-auto flex flex-col gap-5">
         <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
-          <ArrowLeft size={14} /> Danh Sách Minigame
+          <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
 
         <ResponsiveTabs

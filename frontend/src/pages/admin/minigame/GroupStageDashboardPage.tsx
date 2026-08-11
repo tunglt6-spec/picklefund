@@ -160,7 +160,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
           onClick={() => navigate('/minigames')}
           className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
         >
-          <ArrowLeft size={14} /> Danh Sách Minigame
+          <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
 
         {/* KPI */}
