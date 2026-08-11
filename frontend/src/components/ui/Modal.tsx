@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { Portal } from './Portal'
 
 interface ModalProps {
   open: boolean
@@ -29,9 +30,10 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
   if (!open) return null
 
   return (
+    <Portal>
     <div
-      // h-[100dvh] (KHÔNG inset-0/100vh): trên mobile 100vh tính theo layout viewport → đáy sheet
-      // bị thanh trình duyệt che, phải cuộn mới thấy input. dvh = vùng nhìn thấy thực → sheet nằm gọn.
+      // Portal ra body + h-[100dvh]: overlay bám viewport thật (thoát .pf-page/scroll ancestor),
+      // dvh = vùng nhìn thấy thực trên mobile → modal luôn căn đúng, không tụt lên/xuống.
       className="fixed inset-x-0 top-0 h-[100dvh] z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -68,5 +70,6 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         )}
       </div>
     </div>
+    </Portal>
   )
 }

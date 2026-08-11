@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
+import { Portal } from '../../../components/ui/Portal'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
@@ -79,6 +80,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
     { name: team2Name, members: team2Members, val: s2, set: setS2 },
   ]
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)' }}>
       <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: T.border }}>
@@ -117,6 +119,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
 

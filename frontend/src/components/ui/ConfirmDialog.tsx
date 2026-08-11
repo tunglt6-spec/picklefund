@@ -1,5 +1,6 @@
 import { AlertTriangle, X } from 'lucide-react'
 import { Button } from './Button'
+import { Portal } from './Portal'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -31,6 +32,7 @@ export function ConfirmDialog({
     : 'bg-amber-500 hover:bg-amber-500 text-white'
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onCancel} />
       <div className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden">
@@ -62,5 +64,6 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
+    </Portal>
   )
 }

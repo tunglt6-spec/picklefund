@@ -24,6 +24,7 @@ import { exportMembersExcel, exportMembersPDF } from '../../lib/export'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { Portal } from '../../components/ui/Portal'
 import {
   PageShell, PageHeader, MetricCard, FilterBar, DataTable, type Column,
   StatusBadge, type StatusTone, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
@@ -82,8 +83,9 @@ function DrawerShell({
 }) {
   if (!open) return null
   return (
-    // h-[100dvh] thay inset-0/100vh: mobile 100vh bị thanh trình duyệt che đáy → sheet neo đáy tụt
-    // khỏi vùng nhìn, phải cuộn mới thấy input. dvh = vùng thấy thực → form gọn trong màn.
+    // Portal ra body + h-[100dvh]: drawer bám viewport thật (thoát .pf-page/scroll ancestor) →
+    // luôn căn đúng, không tụt lên/xuống dù trang dài. dvh = vùng nhìn thấy thực trên mobile.
+    <Portal>
     <div className={`fixed inset-x-0 top-0 h-[100dvh] z-50 flex ${isMobile ? 'items-end' : 'justify-end'}`}>
       <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={onClose} />
       <div
@@ -115,6 +117,7 @@ function DrawerShell({
         )}
       </div>
     </div>
+    </Portal>
   )
 }
 
