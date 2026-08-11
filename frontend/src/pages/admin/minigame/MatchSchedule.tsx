@@ -131,7 +131,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
           <button onClick={() => navigate(`/minigames/${minigameId}`)} className="[color:var(--pf-color-muted)]">
             <ArrowLeft size={18} />
@@ -549,7 +549,7 @@ export function MatchSchedule() {
       return m.groupId === filter
     })
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
           <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]">
             <ArrowLeft size={18} />

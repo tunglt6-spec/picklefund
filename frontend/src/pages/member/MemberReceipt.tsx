@@ -182,7 +182,7 @@ export function MemberReceipt() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
@@ -384,7 +384,7 @@ export function MemberReceipt() {
         })()}
 
         {/* Summary KPIs */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">

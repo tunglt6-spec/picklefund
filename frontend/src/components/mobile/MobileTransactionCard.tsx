@@ -34,7 +34,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
         )}
       </div>
       {actions && (
-        <div className="flex flex-shrink-0 items-center gap-0.5 ml-1 border-l border-[color:var(--pf-border)] pl-2">
+        <div className="flex flex-shrink-0 items-center gap-1 ml-1 border-l border-[color:var(--pf-border)] pl-2">
           {actions}
         </div>
       )}

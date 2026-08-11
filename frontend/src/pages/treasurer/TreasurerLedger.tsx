@@ -83,7 +83,7 @@ export function TreasurerLedger() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
@@ -270,7 +270,7 @@ export function TreasurerLedger() {
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có giao dịch nào</p>
           </div>
         ) : (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
             <table className="table-base">
               <thead>
                 <tr>

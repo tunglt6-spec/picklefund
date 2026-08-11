@@ -71,7 +71,7 @@ export function MemberDashboard() {
   /* ── Mobile layout ── */
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         {/* Hero header */}
         <div
           className="px-5 pt-5 pb-6"

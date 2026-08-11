@@ -90,7 +90,7 @@ export function MemberContributions() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Lịch Sử Đóng Quỹ</div>
@@ -205,7 +205,7 @@ export function MemberContributions() {
       />
 
       {/* KPI — MetricCard giống Admin */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={`${contributions.length} khoản`} accent="blue" icon={<DollarSign size={18} />} />
         <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
         <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />

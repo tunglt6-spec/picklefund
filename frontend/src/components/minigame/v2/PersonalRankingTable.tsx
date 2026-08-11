@@ -46,7 +46,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
   const rows = compact ? rankings.slice(0, 5) : rankings;
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+    <div id="full-ranking" className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 scroll-mt-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BarChart2 size={18} className="[color:var(--pf-primary)]" />

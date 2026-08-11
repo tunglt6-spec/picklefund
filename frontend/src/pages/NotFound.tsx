@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button'
 export function NotFound() {
   const navigate = useNavigate()
   return (
-    <div className="min-h-screen flex items-center justify-center [background:var(--pf-bg)]">
+    <div className="min-h-[100dvh] flex items-center justify-center [background:var(--pf-bg)]">
       <div className="text-center">
         <p className="text-8xl font-extrabold [color:var(--pf-primary)] opacity-90">404</p>
         <h1 className="text-2xl font-bold [color:var(--pf-text)] mt-4">Trang không tồn tại</h1>

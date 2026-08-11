@@ -395,7 +395,7 @@ export function MemberAccounts() {
             </div>
           </div>
           {/* KPI mini stats */}
-          <div className="grid grid-cols-4 gap-1.5 mb-3">
+          <div className="grid grid-cols-2 gap-1.5 mb-3 sm:grid-cols-4">
             {[
               { label: 'Tổng', value: accounts.length, color: '[color:var(--pf-primary)]' },
               { label: 'Hoạt động', value: accounts.filter(a => getStatus(a) === 'active').length, color: 'text-emerald-600' },

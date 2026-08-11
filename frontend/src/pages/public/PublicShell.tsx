@@ -44,7 +44,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen [background:var(--pf-bg)] [color:var(--pf-text)]">
+    <div className="min-h-[100dvh] [background:var(--pf-bg)] [color:var(--pf-text)]">
       {/* Topbar 72px */}
       <header className="sticky top-0 z-40 border-b [border-color:var(--pf-border)] [background:rgba(255,255,255,0.9)] backdrop-blur">
         <div className="pf-center-x flex h-[72px] max-w-[1200px] items-center justify-between px-4 sm:px-8">

@@ -556,7 +556,7 @@ export function FundPeriods() {
     const chungPeriods = filtered.filter(p => (p.type ?? 'chung') === 'chung')
     const gamePeriods = filtered.filter(p => p.type === 'game')
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <span className="text-[17px] font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
@@ -1699,7 +1699,7 @@ function HistoryTab({ contributions, periods, members }: {
   return (
     <div className="p-5 space-y-4">
       {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
           <p className="text-xs text-emerald-600 font-medium">Tổng đã xác nhận</p>
           <p className="text-base font-bold text-emerald-700 mt-0.5">{formatVND(totalIncome)}</p>

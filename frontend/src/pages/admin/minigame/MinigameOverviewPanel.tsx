@@ -187,7 +187,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90">
           <Trophy size={16} /> Tổng quan · {sportEmoji(sport)} {featured.name}
         </div>
-        <div className="mt-3 grid grid-cols-4 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {kpis.map(k => (
             <div key={k.label} className="text-center">
               <div className="flex justify-center opacity-90">{k.icon}</div>
@@ -233,6 +233,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         </div>
         {isGolf ? (
           golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
+            <div className="overflow-x-auto">
             <table className="mt-2 w-full text-sm">
               <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
               <tbody>
@@ -246,9 +247,11 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )
         ) : (
           teamStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có đội.</p> : (
+            <div className="overflow-x-auto">
             <table className="mt-2 w-full text-sm">
               <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
               <tbody>
@@ -264,6 +267,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )
         )}
       </div>

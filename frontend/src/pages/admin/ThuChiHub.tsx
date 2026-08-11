@@ -444,7 +444,7 @@ export function ThuChiHub() {
 
         {/* ── Transaction View Metrics (chỉ mô tả danh sách ĐANG LỌC — KHÔNG phải số liệu tài chính chính thức) ── */}
         <p className="mb-2 mt-5 text-[11px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Giao dịch đang lọc · không phải số liệu tài chính chính thức</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <MetricCard label="Thu đang lọc" value={formatVND(filteredIncomeTotal)} sub="Tổng khoản thu đang hiển thị" accent="teal" icon={<TrendingUp size={18} />} />
           <MetricCard label="Chi đang lọc" value={formatVND(filteredExpenseTotal)} sub="Không tính từ chối" accent="teal" icon={<TrendingDown size={18} />} />
           <MetricCard label="Số giao dịch" value={filteredCount.toLocaleString('vi-VN')} sub="Trong phạm vi lọc" accent="blue" icon={<Layers size={18} />} />

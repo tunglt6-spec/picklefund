@@ -45,7 +45,7 @@ export function AppLayout() {
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
-    <div className="flex h-screen overflow-hidden [background:var(--pf-bg)]">
+    <div className="flex h-[100dvh] overflow-hidden [background:var(--pf-bg)]">
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
         <Sidebar />

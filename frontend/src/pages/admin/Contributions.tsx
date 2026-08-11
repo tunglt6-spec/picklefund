@@ -341,7 +341,7 @@ export function Contributions() {
     const sortedCommon = [...commonContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>
@@ -410,7 +410,7 @@ export function Contributions() {
           </button>
         </div>
 
-        <div className="px-4 pt-3 pb-6 space-y-2">
+        <div className="px-4 pt-3 pb-24 space-y-2">
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
               <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
@@ -430,11 +430,11 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
                 />
@@ -459,12 +459,12 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-1.5 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-1.5" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-1.5"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-1.5"><Trash2 size={14} /></button>
+                      <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-2" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
                 />

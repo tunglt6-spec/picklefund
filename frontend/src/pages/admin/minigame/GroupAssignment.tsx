@@ -166,7 +166,7 @@ export function GroupAssignment() {
   )
 
   return (
-    <div className={isMobile ? 'min-h-screen [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
+    <div className={isMobile ? 'min-h-full [background:var(--pf-bg)]' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
       {isMobile ? (
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <div className="flex items-center gap-3 mb-2">

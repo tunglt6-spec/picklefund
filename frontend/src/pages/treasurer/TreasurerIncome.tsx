@@ -267,7 +267,7 @@ export function TreasurerIncome() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div className="text-[17px] font-[800] [color:var(--pf-text)] shrink-0">Khoản Thu</div>
           <div className="flex flex-wrap items-center justify-end gap-1.5 ml-auto">
@@ -298,7 +298,7 @@ export function TreasurerIncome() {
             </button>
           </div>
         </div>
-        <div className="px-4 pt-4 pb-6 space-y-4">
+        <div className="px-4 pt-4 pb-24 space-y-4">
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -498,7 +498,7 @@ export function TreasurerIncome() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
@@ -550,7 +550,7 @@ export function TreasurerIncome() {
                 <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu nào. Bấm "Ghi nhận thu" để bắt đầu.</p>
               </div>
             ) : (
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>

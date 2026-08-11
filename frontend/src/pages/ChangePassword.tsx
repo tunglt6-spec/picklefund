@@ -39,7 +39,7 @@ export function ChangePassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--pf-primary-soft)] via-white to-[var(--pf-primary-soft)] flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-[var(--pf-primary-soft)] via-white to-[var(--pf-primary-soft)] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / header */}
         <div className="text-center mb-8">

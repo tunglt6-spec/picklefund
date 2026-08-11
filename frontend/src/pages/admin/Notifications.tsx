@@ -207,7 +207,7 @@ export function Notifications() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>

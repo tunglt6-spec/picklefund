@@ -818,7 +818,7 @@ export function Expenses() {
     ]
 
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
@@ -891,7 +891,7 @@ export function Expenses() {
         </div>
 
         {/* Expense list */}
-        <div className="px-4 pt-3 pb-6 space-y-2">
+        <div className="px-4 pt-3 pb-24 space-y-2">
           {mobileFiltered.length === 0 ? (
             <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
               <Receipt size={36} className="mx-auto text-slate-200 mb-3" />

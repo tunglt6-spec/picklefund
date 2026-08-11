@@ -951,7 +951,7 @@ export function Settings() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <p className="text-[15px] font-bold [color:var(--pf-text)]">Cài đặt</p>
