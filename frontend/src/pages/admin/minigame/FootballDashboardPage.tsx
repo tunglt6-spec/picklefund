@@ -588,6 +588,25 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   const filteredMembers = members.filter(m =>
     !search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase()))
 
+  // Nội dung ĐÔI: người CHƠI đã được ghép cặp (id ở player1/player2) → LOẠI khỏi pool chọn để
+  // không phải tìm/chọn trùng. availablePairMembers = pool còn lại cho PairBuilder.
+  const pairedMemberIds = new Set(
+    teams.flatMap(t => [t.player1?.id, t.player2?.id]).filter((x): x is string => !!x),
+  )
+  const availablePairMembers = filteredMembers.filter(m => !pairedMemberIds.has(m.id))
+  // Xem trước theo BẢNG (Vòng bảng): đủ groupSize cặp → sang bảng kế (fill-first, khớp backend).
+  const isGroupStage = mg?.formatType === 'GROUP_STAGE'
+  const pairGroupSize = Math.max(2, mg?.groupSize ?? 4)
+  const renderPairCard = (t: RosterTeam, idx: number) => (
+    <div key={t.id} className="rounded-[14px] border p-3.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] flex items-center justify-between gap-2">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-primary)]">Đôi {idx + 1}</p>
+        <p className="mt-0.5 text-sm font-medium [color:var(--pf-text)] truncate">{pairNames(t)}</p>
+      </div>
+      <button onClick={() => deletePair(t.id)} className="shrink-0 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors" title="Xóa cặp"><Trash2 size={16} /></button>
+    </div>
+  )
+
   const teamName = (m: FbMatch, side: 'A' | 'B') =>
     (side === 'A' ? m.teamA?.name : m.teamB?.name) ?? 'Đội'
 
@@ -648,7 +667,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                         className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
-                      {filteredMembers.map(m => (
+                      {availablePairMembers.map(m => (
                         <button key={m.id} onClick={() => togglePick(m.id)}
                           className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
                             pickIds.includes(m.id) ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface)] border-[color:var(--pf-border)] hover:border-[color:var(--pf-border)]'
@@ -656,7 +675,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                           {pickIds.includes(m.id) && <X size={12} />} {m.fullName}
                         </button>
                       ))}
-                      {filteredMembers.length === 0 && <p className="text-xs [color:var(--pf-color-muted)] py-1">Không có thành viên phù hợp</p>}
+                      {availablePairMembers.length === 0 && (
+                        <p className="text-xs [color:var(--pf-color-muted)] py-1">
+                          {pairedMemberIds.size > 0 ? 'Tất cả thành viên đã được ghép cặp — thêm khách hoặc xóa cặp để ghép lại.' : 'Không có thành viên phù hợp.'}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -717,17 +740,31 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     <Users size={28} className="mx-auto [color:var(--pf-color-muted)]" />
                     <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có cặp nào. Chọn thành viên rồi bấm "Ghép cặp tự động".</p>
                   </div>
+                ) : isGroupStage ? (
+                  // Vòng bảng: gom cặp thành BẢNG theo groupSize (fill-first) — đủ 1 bảng thì render sang bảng kế.
+                  <div className="flex flex-col gap-4">
+                    {Array.from({ length: Math.ceil(teams.length / pairGroupSize) }, (_, gi) => {
+                      const slice = teams.slice(gi * pairGroupSize, gi * pairGroupSize + pairGroupSize)
+                      const full = slice.length >= pairGroupSize
+                      return (
+                        <div key={gi}>
+                          <div className="mb-2 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Bảng {String.fromCharCode(65 + gi)}</span>
+                            <span className={cn('text-xs font-semibold', full ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-muted)]')}>
+                              {full ? `đủ ${pairGroupSize}/${pairGroupSize} cặp` : `${slice.length}/${pairGroupSize} cặp`}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            {slice.map((t, i) => renderPairCard(t, gi * pairGroupSize + i))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <p className="text-xs [color:var(--pf-color-muted)]">Xem trước theo bảng ({pairGroupSize} cặp/bảng). Chia bảng chính thức áp dụng đúng thứ tự này khi tạo lịch.</p>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                    {teams.map((t, i) => (
-                      <div key={t.id} className="rounded-[14px] border p-3.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-primary)]">Đôi {i + 1}</p>
-                          <p className="mt-0.5 text-sm font-medium [color:var(--pf-text)] truncate">{pairNames(t)}</p>
-                        </div>
-                        <button onClick={() => deletePair(t.id)} className="shrink-0 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors" title="Xóa cặp"><Trash2 size={16} /></button>
-                      </div>
-                    ))}
+                    {teams.map((t, i) => renderPairCard(t, i))}
                   </div>
                 )}
               </>

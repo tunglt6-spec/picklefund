@@ -61,10 +61,10 @@ describe('splitIntoGroups (chia bảng entrant — dùng cho cả cặp lẫn ng
     expect(g).toHaveLength(2);
     expect(g.map((x) => x.memberKeys.length)).toEqual([4, 4]);
   });
-  it('6 entrant / bảng 4 → 2 bảng 3-3 (chia đều)', () => {
+  it('6 entrant / bảng 4 → 2 bảng 4-2 (fill-first: đủ 4 mới sang bảng kế)', () => {
     const g = split(6, 4);
     expect(g).toHaveLength(2);
-    expect(g.map((x) => x.memberKeys.length)).toEqual([3, 3]);
+    expect(g.map((x) => x.memberKeys.length)).toEqual([4, 2]);
   });
   it('5 entrant / bảng 2 → 3 bảng 2-2-1 (dư dồn bảng đầu)', () => {
     const g = split(5, 2);

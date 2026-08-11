@@ -1310,17 +1310,16 @@ export class MinigameService {
     return this.shuffle(pool);
   }
 
-  /** Chia danh sách "entrant key" (người hoặc id-đội) thành N bảng cân đối theo groupSize. */
+  /**
+   * Chia "entrant key" (người/cặp/đội) thành bảng theo groupSize — FILL-FIRST: đổ ĐỦ groupSize
+   * vào một bảng rồi mới sang bảng kế (groupSize = SỐ tối đa mỗi bảng, không phải chia đều).
+   * Bảng cuối nhận phần dư. Vd 6 entrant, size 4 → [4, 2] (khớp UX "đủ số/bảng thì sang bảng khác").
+   */
   private splitIntoGroups(keys: string[], groupSize: number) {
-    const numGroups = Math.max(1, Math.ceil(keys.length / groupSize));
-    const base = Math.floor(keys.length / numGroups);
-    const extra = keys.length % numGroups;
+    const size = Math.max(1, Math.floor(groupSize) || 1);
     const groups: Array<{ id: string; name: string; order: number; status: string; memberKeys: string[] }> = [];
-    let offset = 0;
-    for (let i = 0; i < numGroups; i++) {
-      const size = base + (i < extra ? 1 : 0);
-      groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(i), order: i, status: 'ACTIVE', memberKeys: keys.slice(offset, offset + size) });
-      offset += size;
+    for (let i = 0, g = 0; i < keys.length; i += size, g++) {
+      groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(g), order: g, status: 'ACTIVE', memberKeys: keys.slice(i, i + size) });
     }
     return groups;
   }
