@@ -385,6 +385,54 @@ export class MinigameService {
     });
   }
 
+  /**
+   * GHÉP CẶP TỰ ĐỘNG (chuẩn SaaS) — nội dung ĐÔI: nhận danh sách người chơi (thành viên CLB +
+   * khách) + chế độ ghép, tạo TOÀN BỘ cặp trong 1 thao tác (thay vì gõ tên đội từng cặp kiểu
+   * roster bóng đá). Ngẫu nhiên hoặc cân bằng trình độ (mạnh↔yếu). Dùng chung cho Vòng bảng &
+   * Loại trực tiếp (cặp = MinigameTeam player1+player2; chia bảng/nhánh đọc lại các cặp này).
+   */
+  async autoPairEntrants(
+    id: string,
+    clubId: string,
+    dto: {
+      memberIds?: string[];
+      guests?: { name: string; phone?: string }[];
+      pairingMode?: string;
+    },
+  ) {
+    await this.assertOwnership(id, clubId);
+    const pairingMode =
+      dto.pairingMode === 'BALANCED_SKILL_PAIRING'
+        ? 'BALANCED_SKILL_PAIRING'
+        : 'RANDOM_PAIRING';
+    const existingMatches = await this.prisma.minigameMatch.count({
+      where: { minigameId: id },
+    });
+    if (existingMatches > 0)
+      throw new BadRequestException(
+        'Đã có lịch thi đấu — hãy xoá lịch trước khi ghép lại cặp.',
+      );
+    // 1) Nạp người chơi (member CLB + khách) vào pool ghép (participants + settings.guests).
+    await this.addParticipants(id, clubId, dto.memberIds ?? [], dto.guests);
+    // 2) Lưu chế độ ghép + đánh dấu nội dung ĐÔI (để dispatch/engine xử lý đúng cặp).
+    const row = await this.prisma.minigame.findUnique({
+      where: { id },
+      select: { settings: true },
+    });
+    const settings = this.asSettings(row?.settings);
+    await this.prisma.minigame.update({
+      where: { id },
+      data: {
+        participantType: 'PAIR',
+        settings: { ...settings, pairingMode } as Prisma.InputJsonValue,
+      },
+    });
+    // 3) Ghép lại cặp TỪ ĐẦU (xoá cặp cũ rồi tạo mới theo pool + chế độ). Cần ≥4 người (2 cặp).
+    await this.prisma.minigameTeam.deleteMany({ where: { minigameId: id } });
+    await this.ensureEntrantTeams(id, 'PAIR', pairingMode);
+    return this.findOne(id, clubId);
+  }
+
   // ── Đội có ROSTER nhiều người (môn đồng đội, vd bóng đá) — Pha 1 ──
   private cleanGuestNames(guests?: { name?: string }[]): string[] {
     return (guests ?? [])

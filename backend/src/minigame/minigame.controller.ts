@@ -93,6 +93,24 @@ class AddParticipantsDto {
   guests?: GuestParticipantDto[];
 }
 
+/** Ghép cặp tự động (nội dung ĐÔI): danh sách người chơi + chế độ ghép. */
+class AutoPairDto {
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200)
+  @IsString({ each: true })
+  memberIds?: string[];
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => GuestParticipantDto)
+  guests?: GuestParticipantDto[];
+  @IsOptional()
+  @IsIn(['RANDOM_PAIRING', 'BALANCED_SKILL_PAIRING'])
+  pairingMode?: string;
+}
+
 /** Đổi tên người chơi (chỉ khách mời) — settings.guests. */
 class UpdateParticipantNameDto {
   @IsString() @MaxLength(120) name!: string;
@@ -464,6 +482,20 @@ export class MinigameController {
     @Body() body: CreateTeamDto,
   ) {
     return ok(await this.svc.createTeam(id, user.clubId, body), 'Đã tạo đội');
+  }
+
+  // Ghép cặp TỰ ĐỘNG (nội dung đôi): nạp người chơi + tạo toàn bộ cặp (ngẫu nhiên/cân bằng).
+  @Post(':id/pairs/auto')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async autoPair(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: AutoPairDto,
+  ) {
+    return ok(
+      await this.svc.autoPairEntrants(id, user.clubId, body),
+      'Đã ghép cặp tự động',
+    );
   }
 
   // ── Đội có roster nhiều người (môn đồng đội, vd bóng đá) — Pha 1 ──
