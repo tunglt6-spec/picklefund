@@ -9,6 +9,7 @@ import {
   approveAiAction, rejectAiAction, retryAiAction, executeAiAction,
   type RiskLevel, type ApprovalEvaluation, type AiActionDetail,
 } from '../../../hooks/useAiManager'
+import { Portal } from '../../../components/ui/Portal'
 
 const RISK_OPTS: { value: RiskLevel; label: string }[] = [
   { value: 'low', label: 'Thấp' },
@@ -322,6 +323,7 @@ export function AiApprovalInbox() {
 
       {/* Detail drawer */}
       {(detail || detailLoading) && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetail(null)}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative h-full w-full max-w-md [background:var(--pf-surface)] shadow-xl overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -462,6 +464,7 @@ export function AiApprovalInbox() {
             )}
           </div>
         </div>
+        </Portal>
       )}
     </div>
   )

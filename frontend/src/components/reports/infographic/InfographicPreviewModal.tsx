@@ -5,6 +5,7 @@ import { InfographicOverlayB } from './InfographicOverlayB'
 import type { InfographicReportData } from './infographic.types'
 import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName } from './infographic.utils'
 import toast from 'react-hot-toast'
+import { Portal } from '../../ui/Portal'
 
 const ID_A = 'infographic-canvas-a'
 const ID_B = 'infographic-canvas-b'
@@ -76,6 +77,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
   const isLoading = exporting !== null
 
   return (
+    <Portal>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
@@ -198,5 +200,6 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
         </div>
       </div>
     </div>
+    </Portal>
   )
 }

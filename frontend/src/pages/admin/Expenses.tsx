@@ -21,6 +21,7 @@ import { exportExpensesPDF, exportGenericExcel } from '../../lib/export'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
+import { Portal } from '../../components/ui/Portal'
 
 /* ── Constants ── */
 /** receiptUrl backend trả dạng `/uploads/receipts/xxx` phục vụ ở origin API (bỏ hậu tố /api). */
@@ -144,6 +145,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
   ]
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-full max-w-md [background:var(--pf-surface)] flex flex-col shadow-2xl">
@@ -321,6 +323,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
         </form>
       </div>
     </div>
+    </Portal>
   )
 }
 
@@ -347,6 +350,7 @@ function FilterPanel({ open, onClose, values, onApply }: {
     onClose()
   }
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl">
@@ -388,6 +392,7 @@ function FilterPanel({ open, onClose, values, onApply }: {
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
 
@@ -423,6 +428,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
   ]
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
       <div className="w-full max-w-lg [background:var(--pf-surface)] flex flex-col shadow-2xl">
@@ -494,6 +500,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
 
@@ -1171,6 +1178,7 @@ export function Expenses() {
 
       {/* Categories management modal */}
       {showCatMgr && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
             <div className="flex items-center justify-between">
@@ -1195,6 +1203,7 @@ export function Expenses() {
             </div>
           </div>
         </div>
+        </Portal>
       )}
       {detailExp && (
         <DetailView

@@ -35,6 +35,7 @@ import {
   PageShell, PageHeader, MetricCard, ChartCard, FilterBar, DataTable, type Column,
   StatusBadge, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList, ResponsiveTabs,
 } from '../../components/shared'
+import { Portal } from '../../components/ui/Portal'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz). */
 const CHART_INCOME = '#059669'
@@ -565,6 +566,7 @@ export function Reports() {
 
       {/* ── Mobile filter bottom sheet ── */}
       {showFilterSheet && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={() => setShowFilterSheet(false)} />
           <div role="dialog" aria-modal="true" aria-label="Bộ lọc báo cáo" className="relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
@@ -598,6 +600,7 @@ export function Reports() {
             </div>
           </div>
         </div>
+        </Portal>
       )}
 
       {/* ── Infographic modal — chỉ mở khi đủ official field (không fallback 0/fake) ── */}

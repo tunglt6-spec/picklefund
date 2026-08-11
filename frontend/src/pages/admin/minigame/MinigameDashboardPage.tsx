@@ -17,6 +17,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
+import { Portal } from '../../../components/ui/Portal'
 
 function isLocalToken(token?: string | null) {
   return !token || token.startsWith('local-token-') || token.startsWith('token-')
@@ -411,6 +412,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
       {/* Score Entry Modal */}
       {scoreEntryMatchId && scoreEntryMatch && (
+        <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center gap-2 mb-4">
@@ -479,6 +481,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
         </div>
+        </Portal>
       )}
 
       <DrawRoundModal
@@ -489,6 +492,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
       {/* Delete Confirm Modal */}
       {deleteTarget && (
+        <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-4">
@@ -521,10 +525,12 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
         </div>
+        </Portal>
       )}
 
       {/* Edit Participant Modal */}
       {editTarget && (
+        <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-5">
@@ -566,6 +572,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </div>
   )

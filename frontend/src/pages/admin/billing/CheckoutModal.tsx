@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, ShieldCheck, Loader2, CheckCircle2, Sparkles, Tag, ChevronDown } from 'lucide-react'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
+import { Portal } from '../../../components/ui/Portal'
 
 export type CheckoutPlan = {
   tier: 'PRO' | 'CLUB_PLUS' | 'STARTER'
@@ -130,6 +131,7 @@ export function CheckoutModal({
   const inputCls = 'w-full h-10 rounded-lg border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]'
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={loading ? undefined : onClose} />
       <div className="relative w-full sm:max-w-md [background:var(--pf-surface)] rounded-t-2xl sm:rounded-2xl border border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)] max-h-[92vh] overflow-y-auto">
@@ -256,5 +258,6 @@ export function CheckoutModal({
         </div>
       </div>
     </div>
+    </Portal>
   )
 }

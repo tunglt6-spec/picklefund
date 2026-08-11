@@ -17,6 +17,7 @@ import type { MiniGameMatch, MiniGameDoublesMatch } from '../../../types/minigam
 import { cn } from '../../../lib/utils'
 import { ScheduleExportButtons } from '../../../components/minigame/ScheduleExportButtons'
 import { exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
+import { Portal } from '../../../components/ui/Portal'
 
 type Filter = 'all' | 'pending' | 'completed' | string
 
@@ -237,6 +238,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         <ScoreEntryDrawer open={!!scoreMatch} onClose={() => setScoreMatch(null)} match={scoreMatch} minigame={mg ?? null} />
 
         {deleteTarget && (
+          <Portal>
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
             <div className="[background:var(--pf-surface)] rounded-t-[20px] p-6 w-full">
               <p className="font-semibold [color:var(--pf-text)] mb-1">Xóa trận đấu?</p>
@@ -255,6 +257,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               </div>
             </div>
           </div>
+          </Portal>
         )}
       </div>
     )
@@ -385,6 +388,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
       {/* Delete confirm modal */}
       {deleteTarget && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="[background:var(--pf-surface)] rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-4">
@@ -419,6 +423,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </div>
   )

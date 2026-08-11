@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils'
 import { useMinigameStore } from '../../store/minigameStore'
 import type { DrawMode, DrawRoundPreview, GenderBalanceMode, DoublesPlayer } from '../../types/minigame'
 import { isGuestId } from '../../types/minigame'
+import { Portal } from '../ui/Portal'
 
 const MODES: { mode: DrawMode; label: string; sublabel: string; icon: string }[] = [
   { mode: 'SMART_DRAW',       label: 'Thông Minh',    sublabel: 'Cân bằng tổng hợp',     icon: '🎯' },
@@ -188,6 +189,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
   const confirmBlockedByGender = !!preview && preview.genderBalanceMode === 'REQUIRED' && !preview.genderRequirementMet
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -621,5 +623,6 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
         </div>
       </div>
     </div>
+    </Portal>
   )
 }

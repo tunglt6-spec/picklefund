@@ -28,6 +28,7 @@ import {
   StatusBadge, type StatusTone, ActionButton, EmptyState, LoadingState, MobileCardList,
   ResponsiveTabs,
 } from '../../../components/shared'
+import { Portal } from '../../../components/ui/Portal'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -377,6 +378,7 @@ export function MinigameList() {
 
       {/* ── Modal ủy quyền minigame (CLUB_ADMIN) ── */}
       {isClubAdmin && showDelegateModal && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowDelegateModal(false)} />
           <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
@@ -420,10 +422,12 @@ export function MinigameList() {
             </div>
           </div>
         </div>
+        </Portal>
       )}
 
       {/* ── Mobile filter bottom sheet ── */}
       {showFilterSheet && (
+        <Portal>
         <div className="fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={() => setShowFilterSheet(false)} />
           <div role="dialog" aria-modal="true" aria-label="Bộ lọc giải đấu" className="relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
@@ -459,6 +463,7 @@ export function MinigameList() {
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </PageShell>
   )

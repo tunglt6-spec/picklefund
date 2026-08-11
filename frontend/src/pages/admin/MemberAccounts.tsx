@@ -9,6 +9,7 @@ import { useEmbedded } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Button } from '../../components/ui/Button'
+import { Portal } from '../../components/ui/Portal'
 import type { MemberUserAccount } from '../../types'
 import toast from 'react-hot-toast'
 
@@ -104,6 +105,7 @@ function BulkCreateModal({
   }
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
@@ -158,6 +160,7 @@ function BulkCreateModal({
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
 
@@ -209,6 +212,7 @@ function CreateSingleModal({
   const labelCls = 'block text-sm font-medium [color:var(--pf-text)] mb-1.5'
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md">
         <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
@@ -263,6 +267,7 @@ function CreateSingleModal({
         </form>
       </div>
     </div>
+    </Portal>
   )
 }
 
@@ -271,6 +276,7 @@ function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
   title: string; body: string; onConfirm: () => void; onClose: () => void; danger?: boolean
 }) {
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
         <h3 className="font-bold [color:var(--pf-text)]">{title}</h3>
@@ -281,6 +287,7 @@ function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
 

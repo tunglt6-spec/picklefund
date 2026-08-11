@@ -37,6 +37,7 @@ import {
   StatusBadge, type StatusTone, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
   ResponsiveTabs,
 } from '../../components/shared'
+import { Portal } from '../../components/ui/Portal'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz, không phải semantic UI). */
 const CHART_INCOME = '#059669' // --pf-green
@@ -136,6 +137,7 @@ function DrawerShell({
 }) {
   if (!open) return null
   return (
+    <Portal>
     <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'justify-end'}`}>
       <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={onClose} />
       <div
@@ -158,6 +160,7 @@ function DrawerShell({
         {footer && <div className="flex items-center gap-3 border-t px-5 py-4 border-[color:var(--pf-border)]">{footer}</div>}
       </div>
     </div>
+    </Portal>
   )
 }
 
