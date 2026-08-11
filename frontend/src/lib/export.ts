@@ -600,7 +600,77 @@ export function exportGenericExcel(fileBase: string, sheetName: string, headers:
   exportExcel(fileBase, [{ name: sheetName.slice(0, 31), headers, rows }])
 }
 
-/** PDF bảng (vector-hoá qua html2canvas mẫu chung): header brand + bảng + summary tùy chọn. */
+/** Cột cho bảng PDF vector: w tùy chọn (thiếu → tự phân bổ theo align). */
+type VectorTableColumn = { key: string; label: string; w?: number; align?: 'left' | 'center' | 'right'; tone?: StandingsColumn['tone']; bold?: boolean }
+
+/** Slug tên file an toàn (giữ tiếng Việt, bỏ ký tự cấm). */
+const slugName = (s: string) => s.replace(/\s+/g, '_').replace(/[/\\?%*:|"<>]/g, '')
+
+/**
+ * PDF BẢNG CHUẨN SaaS — VECTOR, tự phân trang theo HÀNG (không cắt ngang hàng/chân trang như
+ * html2canvas). Dùng chung renderer `buildStandingsReportPDF` (lặp header + footer "Trang x/y"
+ * mỗi trang, gọn trong từng A4). Mọi export bảng danh sách (thành viên, thu quỹ, sổ quỹ, generic)
+ * đi qua đây để đồng nhất & hết lỗi chèn/cắt trang.
+ */
+async function buildVectorTable(input: {
+  fileName: string
+  title: string
+  clubName: string
+  /** Dòng phụ dưới tiêu đề (vd "CLB · 128 thành viên"). */
+  headerLeft?: string
+  /** Ghi chú cuối bảng (vd tổng/summary). */
+  note?: string
+  columns: VectorTableColumn[]
+  rows: Record<string, string | number>[]
+  stats?: { label: string; value: string | number }[]
+}) {
+  const CONTENT_W = 186 // = PAGE_W(210) - 2*MARGIN(12), khớp pdf-report-core
+  const hasAllW = input.columns.every(c => typeof c.w === 'number')
+  let cols: StandingsColumn[]
+  if (hasAllW) {
+    cols = input.columns.map(c => ({ key: c.key, label: c.label, w: c.w as number, align: c.align ?? 'left', tone: c.tone, bold: c.bold }))
+  } else {
+    // Tự phân bổ: cột text (trái) rộng hơn cột căn giữa/phải; cột cuối hút phần dư → tổng = CONTENT_W.
+    const weight = (a?: string) => (a === 'right' ? 1.3 : a === 'center' ? 1 : 2.2)
+    const totalW = input.columns.reduce((s, c) => s + weight(c.align), 0)
+    let used = 0
+    cols = input.columns.map((c, i) => {
+      const last = i === input.columns.length - 1
+      const w = last ? CONTENT_W - used : Math.round((weight(c.align) / totalW) * CONTENT_W)
+      used += w
+      return { key: c.key, label: c.label, w, align: c.align ?? 'left', tone: c.tone, bold: c.bold }
+    })
+  }
+  const [{ default: jsPDF }, fonts, core, logo] = await Promise.all([
+    import('jspdf'),
+    loadVnFonts(),
+    import('./pdf-report-core.js'),
+    loadBrandLogo(),
+  ])
+  const now = new Date()
+  const doc = core.buildStandingsReportPDF({
+    jsPDF,
+    fonts,
+    branding: { name: brandName(), footer: brandFooter(), logo },
+    meta: {
+      clubName: input.clubName,
+      sportLabel: input.headerLeft ?? input.clubName,
+      tournamentName: '',
+      formatLabel: '',
+      rankNote: input.note ?? '',
+      title: input.title,
+      highlightTop3: false,
+      exportedDateText: now.toLocaleDateString('vi-VN'),
+      exportedAtText: now.toLocaleString('vi-VN'),
+    },
+    columns: cols,
+    rows: input.rows,
+    stats: input.stats ?? [],
+  })
+  return savePdfDoc(doc, input.fileName)
+}
+
+/** PDF bảng dùng chung (vector, phân trang chuẩn): header brand + bảng + summary tùy chọn. */
 export function exportGenericTablePDF(opts: {
   fileBase: string
   title: string
@@ -611,21 +681,20 @@ export function exportGenericTablePDF(opts: {
   summaryLabel?: string
   summaryValue?: string
 }) {
-  const cls = (a?: CellAlign) => (a === 'right' ? 'right' : a === 'center' ? 'center' : '')
-  const thead = `<tr>${opts.columns.map(c => `<th class="${cls(c.align)}">${escHtml(c.header)}</th>`).join('')}</tr>`
-  const body = opts.rows.map(r =>
-    `<tr>${r.map((cell, i) => `<td class="${cls(opts.columns[i]?.align)}">${escHtml(cell)}</td>`).join('')}</tr>`,
-  ).join('')
-  return downloadPDF([`
-    <div class="header">
-      <h1>${escHtml(brandName())} · ${escHtml(opts.title)}</h1>
-      ${opts.subtitle ? `<p>${escHtml(opts.subtitle)}</p>` : ''}
-      <div class="header-meta"><span>${escHtml(opts.metaLeft ?? '')}</span><span>Xuất ngày: ${today()}</span></div>
-    </div>
-    <table><thead>${thead}</thead><tbody>${body}</tbody></table>
-    ${opts.summaryLabel ? `<div class="summary"><span class="label">${escHtml(opts.summaryLabel)}</span><span class="value">${escHtml(opts.summaryValue ?? '')}</span></div>` : ''}
-    <div class="footer">${escHtml(brandFooter())} · Xuất lúc ${todayFull()}</div>
-  `], opts.fileBase)
+  const headerLeft = [opts.subtitle, opts.metaLeft].filter(Boolean).join(' · ') || undefined
+  return buildVectorTable({
+    fileName: opts.fileBase,
+    title: opts.title.toUpperCase(),
+    clubName: opts.subtitle ?? brandName(),
+    headerLeft,
+    note: opts.summaryLabel ? `${opts.summaryLabel}: ${opts.summaryValue ?? ''}` : '',
+    columns: opts.columns.map((c, i) => ({ key: `c${i}`, label: c.header, align: c.align ?? 'left' })),
+    rows: opts.rows.map(r => {
+      const o: Record<string, string | number> = {}
+      opts.columns.forEach((_, i) => { o[`c${i}`] = r[i] ?? '' })
+      return o
+    }),
+  })
 }
 
 /* ════════════════════════════════════════
@@ -642,28 +711,32 @@ export function exportLedgerExcel(periodName: string, rows: LedgerRow[]) {
 }
 
 export function exportLedgerPDF(periodName: string, rows: LedgerRow[], totalIncome: number, totalExpense: number, balance: number) {
-  const bodyRows = rows.map(r => `
-    <tr>
-      <td>${r.date}</td>
-      <td class="center"><span class="${r.type === 'Thu' ? 'badge-green' : 'badge-red'}">${r.type}</span></td>
-      <td>${r.desc}</td>
-      <td class="right ${r.amount > 0 ? 'badge-green' : 'badge-red'}">${r.amount > 0 ? '+' : ''}${formatVND(r.amount)}</td>
-      <td class="right">${formatVND(r.balance)}</td>
-    </tr>`).join('')
-
-  downloadPDF([`
-    <div class="header">
-      <h1>${brandName()} · Sổ Quỹ Chi Tiết</h1>
-      <p>${periodName}</p>
-      <div class="header-meta"><span>Tổng thu: ${formatVND(totalIncome)} | Tổng chi: ${formatVND(totalExpense)}</span><span>Xuất ngày: ${today()}</span></div>
-    </div>
-    <table>
-      <thead><tr><th>Ngày</th><th class="center">Loại</th><th>Mô tả</th><th class="right">Số tiền</th><th class="right">Số dư</th></tr></thead>
-      <tbody>${bodyRows}</tbody>
-    </table>
-    <div class="summary"><span class="label">Số dư cuối kỳ</span><span class="value">${formatVND(balance)}</span></div>
-    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
-  `], `So_Quy_${periodName.replace(/\s/g, '_')}`)
+  return buildVectorTable({
+    fileName: `So_Quy_${slugName(periodName)}`,
+    title: 'SỔ QUỸ CHI TIẾT',
+    clubName: periodName,
+    headerLeft: `${periodName} · ${rows.length} giao dịch`,
+    note: `Số dư cuối kỳ: ${formatVND(balance)}`,
+    columns: [
+      { key: 'date', label: 'NGÀY', w: 26, align: 'left' },
+      { key: 'type', label: 'LOẠI', w: 18, align: 'center' },
+      { key: 'desc', label: 'MÔ TẢ', w: 66, align: 'left' },
+      { key: 'amount', label: 'SỐ TIỀN', w: 38, align: 'right', tone: 'sign', bold: true },
+      { key: 'balance', label: 'SỐ DƯ', w: 38, align: 'right' },
+    ],
+    rows: rows.map(r => ({
+      date: r.date,
+      type: r.type,
+      desc: r.desc,
+      amount: (r.amount > 0 ? '+' : '') + formatVND(r.amount),
+      balance: formatVND(r.balance),
+    })),
+    stats: [
+      { label: 'Tổng thu', value: formatVND(totalIncome) },
+      { label: 'Tổng chi', value: formatVND(totalExpense) },
+      { label: 'Số dư cuối kỳ', value: formatVND(balance) },
+    ],
+  })
 }
 
 /* ════════════════════════════════════════
@@ -681,29 +754,33 @@ export function exportContribExcel(periodName: string, rows: ContribRow[]) {
 
 export function exportContribPDF(periodName: string, rows: ContribRow[], total: number) {
   const confirmed = rows.filter(r => r.confirmed).length
-  const bodyRows = rows.map((r, i) => `
-    <tr>
-      <td class="center">${i + 1}</td>
-      <td>${r.member}</td>
-      <td class="center">${r.date}</td>
-      <td class="right">${formatVND(r.amount)}</td>
-      <td class="center">${r.method === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</td>
-      <td class="center"><span class="${r.confirmed ? 'badge-green' : 'badge-yellow'}">${r.confirmed ? '✓ Xác nhận' : '⏳ Chờ'}</span></td>
-    </tr>`).join('')
-
-  downloadPDF([`
-    <div class="header">
-      <h1>${brandName()} · Danh Sách Thu Quỹ</h1>
-      <p>${periodName}</p>
-      <div class="header-meta"><span>${rows.length} khoản | Đã xác nhận: ${confirmed}/${rows.length}</span><span>Xuất ngày: ${today()}</span></div>
-    </div>
-    <table>
-      <thead><tr><th class="center">#</th><th>Thành viên</th><th class="center">Ngày đóng</th><th class="right">Số tiền</th><th class="center">Hình thức</th><th class="center">Trạng thái</th></tr></thead>
-      <tbody>${bodyRows}</tbody>
-    </table>
-    <div class="summary"><span class="label">Tổng thu (${rows.length} khoản)</span><span class="value">${formatVND(total)}</span></div>
-    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
-  `], `Thu_Quy_${periodName.replace(/\s/g, '_')}`)
+  return buildVectorTable({
+    fileName: `Thu_Quy_${slugName(periodName)}`,
+    title: 'DANH SÁCH THU QUỸ',
+    clubName: periodName,
+    headerLeft: `${periodName} · ${rows.length} khoản`,
+    note: `Tổng thu ${formatVND(total)} · Đã xác nhận ${confirmed}/${rows.length}`,
+    columns: [
+      { key: 'rank', label: '#', w: 10, align: 'center' },
+      { key: 'member', label: 'THÀNH VIÊN', w: 56, align: 'left', bold: true },
+      { key: 'date', label: 'NGÀY ĐÓNG', w: 28, align: 'center' },
+      { key: 'amount', label: 'SỐ TIỀN', w: 34, align: 'right', tone: 'points' },
+      { key: 'method', label: 'HÌNH THỨC', w: 30, align: 'center' },
+      { key: 'status', label: 'TRẠNG THÁI', w: 28, align: 'center' },
+    ],
+    rows: rows.map(r => ({
+      member: r.member,
+      date: r.date,
+      amount: formatVND(r.amount),
+      method: r.method === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
+      status: r.confirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+    })),
+    stats: [
+      { label: 'Số khoản', value: rows.length },
+      { label: 'Đã xác nhận', value: `${confirmed}/${rows.length}` },
+      { label: 'Tổng thu', value: formatVND(total) },
+    ],
+  })
 }
 
 /* ════════════════════════════════════════
@@ -720,28 +797,27 @@ export function exportMembersExcel(clubName: string, rows: MemberRow[]) {
 }
 
 export function exportMembersPDF(clubName: string, rows: MemberRow[]) {
-  const bodyRows = rows.map((r, i) => `
-    <tr>
-      <td class="center">${i + 1}</td>
-      <td>${r.name}</td>
-      <td>${r.phone}</td>
-      <td>${r.email}</td>
-      <td class="center">${r.joinDate}</td>
-      <td class="center"><span class="${r.status === 'Hoạt động' ? 'badge-green' : r.status === 'Tạm nghỉ' ? 'badge-yellow' : ''}">${r.status}</span></td>
-    </tr>`).join('')
-
-  downloadPDF([`
-    <div class="header">
-      <h1>${brandName()} · Danh Sách Thành Viên</h1>
-      <p>${clubName}</p>
-      <div class="header-meta"><span>${rows.length} thành viên</span><span>Xuất ngày: ${today()}</span></div>
-    </div>
-    <table>
-      <thead><tr><th class="center">#</th><th>Họ và tên</th><th>Điện thoại</th><th>Email</th><th class="center">Ngày tham gia</th><th class="center">Trạng thái</th></tr></thead>
-      <tbody>${bodyRows}</tbody>
-    </table>
-    <div class="footer">${brandFooter()} · Xuất lúc ${todayFull()}</div>
-  `], `Danh_Sach_Thanh_Vien_${clubName.replace(/\s/g, '_')}`)
+  const active = rows.filter(r => r.status === 'Hoạt động').length
+  return buildVectorTable({
+    fileName: `Danh_Sach_Thanh_Vien_${slugName(clubName)}`,
+    title: 'DANH SÁCH THÀNH VIÊN',
+    clubName,
+    headerLeft: `${clubName} · ${rows.length} thành viên`,
+    columns: [
+      { key: 'rank', label: '#', w: 10, align: 'center' },
+      { key: 'name', label: 'HỌ VÀ TÊN', w: 44, align: 'left', bold: true },
+      { key: 'phone', label: 'ĐIỆN THOẠI', w: 30, align: 'left' },
+      { key: 'email', label: 'EMAIL', w: 56, align: 'left' },
+      { key: 'joinDate', label: 'NGÀY THAM GIA', w: 24, align: 'center' },
+      { key: 'status', label: 'TRẠNG THÁI', w: 22, align: 'center', tone: 'muted' },
+    ],
+    rows: rows.map(r => ({ name: r.name, phone: r.phone, email: r.email, joinDate: r.joinDate, status: r.status })),
+    stats: [
+      { label: 'Tổng thành viên', value: rows.length },
+      { label: 'Đang hoạt động', value: active },
+      { label: 'Tạm nghỉ / khác', value: rows.length - active },
+    ],
+  })
 }
 
 /* ════════════════════════════════════════

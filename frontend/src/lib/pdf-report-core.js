@@ -473,7 +473,10 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
     font('bold', 15, C.white)
     doc.text(meta.title || 'BẢNG XẾP HẠNG', textX, MARGIN + 15.5)
     font('normal', 8.5, C.white)
-    doc.text(clip(`${meta.sportLabel} · ${meta.tournamentName}`, CONTENT_W - 60), textX, MARGIN + 21.5)
+    // Ghép các phần KHÔNG rỗng bằng ' · ' — báo cáo không-giải-đấu (danh sách TV, sổ quỹ…) chỉ
+    // truyền 1 phần, tránh treo ' · ' thừa ở đầu/cuối.
+    const subLine = [meta.sportLabel, meta.tournamentName].filter((v) => v != null && String(v).trim() !== '').join(' · ')
+    if (subLine) doc.text(clip(subLine, CONTENT_W - 60), textX, MARGIN + 21.5)
     font('normal', 7.5, C.white)
     doc.text(`Xuất ngày ${meta.exportedDateText}`, PAGE_W - MARGIN - 7, MARGIN + 10, { align: 'right' })
     if (subtitle) doc.text(clip(subtitle, 70), PAGE_W - MARGIN - 7, MARGIN + 15.5, { align: 'right' })
