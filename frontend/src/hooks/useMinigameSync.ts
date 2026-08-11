@@ -47,6 +47,9 @@ export function useMinigameSync() {
         // pairingMode nằm trong settings — PHẢI carry qua, nếu không FixedDoubles dashboard
         // hiểu nhầm chế độ THỦ CÔNG thành TỰ ĐỘNG (isManual=false) → hiện nút ghép tự động bị BE chặn.
         pairingMode: m.settings?.pairingMode ?? undefined,
+        // participantType để dispatch đúng đôi (PAIR) → luồng tạo cặp (tránh nhấp nháy sai dashboard).
+        participantType: m.participantType ?? undefined,
+        partnerMode: m.partnerMode ?? undefined,
         // Số liệu THẬT per-giải từ BE (KPI/cột người-bảng-trận) — nếu bỏ sẽ hiện 0 hết.
         playerCount: m.playerCount ?? 0,
         matchCount: m.matchCount ?? 0,

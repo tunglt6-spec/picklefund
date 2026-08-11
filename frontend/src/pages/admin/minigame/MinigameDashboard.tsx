@@ -15,10 +15,12 @@ export function MinigameDashboard() {
   const { resync } = useMinigameDetailSync(id)
   const mg = getMinigame(id!)
 
-  // Môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi) HOẶC nội dung ĐÔI (cặp = đội 2 người):
-  // dùng chung dashboard đội-roster (tạo cặp/đội + chia bảng + RR/knockout + BXH theo cặp/đội).
+  // Môn đồng đội (bóng đá/bóng rổ/bóng chuyền/bóng chuyền hơi) HOẶC nội dung ĐÔI (cặp = đội 2 người)
+  // Ở THỂ THỨC Vòng bảng / Loại trực tiếp: dùng chung dashboard đội-roster (tạo cặp/đội + chia bảng +
+  // RR/knockout + BXH theo cặp/đội). LƯU Ý: đôi + FIXED_DOUBLES_ROUND_ROBIN → FixedDoubles (luồng riêng);
+  // đôi + RANDOM_DOUBLES (Americano) → MinigameDashboardPage. Nên chỉ bắt PAIR cho GROUP_STAGE/KNOCKOUT.
   if (['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(mg?.sport ?? '')
-    || (mg as unknown as { participantType?: string })?.participantType === 'PAIR') {
+    || (mg?.participantType === 'PAIR' && (mg?.formatType === 'GROUP_STAGE' || mg?.formatType === 'KNOCKOUT'))) {
     return <FootballDashboardPage resync={resync} />
   }
   // Golf leaderboard (stroke/stableford). Golf Match-Play (format KNOCKOUT) → xuống nhánh knockout.

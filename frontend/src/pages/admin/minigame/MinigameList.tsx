@@ -148,6 +148,7 @@ export function MinigameList() {
         createdBy: m.createdById ?? '', createdAt: m.createdAt ?? '',
         formatType: m.format ?? 'GROUP_STAGE', sport: m.sport ?? 'PICKLEBALL', scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD', drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
+        participantType: m.participantType ?? undefined, partnerMode: m.partnerMode ?? undefined,
         // Số liệu thật per-giải từ BE (KPI/bảng) — không phụ thuộc store participants/matches.
         playerCount: m.playerCount ?? 0, matchCount: m.matchCount ?? 0, completedCount: m.completedCount ?? 0, groupCount: m.groupCount ?? 0,
       }))

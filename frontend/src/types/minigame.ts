@@ -47,6 +47,11 @@ export interface MiniGame {
   groupCount?: number
   drawMode: DrawMode
   pairingMode?: PairingMode
+  /** INDIVIDUAL (đơn/cá nhân) | PAIR (đôi = cặp 2 người) | TEAM (đội nhiều người). Quyết định
+   *  dashboard: PAIR/TEAM → luồng đội-roster (tạo cặp/đội). BẮT BUỘC carry từ API để route đúng
+   *  đôi nam/đôi nữ (nếu thiếu, đôi bị hiểu nhầm thành đơn → không có màn ghép cặp). */
+  participantType?: 'INDIVIDUAL' | 'PAIR' | 'TEAM'
+  partnerMode?: 'FIXED' | 'RANDOM' | 'ROTATING'
   /** FIXED_DOUBLES_ROUND_ROBIN: đã sinh lịch lượt đi & lượt về (double round-robin). */
   doubleRoundRobin?: boolean
 }

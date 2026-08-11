@@ -59,6 +59,10 @@ export function useMinigameDetailSync(minigameId: string | undefined) {
         scoringModel: m.scoringModel ?? 'HEAD_TO_HEAD',
         drawMode: m.settings?.drawMode ?? 'RANDOM',
         pairingMode: m.settings?.pairingMode ?? undefined,
+        // BẮT BUỘC carry participantType: dispatch (MinigameDashboard) route PAIR → luồng tạo cặp.
+        // Thiếu field này ⇒ đôi nam/đôi nữ bị coi là đơn ⇒ không có màn ghép cặp thành viên.
+        participantType: m.participantType ?? undefined,
+        partnerMode: m.partnerMode ?? undefined,
       }
 
       // Member CLB thật (từ bảng minigame_participants)

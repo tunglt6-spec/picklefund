@@ -506,7 +506,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
   // Nhãn theo bộ môn — cùng engine đội-roster. Nội dung ĐÔI (racket, participantType=PAIR):
   // "đội" = CẶP 2 người → nhãn "cặp đôi"/"VĐV"/"điểm".
-  const isPair = (mg as unknown as { participantType?: string })?.participantType === 'PAIR'
+  const isPair = mg?.participantType === 'PAIR'
   const ui = SPORT_UI[mg.sport ?? 'FOOTBALL']
     ?? (isPair
       ? { emoji: (mg.sport === 'TENNIS' ? '🎾' : mg.sport === 'BADMINTON' ? '🏸' : '🏓'), name: 'Đôi', teamTab: 'Cặp đôi', player: 'VĐV', scoreWord: 'điểm', gfgaShort: 'Đ+/Đ−', gfgaTitle: 'Điểm ghi - Điểm thua' }

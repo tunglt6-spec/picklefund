@@ -38,7 +38,9 @@ export function GroupAssignment() {
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    if (mg && mg.formatType !== 'GROUP_STAGE' && mg.formatType !== 'RANDOM_DOUBLES') {
+    // Nội dung ĐÔI (cặp) không dùng màn chia-bảng-đơn này: ghép cặp + chia bảng làm ở dashboard
+    // đội-roster (cặp = đội 2 người). Redirect về dashboard chính để tránh màn trống "0 người".
+    if (mg && ((mg.formatType !== 'GROUP_STAGE' && mg.formatType !== 'RANDOM_DOUBLES') || mg.participantType === 'PAIR')) {
       navigate(`/minigames/${id}`, { replace: true })
     }
   }, [mg, id, navigate])
