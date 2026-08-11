@@ -82,7 +82,9 @@ function DrawerShell({
 }) {
   if (!open) return null
   return (
-    <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'justify-end'}`}>
+    // h-[100dvh] thay inset-0/100vh: mobile 100vh bị thanh trình duyệt che đáy → sheet neo đáy tụt
+    // khỏi vùng nhìn, phải cuộn mới thấy input. dvh = vùng thấy thực → form gọn trong màn.
+    <div className={`fixed inset-x-0 top-0 h-[100dvh] z-50 flex ${isMobile ? 'items-end' : 'justify-end'}`}>
       <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={onClose} />
       <div
         role="dialog"
@@ -90,7 +92,7 @@ function DrawerShell({
         aria-label={title}
         className={`relative flex flex-col [background:var(--pf-surface)] ${
           isMobile
-            ? 'w-full max-h-[88vh] rounded-t-[24px] animate-fadeIn'
+            ? 'w-full max-h-[88dvh] rounded-t-[24px] animate-fadeIn'
             : 'h-full w-full max-w-md shadow-2xl animate-fadeIn'
         }`}
       >

@@ -30,13 +30,15 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+      // h-[100dvh] (KHÔNG inset-0/100vh): trên mobile 100vh tính theo layout viewport → đáy sheet
+      // bị thanh trình duyệt che, phải cuộn mới thấy input. dvh = vùng nhìn thấy thực → sheet nằm gọn.
+      className="fixed inset-x-0 top-0 h-[100dvh] z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="pf-modal-backdrop absolute inset-0 bg-slate-900/40 pointer-events-none" />
       <div className={cn(
         'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
-        'rounded-t-2xl max-h-[90vh] sm:rounded-2xl sm:max-h-[calc(100vh-2rem)]',
+        'rounded-t-2xl max-h-[90dvh] sm:rounded-2xl sm:max-h-[calc(100dvh-2rem)]',
         sizeClasses[size]
       )}>
         {/* Header */}
