@@ -51,9 +51,9 @@ describe('double-elimination plan', () => {
 
 describe('splitIntoGroups (chia bảng entrant — dùng cho cả cặp lẫn người)', () => {
   const svc = new MinigameService(null as never, null as never);
-  const split = (n: number, size: number) => {
+  const split = (n: number, size: number, fillFirst = false) => {
     const keys = Array.from({ length: n }, (_, i) => `k${i}`);
-    return (svc as unknown as { splitIntoGroups(k: string[], s: number): Array<{ memberKeys: string[] }> }).splitIntoGroups(keys, size);
+    return (svc as unknown as { splitIntoGroups(k: string[], s: number, f?: boolean): Array<{ memberKeys: string[] }> }).splitIntoGroups(keys, size, fillFirst);
   };
 
   it('8 entrant / bảng 4 → 2 bảng, mỗi bảng 4', () => {
@@ -61,8 +61,13 @@ describe('splitIntoGroups (chia bảng entrant — dùng cho cả cặp lẫn ng
     expect(g).toHaveLength(2);
     expect(g.map((x) => x.memberKeys.length)).toEqual([4, 4]);
   });
-  it('6 entrant / bảng 4 → 2 bảng 4-2 (fill-first: đủ 4 mới sang bảng kế)', () => {
+  it('ĐƠN (chia đều mặc định): 6 / bảng 4 → 2 bảng 3-3', () => {
     const g = split(6, 4);
+    expect(g).toHaveLength(2);
+    expect(g.map((x) => x.memberKeys.length)).toEqual([3, 3]);
+  });
+  it('ĐÔI (fill-first): 6 cặp / bảng 4 → 2 bảng 4-2 (đủ 4 mới sang bảng kế)', () => {
+    const g = split(6, 4, true);
     expect(g).toHaveLength(2);
     expect(g.map((x) => x.memberKeys.length)).toEqual([4, 2]);
   });

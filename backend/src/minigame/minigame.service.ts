@@ -1311,15 +1311,28 @@ export class MinigameService {
   }
 
   /**
-   * Chia "entrant key" (người/cặp/đội) thành bảng theo groupSize — FILL-FIRST: đổ ĐỦ groupSize
-   * vào một bảng rồi mới sang bảng kế (groupSize = SỐ tối đa mỗi bảng, không phải chia đều).
-   * Bảng cuối nhận phần dư. Vd 6 entrant, size 4 → [4, 2] (khớp UX "đủ số/bảng thì sang bảng khác").
+   * Chia "entrant key" (người/cặp/đội) thành bảng theo groupSize.
+   * - `fillFirst=false` (mặc định — dùng cho ĐƠN/cá nhân): CHIA ĐỀU thành ceil(N/size) bảng, số
+   *   lượng mỗi bảng chênh nhau tối đa 1 (vd 6 người, size 4 → [3, 3]).
+   * - `fillFirst=true` (dùng cho ĐÔI/cặp): đổ ĐỦ size vào một bảng rồi mới sang bảng kế (size =
+   *   SỐ TỐI ĐA mỗi bảng, bảng cuối nhận dư — vd 6 cặp, size 4 → [4, 2]).
    */
-  private splitIntoGroups(keys: string[], groupSize: number) {
+  private splitIntoGroups(keys: string[], groupSize: number, fillFirst = false) {
     const size = Math.max(1, Math.floor(groupSize) || 1);
     const groups: Array<{ id: string; name: string; order: number; status: string; memberKeys: string[] }> = [];
-    for (let i = 0, g = 0; i < keys.length; i += size, g++) {
-      groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(g), order: g, status: 'ACTIVE', memberKeys: keys.slice(i, i + size) });
+    if (fillFirst) {
+      for (let i = 0, g = 0; i < keys.length; i += size, g++)
+        groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(g), order: g, status: 'ACTIVE', memberKeys: keys.slice(i, i + size) });
+      return groups;
+    }
+    const numGroups = Math.max(1, Math.ceil(keys.length / size));
+    const base = Math.floor(keys.length / numGroups);
+    const extra = keys.length % numGroups;
+    let offset = 0;
+    for (let i = 0; i < numGroups; i++) {
+      const n = base + (i < extra ? 1 : 0);
+      groups.push({ id: `grp-${randomUUID()}`, name: this.groupLabel(i), order: i, status: 'ACTIVE', memberKeys: keys.slice(offset, offset + n) });
+      offset += n;
     }
     return groups;
   }
@@ -1366,7 +1379,7 @@ export class MinigameService {
       } else {
         teams = existingPairs; // đã có cặp (tạo tay dù không phải MANUAL) → dùng luôn
       }
-      const groups = this.splitIntoGroups(this.shuffle(teams.map((t) => t.id)), groupSize);
+      const groups = this.splitIntoGroups(this.shuffle(teams.map((t) => t.id)), groupSize, true); // ĐÔI: fill-first
       await this.prisma.minigame.update({ where: { id }, data: { settings: { ...settings, groups } as Prisma.InputJsonValue } });
       return this.findOne(id, clubId);
     }
