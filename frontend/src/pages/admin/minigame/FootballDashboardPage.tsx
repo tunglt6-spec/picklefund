@@ -703,9 +703,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     )}
                   </div>
 
-                  {/* Chế độ ghép cặp */}
-                  <div className="mt-3">
-                    <div className="text-xs font-medium [color:var(--pf-color-muted)] mb-2">Cách ghép cặp</div>
+                  {/* Cách chia khi ghép TỰ ĐỘNG */}
+                  <div className="mt-4">
+                    <div className="text-xs font-medium [color:var(--pf-color-muted)] mb-2">Cách chia (khi ghép tự động)</div>
                     <div className="inline-flex rounded-xl border border-[color:var(--pf-border)] p-1 gap-1">
                       {([['RANDOM_PAIRING', 'Ngẫu nhiên'], ['BALANCED_SKILL_PAIRING', 'Cân bằng trình độ']] as const).map(([val, label]) => (
                         <button key={val} onClick={() => setPairingMode(val)}
@@ -716,20 +716,21 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     </div>
                   </div>
 
-                  {/* Hành động */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {/* 2 CÁCH GHÉP SONG SONG: tự động (nhiều cặp 1 lần) + thủ công (từng cặp) */}
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button onClick={autoPair} disabled={saving || (pickIds.length + guests.length) < 4}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-60">
-                      <Users size={16} /> {saving ? 'Đang ghép...' : 'Ghép cặp tự động'}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
+                      <Users size={16} /> {saving ? 'Đang ghép…' : `Ghép cặp tự động${(pickIds.length + guests.length) >= 4 ? ` · ${Math.floor((pickIds.length + guests.length) / 2)} cặp` : ''}`}
                     </button>
-                    {pickIds.length === 2 && (
-                      <button onClick={manualPair} disabled={saving}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors disabled:opacity-60">
-                        <Plus size={16} /> Tạo 1 cặp
-                      </button>
-                    )}
+                    <button onClick={manualPair} disabled={saving || pickIds.length !== 2}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                      <Plus size={16} /> Tạo cặp thủ công (2 người)
+                    </button>
                   </div>
-                  <p className="mt-3 text-xs [color:var(--pf-color-muted)]">Chọn tối thiểu 4 người (2 cặp). Bấm Ghép cặp tự động để hệ thống chia cặp ngẫu nhiên hoặc cân bằng trình độ; hoặc chọn đúng 2 người để tự tạo từng cặp.</p>
+                  <p className="mt-2.5 text-xs leading-relaxed [color:var(--pf-color-muted)]">
+                    <b className="[color:var(--pf-text)]">Tự động:</b> chọn ≥4 người → hệ thống chia cặp ngẫu nhiên/cân bằng.
+                    <b className="[color:var(--pf-text)] ml-1">Thủ công:</b> chọn đúng 2 người → tạo từng cặp. Cả 2 chạy song song; người đã ghép tự ẩn khỏi danh sách.
+                  </p>
                 </div>
 
                 {/* Danh sách cặp */}
