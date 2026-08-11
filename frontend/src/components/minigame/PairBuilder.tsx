@@ -1,16 +1,17 @@
 /**
- * PairBuilder — trình ghép cặp CHUẨN SaaS dùng CHUNG cho MỌI nội dung ĐÔI (đôi nam/nữ/nam-nữ) ở
- * mọi thể thức (Vòng bảng · Loại trực tiếp · Đôi cố định vòng tròn) và mọi môn vợt.
+ * PairBuilder — trình chọn VĐV / ghép cặp CHUẨN SaaS dùng CHUNG cho MỌI nội dung ở mọi thể thức
+ * (Vòng bảng · Loại trực tiếp · Đôi cố định vòng tròn) và mọi môn.
  *
- * Self-contained: tự lấy thành viên CLB (clubData), tự fetch danh sách cặp (GET /minigames/:id →
- * teams player1/player2), tự gọi API ghép/xóa. Parent chỉ truyền minigameId + cấu hình hiển thị +
- * onChanged (để parent refresh KPI/lịch của nó). 2 cách ghép SONG SONG:
- *  - Tự động: chọn ≥4 người → POST /pairs/auto (ngẫu nhiên / cân bằng trình độ) → tạo toàn bộ cặp.
- *  - Thủ công: chọn đúng 2 người → POST /participants + /teams → tạo từng cặp.
- * Người đã ghép tự ẩn khỏi pool. Vòng bảng: xem trước cặp gom theo bảng (fill-first).
+ * 2 chế độ (mode):
+ *  - 'pair'  (ĐÔI): chọn người → Ghép cặp tự động (ngẫu nhiên/cân bằng) hoặc thủ công (2 người) →
+ *    danh sách cặp (Vòng bảng: xem trước theo bảng, fill-first).
+ *  - 'single'(ĐƠN): chọn người → Thêm vận động viên (participants) → danh sách VĐV.
+ *
+ * Self-contained: tự lấy thành viên CLB (clubData), tự fetch dữ liệu giải (GET /minigames/:id),
+ * tự gọi API. Parent chỉ truyền minigameId + cấu hình + onChanged (refresh KPI/lịch của parent).
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Users, Search, UserPlus, X, Plus, Trash2 } from 'lucide-react'
+import { Users, Search, UserPlus, X, Plus, Trash2, UserCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { cn } from '../../lib/utils'
@@ -25,24 +26,28 @@ interface PairTeam {
   player1Name?: string | null
   player2Name?: string | null
 }
+interface Entrant { key: string; name: string; isGuest: boolean }
 
 interface PairBuilderProps {
   minigameId: string
-  /** Vòng bảng → xem trước cặp gom theo bảng (fill-first). Loại trực tiếp / đôi cố định → list phẳng. */
+  /** 'pair' (đôi, mặc định) | 'single' (đơn/cá nhân). */
+  mode?: 'pair' | 'single'
+  /** Vòng bảng → xem trước cặp gom theo bảng (fill-first). Chỉ dùng khi mode='pair'. */
   isGroupStage?: boolean
-  /** Số cặp tối đa mỗi bảng (chỉ dùng khi isGroupStage). */
   groupSize?: number
-  /** Gọi sau khi ghép/xóa để parent làm mới KPI/lịch. */
+  /** Gọi sau khi thay đổi để parent làm mới KPI/lịch. */
   onChanged?: () => void
 }
 
-export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, onChanged }: PairBuilderProps) {
+export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, groupSize = 4, onChanged }: PairBuilderProps) {
+  const isSingle = mode === 'single'
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getClubData } = useClubDataStore()
   const members = getClubData(clubId).members
 
   const [pairs, setPairs] = useState<PairTeam[]>([])
+  const [entrants, setEntrants] = useState<Entrant[]>([])
   const [loading, setLoading] = useState(true)
   const [pickIds, setPickIds] = useState<string[]>([])
   const [guests, setGuests] = useState<string[]>([])
@@ -51,33 +56,43 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
   const [pairingMode, setPairingMode] = useState<'RANDOM_PAIRING' | 'BALANCED_SKILL_PAIRING'>('RANDOM_PAIRING')
   const [saving, setSaving] = useState(false)
 
-  const fetchPairs = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await api.get(`/minigames/${minigameId}`)
       const m = res.data?.data ?? res.data
       setPairs((m?.teams ?? []) as PairTeam[])
-    } catch { /* giữ danh sách hiện có */ } finally { setLoading(false) }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts: Entrant[] = (m?.participants ?? []).map((p: any) => ({ key: p.memberId ?? p.member?.id, name: p.member?.fullName ?? p.memberName ?? 'Thành viên', isGuest: false }))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const gsts: Entrant[] = (m?.settings?.guests ?? []).map((g: any) => ({ key: g.id, name: g.name ?? 'Khách', isGuest: true }))
+      setEntrants([...parts, ...gsts])
+    } catch { /* giữ dữ liệu hiện có */ } finally { setLoading(false) }
   }, [minigameId])
-  useEffect(() => { void fetchPairs() }, [fetchPairs])
+  useEffect(() => { void fetchData() }, [fetchData])
 
-  const refresh = async () => { await fetchPairs(); onChanged?.() }
+  const refresh = async () => { await fetchData(); onChanged?.() }
 
-  const pairedIds = new Set(pairs.flatMap(t => [t.player1?.id, t.player2?.id]).filter((x): x is string => !!x))
+  // Người đã tham gia (đã ghép cặp / đã là VĐV) → LOẠI khỏi pool chọn.
+  const usedIds = isSingle
+    ? new Set(entrants.filter(e => !e.isGuest).map(e => e.key))
+    : new Set(pairs.flatMap(t => [t.player1?.id, t.player2?.id]).filter((x): x is string => !!x))
   const available = members.filter(m =>
-    (!search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase())) && !pairedIds.has(m.id),
+    (!search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase())) && !usedIds.has(m.id),
   )
   const togglePick = (mid: string) => setPickIds(ids => ids.includes(mid) ? ids.filter(x => x !== mid) : [...ids, mid])
   const addGuest = () => { const n = guestName.trim(); if (!n) return; setGuests(g => [...g, n]); setGuestName('') }
+  const clearSel = () => { setPickIds([]); setGuests([]); setSearch('') }
   const pairName = (t: PairTeam) => `${t.player1?.fullName ?? t.player1Name ?? '—'} & ${t.player2?.fullName ?? t.player2Name ?? '—'}`
   const selectedCount = pickIds.length + guests.length
+  const existingGuestNames = entrants.filter(e => e.isGuest).map(e => e.name)
 
+  // ── ĐÔI ──
   const autoPair = async () => {
     if (selectedCount < 4) { toast.error('Chọn tối thiểu 4 người (2 cặp)'); return }
     setSaving(true)
     try {
       await api.post(`/minigames/${minigameId}/pairs/auto`, { memberIds: pickIds, guests: guests.map(g => ({ name: g })), pairingMode })
-      await refresh(); toast.success('Đã ghép cặp tự động!')
-      setPickIds([]); setGuests([]); setSearch('')
+      await refresh(); toast.success('Đã ghép cặp tự động!'); clearSel()
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Ghép cặp thất bại') }
     finally { setSaving(false) }
   }
@@ -87,8 +102,7 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
     try {
       await api.post(`/minigames/${minigameId}/participants`, { memberIds: pickIds, guests: guests.map(g => ({ name: g })) })
       await api.post(`/minigames/${minigameId}/teams`, { name: `Đôi ${pairs.length + 1}`, player1Id: pickIds[0], player2Id: pickIds[1] })
-      await refresh(); toast.success('Đã tạo cặp')
-      setPickIds([]); setGuests([]); setSearch('')
+      await refresh(); toast.success('Đã tạo cặp'); clearSel()
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Tạo cặp thất bại') }
     finally { setSaving(false) }
   }
@@ -96,6 +110,26 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
     if (!window.confirm('Xóa cặp này?')) return
     try { await api.delete(`/minigames/${minigameId}/teams/${teamId}`); await refresh(); toast.success('Đã xóa cặp') }
     catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa cặp thất bại') }
+  }
+
+  // ── ĐƠN ──
+  const addEntrants = async () => {
+    if (selectedCount === 0) { toast.error('Chọn ít nhất 1 vận động viên'); return }
+    setSaving(true)
+    try {
+      // Gộp khách cũ + mới (backend thay thế toàn bộ settings.guests khi có field guests).
+      await api.post(`/minigames/${minigameId}/participants`, {
+        memberIds: pickIds,
+        guests: [...existingGuestNames, ...guests].map(name => ({ name })),
+      })
+      await refresh(); toast.success('Đã thêm vận động viên'); clearSel()
+    } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Thêm vận động viên thất bại') }
+    finally { setSaving(false) }
+  }
+  const deleteEntrant = async (key: string) => {
+    if (!window.confirm('Xóa vận động viên này khỏi giải?')) return
+    try { await api.delete(`/minigames/${minigameId}/participants/${key}`); await refresh(); toast.success('Đã xóa vận động viên') }
+    catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa thất bại') }
   }
 
   const pairGroupSize = Math.max(2, groupSize)
@@ -111,9 +145,11 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Card ghép cặp */}
+      {/* Card chọn/ghép */}
       <div className="rounded-[18px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
-        <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Users size={18} /> Ghép cặp thi đấu</h2>
+        <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]">
+          {isSingle ? <UserCheck size={18} /> : <Users size={18} />} {isSingle ? 'Vận động viên thi đấu' : 'Ghép cặp thi đấu'}
+        </h2>
 
         {/* Pool thành viên CLB */}
         <div className="mt-3">
@@ -136,7 +172,7 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
             ))}
             {available.length === 0 && (
               <p className="text-xs [color:var(--pf-color-muted)] py-1">
-                {pairedIds.size > 0 ? 'Tất cả thành viên đã được ghép cặp — thêm khách hoặc xóa cặp để ghép lại.' : 'Không có thành viên phù hợp.'}
+                {usedIds.size > 0 ? 'Tất cả thành viên đã tham gia — thêm khách hoặc xóa bớt để chọn lại.' : 'Không có thành viên phù hợp.'}
               </p>
             )}
           </div>
@@ -162,39 +198,73 @@ export function PairBuilder({ minigameId, isGroupStage = false, groupSize = 4, o
           )}
         </div>
 
-        {/* Cách chia khi ghép TỰ ĐỘNG */}
-        <div className="mt-4">
-          <div className="text-xs font-medium [color:var(--pf-color-muted)] mb-2">Cách chia (khi ghép tự động)</div>
-          <div className="inline-flex rounded-xl border border-[color:var(--pf-border)] p-1 gap-1">
-            {([['RANDOM_PAIRING', 'Ngẫu nhiên'], ['BALANCED_SKILL_PAIRING', 'Cân bằng trình độ']] as const).map(([val, label]) => (
-              <button key={val} onClick={() => setPairingMode(val)}
-                className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors', pairingMode === val ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]')}>
-                {label}
+        {isSingle ? (
+          /* ── ĐƠN: thêm VĐV ── */
+          <>
+            <div className="mt-4">
+              <button onClick={addEntrants} disabled={saving || selectedCount === 0}
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <Plus size={16} /> {saving ? 'Đang thêm…' : `Thêm vận động viên${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 2 CÁCH GHÉP SONG SONG */}
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button onClick={autoPair} disabled={saving || selectedCount < 4}
-            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
-            <Users size={16} /> {saving ? 'Đang ghép…' : `Ghép cặp tự động${selectedCount >= 4 ? ` · ${Math.floor(selectedCount / 2)} cặp` : ''}`}
-          </button>
-          <button onClick={manualPair} disabled={saving || pickIds.length !== 2}
-            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            <Plus size={16} /> Tạo cặp thủ công (2 người)
-          </button>
-        </div>
-        <p className="mt-2.5 text-xs leading-relaxed [color:var(--pf-color-muted)]">
-          <b className="[color:var(--pf-text)]">Tự động:</b> chọn ≥4 người → hệ thống chia cặp ngẫu nhiên/cân bằng.
-          <b className="[color:var(--pf-text)] ml-1">Thủ công:</b> chọn đúng 2 người → tạo từng cặp. Cả 2 chạy song song; người đã ghép tự ẩn khỏi danh sách.
-        </p>
+            </div>
+            <p className="mt-2.5 text-xs leading-relaxed [color:var(--pf-color-muted)]">Chọn thành viên/khách rồi bấm Thêm để đưa vào giải. Người đã tham gia tự ẩn khỏi danh sách. Sau khi đủ VĐV, chia bảng/tạo nhánh ở các bước tiếp theo.</p>
+          </>
+        ) : (
+          /* ── ĐÔI: chế độ + 2 nút song song ── */
+          <>
+            <div className="mt-4">
+              <div className="text-xs font-medium [color:var(--pf-color-muted)] mb-2">Cách chia (khi ghép tự động)</div>
+              <div className="inline-flex rounded-xl border border-[color:var(--pf-border)] p-1 gap-1">
+                {([['RANDOM_PAIRING', 'Ngẫu nhiên'], ['BALANCED_SKILL_PAIRING', 'Cân bằng trình độ']] as const).map(([val, label]) => (
+                  <button key={val} onClick={() => setPairingMode(val)}
+                    className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors', pairingMode === val ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]')}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onClick={autoPair} disabled={saving || selectedCount < 4}
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <Users size={16} /> {saving ? 'Đang ghép…' : `Ghép cặp tự động${selectedCount >= 4 ? ` · ${Math.floor(selectedCount / 2)} cặp` : ''}`}
+              </button>
+              <button onClick={manualPair} disabled={saving || pickIds.length !== 2}
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <Plus size={16} /> Tạo cặp thủ công (2 người)
+              </button>
+            </div>
+            <p className="mt-2.5 text-xs leading-relaxed [color:var(--pf-color-muted)]">
+              <b className="[color:var(--pf-text)]">Tự động:</b> chọn ≥4 người → hệ thống chia cặp ngẫu nhiên/cân bằng.
+              <b className="[color:var(--pf-text)] ml-1">Thủ công:</b> chọn đúng 2 người → tạo từng cặp. Cả 2 chạy song song; người đã ghép tự ẩn khỏi danh sách.
+            </p>
+          </>
+        )}
       </div>
 
-      {/* Danh sách cặp */}
+      {/* Danh sách */}
       {loading ? (
-        <p className="text-sm [color:var(--pf-color-muted)]">Đang tải danh sách cặp...</p>
+        <p className="text-sm [color:var(--pf-color-muted)]">Đang tải danh sách...</p>
+      ) : isSingle ? (
+        entrants.length === 0 ? (
+          <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
+            <UserCheck size={28} className="mx-auto [color:var(--pf-color-muted)]" />
+            <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có vận động viên. Chọn thành viên rồi bấm "Thêm vận động viên".</p>
+          </div>
+        ) : (
+          <div>
+            <div className="mb-2 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{entrants.length} vận động viên</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {entrants.map(e => (
+                <div key={e.key} className="rounded-[12px] border p-2.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium [color:var(--pf-text)] truncate flex items-center gap-1.5">
+                    {e.name}{e.isGuest && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">Khách</span>}
+                  </span>
+                  <button onClick={() => deleteEntrant(e.key)} className="shrink-0 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors" title="Xóa VĐV"><Trash2 size={15} /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
       ) : pairs.length === 0 ? (
         <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
           <Users size={28} className="mx-auto [color:var(--pf-color-muted)]" />

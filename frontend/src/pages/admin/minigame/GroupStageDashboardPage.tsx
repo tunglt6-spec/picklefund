@@ -7,6 +7,7 @@ import {
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { MetricCard } from '../../../components/shared/MetricCard'
+import { PairBuilder } from '../../../components/minigame/PairBuilder'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { isGuestId } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
@@ -207,6 +208,11 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
             </button>
           ))}
         </div>
+
+        {/* ĐƠN: chọn/thêm VĐV bằng builder dùng chung — trước khi chia bảng (thống nhất với đôi). */}
+        {!hasGroups && (
+          <PairBuilder mode="single" minigameId={id!} onChanged={resync} />
+        )}
 
         {/* BXH từng bảng */}
         {!hasGroups ? (

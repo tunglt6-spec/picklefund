@@ -11,6 +11,7 @@ import api from '../../../lib/api'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
+import { PairBuilder } from '../../../components/minigame/PairBuilder'
 import { useMinigameDetailSync } from '../../../hooks/useMinigameDetailSync'
 import { cn } from '../../../lib/utils'
 import toast from 'react-hot-toast'
@@ -151,15 +152,21 @@ export function KnockoutDashboardPage() {
         )}
 
         {matches.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Swords size={44} className="[color:var(--pf-color-muted)] mb-4" />
-            <p className="[color:var(--pf-color-muted)] font-medium">Chưa có nhánh đấu</p>
-            <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4 max-w-sm">
-              {de
-                ? <>Bấm <b>Tạo nhánh loại kép</b> — cần số đội/người là lũy thừa 2 (4/8/16). Thua ở nhánh thắng sẽ rơi xuống nhánh thua; thắng/thua tự đẩy khi nhập kết quả.</>
-                : <>Bấm <b>Tạo nhánh đấu</b> — hệ thống xếp hạt giống từ người chơi đã đăng ký (số lẻ → có suất BYE tự vào vòng trong).</>}
-            </p>
-            <Button onClick={generate} disabled={busy}><Swords size={16} /> {de ? 'Tạo nhánh loại kép' : 'Tạo nhánh đấu'}</Button>
+          <div className="flex flex-col gap-5">
+            {/* ĐƠN: chọn/thêm VĐV bằng builder dùng chung (không áp dụng golf — golfer quản ở màn golf). */}
+            {(mg as unknown as { sport?: string }).sport !== 'GOLF' && (
+              <PairBuilder mode="single" minigameId={id!} onChanged={resync} />
+            )}
+            <div className="flex flex-col items-center justify-center py-10 text-center rounded-[18px] border border-dashed border-[color:var(--pf-border)]">
+              <Swords size={40} className="[color:var(--pf-color-muted)] mb-3" />
+              <p className="[color:var(--pf-color-muted)] font-medium">Chưa có nhánh đấu</p>
+              <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4 max-w-sm">
+                {de
+                  ? <>Bấm <b>Tạo nhánh loại kép</b> — cần số đội/người là lũy thừa 2 (4/8/16). Thua ở nhánh thắng sẽ rơi xuống nhánh thua; thắng/thua tự đẩy khi nhập kết quả.</>
+                  : <>Bấm <b>Tạo nhánh đấu</b> — hệ thống xếp hạt giống từ vận động viên đã thêm ở trên (số lẻ → có suất BYE tự vào vòng trong).</>}
+              </p>
+              <Button onClick={generate} disabled={busy}><Swords size={16} /> {de ? 'Tạo nhánh loại kép' : 'Tạo nhánh đấu'}</Button>
+            </div>
           </div>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2">
