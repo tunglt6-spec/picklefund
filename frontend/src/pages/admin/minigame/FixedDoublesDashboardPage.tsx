@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Edit2, Calendar, Trophy,
-  ChevronDown, ChevronUp, Shuffle, RefreshCw, Plus, Trash2,
+  ChevronDown, ChevronUp, Plus, Trash2,
   Check, X, MoreVertical, AlertCircle, TrendingUp,
   Users, Target, Activity, Image as ImageIcon, FileText,
 } from 'lucide-react'
@@ -11,11 +11,12 @@ import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
+import { PairBuilder } from '../../../components/minigame/PairBuilder'
 import { PageHeader } from '../../../components/layout/PageHeader'
 import { MetricCard } from '../../../components/shared/MetricCard'
 import { StatusBadge, type StatusTone } from '../../../components/shared/StatusBadge'
-import type { MiniGame, MiniGameTeam, MiniGameTeamMatch, MiniGameTeamStanding, MiniGameParticipant } from '../../../types/minigame'
-import { isGuestId, normalizeMinigameStatus } from '../../../types/minigame'
+import type { MiniGame, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
+import { normalizeMinigameStatus } from '../../../types/minigame'
 import { exportStandingsPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
@@ -534,194 +535,6 @@ function RecentActivityCard({ entries }: { entries: string[] }) {
   )
 }
 
-// ── draft / paired panels (unchanged logic) ────────────────────────────────────
-function DraftPanel({ minigameId, onAutoGenerate }: { minigameId: string; onAutoGenerate?: () => Promise<void> }) {
-  const { participants, autoGenerateTeams } = useMinigameStore()
-  const parts = participants.filter(p => p.minigameId === minigameId && p.status === 'ACTIVE')
-  const [loading, setLoading] = useState(false)
-  const handleAuto = async () => {
-    if (parts.length < 2) { toast.error('Cần ít nhất 2 người'); return }
-    if (parts.length % 2 !== 0) { toast.error('Số người cần là số chẵn'); return }
-    setLoading(true)
-    try {
-      if (onAutoGenerate) { await onAutoGenerate() }
-      else { autoGenerateTeams(minigameId); toast.success('Đã ghép cặp đội!') }
-    }
-    finally { setLoading(false) }
-  }
-  return (
-    <div style={CARD} className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Users size={16} className="[color:var(--pf-color-muted)]" />
-          <span className="font-bold [color:var(--pf-text)]">Người Tham Gia ({parts.length})</span>
-        </div>
-        <Button onClick={handleAuto} disabled={loading}><Shuffle size={13} /> Ghép Cặp Tự Động</Button>
-      </div>
-      {parts.length === 0 ? (
-        <p className="text-sm [color:var(--pf-color-muted)] text-center py-8">Chưa có người tham gia</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {parts.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-2 rounded-xl [background:var(--pf-surface-muted)] px-3 py-2">
-              <span className="w-5 h-5 rounded-full [background:var(--pf-color-muted-soft)] text-[10px] flex items-center justify-center font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
-              <span className="text-sm [color:var(--pf-text)] truncate">{p.memberName}</span>
-              {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
-            </div>
-          ))}
-        </div>
-      )}
-      {parts.length % 2 !== 0 && parts.length > 0 && (
-        <p className="mt-3 text-xs [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-lg px-3 py-2">⚠️ Số lẻ ({parts.length}) — cần chẵn để ghép đội</p>
-      )}
-    </div>
-  )
-}
-
-function PairedPanel({ minigameId, teams, onCreateSchedule, onDeleteTeam, onRegenerateTeams }: {
-  minigameId: string
-  teams: MiniGameTeam[]
-  onCreateSchedule?: () => Promise<void>
-  onDeleteTeam?: (teamId: string) => Promise<void>
-  onRegenerateTeams?: () => Promise<void>
-}) {
-  const { generateTeamRoundRobinSchedule, updateTeam, removeTeam, autoGenerateTeams } = useMinigameStore()
-  const [editId, setEditId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const handleCreateSchedule = async () => {
-    if (onCreateSchedule) { await onCreateSchedule() }
-    else { generateTeamRoundRobinSchedule(minigameId); toast.success('Đã tạo lịch!') }
-  }
-  const handleDeleteTeam = async (teamId: string) => {
-    if (onDeleteTeam) { await onDeleteTeam(teamId) }
-    else { removeTeam(teamId); toast.success('Đã xóa đội') }
-  }
-  const handleRegenerate = async () => {
-    // Rule 3: ghép lại đội là thao tác phá dữ liệu đội hiện tại → yêu cầu confirm rõ ràng.
-    // (Sau khi đã tạo lịch, backend khoá generate-teams; UI chuyển sang màn lịch nên nút này biến mất.)
-    if (!window.confirm('Ghép lại đội sẽ tạo lại toàn bộ danh sách đội hiện tại. Tiếp tục?')) return
-    if (onRegenerateTeams) { await onRegenerateTeams() }
-    else { autoGenerateTeams(minigameId); toast.success('Đã ghép lại!') }
-  }
-  return (
-    <div style={CARD} className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Users size={16} className="[color:var(--pf-color-muted)]" />
-          <span className="font-bold [color:var(--pf-text)]">Danh Sách Đội ({teams.length})</span>
-          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">Đội sẽ được cố định sau khi tạo lịch</span>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={handleRegenerate}>
-            <RefreshCw size={13} /> Ghép Lại
-          </Button>
-          <Button onClick={handleCreateSchedule}>
-            <Calendar size={13} /> Tạo Lịch
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {teams.map((team, i) => (
-          <div key={team.id} className="flex items-center gap-3 [background:var(--pf-surface-muted)] rounded-xl px-4 py-3">
-            <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-              style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>{i + 1}</span>
-            {editId === team.id ? (
-              <input autoFocus className="flex-1 text-sm border rounded-lg px-2 py-1 outline-none"
-                value={editName} onChange={e => setEditName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') { updateTeam(team.id, { name: editName.trim() }); setEditId(null); toast.success('Đã lưu') }
-                  if (e.key === 'Escape') setEditId(null)
-                }} />
-            ) : (
-              <span className="flex-1 font-semibold [color:var(--pf-text)]">{team.name}</span>
-            )}
-            <span className="text-xs [color:var(--pf-color-muted)]">{team.player1.memberName} &amp; {team.player2.memberName}</span>
-            <Button size="sm" variant="ghost" onClick={() => { setEditId(team.id); setEditName(team.name) }}><Edit2 size={12} /></Button>
-            <Button size="sm" variant="ghost" className="[color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]" onClick={() => handleDeleteTeam(team.id)}><Trash2 size={12} /></Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── manual pairing panel (chế độ ✋ Thủ Công) ─────────────────────────────────
-// Trước đây chế độ MANUAL_PAIRING chọn được nhưng dashboard KHÔNG có cách tạo cặp
-// (chỉ có nút "Ghép Cặp Tự Động" bị backend chặn) → người dùng kẹt. Panel này cho chọn
-// 2 người chưa ghép → tạo cặp (POST /teams), lặp tới khi ghép hết rồi Tạo Lịch.
-function ManualPairPanel({ participants, teams, onCreateTeam, onDeleteTeam, onCreateSchedule }: {
-  participants: MiniGameParticipant[]
-  teams: MiniGameTeam[]
-  onCreateTeam: (p1: string, p2: string) => Promise<void>
-  onDeleteTeam: (teamId: string) => Promise<void>
-  onCreateSchedule: () => Promise<void>
-}) {
-  const [sel, setSel] = useState<string[]>([])
-  const [busy, setBusy] = useState(false)
-  const pairedIds = new Set(
-    teams.flatMap(t => [t.player1.memberId, t.player2.memberId]).filter(Boolean),
-  )
-  const unpaired = participants.filter(p => p.status === 'ACTIVE' && !pairedIds.has(p.memberId))
-  const toggle = (idv: string) =>
-    setSel(s => (s.includes(idv) ? s.filter(x => x !== idv) : s.length < 2 ? [...s, idv] : s))
-  const create = async () => {
-    if (sel.length !== 2 || busy) return
-    setBusy(true)
-    try { await onCreateTeam(sel[0], sel[1]); setSel([]) } finally { setBusy(false) }
-  }
-  const allPaired = unpaired.length === 0 && teams.length >= 2
-
-  return (
-    <div style={CARD} className="p-5 space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        <Users size={16} className="[color:var(--pf-color-muted)]" />
-        <span className="font-bold [color:var(--pf-text)]">Ghép Cặp Thủ Công</span>
-        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">Chọn 2 người → Tạo cặp</span>
-      </div>
-
-      {teams.length > 0 && (
-        <div className="space-y-2">
-          {teams.map((t, i) => (
-            <div key={t.id} className="flex items-center gap-3 [background:var(--pf-surface-muted)] rounded-xl px-4 py-2.5">
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>{i + 1}</span>
-              <span className="flex-1 text-sm font-medium [color:var(--pf-text)] truncate">{t.player1.memberName} &amp; {t.player2.memberName}</span>
-              <Button size="sm" variant="ghost" className="[color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]" onClick={() => onDeleteTeam(t.id)}><Trash2 size={12} /></Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {unpaired.length > 0 ? (
-        <>
-          <p className="text-xs [color:var(--pf-color-muted)]">Người chưa ghép ({unpaired.length}) — chọn đúng 2 người:</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {unpaired.map(p => {
-              const active = sel.includes(p.memberId)
-              return (
-                <button key={p.id} onClick={() => toggle(p.memberId)}
-                  className={cn('flex items-center gap-2 rounded-xl px-3 py-2 border text-left transition-colors',
-                    active ? 'border-[color:var(--pf-primary)] [background:var(--pf-primary-soft)]' : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]')}>
-                  <span className={cn('w-4 h-4 rounded-full border flex items-center justify-center text-[9px] shrink-0',
-                    active ? '[background:var(--pf-primary)] text-white border-transparent' : 'border-[color:var(--pf-border)]')}>{active ? '✓' : ''}</span>
-                  <span className="text-sm [color:var(--pf-text)] truncate">{p.memberName}</span>
-                  {(p.isGuest || isGuestId(p.memberId)) && <span className="shrink-0 text-[9px] font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
-                </button>
-              )
-            })}
-          </div>
-          <Button onClick={create} disabled={sel.length !== 2 || busy}><Plus size={13} /> Tạo Cặp ({sel.length}/2)</Button>
-        </>
-      ) : (
-        <p className="text-sm [color:var(--pf-color-success)] [background:var(--pf-color-success-soft)] rounded-lg px-3 py-2">✓ Đã ghép hết người chơi vào các cặp.</p>
-      )}
-
-      <div className="pt-2 border-t border-[color:var(--pf-border)] flex justify-end">
-        <Button onClick={onCreateSchedule} disabled={!allPaired}><Calendar size={13} /> Tạo Lịch</Button>
-      </div>
-    </div>
-  )
-}
 
 // ── main page ──────────────────────────────────────────────────────────────────
 export function FixedDoublesDashboardPage() {
@@ -730,7 +543,7 @@ export function FixedDoublesDashboardPage() {
   const {
     getMinigame, getTeams, getTeamStandings,
     getFixedDoublesDashboard, enterTeamMatchResult,
-    deleteTeamMatchResult, participants,
+    deleteTeamMatchResult,
     setTeamsFromApi, setTeamMatchesFromApi, updateMinigame,
   } = useMinigameStore()
   const { user } = useAuthStore()
@@ -758,36 +571,6 @@ export function FixedDoublesDashboardPage() {
 
   useEffect(() => { hydrateFromApi() }, [hydrateFromApi])
 
-  const handleAutoGenerateTeams = useCallback(async () => {
-    if (!id) return
-    try {
-      await api.post(`/minigames/${id}/generate-teams`)
-      // Đồng bộ LẠI từ server (GET /minigames/:id) — nguồn chân lý duy nhất; tránh
-      // lệ thuộc shape response POST khiến store không cập nhật → kẹt DraftPanel.
-      await hydrateFromApi()
-      toast.success('Đã ghép cặp đôi!')
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Lỗi ghép cặp')
-    }
-  }, [id, hydrateFromApi])
-
-  const handleCreateTeamManual = useCallback(async (player1Id: string, player2Id: string) => {
-    if (!id) return
-    try {
-      // Đặt tên theo SỐ LỚN NHẤT hiện có + 1 (không dùng count → tránh trùng khi đã xóa đội giữa chừng).
-      const existing = getTeams(id)
-      const maxNum = existing.reduce((m, t) => {
-        const n = parseInt(String(t.name).replace(/\D/g, ''), 10)
-        return Number.isFinite(n) && n > m ? n : m
-      }, 0)
-      await api.post(`/minigames/${id}/teams`, { name: `Đôi ${maxNum + 1}`, player1Id, player2Id })
-      await hydrateFromApi()
-      toast.success('Đã tạo cặp!')
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Lỗi tạo cặp')
-    }
-  }, [id, getTeams, hydrateFromApi])
-
   // Bấm "Tạo Lịch" → mở lựa chọn thể thức (1 lượt / lượt đi & về) trước khi sinh lịch.
   const handleCreateSchedule = useCallback(async () => {
     setShowScheduleChoice(true)
@@ -802,20 +585,6 @@ export function FixedDoublesDashboardPage() {
       toast.success(doubleRoundRobin ? 'Đã tạo lịch lượt đi & lượt về!' : 'Đã tạo lịch thi đấu!')
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Lỗi tạo lịch')
-    }
-  }, [id, hydrateFromApi])
-
-  const handleDeleteTeam = useCallback(async (teamId: string) => {
-    if (!id) return
-    // Rule 3: xóa cặp/đội là thao tác phá dữ liệu → xác nhận trước.
-    // Đặt tại handler dùng chung (onDeleteTeam) nên bao cả PairedPanel lẫn ManualPairPanel.
-    if (!window.confirm('Xóa cặp/đội này?')) return
-    try {
-      await api.delete(`/minigames/${id}/teams/${teamId}`)
-      await hydrateFromApi()
-      toast.success('Đã xóa đội')
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Lỗi xóa đội')
     }
   }, [id, hydrateFromApi])
 
@@ -930,8 +699,6 @@ export function FixedDoublesDashboardPage() {
   // luôn false → kẹt luồng đôi cố định.
   const hasTeams   = teams.length > 0
   const hasSchedule = schedule.length > 0
-  const isManual   = mg.pairingMode === 'MANUAL_PAIRING'
-  const mgParticipants = participants.filter(p => p.minigameId === id)
   const showSched  = hasSchedule
   const canEnter   = hasSchedule && mg.status !== 'COMPLETED' && mg.status !== 'CANCELLED'
 
@@ -1064,21 +831,21 @@ export function FixedDoublesDashboardPage() {
           </div>
         )}
 
-        {/* phase-specific panels (suy từ dữ liệu). Chế độ THỦ CÔNG dùng panel ghép cặp riêng. */}
-        {!hasSchedule && (isManual ? (
-          <ManualPairPanel
-            participants={mgParticipants}
-            teams={teams}
-            onCreateTeam={handleCreateTeamManual}
-            onDeleteTeam={handleDeleteTeam}
-            onCreateSchedule={handleCreateSchedule}
-          />
-        ) : (
+        {/* Ghép cặp — dùng CHUNG PairBuilder (chuẩn SaaS, thống nhất mọi nội dung đôi). Sau khi
+            đã có cặp thì hiện nút Tạo Lịch (vòng tròn đôi cố định). */}
+        {!hasSchedule && (
           <>
-            {!hasTeams && <DraftPanel minigameId={id!} onAutoGenerate={handleAutoGenerateTeams} />}
-            {hasTeams && <PairedPanel minigameId={id!} teams={teams} onCreateSchedule={handleCreateSchedule} onDeleteTeam={handleDeleteTeam} onRegenerateTeams={handleAutoGenerateTeams} />}
+            <PairBuilder minigameId={id!} isGroupStage={false} onChanged={hydrateFromApi} />
+            {hasTeams && (
+              <div className="flex justify-end">
+                <button onClick={handleCreateSchedule}
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] transition">
+                  <Calendar size={16} /> Tạo Lịch Thi Đấu
+                </button>
+              </div>
+            )}
           </>
-        ))}
+        )}
 
         {/* main 12-col grid */}
         {showSched && (
