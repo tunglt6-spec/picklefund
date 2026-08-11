@@ -201,8 +201,12 @@ select:-webkit-autofill {
 /* ── Elite 2026 · Motion nền tảng ─────────────────────────────────────────── */
 /* Vào trang khi đổi route (AppLayout bọc Outlet keyed theo pathname). */
 @keyframes pfPageEnter {
+  /* KẾT THÚC ở transform:none (KHÔNG translateY(0)): translateY(0) vẫn là 1 transform → .pf-page
+     giữ "containing block" cho position:fixed VĨNH VIỄN → mọi modal fixed inset-0 bị căn theo
+     .pf-page (nội dung dài) thay vì viewport → trang dài modal tụt xuống đáy. `none` = hết
+     containing block → modal căn đúng viewport. Vẫn slide 10px→0 khi vào trang. */
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 .pf-page { animation: pfPageEnter var(--pf-dur-slow) var(--pf-ease) both; }
 
