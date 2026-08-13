@@ -63,6 +63,12 @@ export class CommandCenterController {
     return ok(await this.service.aiSelfTest());
   }
 
+  /** Drill-down KPI "Chi chờ duyệt": danh sách khoản chi status='pending' toàn nền tảng. */
+  @Get('pending-expenses')
+  async pendingExpenses() {
+    return ok(await this.service.listPendingExpenses());
+  }
+
   /** Xuất PDF (bìa + 9 mục + đánh giá Maika) — server-side (headless Chrome), A4 chuẩn. */
   @Get('pdf')
   async pdf(

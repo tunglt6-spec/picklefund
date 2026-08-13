@@ -623,4 +623,34 @@ export class CommandCenterService {
 
     return { status, risks, priorities };
   }
+
+  /**
+   * DANH SÁCH khoản chi đang CHỜ DUYỆT toàn nền tảng (super admin) — để drill-down từ KPI
+   * "Chi chờ duyệt": biết CHÍNH XÁC khoản nào (CLB nào · kỳ quỹ · Quỹ Chính/Phụ · số tiền · người
+   * tạo) để duyệt/xử lý. KHÔNG đổi cách đếm ở overview (vẫn count status='pending').
+   */
+  async listPendingExpenses() {
+    const rows = await this.prisma.livingExpense.findMany({
+      where: { status: 'pending' },
+      orderBy: { expenseDate: 'desc' },
+      take: 200,
+      include: {
+        club: { select: { id: true, name: true } },
+        fundPeriod: { select: { name: true } },
+        createdBy: { select: { username: true } },
+      },
+    });
+    return rows.map((e) => ({
+      id: e.id,
+      clubId: e.clubId,
+      clubName: e.club?.name ?? '—',
+      fundSource: e.fundSource,
+      miniExpenseType: e.miniExpenseType ?? null,
+      amount: Number(e.amount),
+      description: e.description,
+      expenseDate: e.expenseDate,
+      periodName: e.fundPeriod?.name ?? null,
+      createdBy: e.createdBy?.username ?? '',
+    }));
+  }
 }

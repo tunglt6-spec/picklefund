@@ -16,6 +16,7 @@ import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { formatVND, formatNumber } from '../../lib/utils'
 import { PageShell, ChartCard, EmptyState, ErrorState, StatusBadge } from '../../components/shared'
+import { Modal } from '../../components/ui/Modal'
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' }, { key: '7d', label: '7 ngày' }, { key: '30d', label: '30 ngày' },
@@ -36,11 +37,16 @@ const BRAND = 'var(--pf-primary)'
 const ALERT_COLOR: Record<'danger' | 'warning', string> = { danger: 'var(--pf-color-danger)', warning: 'var(--pf-color-warning)' }
 
 /** Thẻ KPI THỐNG NHẤT: nền tint thương hiệu nhẹ + shadow (độ sâu), đều chiều cao. Màu chỉ đổi khi alert. */
-function Kpi({ label, value, icon, sub, alert }: { label: string; value: React.ReactNode; icon?: React.ReactNode; sub?: string; alert?: Alert }) {
+function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value: React.ReactNode; icon?: React.ReactNode; sub?: string; alert?: Alert; onClick?: () => void }) {
   const accent = alert ? ALERT_COLOR[alert] : BRAND
+  const clickable = !!onClick
   return (
     <div
-      className="flex h-full flex-col rounded-2xl border p-3.5"
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
+      className={`flex h-full flex-col rounded-2xl border p-3.5${clickable ? ' cursor-pointer transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]' : ''}`}
       style={{
         borderColor: `color-mix(in srgb, ${accent} 22%, var(--pf-border))`,
         background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 6%, var(--pf-surface)), var(--pf-surface))`,
@@ -242,6 +248,16 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
 
 function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onSelfTest, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; review: { sections: any; byAi: boolean } | null; reviewLoading: boolean; onRunReview: () => void; onSelfTest: () => void; onRunBackup: () => void }) {
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards
+  const [pendOpen, setPendOpen] = useState(false)
+  const [pendList, setPendList] = useState<any[] | null>(null)
+  const [pendLoading, setPendLoading] = useState(false)
+  const openPending = useCallback(async () => {
+    setPendOpen(true); setPendLoading(true)
+    try {
+      const r = await api.get('/command-center/pending-expenses')
+      setPendList(r.data?.data ?? [])
+    } catch { setPendList([]); toast.error('Không tải được danh sách chờ duyệt') } finally { setPendLoading(false) }
+  }, [])
 
   return (
     <>
@@ -344,7 +360,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <Kpi label="Tổng thu ghi nhận" value={vnd(fin.totalIncome)} icon={<TrendingUp size={16} />} />
           <Kpi label="Tổng chi ghi nhận" value={vnd(fin.totalExpense)} icon={<Wallet size={16} />} />
           <Kpi label="Tổng số dư quỹ" value={vnd(fin.totalBalance)} icon={<Wallet size={16} />} alert={fin.totalBalance < 0 ? 'danger' : undefined} />
-          <Kpi label="Chi chờ duyệt" value={num(fin.pendingExpenses)} icon={<ClipboardList size={16} />} alert={fin.pendingExpenses > 0 ? 'warning' : undefined} />
+          <Kpi label="Chi chờ duyệt" value={num(fin.pendingExpenses)} icon={<ClipboardList size={16} />} alert={fin.pendingExpenses > 0 ? 'warning' : undefined} sub={fin.pendingExpenses > 0 ? 'Bấm để xem chi tiết' : 'Không có khoản chờ'} onClick={fin.pendingExpenses > 0 ? openPending : undefined} />
           <Kpi label="Tổng công nợ" value={vnd(fin.debt)} sub={fin.overdueCount > 0 ? `${num(fin.overdueCount)} quá hạn · ${vnd(fin.overdueAmount)}` : 'Không có quá hạn'} icon={<CircleAlert size={16} />} alert={fin.debt > 0 ? 'warning' : undefined} />
           <Kpi label="Thu đúng hạn" value={fin.onTimeRatio != null ? `${fin.onTimeRatio}%` : <NoData hint="Chưa kỳ nào đặt hạn đóng" />} icon={<Gauge size={16} />} />
         </div>
@@ -447,6 +463,36 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <div className="mt-3"><Link to="/super/audit-logs" className="text-[12px] font-semibold [color:var(--pf-primary)]">Xem toàn bộ nhật ký →</Link></div>
         </ChartCard>
       </Section>
+
+      <Modal open={pendOpen} onClose={() => setPendOpen(false)} title="Khoản chi chờ duyệt" subtitle="Toàn nền tảng · trạng thái pending" size="xl">
+        {pendLoading ? (
+          <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải…</div>
+        ) : !pendList?.length ? (
+          <EmptyState icon={<ClipboardList size={22} />} title="Không có khoản chờ duyệt" description="Tất cả CLB đã duyệt hết." />
+        ) : (
+          <ul className="space-y-2">
+            {pendList.map((e: any) => (
+              <li key={e.id} className="rounded-xl border p-3 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold [color:var(--pf-text)]">{e.description || '(không có mô tả)'}</p>
+                    <p className="mt-0.5 text-[11.5px] [color:var(--pf-color-muted)]">
+                      {e.clubName}{e.periodName ? ` · ${e.periodName}` : ''} · {e.fundSource === 'MAIN' ? 'Quỹ Chính' : e.fundSource === 'SUB' ? 'Quỹ Phụ' : e.fundSource}{e.miniExpenseType ? ` · ${e.miniExpenseType}` : ''}
+                    </p>
+                    <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">
+                      {e.createdBy ? `Người tạo: ${e.createdBy}` : ''}{e.expenseDate ? ` · ${new Date(e.expenseDate).toLocaleDateString('vi-VN')}` : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-[14px] font-extrabold [color:var(--pf-color-warning)]">{vnd(e.amount)}</span>
+                    {e.clubId && <Link to={`/super/clubs/${e.clubId}`} className="mt-1 block text-[11.5px] font-semibold [color:var(--pf-primary)]">Vào CLB →</Link>}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
     </>
   )
 }
