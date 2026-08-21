@@ -1,4 +1,5 @@
-import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight, Activity, Share2 } from 'lucide-react'
+import { useState } from 'react'
+import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight, Activity, Share2, Send } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { PageShell, PageHeader, MetricCard, ChartCard, EmptyState, ActionButton, StatusBadge } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -6,13 +7,15 @@ import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatVND, formatDate } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { exportReceiptPDF } from '../../lib/export'
+import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import toast from 'react-hot-toast'
 
 export function MemberDashboard() {
   const { user } = useAuthStore()
-  const { finance, attendance } = useMemberPortal()
+  const { finance, attendance, reload } = useMemberPortal()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
+  const [reportOpen, setReportOpen] = useState(false)
 
   const activePeriod = finance?.period ?? null
   const fin = finance?.member ?? null
@@ -141,15 +144,15 @@ export function MemberDashboard() {
         {/* Quick actions */}
         <div className="px-4 pt-3 grid grid-cols-2 gap-2">
           <button
-            onClick={() => navigate('/member/contributions')}
+            onClick={() => setReportOpen(true)}
             className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-4 py-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
-              <DollarSign size={15} className="[color:var(--pf-primary)]" />
+              <Send size={15} className="[color:var(--pf-primary)]" />
             </div>
             <div className="text-left">
-              <p className="text-[13px] font-[700] [color:var(--pf-text)]">Đóng quỹ</p>
-              <p className="text-[11px] [color:var(--pf-color-muted)]">Xem & đóng</p>
+              <p className="text-[13px] font-[700] [color:var(--pf-text)]">Báo nộp quỹ</p>
+              <p className="text-[11px] [color:var(--pf-color-muted)]">Đã CK → chờ duyệt</p>
             </div>
           </button>
           <button
@@ -251,6 +254,7 @@ export function MemberDashboard() {
             )}
           </div>
         )}
+        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
       </div>
     )
   }
@@ -266,6 +270,7 @@ export function MemberDashboard() {
             ? `Xin chào, ${memberName} · ${activePeriod?.name ?? ''}`
             : `Xin chào, ${memberName}`
         }
+        actions={<ActionButton variant="primary" onClick={() => setReportOpen(true)}><Send size={15} /> Báo đã nộp quỹ</ActionButton>}
       />
 
       {!hasData ? (
@@ -361,6 +366,7 @@ export function MemberDashboard() {
           </ChartCard>
         </>
       )}
+      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
     </PageShell>
   )
 }
