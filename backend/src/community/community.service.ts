@@ -70,6 +70,7 @@ export class CommunityService {
   // ─── Reactions summary ──────────────────────────────────────────────────────
 
   private async reactionSummary(
+    clubId: string,
     targetType: ReactionTarget,
     ids: string[],
     myMemberId: string | null,
@@ -81,7 +82,7 @@ export class CommunityService {
 
     const grouped = await this.prisma.communityReaction.groupBy({
       by: ['targetId', 'emoji'],
-      where: { targetType, targetId: { in: ids } },
+      where: { clubId, targetType, targetId: { in: ids } },
       _count: { _all: true },
     });
     for (const g of grouped) {
@@ -92,7 +93,7 @@ export class CommunityService {
     }
     if (myMemberId) {
       const mine = await this.prisma.communityReaction.findMany({
-        where: { targetType, targetId: { in: ids }, memberId: myMemberId },
+        where: { clubId, targetType, targetId: { in: ids }, memberId: myMemberId },
         select: { targetId: true, emoji: true },
       });
       for (const r of mine) if (out[r.targetId]) out[r.targetId].mine = r.emoji;
@@ -125,7 +126,7 @@ export class CommunityService {
     const hasMore = rows.length > take;
     const page = hasMore ? rows.slice(0, take) : rows;
     const ids = page.map((p) => p.id);
-    const reactions = await this.reactionSummary('POST', ids, actor.memberId);
+    const reactions = await this.reactionSummary(actor.clubId, 'POST', ids, actor.memberId);
 
     return {
       items: page.map((p) => ({
@@ -245,7 +246,7 @@ export class CommunityService {
       take: 500,
     });
     const ids = rows.map((c) => c.id);
-    const reactions = await this.reactionSummary('COMMENT', ids, actor.memberId);
+    const reactions = await this.reactionSummary(actor.clubId, 'COMMENT', ids, actor.memberId);
     return rows.map((c) => ({
       id: c.id,
       body: c.body,
@@ -397,7 +398,7 @@ export class CommunityService {
         update: { emoji: dto.emoji as any },
       });
     }
-    const summary = await this.reactionSummary(dto.targetType, [dto.targetId], me.id);
+    const summary = await this.reactionSummary(actor.clubId, dto.targetType, [dto.targetId], me.id);
     return summary[dto.targetId];
   }
 
@@ -506,6 +507,8 @@ export class CommunityService {
     if (!req) throw new NotFoundException('Không tìm thấy kèo.');
     if (req.status === 'CLOSED' || req.status === 'CANCELLED')
       throw new BadRequestException('Kèo đã đóng.');
+    if (req.status === 'FULL')
+      throw new BadRequestException('Kèo đã đủ người.');
     if (req.creatorMemberId === me.id)
       throw new BadRequestException('Bạn là người tạo kèo này.');
 
@@ -590,8 +593,8 @@ export class CommunityService {
       throw new ForbiddenException('Chỉ người tạo hoặc quản trị được đóng kèo.');
     await this.prisma.matchmakingRequest.update({
       where: { id: requestId },
-      data: { status: 'CANCELLED' },
+      data: { status: 'CLOSED' },
     });
-    return { id: requestId, status: 'CANCELLED' };
+    return { id: requestId, status: 'CLOSED' };
   }
 }

@@ -2,11 +2,13 @@ import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsNumber,
+  IsInt,
   IsOptional,
-  IsPositive,
   IsString,
+  Matches,
+  Max,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MemberPortalService } from './member-portal.service';
@@ -30,8 +32,9 @@ class SelfRegistrationDto {
 class ReportPaymentDto {
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  @IsPositive()
+  @IsInt()
+  @Min(1)
+  @Max(2_000_000_000)
   amount?: number;
 
   @IsOptional()
@@ -39,9 +42,11 @@ class ReportPaymentDto {
   @MaxLength(500)
   note?: string;
 
+  // Chỉ cho phép link http(s) — chặn javascript:/data: (stored XSS ở màn Admin).
   @IsOptional()
   @IsString()
   @MaxLength(1000)
+  @Matches(/^https?:\/\//i, { message: 'Link chứng từ phải bắt đầu bằng http:// hoặc https://' })
   proofUrl?: string;
 }
 

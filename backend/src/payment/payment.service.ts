@@ -112,20 +112,33 @@ export class PaymentService {
       throw new ForbiddenException('Giao dịch đã được xử lý');
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const up = await tx.payment.update({
-        where: { id: paymentId },
+      // Conditional write: chỉ đúng 1 request thắng khi có nhiều lần confirm đồng thời
+      // (guard bên ngoài chưa đủ vì transaction lồng đọc-rồi-ghi). count!==1 → rollback.
+      const res = await tx.payment.updateMany({
+        where: { id: paymentId, status: 'PENDING' },
         data: {
           status: 'CONFIRMED',
           confirmedById: adminUserId,
           confirmedAt: new Date(),
         },
       });
+      if (res.count !== 1)
+        throw new ForbiddenException('Giao dịch đã được xử lý');
 
       if (payment.reportedByMember) {
         // Member đã báo → tạo khoản đóng góp COMMON (đã xác nhận) để tính vào "đã nộp".
         // referenceType=CONTRIBUTION → referenceId là fundPeriodId của khoản dues.
-        const fundPeriodId =
+        let fundPeriodId =
           payment.referenceType === 'CONTRIBUTION' ? payment.referenceId : null;
+        // Nếu lúc báo chưa có kỳ (MANUAL) → gán kỳ 'chung' đang mở TẠI THỜI ĐIỂM confirm
+        // để tiền không "biến mất" khỏi dues math (vốn scope theo fundPeriodId).
+        if (!fundPeriodId) {
+          const active = await tx.fundPeriod.findFirst({
+            where: { clubId, status: 'active', type: 'chung' },
+            orderBy: { startDate: 'desc' },
+          });
+          fundPeriodId = active?.id ?? null;
+        }
         await tx.fundContribution.create({
           data: {
             clubId,
@@ -146,7 +159,7 @@ export class PaymentService {
           data: { isConfirmed: true },
         });
       }
-      return up;
+      return tx.payment.findFirst({ where: { id: paymentId } });
     });
 
     await this.calculator.invalidateClosingBalances(clubId);

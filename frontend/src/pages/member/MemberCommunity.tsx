@@ -599,7 +599,9 @@ function PostCard({
     setSavingEdit(true)
     try {
       const res = await api.patch(`/community/posts/${post.id}`, { body: text })
-      onChange(unwrap<Post>(res))
+      // Backend trả object MỘT PHẦN (id/body/imageUrl/updatedAt) → merge vào post đầy đủ
+      // để không mất author/reactions/commentCount (tránh crash render).
+      onChange({ ...post, ...unwrap<Partial<Post>>(res) })
       setEditingPost(false)
       toast.success('Đã cập nhật bài viết')
     } catch (err) {
@@ -628,8 +630,9 @@ function PostCard({
     if (!text) return
     try {
       const res = await api.patch(`/community/comments/${commentId}`, { body: text })
-      const updated = unwrap<Comment>(res)
-      setComments((prev) => prev.map((c) => (c.id === commentId ? updated : c)))
+      // Merge object một phần vào comment đầy đủ (giữ author/reactions) — tránh crash render.
+      const partial = unwrap<Partial<Comment>>(res)
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, ...partial } : c)))
       setEditingCommentId(null)
     } catch (err) {
       toast.error(apiMessage(err, 'Không thể cập nhật bình luận'))

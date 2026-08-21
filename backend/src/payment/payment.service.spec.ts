@@ -19,9 +19,11 @@ const mockPrisma: any = {
     count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     aggregate: jest.fn(),
   },
   fundContribution: { updateMany: jest.fn(), create: jest.fn() },
+  fundPeriod: { findFirst: jest.fn().mockResolvedValue(null) },
   member: { findFirst: jest.fn() },
   systemSetting: { findMany: jest.fn() },
   // callback-form transaction → chạy callback với chính mockPrisma làm tx
@@ -59,6 +61,8 @@ describe('PaymentService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(mockPrisma));
+    mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.fundPeriod.findFirst.mockResolvedValue(null);
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
@@ -74,13 +78,21 @@ describe('PaymentService', () => {
   /* ── confirm ── */
   describe('confirm', () => {
     it('confirms a PENDING payment', async () => {
-      mockPrisma.payment.findFirst.mockResolvedValue(basePayment);
       const confirmed = { ...basePayment, status: 'CONFIRMED', confirmedById: 'admin-1', confirmedAt: new Date() };
-      mockPrisma.payment.update.mockResolvedValue(confirmed);
+      mockPrisma.payment.findFirst.mockResolvedValueOnce(basePayment).mockResolvedValue(confirmed);
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.fundContribution.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.confirm('pay-1', 'admin-1', 'club-1');
       expect(result.status).toBe('CONFIRMED');
+    });
+
+    it('conditional write chống double-credit: updateMany count=0 (thua race) → Forbidden, KHÔNG tạo contribution', async () => {
+      mockPrisma.payment.findFirst.mockResolvedValue(basePayment); // guard ngoài pass
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 0 }); // thua race trong transaction
+      await expect(service.confirm('pay-1', 'admin-1', 'club-1')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockPrisma.fundContribution.create).not.toHaveBeenCalled();
+      expect(mockPrisma.fundContribution.updateMany).not.toHaveBeenCalled();
     });
 
     it('auto-confirms linked FundContribution for admin QR payment', async () => {

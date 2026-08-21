@@ -523,24 +523,43 @@ export class MemberPortalService {
       description: memo,
     });
 
-    const payment = await this.prisma.payment.create({
-      data: {
-        clubId,
-        memberId: member.id,
-        amount,
-        description: memo,
-        referenceType: referenceType as any,
-        referenceId: referenceId ?? undefined,
-        bankCode,
-        accountNumber,
-        accountName,
-        qrImageUrl,
-        reportedByMember: true,
-        memberNote: dto.note?.trim().slice(0, 500) || null,
-        proofUrl: dto.proofUrl?.trim().slice(0, 1000) || null,
-        status: 'PENDING',
-      },
-    });
+    // Chỉ lưu link http(s) — chặn javascript:/data: (stored XSS ở màn Admin).
+    const safeProof = (() => {
+      const u = dto.proofUrl?.trim();
+      return u && /^https?:\/\//i.test(u) ? u.slice(0, 1000) : null;
+    })();
+    let payment: { id: string; amount: any; status: string };
+    try {
+      payment = await this.prisma.payment.create({
+        data: {
+          clubId,
+          memberId: member.id,
+          amount,
+          description: memo,
+          referenceType: referenceType as any,
+          referenceId: referenceId ?? undefined,
+          bankCode,
+          accountNumber,
+          accountName,
+          qrImageUrl,
+          reportedByMember: true,
+          memberNote: dto.note?.trim().slice(0, 500) || null,
+          proofUrl: safeProof,
+          status: 'PENDING',
+        },
+      });
+    } catch (e: any) {
+      // Partial unique index (1 báo PENDING / member / kỳ) chống race double-submit ở tầng DB.
+      if (e?.code === 'P2002') {
+        const dup = await this.prisma.payment.findFirst({
+          where: { clubId, memberId: member.id, reportedByMember: true, status: 'PENDING', referenceId: referenceId },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (dup)
+          return { id: dup.id, amount: Number(dup.amount), status: dup.status, duplicate: true };
+      }
+      throw e;
+    }
 
     void this.audit.log({
       userId: member.userId ?? '',

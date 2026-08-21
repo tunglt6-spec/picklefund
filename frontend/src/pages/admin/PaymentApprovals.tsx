@@ -118,8 +118,8 @@ export function PaymentApprovals() {
                   </div>
                   <p className="mt-2 text-[12.5px] [color:var(--pf-color-muted)]">Nội dung: <span className="[color:var(--pf-text)]">{p.description}</span></p>
                   {p.memberNote && <p className="mt-0.5 text-[12.5px] [color:var(--pf-color-muted)]">Ghi chú: <span className="[color:var(--pf-text)]">{p.memberNote}</span></p>}
-                  {p.proofUrl && (
-                    <a href={p.proofUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-primary)]">
+                  {p.proofUrl && /^https?:\/\//i.test(p.proofUrl) && (
+                    <a href={p.proofUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-primary)]">
                       <ExternalLink size={13} /> Xem chứng từ
                     </a>
                   )}
