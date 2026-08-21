@@ -297,6 +297,8 @@ export class CommunityService {
     await this.notifyMentions(actor, me.fullName, dto.mentions, {
       link: `/community?post=${postId}`,
       context: 'bình luận',
+      // Tránh gửi trùng: tác giả bài đã nhận 'community_reply' ở trên.
+      excludeMemberIds: post.authorMemberId ? [post.authorMemberId] : [],
     });
 
     return {
@@ -408,10 +410,11 @@ export class CommunityService {
     actor: Actor,
     actorName: string,
     mentionIds: string[] | undefined,
-    opts: { link: string; context: string },
+    opts: { link: string; context: string; excludeMemberIds?: string[] },
   ) {
     if (!mentionIds?.length) return;
-    const unique = [...new Set(mentionIds)].filter((id) => id !== actor.memberId);
+    const skip = new Set([actor.memberId, ...(opts.excludeMemberIds ?? [])]);
+    const unique = [...new Set(mentionIds)].filter((id) => !skip.has(id));
     if (!unique.length) return;
     // CHỈ mention member cùng CLB (validate với DB) — không cho mention CLB khác.
     const members = await this.prisma.member.findMany({
@@ -436,8 +439,11 @@ export class CommunityService {
   // ─── Matchmaking (Tìm kèo) ──────────────────────────────────────────────────
 
   async listMatchmaking(actor: Actor) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const rows = await this.prisma.matchmakingRequest.findMany({
-      where: { clubId: actor.clubId, status: { in: ['OPEN', 'FULL'] } },
+      // Chỉ kèo còn hiệu lực và chưa qua ngày (kèo quá hạn tự ẩn khỏi danh sách).
+      where: { clubId: actor.clubId, status: { in: ['OPEN', 'FULL'] }, playDate: { gte: today } },
       orderBy: [{ playDate: 'asc' }, { createdAt: 'desc' }],
       include: {
         creator: { select: { id: true, fullName: true, avatarUrl: true } },
@@ -595,6 +601,24 @@ export class CommunityService {
       where: { id: requestId },
       data: { status: 'CLOSED' },
     });
+    // Báo cho những người đã tham gia biết kèo đã đóng (không để họ chờ vô ích).
+    const parts = await this.prisma.matchmakingParticipant.findMany({
+      where: { requestId },
+      include: { member: { select: { userId: true } } },
+    });
+    for (const p of parts) {
+      if (!p.member?.userId) continue;
+      await this.hermes
+        .dispatch({
+          eventType: 'matchmaking_joined',
+          clubId: actor.clubId,
+          targetUserId: p.member.userId,
+          title: 'Kèo đã đóng',
+          body: `Kèo ${req.sport} bạn tham gia đã được đóng.`,
+          metadata: { link: `/community?tab=matchmaking` },
+        })
+        .catch(() => undefined);
+    }
     return { id: requestId, status: 'CLOSED' };
   }
 }

@@ -256,7 +256,7 @@ function ReactionBar({
             aria-label={r.label}
             aria-pressed={active}
             className={[
-              'inline-flex min-h-9 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all active:scale-[0.96] disabled:opacity-50',
+              'inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all active:scale-[0.96] disabled:opacity-50',
               active
                 ? '[border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                 : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:[border-color:var(--pf-primary-soft)]',
@@ -304,7 +304,7 @@ function MentionPicker({
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="flex h-6 w-6 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
+          className="flex h-9 w-9 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
         >
           <X size={14} />
         </button>
@@ -760,7 +760,7 @@ function PostCard({
         <button
           type="button"
           onClick={toggleComments}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-primary)]"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-primary)]"
         >
           <MessageCircle size={15} />
           Bình luận ({post.commentCount})
@@ -796,7 +796,7 @@ function PostCard({
                                     setEditingCommentId(c.id)
                                     setEditCommentBody(c.body)
                                   }}
-                                  className="flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
+                                  className="flex h-9 w-9 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
                                 >
                                   <Pencil size={13} />
                                 </button>
@@ -806,7 +806,7 @@ function PostCard({
                                   type="button"
                                   aria-label="Xoá bình luận"
                                   onClick={() => setConfirmDelComment(c.id)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
+                                  className="flex h-9 w-9 items-center justify-center rounded-md [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -826,7 +826,7 @@ function PostCard({
                               <button
                                 type="button"
                                 onClick={() => setEditingCommentId(null)}
-                                className="min-h-9 rounded-full px-3 text-xs font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
+                                className="min-h-11 rounded-full px-3 text-xs font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
                               >
                                 Huỷ
                               </button>
@@ -834,7 +834,7 @@ function PostCard({
                                 type="button"
                                 onClick={() => void saveCommentEdit(c.id)}
                                 disabled={!editCommentBody.trim()}
-                                className="min-h-9 rounded-full px-3 text-xs font-semibold text-white disabled:opacity-50 [background:var(--pf-primary)]"
+                                className="min-h-11 rounded-full px-3 text-xs font-semibold text-white disabled:opacity-50 [background:var(--pf-primary)]"
                               >
                                 Lưu
                               </button>

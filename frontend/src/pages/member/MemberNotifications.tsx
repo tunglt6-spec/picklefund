@@ -122,7 +122,9 @@ export function MemberNotifications() {
     const isRead = n.status === 'READ'
     return (
       <div key={n.id} onClick={() => openNotif(n)}
-        className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-all hover:shadow-sm active:opacity-80
+        role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNotif(n) } }}
+        className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-all hover:shadow-sm active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
           ${isRead ? 'opacity-60 [border-color:var(--pf-border)]' : '[border-color:var(--pf-primary-soft)] shadow-sm'} [background:var(--pf-surface)]`}>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${eventBg(n.eventType)}`}>{eventIcon(n.eventType)}</div>
         <div className="min-w-0 flex-1">

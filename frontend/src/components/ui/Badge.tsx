@@ -2,14 +2,15 @@ import { cn } from '../../lib/utils'
 
 type Variant = 'green' | 'red' | 'orange' | 'blue' | 'purple' | 'gray' | 'yellow' | 'indigo'
 
+// Token semantic (`--pf-*`) — an toàn dark mode, đồng bộ StatusBadge. Không dùng palette Tailwind cứng.
 const cfg: Record<Variant, { bg: string; text: string; dot: string }> = {
-  green:  { bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  red:    { bg: 'bg-red-50',      text: 'text-red-600',     dot: 'bg-red-500' },
-  orange: { bg: 'bg-orange-50',   text: 'text-orange-700',  dot: 'bg-orange-500' },
-  blue:   { bg: 'bg-blue-50',     text: 'text-blue-700',    dot: 'bg-blue-500' },
+  green:  { bg: '[background:var(--pf-color-success-soft)]', text: '[color:var(--pf-color-success)]', dot: '[background:var(--pf-color-success)]' },
+  red:    { bg: '[background:var(--pf-color-danger-soft)]',  text: '[color:var(--pf-color-danger)]',  dot: '[background:var(--pf-color-danger)]' },
+  orange: { bg: '[background:var(--pf-color-warning-soft)]', text: '[color:var(--pf-color-warning)]', dot: '[background:var(--pf-color-warning)]' },
+  blue:   { bg: '[background:var(--pf-color-info-soft)]',    text: '[color:var(--pf-color-info)]',    dot: '[background:var(--pf-color-info)]' },
   purple: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
-  gray:   { bg: '[background:var(--pf-color-muted-soft)]',   text: '[color:var(--pf-color-muted)]',   dot: 'bg-slate-400' },
-  yellow: { bg: 'bg-yellow-50',   text: 'text-yellow-700',  dot: 'bg-yellow-500' },
+  gray:   { bg: '[background:var(--pf-color-muted-soft)]',   text: '[color:var(--pf-color-muted)]',   dot: '[background:var(--pf-color-muted)]' },
+  yellow: { bg: '[background:var(--pf-color-warning-soft)]', text: '[color:var(--pf-color-warning)]', dot: '[background:var(--pf-color-warning)]' },
   indigo: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
 }
 

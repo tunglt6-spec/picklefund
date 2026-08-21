@@ -63,7 +63,9 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
   if (mobile) {
     return (
       <div onClick={() => onOpen(n)}
-        className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
+        role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
+        className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
           ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)]'}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
@@ -81,7 +83,9 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
 
   return (
     <div onClick={() => onOpen(n)}
-      className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm
+      role="button" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
+      className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
         ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <div className="flex-1 min-w-0">
@@ -253,7 +257,7 @@ export function Notifications() {
 
           {!loading && filtered.length === 0 && (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">
-              <Bell size={32} className="mx-auto mb-3 text-slate-200" />
+              <Bell size={32} className="mx-auto mb-3 [color:var(--pf-color-muted)]" />
               Không có thông báo trong mục này
             </div>
           )}
@@ -300,7 +304,7 @@ export function Notifications() {
 
         {!loading && filtered.length === 0 && (
           <div className="py-16 text-center">
-            <Bell size={36} className="mx-auto text-slate-200 mb-3" />
+            <Bell size={36} className="mx-auto [color:var(--pf-color-muted)] mb-3" />
             <p className="text-sm [color:var(--pf-color-muted)]">Không có thông báo trong mục này</p>
           </div>
         )}

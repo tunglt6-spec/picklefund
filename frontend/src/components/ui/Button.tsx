@@ -1,4 +1,4 @@
-import { type ButtonHTMLAttributes } from 'react'
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { cn } from '../../lib/utils'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'
@@ -19,15 +19,13 @@ const sizeClasses: Record<Size, string> = {
   lg: 'h-10 px-5 text-sm gap-2',
 }
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  className,
-  children,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
+export const Button = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }
+>(function Button({ variant = 'primary', size = 'md', className, children, ...props }, ref) {
   return (
     <button
+      ref={ref}
       className={cn(
         'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)] focus-visible:ring-offset-1',
@@ -41,4 +39,4 @@ export function Button({
       {children}
     </button>
   )
-}
+})

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Portal } from './Portal'
@@ -21,11 +21,22 @@ const sizeClasses = {
 }
 
 export function Modal({ open, onClose, title, subtitle, children, size = 'md', footer }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
     return () => { document.body.style.overflow = '' }
   }, [open])
+
+  // A11y: đóng bằng Esc + đưa focus vào panel khi mở (screen reader / bàn phím).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    const t = setTimeout(() => panelRef.current?.focus(), 0)
+    return () => { document.removeEventListener('keydown', onKey); clearTimeout(t) }
+  }, [open, onClose])
 
   if (!open) return null
 
@@ -38,8 +49,14 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="pf-modal-backdrop absolute inset-0 bg-slate-900/40 pointer-events-none" />
-      <div className={cn(
-        'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col',
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        className={cn(
+        'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col outline-none',
         'rounded-t-2xl max-h-[90dvh] sm:rounded-2xl sm:max-h-[calc(100dvh-2rem)]',
         sizeClasses[size]
       )}>
@@ -51,7 +68,8 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)] transition-colors ml-4 shrink-0"
+            aria-label="Đóng"
+            className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)] transition-colors ml-4 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]"
           >
             <X size={16} />
           </button>

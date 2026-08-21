@@ -267,7 +267,8 @@ describe('MemberPortalService', () => {
   });
 
   describe('selfRegister', () => {
-    const SESSION = { id: 's1', clubId: 'club-1' };
+    // status 'scheduled' + ngày tương lai để qua guard mới của selfRegister.
+    const SESSION = { id: 's1', clubId: 'club-1', status: 'scheduled', sessionDate: new Date('2099-01-01'), startTime: '18:00', courtName: 'A' };
 
     it('memberId null → Forbidden', async () => {
       await expect(
@@ -310,6 +311,20 @@ describe('MemberPortalService', () => {
         update: {},
       });
       expect(r).toEqual({ sessionId: 's1', registered: true });
+    });
+
+    it('guard: đăng ký buổi đã hủy → BadRequest, KHÔNG upsert', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
+      prisma.attendanceSession.findFirst.mockResolvedValue({ ...SESSION, status: 'cancelled' });
+      await expect(service.selfRegister('mem-A', 'club-1', 's1', true)).rejects.toThrow();
+      expect(prisma.sessionRegistration.upsert).not.toHaveBeenCalled();
+    });
+
+    it('guard: đăng ký buổi đã qua ngày → BadRequest', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
+      prisma.attendanceSession.findFirst.mockResolvedValue({ ...SESSION, sessionDate: new Date('2000-01-01') });
+      await expect(service.selfRegister('mem-A', 'club-1', 's1', true)).rejects.toThrow();
+      expect(prisma.sessionRegistration.upsert).not.toHaveBeenCalled();
     });
 
     it('register=false → deleteMany scope club+session+member', async () => {

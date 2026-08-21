@@ -271,6 +271,19 @@ export class MemberPortalService {
     const member = await this.assertMember(memberId, clubId);
     const session = await this.assertSession(sessionId, clubId);
     if (register) {
+      // Guard server-side (không tin UI): chỉ cho đăng ký buổi còn 'scheduled' và chưa qua ngày.
+      if (session.status !== 'scheduled') {
+        throw new BadRequestException(
+          session.status === 'cancelled'
+            ? 'Buổi chơi đã bị hủy, không thể đăng ký.'
+            : 'Buổi chơi đã kết thúc, không thể đăng ký.',
+        );
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (new Date(session.sessionDate) < today) {
+        throw new BadRequestException('Buổi chơi đã qua, không thể đăng ký.');
+      }
       await this.prisma.sessionRegistration.upsert({
         where: {
           attendanceSessionId_memberId: {

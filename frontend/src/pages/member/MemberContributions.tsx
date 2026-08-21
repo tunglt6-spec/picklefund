@@ -26,8 +26,29 @@ interface PersonalReceipt {
   snapshotAt: string
 }
 
+interface ReportedPayment {
+  id: string
+  amount: number
+  description: string
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | string
+  reportedByMember: boolean
+  memberNote: string | null
+  recheckNote: string | null
+  proofUrl: string | null
+  createdAt: string
+  confirmedAt: string | null
+}
+
 function toNum(v: string | number | null | undefined): number {
   return v == null ? 0 : typeof v === 'number' ? v : Number(v)
+}
+
+/** Map trạng thái Payment → nhãn + tone StatusBadge. */
+function paymentStatusMeta(s: string): { label: string; tone: 'warning' | 'success' | 'danger' | 'neutral' } {
+  if (s === 'PENDING') return { label: 'Chờ Admin xác nhận', tone: 'warning' }
+  if (s === 'CONFIRMED') return { label: 'Đã xác nhận', tone: 'success' }
+  if (s === 'CANCELLED') return { label: 'Cần kiểm tra lại', tone: 'danger' }
+  return { label: s, tone: 'neutral' }
 }
 
 export function MemberContributions() {
@@ -43,14 +64,24 @@ export function MemberContributions() {
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
   const [expandedReceipt, setExpandedReceipt] = useState<string | null>(null)
   const [reportOpen, setReportOpen] = useState(false)
+  const [myPayments, setMyPayments] = useState<ReportedPayment[]>([])
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
+
+  const loadPayments = () => {
+    if (isLocal) return
+    api.get('/member/me/payments').then(res => {
+      setMyPayments(res.data?.data ?? [])
+    }).catch(() => {})
+  }
 
   useEffect(() => {
     if (isLocal) return
     api.get('/personal-receipts/mine').then(res => {
       setReceipts(res.data?.data ?? [])
     }).catch(() => {})
+    loadPayments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, isLocal])
 
   const filtered = contributions.filter(c =>
@@ -64,6 +95,39 @@ export function MemberContributions() {
   const pendingCount = contributions.filter(c => !c.isConfirmed).length
 
   const isMobile = useIsMobile()
+
+  // Mục "Khoản đã báo nộp" — đóng vòng lặp báo→duyệt→báo lại (dùng chung mobile + desktop).
+  const reportedSection = myPayments.length > 0 && (
+    <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-[var(--pf-shadow)] p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <Send size={15} className="[color:var(--pf-primary)]" />
+        <span className="text-[14px] font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
+      </div>
+      <div className="space-y-2">
+        {myPayments.map((p) => {
+          const meta = paymentStatusMeta(p.status)
+          return (
+            <div key={p.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[15px] font-bold [color:var(--pf-text)]">{formatVND(toNum(p.amount))}</span>
+                <StatusBadge tone={meta.tone} dot>{meta.label}</StatusBadge>
+              </div>
+              <p className="mt-0.5 text-[11.5px] [color:var(--pf-color-muted)]">{formatDate(p.createdAt)}</p>
+              {p.status === 'CANCELLED' && p.recheckNote && (
+                <p className="mt-1.5 text-[12.5px] [color:var(--pf-color-danger)]">Admin yêu cầu kiểm tra lại: {p.recheckNote}</p>
+              )}
+              {p.status === 'CANCELLED' && (
+                <button onClick={() => setReportOpen(true)}
+                  className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white active:scale-[0.98] [background:var(--pf-primary)]">
+                  <Send size={14} /> Báo nộp lại
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   const memberSlug = memberName.replace(/\s/g, '_')
   const doExportExcel = () => {
@@ -101,11 +165,11 @@ export function MemberContributions() {
           {filtered.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
               <button onClick={doExportExcel} aria-label="Xuất Excel"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileSpreadsheet size={14} />Excel
               </button>
               <button onClick={doExportPdf} aria-label="Xuất PDF"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileText size={14} />PDF
               </button>
             </div>
@@ -119,6 +183,7 @@ export function MemberContributions() {
           >
             <Send size={17} /> Báo đã nộp quỹ
           </button>
+          {reportedSection}
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
@@ -193,7 +258,7 @@ export function MemberContributions() {
             </div>
           )}
         </div>
-        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} />
+        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={loadPayments} />
       </div>
     )
   }
@@ -225,6 +290,8 @@ export function MemberContributions() {
         <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
         <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
       </div>
+
+      {reportedSection}
 
       {/* Search */}
       <div className="relative">
@@ -313,7 +380,7 @@ export function MemberContributions() {
           </div>
         </ChartCard>
       )}
-      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} />
+      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={loadPayments} />
     </PageShell>
   )
 }

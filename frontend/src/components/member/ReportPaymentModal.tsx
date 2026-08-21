@@ -63,7 +63,8 @@ export function ReportPaymentModal({
       .then((r) => {
         const c: PaymentContext = r.data?.data ?? r.data
         setCtx(c)
-        setAmount(c?.suggestedAmount || c?.contributionAmount || 0)
+        // Đã nộp đủ (suggested=0) → để trống, KHÔNG tự điền lại cả kỳ (tránh báo trùng/thừa).
+        setAmount(c?.suggestedAmount ?? 0)
       })
       .catch(() => toast.error('Không tải được thông tin nộp quỹ'))
       .finally(() => setLoading(false))
@@ -128,6 +129,15 @@ export function ReportPaymentModal({
               <span className="font-semibold [color:var(--pf-text)]">{formatVND(ctx.suggestedAmount)}</span>
             </div>
           </div>
+
+          {ctx.period && ctx.suggestedAmount <= 0 && (
+            <div className="flex items-start gap-2 rounded-xl border p-3 [border-color:var(--pf-border)] [background:var(--pf-color-success-soft)]">
+              <CheckCircle2 size={18} className="mt-0.5 shrink-0 [color:var(--pf-color-success)]" />
+              <p className="text-[12.5px] [color:var(--pf-text)]">
+                Bạn đã nộp đủ kỳ này. Nếu vẫn muốn báo nộp thêm, hãy nhập số tiền bên dưới.
+              </p>
+            </div>
+          )}
 
           {/* Bank info */}
           {ctx.bank ? (

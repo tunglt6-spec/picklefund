@@ -114,7 +114,9 @@ export function MemberAttendance() {
                   <div key={s.id} className={`[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm ${!present && s.status === 'completed' ? 'opacity-60' : ''}`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[15px] font-[700] [color:var(--pf-text)]">{formatDate(s.sessionDate)}</span>
-                      {s.status === 'scheduled'
+                      {s.status === 'cancelled'
+                        ? <Badge variant="gray" dot>Đã hủy</Badge>
+                        : s.status === 'scheduled'
                         ? <Badge variant="blue" dot>Sắp TG</Badge>
                         : present
                           ? <Badge variant="green" dot>Có mặt</Badge>
@@ -123,6 +125,7 @@ export function MemberAttendance() {
                     <div className="flex items-center gap-3 text-[12px] [color:var(--pf-color-muted)]">
                       <span className="flex items-center gap-1"><MapPin size={11} />{s.courtName ?? 'Sân chưa đặt'}</span>
                       {s.startTime && s.endTime && <span><Clock size={11} className="inline mr-0.5" />{s.startTime}–{s.endTime}</span>}
+                      {s.status === 'scheduled' && (s.registeredCount ?? 0) > 0 && <span>· {s.registeredCount} đăng ký</span>}
                     </div>
                     {present && costShare > 0 && (
                       <div className="mt-2 text-[12px] [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
@@ -131,13 +134,13 @@ export function MemberAttendance() {
                       <div className="mt-3">
                         {s.registered ? (
                           <div className="flex items-center justify-between gap-2">
-                            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-emerald-600"><UserCheck size={14} /> Đã đăng ký – Chờ tham gia</span>
+                            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-color-success)]"><UserCheck size={14} /> Đã đăng ký – Chờ tham gia</span>
                             <button onClick={() => toggleRegister(s.id, false)} disabled={busyId === s.id}
-                              className="text-[12px] font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
+                              className="inline-flex min-h-11 items-center px-2 text-[12px] font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
                           </div>
                         ) : (
                           <button onClick={() => toggleRegister(s.id, true)} disabled={busyId === s.id}
-                            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] text-[14px] font-bold text-white active:scale-[0.98] disabled:opacity-50"
+                            className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-[12px] text-[14px] font-bold [color:var(--pf-primary-on)] active:scale-[0.98] disabled:opacity-50"
                             style={{ background: 'var(--pf-primary)' }}>
                             <UserPlus size={15} /> Đăng ký tham gia
                           </button>
@@ -164,7 +167,9 @@ export function MemberAttendance() {
     {
       key: 'status', header: 'Tình trạng', align: 'center', render: (s) => {
         const present = s.status === 'completed' ? attended.has(s.id) : null
-        return s.status === 'scheduled'
+        return s.status === 'cancelled'
+          ? <StatusBadge tone="neutral" dot>Đã hủy</StatusBadge>
+          : s.status === 'scheduled'
           ? <StatusBadge tone="info" dot>Sắp diễn ra</StatusBadge>
           : present
             ? <StatusBadge tone="success" dot>Có mặt</StatusBadge>
