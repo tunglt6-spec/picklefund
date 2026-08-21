@@ -131,6 +131,8 @@ const MemberNotifications = lz(() => import('./pages/member/MemberNotifications'
 const MemberReceipt = lz(() => import('./pages/member/MemberReceipt'), 'MemberReceipt')
 const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'MemberLisaChat')
 const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
+const MemberCommunity = lz(() => import('./pages/member/MemberCommunity'), 'default')
+const PaymentApprovals = lz(() => import('./pages/admin/PaymentApprovals'), 'PaymentApprovals')
 
 // Member modules gom (UI Consolidation v2.1) — view-only, tái dùng màn đã có làm tab.
 const MemberPersonalModule = lz(() => import('./pages/member/modules/MemberPersonalModule'), 'MemberPersonalModule')
@@ -313,6 +315,14 @@ export default function App() {
             <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
             <Route path="/minigames/:id/standings" element={<StandingsPage />} />
             <Route path="/finance-dashboard" element={<FinanceDashboard />} />
+            </Route>
+            {/* Cộng đồng CLB (Member Experience v1) — mọi vai trong CLB đều vào được. */}
+            <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW']} />}>
+            <Route path="/community" element={<MemberCommunity />} />
+            </Route>
+            {/* Xác nhận nộp quỹ (Báo đã nộp quỹ) — chỉ staff tài chính. */}
+            <Route element={<RoleRoute allow={STAFF_ROLES} />}>
+            <Route path="/payments" element={<PaymentApprovals />} />
             </Route>
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>

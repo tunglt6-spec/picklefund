@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap } from 'lucide-react'
 import { PageShell, PageHeader, LoadingState, EmptyState } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -14,6 +15,7 @@ type HermesNotif = {
   body: string
   status: 'PENDING' | 'SENT' | 'READ' | 'FAILED'
   createdAt: string
+  metadata?: { link?: string } | null
 }
 
 function eventIcon(eventType: string) {
@@ -45,6 +47,7 @@ function timeAgo(dateStr: string) {
 
 export function MemberNotifications() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -109,10 +112,16 @@ export function MemberNotifications() {
   const unread = notifs.filter(n => n.status !== 'READ')
   const read = notifs.filter(n => n.status === 'READ')
 
+  const openNotif = (n: HermesNotif) => {
+    if (n.status !== 'READ') handleRead(n.id)
+    const link = n.metadata?.link
+    if (link) navigate(link)
+  }
+
   const renderCard = (n: HermesNotif) => {
     const isRead = n.status === 'READ'
     return (
-      <div key={n.id} onClick={() => !isRead && handleRead(n.id)}
+      <div key={n.id} onClick={() => openNotif(n)}
         className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-all hover:shadow-sm active:opacity-80
           ${isRead ? 'opacity-60 [border-color:var(--pf-border)]' : '[border-color:var(--pf-primary-soft)] shadow-sm'} [background:var(--pf-surface)]`}>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${eventBg(n.eventType)}`}>{eventIcon(n.eventType)}</div>

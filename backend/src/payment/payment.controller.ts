@@ -37,12 +37,25 @@ export class PaymentController {
     );
   }
 
-  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'SUPER_ADMIN')
   @Patch(':id/confirm')
   async confirm(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(
       await this.svc.confirm(id, user.userId, user.clubId),
       'Đã xác nhận thanh toán',
+    );
+  }
+
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'SUPER_ADMIN')
+  @Patch(':id/recheck')
+  async recheck(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Body() body: { note?: string },
+  ) {
+    return ok(
+      await this.svc.requestRecheck(id, user.userId, user.clubId, body?.note),
+      'Đã yêu cầu kiểm tra lại',
     );
   }
 
@@ -55,7 +68,7 @@ export class PaymentController {
     );
   }
 
-  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'SUPER_ADMIN')
   @Get()
   async findAll(
     @CurrentUser() user: any,
@@ -74,13 +87,13 @@ export class PaymentController {
     );
   }
 
-  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'SUPER_ADMIN')
   @Get('stats')
   async getStats(@CurrentUser() user: any) {
     return ok(await this.svc.getStats(user.clubId));
   }
 
-  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Roles('CLUB_ADMIN', 'CLUB_TREASURER', 'SUPER_ADMIN')
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return ok(await this.svc.findOne(id, user.clubId));

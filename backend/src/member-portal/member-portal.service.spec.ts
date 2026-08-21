@@ -3,9 +3,11 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { MemberPortalService } from './member-portal.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { HermesService } from '../hermes/hermes.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 const prisma = {
-  member: { findFirst: jest.fn() },
+  member: { findFirst: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
   attendanceSession: {
     findMany: jest.fn().mockResolvedValue([]),
     findFirst: jest.fn(),
@@ -19,12 +21,21 @@ const prisma = {
   fundContribution: {
     findFirst: jest.fn().mockResolvedValue(null),
     findMany: jest.fn().mockResolvedValue([]),
+    aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 } }),
   },
   personalReceipt: { findMany: jest.fn().mockResolvedValue([]) },
   minigameParticipant: { findMany: jest.fn().mockResolvedValue([]) },
   notification: { findMany: jest.fn().mockResolvedValue([]) },
+  payment: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+    create: jest.fn().mockResolvedValue({ id: 'pay-new', amount: 500, status: 'PENDING' }),
+  },
+  systemSetting: { findMany: jest.fn().mockResolvedValue([]) },
 };
 const calculator = { calculate: jest.fn() };
+const hermes = { dispatch: jest.fn().mockResolvedValue({ dispatched: 1 }) };
+const audit = { log: jest.fn() };
 
 const MEMBER_A = {
   id: 'mem-A',
@@ -46,11 +57,16 @@ describe('MemberPortalService', () => {
     prisma.personalReceipt.findMany.mockResolvedValue([]);
     prisma.minigameParticipant.findMany.mockResolvedValue([]);
     prisma.notification.findMany.mockResolvedValue([]);
+    prisma.fundContribution.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
+    prisma.payment.findFirst.mockResolvedValue(null);
+    prisma.systemSetting.findMany.mockResolvedValue([]);
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MemberPortalService,
         { provide: PrismaService, useValue: prisma },
         { provide: FinancialCalculatorService, useValue: calculator },
+        { provide: HermesService, useValue: hermes },
+        { provide: AuditLogsService, useValue: audit },
       ],
     }).compile();
     service = module.get<MemberPortalService>(MemberPortalService);
@@ -95,8 +111,9 @@ describe('MemberPortalService', () => {
           endTime: '20:00',
           status: 'completed',
           courtFee: 100,
-          _count: { attendanceRecords: 4 },
+          _count: { attendanceRecords: 4, registrations: 0 },
           attendanceRecords: [{ status: 'PRESENT' }],
+          registrations: [],
         },
         {
           id: 's2',
@@ -106,8 +123,9 @@ describe('MemberPortalService', () => {
           endTime: null,
           status: 'scheduled',
           courtFee: 100,
-          _count: { attendanceRecords: 0 },
+          _count: { attendanceRecords: 0, registrations: 0 },
           attendanceRecords: [],
+          registrations: [],
         },
       ]);
       const r = await service.getAttendance('mem-A', 'club-1');
@@ -116,11 +134,18 @@ describe('MemberPortalService', () => {
         where: { clubId: 'club-1', fundPeriodId: 'fp-1' },
         include: {
           _count: {
-            select: { attendanceRecords: { where: { status: 'PRESENT' } } },
+            select: {
+              attendanceRecords: { where: { status: 'PRESENT' } },
+              registrations: true,
+            },
           },
           attendanceRecords: {
             where: { memberId: 'mem-A' },
             select: { status: true },
+          },
+          registrations: {
+            where: { memberId: 'mem-A' },
+            select: { id: true },
           },
         },
         orderBy: { sessionDate: 'asc' },
@@ -345,6 +370,55 @@ describe('MemberPortalService', () => {
         update: { status: 'PRESENT' },
       });
       expect(r).toEqual({ sessionId: 's1', checkedIn: true });
+    });
+  });
+
+  describe('reportPayment (Báo đã nộp quỹ)', () => {
+    const PERIOD = { id: 'fp-1', name: 'Q1', contributionAmount: 500 };
+
+    it('memberId null → Forbidden', async () => {
+      await expect(
+        service.reportPayment(null, 'club-1', { amount: 500 }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('tạo báo nộp PENDING (reportedByMember) — KHÔNG BAO GIỜ tự CONFIRMED', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
+      prisma.fundPeriod.findFirst.mockResolvedValue(PERIOD);
+      prisma.payment.findFirst.mockResolvedValue(null); // chưa có báo PENDING
+      prisma.payment.create.mockResolvedValue({ id: 'pay-1', amount: 500, status: 'PENDING' });
+
+      const r = await service.reportPayment('mem-A', 'club-1', { amount: 500, note: 'CK 20h' });
+
+      expect(prisma.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            clubId: 'club-1',
+            memberId: 'mem-A',
+            reportedByMember: true,
+            status: 'PENDING',
+            referenceType: 'CONTRIBUTION',
+            referenceId: 'fp-1',
+          }),
+        }),
+      );
+      expect(r.status).toBe('PENDING');
+      expect(r.status).not.toBe('CONFIRMED');
+      // Thông báo cho Admin/Treasurer
+      expect(hermes.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ eventType: 'payment_reported', clubId: 'club-1' }),
+      );
+    });
+
+    it('idempotent: đã có báo PENDING cho cùng kỳ → trả lại bản cũ, KHÔNG tạo trùng', async () => {
+      prisma.member.findFirst.mockResolvedValue(MEMBER_A);
+      prisma.fundPeriod.findFirst.mockResolvedValue(PERIOD);
+      prisma.payment.findFirst.mockResolvedValue({ id: 'pay-existing', amount: 500, status: 'PENDING' });
+
+      const r = await service.reportPayment('mem-A', 'club-1', { amount: 500 });
+
+      expect(r).toEqual(expect.objectContaining({ id: 'pay-existing', duplicate: true }));
+      expect(prisma.payment.create).not.toHaveBeenCalled();
     });
   });
 });

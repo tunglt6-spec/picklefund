@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import api from '../lib/api'
 
 /** Tài chính cá nhân (nguồn: calculator server-side qua /member/me/finance). */
@@ -36,7 +36,9 @@ export interface MemberSession {
   status: string
   courtFee: number
   attendeeCount: number
+  registeredCount?: number
   present: boolean
+  registered?: boolean
 }
 
 /** Lịch tham gia cá nhân (nguồn: /member/me/attendance). */
@@ -69,6 +71,9 @@ export function useMemberPortal() {
   const [attendance, setAttendance] = useState<MemberAttendance | null>(null)
   const [contributions, setContributions] = useState<MemberContribution[]>([])
   const [loading, setLoading] = useState(true)
+  const [tick, setTick] = useState(0)
+
+  const reload = useCallback(() => setTick((t) => t + 1), [])
 
   useEffect(() => {
     let alive = true
@@ -98,7 +103,7 @@ export function useMemberPortal() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [tick])
 
-  return { finance, attendance, contributions, loading }
+  return { finance, attendance, contributions, loading, reload }
 }

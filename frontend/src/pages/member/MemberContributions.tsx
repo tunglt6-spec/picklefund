@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText } from 'lucide-react'
+import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, ActionButton, type Column } from '../../components/shared'
+import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
@@ -41,6 +42,7 @@ export function MemberContributions() {
   const [search, setSearch] = useState('')
   const [receipts, setReceipts] = useState<PersonalReceipt[]>([])
   const [expandedReceipt, setExpandedReceipt] = useState<string | null>(null)
+  const [reportOpen, setReportOpen] = useState(false)
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
 
@@ -110,6 +112,13 @@ export function MemberContributions() {
           )}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
+          <button
+            onClick={() => setReportOpen(true)}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[14px] text-[15px] font-bold text-white active:scale-[0.98]"
+            style={{ background: 'var(--pf-primary)' }}
+          >
+            <Send size={17} /> Báo đã nộp quỹ
+          </button>
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
@@ -184,6 +193,7 @@ export function MemberContributions() {
             </div>
           )}
         </div>
+        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} />
       </div>
     )
   }
@@ -201,7 +211,12 @@ export function MemberContributions() {
   return (
     <PageShell maxWidth={1200}>
       <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName}
-        actions={filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <ActionButton variant="primary" onClick={() => setReportOpen(true)}><Send size={15} /> Báo đã nộp quỹ</ActionButton>
+            {filtered.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+          </div>
+        }
       />
 
       {/* KPI — MetricCard giống Admin */}
@@ -298,6 +313,7 @@ export function MemberContributions() {
           </div>
         </ChartCard>
       )}
+      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} />
     </PageShell>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
@@ -16,6 +17,7 @@ type HermesNotif = {
   body: string
   status: 'PENDING' | 'SENT' | 'READ' | 'FAILED'
   createdAt: string
+  metadata?: { link?: string } | null
 }
 
 function eventIcon(eventType: string) {
@@ -53,14 +55,14 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('vi-VN')
 }
 
-function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string) => void; mobile?: boolean }) {
+function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNotif) => void; mobile?: boolean }) {
   const isRead = n.status === 'READ'
   const bg = eventBg(n.eventType)
   const icon = eventIcon(n.eventType)
 
   if (mobile) {
     return (
-      <div onClick={() => !isRead && onRead(n.id)}
+      <div onClick={() => onOpen(n)}
         className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80
           ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)]'}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
@@ -78,7 +80,7 @@ function NotifCard({ n, onRead, mobile }: { n: HermesNotif; onRead: (id: string)
   }
 
   return (
-    <div onClick={() => !isRead && onRead(n.id)}
+    <div onClick={() => onOpen(n)}
       className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm
         ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
@@ -134,6 +136,7 @@ function TabBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void 
 
 export function Notifications() {
   const isMobile = useIsMobile()
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -157,6 +160,12 @@ export function Notifications() {
   }, [user])
 
   useEffect(() => { fetchNotifs() }, [fetchNotifs])
+
+  const handleOpen = (n: HermesNotif) => {
+    if (n.status !== 'READ') handleRead(n.id)
+    const link = n.metadata?.link
+    if (link) navigate(link)
+  }
 
   const handleRead = async (id: string) => {
     // Optimistic: đánh dấu đã đọc NGAY (UI tức thì), rollback nếu API lỗi.
@@ -228,7 +237,7 @@ export function Notifications() {
             <div>
               <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Chưa đọc</p>
               <div className="space-y-2">
-                {unread.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} mobile />)}
+                {unread.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} mobile />)}
               </div>
             </div>
           )}
@@ -237,7 +246,7 @@ export function Notifications() {
             <div>
               <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Đã đọc</p>
               <div className="space-y-2">
-                {read.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} mobile />)}
+                {read.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} mobile />)}
               </div>
             </div>
           )}
@@ -275,7 +284,7 @@ export function Notifications() {
           <div>
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Chưa đọc</p>
             <div className="space-y-2">
-              {unread.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} />)}
+              {unread.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
             </div>
           </div>
         )}
@@ -284,7 +293,7 @@ export function Notifications() {
           <div>
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Đã đọc</p>
             <div className="space-y-2">
-              {read.map(n => <NotifCard key={n.id} n={n} onRead={handleRead} />)}
+              {read.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
             </div>
           </div>
         )}

@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { IsBoolean } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { MemberPortalService } from './member-portal.service';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ok } from '../common/response';
@@ -16,6 +24,25 @@ interface RequestUser {
 /** Body đăng ký / hủy đăng ký buổi chơi (self-scope). */
 class SelfRegistrationDto {
   @IsBoolean() register!: boolean;
+}
+
+/** Body "Tôi đã chuyển khoản" — báo đã nộp quỹ (self-scope). */
+class ReportPaymentDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  amount?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  note?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  proofUrl?: string;
 }
 
 /**
@@ -91,6 +118,32 @@ export class MemberPortalController {
     return ok(
       await this.svc.selfCheckin(user.memberId, user.clubId, sessionId),
       'Đã check-in',
+    );
+  }
+
+  // ─── Scope 1: Báo đã nộp quỹ ──────────────────────────────────────────────
+
+  /** Bối cảnh báo nộp: số cần nộp, NH, nội dung CK, QR, trạng thái chờ duyệt. */
+  @Get('me/payment-context')
+  async paymentContext(@CurrentUser() user: RequestUser) {
+    return ok(await this.svc.getPaymentContext(user.memberId, user.clubId));
+  }
+
+  /** Lịch sử báo nộp của chính member. */
+  @Get('me/payments')
+  async myPayments(@CurrentUser() user: RequestUser) {
+    return ok(await this.svc.listMyPayments(user.memberId, user.clubId));
+  }
+
+  /** Member xác nhận "Tôi đã chuyển khoản" → tạo báo nộp PENDING (idempotent). */
+  @Post('me/payments/report')
+  async reportPayment(
+    @CurrentUser() user: RequestUser,
+    @Body() body: ReportPaymentDto,
+  ) {
+    return ok(
+      await this.svc.reportPayment(user.memberId, user.clubId, body),
+      'Đã gửi báo nộp quỹ, chờ Admin xác nhận',
     );
   }
 

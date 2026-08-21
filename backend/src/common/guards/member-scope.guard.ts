@@ -29,6 +29,10 @@ export class MemberScopeGuard implements CanActivate {
     '/auth',
     '/lisa',
     '/hermes/notifications',
+    // Cộng đồng CLB (Member Experience v1): member được tạo/đọc/tương tác nội dung
+    // trong CLB của mình. Service tự scope theo clubId/memberId từ JWT (không tin client);
+    // sửa/xóa chỉ nội dung của chính mình, kiểm duyệt do handler check role admin.
+    '/community',
   ];
 
   /** Route chính xác được phép (self-scope; không lộ thông tin member khác). */

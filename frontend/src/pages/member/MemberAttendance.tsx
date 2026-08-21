@@ -1,14 +1,30 @@
 import { useState } from 'react'
-import { CheckCircle, Clock, MapPin, Search } from 'lucide-react'
+import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
 import { formatDate, formatVND } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
+import api from '../../lib/api'
 
 export function MemberAttendance() {
   const isMobile = useIsMobile()
-  const { attendance } = useMemberPortal()
+  const { attendance, reload } = useMemberPortal()
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  const toggleRegister = async (sessionId: string, register: boolean) => {
+    setBusyId(sessionId)
+    try {
+      await api.put(`/member/me/sessions/${sessionId}/registration`, { register })
+      toast.success(register ? 'Đã đăng ký tham gia' : 'Đã hủy đăng ký')
+      reload()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Thao tác thất bại')
+    } finally {
+      setBusyId(null)
+    }
+  }
 
   const activePeriod = attendance?.period ?? null
   // Session trong kỳ đã gồm cờ present + attendeeCount từ backend (self-scope, không lộ member khác).
@@ -111,6 +127,23 @@ export function MemberAttendance() {
                     {present && costShare > 0 && (
                       <div className="mt-2 text-[12px] [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
                     )}
+                    {s.status === 'scheduled' && (
+                      <div className="mt-3">
+                        {s.registered ? (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-emerald-600"><UserCheck size={14} /> Đã đăng ký – Chờ tham gia</span>
+                            <button onClick={() => toggleRegister(s.id, false)} disabled={busyId === s.id}
+                              className="text-[12px] font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => toggleRegister(s.id, true)} disabled={busyId === s.id}
+                            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] text-[14px] font-bold text-white active:scale-[0.98] disabled:opacity-50"
+                            style={{ background: 'var(--pf-primary)' }}>
+                            <UserPlus size={15} /> Đăng ký tham gia
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -145,6 +178,24 @@ export function MemberAttendance() {
         return s.status === 'completed' && present
           ? <span className="font-medium [color:var(--pf-primary)]">{formatVND(Math.round(s.courtFee / attendees))}</span>
           : <span className="[color:var(--pf-color-muted)]">—</span>
+      },
+    },
+    {
+      key: 'register', header: 'Đăng ký', align: 'center', render: (s) => {
+        if (s.status !== 'scheduled') return <span className="[color:var(--pf-color-muted)]">—</span>
+        return s.registered ? (
+          <div className="inline-flex items-center gap-2">
+            <StatusBadge tone="success" dot>Đã đăng ký</StatusBadge>
+            <button onClick={() => toggleRegister(s.id, false)} disabled={busyId === s.id}
+              className="text-xs font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
+          </div>
+        ) : (
+          <button onClick={() => toggleRegister(s.id, true)} disabled={busyId === s.id}
+            className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+            style={{ background: 'var(--pf-primary)' }}>
+            <UserPlus size={13} /> Đăng ký
+          </button>
+        )
       },
     },
   ]

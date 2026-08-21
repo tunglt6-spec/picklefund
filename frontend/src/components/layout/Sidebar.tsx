@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users,
   Settings, Building2,
   Bell, ScrollText, Receipt, ListOrdered,
-  Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu,
+  Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu, MessageSquare, BadgeCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -42,6 +42,8 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh',   desc: 'Quỹ · Thu · Chi · Công nợ · Báo cáo' },
   { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong',   desc: 'Lịch · Đăng ký · Check-in · Điểm danh' },
   { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
+  { label: 'Cộng đồng CLB', icon: <MessageSquare size={18} />, to: '/community',   desc: 'Bảng tin · Tương tác · Tìm kèo' },
+  { label: 'Xác nhận nộp quỹ', icon: <BadgeCheck size={18} />, to: '/payments',  desc: 'Duyệt khoản thành viên báo đã nộp' },
   { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 
@@ -50,6 +52,7 @@ const treasurerNav: NavItem[] = [
   { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/treasurer/dashboard', desc: 'Số dư & sổ quỹ tổng hợp' },
   { label: 'Sổ quỹ',   icon: <ListOrdered size={18} />,     to: '/treasurer/so-quy',   desc: 'Nhập thu · Nhập chi · Sổ quỹ' },
   { label: 'Chấm điểm', icon: <Award size={18} />,           to: '/scoring',            desc: 'Chấm điểm thành viên' },
+  { label: 'Xác nhận nộp quỹ', icon: <BadgeCheck size={18} />, to: '/payments',        desc: 'Duyệt khoản thành viên báo đã nộp' },
   { label: 'Nhắc nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders', desc: 'Nhắc đóng quỹ & thông báo' },
 ]
 
@@ -61,6 +64,7 @@ const memberNav: NavItem[] = [
   { label: 'Tài chính',   icon: <Wallet size={18} />,          to: '/member/tai-chinh',     desc: 'Quỹ · Thu · Chi · Báo cáo (xem)' },
   { label: 'Hoạt động',   icon: <CalendarDays size={18} />,    to: '/member/hoat-dong',     desc: 'Lịch · Đăng ký · Check-in · Tuần' },
   { label: 'Thi đấu',     icon: <Trophy size={18} />,          to: '/member/thi-dau',       desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
+  { label: 'Cộng đồng CLB', icon: <MessageSquare size={18} />, to: '/community',            desc: 'Bảng tin · Tương tác · Tìm kèo' },
   { label: 'Thông báo',   icon: <Bell size={18} />,            to: '/member/notifications', desc: 'Tin & nhắc nhở' },
 ]
 

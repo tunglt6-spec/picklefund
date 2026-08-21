@@ -13,7 +13,15 @@ export type HermesEventType =
   | 'subscription_expiring'
   | 'subscription_grace'
   | 'subscription_expired'
-  | 'referral_reward';
+  | 'referral_reward'
+  // Member Experience v1
+  | 'payment_reported' // Member báo đã nộp quỹ → Admin/Treasurer
+  | 'payment_confirmed_member' // Admin xác nhận → Member
+  | 'payment_recheck' // Admin yêu cầu kiểm tra lại → Member
+  | 'session_registered' // Member đăng ký buổi chơi → Admin
+  | 'community_mention' // Được @mention → Member
+  | 'community_reply' // Có phản hồi vào nội dung của mình → Member
+  | 'matchmaking_joined'; // Có người tham gia kèo của mình → Member
 
 export type HermesPriority = 'HIGH' | 'MEDIUM' | 'LOW';
 export type HermesChannel = 'IN_APP' | 'EMAIL' | 'TELEGRAM';
@@ -55,6 +63,13 @@ export const EVENT_PRIORITY: Record<HermesEventType, HermesPriority> = {
   weekly_report: 'LOW',
   payment_confirmed: 'LOW',
   new_member_joined: 'LOW',
+  payment_reported: 'MEDIUM',
+  payment_confirmed_member: 'MEDIUM',
+  payment_recheck: 'HIGH',
+  session_registered: 'LOW',
+  community_mention: 'LOW',
+  community_reply: 'LOW',
+  matchmaking_joined: 'LOW',
 };
 
 export const EVENT_RECIPIENTS: Record<HermesEventType, RecipientRole[]> = {
@@ -73,4 +88,11 @@ export const EVENT_RECIPIENTS: Record<HermesEventType, RecipientRole[]> = {
   inactivity_alert: ['SPECIFIC_USER'],
   payment_confirmed: ['CLUB_ADMIN', 'CLUB_TREASURER'],
   new_member_joined: ['CLUB_ADMIN'],
+  payment_reported: ['CLUB_ADMIN', 'CLUB_TREASURER'],
+  payment_confirmed_member: ['SPECIFIC_USER'],
+  payment_recheck: ['SPECIFIC_USER'],
+  session_registered: ['CLUB_ADMIN'],
+  community_mention: ['SPECIFIC_USER'],
+  community_reply: ['SPECIFIC_USER'],
+  matchmaking_joined: ['SPECIFIC_USER'],
 };

@@ -6,6 +6,38 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { HermesService } from '../hermes/hermes.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+
+/** Tạo URL ảnh QR VietQR (khớp cách payment.service dùng) cho member tự chuyển khoản. */
+function buildVietQRUrl(params: {
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  amount: number;
+  description: string;
+}): string {
+  const base = `https://img.vietqr.io/image/${params.bankCode}-${params.accountNumber}-compact2.jpg`;
+  const qs = new URLSearchParams({
+    amount: String(Math.max(0, Math.round(params.amount))),
+    addInfo: params.description,
+    accountName: params.accountName,
+  });
+  return `${base}?${qs.toString()}`;
+}
+
+/** Bỏ dấu tiếng Việt + ký tự lạ → nội dung CK ngắn, dễ đối chiếu trên sao kê ngân hàng. */
+function asciiMemo(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
 
 /**
  * MemberPortalService — read-only, JWT-scoped self-view cho MEMBER_VIEW (AUTH-IMPL-01).
@@ -17,6 +49,8 @@ export class MemberPortalService {
   constructor(
     private prisma: PrismaService,
     private calculator: FinancialCalculatorService,
+    private hermes: HermesService,
+    private audit: AuditLogsService,
   ) {}
 
   /** Bảo đảm member thuộc đúng club (chống truy cập chéo). */
@@ -87,11 +121,18 @@ export class MemberPortalService {
       where: { clubId, ...(period ? { fundPeriodId: period.id } : {}) },
       include: {
         _count: {
-          select: { attendanceRecords: { where: { status: 'PRESENT' } } },
+          select: {
+            attendanceRecords: { where: { status: 'PRESENT' } },
+            registrations: true,
+          },
         },
         attendanceRecords: {
           where: { memberId: memberId as string },
           select: { status: true },
+        },
+        registrations: {
+          where: { memberId: memberId as string },
+          select: { id: true },
         },
       },
       orderBy: { sessionDate: 'asc' },
@@ -105,7 +146,9 @@ export class MemberPortalService {
       status: s.status,
       courtFee: s.courtFee,
       attendeeCount: s._count.attendanceRecords,
+      registeredCount: s._count.registrations,
       present: s.attendanceRecords[0]?.status === 'PRESENT',
+      registered: s.registrations.length > 0,
     }));
     const completed = mapped.filter((s) => s.status === 'completed');
     return {
@@ -226,7 +269,7 @@ export class MemberPortalService {
     // Xác thực member THẬT với DB (thuộc clubId + chưa xóa) — chống memberId stale
     // trong access token cũ khi member bị xóa/đổi CLB. Dùng member.id đã verify, không tin token.
     const member = await this.assertMember(memberId, clubId);
-    await this.assertSession(sessionId, clubId);
+    const session = await this.assertSession(sessionId, clubId);
     if (register) {
       await this.prisma.sessionRegistration.upsert({
         where: {
@@ -243,7 +286,40 @@ export class MemberPortalService {
         where: { clubId, attendanceSessionId: sessionId, memberId: member.id },
       });
     }
+
+    // Audit đăng ký/hủy (Scope 2).
+    void this.audit.log({
+      userId: member.userId ?? '',
+      clubId,
+      action: register ? 'REGISTER' : 'UNREGISTER',
+      resource: 'SessionRegistration',
+      resourceId: sessionId,
+      detail: `${member.fullName} ${register ? 'đăng ký' : 'hủy đăng ký'} buổi chơi ${this.fmtDate(session.sessionDate)}`,
+    });
+
+    // Thông báo Admin khi có đăng ký mới (không cần Admin duyệt — chỉ để nắm số lượng).
+    if (register) {
+      const when = `${this.fmtDate(session.sessionDate)}${session.startTime ? ` ${session.startTime}` : ''}`;
+      await this.hermes
+        .dispatch({
+          eventType: 'session_registered',
+          clubId,
+          title: 'Có thành viên đăng ký buổi chơi',
+          body: `${member.fullName} đã đăng ký tham gia buổi chơi ${when}${session.courtName ? ` — ${session.courtName}` : ''}.`,
+          metadata: { link: '/session-registration', sessionId },
+        })
+        .catch(() => undefined);
+    }
     return { sessionId, registered: register };
+  }
+
+  /** Định dạng ngày dd/MM/yyyy cho nội dung thông báo/audit. */
+  private fmtDate(d: Date): string {
+    try {
+      return new Date(d).toLocaleDateString('vi-VN');
+    } catch {
+      return String(d);
+    }
   }
 
   /** Member tự check-in PRESENT vào buổi chơi (self-scope, idempotent). */
@@ -273,6 +349,219 @@ export class MemberPortalService {
       update: { status: 'PRESENT' },
     });
     return { sessionId, checkedIn: true };
+  }
+
+  // ─── Scope 1: Báo đã nộp quỹ ─────────────────────────────────────────────
+
+  /** Đọc cấu hình NH của CLB (theo prefix clubId). Trả rỗng nếu chưa cấu hình. */
+  private async getClubBank(clubId: string) {
+    const prefix = `${clubId}_`;
+    const keys = ['bank_code', 'bank_account_number', 'bank_account_name'];
+    const rows = await this.prisma.systemSetting.findMany({
+      where: { key: { in: keys.map((k) => `${prefix}${k}`) } },
+    });
+    const map: Record<string, string> = {};
+    for (const r of rows) map[r.key.slice(prefix.length)] = r.value;
+    return {
+      bankCode: map['bank_code'] ?? '',
+      accountNumber: map['bank_account_number'] ?? '',
+      accountName: map['bank_account_name'] ?? '',
+    };
+  }
+
+  /** Tổng đã đóng (đã xác nhận) của member trong 1 kỳ (COMMON). */
+  private async confirmedPaid(memberId: string, clubId: string, periodId: string) {
+    const agg = await this.prisma.fundContribution.aggregate({
+      where: {
+        clubId,
+        memberId,
+        fundPeriodId: periodId,
+        fundSource: 'COMMON',
+        isConfirmed: true,
+      },
+      _sum: { amount: true },
+    });
+    return Number(agg._sum.amount ?? 0);
+  }
+
+  /**
+   * Bối cảnh để member "Báo đã nộp quỹ": số cần nộp, thông tin NH, nội dung CK tự sinh, QR,
+   * và trạng thái đang-chờ-duyệt (nếu member đã báo). KHÔNG tạo dữ liệu thanh toán giả.
+   */
+  async getPaymentContext(memberId: string | null, clubId: string) {
+    const member = await this.assertMember(memberId, clubId);
+    const period = await this.activePeriod(clubId);
+    const contributionAmount = period ? Number(period.contributionAmount) : 0;
+    const paid = period ? await this.confirmedPaid(member.id, clubId, period.id) : 0;
+    const suggestedAmount = Math.max(0, contributionAmount - paid);
+
+    const bank = await this.getClubBank(clubId);
+    const bankConfigured = !!(bank.accountNumber && bank.accountName);
+    const memo = asciiMemo(
+      `NOP QUY ${member.fullName} ${period?.name ?? ''}`,
+    ).slice(0, 50);
+    const qrImageUrl =
+      bankConfigured && suggestedAmount > 0
+        ? buildVietQRUrl({
+            bankCode: bank.bankCode || 'MB',
+            accountNumber: bank.accountNumber,
+            accountName: bank.accountName,
+            amount: suggestedAmount,
+            description: memo,
+          })
+        : null;
+
+    // Đang chờ duyệt? (member đã báo, chưa được xác nhận / chưa bị yêu cầu kiểm tra lại)
+    const pending = await this.prisma.payment.findFirst({
+      where: {
+        clubId,
+        memberId: member.id,
+        reportedByMember: true,
+        status: 'PENDING',
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, amount: true, createdAt: true, description: true },
+    });
+
+    return {
+      period: period ? { id: period.id, name: period.name } : null,
+      contributionAmount,
+      paid,
+      suggestedAmount,
+      bank: bankConfigured
+        ? {
+            bank_code: bank.bankCode,
+            bank_account_number: bank.accountNumber,
+            bank_account_name: bank.accountName,
+          }
+        : null,
+      memo,
+      qrImageUrl,
+      pending: pending
+        ? { id: pending.id, amount: Number(pending.amount), createdAt: pending.createdAt }
+        : null,
+    };
+  }
+
+  /** Lịch sử báo nộp quỹ của CHÍNH member (mọi trạng thái). */
+  async listMyPayments(memberId: string | null, clubId: string) {
+    const member = await this.assertMember(memberId, clubId);
+    const rows = await this.prisma.payment.findMany({
+      where: { clubId, memberId: member.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return rows.map((p) => ({
+      id: p.id,
+      amount: Number(p.amount),
+      description: p.description,
+      status: p.status,
+      reportedByMember: p.reportedByMember,
+      memberNote: p.memberNote,
+      recheckNote: p.recheckNote,
+      proofUrl: p.proofUrl,
+      createdAt: p.createdAt,
+      confirmedAt: p.confirmedAt,
+    }));
+  }
+
+  /**
+   * Member "Tôi đã chuyển khoản" → tạo Payment PENDING (reportedByMember).
+   * KHÔNG bao giờ tự thành PAID/CONFIRMED. Idempotent: nếu đã có 1 báo PENDING cho cùng kỳ
+   * thì trả lại bản đó (chống double-click/retry). Thông báo Admin/Treasurer + ghi audit.
+   */
+  async reportPayment(
+    memberId: string | null,
+    clubId: string,
+    dto: { amount?: number; note?: string; proofUrl?: string },
+  ) {
+    const member = await this.assertMember(memberId, clubId);
+    const period = await this.activePeriod(clubId);
+
+    // Số tiền: ưu tiên client gửi (đã validate > 0); nếu không có → gợi ý theo kỳ.
+    let amount = dto.amount ?? 0;
+    if (!amount || amount <= 0) {
+      const contributionAmount = period ? Number(period.contributionAmount) : 0;
+      const paid = period
+        ? await this.confirmedPaid(member.id, clubId, period.id)
+        : 0;
+      amount = Math.max(0, contributionAmount - paid);
+    }
+    if (!amount || amount <= 0)
+      throw new BadRequestException('Số tiền báo nộp không hợp lệ.');
+
+    const referenceType = period ? 'CONTRIBUTION' : 'MANUAL';
+    const referenceId = period ? period.id : null;
+
+    // Idempotency: đã có báo PENDING cho cùng kỳ (cùng referenceId) → trả lại, không tạo trùng.
+    const existing = await this.prisma.payment.findFirst({
+      where: {
+        clubId,
+        memberId: member.id,
+        reportedByMember: true,
+        status: 'PENDING',
+        referenceId: referenceId,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing) {
+      return { id: existing.id, amount: Number(existing.amount), status: existing.status, duplicate: true };
+    }
+
+    const bank = await this.getClubBank(clubId);
+    const memo = asciiMemo(
+      `NOP QUY ${member.fullName} ${period?.name ?? ''}`,
+    ).slice(0, 50);
+    const bankCode = bank.bankCode || 'MB';
+    const accountNumber = bank.accountNumber || '0000000000';
+    const accountName = bank.accountName || 'CLB PICKLEBALL';
+    const qrImageUrl = buildVietQRUrl({
+      bankCode,
+      accountNumber,
+      accountName,
+      amount,
+      description: memo,
+    });
+
+    const payment = await this.prisma.payment.create({
+      data: {
+        clubId,
+        memberId: member.id,
+        amount,
+        description: memo,
+        referenceType: referenceType as any,
+        referenceId: referenceId ?? undefined,
+        bankCode,
+        accountNumber,
+        accountName,
+        qrImageUrl,
+        reportedByMember: true,
+        memberNote: dto.note?.trim().slice(0, 500) || null,
+        proofUrl: dto.proofUrl?.trim().slice(0, 1000) || null,
+        status: 'PENDING',
+      },
+    });
+
+    void this.audit.log({
+      userId: member.userId ?? '',
+      clubId,
+      action: 'REPORT',
+      resource: 'Payment',
+      resourceId: payment.id,
+      detail: `Member ${member.fullName} báo đã nộp ${new Intl.NumberFormat('vi-VN').format(amount)}đ${period ? ` cho ${period.name}` : ''}`,
+    });
+
+    await this.hermes
+      .dispatch({
+        eventType: 'payment_reported',
+        clubId,
+        title: 'Có thành viên báo đã nộp quỹ',
+        body: `${member.fullName} báo đã nộp ${new Intl.NumberFormat('vi-VN').format(amount)}đ${period ? ` cho ${period.name}` : ''}. Vui lòng kiểm tra & xác nhận.`,
+        metadata: { link: '/payments', paymentId: payment.id, memberId: member.id },
+      })
+      .catch(() => undefined);
+
+    return { id: payment.id, amount: Number(payment.amount), status: payment.status, duplicate: false };
   }
 
   async getNotifications(userId: string, clubId: string) {

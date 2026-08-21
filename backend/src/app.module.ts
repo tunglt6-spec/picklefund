@@ -40,6 +40,7 @@ import { BillingModule } from './billing/billing.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MemberPortalModule } from './member-portal/member-portal.module';
+import { CommunityModule } from './community/community.module';
 import { AiActionsModule } from './ai-actions/ai-actions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 import { NotificationRuntimeModule } from './notification-runtime/notification-runtime.module';
@@ -111,6 +112,7 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     ReferralsModule,
     CategoriesModule,
     MemberPortalModule,
+    CommunityModule,
     AiActionsModule,
     WorkflowsModule,
     NotificationRuntimeModule,

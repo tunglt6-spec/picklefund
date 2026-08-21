@@ -53,6 +53,11 @@ model Club {
   subscription         Subscription?
   paymentOrders        PaymentOrder[]
   invoices             Invoice[]
+  communityPosts       CommunityPost[]
+  communityComments    CommunityComment[]
+  communityReactions   CommunityReaction[]
+  matchmakingRequests  MatchmakingRequest[]
+  matchmakingParticipants MatchmakingParticipant[]
 
   @@map("clubs")
 }
@@ -145,6 +150,11 @@ model Member {
   fundPeriodMemberships FundPeriodMember[]
   scoreEvents           MemberScoreEvent[]
   scoreSnapshots        MemberScoreSnapshot[]
+  communityPosts        CommunityPost[]
+  communityComments     CommunityComment[]
+  communityReactions    CommunityReaction[]
+  matchmakingRequests   MatchmakingRequest[]
+  matchmakingJoins      MatchmakingParticipant[]
 
   @@index([clubId, isDeleted])
   @@map("members")
@@ -786,6 +796,13 @@ model Payment {
   accountName   String         @map("account_name") @db.VarChar(100)
   qrImageUrl    String?        @map("qr_image_url")
   status        PaymentStatus  @default(PENDING)
+  // Member Experience v1 — "Báo đã nộp quỹ": member tự khai báo đã chuyển khoản.
+  // reportedByMember=true → dòng do member tạo (chờ Admin xác nhận), KHÔNG tự thành CONFIRMED.
+  reportedByMember Boolean     @default(false) @map("reported_by_member")
+  memberNote    String?        @map("member_note") @db.VarChar(500)
+  proofUrl      String?        @map("proof_url")
+  // Admin "yêu cầu kiểm tra lại": set status=CANCELLED + recheckNote (phân biệt với member tự hủy).
+  recheckNote   String?        @map("recheck_note") @db.VarChar(500)
   confirmedById String?        @map("confirmed_by")
   confirmedAt   DateTime?      @map("confirmed_at")
   expiredAt     DateTime?      @map("expired_at")
@@ -1323,4 +1340,140 @@ model ReportExportLog {
   @@index([clubId, createdAt])
   @@index([createdAt])
   @@map("report_export_logs")
+}
+
+// ============================================================
+// COMMUNITY (Member Experience v1 — Cộng đồng CLB)
+// Tenant-scoped (mọi bảng có club_id). KHÔNG phải mạng xã hội tổng quát:
+// chỉ bảng tin + reaction + bình luận + @mention + tương tác buổi chơi/giải đấu + Tìm kèo.
+// KHÔNG chat 1-1 / group chat / voice-video / liên CLB.
+// ============================================================
+enum CommunityPostKind {
+  GENERAL // Bài cộng đồng thường
+  SESSION // Gắn 1 buổi chơi (session_id)
+  TOURNAMENT // Gắn 1 giải đấu (minigame_id)
+}
+
+enum ReactionTargetType {
+  POST
+  COMMENT
+}
+
+enum ReactionEmoji {
+  THUMBS_UP // 👍
+  HEART // ❤️
+  CLAP // 👏
+  FIRE // 🔥
+}
+
+enum MatchmakingStatus {
+  OPEN
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+/// Bài đăng bảng tin CLB. Xóa = soft delete (is_deleted) để giữ lịch sử/kiểm duyệt.
+model CommunityPost {
+  id             String            @id @default(uuid())
+  clubId         String            @map("club_id")
+  authorMemberId String            @map("author_member_id")
+  kind           CommunityPostKind @default(GENERAL)
+  body           String            @db.Text
+  imageUrl       String?           @map("image_url")
+  sessionId      String?           @map("session_id") // AttendanceSession (buổi chơi) — không FK cứng để tránh ràng buộc xóa
+  minigameId     String?           @map("minigame_id") // Minigame (giải đấu)
+  isDeleted      Boolean           @default(false) @map("is_deleted")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  club     Club               @relation(fields: [clubId], references: [id])
+  author   Member             @relation(fields: [authorMemberId], references: [id])
+  comments CommunityComment[]
+
+  @@index([clubId, isDeleted, createdAt])
+  @@index([clubId, sessionId])
+  @@index([clubId, minigameId])
+  @@map("community_posts")
+}
+
+/// Bình luận trên 1 bài đăng. Sanitize server-side; xóa = soft delete.
+model CommunityComment {
+  id             String   @id @default(uuid())
+  clubId         String   @map("club_id")
+  postId         String   @map("post_id")
+  authorMemberId String   @map("author_member_id")
+  body           String   @db.Text
+  isDeleted      Boolean  @default(false) @map("is_deleted")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  club   Club          @relation(fields: [clubId], references: [id])
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author Member        @relation(fields: [authorMemberId], references: [id])
+
+  @@index([clubId, postId, createdAt])
+  @@map("community_comments")
+}
+
+/// Reaction lên POST hoặc COMMENT (polymorphic). 1 reaction / member / content —
+/// unique chống ghi trùng; đổi cảm xúc = update emoji; bỏ = xóa dòng.
+model CommunityReaction {
+  id         String             @id @default(uuid())
+  clubId     String             @map("club_id")
+  targetType ReactionTargetType @map("target_type")
+  targetId   String             @map("target_id")
+  memberId   String             @map("member_id")
+  emoji      ReactionEmoji
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  club   Club   @relation(fields: [clubId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@unique([targetType, targetId, memberId])
+  @@index([targetType, targetId])
+  @@map("community_reactions")
+}
+
+/// "Tìm kèo" — yêu cầu tìm người chơi trong CLB. Đủ người → status=FULL.
+/// KHÔNG tự chuyển thành buổi chơi chính thức (ngoài scope v1).
+model MatchmakingRequest {
+  id              String            @id @default(uuid())
+  clubId          String            @map("club_id")
+  creatorMemberId String            @map("creator_member_id")
+  sport           String            @db.VarChar(40)
+  playDate        DateTime          @map("play_date") @db.Date
+  startTime       String?           @map("start_time") @db.VarChar(5)
+  endTime         String?           @map("end_time") @db.VarChar(5)
+  format          String?           @db.VarChar(40)
+  neededCount     Int               @default(1) @map("needed_count")
+  skillLevel      Int?              @map("skill_level")
+  note            String?           @db.VarChar(500)
+  status          MatchmakingStatus @default(OPEN)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  club         Club                     @relation(fields: [clubId], references: [id])
+  creator      Member                   @relation(fields: [creatorMemberId], references: [id])
+  participants MatchmakingParticipant[]
+
+  @@index([clubId, status, playDate])
+  @@map("matchmaking_requests")
+}
+
+/// Người tham gia 1 kèo (ngoài người tạo). Unique chống join trùng.
+model MatchmakingParticipant {
+  id        String   @id @default(uuid())
+  clubId    String   @map("club_id")
+  requestId String   @map("request_id")
+  memberId  String   @map("member_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club    Club               @relation(fields: [clubId], references: [id])
+  request MatchmakingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  member  Member             @relation(fields: [memberId], references: [id])
+
+  @@unique([requestId, memberId])
+  @@index([clubId, requestId])
+  @@map("matchmaking_participants")
 }

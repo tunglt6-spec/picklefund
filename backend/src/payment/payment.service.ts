@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { HermesService } from '../hermes/hermes.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 function buildVietQRUrl(params: {
   bankCode: string;
@@ -27,7 +29,13 @@ export class PaymentService {
   constructor(
     private prisma: PrismaService,
     private calculator: FinancialCalculatorService,
+    private hermes: HermesService,
+    private audit: AuditLogsService,
   ) {}
+
+  private fmtVnd(v: number): string {
+    return new Intl.NumberFormat('vi-VN').format(v) + 'đ';
+  }
 
   async createQR(
     clubId: string,
@@ -88,30 +96,130 @@ export class PaymentService {
     });
   }
 
+  /**
+   * Admin/Treasurer XÁC NHẬN đã nhận tiền: PENDING → CONFIRMED.
+   * An toàn giao dịch ($transaction): cập nhật payment + ghi/nhận khoản đóng góp COMMON
+   * (member-report → tạo mới; QR admin gắn contribution → confirm cái có sẵn). Sau đó
+   * invalidate số dư + audit + thông báo lại cho member. KHÔNG có đường nào để member tự PAID.
+   */
   async confirm(paymentId: string, adminUserId: string, clubId: string) {
     const payment = await this.prisma.payment.findFirst({
       where: { id: paymentId, clubId },
+      include: { member: { select: { id: true, fullName: true, userId: true } } },
     });
     if (!payment) throw new NotFoundException('Giao dịch không tồn tại');
     if (payment.status !== 'PENDING')
       throw new ForbiddenException('Giao dịch đã được xử lý');
 
-    const updated = await this.prisma.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: 'CONFIRMED',
-        confirmedById: adminUserId,
-        confirmedAt: new Date(),
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const up = await tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: 'CONFIRMED',
+          confirmedById: adminUserId,
+          confirmedAt: new Date(),
+        },
+      });
+
+      if (payment.reportedByMember) {
+        // Member đã báo → tạo khoản đóng góp COMMON (đã xác nhận) để tính vào "đã nộp".
+        // referenceType=CONTRIBUTION → referenceId là fundPeriodId của khoản dues.
+        const fundPeriodId =
+          payment.referenceType === 'CONTRIBUTION' ? payment.referenceId : null;
+        await tx.fundContribution.create({
+          data: {
+            clubId,
+            fundPeriodId: fundPeriodId ?? undefined,
+            memberId: payment.memberId,
+            fundSource: 'COMMON',
+            amount: payment.amount,
+            paymentDate: new Date(),
+            paymentMethod: 'bank_transfer',
+            isConfirmed: true,
+            createdById: adminUserId,
+          },
+        });
+      } else if (payment.referenceId) {
+        // QR do admin tạo, gắn 1 contribution có sẵn → confirm nó.
+        await tx.fundContribution.updateMany({
+          where: { id: payment.referenceId, clubId, isConfirmed: false },
+          data: { isConfirmed: true },
+        });
+      }
+      return up;
     });
 
-    // Auto-confirm the linked contribution (if any)
-    if (payment.referenceId) {
-      await this.prisma.fundContribution.updateMany({
-        where: { id: payment.referenceId, clubId, isConfirmed: false },
-        data: { isConfirmed: true },
-      }).catch(() => { /* non-fatal */ });
-      await this.calculator.invalidateClosingBalances(clubId);
+    await this.calculator.invalidateClosingBalances(clubId);
+
+    void this.audit.log({
+      userId: adminUserId,
+      clubId,
+      action: 'CONFIRM',
+      resource: 'Payment',
+      resourceId: paymentId,
+      detail: `Xác nhận đã nhận ${this.fmtVnd(Number(payment.amount))} từ ${payment.member?.fullName ?? 'thành viên'}`,
+    });
+
+    if (payment.member?.userId) {
+      await this.hermes
+        .dispatch({
+          eventType: 'payment_confirmed_member',
+          clubId,
+          targetUserId: payment.member.userId,
+          title: 'Đã xác nhận nộp quỹ',
+          body: `Khoản ${this.fmtVnd(Number(payment.amount))} của bạn đã được xác nhận. Cảm ơn bạn!`,
+          metadata: { link: '/member/contributions', paymentId },
+        })
+        .catch(() => undefined);
+    }
+
+    return updated;
+  }
+
+  /**
+   * Admin YÊU CẦU KIỂM TRA LẠI: PENDING → CANCELLED + recheckNote (giữ lịch sử lần báo).
+   * Member nhận thông báo và có thể báo nộp lại (tạo dòng mới). KHÔNG xóa dữ liệu.
+   */
+  async requestRecheck(
+    paymentId: string,
+    adminUserId: string,
+    clubId: string,
+    note?: string,
+  ) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { id: paymentId, clubId },
+      include: { member: { select: { fullName: true, userId: true } } },
+    });
+    if (!payment) throw new NotFoundException('Giao dịch không tồn tại');
+    if (payment.status !== 'PENDING')
+      throw new ForbiddenException('Giao dịch đã được xử lý');
+
+    const reason = (note ?? '').trim().slice(0, 500) || 'Cần kiểm tra lại';
+    const updated = await this.prisma.payment.update({
+      where: { id: paymentId },
+      data: { status: 'CANCELLED', recheckNote: reason },
+    });
+
+    void this.audit.log({
+      userId: adminUserId,
+      clubId,
+      action: 'RECHECK',
+      resource: 'Payment',
+      resourceId: paymentId,
+      detail: `Yêu cầu kiểm tra lại khoản báo nộp của ${payment.member?.fullName ?? 'thành viên'}: ${reason}`,
+    });
+
+    if (payment.member?.userId) {
+      await this.hermes
+        .dispatch({
+          eventType: 'payment_recheck',
+          clubId,
+          targetUserId: payment.member.userId,
+          title: 'Cần kiểm tra lại khoản nộp quỹ',
+          body: reason,
+          metadata: { link: '/member/contributions', paymentId },
+        })
+        .catch(() => undefined);
     }
 
     return updated;
