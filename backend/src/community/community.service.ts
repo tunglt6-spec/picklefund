@@ -173,6 +173,9 @@ export class CommunityService {
       context: 'bài viết',
     });
 
+    // Thông báo cho các member KHÁC trong CLB có bài đăng mới (trừ tác giả + người đã được @mention).
+    await this.broadcastNewPost(actor, me.fullName, post.id, dto.mentions ?? []);
+
     return {
       id: post.id,
       kind: post.kind,
@@ -431,6 +434,34 @@ export class CommunityService {
           title: 'Bạn được nhắc tên',
           body: `${actorName} đã nhắc bạn trong một ${opts.context}.`,
           metadata: { link: opts.link },
+        })
+        .catch(() => undefined);
+    }
+  }
+
+  /** Báo bài đăng mới cho các member khác trong CLB (trừ tác giả + người đã @mention). */
+  private async broadcastNewPost(
+    actor: Actor,
+    authorName: string,
+    postId: string,
+    mentionIds: string[],
+  ) {
+    const skip = new Set<string>([actor.memberId ?? '', ...mentionIds]);
+    const members = await this.prisma.member.findMany({
+      where: { clubId: actor.clubId, isDeleted: false, status: 'active', userId: { not: null } },
+      select: { id: true, userId: true },
+      take: 1000,
+    });
+    for (const m of members) {
+      if (!m.userId || skip.has(m.id)) continue;
+      await this.hermes
+        .dispatch({
+          eventType: 'community_post',
+          clubId: actor.clubId,
+          targetUserId: m.userId,
+          title: 'Bài đăng mới trong Cộng đồng CLB',
+          body: `${authorName} vừa chia sẻ một bài viết mới.`,
+          metadata: { link: `/community?post=${postId}` },
         })
         .catch(() => undefined);
     }

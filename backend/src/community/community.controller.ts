@@ -1,14 +1,22 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  OnModuleInit,
   Param,
   Patch,
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CommunityService } from './community.service';
 import { CurrentUser } from '../common/decorators';
@@ -23,6 +31,15 @@ import {
   UpdatePostDto,
 } from './community.dto';
 
+const COMMUNITY_UPLOAD_DIR = join(process.cwd(), 'uploads', 'community');
+const communityImageStorage = diskStorage({
+  destination: COMMUNITY_UPLOAD_DIR,
+  filename: (_req, file, cb) => {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    cb(null, `${unique}${extname(file.originalname)}`);
+  },
+});
+
 /**
  * Cộng đồng CLB (Member Experience v1). Mọi thao tác scope theo clubId/memberId từ JWT
  * (KHÔNG tin client). MEMBER_VIEW được vào nhờ allowlist '/community' trong MemberScopeGuard;
@@ -31,8 +48,32 @@ import {
 @ApiTags('Community')
 @ApiBearerAuth()
 @Controller('community')
-export class CommunityController {
+export class CommunityController implements OnModuleInit {
   constructor(private svc: CommunityService) {}
+
+  onModuleInit() {
+    if (!existsSync(COMMUNITY_UPLOAD_DIR)) mkdirSync(COMMUNITY_UPLOAD_DIR, { recursive: true });
+  }
+
+  /** Upload ảnh cho bài đăng — member được phép (allowlist '/community'). Trả URL tĩnh /uploads. */
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: communityImageStorage,
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = /\.(jpg|jpeg|png|webp|gif)$/i;
+        if (!allowed.test(extname(file.originalname))) {
+          return cb(new BadRequestException('Chỉ chấp nhận ảnh jpg/png/webp/gif'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Thiếu tệp ảnh');
+    return ok({ url: `/uploads/community/${file.filename}` });
+  }
 
   private actor(user: JwtUser) {
     return {

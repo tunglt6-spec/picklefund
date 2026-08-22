@@ -275,29 +275,32 @@ function ReactionBar({
 
 function MentionPicker({
   members,
+  query,
+  onQueryChange,
   onPick,
   onClose,
 }: {
   members: MentionMember[]
+  query: string
+  onQueryChange: (v: string) => void
   onPick: (m: MentionMember) => void
   onClose: () => void
 }) {
-  const [q, setQ] = useState('')
   const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase()
+    const t = query.trim().toLowerCase()
     const list = t ? members.filter((m) => m.fullName.toLowerCase().includes(t)) : members
     return list.slice(0, 30)
-  }, [q, members])
+  }, [query, members])
 
   return (
-    <div className="mt-2 overflow-hidden rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface)]">
+    <div className="mt-2 overflow-hidden rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] shadow-[var(--pf-shadow)]">
       <div className="flex items-center gap-2 border-b border-[color:var(--pf-border)] px-3 py-2">
         <Search size={14} className="[color:var(--pf-color-muted)]" />
         <input
           autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Tìm thành viên…"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Tìm thành viên để gắn thẻ…"
           className="min-w-0 flex-1 bg-transparent text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)]"
         />
         <button
@@ -310,7 +313,9 @@ function MentionPicker({
         </button>
       </div>
       <div className="max-h-52 overflow-y-auto">
-        {filtered.length === 0 ? (
+        {members.length === 0 ? (
+          <p className="px-3 py-3 text-xs [color:var(--pf-color-muted)]">Chưa tải được danh sách thành viên.</p>
+        ) : filtered.length === 0 ? (
           <p className="px-3 py-3 text-xs [color:var(--pf-color-muted)]">Không tìm thấy thành viên.</p>
         ) : (
           filtered.map((m) => (
@@ -318,7 +323,7 @@ function MentionPicker({
               key={m.id}
               type="button"
               onClick={() => onPick(m)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:[background:var(--pf-color-muted-soft)]"
+              className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:[background:var(--pf-color-muted-soft)]"
             >
               <Avatar name={m.fullName} url={m.avatarUrl} size={28} />
               <span className="truncate text-sm [color:var(--pf-text)]">{m.fullName}</span>
@@ -345,36 +350,89 @@ function Composer({
 }) {
   const [body, setBody] = useState('')
   const [imageUrl, setImageUrl] = useState('')
-  const [showImage, setShowImage] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [showMention, setShowMention] = useState(false)
-  const [mentions, setMentions] = useState<string[]>([])
+  const [mentionQuery, setMentionQuery] = useState('')
+  const [mentions, setMentions] = useState<MentionMember[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const taRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
+  // Gõ "@..." trong ô nhập → tự mở danh sách thành viên (lọc theo chữ đã gõ).
+  const onBodyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value
+    setBody(val)
+    const pos = e.target.selectionStart ?? val.length
+    const m = val.slice(0, pos).match(/(?:^|\s)@([\p{L}\d._]*)$/u)
+    if (m) {
+      setShowMention(true)
+      setMentionQuery(m[1])
+    } else {
+      setShowMention(false)
+    }
+  }
+
+  // Chèn thẻ: thay token "@..." đang gõ (nếu có) bằng "@Họ Tên " + ghi nhận id.
   const insertMention = (m: MentionMember) => {
-    setBody((prev) => `${prev}${prev && !prev.endsWith(' ') ? ' ' : ''}@${m.fullName} `)
-    setMentions((prev) => (prev.includes(m.id) ? prev : [...prev, m.id]))
+    const ta = taRef.current
+    const pos = ta?.selectionStart ?? body.length
+    const pre = body.slice(0, pos)
+    const tokenMatch = pre.match(/@([\p{L}\d._]*)$/u)
+    const newPre = tokenMatch
+      ? pre.slice(0, pre.length - tokenMatch[0].length) + `@${m.fullName} `
+      : (pre && !pre.endsWith(' ') ? pre + ' ' : pre) + `@${m.fullName} `
+    const newBody = newPre + body.slice(pos)
+    setBody(newBody)
+    setMentions((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]))
     setShowMention(false)
+    setMentionQuery('')
+    setTimeout(() => {
+      ta?.focus()
+      ta?.setSelectionRange(newPre.length, newPre.length)
+    }, 0)
+  }
+
+  const removeMention = (id: string) => setMentions((prev) => prev.filter((m) => m.id !== id))
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await api.post('/community/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      const d = unwrap<{ url: string }>(res)
+      setImageUrl(d.url)
+    } catch (err) {
+      toast.error(apiMessage(err, 'Tải ảnh thất bại — thử lại'))
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
   const reset = () => {
     setBody('')
     setImageUrl('')
-    setShowImage(false)
     setShowMention(false)
+    setMentionQuery('')
     setMentions([])
   }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     const text = body.trim()
-    if (!text || submitting) return
+    if (!text || submitting || uploading) return
+    // CHỐT lại thẻ: chỉ giữ những mention mà "@Họ Tên" còn trong nội dung (tránh gắn nhầm khi đã xóa chữ).
+    const finalMentions = mentions.filter((m) => text.includes(`@${m.fullName}`)).map((m) => m.id)
     setSubmitting(true)
     try {
       const res = await api.post('/community/posts', {
         body: text,
         kind: 'GENERAL',
-        imageUrl: imageUrl.trim() || undefined,
-        mentions: mentions.length ? mentions : undefined,
+        imageUrl: imageUrl || undefined,
+        mentions: finalMentions.length ? finalMentions : undefined,
       })
       onCreated(unwrap<Post>(res))
       reset()
@@ -395,36 +453,49 @@ function Composer({
         <Avatar name={authorName} url={authorUrl} size={40} />
         <div className="min-w-0 flex-1">
           <textarea
+            ref={taRef}
             value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Chia sẻ với cộng đồng CLB…"
+            onChange={onBodyChange}
+            aria-label="Nội dung bài đăng cộng đồng"
+            placeholder="Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)"
             rows={3}
             className="w-full resize-none rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-3 py-2 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
           />
 
-          {showImage && (
-            <input
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Dán đường dẫn hình ảnh (URL)…"
-              inputMode="url"
-              className="mt-2 w-full rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-3 py-2 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
-            />
+          {/* Thẻ thành viên đã gắn — xác nhận trực quan "đã tag" */}
+          {mentions.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {mentions.map((m) => (
+                <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                  @{m.fullName}
+                  <button type="button" aria-label={`Bỏ thẻ ${m.fullName}`} onClick={() => removeMention(m.id)} className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:[background:var(--pf-primary)] hover:[color:var(--pf-primary-on)]">
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
+            </div>
           )}
-          {showImage && imageUrl.trim() && (
-            <img
-              src={imageUrl.trim()}
-              alt="Xem trước"
-              className="mt-2 max-h-64 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover"
-              onError={(e) => {
-                ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-              }}
-            />
+
+          {/* Ảnh: upload file → hiện ảnh (không dán URL) */}
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+          {uploading && (
+            <div className="mt-2 inline-flex items-center gap-2 text-xs [color:var(--pf-color-muted)]"><Loader2 size={14} className="animate-spin" /> Đang tải ảnh…</div>
+          )}
+          {imageUrl && !uploading && (
+            <div className="relative mt-2 inline-block">
+              <img src={imageUrl} alt="Ảnh đính kèm" className="max-h-64 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover" />
+              <button type="button" aria-label="Gỡ ảnh" onClick={() => setImageUrl('')}
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80">
+                <X size={15} />
+              </button>
+            </div>
           )}
 
           {showMention && (
             <MentionPicker
               members={members}
+              query={mentionQuery}
+              onQueryChange={setMentionQuery}
               onPick={insertMention}
               onClose={() => setShowMention(false)}
             />
@@ -434,10 +505,10 @@ function Composer({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setShowMention((v) => !v)}
-                aria-label="Nhắc tên thành viên"
+                onClick={() => { setShowMention((v) => !v); setMentionQuery('') }}
+                aria-label="Gắn thẻ thành viên"
                 className={[
-                  'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+                  'flex h-11 w-11 items-center justify-center rounded-full transition-colors',
                   showMention
                     ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                     : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
@@ -447,11 +518,12 @@ function Composer({
               </button>
               <button
                 type="button"
-                onClick={() => setShowImage((v) => !v)}
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
                 aria-label="Thêm hình ảnh"
                 className={[
-                  'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
-                  showImage
+                  'flex h-11 w-11 items-center justify-center rounded-full transition-colors disabled:opacity-50',
+                  imageUrl
                     ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
                     : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
                 ].join(' ')}
@@ -462,7 +534,7 @@ function Composer({
             <ActionButton
               type="submit"
               variant="primary"
-              disabled={!body.trim() || submitting}
+              disabled={!body.trim() || submitting || uploading}
               className="min-h-11"
               icon={submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             >
