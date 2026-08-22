@@ -33,6 +33,8 @@ export class MemberScopeGuard implements CanActivate {
     // trong CLB của mình. Service tự scope theo clubId/memberId từ JWT (không tin client);
     // sửa/xóa chỉ nội dung của chính mình, kiểm duyệt do handler check role admin.
     '/community',
+    // Web Push (PWA): member đăng ký/hủy nhận thông báo đẩy trên thiết bị của mình.
+    '/push',
   ];
 
   /** Route chính xác được phép (self-scope; không lộ thông tin member khác). */

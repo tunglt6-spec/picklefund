@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { PushService } from '../push/push.service';
 import {
   HermesEvent,
   HermesChannel,
@@ -18,6 +19,7 @@ export class HermesService {
     private prisma: PrismaService,
     private email: EmailService,
     private config: ConfigService,
+    private push: PushService,
   ) {}
 
   // ─── Main entry point ────────────────────────────────────────────────────────
@@ -78,7 +80,17 @@ export class HermesService {
           // Không throw — tiếp tục channel kế tiếp.
         }
       }
-      if (userDelivered > 0) dispatched++;
+      if (userDelivered > 0) {
+        dispatched++;
+        // Web Push (PWA mobile): gửi 1 lần/người nhận — bao mọi eventType (bài đăng/được tag/hệ thống).
+        const link = (event.metadata as { link?: string } | undefined)?.link;
+        void this.push.sendToUser(userId, {
+          title: event.title,
+          body: event.body,
+          url: typeof link === 'string' ? link : '/member/notifications',
+          tag: event.eventType,
+        });
+      }
     }
 
     this.logger.log(

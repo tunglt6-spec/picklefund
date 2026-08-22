@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap } from 'lucide-react'
 import { PageShell, PageHeader, LoadingState, EmptyState } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
+import { enablePush, syncPushIfGranted, pushPermission } from '../../lib/push'
 
 type HermesNotif = {
   id: string
@@ -52,6 +53,28 @@ export function MemberNotifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const { setUnreadCount: setGlobalUnread, reset: resetGlobal } = useNotifStore()
+  const [pushPerm, setPushPerm] = useState<NotificationPermission | 'unsupported'>('default')
+  const [pushBusy, setPushBusy] = useState(false)
+
+  useEffect(() => {
+    setPushPerm(pushPermission())
+    // Đã cấp quyền → đồng bộ lại subscription để chắc chắn nhận push trên thiết bị này.
+    void syncPushIfGranted()
+  }, [])
+
+  const onEnablePush = async () => {
+    setPushBusy(true)
+    try {
+      const r = await enablePush()
+      if (r === 'ok') { toast.success('Đã bật thông báo trên thiết bị này'); setPushPerm('granted') }
+      else if (r === 'denied') { toast.error('Bạn đã chặn quyền thông báo — hãy bật lại trong cài đặt trình duyệt'); setPushPerm('denied') }
+      else if (r === 'no-key') toast.error('Máy chủ chưa bật thông báo đẩy (thiếu VAPID)')
+      else if (r === 'unsupported') toast.error('Thiết bị/trình duyệt không hỗ trợ thông báo đẩy')
+      else toast.error('Không bật được thông báo — thử lại')
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const fetchNotifs = useCallback(async () => {
     if (!user) return
@@ -145,11 +168,24 @@ export function MemberNotifications() {
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
         actions={
-          unreadCount > 0
-            ? <button onClick={handleReadAll} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]">
+          <div className="flex items-center gap-2">
+            {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
+              <button onClick={onEnablePush} disabled={pushBusy}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60 [background:var(--pf-primary)]">
+                <BellRing size={14} />{pushBusy ? 'Đang bật…' : 'Bật thông báo trên điện thoại'}
+              </button>
+            )}
+            {pushPerm === 'granted' && (
+              <span className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-color-success)]">
+                <BellRing size={14} /> Đã bật thông báo
+              </span>
+            )}
+            {unreadCount > 0 && (
+              <button onClick={handleReadAll} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
-            : undefined
+            )}
+          </div>
         }
       />
 

@@ -5,6 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { HermesService } from './hermes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { PushService } from '../push/push.service';
+
+const mockPush = { sendToUser: jest.fn().mockResolvedValue(undefined) };
 
 const mockPrisma = {
   user: { findMany: jest.fn(), findUnique: jest.fn() },
@@ -65,6 +68,7 @@ describe('HermesService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: EmailService, useValue: mockEmail },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: PushService, useValue: mockPush },
       ],
     }).compile();
     service = module.get<HermesService>(HermesService);

@@ -1477,3 +1477,19 @@ model MatchmakingParticipant {
   @@index([clubId, requestId])
   @@map("matchmaking_participants")
 }
+
+/// Web Push subscription của 1 user (PWA mobile). Dùng gửi thông báo đẩy khi Hermes tạo notification.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  clubId    String?  @map("club_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}

@@ -33,6 +33,8 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: false,
       workbox: {
+        // Nạp handler Web Push (push + notificationclick) vào SW sinh tự động.
+        importScripts: ['/push-sw.js'],
         // Precache JS/CSS/HTML/icon nhỏ; KHÔNG precache ảnh nội dung lớn (aido-media/*) —
         // để runtime-cache (CacheFirst) tải khi cần, tránh phình gói cài PWA.
         globPatterns: ['**/*.{js,css,html,ico,woff2}', 'favicon*.png', 'icons/**'],
