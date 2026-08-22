@@ -1570,6 +1570,35 @@ export default function MemberCommunity() {
     void fetchFeed()
   }, [fetchFeed])
 
+  /* Tự làm mới feed: chèn bài MỚI lên đầu (không phá phân trang/scroll). */
+  const refreshFeedTop = useCallback(async () => {
+    try {
+      const res = await api.get('/community/feed', { params: { limit: 15 } })
+      const data = unwrap<FeedResponse>(res)
+      setPosts((prev) => {
+        const seen = new Set(prev.map((p) => p.id))
+        const fresh = (data.items ?? []).filter((p) => !seen.has(p.id))
+        return fresh.length ? [...fresh, ...prev] : prev
+      })
+    } catch {
+      /* im lặng */
+    }
+  }, [])
+
+  // Poll 30s khi đang ở tab Bảng tin + làm mới khi quay lại app (focus/hiển thị lại).
+  useEffect(() => {
+    if (tab !== 'feed') return
+    const iv = setInterval(() => void refreshFeedTop(), 30_000)
+    const onFocus = () => { if (document.visibilityState === 'visible') void refreshFeedTop() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      clearInterval(iv)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [tab, refreshFeedTop])
+
   /* members (once) */
   useEffect(() => {
     let alive = true
