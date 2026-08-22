@@ -83,7 +83,7 @@ export class HermesService {
       if (userDelivered > 0) {
         dispatched++;
         // Web Push (PWA mobile): gửi 1 lần/người nhận cho MỌI thông báo mới (chỉ trừ quiet-hours/tắt).
-        if (this.shouldPush(priority, pref)) {
+        if (this.shouldPush(event.eventType, priority, pref)) {
           const link = (event.metadata as { link?: string } | undefined)?.link;
           void this.push.sendToUser(userId, {
             title: event.title,
@@ -278,19 +278,32 @@ export class HermesService {
     return hour >= start && hour < end;
   }
 
+  /** Nhóm push (member tự tắt theo nhóm). */
+  private pushCategory(eventType: string): string {
+    if (eventType === 'community_mention' || eventType === 'community_reply') return 'mention';
+    if (eventType === 'community_post' || eventType === 'community_comment' || eventType === 'matchmaking_joined') return 'community';
+    if (eventType.startsWith('payment_') || eventType.startsWith('fund')) return 'finance';
+    if (eventType === 'session_registered' || eventType === 'event_reminder' || eventType.includes('attendance')) return 'session';
+    return 'system';
+  }
+
   /**
-   * Điều tiết Web Push tối thiểu (in-app notification VẪN được ghi đầy đủ):
-   *  - Tôn trọng preference.enabled (nếu user tắt hẳn).
-   *  - Quiet-hours: KHÔNG buzz ban đêm (trừ HIGH — việc gấp).
-   * KHÔNG còn cooldown theo tần suất — mỗi thông báo mới đều đẩy push (theo yêu cầu).
+   * Push THÔNG MINH theo giờ/loại (in-app notification VẪN ghi đủ; chỉ quyết định buzz push):
+   *  - preference.enabled=false → tắt hẳn.
+   *  - Quiet-hours (theo GIỜ user cấu hình) → không buzz ban đêm, trừ HIGH (việc gấp).
+   *  - pushMutedCategories (theo LOẠI) → member tự tắt nhóm không muốn nhận.
    */
   private shouldPush(
+    eventType: string,
     priority: string,
-    pref: { enabled?: boolean; quietHoursStart: number; quietHoursEnd: number } | null,
+    pref: { enabled?: boolean; quietHoursStart: number; quietHoursEnd: number; pushMutedCategories?: string[] } | null,
   ): boolean {
     if (pref && pref.enabled === false) return false;
     const isHigh = priority === 'HIGH';
     if (!isHigh && pref && this.isQuietHours(pref.quietHoursStart, pref.quietHoursEnd)) return false;
+    if (pref?.pushMutedCategories?.length && pref.pushMutedCategories.includes(this.pushCategory(eventType))) {
+      return false;
+    }
     return true;
   }
 
@@ -410,6 +423,7 @@ export class HermesService {
         maxDailyEmail: 1,
         maxDailyTelegram: 5,
         enabled: true,
+        pushMutedCategories: [],
       };
     }
     // Backward-compat: dữ liệu cũ có channels rỗng → suy từ preferredChannel.
@@ -454,6 +468,7 @@ export class HermesService {
       maxDailyEmail?: number;
       maxDailyTelegram?: number;
       enabled?: boolean;
+      pushMutedCategories?: string[];
     },
   ) {
     // Chuẩn hoá channels: whitelist + khử trùng. Nếu client chỉ gửi preferredChannel

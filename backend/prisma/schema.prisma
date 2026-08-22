@@ -537,6 +537,9 @@ model NotificationPreference {
   maxDailyEmail    Int                   @default(1) @map("max_daily_email")
   maxDailyTelegram Int                   @default(5) @map("max_daily_telegram")
   enabled          Boolean               @default(true)
+  // Push thông minh theo LOẠI: member tự tắt push theo nhóm (community/mention/finance/session/system).
+  // In-app notification VẪN ghi đủ; chỉ bỏ buzz push cho nhóm bị tắt. Rỗng = nhận tất cả.
+  pushMutedCategories String[]           @default([]) @map("push_muted_categories")
   createdAt        DateTime              @default(now()) @map("created_at")
   updatedAt        DateTime              @updatedAt @map("updated_at")
 

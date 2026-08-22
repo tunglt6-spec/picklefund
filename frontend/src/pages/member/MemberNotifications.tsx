@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap, Settings } from 'lucide-react'
 import { PageShell, PageHeader, LoadingState, EmptyState } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
 import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
+import { NotificationSettingsModal } from '../../components/member/NotificationSettingsModal'
 
 type HermesNotif = {
   id: string
@@ -55,6 +56,7 @@ export function MemberNotifications() {
   const { setUnreadCount: setGlobalUnread, reset: resetGlobal } = useNotifStore()
   const [pushPerm, setPushPerm] = useState<NotificationPermission | 'unsupported'>('default')
   const [pushBusy, setPushBusy] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     setPushPerm(pushPermission())
@@ -204,9 +206,15 @@ export function MemberNotifications() {
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
             )}
+            <button onClick={() => setSettingsOpen(true)} aria-label="Cài đặt thông báo"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)]">
+              <Settings size={16} />
+            </button>
           </div>
         }
       />
+
+      <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {loading ? (
         <LoadingState />

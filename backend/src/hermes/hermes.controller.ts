@@ -94,8 +94,17 @@ export class HermesController {
       maxDailyEmail?: number;
       maxDailyTelegram?: number;
       enabled?: boolean;
+      pushMutedCategories?: string[];
     },
   ) {
+    const PUSH_CATEGORIES = ['community', 'mention', 'finance', 'session', 'system'];
+    if (body.pushMutedCategories !== undefined) {
+      if (!Array.isArray(body.pushMutedCategories))
+        throw new BadRequestException('pushMutedCategories phải là mảng');
+      const bad = body.pushMutedCategories.filter((c) => !PUSH_CATEGORIES.includes(c));
+      if (bad.length)
+        throw new BadRequestException(`Nhóm không hợp lệ: ${bad.join(', ')}`);
+    }
     const {
       channels,
       preferredChannel,

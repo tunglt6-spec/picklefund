@@ -604,6 +604,10 @@ function PostCard({
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [newComment, setNewComment] = useState('')
   const [addingComment, setAddingComment] = useState(false)
+  const [cmtMentions, setCmtMentions] = useState<MentionMember[]>([])
+  const [showCmtMention, setShowCmtMention] = useState(false)
+  const [cmtMentionQuery, setCmtMentionQuery] = useState('')
+  const cmtInputRef = useRef<HTMLInputElement>(null)
 
   const [editingPost, setEditingPost] = useState(false)
   const [editBody, setEditBody] = useState(post.body)
@@ -676,18 +680,48 @@ function PostCard({
     }
   }
 
+  /* @mention trong ô bình luận: gõ "@" → mở danh sách; chọn để gắn thẻ */
+  const onCmtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setNewComment(val)
+    const pos = e.target.selectionStart ?? val.length
+    const m = val.slice(0, pos).match(/(?:^|\s)@([\p{L}\d._]*)$/u)
+    if (m) { setShowCmtMention(true); setCmtMentionQuery(m[1]) }
+    else setShowCmtMention(false)
+  }
+  const insertCmtMention = (mem: MentionMember) => {
+    const el = cmtInputRef.current
+    const pos = el?.selectionStart ?? newComment.length
+    const pre = newComment.slice(0, pos)
+    const tok = pre.match(/@([\p{L}\d._]*)$/u)
+    const newPre = tok
+      ? pre.slice(0, pre.length - tok[0].length) + `@${mem.fullName} `
+      : (pre && !pre.endsWith(' ') ? pre + ' ' : pre) + `@${mem.fullName} `
+    setNewComment(newPre + newComment.slice(pos))
+    setCmtMentions((p) => (p.some((x) => x.id === mem.id) ? p : [...p, mem]))
+    setShowCmtMention(false)
+    setCmtMentionQuery('')
+    setTimeout(() => el?.focus(), 0)
+  }
+
   /* add comment */
   const submitComment = async (e: FormEvent) => {
     e.preventDefault()
     const text = newComment.trim()
     if (!text || addingComment) return
+    const finalMentions = cmtMentions.filter((m) => text.includes(`@${m.fullName}`)).map((m) => m.id)
     setAddingComment(true)
     try {
-      const res = await api.post(`/community/posts/${post.id}/comments`, { body: text })
+      const res = await api.post(`/community/posts/${post.id}/comments`, {
+        body: text,
+        mentions: finalMentions.length ? finalMentions : undefined,
+      })
       const created = unwrap<Comment>(res)
       setComments((prev) => [...prev, created])
       setCommentsLoaded(true)
       setNewComment('')
+      setCmtMentions([])
+      setShowCmtMention(false)
       onChange({ ...post, commentCount: post.commentCount + 1 })
     } catch (err) {
       toast.error(apiMessage(err, 'Không thể gửi bình luận'))
@@ -973,22 +1007,58 @@ function PostCard({
                 </p>
               )}
 
-              {/* add comment */}
-              <form onSubmit={submitComment} className="flex items-center gap-2 pt-1">
-                <input
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Viết bình luận…"
-                  className="min-h-11 min-w-0 flex-1 rounded-full border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
-                />
-                <button
-                  type="submit"
-                  disabled={!newComment.trim() || addingComment}
-                  aria-label="Gửi bình luận"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition-all active:scale-[0.96] disabled:opacity-50 [background:var(--pf-primary)]"
-                >
-                  {addingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                </button>
+              {/* add comment (có @mention) */}
+              <form onSubmit={submitComment} className="pt-1">
+                {cmtMentions.length > 0 && (
+                  <div className="mb-1.5 flex flex-wrap gap-1.5">
+                    {cmtMentions.map((m) => (
+                      <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                        @{m.fullName}
+                        <button type="button" aria-label={`Bỏ thẻ ${m.fullName}`} onClick={() => setCmtMentions((p) => p.filter((x) => x.id !== m.id))} className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:[background:var(--pf-primary)] hover:[color:var(--pf-primary-on)]">
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {showCmtMention && (
+                  <MentionPicker
+                    members={members}
+                    query={cmtMentionQuery}
+                    onQueryChange={setCmtMentionQuery}
+                    onPick={insertCmtMention}
+                    onClose={() => setShowCmtMention(false)}
+                  />
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowCmtMention((v) => !v); setCmtMentionQuery('') }}
+                    aria-label="Gắn thẻ thành viên"
+                    className={[
+                      'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors',
+                      showCmtMention ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
+                    ].join(' ')}
+                  >
+                    <AtSign size={17} />
+                  </button>
+                  <input
+                    ref={cmtInputRef}
+                    value={newComment}
+                    onChange={onCmtChange}
+                    aria-label="Viết bình luận"
+                    placeholder="Viết bình luận…  (gõ @ để gắn thẻ)"
+                    className="min-h-11 min-w-0 flex-1 rounded-full border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim() || addingComment}
+                    aria-label="Gửi bình luận"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition-all active:scale-[0.96] disabled:opacity-50 [background:var(--pf-primary)]"
+                  >
+                    {addingComment ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  </button>
+                </div>
               </form>
             </div>
           )}
