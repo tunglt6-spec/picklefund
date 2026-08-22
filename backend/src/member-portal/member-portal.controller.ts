@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   IsBoolean,
@@ -138,6 +139,33 @@ export class MemberPortalController {
   @Get('me/payments')
   async myPayments(@CurrentUser() user: RequestUser) {
     return ok(await this.svc.listMyPayments(user.memberId, user.clubId));
+  }
+
+  /** Proxy ảnh QR VietQR (same-origin) — tránh lỗi tải ảnh cross-origin trên PWA/mobile. */
+  @Get('me/payment-qr')
+  async paymentQr(
+    @CurrentUser() user: RequestUser,
+    @Query('amount') amount: string,
+    @Res() res: Response,
+  ) {
+    const url = await this.svc.getPaymentQrUrl(user.memberId, user.clubId, Number(amount) || 0);
+    if (!url) {
+      res.status(404).end();
+      return;
+    }
+    try {
+      const r = await fetch(url);
+      if (!r.ok) {
+        res.status(502).end();
+        return;
+      }
+      const buf = Buffer.from(await r.arrayBuffer());
+      res.setHeader('Content-Type', r.headers.get('content-type') || 'image/png');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      res.send(buf);
+    } catch {
+      res.status(502).end();
+    }
   }
 
   /** Member xác nhận "Tôi đã chuyển khoản" → tạo báo nộp PENDING (idempotent). */

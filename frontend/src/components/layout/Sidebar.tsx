@@ -133,7 +133,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const lisaRoute = LISA_ROUTES[user.role]
 
   return (
-    <aside className="flex h-screen w-60 flex-col [background:var(--pf-surface)]" style={{ borderRight: '1px solid var(--color-border)', boxShadow: '1px 0 0 0 rgba(15,23,42,0.02)' }}>
+    <aside className="flex h-[100dvh] w-60 flex-col [background:var(--pf-surface)]" style={{ borderRight: '1px solid var(--color-border)', boxShadow: '1px 0 0 0 rgba(15,23,42,0.02)' }}>
 
       {/* ── Logo (branding trắng nhãn — EPIC10B) ── */}
       <div className="flex items-center gap-2.5 px-5 py-4" style={{ borderBottom: '1px solid var(--color-border-soft)' }}>

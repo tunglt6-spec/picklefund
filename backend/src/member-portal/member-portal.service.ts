@@ -456,6 +456,29 @@ export class MemberPortalService {
     };
   }
 
+  /**
+   * URL ảnh VietQR để backend proxy (same-origin) — tránh lỗi tải ảnh cross-origin trên PWA/mobile.
+   * Trả null nếu CLB chưa cấu hình NH. amount<=0 → QR động không gắn số tiền.
+   */
+  async getPaymentQrUrl(
+    memberId: string | null,
+    clubId: string,
+    amount: number,
+  ): Promise<string | null> {
+    const member = await this.assertMember(memberId, clubId);
+    const bank = await this.getClubBank(clubId);
+    if (!bank.accountNumber || !bank.accountName) return null;
+    const period = await this.activePeriod(clubId);
+    const memo = asciiMemo(`NOP QUY ${member.fullName} ${period?.name ?? ''}`).slice(0, 50);
+    return buildVietQRUrl({
+      bankCode: bank.bankCode || 'MB',
+      accountNumber: bank.accountNumber,
+      accountName: bank.accountName,
+      amount: Math.max(0, Math.round(amount || 0)),
+      description: memo,
+    });
+  }
+
   /** Lịch sử báo nộp quỹ của CHÍNH member (mọi trạng thái). */
   async listMyPayments(memberId: string | null, clubId: string) {
     const member = await this.assertMember(memberId, clubId);

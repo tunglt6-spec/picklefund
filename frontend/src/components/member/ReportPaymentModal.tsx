@@ -16,17 +16,6 @@ interface PaymentContext {
   pending: { id: string; amount: number; createdAt: string } | null
 }
 
-function buildVietQR(bank: PaymentContext['bank'], amount: number, memo: string): string | null {
-  if (!bank?.bank_account_number || !bank?.bank_account_name) return null
-  const base = `https://img.vietqr.io/image/${bank.bank_code || 'MB'}-${bank.bank_account_number}-compact2.jpg`
-  const qs = new URLSearchParams({
-    amount: String(Math.max(0, Math.round(amount || 0))),
-    addInfo: memo,
-    accountName: bank.bank_account_name,
-  })
-  return `${base}?${qs.toString()}`
-}
-
 async function copy(text: string, label: string) {
   try {
     await navigator.clipboard.writeText(text)
@@ -55,6 +44,7 @@ export function ReportPaymentModal({
   const [note, setNote] = useState('')
   const [proofUrl, setProofUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [qrObj, setQrObj] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -96,7 +86,28 @@ export function ReportPaymentModal({
     }
   }
 
-  const qr = ctx ? buildVietQR(ctx.bank, amount, ctx.memo) ?? ctx.qrImageUrl : null
+  // QR same-origin: tải qua backend proxy (tránh lỗi ảnh cross-origin trên PWA/mobile).
+  // Chỉ hiện khi CLB có cấu hình NH và có số tiền để nộp (>0).
+  useEffect(() => {
+    if (!open || !ctx?.bank || !amount || amount <= 0) {
+      setQrObj('')
+      return
+    }
+    let objUrl = ''
+    let alive = true
+    api
+      .get('/member/me/payment-qr', { params: { amount }, responseType: 'blob' })
+      .then((r) => {
+        if (!alive) return
+        objUrl = URL.createObjectURL(r.data as Blob)
+        setQrObj(objUrl)
+      })
+      .catch(() => alive && setQrObj(''))
+    return () => {
+      alive = false
+      if (objUrl) URL.revokeObjectURL(objUrl)
+    }
+  }, [open, amount, ctx])
 
   return (
     <Modal open={open} onClose={onClose} title="Báo đã nộp quỹ" subtitle={ctx?.period ? `Kỳ ${ctx.period.name}` : 'Chuyển khoản quỹ CLB'} size="md">
@@ -170,11 +181,11 @@ export function ReportPaymentModal({
             </div>
           )}
 
-          {/* QR */}
-          {qr && (
+          {/* QR (same-origin, chỉ hiện khi có số tiền cần nộp) */}
+          {qrObj && (
             <div className="flex flex-col items-center gap-2 rounded-xl border p-3 [border-color:var(--pf-border)]">
               <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]"><QrCode size={14} /> Quét QR để chuyển khoản</div>
-              <img src={qr} alt="QR chuyển khoản" className="h-52 w-52 max-w-full rounded-lg object-contain" />
+              <img src={qrObj} alt="QR chuyển khoản" className="h-52 w-52 max-w-full rounded-lg object-contain" />
             </div>
           )}
 
