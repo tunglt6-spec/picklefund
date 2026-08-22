@@ -35,7 +35,8 @@ function sanitize(s: string): string {
 function safeImageUrl(u: string | null | undefined): string | null {
   const v = (u ?? '').trim();
   if (!v) return null;
-  return /^\/(api\/)?uploads\//.test(v) ? v.slice(0, 1000) : null;
+  // Chấp nhận: ảnh ký mới (/api/community/media/...) + upload cũ (/uploads | /api/uploads).
+  return /^\/(api\/community\/media\/|(api\/)?uploads\/)/.test(v) ? v.slice(0, 1000) : null;
 }
 
 @Injectable()

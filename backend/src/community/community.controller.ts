@@ -3,23 +3,29 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
+  NotFoundException,
   OnModuleInit,
   Param,
   Patch,
   Post,
   Put,
   Query,
+  Req,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CommunityService } from './community.service';
-import { CurrentUser } from '../common/decorators';
+import { CurrentUser, Public } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import {
@@ -31,12 +37,34 @@ import {
   UpdatePostDto,
 } from './community.dto';
 
-const COMMUNITY_UPLOAD_DIR = join(process.cwd(), 'uploads', 'community');
+// F4: ảnh cộng đồng lưu thư mục RIÊNG theo CLB, KHÔNG phục vụ tĩnh — chỉ qua route ký HMAC.
+const MEDIA_ROOT = join(process.cwd(), 'uploads_private', 'community');
+const MEDIA_TTL_MS = 180 * 24 * 3600 * 1000; // link ảnh có hạn 180 ngày
+const MEDIA_SECRET =
+  process.env.MEDIA_SIGNING_SECRET || process.env.JWT_SECRET || 'pf-media-fallback-secret';
+const CLUBID_RE = /^[A-Za-z0-9-]{1,64}$/;
+const FILE_RE = /^[a-f0-9]{16,64}\.(jpg|jpeg|png|webp|gif)$/i;
+
+function mediaSig(clubId: string, file: string, exp: number): string {
+  return createHmac('sha256', MEDIA_SECRET).update(`${clubId}/${file}.${exp}`).digest('hex');
+}
+function signedMediaUrl(clubId: string, file: string): string {
+  const exp = Date.now() + MEDIA_TTL_MS;
+  const s = mediaSig(clubId, file, exp);
+  return `/api/community/media/${clubId}/${file}?e=${exp}&s=${s}`;
+}
+
+// Lưu file vào uploads_private/community/<clubId>/<random>.<ext> (clubId từ JWT).
 const communityImageStorage = diskStorage({
-  destination: COMMUNITY_UPLOAD_DIR,
+  destination: (req: any, _file, cb) => {
+    const clubId = req?.user?.clubId;
+    if (!clubId || !CLUBID_RE.test(clubId)) return cb(new ForbiddenException('Thiếu CLB'), '');
+    const dir = join(MEDIA_ROOT, clubId);
+    mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
   filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `${unique}${extname(file.originalname)}`);
+    cb(null, `${randomBytes(16).toString('hex')}${extname(file.originalname).toLowerCase()}`);
   },
 });
 
@@ -52,10 +80,10 @@ export class CommunityController implements OnModuleInit {
   constructor(private svc: CommunityService) {}
 
   onModuleInit() {
-    if (!existsSync(COMMUNITY_UPLOAD_DIR)) mkdirSync(COMMUNITY_UPLOAD_DIR, { recursive: true });
+    if (!existsSync(MEDIA_ROOT)) mkdirSync(MEDIA_ROOT, { recursive: true });
   }
 
-  /** Upload ảnh cho bài đăng — member được phép (allowlist '/community'). Trả URL tĩnh /uploads. */
+  /** Upload ảnh cho bài đăng — lưu theo CLB (từ JWT), trả URL ĐÃ KÝ (hạn 180 ngày). */
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -70,10 +98,39 @@ export class CommunityController implements OnModuleInit {
       },
     }),
   )
-  uploadImage(@UploadedFile() file?: Express.Multer.File) {
+  uploadImage(@CurrentUser() user: JwtUser, @UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new BadRequestException('Thiếu tệp ảnh');
-    // Trả path qua '/api/uploads' (được nginx proxy về backend) để ảnh hiển thị được.
-    return ok({ url: `/api/uploads/community/${file.filename}` });
+    return ok({ url: signedMediaUrl(user.clubId as string, file.filename) });
+  }
+
+  /**
+   * F4: phục vụ ảnh cộng đồng qua route ký HMAC (không lộ chéo CLB, không phục vụ tĩnh).
+   * @Public vì thẻ <img> không gửi được Bearer — thay bằng chữ ký gắn clubId + hạn dùng.
+   */
+  @Public()
+  @Get('media/:clubId/:file')
+  media(
+    @Param('clubId') clubId: string,
+    @Param('file') file: string,
+    @Query('e') e: string,
+    @Query('s') s: string,
+    @Res() res: Response,
+  ) {
+    if (!CLUBID_RE.test(clubId) || !FILE_RE.test(file)) throw new NotFoundException();
+    const exp = Number(e);
+    if (!exp || Date.now() > exp) throw new ForbiddenException('Link ảnh đã hết hạn');
+    const expected = mediaSig(clubId, file, exp);
+    const got = (s || '').toLowerCase();
+    if (
+      got.length !== expected.length ||
+      !timingSafeEqual(Buffer.from(got), Buffer.from(expected))
+    ) {
+      throw new ForbiddenException('Chữ ký ảnh không hợp lệ');
+    }
+    const path = join(MEDIA_ROOT, clubId, file);
+    if (!existsSync(path)) throw new NotFoundException();
+    res.setHeader('Cache-Control', 'private, max-age=86400');
+    return res.sendFile(path);
   }
 
   private actor(user: JwtUser) {
