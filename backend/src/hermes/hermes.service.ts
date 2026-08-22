@@ -82,8 +82,8 @@ export class HermesService {
       }
       if (userDelivered > 0) {
         dispatched++;
-        // Web Push (PWA mobile): gửi 1 lần/người nhận, CÓ ĐIỀU TIẾT NHỊP (quiet-hours + cooldown).
-        if (await this.shouldPush(userId, event.eventType, priority, pref)) {
+        // Web Push (PWA mobile): gửi 1 lần/người nhận cho MỌI thông báo mới (chỉ trừ quiet-hours/tắt).
+        if (this.shouldPush(priority, pref)) {
           const link = (event.metadata as { link?: string } | undefined)?.link;
           void this.push.sendToUser(userId, {
             title: event.title,
@@ -279,28 +279,18 @@ export class HermesService {
   }
 
   /**
-   * F3 — điều tiết nhịp Web Push (giảm "notification fatigue"). In-app notification VẪN được ghi;
-   * chỉ QUYẾT ĐỊNH có bắn push (buzz điện thoại) hay không:
-   *  - Tôn trọng preference.enabled + quiet-hours (trừ HIGH — vẫn báo việc gấp).
-   *  - Cooldown bài cộng đồng: tối đa 1 push community_post / 30 phút / người (chống buzz dồn dập).
+   * Điều tiết Web Push tối thiểu (in-app notification VẪN được ghi đầy đủ):
+   *  - Tôn trọng preference.enabled (nếu user tắt hẳn).
+   *  - Quiet-hours: KHÔNG buzz ban đêm (trừ HIGH — việc gấp).
+   * KHÔNG còn cooldown theo tần suất — mỗi thông báo mới đều đẩy push (theo yêu cầu).
    */
-  private async shouldPush(
-    userId: string,
-    eventType: string,
+  private shouldPush(
     priority: string,
     pref: { enabled?: boolean; quietHoursStart: number; quietHoursEnd: number } | null,
-  ): Promise<boolean> {
+  ): boolean {
     if (pref && pref.enabled === false) return false;
     const isHigh = priority === 'HIGH';
     if (!isHigh && pref && this.isQuietHours(pref.quietHoursStart, pref.quietHoursEnd)) return false;
-    if (eventType === 'community_post') {
-      const since = new Date(Date.now() - 30 * 60 * 1000);
-      const n = await this.prisma.notification.count({
-        where: { userId, eventType: 'community_post', sentAt: { gte: since } },
-      });
-      // >1 vì bản ghi notification hiện tại đã được tạo trước bước push.
-      if (n > 1) return false;
-    }
     return true;
   }
 
