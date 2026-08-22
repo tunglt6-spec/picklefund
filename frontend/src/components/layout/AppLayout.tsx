@@ -5,6 +5,7 @@ import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { UserGuideModal } from '../help/UserGuideModal'
+import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
 import { useApplyBranding } from '../../hooks/useApplyBranding'
@@ -83,6 +84,8 @@ export function AppLayout() {
                 <ArrowLeft size={16} /> Quay lại AI Operations Center
               </button>
             )}
+            {/* Nhắc member bật thông báo đẩy (Web Push opt-in theo thiết bị). */}
+            <PushEnableBanner />
             {/* Page transition (Elite): keyed theo pathname → replay hiệu ứng vào mỗi lần
                 đổi route. Đổi ?tab= KHÔNG replay (chỉ đổi search) — tránh nháy khi chuyển tab. */}
             <div key={location.pathname} className="pf-page">
