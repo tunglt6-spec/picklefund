@@ -22,6 +22,7 @@ export type HermesEventType =
   | 'community_mention' // Được @mention → Member
   | 'community_reply' // Có phản hồi vào nội dung của mình → Member
   | 'community_post' // Có bài đăng mới trong Cộng đồng CLB → các member khác
+  | 'community_comment' // Có bình luận mới trong Cộng đồng CLB → các member khác
   | 'matchmaking_joined'; // Có người tham gia kèo của mình → Member
 
 export type HermesPriority = 'HIGH' | 'MEDIUM' | 'LOW';
@@ -71,6 +72,7 @@ export const EVENT_PRIORITY: Record<HermesEventType, HermesPriority> = {
   community_mention: 'LOW',
   community_reply: 'LOW',
   community_post: 'LOW',
+  community_comment: 'LOW',
   matchmaking_joined: 'LOW',
 };
 
@@ -97,5 +99,6 @@ export const EVENT_RECIPIENTS: Record<HermesEventType, RecipientRole[]> = {
   community_mention: ['SPECIFIC_USER'],
   community_reply: ['SPECIFIC_USER'],
   community_post: ['SPECIFIC_USER'],
+  community_comment: ['SPECIFIC_USER'],
   matchmaking_joined: ['SPECIFIC_USER'],
 };

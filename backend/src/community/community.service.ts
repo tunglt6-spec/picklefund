@@ -314,6 +314,16 @@ export class CommunityService {
       excludeMemberIds: post.authorMemberId ? [post.authorMemberId] : [],
     });
 
+    // Thông báo cho các member KHÁC có bình luận mới — deep-link về ĐÚNG bài để xem bình luận của bài đó.
+    // Loại: người bình luận + tác giả bài (đã nhận community_reply) + người đã được @mention.
+    const excludeFromBroadcast = [
+      ...(post.authorMemberId ? [post.authorMemberId] : []),
+      ...(dto.mentions ?? []),
+    ];
+    void this.broadcastNewComment(actor, me.fullName, postId, excludeFromBroadcast).catch(
+      () => undefined,
+    );
+
     return {
       id: comment.id,
       body: comment.body,
@@ -473,6 +483,37 @@ export class CommunityService {
           targetUserId: m.userId,
           title: 'Bài đăng mới trong Cộng đồng CLB',
           body: `${authorName} vừa chia sẻ một bài viết mới.`,
+          metadata: { link: `/community?post=${postId}` },
+        })
+        .catch(() => undefined);
+    }
+  }
+
+  /**
+   * Báo bình luận mới cho các member khác — deep-link về ĐÚNG bài (member xem bình luận của bài đó).
+   * Loại: người bình luận + các memberId trong excludeIds (tác giả bài đã nhận community_reply, người đã @mention).
+   */
+  private async broadcastNewComment(
+    actor: Actor,
+    commenterName: string,
+    postId: string,
+    excludeIds: string[],
+  ) {
+    const skip = new Set<string>([actor.memberId ?? '', ...excludeIds]);
+    const members = await this.prisma.member.findMany({
+      where: { clubId: actor.clubId, isDeleted: false, status: 'active', userId: { not: null } },
+      select: { id: true, userId: true },
+      take: 1000,
+    });
+    for (const m of members) {
+      if (!m.userId || skip.has(m.id)) continue;
+      await this.hermes
+        .dispatch({
+          eventType: 'community_comment',
+          clubId: actor.clubId,
+          targetUserId: m.userId,
+          title: 'Bình luận mới trong Cộng đồng CLB',
+          body: `${commenterName} vừa bình luận một bài viết.`,
           metadata: { link: `/community?post=${postId}` },
         })
         .catch(() => undefined);
