@@ -40,6 +40,7 @@ import { Modal } from '../../components/ui/Modal'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
+import { CommunityModeration } from '../admin/CommunityModeration'
 
 /* ────────────────────────────── Types ────────────────────────────── */
 
@@ -116,7 +117,7 @@ interface Match {
   isJoined: boolean
 }
 
-type TabKey = 'feed' | 'matchmaking'
+type TabKey = 'feed' | 'matchmaking' | 'moderation'
 
 /* ────────────────────────────── Constants ────────────────────────────── */
 
@@ -1496,9 +1497,12 @@ function CreateMatchModal({
 
 export default function MemberCommunity() {
   const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.role === 'CLUB_ADMIN' || user?.role === 'SUPER_ADMIN'
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const initialTab: TabKey = searchParams.get('tab') === 'matchmaking' ? 'matchmaking' : 'feed'
+  const tabParam = searchParams.get('tab')
+  const initialTab: TabKey =
+    tabParam === 'matchmaking' ? 'matchmaking' : tabParam === 'moderation' && isAdmin ? 'moderation' : 'feed'
   const [tab, setTab] = useState<TabKey>(initialTab)
   const highlightPostId = searchParams.get('post')
 
@@ -1523,8 +1527,8 @@ export default function MemberCommunity() {
     const next = key as TabKey
     setTab(next)
     const params = new URLSearchParams(searchParams)
-    if (next === 'matchmaking') params.set('tab', 'matchmaking')
-    else params.delete('tab')
+    if (next === 'feed') params.delete('tab')
+    else params.set('tab', next)
     setSearchParams(params, { replace: true })
   }
 
@@ -1630,6 +1634,7 @@ export default function MemberCommunity() {
   const tabs = [
     { key: 'feed', label: 'Bảng tin' },
     { key: 'matchmaking', label: 'Tìm kèo' },
+    ...(isAdmin ? [{ key: 'moderation', label: 'Kiểm duyệt' }] : []),
   ]
 
   return (
@@ -1702,7 +1707,7 @@ export default function MemberCommunity() {
             </>
           )}
         </div>
-      ) : (
+      ) : tab === 'matchmaking' ? (
         <div className="flex flex-col gap-4">
           {matchLoading ? (
             <LoadingState rows={3} />
@@ -1731,7 +1736,9 @@ export default function MemberCommunity() {
             ))
           )}
         </div>
-      )}
+      ) : isAdmin ? (
+        <CommunityModeration embedded />
+      ) : null}
 
       <CreateMatchModal
         open={createOpen}

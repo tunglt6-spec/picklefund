@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users,
   Settings, Building2,
   Bell, ScrollText, Receipt, ListOrdered,
-  Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu, MessageSquare, BadgeCheck, ShieldCheck,
+  Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu, MessageSquare, BadgeCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
@@ -42,8 +42,7 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Tài chính',     icon: <Wallet size={18} />,       to: '/tai-chinh',   desc: 'Quỹ · Thu · Chi · Công nợ · Báo cáo' },
   { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong',   desc: 'Lịch · Đăng ký · Check-in · Điểm danh' },
   { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
-  { label: 'Cộng đồng CLB', icon: <MessageSquare size={18} />, to: '/community',   desc: 'Bảng tin · Tương tác · Tìm kèo' },
-  { label: 'Kiểm duyệt ND', icon: <ShieldCheck size={18} />,  to: '/community-moderation', desc: 'Duyệt báo cáo nội dung cộng đồng' },
+  { label: 'Cộng đồng CLB', icon: <MessageSquare size={18} />, to: '/community',   desc: 'Bảng tin · Tương tác · Kiểm duyệt · Tìm kèo' },
   { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 

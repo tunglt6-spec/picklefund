@@ -66,7 +66,7 @@ const TABS: TabItem[] = [
   { key: 'DISMISSED', label: 'Đã bỏ qua' },
 ]
 
-export function CommunityModeration() {
+export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
   const [tab, setTab] = useState<ReportStatus>('OPEN')
   const [rows, setRows] = useState<Report[]>([])
@@ -118,9 +118,11 @@ export function CommunityModeration() {
     await patchReport(r, 'resolve', true)
   }
 
-  return (
-    <PageShell maxWidth={1100}>
-      <PageHeader title="Kiểm Duyệt Nội Dung" subtitle="Duyệt các báo cáo nội dung cộng đồng" />
+  const body = (
+    <>
+      {!embedded && (
+        <PageHeader title="Kiểm Duyệt Nội Dung" subtitle="Duyệt các báo cáo nội dung cộng đồng" />
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <MetricCard
@@ -255,8 +257,10 @@ export function CommunityModeration() {
         onConfirm={onConfirmDelete}
         onCancel={() => setConfirmDelete(null)}
       />
-    </PageShell>
+    </>
   )
+
+  return embedded ? body : <PageShell maxWidth={1100}>{body}</PageShell>
 }
 
 export default CommunityModeration

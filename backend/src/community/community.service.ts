@@ -748,7 +748,7 @@ export class CommunityService {
         clubId: actor.clubId,
         title: 'Có báo cáo nội dung cộng đồng',
         body: `${me.fullName} đã báo cáo một ${dto.targetType === 'POST' ? 'bài viết' : 'bình luận'}.`,
-        metadata: { link: '/community-moderation' },
+        metadata: { link: '/community?tab=moderation' },
       })
       .catch(() => undefined);
     return { ok: true, duplicate: false };
