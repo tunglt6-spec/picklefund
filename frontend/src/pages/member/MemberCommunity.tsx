@@ -366,10 +366,19 @@ function Composer({
   const taRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Tự giãn chiều cao theo nội dung (kiểu Facebook), tối đa ~360px rồi cuộn.
+  const growTa = () => {
+    const el = taRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 360)}px`
+  }
+
   // Gõ "@..." trong ô nhập → tự mở danh sách thành viên (lọc theo chữ đã gõ).
   const onBodyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
     setBody(val)
+    growTa()
     const pos = e.target.selectionStart ?? val.length
     const m = val.slice(0, pos).match(/(?:^|\s)@([\p{L}\d._]*)$/u)
     if (m) {
@@ -397,6 +406,7 @@ function Composer({
     setTimeout(() => {
       ta?.focus()
       ta?.setSelectionRange(newPre.length, newPre.length)
+      growTa()
     }, 0)
   }
 
@@ -426,6 +436,7 @@ function Composer({
     setShowMention(false)
     setMentionQuery('')
     setMentions([])
+    if (taRef.current) taRef.current.style.height = ''
   }
 
   const submit = async (e: FormEvent) => {
@@ -466,8 +477,8 @@ function Composer({
             onChange={onBodyChange}
             aria-label="Nội dung bài đăng cộng đồng"
             placeholder="Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)"
-            rows={3}
-            className="w-full resize-none rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-3 py-2 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
+            rows={4}
+            className="min-h-[112px] w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-[15px] leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
           />
 
           {/* Thẻ thành viên đã gắn — xác nhận trực quan "đã tag" */}
