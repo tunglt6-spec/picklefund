@@ -133,6 +133,7 @@ const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'Member
 const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
 const MemberCommunity = lz(() => import('./pages/member/MemberCommunity'), 'default')
 const PaymentApprovals = lz(() => import('./pages/admin/PaymentApprovals'), 'PaymentApprovals')
+const CommunityModeration = lz(() => import('./pages/admin/CommunityModeration'), 'CommunityModeration')
 
 // Member modules gom (UI Consolidation v2.1) — view-only, tái dùng màn đã có làm tab.
 const MemberPersonalModule = lz(() => import('./pages/member/modules/MemberPersonalModule'), 'MemberPersonalModule')
@@ -323,6 +324,10 @@ export default function App() {
             {/* Xác nhận nộp quỹ (Báo đã nộp quỹ) — chỉ staff tài chính. */}
             <Route element={<RoleRoute allow={STAFF_ROLES} />}>
             <Route path="/payments" element={<PaymentApprovals />} />
+            </Route>
+            {/* Kiểm duyệt nội dung cộng đồng — chỉ admin. */}
+            <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>
+            <Route path="/community-moderation" element={<CommunityModeration />} />
             </Route>
             {/* AI Manager (Epic 4) — chỉ SUPER_ADMIN / CLUB_ADMIN */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN']} />}>

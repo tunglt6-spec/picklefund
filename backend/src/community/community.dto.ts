@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsIn,
@@ -93,6 +94,29 @@ export class ReactionDto {
   @IsOptional()
   @IsIn(EMOJIS)
   emoji?: Emoji | null;
+}
+
+export class ReportDto {
+  @IsIn(['POST', 'COMMENT'])
+  targetType!: ReactionTarget;
+
+  @IsString()
+  @MaxLength(64)
+  targetId!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
+}
+
+export class ResolveReportDto {
+  @IsIn(['resolve', 'dismiss'])
+  action!: 'resolve' | 'dismiss';
+
+  @IsOptional()
+  @IsBoolean()
+  deleteContent?: boolean;
 }
 
 export class CreateMatchmakingDto {

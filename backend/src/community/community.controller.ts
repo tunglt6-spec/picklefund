@@ -25,7 +25,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CommunityService } from './community.service';
-import { CurrentUser, Public } from '../common/decorators';
+import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import {
@@ -33,6 +33,8 @@ import {
   CreateMatchmakingDto,
   CreatePostDto,
   ReactionDto,
+  ReportDto,
+  ResolveReportDto,
   UpdateCommentDto,
   UpdatePostDto,
 } from './community.dto';
@@ -52,6 +54,36 @@ function signedMediaUrl(clubId: string, file: string): string {
   const exp = Date.now() + MEDIA_TTL_MS;
   const s = mediaSig(clubId, file, exp);
   return `/api/community/media/${clubId}/${file}?e=${exp}&s=${s}`;
+}
+
+// Cookie phiên xem ảnh: chứng minh trình duyệt ĐÃ đăng nhập là member của clubId (authz đầy đủ).
+const MEDIA_COOKIE = 'pf_media';
+const MEDIA_COOKIE_TTL_MS = 7 * 24 * 3600 * 1000;
+function mediaCookieSig(clubId: string, exp: number): string {
+  return createHmac('sha256', MEDIA_SECRET).update(`cookie.${clubId}.${exp}`).digest('hex');
+}
+function buildMediaCookie(clubId: string): string {
+  const exp = Date.now() + MEDIA_COOKIE_TTL_MS;
+  return `${clubId}.${exp}.${mediaCookieSig(clubId, exp)}`;
+}
+/** Đọc cookie clubId hợp lệ từ header (parse thủ công, không cần cookie-parser). */
+function readMediaCookieClub(req: Request): string | null {
+  const raw = req.headers?.cookie;
+  if (!raw) return null;
+  const m = raw.split(';').map((s) => s.trim()).find((s) => s.startsWith(`${MEDIA_COOKIE}=`));
+  if (!m) return null;
+  const val = decodeURIComponent(m.slice(MEDIA_COOKIE.length + 1));
+  const [clubId, expStr, sig] = val.split('.');
+  const exp = Number(expStr);
+  if (!clubId || !exp || Date.now() > exp) return null;
+  const expected = mediaCookieSig(clubId, exp);
+  if (!sig || sig.length !== expected.length) return null;
+  try {
+    if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  } catch {
+    return null;
+  }
+  return clubId;
 }
 
 // Lưu file vào uploads_private/community/<clubId>/<random>.<ext> (clubId từ JWT).
@@ -103,9 +135,25 @@ export class CommunityController implements OnModuleInit {
     return ok({ url: signedMediaUrl(user.clubId as string, file.filename) });
   }
 
+  /** Đặt cookie phiên xem ảnh (authz đầy đủ): chứng minh trình duyệt đăng nhập là member của clubId. */
+  @Post('media-session')
+  mediaSession(@CurrentUser() user: JwtUser, @Res() res: Response) {
+    const clubId = user.clubId as string;
+    if (!clubId) return res.status(400).json({ success: false, message: 'Thiếu CLB' });
+    res.cookie(MEDIA_COOKIE, buildMediaCookie(clubId), {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/api/community/media',
+      maxAge: MEDIA_COOKIE_TTL_MS,
+    });
+    return res.json({ success: true, data: { ok: true } });
+  }
+
   /**
-   * F4: phục vụ ảnh cộng đồng qua route ký HMAC (không lộ chéo CLB, không phục vụ tĩnh).
-   * @Public vì thẻ <img> không gửi được Bearer — thay bằng chữ ký gắn clubId + hạn dùng.
+   * F4 + authz đầy đủ: phục vụ ảnh cộng đồng qua route ký HMAC + XÁC THỰC cookie phiên.
+   * @Public (thẻ <img> không gửi Bearer) nhưng bắt buộc: (1) cookie pf_media hợp lệ đúng CLB
+   * (đã đăng nhập là member của CLB), (2) chữ ký URL gắn clubId + hạn dùng. Cả hai cùng đúng mới phục vụ.
    */
   @Public()
   @Get('media/:clubId/:file')
@@ -114,9 +162,16 @@ export class CommunityController implements OnModuleInit {
     @Param('file') file: string,
     @Query('e') e: string,
     @Query('s') s: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     if (!CLUBID_RE.test(clubId) || !FILE_RE.test(file)) throw new NotFoundException();
+    // (1) Authz cookie: người xem phải đã đăng nhập là member của ĐÚNG clubId này.
+    const cookieClub = readMediaCookieClub(req);
+    if (cookieClub !== clubId) {
+      throw new ForbiddenException('Cần đăng nhập đúng CLB để xem ảnh');
+    }
+    // (2) Chữ ký URL (chống đoán/sửa path).
     const exp = Number(e);
     if (!exp || Date.now() > exp) throw new ForbiddenException('Link ảnh đã hết hạn');
     const expected = mediaSig(clubId, file, exp);
@@ -216,6 +271,34 @@ export class CommunityController implements OnModuleInit {
   @Put('reactions')
   async react(@CurrentUser() user: JwtUser, @Body() body: ReactionDto) {
     return ok(await this.svc.setReaction(this.actor(user), body));
+  }
+
+  // ── Quản trị nội dung (report + duyệt) ──
+  /** Member báo cáo (flag) bài/bình luận. */
+  @Post('report')
+  async report(@CurrentUser() user: JwtUser, @Body() body: ReportDto) {
+    return ok(await this.svc.reportContent(this.actor(user), body), 'Đã gửi báo cáo');
+  }
+
+  /** Admin: danh sách báo cáo (queue duyệt). */
+  @Get('reports')
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async reports(@CurrentUser() user: JwtUser, @Query('status') status?: string) {
+    return ok(await this.svc.listReports(this.actor(user), status || 'OPEN'));
+  }
+
+  /** Admin: xử lý báo cáo (resolve + tùy chọn xóa nội dung, hoặc dismiss). */
+  @Patch('reports/:id')
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async resolveReport(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() body: ResolveReportDto,
+  ) {
+    return ok(
+      await this.svc.resolveReport(this.actor(user), id, body.action, body.deleteContent ?? false),
+      'Đã xử lý báo cáo',
+    );
   }
 
   // ── Members (mention picker) ──

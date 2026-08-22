@@ -1481,6 +1481,24 @@ model MatchmakingParticipant {
   @@map("matchmaking_participants")
 }
 
+/// Báo cáo nội dung cộng đồng (member flag bài/bình luận) → admin duyệt. Quản trị nội dung nâng cao.
+model CommunityReport {
+  id               String    @id @default(uuid())
+  clubId           String    @map("club_id")
+  targetType       String    @map("target_type") // POST | COMMENT
+  targetId         String    @map("target_id")
+  reporterMemberId String    @map("reporter_member_id")
+  reason           String?
+  status           String    @default("OPEN") // OPEN | RESOLVED | DISMISSED
+  resolvedById     String?   @map("resolved_by_id")
+  resolvedAt       DateTime? @map("resolved_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@unique([targetType, targetId, reporterMemberId])
+  @@index([clubId, status])
+  @@map("community_reports")
+}
+
 /// Web Push subscription của 1 user (PWA mobile). Dùng gửi thông báo đẩy khi Hermes tạo notification.
 model PushSubscription {
   id        String   @id @default(uuid())

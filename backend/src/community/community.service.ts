@@ -705,4 +705,147 @@ export class CommunityService {
     }
     return { id: requestId, status: 'CLOSED' };
   }
+
+  // ─── Quản trị nội dung nâng cao (report/moderation) ──────────────────────────
+
+  /** Member báo cáo (flag) 1 bài/bình luận. Idempotent (1 report/người/nội dung). Notify admin. */
+  async reportContent(
+    actor: Actor,
+    dto: { targetType: ReactionTarget; targetId: string; reason?: string },
+  ) {
+    const me = await this.requireMember(actor);
+    // Xác thực nội dung thuộc CLB.
+    if (dto.targetType === 'POST') {
+      const p = await this.prisma.communityPost.findFirst({
+        where: { id: dto.targetId, clubId: actor.clubId, isDeleted: false },
+        select: { id: true },
+      });
+      if (!p) throw new NotFoundException('Không tìm thấy bài viết.');
+    } else {
+      const c = await this.prisma.communityComment.findFirst({
+        where: { id: dto.targetId, clubId: actor.clubId, isDeleted: false },
+        select: { id: true },
+      });
+      if (!c) throw new NotFoundException('Không tìm thấy bình luận.');
+    }
+    try {
+      await this.prisma.communityReport.create({
+        data: {
+          clubId: actor.clubId,
+          targetType: dto.targetType,
+          targetId: dto.targetId,
+          reporterMemberId: me.id,
+          reason: dto.reason ? sanitize(dto.reason).slice(0, 300) : null,
+        },
+      });
+    } catch (e: any) {
+      if (e?.code === 'P2002') return { ok: true, duplicate: true }; // đã báo cáo trước đó
+      throw e;
+    }
+    await this.hermes
+      .dispatch({
+        eventType: 'community_report',
+        clubId: actor.clubId,
+        title: 'Có báo cáo nội dung cộng đồng',
+        body: `${me.fullName} đã báo cáo một ${dto.targetType === 'POST' ? 'bài viết' : 'bình luận'}.`,
+        metadata: { link: '/community-moderation' },
+      })
+      .catch(() => undefined);
+    return { ok: true, duplicate: false };
+  }
+
+  /** Admin: danh sách báo cáo (kèm preview nội dung). */
+  async listReports(actor: Actor, status = 'OPEN') {
+    const rows = await this.prisma.communityReport.findMany({
+      where: { clubId: actor.clubId, status },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    // Preview nội dung + người báo cáo.
+    const reporterIds = [...new Set(rows.map((r) => r.reporterMemberId))];
+    const reporters = await this.prisma.member.findMany({
+      where: { id: { in: reporterIds } },
+      select: { id: true, fullName: true },
+    });
+    const rmap = new Map(reporters.map((m) => [m.id, m.fullName]));
+    const out: Array<Record<string, unknown>> = [];
+    for (const r of rows) {
+      let preview = '';
+      let author = '';
+      let deleted = false;
+      if (r.targetType === 'POST') {
+        const p = await this.prisma.communityPost.findFirst({
+          where: { id: r.targetId },
+          include: { author: { select: { fullName: true } } },
+        });
+        preview = p?.body ?? '';
+        author = p?.author?.fullName ?? '';
+        deleted = !p || p.isDeleted;
+      } else {
+        const c = await this.prisma.communityComment.findFirst({
+          where: { id: r.targetId },
+          include: { author: { select: { fullName: true } }, post: { select: { id: true } } },
+        });
+        preview = c?.body ?? '';
+        author = c?.author?.fullName ?? '';
+        deleted = !c || c.isDeleted;
+      }
+      out.push({
+        id: r.id,
+        targetType: r.targetType,
+        targetId: r.targetId,
+        reason: r.reason,
+        status: r.status,
+        createdAt: r.createdAt,
+        reporter: rmap.get(r.reporterMemberId) ?? '',
+        preview: preview.slice(0, 200),
+        contentAuthor: author,
+        contentDeleted: deleted,
+      });
+    }
+    return out;
+  }
+
+  /** Admin: xử lý báo cáo — 'resolve' (tùy chọn xóa nội dung) hoặc 'dismiss' (bỏ qua). */
+  async resolveReport(
+    actor: Actor,
+    reportId: string,
+    action: 'resolve' | 'dismiss',
+    deleteContent = false,
+  ) {
+    const r = await this.prisma.communityReport.findFirst({
+      where: { id: reportId, clubId: actor.clubId },
+    });
+    if (!r) throw new NotFoundException('Không tìm thấy báo cáo.');
+    if (action === 'resolve' && deleteContent) {
+      if (r.targetType === 'POST') {
+        await this.prisma.communityPost.updateMany({
+          where: { id: r.targetId, clubId: actor.clubId },
+          data: { isDeleted: true },
+        });
+      } else {
+        await this.prisma.communityComment.updateMany({
+          where: { id: r.targetId, clubId: actor.clubId },
+          data: { isDeleted: true },
+        });
+      }
+      void this.audit.log({
+        userId: actor.userId,
+        clubId: actor.clubId,
+        action: 'MODERATE_DELETE',
+        resource: r.targetType === 'POST' ? 'CommunityPost' : 'CommunityComment',
+        resourceId: r.targetId,
+        detail: `Xóa nội dung do báo cáo (report ${reportId})`,
+      });
+    }
+    await this.prisma.communityReport.update({
+      where: { id: reportId },
+      data: {
+        status: action === 'resolve' ? 'RESOLVED' : 'DISMISSED',
+        resolvedById: actor.userId,
+        resolvedAt: new Date(),
+      },
+    });
+    return { id: reportId, status: action === 'resolve' ? 'RESOLVED' : 'DISMISSED' };
+  }
 }

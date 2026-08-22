@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   Pencil,
+  Flag,
   Clock,
   CalendarDays,
   Users,
@@ -613,6 +614,18 @@ function PostCard({
   const [editBody, setEditBody] = useState(post.body)
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
+  const [confirmReport, setConfirmReport] = useState(false)
+
+  const reportPost = async () => {
+    setConfirmReport(false)
+    try {
+      const res = await api.post('/community/report', { targetType: 'POST', targetId: post.id })
+      const r = unwrap<{ duplicate?: boolean }>(res)
+      toast.success(r?.duplicate ? 'Bạn đã báo cáo bài này trước đó' : 'Đã gửi báo cáo cho quản trị viên')
+    } catch (err) {
+      toast.error(apiMessage(err, 'Không gửi được báo cáo'))
+    }
+  }
 
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editCommentBody, setEditCommentBody] = useState('')
@@ -815,7 +828,7 @@ function PostCard({
             {edited ? ' · đã sửa' : ''}
           </p>
         </div>
-        {(post.canEdit || post.canDelete) && !editingPost && (
+        {!editingPost && (
           <div className="flex shrink-0 items-center gap-1">
             {post.canEdit && (
               <button
@@ -838,6 +851,18 @@ function PostCard({
                 className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
               >
                 <Trash2 size={15} />
+              </button>
+            )}
+            {/* Báo cáo — chỉ với bài của người khác (không phải chủ/không phải admin). */}
+            {!post.canDelete && (
+              <button
+                type="button"
+                aria-label="Báo cáo bài viết"
+                title="Báo cáo cho quản trị viên"
+                onClick={() => setConfirmReport(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)]"
+              >
+                <Flag size={15} />
               </button>
             )}
           </div>
@@ -1071,6 +1096,15 @@ function PostCard({
         message="Bài viết và toàn bộ bình luận sẽ bị xoá vĩnh viễn."
         onConfirm={doDelete}
         onCancel={() => setConfirmDel(false)}
+      />
+      <ConfirmDialog
+        open={confirmReport}
+        variant="warning"
+        title="Báo cáo nội dung này?"
+        message="Quản trị viên sẽ nhận báo cáo và xem xét nội dung này."
+        confirmLabel="Báo cáo"
+        onConfirm={reportPost}
+        onCancel={() => setConfirmReport(false)}
       />
       <ConfirmDialog
         open={confirmDelComment !== null}
