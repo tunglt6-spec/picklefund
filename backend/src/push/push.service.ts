@@ -73,9 +73,12 @@ export class PushService implements OnModuleInit {
     return { ok: true };
   }
 
-  async removeSubscription(endpoint: string) {
+  async removeSubscription(endpoint: string, userId?: string) {
     if (!endpoint) return { ok: false };
-    await this.prisma.pushSubscription.deleteMany({ where: { endpoint } });
+    // Scope theo userId nếu có (chỉ hủy sub của chính mình).
+    await this.prisma.pushSubscription.deleteMany({
+      where: userId ? { endpoint, userId } : { endpoint },
+    });
     return { ok: true };
   }
 

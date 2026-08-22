@@ -20,19 +20,19 @@ type HermesNotif = {
 }
 
 function eventIcon(eventType: string) {
-  if (eventType.includes('payment') || eventType.includes('fund')) return <DollarSign size={14} className="text-emerald-500" />
+  if (eventType.includes('payment') || eventType.includes('fund')) return <DollarSign size={14} className="[color:var(--pf-color-success)]" />
   if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={14} className="[color:var(--pf-primary)]" />
   if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={14} className="[color:var(--pf-primary)]" />
-  if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={14} className="text-amber-500" />
+  if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={14} className="[color:var(--pf-color-warning)]" />
   if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={14} className="[color:var(--pf-primary)]" />
   return <Zap size={14} className="[color:var(--pf-color-muted)]" />
 }
 
 function eventBg(eventType: string) {
-  if (eventType.includes('payment') || eventType.includes('fund')) return 'bg-emerald-50'
+  if (eventType.includes('payment') || eventType.includes('fund')) return '[background:var(--pf-color-success-soft)]'
   if (eventType.includes('session') || eventType.includes('event')) return '[background:var(--pf-primary-soft)]'
   if (eventType.includes('member') || eventType.includes('inactivity')) return '[background:var(--pf-primary-soft)]'
-  if (eventType.includes('anomaly') || eventType.includes('health')) return 'bg-amber-50'
+  if (eventType.includes('anomaly') || eventType.includes('health')) return '[background:var(--pf-color-warning-soft)]'
   return '[background:var(--pf-color-muted-soft)]'
 }
 

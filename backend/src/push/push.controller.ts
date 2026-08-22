@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { IsObject, IsString, MaxLength } from 'class-validator';
+import { IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PushService } from './push.service';
 import { CurrentUser } from '../common/decorators';
@@ -10,6 +10,9 @@ import { ok } from '../common/response';
 class SubscribeDto {
   @IsString() @MaxLength(1000) endpoint!: string;
   @IsObject() keys!: { p256dh: string; auth: string };
+  // Push API sub.toJSON() luôn kèm expirationTime (thường null) — cho phép để không bị
+  // forbidNonWhitelisted ném 400 (nếu không, subscribe luôn thất bại → push chết).
+  @IsOptional() expirationTime?: number | null;
 }
 class UnsubscribeDto {
   @IsString() @MaxLength(1000) endpoint!: string;
@@ -48,7 +51,8 @@ export class PushController {
   }
 
   @Post('unsubscribe')
-  async unsubscribe(@Body() body: UnsubscribeDto) {
-    return ok(await this.svc.removeSubscription(body.endpoint));
+  async unsubscribe(@CurrentUser() user: JwtUser, @Body() body: UnsubscribeDto) {
+    // Chỉ cho hủy subscription CỦA CHÍNH mình (chống hủy nhầm thiết bị người khác).
+    return ok(await this.svc.removeSubscription(body.endpoint, user.userId));
   }
 }

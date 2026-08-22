@@ -152,11 +152,12 @@ describe('CommunityService', () => {
     it('chỉ mention member CÙNG CLB (validate DB), gửi thông báo', async () => {
       prisma.member.findFirst.mockResolvedValue(MEMBER);
       prisma.communityPost.create.mockResolvedValue({
-        id: 'p1', kind: 'GENERAL', body: 'hi', imageUrl: null, sessionId: null,
+        id: 'p1', kind: 'GENERAL', body: 'chao @Bao', imageUrl: null, sessionId: null,
         minigameId: null, author: MEMBER, createdAt: new Date(), updatedAt: new Date(),
       });
-      prisma.member.findMany.mockResolvedValue([{ userId: 'user-2' }]);
-      await service.createPost(ACTOR, { body: 'hi', mentions: ['mem-2'] });
+      // F7: notifyMentions chỉ báo khi "@Họ Tên" có trong body → body chứa @Bao + fullName='Bao'.
+      prisma.member.findMany.mockResolvedValue([{ userId: 'user-2', fullName: 'Bao' }]);
+      await service.createPost(ACTOR, { body: 'chao @Bao', mentions: ['mem-2'] });
       // validate mention theo clubId của actor
       expect(prisma.member.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ clubId: 'club-1', isDeleted: false }) }),

@@ -31,6 +31,13 @@ function sanitize(s: string): string {
   return (s ?? "").replace(/<[^>]*>/g, "").trim();
 }
 
+/** Chỉ chấp nhận ảnh đã upload nội bộ (/uploads/ | /api/uploads/) — chặn URL ngoài (beacon/tracking). */
+function safeImageUrl(u: string | null | undefined): string | null {
+  const v = (u ?? '').trim();
+  if (!v) return null;
+  return /^\/(api\/)?uploads\//.test(v) ? v.slice(0, 1000) : null;
+}
+
 @Injectable()
 export class CommunityService {
   constructor(
@@ -161,7 +168,7 @@ export class CommunityService {
         authorMemberId: me.id,
         kind: (dto.kind ?? 'GENERAL') as any,
         body,
-        imageUrl: dto.imageUrl?.trim() || null,
+        imageUrl: safeImageUrl(dto.imageUrl),
         sessionId: dto.sessionId || null,
         minigameId: dto.minigameId || null,
       },
@@ -171,10 +178,11 @@ export class CommunityService {
     await this.notifyMentions(actor, me.fullName, dto.mentions, {
       link: `/community?post=${post.id}`,
       context: 'bài viết',
+      body,
     });
 
-    // Thông báo cho các member KHÁC trong CLB có bài đăng mới (trừ tác giả + người đã được @mention).
-    await this.broadcastNewPost(actor, me.fullName, post.id, dto.mentions ?? []);
+    // Thông báo bài mới cho các member KHÁC — CHẠY NỀN (không chặn/không kéo dài request đăng bài).
+    void this.broadcastNewPost(actor, me.fullName, post.id, dto.mentions ?? []).catch(() => undefined);
 
     return {
       id: post.id,
@@ -204,7 +212,7 @@ export class CommunityService {
     if (!body) throw new BadRequestException('Nội dung không được để trống.');
     return this.prisma.communityPost.update({
       where: { id: postId },
-      data: { body, imageUrl: dto.imageUrl?.trim() ?? post.imageUrl },
+      data: { body, imageUrl: dto.imageUrl !== undefined ? safeImageUrl(dto.imageUrl) : post.imageUrl },
       select: { id: true, body: true, imageUrl: true, updatedAt: true },
     });
   }
@@ -300,6 +308,7 @@ export class CommunityService {
     await this.notifyMentions(actor, me.fullName, dto.mentions, {
       link: `/community?post=${postId}`,
       context: 'bình luận',
+      body,
       // Tránh gửi trùng: tác giả bài đã nhận 'community_reply' ở trên.
       excludeMemberIds: post.authorMemberId ? [post.authorMemberId] : [],
     });
@@ -413,7 +422,7 @@ export class CommunityService {
     actor: Actor,
     actorName: string,
     mentionIds: string[] | undefined,
-    opts: { link: string; context: string; excludeMemberIds?: string[] },
+    opts: { link: string; context: string; excludeMemberIds?: string[]; body?: string },
   ) {
     if (!mentionIds?.length) return;
     const skip = new Set([actor.memberId, ...(opts.excludeMemberIds ?? [])]);
@@ -422,10 +431,12 @@ export class CommunityService {
     // CHỈ mention member cùng CLB (validate với DB) — không cho mention CLB khác.
     const members = await this.prisma.member.findMany({
       where: { id: { in: unique }, clubId: actor.clubId, isDeleted: false },
-      select: { userId: true },
+      select: { userId: true, fullName: true },
     });
     for (const m of members) {
       if (!m.userId) continue;
+      // Chống spam "được nhắc tên": chỉ báo khi "@Họ Tên" thực sự có trong nội dung (nếu có body).
+      if (opts.body && !opts.body.includes(`@${m.fullName}`)) continue;
       await this.hermes
         .dispatch({
           eventType: 'community_mention',

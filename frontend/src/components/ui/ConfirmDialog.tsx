@@ -65,10 +65,10 @@ export function ConfirmDialog({
 
         {/* Footer */}
         <div className="flex gap-3 px-6 pb-6">
-          <Button ref={cancelRef} variant="outline" className="flex-1" onClick={onCancel}>{cancelLabel}</Button>
+          <Button ref={cancelRef} variant="outline" className="flex-1 min-h-11" onClick={onCancel}>{cancelLabel}</Button>
           <button
             onClick={onConfirm}
-            className={`flex-1 h-9 px-4 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors ${btnClass}`}
+            className={`flex-1 min-h-11 px-4 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors ${btnClass}`}
           >
             <X size={14} />{confirmLabel}
           </button>

@@ -130,10 +130,10 @@ export function PaymentApprovals() {
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <ActionButton variant="primary" onClick={() => confirm(p.id)} disabled={busyId === p.id}>
+                <ActionButton variant="primary" className="min-h-11" onClick={() => confirm(p.id)} disabled={busyId === p.id}>
                   <CheckCircle2 size={15} /> Xác nhận đã nhận
                 </ActionButton>
-                <ActionButton variant="secondary" onClick={() => { setRecheck(p); setRecheckNote('') }} disabled={busyId === p.id}>
+                <ActionButton variant="secondary" className="min-h-11" onClick={() => { setRecheck(p); setRecheckNote('') }} disabled={busyId === p.id}>
                   <RotateCcw size={15} /> Yêu cầu kiểm tra lại
                 </ActionButton>
               </div>
@@ -150,8 +150,8 @@ export function PaymentApprovals() {
         size="sm"
         footer={
           <div className="flex justify-end gap-2">
-            <ActionButton variant="ghost" onClick={() => setRecheck(null)}>Hủy</ActionButton>
-            <ActionButton variant="primary" onClick={doRecheck} disabled={busyId === recheck?.id}>Gửi yêu cầu</ActionButton>
+            <ActionButton variant="ghost" className="min-h-11" onClick={() => setRecheck(null)}>Hủy</ActionButton>
+            <ActionButton variant="primary" className="min-h-11" onClick={doRecheck} disabled={busyId === recheck?.id}>Gửi yêu cầu</ActionButton>
           </div>
         }
       >

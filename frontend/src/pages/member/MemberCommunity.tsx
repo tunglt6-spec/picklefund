@@ -491,7 +491,7 @@ function Composer({
             <div className="relative mt-2 inline-block">
               <img src={mediaUrl(imageUrl)} alt="Ảnh đính kèm" className="max-h-64 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover" />
               <button type="button" aria-label="Gỡ ảnh" onClick={() => setImageUrl('')}
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80">
+                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80">
                 <X size={15} />
               </button>
             </div>
