@@ -43,7 +43,6 @@ const clubAdminBaseNav: NavItem[] = [
   { label: 'Hoạt động CLB', icon: <CalendarDays size={18} />, to: '/hoat-dong',   desc: 'Lịch · Đăng ký · Check-in · Điểm danh' },
   { label: 'Thi đấu',       icon: <Trophy size={18} />,       to: '/thi-dau',     desc: 'Giải đấu · Lịch đấu · Kết quả · Xếp hạng' },
   { label: 'Cộng đồng CLB', icon: <MessageSquare size={18} />, to: '/community',   desc: 'Bảng tin · Tương tác · Tìm kèo' },
-  { label: 'Xác nhận nộp quỹ', icon: <BadgeCheck size={18} />, to: '/payments',  desc: 'Duyệt khoản thành viên báo đã nộp' },
   { label: 'Hệ thống',      icon: <Settings size={18} />,     to: '/he-thong',    desc: 'Thông báo · Gói dịch vụ · Cài đặt' },
 ]
 

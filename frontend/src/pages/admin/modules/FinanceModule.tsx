@@ -9,6 +9,7 @@ import { Contributions } from '../Contributions'
 import { Expenses } from '../Expenses'
 import { Debts } from '../Debts'
 import { Reports } from '../Reports'
+import { PaymentApprovals } from '../PaymentApprovals'
 
 export function FinanceModule() {
   return (
@@ -21,6 +22,7 @@ export function FinanceModule() {
         { key: 'expense', label: 'Chi', element: <Expenses /> },
         { key: 'debts', label: 'Công nợ', element: <Debts /> },
         { key: 'reports', label: 'Báo cáo', element: <Reports /> },
+        { key: 'payments', label: 'Xác nhận nộp quỹ', element: <PaymentApprovals /> },
       ]}
     />
   )
