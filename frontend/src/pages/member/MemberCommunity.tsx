@@ -555,13 +555,39 @@ const KIND_BADGE: Record<PostKind, { tone: 'info' | 'ai'; label: string } | null
   TOURNAMENT: { tone: 'ai', label: 'Giải đấu' },
 }
 
+/** Tô sáng "@Họ Tên" (khớp danh sách thành viên) thành thẻ trong nội dung đã đăng. */
+function renderWithMentions(text: string, members: MentionMember[]): ReactNode {
+  if (!members.length || !text.includes('@')) return text
+  const names = members.map((m) => m.fullName).filter(Boolean).sort((a, b) => b.length - a.length)
+  if (!names.length) return text
+  const esc = names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const re = new RegExp(`@(?:${esc.join('|')})`, 'g')
+  const out: ReactNode[] = []
+  let last = 0
+  let key = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index))
+    out.push(
+      <span key={key++} className="rounded px-1 font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+        {m[0]}
+      </span>,
+    )
+    last = m.index + m[0].length
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out
+}
+
 function PostCard({
   post,
+  members,
   highlight,
   onChange,
   onDelete,
 }: {
   post: Post
+  members: MentionMember[]
   highlight: boolean
   onChange: (p: Post) => void
   onDelete: (id: string) => void
@@ -810,7 +836,7 @@ function PostCard({
         </div>
       ) : (
         <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed [color:var(--pf-text)]">
-          {post.body}
+          {renderWithMentions(post.body, members)}
         </p>
       )}
 
@@ -914,7 +940,7 @@ function PostCard({
                           </div>
                         ) : (
                           <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed [color:var(--pf-text)]">
-                            {c.body}
+                            {renderWithMentions(c.body, members)}
                           </p>
                         )}
                       </div>
@@ -1543,6 +1569,7 @@ export default function MemberCommunity() {
                 <PostCard
                   key={p.id}
                   post={p}
+                  members={members}
                   highlight={p.id === highlightPostId}
                   onChange={handlePostChange}
                   onDelete={handlePostDelete}
