@@ -71,6 +71,9 @@ async function bootstrap() {
   );
   app.setGlobalPrefix('api', { exclude: ['health'] });
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  // Cũng phục vụ file upload dưới '/api/uploads' — nginx đã proxy '/api/' về backend,
+  // trong khi '/uploads' KHÔNG được route (rơi vào SPA). Ảnh cộng đồng dùng path này để hiển thị.
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/api/uploads' });
 
   // Health check endpoint
   const expressApp = app.getHttpAdapter().getInstance();

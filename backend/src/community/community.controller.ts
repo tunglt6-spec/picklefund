@@ -72,7 +72,8 @@ export class CommunityController implements OnModuleInit {
   )
   uploadImage(@UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new BadRequestException('Thiếu tệp ảnh');
-    return ok({ url: `/uploads/community/${file.filename}` });
+    // Trả path qua '/api/uploads' (được nginx proxy về backend) để ảnh hiển thị được.
+    return ok({ url: `/api/uploads/community/${file.filename}` });
   }
 
   private actor(user: JwtUser) {

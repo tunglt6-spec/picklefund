@@ -139,6 +139,12 @@ function apiMessage(err: unknown, fallback: string): string {
   return e?.response?.data?.message ?? fallback
 }
 
+/** Chuẩn hoá URL ảnh: path cũ '/uploads/…' → '/api/uploads/…' (nginx chỉ proxy '/api'). */
+function mediaUrl(u: string | null | undefined): string {
+  if (!u) return ''
+  return u.startsWith('/uploads/') ? `/api${u}` : u
+}
+
 /** "Vừa xong" / "5 phút trước" / "2 giờ trước" / "3 ngày trước" / dd/mm/yyyy. */
 function timeAgo(dateStr: string): string {
   const t = new Date(dateStr).getTime()
@@ -483,7 +489,7 @@ function Composer({
           )}
           {imageUrl && !uploading && (
             <div className="relative mt-2 inline-block">
-              <img src={imageUrl} alt="Ảnh đính kèm" className="max-h-64 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover" />
+              <img src={mediaUrl(imageUrl)} alt="Ảnh đính kèm" className="max-h-64 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover" />
               <button type="button" aria-label="Gỡ ảnh" onClick={() => setImageUrl('')}
                 className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80">
                 <X size={15} />
@@ -842,7 +848,7 @@ function PostCard({
 
       {post.imageUrl && !editingPost && (
         <img
-          src={post.imageUrl}
+          src={mediaUrl(post.imageUrl)}
           alt=""
           className="mt-3 max-h-96 max-w-full rounded-xl border border-[color:var(--pf-border)] object-cover"
           loading="lazy"
