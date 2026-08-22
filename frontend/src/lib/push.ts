@@ -51,17 +51,31 @@ export async function enablePush(): Promise<'ok' | 'denied' | 'unsupported' | 'n
   const reg = await getReg()
   if (!reg) return 'error'
   try {
-    let sub = await reg.pushManager.getSubscription()
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      })
+    // Ép đăng ký MỚI: hủy sub cũ (có thể tạo bằng VAPID key cũ/khác → server gửi 403 âm thầm)
+    // rồi subscribe lại bằng public key hiện tại → key luôn khớp.
+    const existing = await reg.pushManager.getSubscription()
+    if (existing) {
+      await api.post('/push/unsubscribe', { endpoint: existing.endpoint }).catch(() => undefined)
+      await existing.unsubscribe().catch(() => undefined)
     }
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    })
     await api.post('/push/subscribe', sub.toJSON())
     return 'ok'
   } catch {
     return 'error'
+  }
+}
+
+/** Gửi push thử tới chính mình để kiểm tra end-to-end. Trả tóm tắt từ server. */
+export async function sendTestPush(): Promise<{ devices: number; sent: number; errors: string[] } | null> {
+  try {
+    const res = await api.post('/push/test')
+    return (res.data?.data ?? res.data) as { devices: number; sent: number; errors: string[] }
+  } catch {
+    return null
   }
 }
 

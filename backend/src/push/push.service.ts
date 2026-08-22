@@ -82,11 +82,23 @@ export class PushService implements OnModuleInit {
     return { ok: true };
   }
 
-  /** Gửi push tới mọi thiết bị của 1 user. Tự dọn subscription hết hạn (404/410). */
-  async sendToUser(userId: string, payload: PushPayload) {
-    if (!this.enabled || !userId) return;
+  /**
+   * Gửi push tới mọi thiết bị của 1 user. Tự dọn subscription hết hạn/không hợp lệ (404/410).
+   * Trả tóm tắt để chẩn đoán (số thiết bị, gửi ok, xóa, lỗi).
+   */
+  async sendToUser(userId: string, payload: PushPayload): Promise<{
+    enabled: boolean;
+    devices: number;
+    sent: number;
+    removed: number;
+    errors: string[];
+  }> {
+    if (!this.enabled) return { enabled: false, devices: 0, sent: 0, removed: 0, errors: ['push_disabled'] };
+    if (!userId) return { enabled: true, devices: 0, sent: 0, removed: 0, errors: [] };
     const subs = await this.prisma.pushSubscription.findMany({ where: { userId } });
-    if (!subs.length) return;
+    let sent = 0;
+    let removed = 0;
+    const errors: string[] = [];
     const data = JSON.stringify(payload);
     await Promise.all(
       subs.map(async (s) => {
@@ -95,17 +107,21 @@ export class PushService implements OnModuleInit {
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             data,
           );
+          sent++;
         } catch (e: any) {
           const code = e?.statusCode;
           if (code === 404 || code === 410) {
+            removed++;
             await this.prisma.pushSubscription
               .deleteMany({ where: { endpoint: s.endpoint } })
               .catch(() => undefined);
           } else {
+            errors.push(String(code ?? e?.message ?? 'unknown'));
             this.logger.warn(`Push lỗi (user=${userId}): ${e?.message ?? code}`);
           }
         }
       }),
     );
+    return { enabled: true, devices: subs.length, sent, removed, errors };
   }
 }

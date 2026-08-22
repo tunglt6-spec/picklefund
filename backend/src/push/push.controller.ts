@@ -55,4 +55,16 @@ export class PushController {
     // Chỉ cho hủy subscription CỦA CHÍNH mình (chống hủy nhầm thiết bị người khác).
     return ok(await this.svc.removeSubscription(body.endpoint, user.userId));
   }
+
+  /** Gửi push THỬ tới chính mình — chẩn đoán nhanh (trả số thiết bị/gửi/lỗi). */
+  @Post('test')
+  async test(@CurrentUser() user: JwtUser) {
+    const r = await this.svc.sendToUser(user.userId, {
+      title: 'PickleFund',
+      body: 'Thông báo thử nghiệm ✅ — nếu bạn thấy dòng này là push đã hoạt động.',
+      url: '/member/notifications',
+      tag: 'push_test',
+    });
+    return ok(r);
+  }
 }

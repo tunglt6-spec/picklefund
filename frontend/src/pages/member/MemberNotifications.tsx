@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
-import { enablePush, syncPushIfGranted, pushPermission } from '../../lib/push'
+import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
 
 type HermesNotif = {
   id: string
@@ -71,6 +71,19 @@ export function MemberNotifications() {
       else if (r === 'no-key') toast.error('Máy chủ chưa bật thông báo đẩy (thiếu VAPID)')
       else if (r === 'unsupported') toast.error('Thiết bị/trình duyệt không hỗ trợ thông báo đẩy')
       else toast.error('Không bật được thông báo — thử lại')
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const onTestPush = async () => {
+    setPushBusy(true)
+    try {
+      const r = await sendTestPush()
+      if (!r) { toast.error('Không gửi được thông báo thử'); return }
+      if (r.devices === 0) toast.error('Chưa có thiết bị đăng ký — hãy bấm "Bật thông báo" trước')
+      else if (r.sent > 0) toast.success(`Đã gửi tới ${r.sent} thiết bị — kiểm tra thông báo trên máy`)
+      else toast.error(`Gửi thất bại (${r.errors[0] ?? 'lỗi'}). Thử bấm "Bật thông báo" lại.`)
     } finally {
       setPushBusy(false)
     }
@@ -176,9 +189,15 @@ export function MemberNotifications() {
               </button>
             )}
             {pushPerm === 'granted' && (
-              <span className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-color-success)]">
-                <BellRing size={14} /> Đã bật thông báo
-              </span>
+              <>
+                <span className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold [color:var(--pf-color-success)]">
+                  <BellRing size={14} /> Đã bật
+                </span>
+                <button onClick={onTestPush} disabled={pushBusy}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                  {pushBusy ? 'Đang gửi…' : 'Gửi thử'}
+                </button>
+              </>
             )}
             {unreadCount > 0 && (
               <button onClick={handleReadAll} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]">
