@@ -38,6 +38,12 @@ export function MemberDashboard() {
   const myCost = fin?.totalCost ?? (roughCourtCost + roughLivingCost)
   const balance = fin?.balance ?? (amountPaid - myCost)
 
+  // Tiến độ đóng quỹ: đã đóng / mức đóng góp của kỳ.
+  const fundTarget = activePeriod?.contributionAmount ?? 0
+  const fundPct = fundTarget > 0
+    ? Math.min(100, Math.round((amountPaid / fundTarget) * 100))
+    : amountPaid > 0 ? 100 : 0
+
   const memberName = fin?.memberName ?? attendance?.memberName ?? user?.username ?? 'Thành viên'
   const initials = memberName.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase()
   const hasData = !!activePeriod
@@ -282,16 +288,58 @@ export function MemberDashboard() {
           />
         </ChartCard>
       ) : (
-        <>
-          {/* KPI — bộ MetricCard giống Admin, dữ liệu của chính mình */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
-            <MetricCard label="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
-            <MetricCard label="Tỷ Lệ Tham Gia" value={`${attendanceRate}%`} sub="So với toàn kỳ" accent={attendanceRate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
-            <MetricCard label="Số Dư" value={formatVND(balance)} sub="Số dư còn lại" accent="blue" negative={balance < 0} icon={<AlertCircle size={18} />} />
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* CỘT TRÁI (2/3): KPI + tiến độ trực quan */}
+          <div className="space-y-4 lg:col-span-2">
+            <div className="grid grid-cols-2 gap-4">
+              <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
+              <MetricCard label="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
+              <MetricCard label="Tỷ Lệ Tham Gia" value={`${attendanceRate}%`} sub="So với toàn kỳ" accent={attendanceRate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
+              <MetricCard label="Số Dư" value={formatVND(balance)} sub="Số dư còn lại" accent="blue" negative={balance < 0} icon={<AlertCircle size={18} />} />
+            </div>
+
+            {/* Tiến độ trực quan: vòng % tham gia + thanh tiến độ đóng quỹ */}
+            <ChartCard title="Tiến độ của bạn" subtitle={activePeriod?.name ?? undefined}>
+              <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+                {/* Vòng tỷ lệ tham gia */}
+                <div className="flex shrink-0 flex-col items-center gap-2">
+                  <div className="relative h-28 w-28">
+                    <div
+                      className="h-28 w-28 rounded-full"
+                      style={{ background: `conic-gradient(var(--pf-primary) ${Math.min(100, attendanceRate) * 3.6}deg, var(--pf-color-muted-soft) 0deg)` }}
+                    />
+                    <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full [background:var(--pf-surface)]">
+                      <span className="text-[22px] font-extrabold [color:var(--pf-text)]">{attendanceRate}%</span>
+                      <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
+                    </div>
+                  </div>
+                  <span className="text-[12px] [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</span>
+                </div>
+
+                {/* Thanh tiến độ đóng quỹ */}
+                <div className="w-full min-w-0 flex-1">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-[13px] font-semibold [color:var(--pf-text)]">Đóng quỹ kỳ này</span>
+                    <span className="text-[13px] font-bold [color:var(--pf-primary)]">{fundPct}%</span>
+                  </div>
+                  <div className="h-3 w-full overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
+                    <div className="h-full rounded-full [background:var(--pf-primary)] transition-all" style={{ width: `${fundPct}%` }} />
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between text-[12px] [color:var(--pf-color-muted)]">
+                    <span>Đã đóng {formatVND(amountPaid)}</span>
+                    {fundTarget > 0 && <span>Mục tiêu {formatVND(fundTarget)}</span>}
+                  </div>
+                  <div className="mt-3">
+                    <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>
+                      {isPaid ? 'Đã đóng đủ quỹ kỳ này' : 'Chưa đóng đủ quỹ'}
+                    </StatusBadge>
+                  </div>
+                </div>
+              </div>
+            </ChartCard>
           </div>
 
-          {/* Phiếu thu cá nhân — ChartCard, chỉ đọc, hành động duy nhất là xuất/chia sẻ */}
+          {/* CỘT PHẢI (1/3): Phiếu thu gọn — KHÔNG lặp KPI, chỉ chi tiết chi phí + số dư */}
           <ChartCard
             title="Phiếu Thu Cá Nhân"
             subtitle={activePeriod?.name ?? undefined}
@@ -315,56 +363,46 @@ export function MemberDashboard() {
             }
           >
             <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
                   <p className="text-xs [color:var(--pf-color-muted)]">Thành viên</p>
-                  <p className="font-semibold [color:var(--pf-text)]">{memberName}</p>
+                  <p className="truncate font-semibold [color:var(--pf-text)]">{memberName}</p>
                 </div>
-                <div>
-                  <p className="text-xs [color:var(--pf-color-muted)]">Trạng thái</p>
-                  <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>
-                    {isPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'}
-                  </StatusBadge>
-                </div>
+                <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>
+                  {isPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'}
+                </StatusBadge>
               </div>
-              <div className="border-t [border-color:var(--pf-border)] pt-3 space-y-2">
-                {[
-                  ['Số buổi toàn kỳ', `${totalSessions} buổi`, ''],
-                  ['Đã tham gia', `${myAttendance} buổi`, 'text-emerald-600'],
-                  ['Tỷ lệ tham gia', `${attendanceRate}%`, ''],
-                ].map(([k, v, c]) => (
-                  <div key={k} className="flex justify-between">
-                    <span className="[color:var(--pf-color-muted)]">{k}</span>
-                    <span className={`font-medium ${c}`}>{v}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t [border-color:var(--pf-border)] pt-3 space-y-2">
+
+              {/* Chỉ chi tiết chưa có ở KPI: bóc tách chi phí */}
+              <div className="space-y-2 border-t pt-3 [border-color:var(--pf-border)]">
                 <div className="flex justify-between">
-                  <span className="[color:var(--pf-color-muted)]">Số tiền đã đóng</span>
-                  <span className="font-medium text-emerald-600">{formatVND(amountPaid)}</span>
+                  <span className="[color:var(--pf-color-muted)]">Chi phí sân</span>
+                  <span className="font-medium [color:var(--pf-text)]">{formatVND(roughCourtCost)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="[color:var(--pf-color-muted)]">Chi phí ước tính</span>
-                  <span className="font-medium text-rose-500">{formatVND(myCost)}</span>
+                  <span className="[color:var(--pf-color-muted)]">Chi phí sinh hoạt</span>
+                  <span className="font-medium [color:var(--pf-text)]">{formatVND(roughLivingCost)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 [border-color:var(--pf-border)]">
+                  <span className="[color:var(--pf-color-muted)]">Tổng chi phí ước tính</span>
+                  <span className="font-semibold [color:var(--pf-color-danger)]">{formatVND(myCost)}</span>
                 </div>
               </div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <div className="flex justify-between items-center">
+
+              <div className="rounded-xl px-4 py-3 [background:var(--pf-color-success-soft)]">
+                <div className="flex items-center justify-between">
                   <span className="font-bold [color:var(--pf-text)]">Số Dư Còn Lại</span>
-                  <span className={`text-xl font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <span className="text-xl font-bold" style={{ color: balance >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </span>
                 </div>
-                {balance >= 0 ? (
-                  <p className="text-xs text-emerald-600 mt-1">✓ Bạn đã đóng đủ quỹ kỳ này</p>
-                ) : (
-                  <p className="text-xs text-rose-600 mt-1">Bạn chưa đóng đủ quỹ kỳ này.</p>
-                )}
+                <p className="mt-1 text-xs" style={{ color: balance >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
+                  {balance >= 0 ? '✓ Bạn đã đóng đủ quỹ kỳ này' : 'Bạn chưa đóng đủ quỹ kỳ này.'}
+                </p>
               </div>
             </div>
           </ChartCard>
-        </>
+        </div>
       )}
       <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
     </PageShell>
