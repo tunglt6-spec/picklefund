@@ -7,6 +7,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { PushService } from '../push/push.service';
 
 /** Yêu cầu tạo job — payload CHỈ lưu nội bộ, không bao giờ trả ra API. */
 export interface NotificationJobRequest {
@@ -44,6 +45,7 @@ export class NotificationRuntimeService {
   constructor(
     private prisma: PrismaService,
     private email: EmailService,
+    private push: PushService,
   ) {}
 
   // ---------- Sanitization ----------
@@ -271,6 +273,13 @@ export class NotificationRuntimeService {
         status: 'SENT',
         sentAt: new Date(),
       },
+    });
+    // Web Push (PWA): đẩy luôn thông báo của Mít Đặc tới điện thoại member (như Hermes).
+    void this.push.sendToUser(user.id, {
+      title: req.title,
+      body: req.bodySummary ?? req.title,
+      url: '/member/notifications',
+      tag: 'hermes_runtime',
     });
     return { sent: true, note: 'in-app record created' };
   }

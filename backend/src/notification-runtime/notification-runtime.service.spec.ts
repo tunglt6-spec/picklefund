@@ -4,6 +4,9 @@ import { ForbiddenException } from '@nestjs/common';
 import { NotificationRuntimeService } from './notification-runtime.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { PushService } from '../push/push.service';
+
+const push = { sendToUser: jest.fn().mockResolvedValue({ enabled: true, devices: 0, sent: 0, removed: 0, errors: [] }) };
 
 const prisma = {
   notificationJob: {
@@ -30,6 +33,7 @@ async function makeService(): Promise<NotificationRuntimeService> {
       NotificationRuntimeService,
       { provide: PrismaService, useValue: prisma },
       { provide: EmailService, useValue: email },
+      { provide: PushService, useValue: push },
     ],
   }).compile();
   return mod.get(NotificationRuntimeService);
