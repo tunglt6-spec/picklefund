@@ -6,7 +6,6 @@ import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { UserGuideModal } from '../help/UserGuideModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
-import api from '../../lib/api'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
 import { useApplyBranding } from '../../hooks/useApplyBranding'
@@ -39,12 +38,6 @@ export function AppLayout() {
       openGuide()
     }
   }, [user, openGuide])
-
-  // Đặt cookie phiên xem ảnh cộng đồng (authz đầy đủ) — để <img> tải được ảnh đã ký.
-  useEffect(() => {
-    if (!user) return
-    api.post('/community/media-session').catch(() => undefined)
-  }, [user])
 
   const lisaRoute = user ? LISA_ROUTES[user.role] : null
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false

@@ -12,12 +12,11 @@ import {
   Post,
   Put,
   Query,
-  Req,
   Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -54,36 +53,6 @@ function signedMediaUrl(clubId: string, file: string): string {
   const exp = Date.now() + MEDIA_TTL_MS;
   const s = mediaSig(clubId, file, exp);
   return `/api/community/media/${clubId}/${file}?e=${exp}&s=${s}`;
-}
-
-// Cookie phiên xem ảnh: chứng minh trình duyệt ĐÃ đăng nhập là member của clubId (authz đầy đủ).
-const MEDIA_COOKIE = 'pf_media';
-const MEDIA_COOKIE_TTL_MS = 7 * 24 * 3600 * 1000;
-function mediaCookieSig(clubId: string, exp: number): string {
-  return createHmac('sha256', MEDIA_SECRET).update(`cookie.${clubId}.${exp}`).digest('hex');
-}
-function buildMediaCookie(clubId: string): string {
-  const exp = Date.now() + MEDIA_COOKIE_TTL_MS;
-  return `${clubId}.${exp}.${mediaCookieSig(clubId, exp)}`;
-}
-/** Đọc cookie clubId hợp lệ từ header (parse thủ công, không cần cookie-parser). */
-function readMediaCookieClub(req: Request): string | null {
-  const raw = req.headers?.cookie;
-  if (!raw) return null;
-  const m = raw.split(';').map((s) => s.trim()).find((s) => s.startsWith(`${MEDIA_COOKIE}=`));
-  if (!m) return null;
-  const val = decodeURIComponent(m.slice(MEDIA_COOKIE.length + 1));
-  const [clubId, expStr, sig] = val.split('.');
-  const exp = Number(expStr);
-  if (!clubId || !exp || Date.now() > exp) return null;
-  const expected = mediaCookieSig(clubId, exp);
-  if (!sig || sig.length !== expected.length) return null;
-  try {
-    if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
-  } catch {
-    return null;
-  }
-  return clubId;
 }
 
 // Lưu file vào uploads_private/community/<clubId>/<random>.<ext> (clubId từ JWT).
@@ -135,25 +104,17 @@ export class CommunityController implements OnModuleInit {
     return ok({ url: signedMediaUrl(user.clubId as string, file.filename) });
   }
 
-  /** Đặt cookie phiên xem ảnh (authz đầy đủ): chứng minh trình duyệt đăng nhập là member của clubId. */
-  @Post('media-session')
-  mediaSession(@CurrentUser() user: JwtUser, @Res() res: Response) {
-    const clubId = user.clubId as string;
-    if (!clubId) return res.status(400).json({ success: false, message: 'Thiếu CLB' });
-    res.cookie(MEDIA_COOKIE, buildMediaCookie(clubId), {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/api/community/media',
-      maxAge: MEDIA_COOKIE_TTL_MS,
-    });
-    return res.json({ success: true, data: { ok: true } });
-  }
-
   /**
-   * F4 + authz đầy đủ: phục vụ ảnh cộng đồng qua route ký HMAC + XÁC THỰC cookie phiên.
-   * @Public (thẻ <img> không gửi Bearer) nhưng bắt buộc: (1) cookie pf_media hợp lệ đúng CLB
-   * (đã đăng nhập là member của CLB), (2) chữ ký URL gắn clubId + hạn dùng. Cả hai cùng đúng mới phục vụ.
+   * F4: phục vụ ảnh cộng đồng qua route ký HMAC.
+   * @Public vì thẻ <img> không gửi Bearer. Bảo mật dựa trên CHỮ KÝ URL:
+   * link gắn clubId + hạn dùng + HMAC bí mật, KHÔNG đoán được và chỉ được phát ra cho
+   * member của CLB (qua upload / feed đã scope theo clubId). Đây là điều kiện đủ để mọi
+   * member cùng CLB xem được ảnh của nhau một cách ổn định trên <img> (không phụ thuộc
+   * thời điểm set cookie — vốn gây 403 race khiến member khác không thấy ảnh).
+   *
+   * LƯU Ý: KHÔNG dùng cookie pf_media làm cổng chặn cứng ở đây. Thẻ <img> có thể tải ảnh
+   * trước khi cookie phiên kịp được set (media-session chạy bất đồng bộ lúc mở app), dẫn tới
+   * 403 và onError ẩn ảnh vĩnh viễn — đúng lỗi "member khác chỉ thấy bài, không thấy ảnh".
    */
   @Public()
   @Get('media/:clubId/:file')
@@ -162,16 +123,10 @@ export class CommunityController implements OnModuleInit {
     @Param('file') file: string,
     @Query('e') e: string,
     @Query('s') s: string,
-    @Req() req: Request,
     @Res() res: Response,
   ) {
     if (!CLUBID_RE.test(clubId) || !FILE_RE.test(file)) throw new NotFoundException();
-    // (1) Authz cookie: người xem phải đã đăng nhập là member của ĐÚNG clubId này.
-    const cookieClub = readMediaCookieClub(req);
-    if (cookieClub !== clubId) {
-      throw new ForbiddenException('Cần đăng nhập đúng CLB để xem ảnh');
-    }
-    // (2) Chữ ký URL (chống đoán/sửa path).
+    // Chữ ký URL (gắn clubId + hạn dùng + HMAC bí mật; chống đoán/sửa path/mượn link chéo CLB).
     const exp = Number(e);
     if (!exp || Date.now() > exp) throw new ForbiddenException('Link ảnh đã hết hạn');
     const expected = mediaSig(clubId, file, exp);
