@@ -29,6 +29,8 @@ export class MemberScopeGuard implements CanActivate {
     '/auth',
     '/lisa',
     '/hermes/notifications',
+    // Cài đặt thông báo của CHÍNH member (GET/PATCH) — service scope theo userId từ JWT.
+    '/hermes/preferences',
     // Cộng đồng CLB (Member Experience v1): member được tạo/đọc/tương tác nội dung
     // trong CLB của mình. Service tự scope theo clubId/memberId từ JWT (không tin client);
     // sửa/xóa chỉ nội dung của chính mình, kiểm duyệt do handler check role admin.
