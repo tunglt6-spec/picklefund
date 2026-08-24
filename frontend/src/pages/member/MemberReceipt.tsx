@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageHeader } from '../../components/layout/PageHeader'
-import { Button } from '../../components/ui/Button'
+import { PageShell, PageHeader, MetricCard, ActionButton } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
@@ -327,18 +326,18 @@ export function MemberReceipt() {
   )
 
   return (
-    <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
+    <PageShell maxWidth={1200}>
       <PageHeader
         title="Phiếu Thu Cá Nhân"
         subtitle={memberName}
         actions={
-          <Button variant="secondary" onClick={handleExport}>
-            <Download size={14} />Xuất PDF
-          </Button>
+          <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExport}>
+            Xuất PDF
+          </ActionButton>
         }
       />
 
-      <div ref={printRef} className="pf-center-x w-full max-w-[1000px] p-6 space-y-5">
+      <div ref={printRef} className="space-y-5">
 
         {/* QR Payment Banner — shown prominently when member has unpaid balance */}
         {(() => {
@@ -383,37 +382,30 @@ export function MemberReceipt() {
           )
         })()}
 
-        {/* Summary KPIs */}
+        {/* Summary KPIs — MetricCard (đồng bộ tab Lịch sử đóng / Lịch tham gia / Công nợ) */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
-                <DollarSign size={14} className="[color:var(--pf-primary)]" />
-              </div>
-              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Tổng đã đóng</p>
-            </div>
-            <p className="text-xl font-bold [color:var(--pf-primary)]">{formatVND(totalPaid)}</p>
-          </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                <TrendingUp size={14} className="text-amber-600" />
-              </div>
-              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chi phí phân bổ</p>
-            </div>
-            <p className="text-xl font-bold text-amber-600">{formatVND(totalCost)}</p>
-          </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <Receipt size={14} className="text-emerald-600" />
-              </div>
-              <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Số dư</p>
-            </div>
-            <p className={`text-xl font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              {netBalance >= 0 ? '+' : ''}{formatVND(netBalance)}
-            </p>
-          </div>
+          <MetricCard
+            label="Tổng đã đóng"
+            value={formatVND(totalPaid)}
+            sub={activePeriod ? `Kỳ ${activePeriod.name}` : undefined}
+            accent="blue"
+            icon={<DollarSign size={18} />}
+          />
+          <MetricCard
+            label="Chi phí phân bổ"
+            value={formatVND(totalCost)}
+            sub="Tiền sân + sinh hoạt"
+            accent="amber"
+            icon={<TrendingUp size={18} />}
+          />
+          <MetricCard
+            label="Số dư"
+            value={`${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`}
+            sub={netBalance >= 0 ? 'Dư quỹ' : 'Còn thiếu'}
+            accent="green"
+            negative={netBalance < 0}
+            icon={<Receipt size={18} />}
+          />
         </div>
 
         {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
@@ -565,6 +557,6 @@ export function MemberReceipt() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }
