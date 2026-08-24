@@ -274,7 +274,7 @@ export function MemberContributions() {
   ]
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell>
       <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName}
         actions={
           <div className="flex items-center gap-2">

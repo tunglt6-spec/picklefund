@@ -325,7 +325,7 @@ export function MemberReceipt() {
   )
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell>
       <PageHeader
         title="Phiếu Thu Cá Nhân"
         subtitle={memberName}
