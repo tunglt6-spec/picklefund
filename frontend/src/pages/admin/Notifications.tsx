@@ -327,15 +327,15 @@ export function Notifications() {
         }
       />
 
-      <div className="p-6 max-w-[1200px] pf-center-x">
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* CỘT TRÁI (1/3) — 5 KPI-lọc xếp DỌC */}
-          <div className="lg:col-span-1">
+      <div className="p-6 pf-center-x w-full" style={{ maxWidth: 1600 }}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+          {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, bề ngang cố định, sát lề trái */}
+          <div className="lg:w-[260px] lg:shrink-0">
             <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
           </div>
 
-          {/* CỘT PHẢI (2/3) — danh sách thông báo 1 CỘT */}
-          <div className="space-y-5 lg:col-span-2">
+          {/* CỘT PHẢI — danh sách thông báo 1 CỘT, mở rộng hết phần còn lại */}
+          <div className="min-w-0 flex-1 space-y-5">
             {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
             {!loading && unread.length > 0 && (
