@@ -25,13 +25,17 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  // onCancel qua ref → KHÔNG đưa vào deps (arrow inline đổi identity mỗi render sẽ khiến
+  // effect chạy lại và cướp focus mỗi lần cha re-render). deps = [open]: focus 1 lần khi mở.
+  const onCancelRef = useRef(onCancel)
+  useEffect(() => { onCancelRef.current = onCancel }, [onCancel])
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancelRef.current() }
     document.addEventListener('keydown', onKey)
     const t = setTimeout(() => cancelRef.current?.focus(), 0)
     return () => { document.removeEventListener('keydown', onKey); clearTimeout(t) }
-  }, [open, onCancel])
+  }, [open])
 
   if (!open) return null
 

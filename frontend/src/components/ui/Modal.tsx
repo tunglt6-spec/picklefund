@@ -23,20 +23,28 @@ const sizeClasses = {
 export function Modal({ open, onClose, title, subtitle, children, size = 'md', footer }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // Giữ onClose mới nhất trong ref để handler Esc dùng được mà KHÔNG cần đưa onClose vào
+  // deps effect. Các trang truyền onClose dạng arrow inline (đổi identity mỗi render); nếu
+  // để onClose trong deps thì mỗi keystroke (cha re-render) effect chạy lại và gọi
+  // panelRef.focus() → CƯỚP focus khỏi input → bàn phím mobile tắt sau mỗi ký tự.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
     return () => { document.body.style.overflow = '' }
   }, [open])
 
-  // A11y: đóng bằng Esc + đưa focus vào panel khi mở (screen reader / bàn phím).
+  // A11y: đóng bằng Esc + đưa focus vào panel MỘT LẦN khi mở (screen reader / bàn phím).
+  // deps = [open] để CHỈ chạy lúc mở/đóng — không chạy lại theo mỗi lần cha re-render.
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current() }
     document.addEventListener('keydown', onKey)
     const t = setTimeout(() => panelRef.current?.focus(), 0)
     return () => { document.removeEventListener('keydown', onKey); clearTimeout(t) }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
