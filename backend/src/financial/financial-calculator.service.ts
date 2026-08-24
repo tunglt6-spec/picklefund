@@ -153,8 +153,13 @@ export class FinancialCalculatorService {
         },
         _sum: { amount: true },
       }),
+      // CHỈ tính buổi ĐÃ DIỄN RA (status 'completed'). Buổi 'scheduled' (sắp diễn ra) /
+      // 'cancelled' KHÔNG được tính vào tổng buổi & tổng lượt tham dự — nếu tính sẽ:
+      //  (1) thổi phồng "tổng số buổi" (mẫu số tỷ lệ tham gia) → lệch với màn Điểm danh;
+      //  (2) phân bổ SAI chi phí sinh hoạt theo buổi cho buổi chưa diễn ra.
+      // Khớp nguồn chuẩn getAttendance (chỉ completed).
       this.prisma.attendanceSession.findMany({
-        where: { fundPeriodId, clubId },
+        where: { fundPeriodId, clubId, status: 'completed' },
         select: {
           id: true,
           _count: {
@@ -209,9 +214,15 @@ export class FinancialCalculatorService {
         : 0;
 
     const [attendanceCounts, paidAmounts] = await Promise.all([
+      // Lượt tham dự per-member: CHỈ đếm PRESENT ở buổi ĐÃ DIỄN RA (completed) — khớp mẫu số
+      // totalAttendance ở trên và tránh tính present lỡ gắn ở buổi chưa completed.
       this.prisma.attendanceRecord.groupBy({
         by: ['memberId'],
-        where: { status: 'PRESENT', clubId, attendanceSession: { fundPeriodId } },
+        where: {
+          status: 'PRESENT',
+          clubId,
+          attendanceSession: { fundPeriodId, status: 'completed' },
+        },
         _count: { id: true },
       }),
       this.prisma.fundContribution.groupBy({
