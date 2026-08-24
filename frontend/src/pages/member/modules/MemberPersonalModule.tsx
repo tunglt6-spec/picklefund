@@ -6,7 +6,7 @@ import { ModuleTabs } from '../../../components/shared'
 import { MemberReceipt } from '../MemberReceipt'
 import { MemberContributions } from '../MemberContributions'
 import { MemberAttendance } from '../MemberAttendance'
-import { Debts } from '../../admin/Debts'
+import { MemberDebts } from '../MemberDebts'
 
 export function MemberPersonalModule() {
   return (
@@ -16,7 +16,7 @@ export function MemberPersonalModule() {
         { key: 'receipt', label: 'Phiếu thu', element: <MemberReceipt /> },
         { key: 'contrib', label: 'Lịch sử đóng', element: <MemberContributions /> },
         { key: 'attend', label: 'Lịch tham gia', element: <MemberAttendance /> },
-        { key: 'debts', label: 'Công nợ', element: <Debts /> },
+        { key: 'debts', label: 'Công nợ', element: <MemberDebts /> },
       ]}
     />
   )
