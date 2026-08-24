@@ -278,13 +278,16 @@ export class HermesService {
     return hour >= start && hour < end;
   }
 
-  /** Nhóm push (member tự tắt theo nhóm). */
+  /**
+   * Nhóm push (member tự tắt theo nhóm) — ĐỒNG BỘ với bộ lọc thông báo của member
+   * (catOf ở frontend MemberNotifications) + CATEGORIES trong NotificationSettingsModal.
+   * Chỉ 3 nhóm: community (cộng đồng + tìm kèo) · finance (quỹ/thanh toán) · activity (buổi tập/khác).
+   */
   private pushCategory(eventType: string): string {
-    if (eventType === 'community_mention' || eventType === 'community_reply') return 'mention';
-    if (eventType === 'community_post' || eventType === 'community_comment' || eventType === 'matchmaking_joined') return 'community';
-    if (eventType.startsWith('payment_') || eventType.startsWith('fund')) return 'finance';
-    if (eventType === 'session_registered' || eventType === 'event_reminder' || eventType.includes('attendance')) return 'session';
-    return 'system';
+    const s = (eventType || '').toLowerCase();
+    if (s.includes('community') || s.includes('matchmaking')) return 'community';
+    if (s.includes('payment') || s.includes('fund')) return 'finance';
+    return 'activity';
   }
 
   /**

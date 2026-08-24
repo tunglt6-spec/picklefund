@@ -4,12 +4,11 @@ import { Modal } from '../ui/Modal'
 import { ActionButton } from '../shared'
 import api from '../../lib/api'
 
+// Đồng bộ với bộ lọc thông báo của member (catOf ở MemberNotifications) + pushCategory backend.
 const CATEGORIES: { key: string; label: string; desc: string }[] = [
-  { key: 'community', label: 'Cộng đồng CLB', desc: 'Bài đăng & bình luận mới' },
-  { key: 'mention', label: 'Nhắc tên & phản hồi', desc: 'Khi bạn được @tag hoặc có phản hồi' },
+  { key: 'community', label: 'Cộng đồng', desc: 'Bài đăng · bình luận · @nhắc tên · tìm kèo' },
   { key: 'finance', label: 'Tài chính', desc: 'Nộp quỹ · xác nhận · nhắc đóng' },
-  { key: 'session', label: 'Buổi tập', desc: 'Đăng ký · nhắc buổi sắp tới' },
-  { key: 'system', label: 'Hệ thống khác', desc: 'Thông báo còn lại' },
+  { key: 'activity', label: 'Hoạt động', desc: 'Nhắc buổi tập · đăng ký · thông báo khác' },
 ]
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -29,7 +28,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 
 /**
  * Cài đặt thông báo đẩy (push) THÔNG MINH theo LOẠI + GIỜ.
- * - Bật/tắt push theo từng nhóm (community/mention/finance/session/system).
+ * - Bật/tắt push theo từng nhóm (community/finance/activity) — trùng bộ lọc thông báo.
  * - "Không làm phiền ban đêm": khung giờ yên tĩnh (không buzz push, in-app vẫn nhận).
  */
 export function NotificationSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
