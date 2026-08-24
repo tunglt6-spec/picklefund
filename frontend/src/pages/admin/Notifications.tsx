@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap } from 'lucide-react'
+import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -117,22 +117,60 @@ function catOf(eventType: string): 'notice' | 'system' | 'ai' {
   return 'notice'
 }
 
-function TabBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void }) {
+/** Icon cho từng bộ lọc (dùng ở KPI dọc desktop). */
+function filterIcon(key: TabKey) {
+  switch (key) {
+    case 'all': return <Inbox size={18} />
+    case 'unread': return <Bell size={18} />
+    case 'notice': return <Megaphone size={18} />
+    case 'system': return <Settings size={18} />
+    case 'ai': return <Brain size={18} />
+  }
+}
+
+/** 1 thẻ KPI-lọc (dọc): icon + nhãn + số đếm; bấm để lọc. Dùng CHUNG desktop + mobile. */
+function FilterKpi({ active, label, icon, count, onClick }: {
+  active: boolean; label: string; icon: ReactNode; count: number; onClick: () => void
+}) {
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto">
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99]"
+      style={active
+        ? { background: 'var(--pf-primary-soft)', borderColor: 'var(--pf-primary)' }
+        : { background: 'var(--pf-surface)', borderColor: 'var(--pf-border)' }}
+    >
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={active
+          ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+          : { background: 'var(--pf-color-muted-soft)', color: 'var(--pf-color-muted)' }}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 text-sm font-semibold" style={{ color: active ? 'var(--pf-primary)' : 'var(--pf-text)' }}>
+        {label}
+      </span>
+      <span
+        className="rounded-full px-2.5 py-0.5 text-sm font-bold tabular-nums"
+        style={active
+          ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+          : { background: 'var(--pf-color-muted-soft)', color: 'var(--pf-color-muted)' }}
+      >
+        {count}
+      </span>
+    </button>
+  )
+}
+
+/** 5 KPI-lọc xếp DỌC (1 cột). */
+function FilterKpiList({ tab, counts, onChange }: {
+  tab: TabKey; counts: Record<TabKey, number>; onChange: (t: TabKey) => void
+}) {
+  return (
+    <div className="space-y-2.5">
       {TABS.map(([k, l]) => (
-        <button
-          key={k}
-          onClick={() => onChange(k)}
-          className="min-h-11 shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
-          style={
-            tab === k
-              ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
-              : { background: 'var(--pf-surface)', color: 'var(--pf-color-muted)', border: '1px solid var(--pf-border)' }
-          }
-        >
-          {l}
-        </button>
+        <FilterKpi key={k} active={tab === k} label={l} icon={filterIcon(k)} count={counts[k]} onClick={() => onChange(k)} />
       ))}
     </div>
   )
@@ -218,6 +256,15 @@ export function Notifications() {
   const unread = filtered.filter(n => n.status !== 'READ')
   const read = filtered.filter(n => n.status === 'READ')
 
+  // Số đếm cho 5 KPI-lọc (dùng chung desktop + mobile).
+  const counts: Record<TabKey, number> = {
+    all: notifs.length,
+    unread: notifs.filter(n => n.status !== 'READ').length,
+    notice: notifs.filter(n => catOf(n.eventType) === 'notice').length,
+    system: notifs.filter(n => catOf(n.eventType) === 'system').length,
+    ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
+  }
+
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
@@ -234,7 +281,7 @@ export function Notifications() {
         </div>
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          <TabBar tab={tab} onChange={setTab} />
+          <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (
@@ -280,34 +327,43 @@ export function Notifications() {
         }
       />
 
-      <div className="p-6 max-w-[800px] pf-center-x space-y-5">
-        <TabBar tab={tab} onChange={setTab} />
-        {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
-
-        {!loading && unread.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Chưa đọc</p>
-            <div className="space-y-2">
-              {unread.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
-            </div>
+      <div className="p-6 max-w-[1200px] pf-center-x">
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* CỘT TRÁI (1/3) — 5 KPI-lọc xếp DỌC */}
+          <div className="lg:col-span-1">
+            <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
           </div>
-        )}
 
-        {!loading && read.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Đã đọc</p>
-            <div className="space-y-2">
-              {read.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
-            </div>
-          </div>
-        )}
+          {/* CỘT PHẢI (2/3) — danh sách thông báo 1 CỘT */}
+          <div className="space-y-5 lg:col-span-2">
+            {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
-        {!loading && filtered.length === 0 && (
-          <div className="py-16 text-center">
-            <Bell size={36} className="mx-auto [color:var(--pf-color-muted)] mb-3" />
-            <p className="text-sm [color:var(--pf-color-muted)]">Không có thông báo trong mục này</p>
+            {!loading && unread.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Chưa đọc</p>
+                <div className="space-y-2">
+                  {unread.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
+                </div>
+              </div>
+            )}
+
+            {!loading && read.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-3">Đã đọc</p>
+                <div className="space-y-2">
+                  {read.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} />)}
+                </div>
+              </div>
+            )}
+
+            {!loading && filtered.length === 0 && (
+              <div className="py-16 text-center">
+                <Bell size={36} className="mx-auto [color:var(--pf-color-muted)] mb-3" />
+                <p className="text-sm [color:var(--pf-color-muted)]">Không có thông báo trong mục này</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
