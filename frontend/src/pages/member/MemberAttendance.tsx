@@ -10,7 +10,7 @@ import api from '../../lib/api'
 
 export function MemberAttendance() {
   const isMobile = useIsMobile()
-  const { attendance, finance, reload } = useMemberPortal()
+  const { attendance, reload } = useMemberPortal()
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const toggleRegister = async (sessionId: string, register: boolean) => {
@@ -48,22 +48,18 @@ export function MemberAttendance() {
   const attendedCount = completedSessions.filter(s => attended.has(s.id)).length
   const rate = completedSessions.length > 0 ? Math.round((attendedCount / completedSessions.length) * 100) : 0
 
-  // LUẬT QUỸ (khớp financial-calculator + Phiếu thu): CHI PHÍ SÂN chia ĐỀU cho MỌI thành viên
-  // (memberCount), KHÔNG chia theo số người có mặt từng buổi. Trước đây chia theo số người có mặt
-  // → buổi ít người (vd sân B32) bị thổi phồng phần/người (516k) và lệch với phiếu thu.
-  const memberCount = finance?.totals?.memberCount || 0
+  // Chi phí sân MỖI BUỔI chia ĐỀU cho số người CÓ MẶT buổi đó (vd 310.000đ / 6 người = 51.667đ).
+  // Dùng số người có mặt thực tế của buổi (attendeeCount); fallback 6 nếu chưa có dữ liệu.
   const courtShare = (fee: number | string, attendeeCount?: number) => {
     const f = Number(fee) || 0
-    const div = memberCount > 0 ? memberCount : Number(attendeeCount) || 6
+    const div = Number(attendeeCount) || 6
     return Math.round(f / div)
   }
-  // Tổng chi phí sân của THÀNH VIÊN = số canonical từ calculator (chia đều). Fallback: cộng per-buổi.
-  const myCourtCost = finance?.member
-    ? Number(finance.member.courtFee ?? 0)
-    : completedSessions.reduce(
-        (s, sess) => s + (attended.has(sess.id) ? courtShare(sess.courtFee, sess._count?.attendanceRecords) : 0),
-        0,
-      )
+  // Tổng chi phí sân của THÀNH VIÊN = cộng phần chia mỗi buổi CÓ MẶT.
+  const myCourtCost = completedSessions.reduce(
+    (s, sess) => s + (attended.has(sess.id) ? courtShare(sess.courtFee, sess._count?.attendanceRecords) : 0),
+    0,
+  )
 
   if (isMobile) {
     return (
