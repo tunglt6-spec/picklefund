@@ -523,7 +523,13 @@ export function MemberReceipt() {
           </div>
 
           {/* CỘT PHẢI (1/3) — Kỳ hiện tại (tạm tính) + số dư còn lại */}
-          <ChartCard title="Kỳ hiện tại (tạm tính)" subtitle={activePeriod?.name ?? undefined}>
+          <ChartCard
+            title="Kỳ hiện tại (tạm tính)"
+            subtitle={activePeriod?.name ?? undefined}
+            actions={live && activePeriod ? (
+              <span className="inline-block whitespace-nowrap text-[11px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
+            ) : undefined}
+          >
             {live && activePeriod ? (
               <div className="space-y-3">
                 <div className="space-y-1.5">
@@ -547,7 +553,6 @@ export function MemberReceipt() {
                     {n(live.balance) >= 0 ? '✓ Số dư dương — chuyển sang kỳ sau' : 'Bạn chưa đóng đủ quỹ kỳ này.'}
                   </p>
                 </div>
-                <span className="inline-block text-[11px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
               </div>
             ) : (
               <p className="py-6 text-center text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ đang diễn ra.</p>
