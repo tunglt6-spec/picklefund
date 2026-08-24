@@ -50,6 +50,11 @@ services:
       # Ảnh hóa đơn (expense receipts) upload vào /app/uploads. PHẢI mount volume bền vững,
       # nếu không mỗi lần deploy tạo container mới sẽ MẤT SẠCH file đã upload.
       - uploads:/app/uploads
+      # Ảnh CỘNG ĐỒNG (community posts) upload vào /app/uploads_private/community qua route ký
+      # HMAC (riêng tư, không phục vụ tĩnh). CŨNG phải mount volume bền vững — nếu không mỗi lần
+      # deploy tạo container mới sẽ MẤT SẠCH ảnh bài đăng → member khác GET ảnh trả 404 và onError
+      # ẩn ảnh ("chỉ thấy bài, không thấy ảnh"). Đây là nguyên nhân gốc của lỗi ảnh cộng đồng.
+      - uploads-private:/app/uploads_private
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,3 +94,4 @@ volumes:
   nginx-logs:
   backups:
   uploads:
+  uploads-private:
