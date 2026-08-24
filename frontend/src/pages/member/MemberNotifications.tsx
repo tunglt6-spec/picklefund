@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap, Settings } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap, Settings, Inbox, Megaphone } from 'lucide-react'
 import { PageShell, PageHeader, LoadingState, EmptyState } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -45,6 +45,79 @@ function timeAgo(dateStr: string) {
   const h = Math.floor(m / 60)
   if (h < 24) return `${h} giờ trước`
   return new Date(dateStr).toLocaleDateString('vi-VN')
+}
+
+type TabKey = 'all' | 'unread' | 'notice' | 'system' | 'ai'
+const TABS: [TabKey, string][] = [
+  ['all', 'Tất cả'],
+  ['unread', 'Chưa đọc'],
+  ['notice', 'Thông báo'],
+  ['system', 'Hệ thống'],
+  ['ai', 'AI đề xuất'],
+]
+/** Phân loại notification theo eventType → tab. */
+function catOf(eventType: string): 'notice' | 'system' | 'ai' {
+  const s = (eventType || '').toLowerCase()
+  if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
+  if (/anomaly|health|system|config|error/.test(s)) return 'system'
+  return 'notice'
+}
+function filterIcon(key: TabKey) {
+  switch (key) {
+    case 'all': return <Inbox size={18} />
+    case 'unread': return <Bell size={18} />
+    case 'notice': return <Megaphone size={18} />
+    case 'system': return <Settings size={18} />
+    case 'ai': return <Brain size={18} />
+  }
+}
+
+/** 1 thẻ KPI-lọc (dọc): icon + nhãn + số đếm; bấm để lọc. Dùng CHUNG desktop + mobile. */
+function FilterKpi({ active, label, icon, count, onClick }: {
+  active: boolean; label: string; icon: ReactNode; count: number; onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99]"
+      style={active
+        ? { background: 'var(--pf-primary-soft)', borderColor: 'var(--pf-primary)' }
+        : { background: 'var(--pf-surface)', borderColor: 'var(--pf-border)' }}
+    >
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={active
+          ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+          : { background: 'var(--pf-color-muted-soft)', color: 'var(--pf-color-muted)' }}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 text-sm font-semibold" style={{ color: active ? 'var(--pf-primary)' : 'var(--pf-text)' }}>
+        {label}
+      </span>
+      <span
+        className="rounded-full px-2.5 py-0.5 text-sm font-bold tabular-nums"
+        style={active
+          ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
+          : { background: 'var(--pf-color-muted-soft)', color: 'var(--pf-color-muted)' }}
+      >
+        {count}
+      </span>
+    </button>
+  )
+}
+
+/** 5 KPI-lọc xếp DỌC (1 cột). */
+function FilterKpiList({ tab, counts, onChange }: {
+  tab: TabKey; counts: Record<TabKey, number>; onChange: (t: TabKey) => void
+}) {
+  return (
+    <div className="space-y-2.5">
+      {TABS.map(([k, l]) => (
+        <FilterKpi key={k} active={tab === k} label={l} icon={filterIcon(k)} count={counts[k]} onClick={() => onChange(k)} />
+      ))}
+    </div>
+  )
 }
 
 export function MemberNotifications() {
@@ -147,8 +220,21 @@ export function MemberNotifications() {
     }
   }
 
-  const unread = notifs.filter(n => n.status !== 'READ')
-  const read = notifs.filter(n => n.status === 'READ')
+  const [tab, setTab] = useState<TabKey>('all')
+  const filtered = notifs.filter(n =>
+    tab === 'all' ? true
+    : tab === 'unread' ? n.status !== 'READ'
+    : catOf(n.eventType) === tab,
+  )
+  const unread = filtered.filter(n => n.status !== 'READ')
+  const read = filtered.filter(n => n.status === 'READ')
+  const counts: Record<TabKey, number> = {
+    all: notifs.length,
+    unread: notifs.filter(n => n.status !== 'READ').length,
+    notice: notifs.filter(n => catOf(n.eventType) === 'notice').length,
+    system: notifs.filter(n => catOf(n.eventType) === 'system').length,
+    ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
+  }
 
   const openNotif = (n: HermesNotif) => {
     if (n.status !== 'READ') handleRead(n.id)
@@ -178,7 +264,7 @@ export function MemberNotifications() {
   }
 
   return (
-    <PageShell maxWidth={900}>
+    <PageShell>
       <PageHeader
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
@@ -221,19 +307,33 @@ export function MemberNotifications() {
       ) : notifs.length === 0 ? (
         <EmptyState icon={<Bell size={24} />} title="Không có thông báo nào" description="Các thông báo từ CLB sẽ hiển thị tại đây." />
       ) : (
-        <div className="flex flex-col gap-6">
-          {unread.length > 0 && (
-            <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider [color:var(--pf-color-muted)]">Chưa đọc</p>
-              <div className="flex flex-col gap-2">{unread.map(renderCard)}</div>
-            </div>
-          )}
-          {read.length > 0 && (
-            <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider [color:var(--pf-color-muted)]">Đã đọc</p>
-              <div className="flex flex-col gap-2">{read.map(renderCard)}</div>
-            </div>
-          )}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+          {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, bề ngang cố định, sát lề trái */}
+          <div className="lg:w-[260px] lg:shrink-0">
+            <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
+          </div>
+
+          {/* CỘT PHẢI — danh sách thông báo 1 CỘT, mở rộng hết phần còn lại */}
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
+            {unread.length > 0 && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider [color:var(--pf-color-muted)]">Chưa đọc</p>
+                <div className="flex flex-col gap-2">{unread.map(renderCard)}</div>
+              </div>
+            )}
+            {read.length > 0 && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider [color:var(--pf-color-muted)]">Đã đọc</p>
+                <div className="flex flex-col gap-2">{read.map(renderCard)}</div>
+              </div>
+            )}
+            {filtered.length === 0 && (
+              <div className="py-16 text-center">
+                <Bell size={32} className="mx-auto mb-3 [color:var(--pf-color-muted)]" />
+                <p className="text-sm [color:var(--pf-color-muted)]">Không có thông báo trong mục này</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </PageShell>
