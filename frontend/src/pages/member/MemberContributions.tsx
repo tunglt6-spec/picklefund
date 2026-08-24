@@ -103,8 +103,7 @@ export function MemberContributions() {
         <Send size={15} className="[color:var(--pf-primary)]" />
         <span className="text-[14px] font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
       </div>
-      {/* Lưới 2 cột trên desktop cho cân (mobile giữ 1 cột) */}
-      <div className="grid gap-2 lg:grid-cols-2 items-start">
+      <div className="space-y-2">
         {myPayments.map((p) => {
           const meta = paymentStatusMeta(p.status)
           return (
@@ -285,25 +284,26 @@ export function MemberContributions() {
         }
       />
 
-      {/* KPI — MetricCard giống Admin */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={`${contributions.length} khoản`} accent="blue" icon={<DollarSign size={18} />} />
-        <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
-        <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
-      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* CỘT TRÁI (2/3) — KPI 2×2 + tìm kiếm + bảng đóng quỹ */}
+        <div className="space-y-4 lg:col-span-2">
+          <div className="grid grid-cols-2 gap-4">
+            <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={`${contributions.length} khoản`} accent="green" icon={<DollarSign size={18} />} />
+            <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
+            <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
+            <MetricCard label="Đã báo nộp" value={`${myPayments.length} khoản`} sub="Chờ/đã duyệt" accent="blue" icon={<Send size={18} />} />
+          </div>
 
-      {reportedSection}
-
-      {/* Search */}
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Tìm theo kỳ quỹ..."
-          className="input-base pl-9"
-        />
-      </div>
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm theo kỳ quỹ..."
+              className="input-base pl-9"
+            />
+          </div>
 
       {/* Bảng đóng quỹ — DataTable, read-only */}
       <ChartCard title="Các khoản đóng quỹ" subtitle={`${filtered.length} khoản`}>
@@ -381,6 +381,15 @@ export function MemberContributions() {
           </div>
         </ChartCard>
       )}
+        </div>
+
+        {/* CỘT PHẢI (1/3) — Khoản bạn đã báo nộp */}
+        {myPayments.length > 0 ? reportedSection : (
+          <ChartCard title="Khoản bạn đã báo nộp">
+            <p className="py-6 text-center text-sm [color:var(--pf-color-muted)]">Chưa báo nộp khoản nào. Bấm “Báo đã nộp quỹ” sau khi bạn đã chuyển khoản.</p>
+          </ChartCard>
+        )}
+      </div>
       <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={loadPayments} />
     </PageShell>
   )

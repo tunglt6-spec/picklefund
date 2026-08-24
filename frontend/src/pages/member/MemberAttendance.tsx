@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck } from 'lucide-react'
+import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
@@ -204,8 +204,8 @@ export function MemberAttendance() {
       },
     },
   ]
-  const rateColor = rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'
   const rateBar = rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'
+  const scheduledCount = periodSessions.filter(s => s.status === 'scheduled').length
 
   return (
     <PageShell>
@@ -214,37 +214,57 @@ export function MemberAttendance() {
         subtitle={activePeriod ? `${activePeriod.name} · ${myMember?.fullName ?? 'Thành viên'}` : 'Chưa có kỳ quỹ'}
       />
 
-      {/* KPI — MetricCard giống Admin */}
-      <div className="grid grid-cols-3 gap-4">
-        <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
-        <MetricCard label="Sắp diễn ra" value={`${periodSessions.filter(s => s.status === 'scheduled').length} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} />
-        <MetricCard label="Chi phí sân" value={formatVND(Math.round(courtCostPerSession))} sub="Phần chia cá nhân" accent="green" icon={<MapPin size={18} />} />
-      </div>
+      {/* Bố cục giống Tổng Quan: trái 2/3 (KPI 2×2 + danh sách buổi) · phải 1/3 (tiến độ tham gia) */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* CỘT TRÁI (2/3) */}
+        <div className="space-y-4 lg:col-span-2">
+          <div className="grid grid-cols-2 gap-4">
+            <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
+            <MetricCard label="Tỷ lệ tham gia" value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
+            <MetricCard label="Sắp diễn ra" value={`${scheduledCount} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} />
+            <MetricCard label="Chi phí sân" value={formatVND(Math.round(courtCostPerSession))} sub="Phần chia cá nhân" accent="green" icon={<MapPin size={18} />} />
+          </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Tìm theo ngày hoặc sân..."
-          className="input-base pl-9"
-        />
-      </div>
+          <ChartCard title="Danh sách buổi tập" subtitle={`${filtered.length} buổi`}>
+            <div className="relative mb-3">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm theo ngày hoặc sân..."
+                className="input-base pl-9"
+              />
+            </div>
+            <DataTable columns={sessColumns} rows={filtered} rowKey={(s) => s.id} emptyText="Chưa có buổi tập nào" />
+          </ChartCard>
+        </div>
 
-      {/* Rate bar */}
-      {completedSessions.length > 0 && (
-        <ChartCard title="Tỷ lệ tham gia" actions={<span className={`text-sm font-bold ${rateColor}`}>{rate}%</span>}>
-          <div className="h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${rateBar}`} style={{ width: `${rate}%` }} />
+        {/* CỘT PHẢI (1/3) — Tiến độ tham gia (vòng %) */}
+        <ChartCard title="Tiến độ tham gia" subtitle={activePeriod?.name ?? undefined}>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative h-28 w-28">
+              <div
+                className="h-28 w-28 rounded-full"
+                style={{ background: `conic-gradient(var(--pf-primary) ${Math.min(100, rate) * 3.6}deg, var(--pf-color-muted-soft) 0deg)` }}
+              />
+              <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full [background:var(--pf-surface)]">
+                <span className="text-[22px] font-extrabold [color:var(--pf-text)]">{rate}%</span>
+                <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
+              </div>
+            </div>
+            <span className="text-[12px] [color:var(--pf-color-muted)]">{attendedCount}/{completedSessions.length} buổi hoàn thành</span>
+            <div className="w-full">
+              <div className="h-3 w-full overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
+                <div className={`h-full rounded-full transition-all ${rateBar}`} style={{ width: `${rate}%` }} />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[12px] [color:var(--pf-color-muted)]">
+                <span>Sắp diễn ra: {scheduledCount}</span>
+                <span>Chi phí: {formatVND(Math.round(courtCostPerSession))}</span>
+              </div>
+            </div>
           </div>
         </ChartCard>
-      )}
-
-      {/* Bảng buổi tập — DataTable read-only */}
-      <ChartCard title="Danh sách buổi tập" subtitle={`${filtered.length} buổi`}>
-        <DataTable columns={sessColumns} rows={filtered} rowKey={(s) => s.id} emptyText="Chưa có buổi tập nào" />
-      </ChartCard>
+      </div>
     </PageShell>
   )
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageShell, PageHeader, MetricCard, ActionButton } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, ActionButton } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
@@ -381,64 +381,26 @@ export function MemberReceipt() {
           )
         })()}
 
-        {/* Summary KPIs — MetricCard (đồng bộ tab Lịch sử đóng / Lịch tham gia / Công nợ) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <MetricCard
-            label="Tổng đã đóng"
-            value={formatVND(totalPaid)}
-            sub={activePeriod ? `Kỳ ${activePeriod.name}` : undefined}
-            accent="blue"
-            icon={<DollarSign size={18} />}
-          />
-          <MetricCard
-            label="Chi phí phân bổ"
-            value={formatVND(totalCost)}
-            sub="Tiền sân + sinh hoạt"
-            accent="amber"
-            icon={<TrendingUp size={18} />}
-          />
-          <MetricCard
-            label="Số dư"
-            value={`${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`}
-            sub={netBalance >= 0 ? 'Dư quỹ' : 'Còn thiếu'}
-            accent="green"
-            negative={netBalance < 0}
-            icon={<Receipt size={18} />}
-          />
-        </div>
+        {/* Bố cục giống Tổng Quan: trái 2/3 (KPI 2×2 + phiếu thu chính thức) · phải 1/3 (kỳ hiện tại tạm tính) */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* CỘT TRÁI (2/3) — KPI 2×2 + phiếu thu chính thức */}
+          <div className="space-y-4 lg:col-span-2">
+            <div className="grid grid-cols-2 gap-4">
+              <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={activePeriod ? `Kỳ ${activePeriod.name}` : undefined} accent="green" icon={<DollarSign size={18} />} />
+              <MetricCard label="Buổi tham gia" value={`${n(live?.attendedSessions)}/${n(live?.totalSessions)}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
+              <MetricCard label="Chi phí phân bổ" value={formatVND(totalCost)} sub="Tiền sân + sinh hoạt" accent="amber" icon={<TrendingUp size={18} />} />
+              <MetricCard label="Số dư" value={`${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`} sub={netBalance >= 0 ? 'Dư quỹ' : 'Còn thiếu'} accent="blue" negative={netBalance < 0} icon={<AlertCircle size={18} />} />
+            </div>
 
-        {/* Nội dung chính — bố trí 2 CỘT cho cân trên desktop rộng:
-            chưa có phiếu thu → [sao kê tạm tính | ghi chú]; có phiếu thu → lưới thẻ phiếu thu. */}
-        {!hasReceipts ? (
-          <div className="grid gap-5 lg:grid-cols-2 items-start">
-          {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
-          {live && activePeriod ? (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold [color:var(--pf-text)]">Kỳ hiện tại · {activePeriod.name}</h3>
-              <span className="text-[11px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
-            </div>
-            <div className="space-y-1.5">
-              <LiveRow label="Đã tham gia" value={`${live.attendedSessions}/${live.totalSessions} buổi`} />
-              <LiveRow label="Tiền sân (phân bổ)" value={formatVND(n(live.courtFee))} />
-              <LiveRow label="Chi phí sinh hoạt" value={formatVND(n(live.livingFee))} />
-              <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
-              <div className="flex justify-between pt-2 mt-0.5 border-t border-[color:var(--pf-border)]">
-                <span className="text-sm font-bold [color:var(--pf-text)]">Tổng chi phí</span>
-                <span className="text-base font-extrabold [color:var(--pf-text)]">{formatVND(n(live.totalCost))}</span>
-              </div>
-            </div>
-          </div>
-          ) : null}
-          {/* Ghi chú phiếu thu chính thức — cột phải, cân với sao kê tạm tính bên trái */}
-          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] flex flex-col items-center justify-center text-center px-6 py-10">
-            <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
-            <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có phiếu thu chính thức</p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên trái là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
-          </div>
-          </div>
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2 items-start">
+            <ChartCard title="Phiếu thu chính thức" subtitle={hasReceipts ? `${displayReceipts.length} kỳ đã chốt` : 'Tạo sau khi kỳ quỹ kết thúc'}>
+              {!hasReceipts ? (
+                <div className="flex flex-col items-center justify-center text-center py-8">
+                  <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
+                  <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có phiếu thu chính thức</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên phải là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
             {displayReceipts.map(r => {
               const isExpanded = expanded === r.id
               const period = r.fundPeriod
@@ -555,8 +517,43 @@ export function MemberReceipt() {
                 </div>
               )
             })}
+                </div>
+              )}
+            </ChartCard>
           </div>
-        )}
+
+          {/* CỘT PHẢI (1/3) — Kỳ hiện tại (tạm tính) + số dư còn lại */}
+          <ChartCard title="Kỳ hiện tại (tạm tính)" subtitle={activePeriod?.name ?? undefined}>
+            {live && activePeriod ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <LiveRow label="Đã tham gia" value={`${live.attendedSessions}/${live.totalSessions} buổi`} />
+                  <LiveRow label="Tiền sân (phân bổ)" value={formatVND(n(live.courtFee))} />
+                  <LiveRow label="Chi phí sinh hoạt" value={formatVND(n(live.livingFee))} />
+                  <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
+                  <div className="flex justify-between pt-2 mt-0.5 border-t border-[color:var(--pf-border)]">
+                    <span className="text-sm font-bold [color:var(--pf-text)]">Tổng chi phí</span>
+                    <span className="text-base font-extrabold [color:var(--pf-text)]">{formatVND(n(live.totalCost))}</span>
+                  </div>
+                </div>
+                <div className="rounded-xl px-4 py-3 [background:var(--pf-color-success-soft)]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold [color:var(--pf-text)]">Số dư còn lại</span>
+                    <span className="text-xl font-bold" style={{ color: n(live.balance) >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
+                      {n(live.balance) >= 0 ? '+' : ''}{formatVND(n(live.balance))}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs" style={{ color: n(live.balance) >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
+                    {n(live.balance) >= 0 ? '✓ Số dư dương — chuyển sang kỳ sau' : 'Bạn chưa đóng đủ quỹ kỳ này.'}
+                  </p>
+                </div>
+                <span className="inline-block text-[11px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
+              </div>
+            ) : (
+              <p className="py-6 text-center text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ đang diễn ra.</p>
+            )}
+          </ChartCard>
+        </div>
       </div>
     </PageShell>
   )
