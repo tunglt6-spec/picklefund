@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
+import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
 
 type HermesNotif = {
   id: string
@@ -183,6 +184,7 @@ export function Notifications() {
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const { setUnreadCount: setGlobalUnread, reset: resetGlobal } = useNotifStore()
 
   const fetchNotifs = useCallback(async () => {
@@ -273,12 +275,20 @@ export function Notifications() {
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>
             <div className="text-[12px] [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
-          {unreadCount > 0 && (
-            <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
-              <Check size={13} />Đánh dấu đã đọc
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
+                <Check size={13} />Đánh dấu đã đọc
+              </button>
+            )}
+            <button onClick={() => setSettingsOpen(true)} aria-label="Cài đặt thông báo"
+              className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]">
+              <Settings size={16} />
             </button>
-          )}
+          </div>
         </div>
+
+        <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={ADMIN_PUSH_CATEGORIES} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
           <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
@@ -319,13 +329,21 @@ export function Notifications() {
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
         actions={
-          unreadCount > 0
-            ? <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
-            : undefined
+            )}
+            <button onClick={() => setSettingsOpen(true)} aria-label="Cài đặt thông báo"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)]">
+              <Settings size={16} />
+            </button>
+          </div>
         }
       />
+
+      <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={ADMIN_PUSH_CATEGORIES} />
 
       <div className="p-6 pf-center-x w-full" style={{ maxWidth: 1600 }}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">

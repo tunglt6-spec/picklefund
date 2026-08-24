@@ -4,11 +4,22 @@ import { Modal } from '../ui/Modal'
 import { ActionButton } from '../shared'
 import api from '../../lib/api'
 
-// Đồng bộ với bộ lọc thông báo của member (catOf ở MemberNotifications) + pushCategory backend.
-const CATEGORIES: { key: string; label: string; desc: string }[] = [
-  { key: 'community', label: 'Cộng đồng', desc: 'Bài đăng · bình luận · @nhắc tên · tìm kèo' },
-  { key: 'finance', label: 'Tài chính', desc: 'Nộp quỹ · xác nhận · nhắc đóng' },
-  { key: 'activity', label: 'Hoạt động', desc: 'Nhắc buổi tập · đăng ký · thông báo khác' },
+// Mỗi mục = 1 toggle điều khiển 1 hoặc nhiều key gốc trong pushMutedCategories.
+// Đồng bộ với bộ lọc thông báo + pushCategory backend (keys: community/finance/activity/system/ai).
+export interface PushCategoryDef { label: string; desc: string; keys: string[] }
+
+/** Member: 3 nhóm khớp bộ lọc member (catOf ở MemberNotifications). */
+export const MEMBER_PUSH_CATEGORIES: PushCategoryDef[] = [
+  { label: 'Cộng đồng', desc: 'Bài đăng · bình luận · @nhắc tên · tìm kèo', keys: ['community'] },
+  { label: 'Tài chính', desc: 'Nộp quỹ · xác nhận · nhắc đóng', keys: ['finance'] },
+  { label: 'Hoạt động', desc: 'Nhắc buổi tập · đăng ký · thông báo khác', keys: ['activity'] },
+]
+
+/** Admin: 3 nhóm khớp bộ lọc admin (Thông báo / Hệ thống / AI đề xuất). */
+export const ADMIN_PUSH_CATEGORIES: PushCategoryDef[] = [
+  { label: 'Thông báo', desc: 'Cộng đồng · tài chính · hoạt động', keys: ['community', 'finance', 'activity'] },
+  { label: 'Hệ thống', desc: 'Cảnh báo bất thường · sức khỏe CLB', keys: ['system'] },
+  { label: 'AI đề xuất', desc: 'Bản tin AI · báo cáo định kỳ', keys: ['ai'] },
 ]
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -31,7 +42,9 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
  * - Bật/tắt push theo từng nhóm (community/finance/activity) — trùng bộ lọc thông báo.
  * - "Không làm phiền ban đêm": khung giờ yên tĩnh (không buzz push, in-app vẫn nhận).
  */
-export function NotificationSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NotificationSettingsModal({ open, onClose, categories = MEMBER_PUSH_CATEGORIES }: {
+  open: boolean; onClose: () => void; categories?: PushCategoryDef[]
+}) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [muted, setMuted] = useState<Set<string>>(new Set())
@@ -60,11 +73,10 @@ export function NotificationSettingsModal({ open, onClose }: { open: boolean; on
     if (open) load()
   }, [open, load])
 
-  const toggleCat = (key: string, receive: boolean) => {
+  const toggleCat = (keys: string[], receive: boolean) => {
     setMuted((prev) => {
       const next = new Set(prev)
-      if (receive) next.delete(key)
-      else next.add(key)
+      keys.forEach((k) => (receive ? next.delete(k) : next.add(k)))
       return next
     })
   }
@@ -109,13 +121,13 @@ export function NotificationSettingsModal({ open, onClose }: { open: boolean; on
           <div>
             <p className="mb-2 text-[12px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">Nhận thông báo đẩy theo nhóm</p>
             <div className="space-y-2">
-              {CATEGORIES.map((c) => (
-                <div key={c.key} className="flex items-center justify-between gap-3 rounded-xl border p-3 [border-color:var(--pf-border)]">
+              {categories.map((c) => (
+                <div key={c.label} className="flex items-center justify-between gap-3 rounded-xl border p-3 [border-color:var(--pf-border)]">
                   <div className="min-w-0">
                     <p className="text-[14px] font-semibold [color:var(--pf-text)]">{c.label}</p>
                     <p className="text-[12px] [color:var(--pf-color-muted)]">{c.desc}</p>
                   </div>
-                  <Toggle on={!muted.has(c.key)} onChange={(v) => toggleCat(c.key, v)} />
+                  <Toggle on={c.keys.every((k) => !muted.has(k))} onChange={(v) => toggleCat(c.keys, v)} />
                 </div>
               ))}
             </div>

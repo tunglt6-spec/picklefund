@@ -279,14 +279,19 @@ export class HermesService {
   }
 
   /**
-   * Nhóm push (member tự tắt theo nhóm) — ĐỒNG BỘ với bộ lọc thông báo của member
-   * (catOf ở frontend MemberNotifications) + CATEGORIES trong NotificationSettingsModal.
-   * Chỉ 3 nhóm: community (cộng đồng + tìm kèo) · finance (quỹ/thanh toán) · activity (buổi tập/khác).
+   * Nhóm push (member/admin tự tắt theo nhóm) — ĐỒNG BỘ với bộ lọc thông báo:
+   *  - Member (MemberNotifications.catOf): community · finance · activity.
+   *  - Admin (Notifications.catOf): "Thông báo" = {community,finance,activity} · system · ai.
+   * 5 key gốc: community (cộng đồng + tìm kèo) · finance (quỹ/thanh toán) · system (bất thường/sức khỏe)
+   * · ai (bản tin/báo cáo) · activity (còn lại). Check community/finance TRƯỚC để 'community_report'
+   * (chứa 'report') không rơi nhầm vào 'ai'.
    */
   private pushCategory(eventType: string): string {
     const s = (eventType || '').toLowerCase();
     if (s.includes('community') || s.includes('matchmaking')) return 'community';
     if (s.includes('payment') || s.includes('fund')) return 'finance';
+    if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai';
+    if (/anomaly|health|system|config|error/.test(s)) return 'system';
     return 'activity';
   }
 
