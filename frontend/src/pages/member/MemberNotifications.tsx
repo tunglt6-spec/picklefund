@@ -47,28 +47,35 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('vi-VN')
 }
 
-type TabKey = 'all' | 'unread' | 'notice' | 'system' | 'ai'
+type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity'
 const TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
   ['unread', 'Chưa đọc'],
-  ['notice', 'Thông báo'],
-  ['system', 'Hệ thống'],
-  ['ai', 'AI đề xuất'],
+  ['community', 'Cộng đồng'],
+  ['finance', 'Tài chính'],
+  ['activity', 'Hoạt động'],
 ]
-/** Phân loại notification theo eventType → tab. */
-function catOf(eventType: string): 'notice' | 'system' | 'ai' {
+/**
+ * Phân loại thông báo của MEMBER theo eventType. Member CHỈ nhận các nhóm dưới đây —
+ * KHÔNG nhận nhóm "Hệ thống" (anomaly/health) hay "AI đề xuất" (daily_brief/weekly_report)
+ * vì theo EVENT_RECIPIENTS các nhóm đó chỉ gửi cho CLUB_ADMIN/CLUB_TREASURER.
+ *  - Cộng đồng: community_* (bài đăng/bình luận/@mention/phản hồi), matchmaking (tìm kèo)
+ *  - Tài chính: payment_* (báo nộp/xác nhận/kiểm tra lại), fund
+ *  - Hoạt động: nhắc buổi tập, đăng ký, không hoạt động, ...
+ */
+function catOf(eventType: string): 'community' | 'finance' | 'activity' {
   const s = (eventType || '').toLowerCase()
-  if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
-  if (/anomaly|health|system|config|error/.test(s)) return 'system'
-  return 'notice'
+  if (s.includes('community') || s.includes('matchmaking')) return 'community'
+  if (s.includes('payment') || s.includes('fund')) return 'finance'
+  return 'activity'
 }
 function filterIcon(key: TabKey) {
   switch (key) {
     case 'all': return <Inbox size={18} />
     case 'unread': return <Bell size={18} />
-    case 'notice': return <Megaphone size={18} />
-    case 'system': return <Settings size={18} />
-    case 'ai': return <Brain size={18} />
+    case 'community': return <Megaphone size={18} />
+    case 'finance': return <DollarSign size={18} />
+    case 'activity': return <Calendar size={18} />
   }
 }
 
@@ -231,9 +238,9 @@ export function MemberNotifications() {
   const counts: Record<TabKey, number> = {
     all: notifs.length,
     unread: notifs.filter(n => n.status !== 'READ').length,
-    notice: notifs.filter(n => catOf(n.eventType) === 'notice').length,
-    system: notifs.filter(n => catOf(n.eventType) === 'system').length,
-    ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
+    community: notifs.filter(n => catOf(n.eventType) === 'community').length,
+    finance: notifs.filter(n => catOf(n.eventType) === 'finance').length,
+    activity: notifs.filter(n => catOf(n.eventType) === 'activity').length,
   }
 
   const openNotif = (n: HermesNotif) => {
