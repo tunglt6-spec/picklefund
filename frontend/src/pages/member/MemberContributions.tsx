@@ -103,7 +103,8 @@ export function MemberContributions() {
         <Send size={15} className="[color:var(--pf-primary)]" />
         <span className="text-[14px] font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
       </div>
-      <div className="space-y-2">
+      {/* Lưới 2 cột trên desktop cho cân (mobile giữ 1 cột) */}
+      <div className="grid gap-2 lg:grid-cols-2 items-start">
         {myPayments.map((p) => {
           const meta = paymentStatusMeta(p.status)
           return (

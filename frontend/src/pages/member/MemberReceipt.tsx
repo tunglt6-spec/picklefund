@@ -407,8 +407,12 @@ export function MemberReceipt() {
           />
         </div>
 
-        {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
-        {!hasReceipts && live && activePeriod && (
+        {/* Nội dung chính — bố trí 2 CỘT cho cân trên desktop rộng:
+            chưa có phiếu thu → [sao kê tạm tính | ghi chú]; có phiếu thu → lưới thẻ phiếu thu. */}
+        {!hasReceipts ? (
+          <div className="grid gap-5 lg:grid-cols-2 items-start">
+          {/* Kỳ hiện tại — số liệu LIVE (tạm tính) khi chưa có phiếu thu chính thức */}
+          {live && activePeriod ? (
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold [color:var(--pf-text)]">Kỳ hiện tại · {activePeriod.name}</h3>
@@ -425,17 +429,16 @@ export function MemberReceipt() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Receipt cards */}
-        {displayReceipts.length === 0 ? (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
+          ) : null}
+          {/* Ghi chú phiếu thu chính thức — cột phải, cân với sao kê tạm tính bên trái */}
+          <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] flex flex-col items-center justify-center text-center px-6 py-10">
             <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
             <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có phiếu thu chính thức</p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên trên là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên trái là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
+          </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-4 lg:grid-cols-2 items-start">
             {displayReceipts.map(r => {
               const isExpanded = expanded === r.id
               const period = r.fundPeriod
