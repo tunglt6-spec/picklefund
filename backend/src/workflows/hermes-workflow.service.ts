@@ -369,6 +369,138 @@ export class HermesWorkflowService {
     return this.toRunResponse(run);
   }
 
+  /**
+   * GIẢI TRÌNH 1 lần chạy (AI observability — Phase 1/2). Gộp mọi dữ kiện ĐÃ CÓ để trả lời 8 câu:
+   * rule nào · agent nào · tạo bao nhiêu AI Action · thành/bại · dedup/cooldown · human approval ·
+   * chi phí AI · outcome nghiệp vụ (thông báo). KHÔNG lộ payload thô (chỉ id/loại/trạng thái/đếm).
+   */
+  async runTrace(id: string, clubIdRaw: string | null) {
+    const clubId = this.requireClub(clubIdRaw);
+    const run = await this.prisma.workflowRun.findFirst({ where: { id, clubId } });
+    if (!run) throw new NotFoundException('Không tìm thấy workflow run.');
+
+    const rj = (run.resultJson ?? {}) as {
+      matched?: boolean;
+      createdActionIds?: string[];
+      skippedActionCount?: number;
+      skippedDuplicateCount?: number;
+      skippedCooldownCount?: number;
+      autoResolvedCount?: number;
+    };
+    const actionIds = Array.isArray(rj.createdActionIds) ? rj.createdActionIds : [];
+
+    const [rule, actions, jobs, usage] = await Promise.all([
+      run.workflowRuleId
+        ? this.prisma.workflowRule.findUnique({
+            where: { id: run.workflowRuleId },
+            select: { id: true, name: true, triggerType: true, scheduleType: true },
+          })
+        : Promise.resolve(null),
+      actionIds.length
+        ? this.prisma.aiAction.findMany({
+            where: { id: { in: actionIds }, clubId },
+            select: {
+              id: true, actionType: true, riskLevel: true, status: true, title: true,
+              approvalRequired: true, approvedAt: true, rejectedAt: true,
+              executorAgent: true, executionDuration: true,
+            },
+          })
+        : Promise.resolve([] as any[]),
+      actionIds.length
+        ? this.prisma.notificationJob.findMany({
+            where: { clubId, aiActionId: { in: actionIds } },
+            select: { channel: true, status: true, aiActionId: true },
+          })
+        : Promise.resolve([] as any[]),
+      // Chi phí AI gắn theo run qua correlationId (= run.id). Engine rule-based nên thường rỗng ($0).
+      this.prisma.aiUsageLog.findMany({
+        where: { correlationId: id },
+        select: {
+          agent: true, provider: true, model: true, totalTokens: true,
+          estimatedCostUsd: true, latencyMs: true, source: true, success: true,
+        },
+      }),
+    ]);
+
+    const durationMs =
+      run.startedAt && run.completedAt
+        ? new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()
+        : null;
+
+    // Q2 — agent tham gia
+    const agents = new Set<string>(['HERMES']);
+    for (const a of actions) if (a.executorAgent) agents.add(a.executorAgent);
+    for (const u of usage) agents.add((u.source ?? u.agent ?? '').toUpperCase());
+
+    // Q6 — human approval
+    const approval = {
+      required: actions.filter((a) => a.approvalRequired).length,
+      approved: actions.filter((a) => a.approvedAt).length,
+      rejected: actions.filter((a) => a.rejectedAt).length,
+      pending: actions.filter((a) => a.status === 'PENDING_APPROVAL').length,
+    };
+
+    // Q7 — chi phí AI
+    const cost = {
+      calls: usage.length,
+      totalTokens: usage.reduce((s, u) => s + (u.totalTokens ?? 0), 0),
+      estimatedCostUsd: usage.reduce((s, u) => s + Number(u.estimatedCostUsd ?? 0), 0),
+      note:
+        usage.length === 0
+          ? 'Engine rule-based — không gọi LLM trong lần chạy này (chi phí AI ≈ $0).'
+          : undefined,
+    };
+
+    // Q8 — outcome nghiệp vụ (thông báo phát sinh)
+    const byChannel: Record<string, number> = {};
+    const byStatus: Record<string, number> = {};
+    for (const j of jobs) {
+      byChannel[j.channel] = (byChannel[j.channel] ?? 0) + 1;
+      byStatus[j.status] = (byStatus[j.status] ?? 0) + 1;
+    }
+
+    return {
+      run: {
+        id: run.id,
+        triggerType: run.triggerType,
+        status: run.status,
+        ruleId: run.workflowRuleId,
+        ruleName: rule?.name ?? null,
+        scheduleType: rule?.scheduleType ?? null,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        durationMs,
+        idempotencyKey: run.idempotencyKey,
+        matched: rj.matched ?? null,
+        error: (run as { errorMessage?: string | null }).errorMessage ?? null,
+      },
+      // 8 câu hỏi giải trình
+      q1_rule: { ruleId: run.workflowRuleId, ruleName: rule?.name ?? null, triggerType: run.triggerType },
+      q2_agents: [...agents].filter(Boolean),
+      q3_actions: {
+        created: actions.length,
+        items: actions.map((a) => ({
+          id: a.id,
+          actionType: a.actionType,
+          riskLevel: a.riskLevel,
+          status: a.status,
+          title: a.title,
+          executionDurationMs: a.executionDuration ?? null,
+        })),
+      },
+      q4_result: { status: run.status, matched: rj.matched ?? null },
+      q5_dedup: {
+        skippedDuplicate: rj.skippedDuplicateCount ?? 0,
+        skippedCooldown: rj.skippedCooldownCount ?? 0,
+        skippedOther: rj.skippedActionCount ?? 0,
+        autoResolved: rj.autoResolvedCount ?? 0,
+      },
+      q6_approval: approval,
+      q7_cost: cost,
+      q8_business: { notifications: { total: jobs.length, byChannel, byStatus } },
+    };
+  }
+
   listTemplates() {
     return WORKFLOW_TEMPLATES;
   }

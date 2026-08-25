@@ -16,6 +16,7 @@ import {
   type WorkflowRunStatus,
   type WorkflowTemplate,
 } from '../../../hooks/useWorkflows'
+import { RunTraceDrawer } from './RunTraceDrawer'
 
 const RUN_STATUS_STYLE: Record<WorkflowRunStatus, string> = {
   PENDING: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
@@ -67,6 +68,8 @@ export function WorkflowRules() {
   const [liveResult, setLiveResult] = useState<DispatchLiveResult | null>(null)
   // Phase 1: rule trùng — khi BE trả 409, hỏi mở rule hiện có hay tạo bản mới.
   const [dup, setDup] = useState<{ template: WorkflowTemplate; existingRuleId: string; existingRuleName: string } | null>(null)
+  // Giải trình 1 lần chạy (AI observability) — mở drawer trace theo run.id.
+  const [traceRunId, setTraceRunId] = useState<string | null>(null)
 
   async function run(fn: () => Promise<unknown>, okMsg: string) {
     setBusy(true)
@@ -401,7 +404,12 @@ export function WorkflowRules() {
           ) : (
             <div className="space-y-2">
               {runs.map((run) => (
-                <div key={run.id} className="flex items-center justify-between gap-2 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5">
+                <button
+                  key={run.id}
+                  onClick={() => setTraceRunId(run.id)}
+                  title="Xem giải trình lần chạy"
+                  className="flex w-full items-center justify-between gap-2 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5 text-left transition-colors hover:[background:var(--pf-color-muted-soft)]"
+                >
                   <div className="min-w-0">
                     <p className="text-xs font-medium [color:var(--pf-text)]">{run.triggerType}</p>
                     <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)}</p>
@@ -410,12 +418,13 @@ export function WorkflowRules() {
                   <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                     {run.status}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
       </div>
+      <RunTraceDrawer runId={traceRunId} onClose={() => setTraceRunId(null)} />
     </div>
   )
 }

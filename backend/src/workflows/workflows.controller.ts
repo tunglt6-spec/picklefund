@@ -216,4 +216,11 @@ export class WorkflowsController {
   async findRun(@Param('id') id: string, @CurrentUser() user: JwtUser) {
     return ok(await this.svc.findRun(id, user.clubId));
   }
+
+  // Giải trình 1 lần chạy (AI observability): rule/agent/action/kết quả/dedup/approval/chi phí/outcome.
+  @Get('runs/:id/trace')
+  @ApiOperation({ summary: 'Giải trình 1 lần chạy (8 câu hỏi observability).' })
+  async runTrace(@Param('id') id: string, @CurrentUser() user: JwtUser) {
+    return ok(await this.svc.runTrace(id, user.clubId));
+  }
 }

@@ -136,6 +136,28 @@ export async function setRuleEnabled(id: string, enabled: boolean): Promise<void
 export async function deleteWorkflowRule(id: string): Promise<void> {
   await api.delete(`/workflows/rules/${id}`)
 }
+
+/** Giải trình 1 lần chạy (AI observability) — trả lời 8 câu hỏi. */
+export interface RunTrace {
+  run: {
+    id: string; triggerType: string; status: WorkflowRunStatus
+    ruleId: string | null; ruleName: string | null; scheduleType: string | null
+    startedAt: string | null; completedAt: string | null; durationMs: number | null
+    idempotencyKey: string | null; matched: boolean | null; error: string | null
+  }
+  q1_rule: { ruleId: string | null; ruleName: string | null; triggerType: string }
+  q2_agents: string[]
+  q3_actions: { created: number; items: { id: string; actionType: string; riskLevel: string; status: string; title: string; executionDurationMs: number | null }[] }
+  q4_result: { status: WorkflowRunStatus; matched: boolean | null }
+  q5_dedup: { skippedDuplicate: number; skippedCooldown: number; skippedOther: number; autoResolved: number }
+  q6_approval: { required: number; approved: number; rejected: number; pending: number }
+  q7_cost: { calls: number; totalTokens: number; estimatedCostUsd: number; note?: string }
+  q8_business: { notifications: { total: number; byChannel: Record<string, number>; byStatus: Record<string, number> } }
+}
+export async function fetchRunTrace(runId: string): Promise<RunTrace> {
+  const res = await api.get(`/workflows/runs/${runId}/trace`)
+  return (res.data?.data ?? res.data) as RunTrace
+}
 export async function testTriggerRule(
   id: string,
   contextJson?: Record<string, unknown>,

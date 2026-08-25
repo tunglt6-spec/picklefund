@@ -1323,10 +1323,16 @@ model AiUsageLog {
   latencyMs        Int?     @map("latency_ms")
   success          Boolean  @default(true)
   fallback         Boolean  @default(false)
+  // Observability chuẩn hoá (Phase 0): 1 sink persisted DUY NHẤT cho mọi lời gọi LLM.
+  source           String?  @db.VarChar(20)                       // maika | lisa | harness | workflow
+  correlationId    String?  @map("correlation_id") @db.VarChar(64) // nối tới WorkflowRun.id / AiAction.id
+  userId           String?  @map("user_id")
+  errorType        String?  @map("error_type") @db.VarChar(60)
   createdAt        DateTime @default(now()) @map("created_at")
 
   @@index([clubId, createdAt])
   @@index([createdAt])
+  @@index([correlationId])
   @@map("ai_usage_logs")
 }
 

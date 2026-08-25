@@ -6,6 +6,7 @@ import { TokenAccountingService } from './token-accounting.service';
 import { AIProviderManagerService } from './ai-provider-manager.service';
 import { AIConfigService } from './ai-config.service';
 import { BillingService } from '../../billing/billing.service';
+import { AiUsageService } from '../../ai-usage/ai-usage.service';
 import {
   AIGatewayRequest,
   AIGatewayResponse,
@@ -25,6 +26,9 @@ export class AIGatewayService {
     // Optional: metering token theo tháng cho Billing. @Optional để harness unit-test
     // dựng gateway trực tiếp (không cần BillingModule) vẫn chạy; runtime luôn có (AiModule import BillingModule).
     @Optional() private readonly billing?: BillingService,
+    // Observability chuẩn hoá (Phase 0): ghi BỀN mọi lời gọi harness vào AiUsageLog (1 sink duy nhất).
+    // @Optional để unit-test dựng gateway trực tiếp vẫn chạy; runtime luôn có (AiUsageModule @Global).
+    @Optional() private readonly aiUsage?: AiUsageService,
   ) {}
 
   /** Shared gateway for both Desktop and Mobile — single entry point for all AI requests */
@@ -84,6 +88,25 @@ export class AIGatewayService {
         timestamp: new Date(),
       });
 
+      // Persist BỀN vào AiUsageLog (Phase 0) — 1 sink duy nhất cho observability, không mất khi redeploy.
+      if (this.aiUsage) {
+        void this.aiUsage.record({
+          clubId: request.clubId ?? null,
+          agent: 'HARNESS',
+          provider: response.provider,
+          model: response.model,
+          promptTokens: response.promptTokens,
+          completionTokens: response.completionTokens,
+          totalTokens: response.totalTokens,
+          estimatedCostUsd: response.estimatedCostUsd,
+          latencyMs: totalLatency,
+          success: true,
+          source: 'harness',
+          correlationId: requestId,
+          userId: request.userId ?? null,
+        });
+      }
+
       // Metering token tích luỹ theo tháng cho Billing (persisted, SystemSetting) —
       // fire-and-forget: lỗi ghi metering KHÔNG được ảnh hưởng phản hồi AI.
       if (this.billing && request.clubId && response.totalTokens > 0) {
@@ -131,6 +154,22 @@ export class AIGatewayService {
         userId: request.userId,
         timestamp: new Date(),
       });
+
+      // Persist lỗi vào AiUsageLog (Phase 0) — vẫn đếm được lỗi/latency dù call thất bại.
+      if (this.aiUsage) {
+        void this.aiUsage.record({
+          clubId: request.clubId ?? null,
+          agent: 'HARNESS',
+          provider: request.providerOverride ?? 'unknown',
+          model: options.model,
+          latencyMs: Date.now() - startMs,
+          success: false,
+          errorType,
+          source: 'harness',
+          correlationId: requestId,
+          userId: request.userId ?? null,
+        });
+      }
 
       // Log only the classified error type — never the message body/prompt.
       this.logger.error(`AI Gateway error [${requestId}]: ${errorType}`);

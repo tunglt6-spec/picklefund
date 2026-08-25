@@ -19,7 +19,7 @@ const PRICE_PER_1M: Record<string, { in: number; out: number }> = {
 export interface AiUsageInput {
   clubId?: string | null;
   agent: string; // 'MAIKA' | 'LISA' | ...
-  provider: 'gemini' | 'openrouter' | 'rule-based';
+  provider: 'gemini' | 'openrouter' | 'rule-based' | string;
   model?: string | null;
   promptTokens?: number;
   completionTokens?: number;
@@ -27,6 +27,13 @@ export interface AiUsageInput {
   latencyMs?: number;
   success?: boolean;
   fallback?: boolean;
+  /** Cost USD đã tính sẵn từ call-site (vd harness litellm/openrouter). Nếu bỏ trống → tự ước tính (chỉ Gemini). */
+  estimatedCostUsd?: number | null;
+  // Observability chuẩn hoá (Phase 0).
+  source?: string | null; // maika | lisa | harness | workflow
+  correlationId?: string | null; // nối tới WorkflowRun/AiAction để giải trình 1 lần chạy
+  userId?: string | null;
+  errorType?: string | null;
 }
 
 @Injectable()
@@ -47,7 +54,9 @@ export class AiUsageService {
       const promptTokens = Math.max(0, Math.round(input.promptTokens ?? 0));
       const completionTokens = Math.max(0, Math.round(input.completionTokens ?? 0));
       const totalTokens = Math.max(0, Math.round(input.totalTokens ?? promptTokens + completionTokens));
-      const cost = this.estimateCost(input.provider, input.model, promptTokens, completionTokens);
+      const cost = input.estimatedCostUsd != null
+        ? Math.max(0, input.estimatedCostUsd)
+        : this.estimateCost(input.provider, input.model, promptTokens, completionTokens);
       await this.prisma.aiUsageLog.create({
         data: {
           clubId: input.clubId ?? null,
@@ -61,6 +70,10 @@ export class AiUsageService {
           latencyMs: input.latencyMs != null ? Math.round(input.latencyMs) : null,
           success: input.success ?? true,
           fallback: input.fallback ?? false,
+          source: input.source?.slice(0, 20) ?? input.agent.toLowerCase().slice(0, 20),
+          correlationId: input.correlationId?.slice(0, 64) ?? null,
+          userId: input.userId ?? null,
+          errorType: input.errorType?.slice(0, 60) ?? null,
         },
       });
     } catch (err: any) {
