@@ -973,6 +973,30 @@ model WorkflowRule {
   @@map("workflow_rules")
 }
 
+/// Lịch sử phiên bản WorkflowRule (Phase 3 lifecycle): snapshot mỗi lần tạo/sửa để ROLLBACK.
+/// Không FK cứng tới rule (giữ lịch sử kể cả khi rule bị xoá).
+model WorkflowRuleVersion {
+  id             String   @id @default(uuid())
+  ruleId         String   @map("rule_id")
+  clubId         String   @map("club_id")
+  version        Int
+  name           String   @db.VarChar(200)
+  triggerType    String   @map("trigger_type") @db.VarChar(60)
+  scopeKey       String?  @map("scope_key") @db.VarChar(120)
+  conditionsJson Json?    @map("conditions_json")
+  actionsJson    Json?    @map("actions_json")
+  scheduleType   String   @map("schedule_type") @db.VarChar(20)
+  enabled        Boolean
+  priority       Int      @default(100)
+  changedBy      String?  @map("changed_by")
+  changeNote     String?  @map("change_note") @db.VarChar(200)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([ruleId, version])
+  @@index([clubId, createdAt])
+  @@map("workflow_rule_versions")
+}
+
 // ============================================================
 // HERMES NOTIFICATION RUNTIME (Epic 8) — job gửi thông báo qua adapter
 // quanh hạ tầng có sẵn (Notification/Email/Telegram). payloadJson CHỈ nội bộ.

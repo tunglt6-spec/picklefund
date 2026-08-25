@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database } from 'lucide-react'
+import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database, History } from 'lucide-react'
 import {
   useWorkflows,
   createRuleFromTemplate,
@@ -11,12 +11,15 @@ import {
   dispatchTestTrigger,
   dispatchLiveTrigger,
   DISPATCH_TRIGGER_TYPES,
+  fetchObservabilitySummary,
+  type ObservabilitySummary,
   type DispatchSummary,
   type DispatchLiveResult,
   type WorkflowRunStatus,
   type WorkflowTemplate,
 } from '../../../hooks/useWorkflows'
 import { RunTraceDrawer } from './RunTraceDrawer'
+import { RuleVersionsModal } from './RuleVersionsModal'
 
 const RUN_STATUS_STYLE: Record<WorkflowRunStatus, string> = {
   PENDING: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
@@ -70,6 +73,11 @@ export function WorkflowRules() {
   const [dup, setDup] = useState<{ template: WorkflowTemplate; existingRuleId: string; existingRuleName: string } | null>(null)
   // Giải trình 1 lần chạy (AI observability) — mở drawer trace theo run.id.
   const [traceRunId, setTraceRunId] = useState<string | null>(null)
+  // Tổng quan observability (30 ngày): success-rate/duration/dedup + chi phí AI.
+  const [obs, setObs] = useState<ObservabilitySummary | null>(null)
+  useEffect(() => { fetchObservabilitySummary().then(setObs).catch(() => setObs(null)) }, [runs.length])
+  // Lifecycle: mở lịch sử phiên bản / rollback của 1 rule.
+  const [versionsRule, setVersionsRule] = useState<{ id: string; name: string } | null>(null)
 
   async function run(fn: () => Promise<unknown>, okMsg: string) {
     setBusy(true)
@@ -375,6 +383,13 @@ export function WorkflowRules() {
                       {r.enabled ? 'Tắt' : 'Bật'}
                     </button>
                     <button
+                      onClick={() => setVersionsRule({ id: r.id, name: r.name })}
+                      disabled={busy}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] disabled:opacity-50"
+                    >
+                      <History size={13} /> Lịch sử
+                    </button>
+                    <button
                       onClick={() => void run(() => deleteWorkflowRule(r.id), 'Đã xoá rule')}
                       disabled={busy}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
@@ -397,6 +412,24 @@ export function WorkflowRules() {
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Lịch Sử Chạy (Runs)</h3>
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{runs.length}</span>
           </div>
+
+          {/* Quan sát AI (30 ngày): tỷ lệ thành công · thời lượng TB · dedup/cooldown · chi phí AI */}
+          {obs && (
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                { label: 'Tỷ lệ thành công', value: `${obs.runs.successRate}%`, sub: `${obs.runs.total} lần chạy` },
+                { label: 'Thời lượng TB', value: obs.runs.avgDurationMs == null ? '—' : obs.runs.avgDurationMs < 1000 ? `${obs.runs.avgDurationMs} ms` : `${(obs.runs.avgDurationMs / 1000).toFixed(2)} s`, sub: `Chờ duyệt ${obs.runs.waitingApproval} · Lỗi ${obs.runs.failed}` },
+                { label: 'Trùng / Cooldown', value: `${obs.runs.skippedDuplicate} / ${obs.runs.skippedCooldown}`, sub: 'AI Action bị chặn' },
+                { label: 'Chi phí AI (30 ngày)', value: `$${obs.aiCost.estimatedCostUsd.toFixed(4)}`, sub: `${obs.aiCost.totalTokens.toLocaleString('vi-VN')} token · ${obs.aiCost.calls} gọi` },
+              ].map((k) => (
+                <div key={k.label} className="rounded-xl border border-[color:var(--pf-border)] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k.label}</p>
+                  <p className="mt-0.5 text-lg font-bold tabular-nums [color:var(--pf-text)]">{k.value}</p>
+                  <p className="text-[10px] [color:var(--pf-color-muted)]">{k.sub}</p>
+                </div>
+              ))}
+            </div>
+          )}
           {loading ? (
             <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
           ) : runs.length === 0 ? (
@@ -425,6 +458,7 @@ export function WorkflowRules() {
         </div>
       </div>
       <RunTraceDrawer runId={traceRunId} onClose={() => setTraceRunId(null)} />
+      <RuleVersionsModal rule={versionsRule} onClose={() => setVersionsRule(null)} onRolledBack={refetch} />
     </div>
   )
 }

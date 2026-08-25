@@ -214,6 +214,81 @@ export class HermesWorkflowService {
         createdById: userId,
       },
     });
+    await this.snapshotRuleVersion(rule, userId, 'Tạo mới');
+    return this.toRuleResponse(rule);
+  }
+
+  /** Ghi 1 snapshot phiên bản rule (best-effort, không chặn luồng chính). */
+  private async snapshotRuleVersion(
+    rule: {
+      id: string; clubId: string; name: string; triggerType: string;
+      scopeKey: string | null; conditionsJson: unknown; actionsJson: unknown;
+      scheduleType: string; enabled: boolean; priority: number;
+    },
+    userId: string | null | undefined,
+    note: string,
+  ) {
+    try {
+      const count = await this.prisma.workflowRuleVersion.count({ where: { ruleId: rule.id } });
+      await this.prisma.workflowRuleVersion.create({
+        data: {
+          ruleId: rule.id,
+          clubId: rule.clubId,
+          version: count + 1,
+          name: rule.name,
+          triggerType: rule.triggerType,
+          scopeKey: rule.scopeKey ?? null,
+          conditionsJson: (rule.conditionsJson ?? undefined) as Prisma.InputJsonValue,
+          actionsJson: (rule.actionsJson ?? undefined) as Prisma.InputJsonValue,
+          scheduleType: rule.scheduleType,
+          enabled: rule.enabled,
+          priority: rule.priority,
+          changedBy: userId ?? null,
+          changeNote: note.slice(0, 200),
+        },
+      });
+    } catch {
+      // snapshot lỗi không được chặn tạo/sửa rule.
+    }
+  }
+
+  /** Danh sách phiên bản của 1 rule (mới nhất trước). */
+  async listRuleVersions(id: string, clubIdRaw: string | null) {
+    const clubId = this.requireClub(clubIdRaw);
+    await this.requireRule(id, clubId);
+    return this.prisma.workflowRuleVersion.findMany({
+      where: { ruleId: id, clubId },
+      orderBy: { version: 'desc' },
+    });
+  }
+
+  /** Khôi phục rule về 1 phiên bản cũ (rollback) + ghi snapshot mới ghi nhận thao tác. */
+  async rollbackRule(
+    id: string,
+    versionId: string,
+    clubIdRaw: string | null,
+    userId: string,
+  ) {
+    const clubId = this.requireClub(clubIdRaw);
+    await this.requireRule(id, clubId);
+    const v = await this.prisma.workflowRuleVersion.findFirst({
+      where: { id: versionId, ruleId: id, clubId },
+    });
+    if (!v) throw new NotFoundException('Không tìm thấy phiên bản để khôi phục.');
+    const rule = await this.prisma.workflowRule.update({
+      where: { id },
+      data: {
+        name: v.name,
+        triggerType: v.triggerType,
+        scopeKey: v.scopeKey ?? null,
+        conditionsJson: (v.conditionsJson ?? undefined) as Prisma.InputJsonValue,
+        actionsJson: (v.actionsJson ?? undefined) as Prisma.InputJsonValue,
+        scheduleType: v.scheduleType,
+        enabled: v.enabled,
+        priority: v.priority,
+      },
+    });
+    await this.snapshotRuleVersion(rule, userId, `Khôi phục v${v.version}`);
     return this.toRuleResponse(rule);
   }
 
@@ -221,6 +296,7 @@ export class HermesWorkflowService {
     id: string,
     clubIdRaw: string | null,
     dto: UpdateWorkflowRuleDto,
+    userId?: string,
   ) {
     const clubId = this.requireClub(clubIdRaw);
     await this.requireRule(id, clubId);
@@ -244,6 +320,7 @@ export class HermesWorkflowService {
           : {}),
       },
     });
+    await this.snapshotRuleVersion(rule, userId, 'Cập nhật');
     return this.toRuleResponse(rule);
   }
 
@@ -498,6 +575,72 @@ export class HermesWorkflowService {
       q6_approval: approval,
       q7_cost: cost,
       q8_business: { notifications: { total: jobs.length, byChannel, byStatus } },
+    };
+  }
+
+  /**
+   * TỔNG QUAN observability (Phase 2 cost + KPI): 30 ngày gần nhất, scope theo clubId.
+   * Runs: tổng/thành công/thất bại/chờ duyệt · tỷ lệ thành công · thời lượng TB · dedup/cooldown.
+   * Chi phí AI: gộp AiUsageLog theo `source` (maika/lisa/harness/…) — token + cost USD ước tính.
+   */
+  async observabilitySummary(clubIdRaw: string | null) {
+    const clubId = this.requireClub(clubIdRaw);
+    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+
+    const runs = await this.prisma.workflowRun.findMany({
+      where: { clubId, startedAt: { gte: since } },
+      select: { status: true, startedAt: true, completedAt: true, resultJson: true },
+    });
+    const total = runs.length;
+    const failed = runs.filter((r) => r.status === 'FAILED').length;
+    const waitingApproval = runs.filter((r) => r.status === 'WAITING_APPROVAL').length;
+    const completed = runs.filter((r) => r.status === 'COMPLETED').length;
+    const durations = runs
+      .filter((r) => r.startedAt && r.completedAt)
+      .map((r) => new Date(r.completedAt as Date).getTime() - new Date(r.startedAt as Date).getTime());
+    const avgDurationMs = durations.length
+      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+      : null;
+    let skippedDuplicate = 0;
+    let skippedCooldown = 0;
+    for (const r of runs) {
+      const rj = (r.resultJson ?? {}) as { skippedDuplicateCount?: number; skippedCooldownCount?: number };
+      skippedDuplicate += rj.skippedDuplicateCount ?? 0;
+      skippedCooldown += rj.skippedCooldownCount ?? 0;
+    }
+
+    const usage = await this.prisma.aiUsageLog.groupBy({
+      by: ['source'],
+      where: { clubId, createdAt: { gte: since } },
+      _sum: { totalTokens: true, estimatedCostUsd: true },
+      _count: { _all: true },
+    });
+    const bySource = usage.map((u) => ({
+      source: u.source ?? 'unknown',
+      calls: u._count._all,
+      totalTokens: u._sum.totalTokens ?? 0,
+      estimatedCostUsd: Number(u._sum.estimatedCostUsd ?? 0),
+    }));
+    const aiCost = {
+      calls: bySource.reduce((s, x) => s + x.calls, 0),
+      totalTokens: bySource.reduce((s, x) => s + x.totalTokens, 0),
+      estimatedCostUsd: bySource.reduce((s, x) => s + x.estimatedCostUsd, 0),
+      bySource,
+    };
+
+    return {
+      periodDays: 30,
+      runs: {
+        total,
+        completed,
+        failed,
+        waitingApproval,
+        successRate: total ? Math.round(((total - failed) / total) * 100) : 0,
+        avgDurationMs,
+        skippedDuplicate,
+        skippedCooldown,
+      },
+      aiCost,
     };
   }
 

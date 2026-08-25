@@ -65,8 +65,28 @@ export class WorkflowsController {
     @Body() dto: UpdateWorkflowRuleDto,
   ) {
     return ok(
-      await this.svc.updateRule(id, user.clubId, dto),
+      await this.svc.updateRule(id, user.clubId, dto, user.userId),
       'Đã cập nhật rule',
+    );
+  }
+
+  // Lifecycle (Phase 3): lịch sử phiên bản + rollback rule.
+  @Get('rules/:id/versions')
+  @ApiOperation({ summary: 'Lịch sử phiên bản của rule (snapshot mỗi lần tạo/sửa).' })
+  async ruleVersions(@Param('id') id: string, @CurrentUser() user: JwtUser) {
+    return ok(await this.svc.listRuleVersions(id, user.clubId));
+  }
+
+  @Post('rules/:id/rollback')
+  @ApiOperation({ summary: 'Khôi phục rule về 1 phiên bản cũ (rollback).' })
+  async rollbackRule(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtUser,
+    @Body() body: { versionId: string },
+  ) {
+    return ok(
+      await this.svc.rollbackRule(id, body.versionId, user.clubId, user.userId),
+      'Đã khôi phục phiên bản rule',
     );
   }
 
@@ -209,6 +229,13 @@ export class WorkflowsController {
   @ApiOperation({ summary: 'Thống kê run cho KPI (chờ duyệt/hoàn tất/lỗi).' })
   async runsStats(@CurrentUser() user: JwtUser) {
     return ok(await this.svc.runsSummary(user.clubId));
+  }
+
+  // Tổng quan observability (KPI runs + chi phí AI 30 ngày). Đặt TRƯỚC 'runs/:id'.
+  @Get('observability/summary')
+  @ApiOperation({ summary: 'Tổng quan observability: success-rate/duration/dedup + chi phí AI 30 ngày.' })
+  async observability(@CurrentUser() user: JwtUser) {
+    return ok(await this.svc.observabilitySummary(user.clubId));
   }
 
   @Get('runs/:id')

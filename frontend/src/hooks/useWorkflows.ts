@@ -158,6 +158,31 @@ export async function fetchRunTrace(runId: string): Promise<RunTrace> {
   const res = await api.get(`/workflows/runs/${runId}/trace`)
   return (res.data?.data ?? res.data) as RunTrace
 }
+
+/** Tổng quan observability (KPI runs + chi phí AI 30 ngày). */
+export interface ObservabilitySummary {
+  periodDays: number
+  runs: { total: number; completed: number; failed: number; waitingApproval: number; successRate: number; avgDurationMs: number | null; skippedDuplicate: number; skippedCooldown: number }
+  aiCost: { calls: number; totalTokens: number; estimatedCostUsd: number; bySource: { source: string; calls: number; totalTokens: number; estimatedCostUsd: number }[] }
+}
+export async function fetchObservabilitySummary(): Promise<ObservabilitySummary> {
+  const res = await api.get('/workflows/observability/summary')
+  return (res.data?.data ?? res.data) as ObservabilitySummary
+}
+
+/** Lifecycle (Phase 3): phiên bản rule + rollback. */
+export interface RuleVersion {
+  id: string; ruleId: string; version: number; name: string; triggerType: string
+  scheduleType: string; enabled: boolean; priority: number
+  changedBy: string | null; changeNote: string | null; createdAt: string
+}
+export async function fetchRuleVersions(ruleId: string): Promise<RuleVersion[]> {
+  const res = await api.get(`/workflows/rules/${ruleId}/versions`)
+  return (res.data?.data ?? res.data) as RuleVersion[]
+}
+export async function rollbackRuleVersion(ruleId: string, versionId: string): Promise<void> {
+  await api.post(`/workflows/rules/${ruleId}/rollback`, { versionId })
+}
 export async function testTriggerRule(
   id: string,
   contextJson?: Record<string, unknown>,
