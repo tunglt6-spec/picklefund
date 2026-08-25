@@ -413,21 +413,28 @@ export function WorkflowRules() {
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{runs.length}</span>
           </div>
 
-          {/* Quan sát AI (30 ngày): tỷ lệ thành công · thời lượng TB · dedup/cooldown · chi phí AI */}
+          {/* Quan sát AI (30 ngày) — cùng style KPI của trang (WF_KPI_TONE, value-based). */}
           {obs && (
-            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {[
-                { label: 'Tỷ lệ thành công', value: `${obs.runs.successRate}%`, sub: `${obs.runs.total} lần chạy` },
-                { label: 'Thời lượng engine TB', value: obs.runs.avgDurationMs == null ? '—' : obs.runs.avgDurationMs < 1000 ? `${obs.runs.avgDurationMs} ms` : `${(obs.runs.avgDurationMs / 1000).toFixed(2)} s`, sub: `Chờ duyệt ${obs.runs.waitingApproval} · Lỗi ${obs.runs.failed}` },
-                { label: 'Trùng / Cooldown', value: `${obs.runs.skippedDuplicate} / ${obs.runs.skippedCooldown}`, sub: 'AI Action bị chặn' },
-                { label: 'Chi phí AI (30 ngày)', value: `$${obs.aiCost.estimatedCostUsd.toFixed(4)}`, sub: `${obs.aiCost.totalTokens.toLocaleString('vi-VN')} token · ${obs.aiCost.calls} gọi` },
-              ].map((k) => (
-                <div key={k.label} className="rounded-xl border border-[color:var(--pf-border)] p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k.label}</p>
-                  <p className="mt-0.5 text-lg font-bold tabular-nums [color:var(--pf-text)]">{k.value}</p>
-                  <p className="text-[10px] [color:var(--pf-color-muted)]">{k.sub}</p>
-                </div>
-              ))}
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {([
+                { label: 'Tỷ lệ thành công', value: `${obs.runs.successRate}%`, sub: `${obs.runs.total} lần chạy`, tone: obs.runs.successRate >= 90 ? 'success' : obs.runs.successRate >= 60 ? 'warning' : 'danger' },
+                { label: 'Thời lượng engine TB', value: obs.runs.avgDurationMs == null ? '—' : obs.runs.avgDurationMs < 1000 ? `${obs.runs.avgDurationMs} ms` : `${(obs.runs.avgDurationMs / 1000).toFixed(2)} s`, sub: `Chờ duyệt ${obs.runs.waitingApproval} · Lỗi ${obs.runs.failed}`, tone: obs.runs.failed > 0 ? 'danger' : 'neutral' },
+                { label: 'Trùng / Cooldown', value: `${obs.runs.skippedDuplicate} / ${obs.runs.skippedCooldown}`, sub: 'AI Action bị chặn', tone: 'neutral' },
+                { label: 'Chi phí AI (30 ngày)', value: `$${obs.aiCost.estimatedCostUsd.toFixed(4)}`, sub: `${obs.aiCost.totalTokens.toLocaleString('vi-VN')} token · ${obs.aiCost.calls} gọi`, tone: 'neutral' },
+              ] as const).map((k) => {
+                const c = WF_KPI_TONE[k.tone]
+                return (
+                  <div
+                    key={k.label}
+                    className="rounded-2xl border shadow-sm px-4 py-3"
+                    style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+                  >
+                    <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
+                    <p className="mt-0.5 text-[11px] font-medium [color:var(--pf-color-muted)]">{k.label}</p>
+                    <p className="text-[10px] [color:var(--pf-color-muted)]">{k.sub}</p>
+                  </div>
+                )
+              })}
             </div>
           )}
 
