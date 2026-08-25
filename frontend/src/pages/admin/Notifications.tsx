@@ -102,28 +102,37 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
   )
 }
 
-type TabKey = 'all' | 'unread' | 'notice' | 'system' | 'ai'
+type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'system' | 'ai'
 const TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
   ['unread', 'Chưa đọc'],
-  ['notice', 'Thông báo'],
+  ['community', 'Cộng đồng'],
+  ['finance', 'Tài chính'],
+  ['activity', 'Hoạt động'],
   ['system', 'Hệ thống'],
   ['ai', 'AI đề xuất'],
 ]
-/** Phân loại notification theo eventType → tab. */
-function catOf(eventType: string): 'notice' | 'system' | 'ai' {
+/**
+ * Phân loại notification → nhóm. Admin nhận ĐỦ 5 nhóm (admin cũng tham gia cộng đồng, được tag).
+ * KHỚP HỆT pushCategory backend (community/finance TRƯỚC ai/system để community_report không lọt 'ai').
+ */
+function catOf(eventType: string): 'community' | 'finance' | 'activity' | 'system' | 'ai' {
   const s = (eventType || '').toLowerCase()
+  if (s.includes('community') || s.includes('matchmaking')) return 'community'
+  if (s.includes('payment') || s.includes('fund')) return 'finance'
   if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
   if (/anomaly|health|system|config|error/.test(s)) return 'system'
-  return 'notice'
+  return 'activity'
 }
 
-/** Icon cho từng bộ lọc (dùng ở KPI dọc desktop). */
+/** Icon cho từng bộ lọc (dùng ở KPI dọc). */
 function filterIcon(key: TabKey) {
   switch (key) {
     case 'all': return <Inbox size={18} />
     case 'unread': return <Bell size={18} />
-    case 'notice': return <Megaphone size={18} />
+    case 'community': return <Megaphone size={18} />
+    case 'finance': return <DollarSign size={18} />
+    case 'activity': return <Calendar size={18} />
     case 'system': return <Settings size={18} />
     case 'ai': return <Brain size={18} />
   }
@@ -262,7 +271,9 @@ export function Notifications() {
   const counts: Record<TabKey, number> = {
     all: notifs.length,
     unread: notifs.filter(n => n.status !== 'READ').length,
-    notice: notifs.filter(n => catOf(n.eventType) === 'notice').length,
+    community: notifs.filter(n => catOf(n.eventType) === 'community').length,
+    finance: notifs.filter(n => catOf(n.eventType) === 'finance').length,
+    activity: notifs.filter(n => catOf(n.eventType) === 'activity').length,
     system: notifs.filter(n => catOf(n.eventType) === 'system').length,
     ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
   }

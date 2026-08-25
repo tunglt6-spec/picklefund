@@ -15,9 +15,11 @@ export const MEMBER_PUSH_CATEGORIES: PushCategoryDef[] = [
   { label: 'Hoạt động', desc: 'Nhắc buổi tập · đăng ký · thông báo khác', keys: ['activity'] },
 ]
 
-/** Admin: 3 nhóm khớp bộ lọc admin (Thông báo / Hệ thống / AI đề xuất). */
+/** Admin: đủ 5 nhóm (admin cũng tham gia cộng đồng, được tag) — khớp bộ lọc admin + pushCategory. */
 export const ADMIN_PUSH_CATEGORIES: PushCategoryDef[] = [
-  { label: 'Thông báo', desc: 'Cộng đồng · tài chính · hoạt động', keys: ['community', 'finance', 'activity'] },
+  { label: 'Cộng đồng', desc: 'Bài đăng · bình luận · @nhắc tên · tìm kèo', keys: ['community'] },
+  { label: 'Tài chính', desc: 'Nộp quỹ · xác nhận · nhắc đóng · công nợ', keys: ['finance'] },
+  { label: 'Hoạt động', desc: 'Buổi tập · đăng ký · nhắc nhở', keys: ['activity'] },
   { label: 'Hệ thống', desc: 'Cảnh báo bất thường · sức khỏe CLB', keys: ['system'] },
   { label: 'AI đề xuất', desc: 'Bản tin AI · báo cáo định kỳ', keys: ['ai'] },
 ]

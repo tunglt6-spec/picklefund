@@ -461,26 +461,55 @@ export class CommunityService {
     }
   }
 
-  /** Báo bài đăng mới cho các member khác trong CLB (trừ tác giả + người đã @mention). */
+  /** userId của QUẢN TRỊ CLB (CLUB_ADMIN/CLUB_TREASURER) — nhận thông báo cộng đồng dù KHÔNG có
+   * hồ sơ member. Trước đây broadcast chỉ query bảng member nên admin không-là-member bị bỏ sót. */
+  private async clubStaffUserIds(clubId: string): Promise<string[]> {
+    const staff = await this.prisma.user.findMany({
+      where: { clubId, isActive: true, role: { in: ['CLUB_ADMIN', 'CLUB_TREASURER'] as any } },
+      select: { id: true },
+    });
+    return staff.map((s) => s.id);
+  }
+
+  /**
+   * Tập userId nhận broadcast cộng đồng = members đang hoạt động + QUẢN TRỊ CLB, dedupe theo userId,
+   * loại tác giả + những người đã nhận riêng (mention/reply). excludeMemberIds là memberId → map sang userId.
+   */
+  private async communityAudience(
+    actor: Actor,
+    excludeMemberIds: string[],
+  ): Promise<string[]> {
+    const members = await this.prisma.member.findMany({
+      where: { clubId: actor.clubId, isDeleted: false, status: 'active', userId: { not: null } },
+      select: { id: true, userId: true },
+      take: 1000,
+    });
+    const staffIds = await this.clubStaffUserIds(actor.clubId);
+    const excludeMemberSet = new Set(excludeMemberIds);
+    const excludeUserIds = new Set<string>();
+    if (actor.userId) excludeUserIds.add(actor.userId);
+    for (const m of members) if (m.userId && excludeMemberSet.has(m.id)) excludeUserIds.add(m.userId);
+    const recipients = new Set<string>();
+    for (const m of members) if (m.userId) recipients.add(m.userId);
+    for (const uid of staffIds) recipients.add(uid);
+    for (const uid of excludeUserIds) recipients.delete(uid);
+    return [...recipients];
+  }
+
+  /** Báo bài đăng mới cho member khác + QUẢN TRỊ CLB (trừ tác giả + người đã @mention). */
   private async broadcastNewPost(
     actor: Actor,
     authorName: string,
     postId: string,
     mentionIds: string[],
   ) {
-    const skip = new Set<string>([actor.memberId ?? '', ...mentionIds]);
-    const members = await this.prisma.member.findMany({
-      where: { clubId: actor.clubId, isDeleted: false, status: 'active', userId: { not: null } },
-      select: { id: true, userId: true },
-      take: 1000,
-    });
-    for (const m of members) {
-      if (!m.userId || skip.has(m.id)) continue;
+    const recipients = await this.communityAudience(actor, mentionIds);
+    for (const uid of recipients) {
       await this.hermes
         .dispatch({
           eventType: 'community_post',
           clubId: actor.clubId,
-          targetUserId: m.userId,
+          targetUserId: uid,
           title: 'Bài đăng mới trong Cộng đồng CLB',
           body: `${authorName} vừa chia sẻ một bài viết mới.`,
           metadata: { link: `/community?post=${postId}` },
@@ -499,19 +528,13 @@ export class CommunityService {
     postId: string,
     excludeIds: string[],
   ) {
-    const skip = new Set<string>([actor.memberId ?? '', ...excludeIds]);
-    const members = await this.prisma.member.findMany({
-      where: { clubId: actor.clubId, isDeleted: false, status: 'active', userId: { not: null } },
-      select: { id: true, userId: true },
-      take: 1000,
-    });
-    for (const m of members) {
-      if (!m.userId || skip.has(m.id)) continue;
+    const recipients = await this.communityAudience(actor, excludeIds);
+    for (const uid of recipients) {
       await this.hermes
         .dispatch({
           eventType: 'community_comment',
           clubId: actor.clubId,
-          targetUserId: m.userId,
+          targetUserId: uid,
           title: 'Bình luận mới trong Cộng đồng CLB',
           body: `${commenterName} vừa bình luận một bài viết.`,
           metadata: { link: `/community?post=${postId}` },
