@@ -609,23 +609,31 @@ export class HermesWorkflowService {
       skippedCooldown += rj.skippedCooldownCount ?? 0;
     }
 
-    const usage = await this.prisma.aiUsageLog.groupBy({
-      by: ['source'],
-      where: { clubId, createdAt: { gte: since } },
-      _sum: { totalTokens: true, estimatedCostUsd: true },
-      _count: { _all: true },
-    });
-    const bySource = usage.map((u) => ({
-      source: u.source ?? 'unknown',
-      calls: u._count._all,
-      totalTokens: u._sum.totalTokens ?? 0,
-      estimatedCostUsd: Number(u._sum.estimatedCostUsd ?? 0),
-    }));
+    const where = { clubId, createdAt: { gte: since } };
+    const [bySourceRaw, byModelRaw, byAgentRaw] = await Promise.all([
+      this.prisma.aiUsageLog.groupBy({ by: ['source'], where, _sum: { totalTokens: true, estimatedCostUsd: true }, _count: { _all: true } }),
+      this.prisma.aiUsageLog.groupBy({ by: ['model'], where, _sum: { totalTokens: true, estimatedCostUsd: true }, _count: { _all: true } }),
+      this.prisma.aiUsageLog.groupBy({ by: ['agent'], where, _sum: { totalTokens: true, estimatedCostUsd: true }, _count: { _all: true } }),
+    ]);
+    const mapRows = <K extends string>(rows: any[], key: K) =>
+      rows
+        .map((u) => ({
+          [key]: u[key] ?? 'unknown',
+          calls: u._count._all,
+          totalTokens: u._sum.totalTokens ?? 0,
+          estimatedCostUsd: Number(u._sum.estimatedCostUsd ?? 0),
+        }))
+        .sort((a: any, b: any) => b.estimatedCostUsd - a.estimatedCostUsd || b.calls - a.calls);
+    const bySource = mapRows(bySourceRaw, 'source');
+    const byModel = mapRows(byModelRaw, 'model');
+    const byAgent = mapRows(byAgentRaw, 'agent');
     const aiCost = {
       calls: bySource.reduce((s, x) => s + x.calls, 0),
       totalTokens: bySource.reduce((s, x) => s + x.totalTokens, 0),
       estimatedCostUsd: bySource.reduce((s, x) => s + x.estimatedCostUsd, 0),
       bySource,
+      byModel,
+      byAgent,
     };
 
     return {

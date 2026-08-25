@@ -163,7 +163,12 @@ export async function fetchRunTrace(runId: string): Promise<RunTrace> {
 export interface ObservabilitySummary {
   periodDays: number
   runs: { total: number; completed: number; failed: number; waitingApproval: number; successRate: number; avgDurationMs: number | null; skippedDuplicate: number; skippedCooldown: number }
-  aiCost: { calls: number; totalTokens: number; estimatedCostUsd: number; bySource: { source: string; calls: number; totalTokens: number; estimatedCostUsd: number }[] }
+  aiCost: {
+    calls: number; totalTokens: number; estimatedCostUsd: number
+    bySource: { source: string; calls: number; totalTokens: number; estimatedCostUsd: number }[]
+    byModel: { model: string; calls: number; totalTokens: number; estimatedCostUsd: number }[]
+    byAgent: { agent: string; calls: number; totalTokens: number; estimatedCostUsd: number }[]
+  }
 }
 export async function fetchObservabilitySummary(): Promise<ObservabilitySummary> {
   const res = await api.get('/workflows/observability/summary')

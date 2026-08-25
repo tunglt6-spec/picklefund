@@ -430,6 +430,29 @@ export function WorkflowRules() {
               ))}
             </div>
           )}
+
+          {/* Chi phí AI theo MODEL (30 ngày) — bằng chứng để quyết định multi-model routing. */}
+          {obs && obs.aiCost.byModel.length > 0 && (
+            <div className="mb-4 rounded-xl border border-[color:var(--pf-border)] p-3">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi phí AI theo model (30 ngày)</p>
+              <div className="space-y-1">
+                {obs.aiCost.byModel.map((m) => {
+                  const pct = obs.aiCost.estimatedCostUsd > 0 ? Math.round((m.estimatedCostUsd / obs.aiCost.estimatedCostUsd) * 100) : 0
+                  return (
+                    <div key={m.model} className="flex items-center gap-2 text-[12px]">
+                      <span className="w-40 shrink-0 truncate font-medium [color:var(--pf-text)]">{m.model === 'unknown' ? '(rule-based/free)' : m.model}</span>
+                      <div className="h-2 flex-1 overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
+                        <div className="h-full rounded-full [background:var(--pf-primary)]" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-28 shrink-0 text-right tabular-nums [color:var(--pf-color-muted)]">${m.estimatedCostUsd.toFixed(4)} · {m.calls}×</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="mt-2 text-[10px] [color:var(--pf-color-muted)]">Chỉ chỉnh routing khi 1 model chi phí cao chiếm ưu thế VÀ có model rẻ hơn đủ chất lượng cho tác vụ đó.</p>
+            </div>
+          )}
+
           {loading ? (
             <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
           ) : runs.length === 0 ? (
