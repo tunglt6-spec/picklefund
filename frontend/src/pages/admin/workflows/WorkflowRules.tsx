@@ -418,7 +418,7 @@ export function WorkflowRules() {
             <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[
                 { label: 'Tỷ lệ thành công', value: `${obs.runs.successRate}%`, sub: `${obs.runs.total} lần chạy` },
-                { label: 'Thời lượng TB', value: obs.runs.avgDurationMs == null ? '—' : obs.runs.avgDurationMs < 1000 ? `${obs.runs.avgDurationMs} ms` : `${(obs.runs.avgDurationMs / 1000).toFixed(2)} s`, sub: `Chờ duyệt ${obs.runs.waitingApproval} · Lỗi ${obs.runs.failed}` },
+                { label: 'Thời lượng engine TB', value: obs.runs.avgDurationMs == null ? '—' : obs.runs.avgDurationMs < 1000 ? `${obs.runs.avgDurationMs} ms` : `${(obs.runs.avgDurationMs / 1000).toFixed(2)} s`, sub: `Chờ duyệt ${obs.runs.waitingApproval} · Lỗi ${obs.runs.failed}` },
                 { label: 'Trùng / Cooldown', value: `${obs.runs.skippedDuplicate} / ${obs.runs.skippedCooldown}`, sub: 'AI Action bị chặn' },
                 { label: 'Chi phí AI (30 ngày)', value: `$${obs.aiCost.estimatedCostUsd.toFixed(4)}`, sub: `${obs.aiCost.totalTokens.toLocaleString('vi-VN')} token · ${obs.aiCost.calls} gọi` },
               ].map((k) => (

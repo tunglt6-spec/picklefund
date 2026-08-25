@@ -595,9 +595,14 @@ export class HermesWorkflowService {
     const failed = runs.filter((r) => r.status === 'FAILED').length;
     const waitingApproval = runs.filter((r) => r.status === 'WAITING_APPROVAL').length;
     const completed = runs.filter((r) => r.status === 'COMPLETED').length;
+    // CHỈ đo thời lượng ENGINE (chạy đồng bộ). Run tạo AI Action → WAITING_APPROVAL, completedAt
+    // được set lúc RESOLVE (hàng giờ sau) → phản ánh thời gian CHỜ DUYỆT, không phải engine.
+    // Lọc ngưỡng 60s để loại pollution chờ-duyệt (engine thực tế chỉ ~ms).
+    const ENGINE_MAX_MS = 60_000;
     const durations = runs
       .filter((r) => r.startedAt && r.completedAt)
-      .map((r) => new Date(r.completedAt as Date).getTime() - new Date(r.startedAt as Date).getTime());
+      .map((r) => new Date(r.completedAt as Date).getTime() - new Date(r.startedAt as Date).getTime())
+      .filter((d) => d >= 0 && d <= ENGINE_MAX_MS);
     const avgDurationMs = durations.length
       ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
       : null;
