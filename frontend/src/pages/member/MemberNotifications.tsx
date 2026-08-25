@@ -315,13 +315,13 @@ export function MemberNotifications() {
         <EmptyState icon={<Bell size={24} />} title="Không có thông báo nào" description="Các thông báo từ CLB sẽ hiển thị tại đây." />
       ) : (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-          {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, bề ngang cố định, sát lề trái */}
-          <div className="lg:w-[260px] lg:shrink-0">
+          {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
+          <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
             <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
           </div>
 
-          {/* CỘT PHẢI — danh sách thông báo 1 CỘT, mở rộng hết phần còn lại */}
-          <div className="flex min-w-0 flex-1 flex-col gap-6">
+          {/* CỘT PHẢI — danh sách thông báo 1 CỘT; desktop có thanh cuộn riêng (header + KPI đứng yên) */}
+          <div className="flex min-w-0 flex-1 flex-col gap-6 lg:max-h-[calc(100dvh-13rem)] lg:overflow-y-auto lg:pr-1.5 lg:pb-2">
             {unread.length > 0 && (
               <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wider [color:var(--pf-color-muted)]">Chưa đọc</p>
