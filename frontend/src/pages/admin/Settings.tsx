@@ -1014,6 +1014,8 @@ export function Settings() {
         {activeTab === 'account'       && <AccountTab />}
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
         {activeTab === 'payment'       && <PaymentTab />}
+        {activeTab === 'telegram'      && <TelegramTab />}
+        {activeTab === 'billing'       && <BillingTab />}
       </div>
     </div>
   )
