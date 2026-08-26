@@ -252,10 +252,19 @@ export class HermesWorkflowService {
     }
   }
 
-  /** Danh sách phiên bản của 1 rule (mới nhất trước). */
+  /** Danh sách phiên bản của 1 rule (mới nhất trước). Rule tạo TRƯỚC khi có versioning chưa có
+   * snapshot → tự backfill 1 "Phiên bản hiện tại" để lịch sử không rỗng + có mốc rollback. */
   async listRuleVersions(id: string, clubIdRaw: string | null) {
     const clubId = this.requireClub(clubIdRaw);
-    await this.requireRule(id, clubId);
+    const rule = await this.requireRule(id, clubId);
+    const existing = await this.prisma.workflowRuleVersion.count({ where: { ruleId: id, clubId } });
+    if (existing === 0) {
+      await this.snapshotRuleVersion(
+        rule as any,
+        (rule as { createdById?: string | null }).createdById ?? null,
+        'Phiên bản hiện tại',
+      );
+    }
     return this.prisma.workflowRuleVersion.findMany({
       where: { ruleId: id, clubId },
       orderBy: { version: 'desc' },
