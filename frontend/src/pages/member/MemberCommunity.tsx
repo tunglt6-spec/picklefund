@@ -575,10 +575,44 @@ const KIND_BADGE: Record<PostKind, { tone: 'info' | 'ai'; label: string } | null
 }
 
 /** Tô sáng "@Họ Tên" (khớp danh sách thành viên) thành thẻ trong nội dung đã đăng. */
+/** Chuyển URL http/https trong 1 đoạn text thành link click được (mở tab mới, an toàn). */
+function linkify(text: string, keyBase: string): ReactNode[] {
+  const out: ReactNode[] = []
+  const re = /(https?:\/\/[^\s]+)/g
+  let last = 0
+  let i = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index))
+    let url = m[0]
+    let tail = ''
+    // Bỏ dấu câu dính cuối URL (., ), ,, ;, !, ?) khỏi href nhưng vẫn hiển thị.
+    const t = url.match(/[).,;!?]+$/)
+    if (t) { tail = t[0]; url = url.slice(0, -tail.length) }
+    out.push(
+      <a
+        key={`${keyBase}-u${i++}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="break-all underline [color:var(--pf-primary)] hover:opacity-80"
+      >
+        {url}
+      </a>,
+    )
+    if (tail) out.push(tail)
+    last = m.index + m[0].length
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out
+}
+
 function renderWithMentions(text: string, members: MentionMember[]): ReactNode {
-  if (!members.length || !text.includes('@')) return text
   const names = members.map((m) => m.fullName).filter(Boolean).sort((a, b) => b.length - a.length)
-  if (!names.length) return text
+  const hasMention = names.length > 0 && text.includes('@')
+  // Không có mention → chỉ cần linkify URL.
+  if (!hasMention) return linkify(text, 'lk')
   const esc = names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   const re = new RegExp(`@(?:${esc.join('|')})`, 'g')
   const out: ReactNode[] = []
@@ -586,15 +620,15 @@ function renderWithMentions(text: string, members: MentionMember[]): ReactNode {
   let key = 0
   let m: RegExpExecArray | null
   while ((m = re.exec(text)) !== null) {
-    if (m.index > last) out.push(text.slice(last, m.index))
+    if (m.index > last) out.push(...linkify(text.slice(last, m.index), `t${key}`))
     out.push(
-      <span key={key++} className="rounded px-1 font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+      <span key={`men-${key++}`} className="rounded px-1 font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
         {m[0]}
       </span>,
     )
     last = m.index + m[0].length
   }
-  if (last < text.length) out.push(text.slice(last))
+  if (last < text.length) out.push(...linkify(text.slice(last), `t${key}`))
   return out
 }
 
