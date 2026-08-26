@@ -24,6 +24,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CommunityService } from './community.service';
+import { LinkPreviewService } from './link-preview.service';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
@@ -78,7 +79,16 @@ const communityImageStorage = diskStorage({
 @ApiBearerAuth()
 @Controller('community')
 export class CommunityController implements OnModuleInit {
-  constructor(private svc: CommunityService) {}
+  constructor(
+    private svc: CommunityService,
+    private linkPreview: LinkPreviewService,
+  ) {}
+
+  /** OpenGraph link-preview cho Cộng đồng CLB (card kiểu FB/Zalo). Fetch server-side + cache. */
+  @Get('link-preview')
+  async getLinkPreview(@Query('url') url: string) {
+    return ok(await this.linkPreview.getPreview(url ?? ''));
+  }
 
   onModuleInit() {
     if (!existsSync(MEDIA_ROOT)) mkdirSync(MEDIA_ROOT, { recursive: true });

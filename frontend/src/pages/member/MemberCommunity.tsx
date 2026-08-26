@@ -632,6 +632,62 @@ function renderWithMentions(text: string, members: MentionMember[]): ReactNode {
   return out
 }
 
+/** URL http/https ĐẦU TIÊN trong text (bỏ dấu câu dính cuối) — để lấy link-preview. */
+function firstUrl(text: string): string | null {
+  const m = text.match(/(https?:\/\/[^\s]+)/)
+  if (!m) return null
+  let u = m[0]
+  const t = u.match(/[).,;!?]+$/)
+  if (t) u = u.slice(0, -t[0].length)
+  return u
+}
+
+interface LinkPreviewData { url: string; title: string | null; description: string | null; image: string | null; siteName: string | null }
+const _previewCache = new Map<string, LinkPreviewData | null>()
+async function loadLinkPreview(url: string): Promise<LinkPreviewData | null> {
+  if (_previewCache.has(url)) return _previewCache.get(url) ?? null
+  try {
+    const res = await api.get('/community/link-preview', { params: { url } })
+    const data = (res.data?.data ?? null) as LinkPreviewData | null
+    _previewCache.set(url, data)
+    return data
+  } catch {
+    _previewCache.set(url, null)
+    return null
+  }
+}
+
+/** Thẻ preview link (OpenGraph) kiểu FB/Zalo. */
+function LinkPreviewCard({ data }: { data: LinkPreviewData }) {
+  let domain = ''
+  try { domain = new URL(data.url).hostname.replace(/^www\./, '') } catch { /* noop */ }
+  if (!data.title && !data.image) return null
+  return (
+    <a
+      href={data.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="mt-2 flex overflow-hidden rounded-xl border border-[color:var(--pf-border)] transition-colors hover:[background:var(--pf-surface-muted)]"
+    >
+      {data.image && (
+        <img
+          src={data.image}
+          alt=""
+          loading="lazy"
+          className="h-24 w-24 shrink-0 object-cover [background:var(--pf-surface-muted)] sm:h-28 sm:w-28"
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      )}
+      <div className="min-w-0 flex-1 p-3">
+        <p className="truncate text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{data.siteName || domain}</p>
+        {data.title && <p className="mt-0.5 line-clamp-2 text-sm font-semibold [color:var(--pf-text)]">{data.title}</p>}
+        {data.description && <p className="mt-0.5 line-clamp-2 text-xs [color:var(--pf-color-muted)]">{data.description}</p>}
+      </div>
+    </a>
+  )
+}
+
 function PostCard({
   post,
   members,
@@ -661,6 +717,16 @@ function PostCard({
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
   const [confirmReport, setConfirmReport] = useState(false)
+
+  // Link-preview (OpenGraph) cho URL đầu tiên trong bài đăng.
+  const postUrl = firstUrl(post.body)
+  const [linkPreview, setLinkPreview] = useState<LinkPreviewData | null>(null)
+  useEffect(() => {
+    let alive = true
+    setLinkPreview(null)
+    if (postUrl) loadLinkPreview(postUrl).then((p) => { if (alive) setLinkPreview(p) })
+    return () => { alive = false }
+  }, [postUrl])
 
   const reportPost = async () => {
     setConfirmReport(false)
@@ -962,6 +1028,9 @@ function PostCard({
           }}
         />
       )}
+
+      {/* Link-preview (OpenGraph) — chỉ khi bài KHÔNG có ảnh đính kèm để tránh trùng lặp */}
+      {!editingPost && !post.imageUrl && linkPreview && <LinkPreviewCard data={linkPreview} />}
 
       {/* actions row */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">

@@ -1334,6 +1334,22 @@ model Referral {
 /// Ghi nhận sử dụng LLM để tính token/chi phí AI thật (Command Center).
 /// Token = số THẬT từ provider (Gemini usageMetadata / OpenRouter usage). Cost = token × bảng
 /// giá (ƯỚC TÍNH, cấu hình trong AiUsageService). Ghi best-effort, không chặn luồng trả lời.
+/// Cache OpenGraph link-preview (Cộng đồng CLB). Fetch server-side (chống SSRF) + cache theo urlHash;
+/// ok=false = cache "âm" (fetch lỗi/bị chặn) để không hammer URL xấu. Làm mới khi quá 7 ngày.
+model LinkPreview {
+  id          String   @id @default(uuid())
+  urlHash     String   @unique @map("url_hash") @db.VarChar(64)
+  url         String   @db.VarChar(2048)
+  title       String?  @db.VarChar(300)
+  description String?  @db.VarChar(600)
+  image       String?  @db.VarChar(2048)
+  siteName    String?  @map("site_name") @db.VarChar(120)
+  ok          Boolean  @default(true)
+  fetchedAt   DateTime @default(now()) @map("fetched_at")
+
+  @@map("link_previews")
+}
+
 model AiUsageLog {
   id               String   @id @default(uuid())
   clubId           String?  @map("club_id")
