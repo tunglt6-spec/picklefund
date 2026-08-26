@@ -30,7 +30,8 @@ export class LinkPreviewService {
   constructor(private prisma: PrismaService) {}
 
   private hash(u: string): string {
-    return createHash('sha256').update(u).digest('hex');
+    // 'v2:' bust cache khi đổi logic parse/decode (bản v1 lưu title/desc còn entity số chưa decode).
+    return createHash('sha256').update('v2:' + u).digest('hex');
   }
 
   async getPreview(rawUrl: string): Promise<LinkPreviewDto | null> {
@@ -158,13 +159,20 @@ export class LinkPreviewService {
   // ─── Parse OpenGraph ──────────────────────────────────────────────────────
   private decode(s: string): string {
     return s
-      .replace(/&amp;/g, '&')
+      // Entity SỐ (thập lục phân + thập phân) — bắt buộc cho tiếng Việt trong og tag (vd &#225; = á).
+      .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => {
+        try { return String.fromCodePoint(parseInt(h, 16)); } catch { return m; }
+      })
+      .replace(/&#(\d+);/g, (m, d) => {
+        try { return String.fromCodePoint(parseInt(d, 10)); } catch { return m; }
+      })
+      // Entity có tên phổ biến.
       .replace(/&quot;/g, '"')
-      .replace(/&#0?39;/g, "'")
       .replace(/&apos;/g, "'")
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&nbsp;/g, ' ');
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&');
   }
   private cut(s: string | null, n: number): string | null {
     if (!s) return null;
