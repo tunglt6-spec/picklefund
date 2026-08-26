@@ -11,6 +11,7 @@ import {
   dispatchTestTrigger,
   dispatchLiveTrigger,
   DISPATCH_TRIGGER_TYPES,
+  triggerLabel,
   fetchObservabilitySummary,
   type ObservabilitySummary,
   type DispatchSummary,
@@ -273,7 +274,10 @@ export function WorkflowRules() {
           <div className="space-y-2">
             {DISPATCH_TRIGGER_TYPES.map((t) => (
               <div key={t} className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-mono [color:var(--pf-color-muted)] w-40 shrink-0">{t}</span>
+                <div className="w-44 shrink-0" title={t}>
+                  <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(t)}</p>
+                  <p className="text-[10px] font-mono [color:var(--pf-color-muted)]">{t}</p>
+                </div>
                 <button
                   onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
                   disabled={busy}
@@ -474,8 +478,8 @@ export function WorkflowRules() {
                   className="flex w-full items-center justify-between gap-2 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5 text-left transition-colors hover:[background:var(--pf-color-muted-soft)]"
                 >
                   <div className="min-w-0">
-                    <p className="text-xs font-medium [color:var(--pf-text)]">{run.triggerType}</p>
-                    <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)}</p>
+                    <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(run.triggerType)}</p>
+                    <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)} · <span className="font-mono">{run.triggerType}</span></p>
                     {run.errorMessage && <p className="text-[10px] text-red-500 truncate">{run.errorMessage}</p>}
                   </div>
                   <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>

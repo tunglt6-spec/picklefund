@@ -188,6 +188,33 @@ export async function fetchRuleVersions(ruleId: string): Promise<RuleVersion[]> 
 export async function rollbackRuleVersion(ruleId: string, versionId: string): Promise<void> {
   await api.post(`/workflows/rules/${ruleId}/rollback`, { versionId })
 }
+
+/** Nhãn tiếng Việt DÙNG CHUNG cho trigger type (mọi màn AIDO). Giữ mã gốc làm fallback. */
+export const TRIGGER_LABELS: Record<string, string> = {
+  // Rule runtime (Epic 6/Phase 2-4)
+  DEBT_ESCALATION: 'Nhắc đóng quỹ',
+  EVENT_REMINDER: 'Nhắc buổi tập',
+  REPORT_DISPATCH: 'Gửi báo cáo kỳ quỹ',
+  FUND_BALANCE_RISK: 'Cảnh báo quỹ âm',
+  PAYMENT_DUE_REMINDER: 'Nhắc đóng quỹ trước hạn',
+  MISSING_FINANCE_DOCUMENT: 'Thiếu chứng từ chi',
+  LOW_SESSION_REGISTRATION: 'Buổi ít người đăng ký',
+  ATTENDANCE_NOT_CLOSED: 'Chưa chốt điểm danh',
+  SESSION_CAPACITY_RISK: 'Buổi quá đông',
+  LOW_MEMBER_ATTENDANCE: 'Thành viên đi ít',
+  APPROVAL_OVERDUE: 'AI Action chờ duyệt quá hạn',
+  MATCH_RESULT_MISSING: 'Thiếu kết quả trận đấu',
+  WEEKLY_CLUB_HEALTH_REPORT: 'Báo cáo sức khỏe CLB tuần',
+  // Sự kiện nghiệp vụ (business events)
+  ATTENDANCE_COMPLETED: 'Điểm danh hoàn tất',
+  CONTRIBUTION_CONFIRMED: 'Xác nhận đóng quỹ',
+  EXPENSE_RECORDED: 'Ghi nhận chi phí',
+  FUND_PERIOD_CLOSED: 'Chốt kỳ quỹ',
+  MINIGAME_COMPLETED: 'Kết thúc minigame',
+}
+export function triggerLabel(t: string): string {
+  return TRIGGER_LABELS[t] ?? t
+}
 export async function testTriggerRule(
   id: string,
   contextJson?: Record<string, unknown>,

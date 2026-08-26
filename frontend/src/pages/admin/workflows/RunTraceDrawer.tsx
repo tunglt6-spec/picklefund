@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, type ReactNode } from 'react'
 import { Modal } from '../../../components/ui/Modal'
-import { fetchRunTrace, type RunTrace } from '../../../hooks/useWorkflows'
+import { fetchRunTrace, triggerLabel, type RunTrace } from '../../../hooks/useWorkflows'
 
 function fmtMs(ms: number | null): string {
   if (ms == null) return '—'
@@ -46,7 +46,7 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
   const statusTone = r?.status === 'FAILED' ? 'danger' : r?.status === 'WAITING_APPROVAL' ? 'warn' : r?.status === 'COMPLETED' ? 'ok' : 'muted'
 
   return (
-    <Modal open={!!runId} onClose={onClose} title="Giải trình lần chạy" subtitle={r?.ruleName ?? r?.triggerType ?? undefined} size="xl">
+    <Modal open={!!runId} onClose={onClose} title="Giải trình lần chạy" subtitle={r?.ruleName ?? (r ? triggerLabel(r.triggerType) : undefined)} size="xl">
       {loading || !trace || !r ? (
         <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải giải trình…</div>
       ) : (
@@ -61,7 +61,7 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
           {r.error && <p className="rounded-lg [background:var(--pf-color-danger-soft)] px-3 py-2 text-[12px] [color:var(--pf-color-danger)]">{r.error}</p>}
 
           <QBlock n={1} q="Rule nào chạy?">
-            <strong>{trace.q1_rule.ruleName ?? '(rule đã xoá)'}</strong> · <span className="[color:var(--pf-color-muted)]">{trace.q1_rule.triggerType}</span>
+            <strong>{trace.q1_rule.ruleName ?? '(rule đã xoá)'}</strong> · <span className="[color:var(--pf-color-muted)]">{triggerLabel(trace.q1_rule.triggerType)}</span>
           </QBlock>
 
           <QBlock n={2} q="Agent nào tham gia?">

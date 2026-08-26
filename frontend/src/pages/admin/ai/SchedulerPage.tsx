@@ -17,6 +17,7 @@ import {
   PageShell, PageHeader, MetricCard, StatusBadge, EmptyState, LoadingState, ErrorState,
   ActionButton, type StatusTone,
 } from '../../../components/shared'
+import { TRIGGER_LABELS as TRIGGER_LABEL } from '../../../hooks/useWorkflows'
 
 interface SchedulerStatus {
   enabled: boolean
@@ -43,16 +44,6 @@ interface SchedRun {
 
 const SCHEDULE_LABEL: Record<string, string> = {
   DAILY: 'Hàng ngày', WEEKLY: 'Hàng tuần', MONTHLY: 'Hàng tháng', MANUAL: 'Thủ công',
-}
-const TRIGGER_LABEL: Record<string, string> = {
-  DEBT_ESCALATION: 'Nhắc đóng quỹ',
-  EVENT_REMINDER: 'Nhắc buổi tập',
-  REPORT_DISPATCH: 'Gửi báo cáo kỳ quỹ',
-  ATTENDANCE_COMPLETED: 'Điểm danh hoàn tất',
-  CONTRIBUTION_CONFIRMED: 'Xác nhận đóng quỹ',
-  EXPENSE_RECORDED: 'Ghi nhận chi phí',
-  FUND_PERIOD_CLOSED: 'Chốt kỳ quỹ',
-  MINIGAME_COMPLETED: 'Kết thúc minigame',
 }
 const RUN_TONE: Record<string, StatusTone> = {
   COMPLETED: 'success', FAILED: 'danger', WAITING_APPROVAL: 'warning',

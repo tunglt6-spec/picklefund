@@ -18,6 +18,7 @@ import {
   PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState,
   type StatusTone,
 } from '../../../components/shared'
+import { TRIGGER_LABELS as TRIGGER_LABEL } from '../../../hooks/useWorkflows'
 
 interface FailedRun { id: string; triggerType: string; status: string; startedAt?: string; createdAt?: string }
 interface FailedAction { id: string; title: string; actionType: string; status: string; createdAt: string; errorMessage?: string | null }
@@ -27,9 +28,6 @@ const LEVEL_TONE: Record<SignalLevel, StatusTone> = {
 }
 const LEVEL_LABEL: Record<SignalLevel, string> = {
   warning: 'Cảnh báo', attention: 'Chú ý', info: 'Thông tin',
-}
-const TRIGGER_LABEL: Record<string, string> = {
-  DEBT_ESCALATION: 'Nhắc đóng quỹ', EVENT_REMINDER: 'Nhắc buổi tập', REPORT_DISPATCH: 'Gửi báo cáo',
 }
 
 function fmt(iso?: string): string {
