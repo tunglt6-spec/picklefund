@@ -275,7 +275,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const recipients = unpaid.map((m) => this.toRecipient(m));
 
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc đóng quỹ';
+    const title = `Nhắc đóng quỹ kỳ ${period.name}`;
     const body =
       `Bạn chưa hoàn tất đóng quỹ kỳ "${period.name}". Vui lòng đóng quỹ sớm nhé.`;
 
@@ -331,7 +331,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const court = session.courtName ? ` tại ${session.courtName}` : '';
 
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc lịch tập';
+    const title = `Nhắc buổi tập ${dateStr}${court}`;
     const body =
       `Sắp có buổi tập ngày ${dateStr}${timeStr}${court}. Nhớ sắp xếp tham gia nhé.`;
 
@@ -373,7 +373,7 @@ export class HermesActionExecutor implements ActionExecutor {
 
     const recipients = await this.activeMembers(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Báo cáo kỳ quỹ';
+    const title = `Báo cáo kỳ quỹ ${period.name}`;
     const body =
       `Báo cáo kỳ "${period.name}" đã chốt. Bạn có thể xem phiếu thu/quyết toán của mình trong app.`;
 
@@ -422,7 +422,7 @@ export class HermesActionExecutor implements ActionExecutor {
     }
     const recipients = await this.adminRecipients(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Cảnh báo quỹ âm';
+    const title = `Cảnh báo quỹ âm ${this.fmtMoney(balance)}`;
     const body =
       `Số dư Quỹ Chính đang âm (${this.fmtMoney(balance)}). Vui lòng rà soát thu/chi và bổ sung quỹ.`;
     const counts = await this.fanOut(
@@ -483,7 +483,7 @@ export class HermesActionExecutor implements ActionExecutor {
       .filter((m) => !paid.has(m.id))
       .map((m) => this.toRecipient(m));
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc đóng quỹ trước hạn';
+    const title = `Nhắc đóng quỹ kỳ ${period.name} trước ${this.fmtDate(period.endDate)}`;
     const body =
       `Sắp đến hạn đóng quỹ kỳ "${period.name}" (${this.fmtDate(period.endDate)}). Bạn vui lòng đóng trước hạn nhé.`;
     const counts = await this.fanOut(
@@ -524,7 +524,7 @@ export class HermesActionExecutor implements ActionExecutor {
     }
     const recipients = await this.adminRecipients(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Bổ sung chứng từ chi';
+    const title = `Bổ sung chứng từ chi (${missing} khoản)`;
     const body =
       `Có ${missing} khoản chi đã duyệt nhưng thiếu hóa đơn/chứng từ. Vui lòng bổ sung để hoàn thiện hồ sơ.`;
     const counts = await this.fanOut(
@@ -578,7 +578,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const channels = this.resolveChannels(action.requestPayload);
     const dateStr = this.fmtDate(session.sessionDate);
     const court = session.courtName ? ` tại ${session.courtName}` : '';
-    const title = action.title || 'Buổi sắp tới ít người đăng ký';
+    const title = `Buổi ${dateStr}${court} ít người đăng ký`;
     const body =
       `Buổi ngày ${dateStr}${court} đang ít người đăng ký. Nếu tham gia được, bạn đăng ký sớm nhé.`;
     const counts = await this.fanOut(
@@ -614,7 +614,7 @@ export class HermesActionExecutor implements ActionExecutor {
     }
     const recipients = await this.adminRecipients(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc chốt điểm danh';
+    const title = `Nhắc chốt điểm danh (${notClosed} buổi)`;
     const body =
       `Có ${notClosed} buổi đã qua nhưng chưa chốt điểm danh. Vui lòng vào chốt để tính quỹ chính xác.`;
     const counts = await this.fanOut(
@@ -669,7 +669,7 @@ export class HermesActionExecutor implements ActionExecutor {
     const channels = this.resolveChannels(action.requestPayload);
     const dateStr = this.fmtDate(top.date);
     const court = top.court ? ` tại ${top.court}` : '';
-    const title = action.title || 'Buổi sắp tới quá đông';
+    const title = `Buổi ${dateStr}${court} quá đông (${top.count} đăng ký)`;
     const body =
       `Buổi ngày ${dateStr}${court} đang có ${top.count} người đăng ký — cân nhắc tăng sân/đổi giờ/giới hạn.`;
     const counts = await this.fanOut(
@@ -776,7 +776,7 @@ export class HermesActionExecutor implements ActionExecutor {
     }
     const recipients = await this.adminRecipients(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc duyệt AI Action tồn đọng';
+    const title = `Nhắc duyệt ${overdue} AI Action tồn đọng`;
     const body =
       `Có ${overdue} hành động AI chờ duyệt quá lâu. Vui lòng vào Hộp Duyệt xử lý.`;
     const counts = await this.fanOut(
@@ -815,7 +815,7 @@ export class HermesActionExecutor implements ActionExecutor {
     }
     const recipients = await this.adminRecipients(clubId);
     const channels = this.resolveChannels(action.requestPayload);
-    const title = action.title || 'Nhắc nhập kết quả trận đấu';
+    const title = `Nhắc nhập kết quả ${missing} trận đấu`;
     const body =
       `Có ${missing} trận trong giải đang diễn ra chưa nhập kết quả. Vui lòng cập nhật để hoàn tất bảng đấu.`;
     const counts = await this.fanOut(
