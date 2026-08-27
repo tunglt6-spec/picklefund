@@ -38,12 +38,6 @@ export function MemberDashboard() {
   const myCost = fin?.totalCost ?? (roughCourtCost + roughLivingCost)
   const balance = fin?.balance ?? (amountPaid - myCost)
 
-  // Tiến độ đóng quỹ: đã đóng / mức đóng góp của kỳ.
-  const fundTarget = activePeriod?.contributionAmount ?? 0
-  const fundPct = fundTarget > 0
-    ? Math.min(100, Math.round((amountPaid / fundTarget) * 100))
-    : amountPaid > 0 ? 100 : 0
-
   const memberName = fin?.memberName ?? attendance?.memberName ?? user?.username ?? 'Thành viên'
   const initials = memberName.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase()
   const hasData = !!activePeriod
@@ -316,22 +310,15 @@ export function MemberDashboard() {
                   <span className="text-[12px] [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</span>
                 </div>
 
-                {/* Thanh tiến độ đóng quỹ */}
+                {/* Đóng quỹ kỳ này — khoản thu mở: hiện SỐ TIỀN THẬT, không mục tiêu/tiến độ % */}
                 <div className="w-full min-w-0 flex-1">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-[13px] font-semibold [color:var(--pf-text)]">Đóng quỹ kỳ này</span>
-                    <span className="text-[13px] font-bold [color:var(--pf-primary)]">{fundPct}%</span>
+                    <span className="text-[15px] font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
-                    <div className="h-full rounded-full [background:var(--pf-primary)] transition-all" style={{ width: `${fundPct}%` }} />
-                  </div>
-                  <div className="mt-1.5 flex items-center justify-between text-[12px] [color:var(--pf-color-muted)]">
-                    <span>Đã đóng {formatVND(amountPaid)}</span>
-                    {fundTarget > 0 && <span>Mục tiêu {formatVND(fundTarget)}</span>}
-                  </div>
-                  <div className="mt-3">
+                  <div className="mt-1">
                     <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>
-                      {isPaid ? 'Đã đóng đủ quỹ kỳ này' : 'Chưa đóng đủ quỹ'}
+                      {isPaid ? 'Đã xác nhận đóng quỹ kỳ này' : 'Chưa có đóng quỹ xác nhận'}
                     </StatusBadge>
                   </div>
                 </div>

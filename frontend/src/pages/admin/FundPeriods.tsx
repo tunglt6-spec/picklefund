@@ -316,9 +316,6 @@ export function FundPeriods() {
     // COMMON: only active (Đang mở) periods — exclude draft and closed
     const calcChung = () => {
       const fps = periods.filter(p => (p.type ?? 'chung') === 'chung' && p.status === 'active')
-      // Sĩ số tính phí theo TỪNG kỳ (đã chốt từ backend ?? số live) → xóa/thêm member không đổi
-      // target kỳ cũ; chỉ kỳ hiện tại (chưa chốt) theo danh sách hiện tại.
-      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount * (p.billedMemberCount ?? memberCount), 0)
       const periodIds = new Set(fps.map(p => p.id))
       const relevant = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && periodIds.has(c.fundPeriodId ?? ''))
       const totalCollected = relevant.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
@@ -329,23 +326,15 @@ export function FundPeriods() {
         ? (primaryActive.billedMemberCount ?? memberCount) - new Set(contributions.filter(c => c.fundPeriodId === primaryActive.id && c.isConfirmed).map(c => c.memberId)).size
         : 0)
       const txCount = relevant.length
-
-      const remaining = Math.max(0, totalTarget - totalCollected)
-      const pct = totalTarget > 0 ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : 0
-      return { balance: totalCollected, pct, remainPct: Math.max(0, 100 - pct), remaining, unpaidCount, txCount, totalTarget, totalPending }
+      return { balance: totalCollected, unpaidCount, txCount, totalPending }
     }
 
-    // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
-    // Not member-based: target = sum of period.contributionAmount (no × memberCount)
+    // MINI: gộp mọi khoản fundSource === 'MINI' (khoản thu mở — không mục tiêu/tiến độ).
     const calcMini = () => {
-      const fps = periods.filter(p => p.type === 'game')
-      const totalTarget = fps.reduce((a, p) => a + p.contributionAmount, 0)
       const miniContribs = contributions.filter(c => c.fundSource === 'MINI')
       const totalCollected = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = miniContribs.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-      const remaining = Math.max(0, totalTarget - totalCollected)
-      const pct = totalTarget > 0 ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : (miniContribs.length > 0 ? 100 : 0)
-      return { balance: totalCollected, pct, remainPct: Math.max(0, 100 - pct), remaining, unpaidCount: 0, txCount: miniContribs.length, totalTarget, totalPending }
+      return { balance: totalCollected, unpaidCount: 0, txCount: miniContribs.length, totalPending }
     }
 
     return { chung: calcChung(), game: calcMini() }
@@ -1929,8 +1918,8 @@ function HighlightsTab({ contributions, periods, members }: {
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 interface KpiStats {
-  balance: number; pct: number; remainPct: number; remaining: number
-  unpaidCount: number; txCount: number; totalTarget: number; totalPending: number
+  balance: number
+  unpaidCount: number; txCount: number; totalPending: number
   prevCarryover?: number
 }
 
