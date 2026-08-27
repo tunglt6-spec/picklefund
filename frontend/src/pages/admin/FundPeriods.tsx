@@ -604,12 +604,12 @@ export function FundPeriods() {
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
               <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
               <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
-              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.chung.pct}% đã thu</div>
+              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
             </div>
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
               <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
               <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
-              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.game.pct}% đã thu</div>
+              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
             </div>
           </div>
 
@@ -932,7 +932,8 @@ export function FundPeriods() {
             iconBg="[background:var(--pf-primary-soft)]"
             accentColor="[color:var(--pf-primary)]"
             stats={stats.chung}
-            label="Chưa đóng"
+            footerLabel="Chưa đóng"
+            footerValue={stats.chung.unpaidCount}
           />
           <KpiSummaryCard
             title="TỔNG QUỸ PHỤ"
@@ -940,8 +941,6 @@ export function FundPeriods() {
             iconBg="[background:var(--pf-primary-soft)]"
             accentColor="[color:var(--pf-primary)]"
             stats={stats.game}
-            label="Giao dịch"
-            labelValue={stats.game.txCount}
           />
         </div>
 
@@ -952,7 +951,6 @@ export function FundPeriods() {
             icon={<Building2 size={16} className="[color:var(--pf-primary)]" />}
             period={activePeriods.chung}
             color="indigo"
-            memberCount={activePeriods.chung?.billedMemberCount ?? memberCount}
             contributions={contributions}
             prevBalance={prevChungBalance}
             isMember={isMember}
@@ -964,7 +962,6 @@ export function FundPeriods() {
             icon={<Wallet size={16} className="[color:var(--pf-primary)]" />}
             period={activePeriods.game ?? latestGamePeriod}
             color="violet"
-            memberCount={memberCount}
             contributions={contributions}
             miniMode
             isMember={isMember}
@@ -1073,24 +1070,19 @@ export function FundPeriods() {
                         <th className="text-left px-4 py-3 font-semibold">Thời gian</th>
                         <th className="text-right px-4 py-3 font-semibold">Mức đóng/người</th>
                         <th className="text-right px-4 py-3 font-semibold">Đã thu</th>
-                        <th className="text-right px-4 py-3 font-semibold">Còn thiếu</th>
-                        <th className="px-4 py-3 font-semibold">Tiến độ</th>
                         <th className="text-left px-4 py-3 font-semibold">Trạng thái</th>
                         <th className="text-center px-4 py-3 font-semibold">Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginated.map(p => {
-                        // Kỳ Mini (Quỹ Phụ) ĐỘC LẬP KỲ: mục tiêu = mức đóng (KHÔNG × số TV),
-                        // đã thu = gộp mọi khoản MINI (fundPeriodId=null nên không lọc theo kỳ).
-                        // Nhất quán với card TỔNG QUỸ PHỤ (calcMini). Kỳ Chung: theo đầu người.
+                        // Khoản thu mở: chỉ hiện "Đã thu" (số tiền thật). KHÔNG tính Mục tiêu/
+                        // Còn thiếu/Tiến độ vì mức đóng thực tế mỗi CLB khác cấu hình → % gây hiểu nhầm.
+                        // Kỳ Mini gộp mọi khoản MINI (fundPeriodId=null); Kỳ Chung lọc theo kỳ.
                         const isMiniPeriod = (p.type ?? 'chung') === 'game'
-                        const target = isMiniPeriod ? p.contributionAmount : p.contributionAmount * (p.billedMemberCount ?? memberCount)
                         const collected = contributions
                           .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
                           .reduce((a, c) => a + c.amount, 0)
-                        const remaining = Math.max(0, target - collected)
-                        const pct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : (isMiniPeriod && collected > 0 ? 100 : 0)
                         const startMs = new Date(p.startDate).getTime()
                         const endMs = new Date(p.endDate).getTime()
                         const days = Math.round((endMs - startMs) / 86400000)
@@ -1118,15 +1110,6 @@ export function FundPeriods() {
                             <td className="px-4 py-3.5 [color:var(--pf-color-muted)] text-xs">{days} ngày</td>
                             <td className="px-4 py-3.5 text-right font-medium [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</td>
                             <td className="px-4 py-3.5 text-right text-green-600 font-medium">{formatVND(collected)}</td>
-                            <td className="px-4 py-3.5 text-right text-red-500 font-medium">{formatVND(remaining)}</td>
-                            <td className="px-4 py-3.5 w-28">
-                              <div className="flex items-center gap-1.5">
-                                <div className="flex-1 h-1.5 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
-                                  <div className="h-full rounded-full [background:var(--pf-primary)] transition-all" style={{ width: `${pct}%` }} />
-                                </div>
-                                <span className="text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{pct}%</span>
-                              </div>
-                            </td>
                             <td className="px-4 py-3.5">
                               <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge>
                             </td>
@@ -1951,10 +1934,12 @@ interface KpiStats {
   prevCarryover?: number
 }
 
-function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelValue }: {
+function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, footerValue }: {
   title: string; icon: React.ReactNode; iconBg: string; accentColor: string
-  stats: KpiStats; label: string; labelValue?: number
+  stats: KpiStats; footerLabel?: string; footerValue?: number
 }) {
+  // Khoản thu mở: KHÔNG hiển thị Mục tiêu / Còn thiếu / Tiến độ (mức đóng thực tế mỗi
+  // CLB khác nhau nên % theo mức cấu hình gây hiểu nhầm). Chỉ hiện SỐ TIỀN THẬT.
   return (
     <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
       <div className="flex items-center gap-2 mb-4">
@@ -1968,54 +1953,37 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, label, labelV
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
             <p className="text-[10px] text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
           )}
-          {stats.totalPending > 0 && (
-            <p className="text-[10px] text-amber-500 mt-0.5">+{formatVND(stats.totalPending)} chờ</p>
-          )}
         </div>
         <div>
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Đã thu</p>
-          <p className="text-base font-bold text-green-600">{stats.pct}%</p>
-          <p className="text-[10px] text-green-500">{formatVND(stats.balance)}</p>
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Chờ xác nhận</p>
+          <p className={`text-base font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
         </div>
         <div>
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Còn thiếu</p>
-          <p className="text-base font-bold text-red-500">{stats.remainPct}%</p>
-          <p className="text-[10px] text-red-400">{formatVND(stats.remaining)}</p>
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Giao dịch</p>
+          <p className="text-base font-bold [color:var(--pf-text)]">{stats.txCount}</p>
         </div>
       </div>
-      {stats.totalPending > 0 && (
-        <div className="mt-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-between text-xs">
-          <span className="text-amber-700 font-medium">⏳ Chờ xác nhận</span>
-          <span className="font-bold text-amber-700">{formatVND(stats.totalPending)}</span>
+      {footerLabel && (
+        <div className="mt-3 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
+          <span>{footerLabel}: <strong className="[color:var(--pf-text)]">{footerValue ?? 0}</strong></span>
         </div>
       )}
-      <div className="mt-3 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
-        <span>{label}: <strong className="[color:var(--pf-text)]">{labelValue ?? stats.unpaidCount}</strong></span>
-        <span>Giao dịch: <strong className="[color:var(--pf-text)]">{stats.txCount}</strong></span>
-      </div>
     </div>
   )
 }
 
-function FundDetailCard({ title, icon, period, color, memberCount, contributions, onEdit, onView, miniMode, prevBalance = 0, isMember = false }: {
+function FundDetailCard({ title, icon, period, color, contributions, onEdit, onView, miniMode, prevBalance = 0, isMember = false }: {
   title: string; icon: React.ReactNode; period: FundPeriod | undefined
-  color: 'indigo' | 'violet'; memberCount: number
+  color: 'indigo' | 'violet'
   contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
   miniMode?: boolean; prevBalance?: number; isMember?: boolean
 }) {
-  const target = period ? (miniMode ? period.contributionAmount : period.contributionAmount * memberCount) : 0
-  const miniCollected = miniMode
-    ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-    : 0
+  // Khoản thu mở: chỉ hiển thị "Đã thu" (số tiền thật). KHÔNG tính Mục tiêu / Tiến độ %.
   const collected = miniMode
-    ? miniCollected
+    ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
     : period
       ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       : 0
-  // CANONICAL "% đã thu kỳ này" = thu ĐÃ xác nhận / target — KHÔNG cộng số dư chuyển kỳ vào tử số
-  // (chuyển kỳ là tiền kỳ trước, không phải "thu kỳ này"). Đồng nhất với KPI Tổng quan + cột danh sách.
-  const pct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : (miniMode && collected > 0 ? 100 : 0)
-  const barColor = color === 'indigo' ? '[background:var(--pf-primary)]' : '[background:var(--pf-primary)]'
   const borderColor = color === 'indigo' ? '[border-color:var(--pf-primary-soft)]' : '[border-color:var(--pf-primary-soft)]'
 
   return (
@@ -2031,12 +1999,6 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
         <>
           <p className="text-xs [color:var(--pf-color-muted)] mb-1">{period.name}</p>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">{formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
-              <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
-            </div>
-            <span className="text-xs font-medium [color:var(--pf-color-muted)]">{pct}%</span>
-          </div>
           {!miniMode && prevBalance > 0 && (
             <div className="flex items-center justify-between text-xs mt-1 mb-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
               <span className="text-emerald-700">↩ Kết dư kỳ trước</span>
@@ -2045,10 +2007,9 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
           )}
           <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2">
             <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
-            {miniMode
-              ? <span>Giao dịch: <strong className="[color:var(--pf-text)]">{contributions.filter(c => c.fundSource === 'MINI').length}</strong></span>
-              : <span>Mục tiêu: <strong className="[color:var(--pf-text)]">{formatVND(target)}</strong></span>
-            }
+            <span>Giao dịch: <strong className="[color:var(--pf-text)]">{miniMode
+              ? contributions.filter(c => c.fundSource === 'MINI').length
+              : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).length}</strong></span>
           </div>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
@@ -2064,12 +2025,6 @@ function FundDetailCard({ title, icon, period, color, memberCount, contributions
       ) : miniMode && collected > 0 ? (
         <>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">Chưa có kỳ quỹ đang mở</p>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 h-2 rounded-full [background:var(--pf-color-muted-soft)] overflow-hidden">
-              <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: '100%' }} />
-            </div>
-            <span className="text-xs font-medium [color:var(--pf-color-muted)]">—</span>
-          </div>
           <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2 mb-4">
             <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
           </div>
