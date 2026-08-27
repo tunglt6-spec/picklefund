@@ -10,6 +10,12 @@ import {
   EVENT_PRIORITY,
   EVENT_RECIPIENTS,
 } from './hermes.types';
+import {
+  pushCategoryOf,
+  isQuietHoursNow,
+  shouldPushNow,
+  notifRouteForRole,
+} from './push-policy';
 
 @Injectable()
 export class HermesService {
@@ -39,6 +45,12 @@ export class HermesService {
       where: { userId: { in: recipients } },
     });
     const prefMap = new Map(prefRows.map((p) => [p.userId, p]));
+    // Prefetch role → route push đúng (admin /notifications ≠ member /member/notifications).
+    const userRows = await this.prisma.user.findMany({
+      where: { id: { in: recipients } },
+      select: { id: true, role: true },
+    });
+    const roleMap = new Map(userRows.map((u) => [u.id, u.role as string]));
 
     let dispatched = 0;
     for (const userId of recipients) {
@@ -88,7 +100,7 @@ export class HermesService {
           void this.push.sendToUser(userId, {
             title: event.title,
             body: event.body,
-            url: typeof link === 'string' ? link : '/member/notifications',
+            url: typeof link === 'string' ? link : notifRouteForRole(roleMap.get(userId)),
             tag: event.eventType,
           });
         }
@@ -273,9 +285,7 @@ export class HermesService {
   // ─── Quiet hours check ───────────────────────────────────────────────────────
 
   private isQuietHours(start: number, end: number): boolean {
-    const hour = new Date().getHours();
-    if (start > end) return hour >= start || hour < end; // wraps midnight
-    return hour >= start && hour < end;
+    return isQuietHoursNow(start, end);
   }
 
   /**
@@ -287,12 +297,7 @@ export class HermesService {
    * (chứa 'report') không rơi nhầm vào 'ai'.
    */
   private pushCategory(eventType: string): string {
-    const s = (eventType || '').toLowerCase();
-    if (s.includes('community') || s.includes('matchmaking')) return 'community';
-    if (s.includes('payment') || s.includes('fund')) return 'finance';
-    if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai';
-    if (/anomaly|health|system|config|error/.test(s)) return 'system';
-    return 'activity';
+    return pushCategoryOf(eventType);
   }
 
   /**
@@ -306,13 +311,7 @@ export class HermesService {
     priority: string,
     pref: { enabled?: boolean; quietHoursStart: number; quietHoursEnd: number; pushMutedCategories?: string[] } | null,
   ): boolean {
-    if (pref && pref.enabled === false) return false;
-    const isHigh = priority === 'HIGH';
-    if (!isHigh && pref && this.isQuietHours(pref.quietHoursStart, pref.quietHoursEnd)) return false;
-    if (pref?.pushMutedCategories?.length && pref.pushMutedCategories.includes(this.pushCategory(eventType))) {
-      return false;
-    }
-    return true;
+    return shouldPushNow(eventType, priority, pref);
   }
 
   // ─── Rate limiter ────────────────────────────────────────────────────────────

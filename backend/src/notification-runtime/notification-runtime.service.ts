@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { PushService } from '../push/push.service';
+import { shouldPushNow, notifRouteForRole } from '../hermes/push-policy';
 
 /** Yêu cầu tạo job — payload CHỈ lưu nội bộ, không bao giờ trả ra API. */
 export interface NotificationJobRequest {
@@ -259,17 +260,18 @@ export class NotificationRuntimeService {
     }
     const user = await this.prisma.user.findFirst({
       where: { id: req.targetId, clubId },
-      select: { id: true },
+      select: { id: true, role: true },
     });
     if (!user) {
       // Không cross-club: target ngoài club → DRY_RUN, không gửi.
       return { sent: false, note: 'target không thuộc club (chặn cross-club)' };
     }
+    const eventType = req.eventType ?? 'HERMES_RUNTIME';
     await this.prisma.notification.create({
       data: {
         userId: user.id,
         clubId,
-        eventType: req.eventType ?? 'HERMES_RUNTIME',
+        eventType,
         priority: 'MEDIUM',
         channel: 'IN_APP',
         title: req.title,
@@ -278,13 +280,26 @@ export class NotificationRuntimeService {
         sentAt: new Date(),
       },
     });
-    // Web Push (PWA): đẩy luôn thông báo của Mít Đặc tới điện thoại member (như Hermes).
-    void this.push.sendToUser(user.id, {
-      title: req.title,
-      body: req.bodySummary ?? req.title,
-      url: '/member/notifications',
-      tag: 'hermes_runtime',
-    });
+    // Web Push (PWA): TÔN TRỌNG preferences như luồng Hermes — in-app record vẫn luôn ghi,
+    // chỉ push (buzz) khi shouldPushNow (enabled + ngoài quiet-hours + không tắt nhóm).
+    // Fire-and-forget + tự nuốt lỗi: push là kênh PHỤ, KHÔNG được làm fail việc ghi in-app.
+    void (async () => {
+      try {
+        const pref = await this.prisma.notificationPreference.findUnique({
+          where: { userId: user.id },
+        });
+        if (shouldPushNow(eventType, 'MEDIUM', pref)) {
+          await this.push.sendToUser(user.id, {
+            title: req.title,
+            body: req.bodySummary ?? req.title,
+            url: notifRouteForRole(user.role),
+            tag: 'hermes_runtime',
+          });
+        }
+      } catch {
+        /* im lặng — push phụ, không ảnh hưởng in-app notification */
+      }
+    })();
     return { sent: true, note: 'in-app record created' };
   }
 
