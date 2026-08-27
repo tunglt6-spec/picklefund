@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
+import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
 import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
 
 type HermesNotif = {
@@ -194,7 +195,42 @@ export function Notifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [pushPerm, setPushPerm] = useState<NotificationPermission | 'unsupported'>('default')
+  const [pushBusy, setPushBusy] = useState(false)
   const { setUnreadCount: setGlobalUnread, reset: resetGlobal } = useNotifStore()
+
+  useEffect(() => {
+    setPushPerm(pushPermission())
+    // Đã cấp quyền → đồng bộ lại subscription để chắc chắn nhận push trên thiết bị này.
+    void syncPushIfGranted()
+  }, [])
+
+  const onEnablePush = async () => {
+    setPushBusy(true)
+    try {
+      const r = await enablePush()
+      if (r === 'ok') { toast.success('Đã bật thông báo trên thiết bị này'); setPushPerm('granted') }
+      else if (r === 'denied') { toast.error('Bạn đã chặn quyền thông báo — hãy bật lại trong cài đặt trình duyệt'); setPushPerm('denied') }
+      else if (r === 'no-key') toast.error('Máy chủ chưa bật thông báo đẩy (thiếu VAPID)')
+      else if (r === 'unsupported') toast.error('Thiết bị/trình duyệt không hỗ trợ thông báo đẩy')
+      else toast.error('Không bật được thông báo — thử lại')
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const onTestPush = async () => {
+    setPushBusy(true)
+    try {
+      const r = await sendTestPush()
+      if (!r) { toast.error('Không gửi được thông báo thử'); return }
+      if (r.devices === 0) toast.error('Chưa có thiết bị đăng ký — hãy bấm "Bật thông báo" trước')
+      else if (r.sent > 0) toast.success(`Đã gửi tới ${r.sent} thiết bị — kiểm tra thông báo trên máy`)
+      else toast.error(`Gửi thất bại (${r.errors[0] ?? 'lỗi'}). Thử bấm "Bật thông báo" lại.`)
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const fetchNotifs = useCallback(async () => {
     if (!user) return
@@ -286,10 +322,22 @@ export function Notifications() {
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>
             <div className="text-[12px] [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
+              <button onClick={onEnablePush} disabled={pushBusy}
+                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] font-[600] text-white disabled:opacity-60 [background:var(--pf-primary)]">
+                <BellRing size={13} />{pushBusy ? 'Đang bật…' : 'Bật push'}
+              </button>
+            )}
+            {pushPerm === 'granted' && (
+              <button onClick={onTestPush} disabled={pushBusy}
+                className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] disabled:opacity-60 active:opacity-70">
+                <BellRing size={13} />{pushBusy ? 'Đang gửi…' : 'Gửi thử'}
+              </button>
+            )}
             {unreadCount > 0 && (
               <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
-                <Check size={13} />Đánh dấu đã đọc
+                <Check size={13} />Đã đọc
               </button>
             )}
             <button onClick={() => setSettingsOpen(true)} aria-label="Cài đặt thông báo"
@@ -341,6 +389,23 @@ export function Notifications() {
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
         actions={
           <div className="flex items-center gap-2">
+            {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
+              <button onClick={onEnablePush} disabled={pushBusy}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60 [background:var(--pf-primary)]">
+                <BellRing size={14} />{pushBusy ? 'Đang bật…' : 'Bật thông báo trên điện thoại'}
+              </button>
+            )}
+            {pushPerm === 'granted' && (
+              <>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-color-success)]">
+                  <BellRing size={14} /> Đã bật
+                </span>
+                <button onClick={onTestPush} disabled={pushBusy}
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                  {pushBusy ? 'Đang gửi…' : 'Gửi thử'}
+                </button>
+              </>
+            )}
             {unreadCount > 0 && (
               <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
