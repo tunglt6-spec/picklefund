@@ -1090,7 +1090,7 @@ export function FundPeriods() {
                           .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
                           .reduce((a, c) => a + c.amount, 0)
                         const remaining = Math.max(0, target - collected)
-                        const pct = target > 0 ? Math.round((collected / target) * 100) : (isMiniPeriod && collected > 0 ? 100 : 0)
+                        const pct = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : (isMiniPeriod && collected > 0 ? 100 : 0)
                         const startMs = new Date(p.startDate).getTime()
                         const endMs = new Date(p.endDate).getTime()
                         const days = Math.round((endMs - startMs) / 86400000)
