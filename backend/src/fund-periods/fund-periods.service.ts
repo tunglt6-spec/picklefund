@@ -280,6 +280,16 @@ export class FundPeriodsService {
           : {}),
       },
     });
+    // Đổi mức đóng → ĐỒNG BỘ expectedAmount của roster kỳ này (nếu có), để mức đóng=0
+    // (khoản thu mở) không còn sinh công nợ ảo ở Command Center. Roster chỉ tồn tại khi
+    // kỳ được tạo bằng "copy thành viên kỳ trước"; kỳ không roster → updateMany 0 dòng (vô hại).
+    // Nhất quán với lúc tạo roster (expectedAmount = contributionAmount cho mọi thành viên).
+    if (safeDto.contributionAmount != null) {
+      await this.prisma.fundPeriodMember.updateMany({
+        where: { fundPeriodId: id },
+        data: { expectedAmount: new Decimal(safeDto.contributionAmount) },
+      });
+    }
     // Sửa startDate/endDate/type/mức đóng có thể đảo thứ tự chuỗi carryForward → xóa cache số dư
     // cuối kỳ toàn CLB (tránh clubAssets stale ở các kỳ đã finalize). Xem summary().
     await this.calculator.invalidateClosingBalances(clubId);

@@ -11,7 +11,6 @@ import {
   EVENT_RECIPIENTS,
 } from './hermes.types';
 import {
-  pushCategoryOf,
   isQuietHoursNow,
   shouldPushNow,
   notifRouteForRole,
@@ -296,10 +295,6 @@ export class HermesService {
    * · ai (bản tin/báo cáo) · activity (còn lại). Check community/finance TRƯỚC để 'community_report'
    * (chứa 'report') không rơi nhầm vào 'ai'.
    */
-  private pushCategory(eventType: string): string {
-    return pushCategoryOf(eventType);
-  }
-
   /**
    * Push THÔNG MINH theo giờ/loại (in-app notification VẪN ghi đủ; chỉ quyết định buzz push):
    *  - preference.enabled=false → tắt hẳn.

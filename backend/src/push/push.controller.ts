@@ -6,6 +6,7 @@ import { PushService } from './push.service';
 import { CurrentUser } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
+import { notifRouteForRole } from '../hermes/push-policy';
 
 class SubscribeDto {
   @IsString() @MaxLength(1000) endpoint!: string;
@@ -62,7 +63,7 @@ export class PushController {
     const r = await this.svc.sendToUser(user.userId, {
       title: 'PickleFund',
       body: 'Thông báo thử nghiệm ✅ — nếu bạn thấy dòng này là push đã hoạt động.',
-      url: '/member/notifications',
+      url: notifRouteForRole(user.role),
       tag: 'push_test',
     });
     return ok(r);
