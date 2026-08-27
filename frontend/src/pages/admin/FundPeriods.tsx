@@ -2080,9 +2080,10 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ) <span className="text-red-500">*</span></label>
-            <input required type="number" value={form.contributionAmount}
-              onChange={e => setForm({ ...form, contributionAmount: Number(e.target.value) })} className="input-base" />
+            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ)</label>
+            <input type="number" min={0} value={form.contributionAmount}
+              onChange={e => setForm({ ...form, contributionAmount: e.target.value === '' ? 0 : Number(e.target.value) })} className="input-base" />
+            <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Tùy chọn — để trống hoặc 0 nếu là khoản thu mở.</p>
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến</label>
