@@ -331,8 +331,8 @@ export function FundPeriods() {
       const txCount = relevant.length
 
       const remaining = Math.max(0, totalTarget - totalCollected)
-      const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0
-      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount, txCount, totalTarget, totalPending }
+      const pct = totalTarget > 0 ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : 0
+      return { balance: totalCollected, pct, remainPct: Math.max(0, 100 - pct), remaining, unpaidCount, txCount, totalTarget, totalPending }
     }
 
     // MINI: all contributions with fundSource === 'MINI' (no period linkage required)
@@ -344,8 +344,8 @@ export function FundPeriods() {
       const totalCollected = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const totalPending = miniContribs.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       const remaining = Math.max(0, totalTarget - totalCollected)
-      const pct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : (miniContribs.length > 0 ? 100 : 0)
-      return { balance: totalCollected, pct, remainPct: 100 - pct, remaining, unpaidCount: 0, txCount: miniContribs.length, totalTarget, totalPending }
+      const pct = totalTarget > 0 ? Math.min(100, Math.round((totalCollected / totalTarget) * 100)) : (miniContribs.length > 0 ? 100 : 0)
+      return { balance: totalCollected, pct, remainPct: Math.max(0, 100 - pct), remaining, unpaidCount: 0, txCount: miniContribs.length, totalTarget, totalPending }
     }
 
     return { chung: calcChung(), game: calcMini() }
