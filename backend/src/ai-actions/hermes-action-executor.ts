@@ -164,6 +164,40 @@ export class HermesActionExecutor implements ActionExecutor {
       .join(', ');
   }
 
+  /**
+   * Map actionType workflow → eventType phân NHÓM thông báo (khớp pushCategory backend +
+   * catOf member/admin). Trước đây mọi thông báo AI Action mang 'HERMES_RUNTIME' → dồn hết
+   * vào "Hoạt động"; nay gán token khớp regex nhóm để hiện đúng tab:
+   *  - Tài chính (regex fund|payment): nhắc/quỹ âm/chứng từ/trước hạn/báo cáo kỳ quỹ.
+   *  - AI đề xuất (regex report|recommend…): đề xuất cá nhân + báo cáo sức khỏe CLB tuần.
+   *  - Hệ thống (regex system…): nhắc duyệt AI Action tồn đọng.
+   *  - Hoạt động (mặc định): nhắc buổi tập/đăng ký/điểm danh/sức chứa/kết quả trận.
+   */
+  private categoryEventType(actionType: string): string {
+    switch (actionType) {
+      case 'workflow:DEBT_ESCALATION':
+        return 'fund_debt_reminder';
+      case 'workflow:PAYMENT_DUE_REMINDER':
+        return 'payment_due_reminder';
+      case 'workflow:FUND_BALANCE_RISK':
+        return 'fund_balance_risk';
+      case 'workflow:MISSING_FINANCE_DOCUMENT':
+        return 'fund_document_missing';
+      case 'workflow:REPORT_DISPATCH':
+        return 'fund_period_report';
+      case 'workflow:LOW_MEMBER_ATTENDANCE':
+        return 'ai_recommendation';
+      case 'workflow:WEEKLY_CLUB_HEALTH_REPORT':
+        return 'weekly_health_report';
+      case 'workflow:APPROVAL_OVERDUE':
+        return 'system_approval_overdue';
+      default:
+        // EVENT_REMINDER, LOW_SESSION_REGISTRATION, ATTENDANCE_NOT_CLOSED,
+        // SESSION_CAPACITY_RISK, MATCH_RESULT_MISSING → nhóm "Hoạt động".
+        return 'HERMES_RUNTIME';
+    }
+  }
+
   /** Tất cả thành viên đang hoạt động → recipient (userId cho IN_APP, email Liên hệ cho EMAIL). */
   private async activeMembers(clubId: string): Promise<Recipient[]> {
     const members = await this.prisma.member.findMany({
@@ -288,6 +322,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
 
     this.logger.log(
@@ -344,6 +379,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
 
     this.logger.log(
@@ -386,6 +422,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
 
     this.logger.log(
@@ -434,6 +471,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `FUND_BALANCE_RISK ${action.id}: balance<0 admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -495,6 +533,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `PAYMENT_DUE_REMINDER ${action.id}: unpaid=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -536,6 +575,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `MISSING_FINANCE_DOCUMENT ${action.id}: missing=${missing} admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -590,6 +630,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `LOW_SESSION_REGISTRATION ${action.id}: notReg=${recipients.length} date=${dateStr} counts=${this.countsStr(counts)}`,
@@ -626,6 +667,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `ATTENDANCE_NOT_CLOSED ${action.id}: notClosed=${notClosed} admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -681,6 +723,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `SESSION_CAPACITY_RISK ${action.id}: max=${top.count} admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -741,8 +784,6 @@ export class HermesActionExecutor implements ActionExecutor {
     const title = action.title || 'Câu lạc bộ nhớ bạn!';
     const body =
       'Gần đây bạn tham gia hơi ít buổi. CLB mong gặp lại bạn ở các buổi tới nhé — có gì cần hỗ trợ cứ nhắn CLB.';
-    // AI đề xuất CÁ NHÂN gửi cho member → nhóm 'ai' (khớp regex 'recommend') để hiện
-    // ở tab "AI đề xuất" của member, tách khỏi "Hoạt động".
     const counts = await this.fanOut(
       clubId,
       action.id,
@@ -750,7 +791,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
-      'ai_recommendation',
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `LOW_MEMBER_ATTENDANCE ${action.id}: low=${recipients.length}/${members.length} counts=${this.countsStr(counts)}`,
@@ -791,6 +832,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `APPROVAL_OVERDUE ${action.id}: overdue=${overdue} admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -830,6 +872,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `MATCH_RESULT_MISSING ${action.id}: missing=${missing} admins=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -902,6 +945,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      this.categoryEventType(action.actionType),
     );
     this.logger.log(
       `WEEKLY_CLUB_HEALTH_REPORT ${action.id}: balance=${balance} unpaid=${unpaidCount} admins=${recipients.length} counts=${this.countsStr(counts)}`,
