@@ -8,11 +8,12 @@ import api from '../../lib/api'
 // Đồng bộ với bộ lọc thông báo + pushCategory backend (keys: community/finance/activity/system/ai).
 export interface PushCategoryDef { label: string; desc: string; keys: string[] }
 
-/** Member: 3 nhóm khớp bộ lọc member (catOf ở MemberNotifications). */
+/** Member: 4 nhóm khớp bộ lọc member (catOf ở MemberNotifications). */
 export const MEMBER_PUSH_CATEGORIES: PushCategoryDef[] = [
   { label: 'Cộng đồng', desc: 'Bài đăng · bình luận · @nhắc tên · tìm kèo', keys: ['community'] },
   { label: 'Tài chính', desc: 'Nộp quỹ · xác nhận · nhắc đóng', keys: ['finance'] },
   { label: 'Hoạt động', desc: 'Nhắc buổi tập · đăng ký · thông báo khác', keys: ['activity'] },
+  { label: 'AI đề xuất', desc: 'Gợi ý & nhắc nhở AI dành riêng cho bạn', keys: ['ai'] },
 ]
 
 /** Admin: đủ 5 nhóm (admin cũng tham gia cộng đồng, được tag) — khớp bộ lọc admin + pushCategory. */

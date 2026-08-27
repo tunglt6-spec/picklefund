@@ -19,6 +19,10 @@ export interface NotificationJobRequest {
   payload?: Record<string, unknown>;
   idempotencyKey?: string;
   aiActionId?: string;
+  // Loại sự kiện lưu trên Notification (dùng để phân nhóm ở bộ lọc member/admin +
+  // pushCategory). Mặc định 'HERMES_RUNTIME' (nhóm "Hoạt động"). Truyền chuỗi khớp
+  // regex nhóm để phân loại đúng — vd 'ai_recommendation' → nhóm "AI đề xuất".
+  eventType?: string;
 }
 
 const VALID_CHANNELS: NotificationChannel[] = ['IN_APP', 'EMAIL', 'TELEGRAM'];
@@ -265,7 +269,7 @@ export class NotificationRuntimeService {
       data: {
         userId: user.id,
         clubId,
-        eventType: 'HERMES_RUNTIME',
+        eventType: req.eventType ?? 'HERMES_RUNTIME',
         priority: 'MEDIUM',
         channel: 'IN_APP',
         title: req.title,

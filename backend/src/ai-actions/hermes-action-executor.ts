@@ -115,6 +115,7 @@ export class HermesActionExecutor implements ActionExecutor {
     title: string,
     body: string,
     channels: string[],
+    eventType?: string,
   ): Promise<Record<string, number>> {
     const counts: Record<string, number> = {};
     for (const channel of channels) {
@@ -147,6 +148,7 @@ export class HermesActionExecutor implements ActionExecutor {
           bodySummary: body,
           idempotencyKey: `AI_ACTION:${actionId}:${target.key}`,
           aiActionId: actionId,
+          eventType,
         })) as { status?: string; duplicate?: boolean } | null;
         if (job && job.status === 'READY' && !job.duplicate) n++;
       }
@@ -739,6 +741,8 @@ export class HermesActionExecutor implements ActionExecutor {
     const title = action.title || 'Câu lạc bộ nhớ bạn!';
     const body =
       'Gần đây bạn tham gia hơi ít buổi. CLB mong gặp lại bạn ở các buổi tới nhé — có gì cần hỗ trợ cứ nhắn CLB.';
+    // AI đề xuất CÁ NHÂN gửi cho member → nhóm 'ai' (khớp regex 'recommend') để hiện
+    // ở tab "AI đề xuất" của member, tách khỏi "Hoạt động".
     const counts = await this.fanOut(
       clubId,
       action.id,
@@ -746,6 +750,7 @@ export class HermesActionExecutor implements ActionExecutor {
       title,
       body,
       channels,
+      'ai_recommendation',
     );
     this.logger.log(
       `LOW_MEMBER_ATTENDANCE ${action.id}: low=${recipients.length}/${members.length} counts=${this.countsStr(counts)}`,

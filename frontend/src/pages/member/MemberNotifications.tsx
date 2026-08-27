@@ -47,26 +47,29 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('vi-VN')
 }
 
-type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity'
+type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'ai'
 const TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
   ['unread', 'Chưa đọc'],
   ['community', 'Cộng đồng'],
   ['finance', 'Tài chính'],
   ['activity', 'Hoạt động'],
+  ['ai', 'AI đề xuất'],
 ]
 /**
- * Phân loại thông báo của MEMBER theo eventType. Member CHỈ nhận các nhóm dưới đây —
- * KHÔNG nhận nhóm "Hệ thống" (anomaly/health) hay "AI đề xuất" (daily_brief/weekly_report)
- * vì theo EVENT_RECIPIENTS các nhóm đó chỉ gửi cho CLUB_ADMIN/CLUB_TREASURER.
+ * Phân loại thông báo của MEMBER theo eventType. KHỚP HỆT pushCategory backend
+ * (community/finance TRƯỚC ai để community_report không lọt 'ai'). Member KHÔNG có
+ * nhóm "Hệ thống" (anomaly/health chỉ gửi CLUB_ADMIN) nên system → gộp 'activity'.
  *  - Cộng đồng: community_* (bài đăng/bình luận/@mention/phản hồi), matchmaking (tìm kèo)
  *  - Tài chính: payment_* (báo nộp/xác nhận/kiểm tra lại), fund
- *  - Hoạt động: nhắc buổi tập, đăng ký, không hoạt động, ...
+ *  - AI đề xuất: gợi ý/nhắc AI CÁ NHÂN (ai_recommendation, brief/insight/suggest…)
+ *  - Hoạt động: nhắc buổi tập, đăng ký, ... (còn lại)
  */
-function catOf(eventType: string): 'community' | 'finance' | 'activity' {
+function catOf(eventType: string): 'community' | 'finance' | 'activity' | 'ai' {
   const s = (eventType || '').toLowerCase()
   if (s.includes('community') || s.includes('matchmaking')) return 'community'
   if (s.includes('payment') || s.includes('fund')) return 'finance'
+  if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
   return 'activity'
 }
 function filterIcon(key: TabKey) {
@@ -76,6 +79,7 @@ function filterIcon(key: TabKey) {
     case 'community': return <Megaphone size={18} />
     case 'finance': return <DollarSign size={18} />
     case 'activity': return <Calendar size={18} />
+    case 'ai': return <Brain size={18} />
   }
 }
 
@@ -114,7 +118,7 @@ function FilterKpi({ active, label, icon, count, onClick }: {
   )
 }
 
-/** 5 KPI-lọc xếp DỌC (1 cột). */
+/** Các KPI-lọc xếp DỌC (1 cột). */
 function FilterKpiList({ tab, counts, onChange }: {
   tab: TabKey; counts: Record<TabKey, number>; onChange: (t: TabKey) => void
 }) {
@@ -241,6 +245,7 @@ export function MemberNotifications() {
     community: notifs.filter(n => catOf(n.eventType) === 'community').length,
     finance: notifs.filter(n => catOf(n.eventType) === 'finance').length,
     activity: notifs.filter(n => catOf(n.eventType) === 'activity').length,
+    ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
   }
 
   const openNotif = (n: HermesNotif) => {
@@ -315,7 +320,7 @@ export function MemberNotifications() {
         <EmptyState icon={<Bell size={24} />} title="Không có thông báo nào" description="Các thông báo từ CLB sẽ hiển thị tại đây." />
       ) : (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-          {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
+          {/* CỘT TRÁI — KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
           <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
             <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
           </div>
