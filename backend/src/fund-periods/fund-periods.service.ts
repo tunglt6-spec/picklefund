@@ -275,7 +275,7 @@ export class FundPeriodsService {
         ...(safeDto.dueDate !== undefined
           ? { dueDate: safeDto.dueDate ? new Date(safeDto.dueDate) : null }
           : {}),
-        ...(safeDto.contributionAmount
+        ...(safeDto.contributionAmount != null
           ? { contributionAmount: new Decimal(safeDto.contributionAmount) }
           : {}),
       },

@@ -2,7 +2,6 @@ import {
   IsString,
   IsNumber,
   IsOptional,
-  IsPositive,
   IsDateString,
   IsInt,
   IsBoolean,
@@ -25,7 +24,7 @@ export class CreateFundPeriodDto {
   dueDate?: string;
 
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   @Type(() => Number)
   contributionAmount: number;
 
@@ -75,7 +74,7 @@ export class UpdateFundPeriodDto {
 
   @IsOptional()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   @Type(() => Number)
   contributionAmount?: number;
 
