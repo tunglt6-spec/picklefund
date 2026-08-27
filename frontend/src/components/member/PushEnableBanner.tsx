@@ -7,8 +7,9 @@ import { enablePush, pushSupported, pushPermission } from '../../lib/push'
 const DISMISS_KEY = 'pf-push-banner-dismissed'
 
 /**
- * Banner nhắc member BẬT thông báo đẩy (Web Push) — hiện 1 lần cho tới khi bật hoặc tắt.
- * Web Push bắt buộc opt-in theo từng thiết bị: mỗi member phải tự cho phép trên máy của mình.
+ * Banner nhắc BẬT thông báo đẩy (Web Push) — hiện 1 lần cho tới khi bật hoặc tắt.
+ * Web Push bắt buộc opt-in theo từng thiết bị: mỗi tài khoản (member + admin) phải tự
+ * cho phép trên máy của mình. Hiện cho MỌI vai trò đã đăng nhập.
  */
 export function PushEnableBanner() {
   const role = useAuthStore((s) => s.user?.role)
@@ -16,7 +17,7 @@ export function PushEnableBanner() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    if (role !== 'MEMBER_VIEW') return
+    if (!role) return // chưa đăng nhập → không nhắc
     if (!pushSupported()) return
     if (pushPermission() !== 'default') return // đã bật hoặc đã chặn → không nhắc
     if (localStorage.getItem(DISMISS_KEY) === '1') return
@@ -57,7 +58,7 @@ export function PushEnableBanner() {
     >
       <BellRing size={18} className="shrink-0 [color:var(--pf-primary)]" />
       <p className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug [color:var(--pf-text)]">
-        Bật thông báo trên điện thoại để nhận tin bài đăng, được nhắc tên và thông báo CLB ngay cả khi không mở app.
+        Bật thông báo trên điện thoại để nhận tin CLB, nhắc nhở & cập nhật quan trọng ngay cả khi không mở app.
       </p>
       <button
         onClick={onEnable}
