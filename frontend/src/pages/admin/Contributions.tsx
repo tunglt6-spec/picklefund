@@ -525,11 +525,7 @@ export function Contributions() {
                 {chungPeriods.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                    <select required value={formPeriodId} onChange={e => {
-                      const p = chungPeriods.find(x => x.id === e.target.value)
-                      setFormPeriodId(e.target.value)
-                      if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
-                    }} className="input-base">
+                    <select required value={formPeriodId} onChange={e => setFormPeriodId(e.target.value)} className="input-base">
                       <option value="">-- Chọn kỳ quỹ --</option>
                       {chungPeriods.map(p => (
                         <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
@@ -909,11 +905,7 @@ export function Contributions() {
               {chungPeriods.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                  <select required value={formPeriodId} onChange={e => {
-                    const p = chungPeriods.find(x => x.id === e.target.value)
-                    setFormPeriodId(e.target.value)
-                    if (p && !editTarget) setForm(f => ({ ...f, amount: p.contributionAmount }))
-                  }} className="input-base">
+                  <select required value={formPeriodId} onChange={e => setFormPeriodId(e.target.value)} className="input-base">
                     <option value="">-- Chọn kỳ quỹ --</option>
                     {chungPeriods.map(p => (
                       <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
