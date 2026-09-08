@@ -345,60 +345,98 @@ export class CommandCenterService {
     const fallback = this.ruleBasedReview(data);
     const digest = this.buildDigest(data);
 
-    const prompt =
-      `Bạn là HỘI ĐỒNG CHUYÊN GIA điều hành của nền tảng SaaS thể thao PickleFund, gồm: CEO, Giám đốc Tăng trưởng & Doanh thu, ` +
-      `Giám đốc Vận hành, Giám đốc Tài chính (CFO), Trưởng nhóm AI, Trưởng Kỹ sư Độ tin cậy (SRE/Hạ tầng), Trưởng Ứng phó sự cố, ` +
-      `Chuyên gia Phân tích dữ liệu (BI) và Chuyên gia Bảo mật & Tuân thủ. Hãy soạn BÁO CÁO ĐIỀU HÀNH CẤP HỆ THỐNG cho Ban lãnh đạo, ` +
-      `gồm 10 phần theo ĐÚNG thứ tự và định dạng bên dưới.\n` +
-      `Với MỖI phần: viết bằng tiếng Việt, giọng CHUYÊN GIA phụ trách mảng đó, CHI TIẾT 150–260 từ (2–4 đoạn), theo mạch: ` +
-      `(1) nhận định hiện trạng bám CHẶT số liệu (có trích số cụ thể), (2) phân tích xu hướng & nguyên nhân, (3) rủi ro/điểm cần chú ý, ` +
-      `(4) KHUYẾN NGHỊ hành động CỤ THỂ, (5) định hướng/hướng xử lý trong tương lai. ` +
-      `TUYỆT ĐỐI không bịa số ngoài dữ liệu; chỉ số nào "chưa có dữ liệu" thì nêu rõ và khuyến nghị bổ sung đo lường. ` +
-      `KHÔNG dùng markdown, KHÔNG in lại tiêu đề — chỉ đặt đúng marker trên một dòng rồi xuống dòng viết đoạn văn.\n\n` +
-      `ĐỊNH DẠNG BẮT BUỘC (mỗi phần bắt đầu bằng marker riêng một dòng):\n` +
-      `[[overview]]  — Tổng quan điều hành (giọng CEO)\n` +
-      `[[business]]  — Kinh doanh & Thuê bao (Giám đốc Tăng trưởng)\n` +
-      `[[operations]] — Hoạt động toàn hệ thống (Giám đốc Vận hành)\n` +
-      `[[finance]]   — Tổng hợp tài chính (CFO)\n` +
-      `[[ai]]        — AIDO AI Operations (Trưởng nhóm AI)\n` +
-      `[[infra]]     — Sức khỏe hạ tầng (Trưởng SRE)\n` +
-      `[[alerts]]    — Cảnh báo điều hành (Trưởng Ứng phó sự cố)\n` +
-      `[[leaderboards]] — Bảng xếp hạng (Chuyên gia BI)\n` +
-      `[[syslog]]    — Nhật ký & Kiểm toán (Chuyên gia Bảo mật)\n` +
-      `[[conclusion]] — Kết luận & Khuyến nghị ưu tiên (Ban điều hành tổng hợp): 220–340 từ, TỔNG HỢP toàn bộ 9 mục trên thành ` +
-      `(1) một đoạn KẾT LUẬN CHUNG về sức khỏe & triển vọng toàn hệ thống, sau đó (2) DANH SÁCH 4–6 KHUYẾN NGHỊ ƯU TIÊN xếp theo thứ tự ` +
-      `quan trọng — MỖI khuyến nghị viết trên MỘT DÒNG RIÊNG bắt đầu bằng "P1: ", "P2: ", "P3: "… nêu rõ HÀNH ĐỘNG cụ thể + LÝ DO bám số liệu + tác động kỳ vọng.\n\n` +
-      `SỐ LIỆU TOÀN HỆ THỐNG:\n${digest}`;
+    // MỖI mục = MỘT lời gọi LLM riêng với PERSONA chuyên gia của mảng đó → phân tích SÂU,
+    // tránh nông như khi gộp 10 mục vào 1 lời gọi (nguyên nhân báo cáo trước bị sơ sài).
+    const tasks: { key: keyof ReviewSections; prompt: string }[] = [
+      ...this.REVIEW_SPECS.map((s) => ({ key: s.key, prompt: this.sectionPrompt(s, digest) })),
+      { key: 'conclusion' as const, prompt: this.conclusionPrompt(digest) },
+    ];
 
-    let sections = { ...fallback } as ReviewSections;
-    let byAi = false;
-    try {
-      const r = await this.maika.composeLong(prompt, '§NO_LLM§');
-      const parsed = this.parseMarkers(r.text);
-      if (parsed && Object.keys(parsed).length >= 5) { sections = { ...fallback, ...parsed }; byAi = r.byAi; }
-    } catch { /* giữ fallback */ }
-    return { generatedAt: data.generatedAt, sections, byAi, data };
+    const sections = { ...fallback } as ReviewSections;
+    let aiCount = 0;
+    // Chạy song song theo LÔ (đồng thời tối đa 3) — an toàn rate-limit Gemini, vẫn trong timeout 60s.
+    // Mục nào lỗi/không có LLM → GIỮ bản rule-based cho riêng mục đó (không kéo tụt cả báo cáo).
+    const CONCURRENCY = 3;
+    for (let i = 0; i < tasks.length; i += CONCURRENCY) {
+      const batch = tasks.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map(async (t) => {
+          try {
+            const r = await this.maika.composeLong(t.prompt, '§NO_LLM§');
+            const text = (r.text ?? '').trim();
+            if (r.byAi && text.length > 60 && !text.includes('§NO_LLM§')) {
+              return { key: t.key, text };
+            }
+          } catch {
+            /* giữ fallback cho mục này */
+          }
+          return { key: t.key, text: null as string | null };
+        }),
+      );
+      for (const res of results) {
+        if (res.text) {
+          sections[res.key] = res.text;
+          aiCount++;
+        }
+      }
+    }
+    return { generatedAt: data.generatedAt, sections, byAi: aiCount > 0, data };
+  }
+
+  /** Đặc tả từng mục báo cáo — persona chuyên gia + trọng tâm chuyên môn của mảng đó. */
+  private readonly REVIEW_SPECS: {
+    key: keyof ReviewSections;
+    title: string;
+    persona: string;
+    focus: string;
+  }[] = [
+    { key: 'overview', title: 'Tổng quan điều hành', persona: 'CEO/Tổng giám đốc nền tảng SaaS thể thao', focus: 'sức khỏe & triển vọng tổng thể toàn hệ thống, ưu tiên chiến lược cấp cao' },
+    { key: 'business', title: 'Kinh doanh & Thuê bao', persona: 'Giám đốc Tăng trưởng & Doanh thu', focus: 'MRR/ARR, thuê bao trả phí, nâng cấp/hủy, CLB sắp/đã hết hạn, cơ hội & rủi ro tăng trưởng' },
+    { key: 'operations', title: 'Hoạt động toàn hệ thống', persona: 'Giám đốc Vận hành (COO)', focus: 'CLB hoạt động, thành viên mới, buổi chơi, điểm danh, đăng ký, mức độ gắn kết & vận hành' },
+    { key: 'finance', title: 'Tổng hợp tài chính', persona: 'Giám đốc Tài chính (CFO)', focus: 'tổng thu/chi, số dư quỹ, công nợ & quá hạn, chi chờ duyệt, dòng tiền, tỷ lệ thu đúng hạn' },
+    { key: 'ai', title: 'AIDO AI Operations', persona: 'Trưởng nhóm AI (AI Lead)', focus: 'Maika/Lisa/Hermes/Mít Đặc: số lượt, tỷ lệ thành công, lỗi, token & chi phí AI, hiệu quả tự động hóa' },
+    { key: 'infra', title: 'Sức khỏe hạ tầng', persona: 'Trưởng Kỹ sư Độ tin cậy (SRE)', focus: 'CPU/RAM/DB/disk, uptime, hàng đợi việc, phiên, lỗi 5xx, backup, khả năng mở rộng' },
+    { key: 'alerts', title: 'Cảnh báo điều hành', persona: 'Trưởng Ứng phó sự cố (Incident Lead)', focus: 'các cảnh báo hiện có, mức nghiêm trọng, thứ tự xử lý, rủi ro vận hành cần chặn sớm' },
+    { key: 'leaderboards', title: 'Bảng xếp hạng CLB', persona: 'Chuyên gia Phân tích dữ liệu (BI)', focus: 'CLB dẫn đầu theo quy mô/hoạt động/doanh thu/dùng AI, chênh lệch, CLB tiêu biểu & CLB cần hỗ trợ' },
+    { key: 'syslog', title: 'Nhật ký & Kiểm toán', persona: 'Chuyên gia Bảo mật & Tuân thủ', focus: 'khối lượng audit, loại thao tác, rủi ro truy cập/phân quyền/dữ liệu nhạy cảm, tuân thủ' },
+  ];
+
+  /** Prompt cho MỘT mục — giọng chuyên gia của mảng, sâu, bám số liệu. */
+  private sectionPrompt(
+    spec: { title: string; persona: string; focus: string },
+    digest: string,
+  ): string {
+    return (
+      `Bạn là ${spec.persona} trong hội đồng điều hành nền tảng SaaS thể thao PickleFund. ` +
+      `Viết phần "${spec.title}" của BÁO CÁO ĐIỀU HÀNH cấp hệ thống gửi Ban lãnh đạo, bằng tiếng Việt, ` +
+      `giọng CHUYÊN GIA phụ trách mảng này — sắc bén, có chiều sâu chuyên môn, thẳng vào vấn đề.\n` +
+      `Tập trung DUY NHẤT vào: ${spec.focus}.\n` +
+      `Độ dài 180–300 từ (2–4 đoạn), theo mạch: (1) NHẬN ĐỊNH hiện trạng bám CHẶT số liệu — TRÍCH số cụ thể; ` +
+      `(2) PHÂN TÍCH xu hướng & nguyên nhân; (3) RỦI RO/điểm cần chú ý; (4) KHUYẾN NGHỊ hành động CỤ THỂ, khả thi; ` +
+      `(5) ĐỊNH HƯỚNG xử lý tiếp theo.\n` +
+      `TUYỆT ĐỐI không bịa số ngoài dữ liệu; chỉ số nào "chưa có dữ liệu" thì nêu rõ và đề xuất bổ sung đo lường. ` +
+      `KHÔNG markdown, KHÔNG in lại tiêu đề, KHÔNG lặp lại đề bài — chỉ trả về đoạn văn phân tích.\n\n` +
+      `SỐ LIỆU TOÀN HỆ THỐNG (chỉ viết về phần của bạn, các số khác dùng để đối chiếu):\n${digest}`
+    );
+  }
+
+  /** Prompt cho mục KẾT LUẬN — tổng hợp toàn hệ thống + danh sách P1..Pn. */
+  private conclusionPrompt(digest: string): string {
+    return (
+      `Bạn là BAN ĐIỀU HÀNH TỔNG HỢP của nền tảng SaaS thể thao PickleFund. ` +
+      `Viết phần "KẾT LUẬN & KHUYẾN NGHỊ ƯU TIÊN" của báo cáo điều hành, tiếng Việt, tổng hợp mọi mảng ` +
+      `(kinh doanh, vận hành, tài chính, AI, hạ tầng, cảnh báo, bảo mật).\n` +
+      `Cấu trúc: (1) một đoạn KẾT LUẬN CHUNG (90–140 từ) về sức khỏe & triển vọng toàn hệ thống, bám số liệu; ` +
+      `sau đó (2) DANH SÁCH 4–6 KHUYẾN NGHỊ ƯU TIÊN xếp theo mức quan trọng — MỖI khuyến nghị trên MỘT DÒNG RIÊNG ` +
+      `bắt đầu bằng "P1: ", "P2: ", "P3: "… nêu HÀNH ĐỘNG cụ thể + LÝ DO bám số liệu + TÁC ĐỘNG kỳ vọng.\n` +
+      `KHÔNG markdown, không bịa số. Trả về đúng: đoạn kết luận, một dòng trống, rồi danh sách P1..Pn.\n\n` +
+      `SỐ LIỆU TOÀN HỆ THỐNG:\n${digest}`
+    );
   }
 
   /** Chẩn đoán đường AI của Maika (model nào chạy). */
   aiSelfTest() {
     return this.maika.selfTest();
-  }
-
-  /** Tách nội dung Maika theo marker [[key]] → { key: đoạn văn }. */
-  private parseMarkers(text: string): Partial<ReviewSections> | null {
-    if (!text || text.includes('§NO_LLM§')) return null;
-    const keys = new Set<string>(['overview', 'business', 'operations', 'finance', 'ai', 'infra', 'alerts', 'leaderboards', 'syslog', 'conclusion']);
-    const parts = text.split(/\[\[(\w+)\]\]/);
-    const out: Partial<ReviewSections> = {};
-    for (let i = 1; i < parts.length; i += 2) {
-      const key = parts[i];
-      let val = (parts[i + 1] ?? '').trim();
-      // Bỏ dòng mô tả "— ..." hoặc "(...)" mà model có thể chép lại ngay sau marker.
-      val = val.replace(/^\s*[—-][^\n]*\n/, '').replace(/^\s*\([^)]*\)\s*/, '').trim();
-      if (keys.has(key) && val.length > 20) (out as any)[key] = val;
-    }
-    return Object.keys(out).length ? out : null;
   }
 
   /** Xuất PDF Command Center (bìa + 9 mục + đánh giá Maika) qua headless Chrome. null nếu không render được. */
