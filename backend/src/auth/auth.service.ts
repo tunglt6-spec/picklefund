@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import { ScoringService } from '../scoring/scoring.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private clubMemory: ClubMemoryService,
     private scoring: ScoringService,
     private referrals: ReferralsService,
+    private accountNotify: AccountNotifyService,
   ) {}
 
   private hashToken(token: string): string {
@@ -255,6 +257,16 @@ export class AuthService {
         },
       });
       return { club, user, member };
+    });
+
+    // Tài khoản mới: gửi email chào mừng + báo Super Admin (best-effort, không chặn đăng ký).
+    void this.accountNotify.onNewAccount({
+      email: dto.admin.email,
+      displayName: dto.admin.fullName || dto.admin.username,
+      username: dto.admin.username,
+      role: 'CLUB_ADMIN',
+      clubName: result.club.name,
+      source: 'register',
     });
 
     // Seed template Club Memory mặc định (toàn nền tảng) SAU khi transaction commit

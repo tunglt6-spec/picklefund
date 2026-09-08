@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { ClubMemoryModule } from '../ai/club-memory/club-memory.module';
 import { ScoringModule } from '../scoring/scoring.module';
 import { ReferralsModule } from '../referrals/referrals.module';
+import { AccountNotifyModule } from '../account-notify/account-notify.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ReferralsModule } from '../referrals/referrals.module';
     ClubMemoryModule,
     ScoringModule,
     ReferralsModule,
+    AccountNotifyModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

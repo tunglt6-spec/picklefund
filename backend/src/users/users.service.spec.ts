@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { UsersService } from './users.service';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const prisma = {
@@ -28,7 +29,11 @@ describe('UsersService (FIX-USER-AUTH-HASH)', () => {
         Promise.resolve({ id: 'u1', ...arg.data }),
     );
     const mod: TestingModule = await Test.createTestingModule({
-      providers: [UsersService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        UsersService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: AccountNotifyService, useValue: { onNewAccount: jest.fn() } },
+      ],
     }).compile();
     service = mod.get(UsersService);
   });

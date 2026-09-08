@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import { ScoringService } from '../scoring/scoring.service';
@@ -57,6 +58,7 @@ describe('ClubsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ClubMemoryService, useValue: mockClubMemory },
         { provide: ScoringService, useValue: mockScoring },
+        { provide: AccountNotifyService, useValue: { onNewAccount: jest.fn() } },
       ],
     }).compile();
     service = module.get<ClubsService>(ClubsService);

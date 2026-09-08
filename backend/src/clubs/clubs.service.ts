@@ -10,6 +10,7 @@ import { Role } from '@prisma/client';
 import type { ClubStatus, Prisma, ServicePlan } from '@prisma/client';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import { ScoringService } from '../scoring/scoring.service';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 
 /** Giới hạn số thành viên theo gói dịch vụ (null = không giới hạn). Nguồn duy nhất. */
 export const PLAN_MEMBER_LIMIT: Record<ServicePlan, number | null> = {
@@ -71,6 +72,7 @@ export class ClubsService {
     private prisma: PrismaService,
     private clubMemory: ClubMemoryService,
     private scoring: ScoringService,
+    private accountNotify: AccountNotifyService,
   ) {}
 
   /** Branding hiệu lực = branding đã lưu, fallback về tên/logo CLB rồi tới PickleFund. */
@@ -196,6 +198,16 @@ export class ClubsService {
         },
       });
       return club;
+    });
+
+    // Tài khoản admin mới: email chào mừng + báo Super Admin (best-effort, không chặn tạo CLB).
+    void this.accountNotify.onNewAccount({
+      email: dto.adminEmail,
+      displayName: dto.adminUsername,
+      username: dto.adminUsername,
+      role: Role.CLUB_ADMIN,
+      clubName: club.name,
+      source: 'super-club',
     });
 
     // Seed template Club Memory mặc định (toàn nền tảng) SAU khi transaction commit

@@ -6,10 +6,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
 import type { Prisma, Role } from '@prisma/client';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private accountNotify: AccountNotifyService,
+  ) {}
 
   async findAll(clubId?: string) {
     return this.prisma.user.findMany({
@@ -59,7 +63,7 @@ export class UsersService {
     // FIX-USER-AUTH-HASH: dùng argon2 (đồng bộ auth.service.login + seed);
     // trước đây dùng bcrypt → login (argon2.verify) luôn thất bại.
     const hash = await argon2.hash(dto.password);
-    return this.prisma.user.create({
+    const created = await this.prisma.user.create({
       data: {
         username: dto.username,
         email: dto.email,
@@ -73,8 +77,26 @@ export class UsersService {
         email: true,
         role: true,
         clubId: true,
+        club: { select: { name: true } },
       },
     });
+    // Tài khoản mới: email chào mừng + báo Super Admin (best-effort, không chặn tạo user).
+    void this.accountNotify.onNewAccount({
+      email: created.email,
+      displayName: created.username,
+      username: created.username,
+      role: created.role,
+      clubName: created.club?.name ?? null,
+      source: 'super-user',
+    });
+    // Trả về đúng shape cũ (không lộ quan hệ club) để không đổi hợp đồng API.
+    return {
+      id: created.id,
+      username: created.username,
+      email: created.email,
+      role: created.role,
+      clubId: created.clubId,
+    };
   }
 
   async update(

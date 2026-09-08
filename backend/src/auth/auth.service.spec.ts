@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+import { AccountNotifyService } from '../account-notify/account-notify.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClubMemoryService } from '../ai/club-memory/club-memory.service';
 import { ScoringService } from '../scoring/scoring.service';
@@ -70,6 +71,7 @@ describe('AuthService', () => {
         { provide: ClubMemoryService, useValue: mockClubMemory },
         { provide: ScoringService, useValue: mockScoring },
         { provide: ReferralsService, useValue: mockReferrals },
+        { provide: AccountNotifyService, useValue: { onNewAccount: jest.fn() } },
       ],
     }).compile();
 
