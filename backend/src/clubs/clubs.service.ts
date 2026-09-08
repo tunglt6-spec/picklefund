@@ -207,6 +207,7 @@ export class ClubsService {
       username: dto.adminUsername,
       role: Role.CLUB_ADMIN,
       clubName: club.name,
+      clubId: club.id,
       source: 'super-club',
     });
 

@@ -17,6 +17,7 @@ type Settings = {
   autoBackup: boolean
   registrationOpen: boolean
   requireEmailVerification: boolean
+  superTelegramChatId: string
 }
 
 const DEFAULTS: Settings = {
@@ -30,6 +31,7 @@ const DEFAULTS: Settings = {
   autoBackup: true,
   registrationOpen: true,
   requireEmailVerification: false,
+  superTelegramChatId: '',
 }
 
 function fromApi(raw: Record<string, string>): Settings {
@@ -44,6 +46,7 @@ function fromApi(raw: Record<string, string>): Settings {
     autoBackup: raw.autoBackup !== 'false',
     registrationOpen: raw.registrationOpen !== 'false',
     requireEmailVerification: raw.requireEmailVerification === 'true',
+    superTelegramChatId: raw.superTelegramChatId ?? DEFAULTS.superTelegramChatId,
   }
 }
 
@@ -59,6 +62,7 @@ function toApi(s: Settings): Record<string, string> {
     autoBackup: String(s.autoBackup),
     registrationOpen: String(s.registrationOpen),
     requireEmailVerification: String(s.requireEmailVerification),
+    superTelegramChatId: s.superTelegramChatId,
   }
 }
 
@@ -200,6 +204,12 @@ export function SuperSettings() {
             <Toggle label="Mở đăng ký CLB mới" desc="Cho phép tổ chức đăng ký CLB mới qua trang công khai"
               value={settings.registrationOpen}
               onChange={v => setSettings(p => ({ ...p, registrationOpen: v }))} />
+            <div className="mt-4">
+              <S id="superTgChat" label="Telegram Chat ID (Super Admin)" value={settings.superTelegramChatId}
+                onChange={v => setSettings(p => ({ ...p, superTelegramChatId: v }))}
+                placeholder="VD: 123456789 — nhắn /myid cho bot để lấy" />
+              <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo “tài khoản mới” qua Telegram. Để trống = tắt kênh này.</p>
+            </div>
           </div>
         </Section>
 

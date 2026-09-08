@@ -43,9 +43,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   const notifRoute = user.role === 'MEMBER_VIEW'
     ? '/member/notifications'
-    : user.role === 'SUPER_ADMIN'
-      ? '/super/dashboard'
-      : '/notifications'
+    : '/notifications'
 
   const handleLogout = () => {
     setOpen(false)

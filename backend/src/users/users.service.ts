@@ -87,6 +87,7 @@ export class UsersService {
       username: created.username,
       role: created.role,
       clubName: created.club?.name ?? null,
+      clubId: created.clubId ?? null,
       source: 'super-user',
     });
     // Trả về đúng shape cũ (không lộ quan hệ club) để không đổi hợp đồng API.

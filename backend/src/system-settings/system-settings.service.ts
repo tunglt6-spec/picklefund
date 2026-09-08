@@ -12,6 +12,8 @@ const DEFAULTS: Record<string, string> = {
   autoBackup: 'true',
   registrationOpen: 'true',
   requireEmailVerification: 'false',
+  // Chat ID Telegram của Super Admin (ops) — nhận báo tài khoản mới qua Telegram. Rỗng = tắt.
+  superTelegramChatId: '',
 };
 
 @Injectable()

@@ -23,7 +23,7 @@ const notifRouteByRole: Record<string, string> = {
   MEMBER_VIEW: '/member/notifications',
   CLUB_ADMIN: '/he-thong?tab=notifications',
   CLUB_TREASURER: '/treasurer/reminders',
-  SUPER_ADMIN: '/super/dashboard',
+  SUPER_ADMIN: '/notifications',
 }
 const searchRouteByRole: Record<string, string> = {
   MEMBER_VIEW: '/member/dashboard',

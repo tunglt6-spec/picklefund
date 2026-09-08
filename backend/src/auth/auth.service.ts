@@ -266,6 +266,7 @@ export class AuthService {
       username: dto.admin.username,
       role: 'CLUB_ADMIN',
       clubName: result.club.name,
+      clubId: result.club.id,
       source: 'register',
     });
 
