@@ -246,6 +246,38 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
   )
 }
 
+/** Khối KẾT LUẬN & KHUYẾN NGHỊ ƯU TIÊN — tách đoạn kết luận + danh sách P1..Pn thành chip nổi bật. */
+function ConclusionBlock({ review }: { review: { sections: any; byAi: boolean } | null }) {
+  const t = reviewText(review, 'conclusion')
+  if (!t) return null
+  const isPri = (l: string) => /^P\d+\s*[:.]/.test(l.trim())
+  const lines = t.split('\n').map((l) => l.trim()).filter(Boolean)
+  const intro = lines.filter((l) => !isPri(l)).join('\n')
+  const pris = lines.filter(isPri)
+  return (
+    <Section title="Kết luận & Khuyến nghị ưu tiên" desc="Tổng hợp toàn hệ thống + hành động ưu tiên" icon={<Sparkles size={16} />}>
+      <ChartCard title="Đánh giá điều hành tổng hợp" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}>
+        {intro && <p className="whitespace-pre-line text-[13.5px] leading-relaxed [color:var(--pf-text)]">{intro}</p>}
+        {pris.length > 0 && (
+          <ol className="mt-4 space-y-2">
+            {pris.map((p, i) => {
+              const m = p.match(/^P(\d+)\s*[:.]\s*(.*)$/)
+              const label = m ? `P${m[1]}` : `P${i + 1}`
+              const text = m ? m[2] : p
+              return (
+                <li key={i} className="flex items-start gap-2.5 rounded-xl border p-3" style={{ borderColor: 'color-mix(in srgb, var(--pf-primary) 22%, var(--pf-border))', background: 'color-mix(in srgb, var(--pf-primary) 5%, var(--pf-surface))' }}>
+                  <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold text-white [background:var(--pf-primary)]">{label}</span>
+                  <span className="text-[13px] leading-relaxed [color:var(--pf-text)]">{text}</span>
+                </li>
+              )
+            })}
+          </ol>
+        )}
+      </ChartCard>
+    </Section>
+  )
+}
+
 function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onSelfTest, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; review: { sections: any; byAi: boolean } | null; reviewLoading: boolean; onRunReview: () => void; onSelfTest: () => void; onRunBackup: () => void }) {
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards
   const [pendOpen, setPendOpen] = useState(false)
@@ -463,6 +495,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <div className="mt-3"><Link to="/super/audit-logs" className="text-[12px] font-semibold [color:var(--pf-primary)]">Xem toàn bộ nhật ký →</Link></div>
         </ChartCard>
       </Section>
+
+      <ConclusionBlock review={review} />
 
       <Modal open={pendOpen} onClose={() => setPendOpen(false)} title="Khoản chi chờ duyệt" subtitle="Toàn nền tảng · trạng thái pending" size="xl">
         {pendLoading ? (
