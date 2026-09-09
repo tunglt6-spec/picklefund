@@ -642,7 +642,7 @@ function TelegramTab() {
       <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Kết nối Telegram Bot</h3>
         <p className="text-sm [color:var(--pf-color-muted)] mb-4">
-          Liên kết bot <strong>MÍT ĐẶC BOT</strong> với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
+          Liên kết Telegram Bot với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
         </p>
 
         {currentChatId ? (
