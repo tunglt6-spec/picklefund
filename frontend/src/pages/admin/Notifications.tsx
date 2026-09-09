@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -8,7 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
 import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
-import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
+import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES, SUPER_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
 
 type HermesNotif = {
   id: string
@@ -103,8 +103,9 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
   )
 }
 
-type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'system' | 'ai'
-const TABS: [TabKey, string][] = [
+type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'system' | 'ai' | 'account'
+/** CLB admin: 5 nhóm nội bộ CLB. */
+const CLUB_TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
   ['unread', 'Chưa đọc'],
   ['community', 'Cộng đồng'],
@@ -113,17 +114,30 @@ const TABS: [TabKey, string][] = [
   ['system', 'Hệ thống'],
   ['ai', 'AI đề xuất'],
 ]
+/** Super Admin: CHỈ nhóm cấp NỀN TẢNG (biến động app) — KHÔNG có nhóm nội bộ CLB. */
+const SUPER_TABS: [TabKey, string][] = [
+  ['all', 'Tất cả'],
+  ['unread', 'Chưa đọc'],
+  ['account', 'Tài khoản & CLB'],
+  ['system', 'Hệ thống'],
+]
 /**
- * Phân loại notification → nhóm. Admin nhận ĐỦ 5 nhóm (admin cũng tham gia cộng đồng, được tag).
- * KHỚP HỆT pushCategory backend (community/finance TRƯỚC ai/system để community_report không lọt 'ai').
+ * Phân loại notification → nhóm (CLB admin). KHỚP HỆT pushCategory backend
+ * (community/finance TRƯỚC ai/system để community_report không lọt 'ai').
  */
-function catOf(eventType: string): 'community' | 'finance' | 'activity' | 'system' | 'ai' {
+function catOf(eventType: string): TabKey {
   const s = (eventType || '').toLowerCase()
   if (s.includes('community') || s.includes('matchmaking')) return 'community'
   if (s.includes('payment') || s.includes('fund')) return 'finance'
   if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai'
   if (/anomaly|health|system|config|error/.test(s)) return 'system'
   return 'activity'
+}
+/** Phân loại cho SUPER ADMIN: chỉ 'account' (tài khoản/CLB mới) vs 'system' (còn lại). */
+function superCatOf(eventType: string): TabKey {
+  const s = (eventType || '').toLowerCase()
+  if (s.includes('account') || s.includes('club') || s.includes('register') || s.includes('subscription')) return 'account'
+  return 'system'
 }
 
 /** Icon cho từng bộ lọc (dùng ở KPI dọc). */
@@ -136,6 +150,7 @@ function filterIcon(key: TabKey) {
     case 'activity': return <Calendar size={18} />
     case 'system': return <Settings size={18} />
     case 'ai': return <Brain size={18} />
+    case 'account': return <UserPlus size={18} />
   }
 }
 
@@ -174,14 +189,14 @@ function FilterKpi({ active, label, icon, count, onClick }: {
   )
 }
 
-/** 5 KPI-lọc xếp DỌC (1 cột). */
-function FilterKpiList({ tab, counts, onChange }: {
-  tab: TabKey; counts: Record<TabKey, number>; onChange: (t: TabKey) => void
+/** KPI-lọc xếp DỌC (1 cột) — danh sách tab theo vai trò. */
+function FilterKpiList({ tab, tabs, counts, onChange }: {
+  tab: TabKey; tabs: [TabKey, string][]; counts: Partial<Record<TabKey, number>>; onChange: (t: TabKey) => void
 }) {
   return (
     <div className="space-y-2.5">
-      {TABS.map(([k, l]) => (
-        <FilterKpi key={k} active={tab === k} label={l} icon={filterIcon(k)} count={counts[k]} onClick={() => onChange(k)} />
+      {tabs.map(([k, l]) => (
+        <FilterKpi key={k} active={tab === k} label={l} icon={filterIcon(k)} count={counts[k] ?? 0} onClick={() => onChange(k)} />
       ))}
     </div>
   )
@@ -191,6 +206,11 @@ export function Notifications() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  // Super Admin: nhóm cấp NỀN TẢNG (tài khoản/CLB mới, hệ thống) — KHÔNG dùng nhóm nội bộ CLB.
+  const isSuper = user?.role === 'SUPER_ADMIN'
+  const activeTabs = isSuper ? SUPER_TABS : CLUB_TABS
+  const catFn = isSuper ? superCatOf : catOf
+  const pushCats = isSuper ? SUPER_PUSH_CATEGORIES : ADMIN_PUSH_CATEGORIES
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -298,21 +318,20 @@ export function Notifications() {
   const filtered = notifs.filter(n =>
     tab === 'all' ? true
     : tab === 'unread' ? n.status !== 'READ'
-    : catOf(n.eventType) === tab,
+    : catFn(n.eventType) === tab,
   )
   const unread = filtered.filter(n => n.status !== 'READ')
   const read = filtered.filter(n => n.status === 'READ')
 
-  // Số đếm cho 5 KPI-lọc (dùng chung desktop + mobile).
-  const counts: Record<TabKey, number> = {
-    all: notifs.length,
-    unread: notifs.filter(n => n.status !== 'READ').length,
-    community: notifs.filter(n => catOf(n.eventType) === 'community').length,
-    finance: notifs.filter(n => catOf(n.eventType) === 'finance').length,
-    activity: notifs.filter(n => catOf(n.eventType) === 'activity').length,
-    system: notifs.filter(n => catOf(n.eventType) === 'system').length,
-    ai: notifs.filter(n => catOf(n.eventType) === 'ai').length,
-  }
+  // Số đếm cho các KPI-lọc theo vai trò (dùng chung desktop + mobile).
+  const counts: Partial<Record<TabKey, number>> = Object.fromEntries(
+    activeTabs.map(([k]) => [
+      k,
+      k === 'all' ? notifs.length
+        : k === 'unread' ? notifs.filter(n => n.status !== 'READ').length
+        : notifs.filter(n => catFn(n.eventType) === k).length,
+    ]),
+  )
 
   if (isMobile) {
     return (
@@ -347,10 +366,10 @@ export function Notifications() {
           </div>
         </div>
 
-        <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={ADMIN_PUSH_CATEGORIES} />
+        <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
+          <FilterKpiList tab={tab} tabs={activeTabs} counts={counts} onChange={setTab} />
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (
@@ -425,7 +444,7 @@ export function Notifications() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           {/* CỘT TRÁI — 5 KPI-lọc xếp DỌC, bề ngang cố định, sát lề trái; desktop đứng yên khi cuộn */}
           <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
-            <FilterKpiList tab={tab} counts={counts} onChange={setTab} />
+            <FilterKpiList tab={tab} tabs={activeTabs} counts={counts} onChange={setTab} />
           </div>
 
           {/* CỘT PHẢI — danh sách thông báo 1 CỘT; desktop có thanh cuộn riêng (header + KPI đứng yên) */}

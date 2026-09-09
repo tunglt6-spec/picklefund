@@ -70,7 +70,7 @@ describe('AccountNotifyService', () => {
     expect(rows[0]).toMatchObject({
       userId: 'super-1',
       clubId: 'club-1',
-      eventType: 'system_account_created',
+      eventType: 'account_created',
       channel: 'IN_APP',
       status: 'SENT',
     });

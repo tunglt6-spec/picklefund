@@ -161,7 +161,7 @@ export class AccountNotifyService {
             data: supers.map((s) => ({
               userId: s.id,
               clubId: info.clubId as string,
-              eventType: 'system_account_created',
+              eventType: 'account_created',
               priority: 'MEDIUM' as const,
               channel: 'IN_APP' as const,
               title,
