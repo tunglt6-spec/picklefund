@@ -441,7 +441,7 @@ export function Notifications() {
         }
       />
 
-      <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={ADMIN_PUSH_CATEGORIES} />
+      <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
       <div className="p-6 pf-center-x w-full" style={{ maxWidth: 1600 }}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
