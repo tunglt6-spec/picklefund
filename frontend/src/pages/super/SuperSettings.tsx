@@ -108,6 +108,22 @@ export function SuperSettings() {
   const [settings, setSettings] = useState<Settings>(DEFAULTS)
   const [tgBusy, setTgBusy] = useState(false)
 
+  /** Tách 1 chat id dùng chung khỏi mọi CLB + xoá pref trùng (chấm dứt việc nhiều CLB chung 1 chat). */
+  const detachSharedChat = async () => {
+    const chatId = window.prompt('Nhập Chat ID cần tách khỏi tất cả CLB (vd 455750167):')?.trim()
+    if (!chatId) return
+    if (!window.confirm(`Tách chat ${chatId} khỏi mọi CLB? Các CLB đó sẽ ngừng nhận Telegram cho tới khi liên kết chat riêng.`)) return
+    const t = toast.loading('Đang tách chat…')
+    try {
+      const res = await api.post('/telegram/detach', { chatId })
+      const d = res.data?.data ?? res.data
+      toast.dismiss(t)
+      toast.success(`Đã tách: gỡ ${d?.unlinkedClubs ?? 0} liên kết CLB, xoá ${d?.clearedPrefs ?? 0} pref.`)
+    } catch (e: any) {
+      toast.dismiss(t); toast.error(e?.response?.data?.message ?? 'Tách chat thất bại')
+    }
+  }
+
   /** Kiểm tra kết nối Telegram: lưu Chat ID hiện tại → gọi backend gửi tin thử → hiện kết quả. */
   const testTelegram = async () => {
     setTgBusy(true)
@@ -230,10 +246,16 @@ export function SuperSettings() {
                 onChange={v => setSettings(p => ({ ...p, superTelegramChatId: v }))}
                 placeholder="VD: 123456789 — nhắn /myid cho bot để lấy" />
               <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
-              <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
-                {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
-              </button>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
+                  {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
+                </button>
+                <button type="button" onClick={detachSharedChat}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold text-amber-700 border-amber-200 hover:bg-amber-50">
+                  Tách chat dùng chung khỏi CLB
+                </button>
+              </div>
             </div>
           </div>
         </Section>

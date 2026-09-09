@@ -23,6 +23,8 @@ const mockPrisma = {
   hermesNotification: {
     create: jest.fn(),
   },
+  // Telegram cấp CLB: getClubTelegramChat reverse-lookup ở đây (mặc định null = CLB chưa link).
+  systemSetting: { findFirst: jest.fn().mockResolvedValue(null) },
 };
 
 const mockEmail = {
@@ -198,7 +200,15 @@ describe('HermesService', () => {
       mockPrisma.notification.create.mockResolvedValue(baseNotif);
       mockPrisma.user.findUnique.mockResolvedValue({ email: 'admin@test.vn' });
       mockPrisma.notification.count.mockResolvedValue(0);
+      // Mặc định CLB CHƯA link chat Telegram → không gửi telegram.
+      mockPrisma.systemSetting.findFirst.mockResolvedValue(null);
     };
+    /** Giả lập CLB đã LIÊN KẾT chat Telegram (kênh cấp CLB). */
+    const linkClubChat = (chatId: string) =>
+      mockPrisma.systemSetting.findFirst.mockResolvedValue({
+        key: `telegram_chat_${chatId}`,
+        value: 'club-1',
+      });
 
     const notifChannels = () =>
       mockPrisma.notification.create.mock.calls.map(
@@ -221,12 +231,22 @@ describe('HermesService', () => {
       expect((global as any).fetch).not.toHaveBeenCalled();
     });
 
-    it('TELEGRAM → notif TELEGRAM + fetch Telegram API, không email', async () => {
-      setupPref(['TELEGRAM']);
+    it('Telegram CẤP CLB: CLB đã link chat → fetch 1 lần (KHÔNG tạo notif TELEGRAM per-user)', async () => {
+      setupPref(['IN_APP']);
+      linkClubChat('tg-123');
       await service.dispatch(HIGH_EVENT);
-      expect(notifChannels()).toEqual(['TELEGRAM']);
+      expect(notifChannels()).toEqual(['IN_APP']); // telegram không còn là kênh per-user
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
+      const body = JSON.parse((global as any).fetch.mock.calls[0][1].body);
+      expect(body.chat_id).toBe('tg-123');
       expect(mockEmail.send).not.toHaveBeenCalled();
+    });
+
+    it('Telegram CẤP CLB: CLB CHƯA link chat → không fetch (dù pref bật TELEGRAM)', async () => {
+      setupPref(['IN_APP', 'TELEGRAM']);
+      await service.dispatch(HIGH_EVENT);
+      expect(notifChannels()).toEqual(['IN_APP']); // TELEGRAM per-user bị bỏ
+      expect((global as any).fetch).not.toHaveBeenCalled();
     });
 
     it('IN_APP + EMAIL → 2 notif, email gửi', async () => {
@@ -236,25 +256,31 @@ describe('HermesService', () => {
       expect(mockEmail.send).toHaveBeenCalledTimes(1);
     });
 
-    it('IN_APP + TELEGRAM → 2 notif, telegram gửi', async () => {
-      setupPref(['IN_APP', 'TELEGRAM']);
+    it('Telegram gửi ĐÚNG 1 LẦN dù nhiều người nhận (kênh cấp CLB, không nhân theo recipient)', async () => {
+      const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
+      mockPrisma.user.findMany.mockResolvedValue([baseUser, { ...baseUser, id: 'user-2' }]);
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([pref, { ...pref, userId: 'user-2' }]);
+      mockPrisma.notification.create.mockResolvedValue(baseNotif);
+      mockPrisma.notification.count.mockResolvedValue(0);
+      linkClubChat('tg-123');
       await service.dispatch(HIGH_EVENT);
-      expect(notifChannels().sort()).toEqual(['IN_APP', 'TELEGRAM']);
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('EMAIL + TELEGRAM → 2 notif, cả email và telegram', async () => {
+    it('EMAIL + TELEGRAM(bị bỏ) + CLB link chat → EMAIL record + email + telegram cấp CLB', async () => {
       setupPref(['EMAIL', 'TELEGRAM']);
+      linkClubChat('tg-123');
       await service.dispatch(HIGH_EVENT);
-      expect(notifChannels().sort()).toEqual(['EMAIL', 'TELEGRAM']);
+      expect(notifChannels()).toEqual(['EMAIL']); // TELEGRAM per-user bị bỏ
       expect(mockEmail.send).toHaveBeenCalledTimes(1);
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('cả 3 kênh → 3 notif, email + telegram', async () => {
+    it('cả 3 kênh + CLB link → IN_APP+EMAIL record (TELEGRAM bỏ) + email + telegram cấp CLB', async () => {
       setupPref(['IN_APP', 'EMAIL', 'TELEGRAM']);
+      linkClubChat('tg-123');
       await service.dispatch(HIGH_EVENT);
-      expect(notifChannels().sort()).toEqual(['EMAIL', 'IN_APP', 'TELEGRAM']);
+      expect(notifChannels().sort()).toEqual(['EMAIL', 'IN_APP']);
       expect(mockEmail.send).toHaveBeenCalledTimes(1);
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
@@ -272,33 +298,30 @@ describe('HermesService', () => {
       expect(r.dispatched).toBe(0);
     });
 
-    it('1 channel fail KHÔNG làm fail channel còn lại', async () => {
-      setupPref(['IN_APP', 'EMAIL', 'TELEGRAM']);
+    it('1 channel fail KHÔNG làm fail channel còn lại (EMAIL lỗi, IN_APP vẫn OK)', async () => {
+      setupPref(['IN_APP', 'EMAIL']);
       mockEmail.send.mockRejectedValueOnce(new Error('SMTP down'));
       await service.dispatch(HIGH_EVENT);
-      // Cả 3 record vẫn được tạo; telegram vẫn gửi dù email lỗi.
-      expect(notifChannels().sort()).toEqual(['EMAIL', 'IN_APP', 'TELEGRAM']);
-      expect((global as any).fetch).toHaveBeenCalledTimes(1);
+      expect(notifChannels().sort()).toEqual(['EMAIL', 'IN_APP']);
     });
 
-    it('email.send() trả false (SMTP nuốt lỗi, không throw) → vẫn log/xử lý như FAILED, không chặn telegram', async () => {
-      setupPref(['EMAIL', 'TELEGRAM']);
+    it('email.send() trả false → EMAIL FAILED nhưng IN_APP delivered; telegram cấp CLB vẫn gửi', async () => {
+      setupPref(['IN_APP', 'EMAIL']);
       mockEmail.send.mockResolvedValueOnce(false);
+      linkClubChat('tg-123');
       const r = await service.dispatch(HIGH_EVENT);
-      // notif EMAIL vẫn được tạo trước khi gửi thất bại; TELEGRAM không bị ảnh hưởng.
-      expect(notifChannels().sort()).toEqual(['EMAIL', 'TELEGRAM']);
+      expect(notifChannels().sort()).toEqual(['EMAIL', 'IN_APP']);
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
-      expect(r.dispatched).toBe(1); // user vẫn tính "delivered" vì telegram thành công
+      expect(r.dispatched).toBe(1); // IN_APP thành công → delivered
     });
 
-    it('quota EMAIL đầy → bỏ EMAIL, giữ IN_APP + TELEGRAM (quota per-channel độc lập)', async () => {
-      setupPref(['IN_APP', 'EMAIL', 'TELEGRAM']);
-      // count trả cao cho EMAIL (>= maxDailyEmail 5), thấp cho các kênh khác.
+    it('quota EMAIL đầy → bỏ EMAIL, giữ IN_APP (TELEGRAM per-user không còn)', async () => {
+      setupPref(['IN_APP', 'EMAIL']);
       mockPrisma.notification.count.mockImplementation((args: any) =>
         Promise.resolve(args.where.channel === 'EMAIL' ? 5 : 0),
       );
       await service.dispatch(HIGH_EVENT);
-      expect(notifChannels().sort()).toEqual(['IN_APP', 'TELEGRAM']);
+      expect(notifChannels().sort()).toEqual(['IN_APP']);
       expect(mockEmail.send).not.toHaveBeenCalled();
     });
 

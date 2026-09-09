@@ -106,10 +106,38 @@ export class HermesService {
       }
     }
 
+    // ── Telegram = kênh CẤP CLB ──────────────────────────────────────────────
+    // Gửi 1 LẦN tới chat LIÊN KẾT của chính CLB (getClubTelegramChat), KHÔNG theo pref user →
+    // mỗi CLB nhận đúng thông báo của mình (cách ly tuyệt đối theo clubId). CLB chưa liên kết
+    // chat riêng → không gửi (không dùng chung chat CLB khác). Best-effort, không chặn.
+    if (dispatched > 0) {
+      try {
+        const clubChat = await this.getClubTelegramChat(event.clubId);
+        if (clubChat) {
+          await this.sendTelegram(clubChat, `*${event.title}*\n${event.body}`);
+        }
+      } catch (err: any) {
+        this.logger.warn(
+          `[Hermes] Telegram CLB ${event.clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
+        );
+      }
+    }
+
     this.logger.log(
       `[Hermes] dispatched ${dispatched}/${recipients.length} recipients for ${event.eventType}`,
     );
     return { dispatched };
+  }
+
+  /** Chat Telegram LIÊN KẾT của 1 CLB (reverse-lookup systemSetting telegram_chat_<id>=clubId).
+   *  Nguồn chân lý cho thông báo Telegram gửi đi của CLB (mỗi CLB một chat riêng). */
+  private async getClubTelegramChat(clubId: string): Promise<string | null> {
+    const s = await this.prisma.systemSetting
+      .findFirst({
+        where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
+      })
+      .catch(() => null);
+    return s ? s.key.replace('telegram_chat_', '') : null;
   }
 
   /**
@@ -244,9 +272,10 @@ export class HermesService {
     }
 
     // HIGH: gửi tới ĐÚNG các kênh user đã bật (nguồn chân lý = channels; fallback
-    // preferredChannel cho dữ liệu cũ chưa migrate). EMAIL/TELEGRAM lọc theo quota
-    // per-channel (kênh vượt quota bị bỏ, KHÔNG ảnh hưởng kênh khác). IN_APP không giới hạn.
-    const selected = this.resolveChannels(pref);
+    // preferredChannel cho dữ liệu cũ chưa migrate). EMAIL lọc theo quota per-channel.
+    // TELEGRAM nay là kênh CẤP CLB (gửi 1 lần tới chat liên kết CLB ở dispatch), KHÔNG còn
+    // per-user → loại khỏi đây để tránh gửi trùng theo pref.telegramChatId cũ.
+    const selected = this.resolveChannels(pref).filter((ch) => ch !== 'TELEGRAM');
     const result: HermesChannel[] = [];
     for (const ch of selected) {
       if (ch === 'IN_APP') {

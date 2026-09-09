@@ -327,4 +327,25 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       .catch(() => null);
     return setting ? setting.key.replace('telegram_chat_', '') : null;
   }
+
+  /**
+   * TÁCH một chat id khỏi hệ thống: gỡ liên kết CLB (systemSetting telegram_chat_<id>) +
+   * xoá pref.telegramChatId trùng. Dùng để chấm dứt việc nhiều CLB dùng chung một chat
+   * (vd chat super admin) — sau đó mỗi CLB phải liên kết chat riêng.
+   */
+  async detachChat(
+    chatId: string,
+  ): Promise<{ unlinkedClubs: number; clearedPrefs: number }> {
+    const del = await this.prisma.systemSetting.deleteMany({
+      where: { key: `telegram_chat_${chatId}` },
+    });
+    const upd = await this.prisma.notificationPreference.updateMany({
+      where: { telegramChatId: chatId },
+      data: { telegramChatId: null },
+    });
+    this.logger.log(
+      `[Telegram] detach chat ${chatId}: unlinked ${del.count} club(s), cleared ${upd.count} pref(s)`,
+    );
+    return { unlinkedClubs: del.count, clearedPrefs: upd.count };
+  }
 }

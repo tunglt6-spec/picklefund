@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TelegramService } from './telegram.service';
 import { CurrentUser, Roles} from '../common/decorators';
@@ -29,6 +29,16 @@ export class TelegramController {
   async sendMessage(@Body() body: { chatId: string; text: string }) {
     const sent = await this.svc.sendMessage(body.chatId, body.text);
     return ok({ sent });
+  }
+
+  /** SUPER_ADMIN: tách 1 chat id (vd 455750167) khỏi mọi CLB + xoá pref trùng — chấm dứt
+   *  việc nhiều CLB dùng chung 1 chat. Sau đó mỗi CLB tự liên kết chat riêng. */
+  @Roles('SUPER_ADMIN')
+  @Post('detach')
+  async detach(@Body() body: { chatId: string }) {
+    const chatId = body?.chatId?.trim();
+    if (!chatId) throw new BadRequestException('Thiếu chatId');
+    return ok(await this.svc.detachChat(chatId));
   }
 
   // CLUB_ADMIN: send test message to the club's linked Telegram chat
