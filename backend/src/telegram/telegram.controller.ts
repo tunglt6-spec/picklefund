@@ -51,15 +51,15 @@ export class TelegramController {
         { sent: false, chatId: null },
         'CLB chưa link Telegram Bot — dùng /myid để lấy chat ID',
       );
-    const sent = await this.svc.sendMessage(
+    const r = await this.svc.sendMessageResult(
       chatId,
-      '✅ PickleFund Bot đang hoạt động bình thường.\n\nNếu bạn nhận được tin nhắn này, kết nối Telegram Bot đã thành công!',
+      '✅ PickleFund — Kiểm tra kết nối Telegram CLB thành công. CLB sẽ nhận thông báo tại đây.',
     );
     return ok(
-      { sent, chatId },
-      sent
+      { sent: r.ok, chatId, error: r.error },
+      r.ok
         ? 'Đã gửi tin nhắn test tới Telegram'
-        : 'Gửi thất bại — kiểm tra TELEGRAM_BOT_TOKEN',
+        : `Chưa gửi được: ${r.error ?? 'không rõ nguyên nhân'}`,
     );
   }
 }

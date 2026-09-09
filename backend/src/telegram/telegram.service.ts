@@ -290,17 +290,26 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   // ─── Send message to a Telegram chat ─────────────────────────────────────
 
   async sendMessage(chatId: string, text: string): Promise<boolean> {
-    if (!this.bot) return false;
+    return (await this.sendMessageResult(chatId, text)).ok;
+  }
+
+  /** Như sendMessage nhưng trả LÝ DO lỗi từ Telegram (chat not found / bot chưa /start / token sai). */
+  async sendMessageResult(
+    chatId: string,
+    text: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    if (!this.bot)
+      return { ok: false, error: 'Bot chưa cấu hình (thiếu TELEGRAM_BOT_TOKEN)' };
     try {
       await this.bot.telegram.sendMessage(chatId, text, {
         parse_mode: 'Markdown',
       });
-      return true;
+      return { ok: true };
     } catch (err: any) {
-      this.logger.warn(
-        `[Telegram] sendMessage failed to ${chatId}: ${err.message}`,
-      );
-      return false;
+      const desc =
+        err?.response?.description || err?.description || err?.message || 'unknown';
+      this.logger.warn(`[Telegram] sendMessage failed to ${chatId}: ${desc}`);
+      return { ok: false, error: desc };
     }
   }
 

@@ -594,6 +594,25 @@ function TelegramTab() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [linked, setLinked] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+
+  /** Gửi tin thử tới chat đã liên kết của CLB → hiện kết quả (kèm lý do lỗi cụ thể nếu có). */
+  const handleTest = async () => {
+    setTesting(true)
+    const t = toast.loading('Đang gửi thử tới Telegram…')
+    try {
+      const res = await api.post('/telegram/test')
+      const d = res.data?.data ?? {}
+      const msg = res.data?.message
+      toast.dismiss(t)
+      if (d?.sent) toast.success(msg ?? 'Đã gửi — kiểm tra Telegram của CLB.')
+      else toast.error(msg ?? 'Chưa gửi được', { duration: 7000 })
+    } catch (e: any) {
+      toast.dismiss(t); toast.error(e?.response?.data?.message ?? 'Không gọi được kiểm tra Telegram')
+    } finally {
+      setTesting(false)
+    }
+  }
 
   useEffect(() => {
     api.get('/telegram/link').then(res => {
@@ -661,10 +680,17 @@ function TelegramTab() {
               <CheckCircle size={14} /> Đã kết nối thành công!
             </p>
           )}
-          <Button onClick={handleLink} disabled={saving || !chatId.trim()} className="w-full sm:w-auto">
-            <Save size={14} className="mr-1.5" />
-            {saving ? 'Đang lưu...' : currentChatId ? 'Cập nhật kết nối' : 'Kết nối Bot'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleLink} disabled={saving || !chatId.trim()} className="w-full sm:w-auto">
+              <Save size={14} className="mr-1.5" />
+              {saving ? 'Đang lưu...' : currentChatId ? 'Cập nhật kết nối' : 'Kết nối Bot'}
+            </Button>
+            {currentChatId && (
+              <Button variant="outline" onClick={handleTest} disabled={testing} className="w-full sm:w-auto">
+                {testing ? 'Đang gửi…' : 'Gửi thử'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
