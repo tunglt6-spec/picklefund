@@ -651,7 +651,9 @@ function TelegramTab() {
       // Dịch lỗi Telegram thô sang hướng dẫn dễ hiểu.
       const e = String(d?.error ?? res.data?.message ?? '').toLowerCase()
       let guide = res.data?.message ?? 'Chưa gửi được'
-      if (e.includes('chat not found') || e.includes('initiate'))
+      if (e.includes("can't send messages to the bot") || e.includes('send messages to the bot') || e.includes('bot can'))
+        guide = 'Chưa gửi được: Chat ID bạn nhập là ID của CHÍNH con bot, không phải chat của bạn (bot không gửi được cho bot). Hãy nhập Chat ID CÁ NHÂN của bạn: mở @userinfobot bằng tài khoản Telegram của bạn, nó trả về ID của bạn — dán ID đó (hoặc ID của nhóm đã thêm bot) vào ô Chat ID.'
+      else if (e.includes('chat not found') || e.includes('initiate'))
         guide = 'Chưa gửi được: chat này chưa mở hội thoại với bot đang dùng. Hãy mở đúng bot của CLB trong Telegram, bấm /start, rồi Gửi thử lại (kiểm tra cả Chat ID).'
       else if (e.includes('blocked'))
         guide = 'Chưa gửi được: bot đang bị chặn. Bỏ chặn bot trong Telegram rồi thử lại.'
@@ -771,6 +773,9 @@ function TelegramTab() {
               : <>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code> — bot chung sẽ trả Chat ID</>}</li>
             <li>Copy Chat ID và dán vào ô bên dưới</li>
           </ol>
+          <p className="text-xs [color:var(--pf-color-muted)] mt-1.5">
+            ⚠️ Nhập <b>Chat ID cá nhân của bạn</b> (hoặc ID nhóm đã thêm bot) — <b>KHÔNG</b> nhập ID của chính con bot, bot không tự gửi tin cho bot được.
+          </p>
         </div>
 
         <div className="space-y-3">
