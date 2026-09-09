@@ -2,6 +2,7 @@ import { HermesActionExecutor } from './hermes-action-executor';
 import type { ExecutableAction } from './action-executor';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
+import type { ConfigService } from '@nestjs/config';
 
 /**
  * HermesActionExecutor — executor THẬT Mít Đặc.
@@ -52,10 +53,19 @@ describe('HermesActionExecutor', () => {
     user: { findMany: userFindMany },
     aiAction: { count: jest.fn() },
     minigameMatch: { count: jest.fn() },
+    // Telegram cấp CLB: mặc định CLB CHƯA liên kết chat + KHÔNG có bot riêng →
+    // sendClubTelegram thoát sớm (không gọi fetch), giữ nguyên assertion của test.
+    systemSetting: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
   } as unknown as PrismaService;
   const notifications = {
     dispatch,
   } as unknown as NotificationRuntimeService;
+  const config = {
+    get: jest.fn().mockReturnValue(undefined),
+  } as unknown as ConfigService;
 
   let executor: HermesActionExecutor;
 
@@ -74,7 +84,7 @@ describe('HermesActionExecutor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    executor = new HermesActionExecutor(prisma, notifications);
+    executor = new HermesActionExecutor(prisma, notifications, config);
     dispatch.mockResolvedValue({ status: 'READY' });
   });
 

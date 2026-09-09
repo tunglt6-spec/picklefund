@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import type { ActionExecutor, ExecutableAction } from './action-executor';
@@ -41,6 +42,7 @@ export class HermesActionExecutor implements ActionExecutor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationRuntimeService,
+    private readonly config: ConfigService,
   ) {}
 
   execute(action: ExecutableAction): Promise<Record<string, unknown>> {
@@ -154,7 +156,65 @@ export class HermesActionExecutor implements ActionExecutor {
       }
       counts[channel] = n;
     }
+
+    // Telegram = kênh CẤP CLB (giống HermesService): gửi 1 LẦN/sự kiện tới chat liên kết
+    // của CLB qua CHÍNH bot của CLB. NotificationRuntime KHÔNG gửi Telegram (DRY_RUN) nên
+    // phải gửi ở đây, nếu không thông báo AI Action chỉ có in-app/email. Chỉ gửi khi có
+    // ít nhất 1 job GỬI MỚI (some counts > 0) → tự idempotent theo dedup của runtime
+    // (chạy lại action → counts=0 → không gửi lại Telegram). Best-effort, không chặn.
+    if (Object.values(counts).some((n) => n > 0)) {
+      await this.sendClubTelegram(clubId, title, body).catch((err) =>
+        this.logger.warn(
+          `[MitDat] Telegram CLB ${clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
+        ),
+      );
+    }
     return counts;
+  }
+
+  /** Chat Telegram LIÊN KẾT của CLB (reverse-lookup systemSetting telegram_chat_<id>=clubId). */
+  private async getClubTelegramChat(clubId: string): Promise<string | null> {
+    const s = await this.prisma.systemSetting
+      .findFirst({
+        where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
+      })
+      .catch(() => null);
+    return s ? s.key.replace('telegram_chat_', '') : null;
+  }
+
+  /** Token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>). null → dùng bot chung. */
+  private async getClubBotToken(clubId: string): Promise<string | null> {
+    const s = await this.prisma.systemSetting
+      .findUnique({ where: { key: `telegram_bot_token_${clubId}` } })
+      .catch(() => null);
+    return s?.value?.trim() || null;
+  }
+
+  /** Gửi 1 tin Telegram cấp CLB qua bot RIÊNG của CLB (fallback bot chung). Best-effort. */
+  private async sendClubTelegram(
+    clubId: string,
+    title: string,
+    body: string,
+  ): Promise<void> {
+    const chatId = await this.getClubTelegramChat(clubId);
+    if (!chatId) return; // CLB chưa liên kết chat → bỏ qua (không lỗi)
+    const token =
+      (await this.getClubBotToken(clubId)) ||
+      this.config.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) return; // chưa có bot → bỏ qua
+    const res = await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `*${title}*\n${body}`,
+          parse_mode: 'Markdown',
+        }),
+      },
+    );
+    if (!res.ok) throw new Error(`Telegram API ${res.status}`);
   }
 
   /** "IN_APP:8, EMAIL:0" — tóm tắt số đã gửi theo kênh cho message. */
