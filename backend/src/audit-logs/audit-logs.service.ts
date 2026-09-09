@@ -74,7 +74,11 @@ export class AuditLogsService {
       return null;
     }
     try {
-      return await this.prisma.auditLog.create({ data });
+      const row = await this.prisma.auditLog.create({ data });
+      // Biến động ĐÁNG CHÚ Ý (xoá/khoá/reset mật khẩu/xuất dữ liệu) → báo Super Admin (in-app).
+      // Fire-and-forget; KHÔNG chặn/không ảnh hưởng ghi audit.
+      this.notifySuperAdmins(data);
+      return row;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       this.logger.error(
@@ -82,5 +86,77 @@ export class AuditLogsService {
       );
       return null;
     }
+  }
+
+  // Chỉ các hành động CẤP NỀN TẢNG đáng chú ý — CỐ TÌNH loại AI_ACTION_EXECUTE (chạy mỗi phút),
+  // VIEW/READ, và CREATE/UPDATE thường ngày (CREATE tài khoản đã có 'account_created' riêng).
+  private static readonly SUPER_AUDIT_ACTIONS = new Set([
+    'DELETE',
+    'LOCK',
+    'UNLOCK',
+    'RESET_PASSWORD',
+    'EXPORT',
+  ]);
+  private static readonly ACTION_LABEL: Record<string, string> = {
+    DELETE: 'Xoá dữ liệu',
+    LOCK: 'Khoá / Tạm dừng',
+    UNLOCK: 'Mở khoá',
+    RESET_PASSWORD: 'Đặt lại mật khẩu',
+    EXPORT: 'Xuất dữ liệu',
+  };
+
+  /** Tạo Notification in-app cho MỌI Super Admin (trừ người thực hiện) khi có biến động đáng chú ý. */
+  private notifySuperAdmins(d: {
+    userId: string;
+    clubId?: string | null;
+    action: string;
+    resource: string;
+    detail?: string;
+  }): void {
+    void (async () => {
+      try {
+        if (!AuditLogsService.SUPER_AUDIT_ACTIONS.has(d.action)) return;
+        // Notification.clubId là NON-null → cần CLB liên quan; thiếu thì bỏ qua in-app (hiếm).
+        if (!d.clubId) return;
+        const supers = await this.prisma.user.findMany({
+          where: { role: 'SUPER_ADMIN', isActive: true, id: { not: d.userId } },
+          select: { id: true },
+        });
+        if (!supers.length) return;
+        const [actor, club] = await Promise.all([
+          this.prisma.user.findUnique({
+            where: { id: d.userId },
+            select: { username: true },
+          }),
+          this.prisma.club.findUnique({
+            where: { id: d.clubId },
+            select: { name: true },
+          }),
+        ]);
+        const label = AuditLogsService.ACTION_LABEL[d.action] ?? d.action;
+        const title = `${label}: ${d.resource}`;
+        const body =
+          `${actor?.username ?? 'Người dùng'} đã ${label.toLowerCase()} "${d.resource}"` +
+          (d.detail ? ` — ${d.detail}` : '') +
+          (club?.name ? ` · CLB ${club.name}` : '');
+        await this.prisma.notification.createMany({
+          data: supers.map((s) => ({
+            userId: s.id,
+            clubId: d.clubId as string,
+            eventType: `audit_${d.action.toLowerCase()}`,
+            priority: 'MEDIUM' as const,
+            channel: 'IN_APP' as const,
+            title,
+            body,
+            status: 'SENT' as const,
+            sentAt: new Date(),
+          })),
+        });
+      } catch (e) {
+        this.logger.warn(
+          `notifySuperAdmins (audit) thất bại (bỏ qua): ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    })();
   }
 }

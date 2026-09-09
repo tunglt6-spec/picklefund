@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus, ScrollText } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -103,7 +103,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
   )
 }
 
-type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'system' | 'ai' | 'account'
+type TabKey = 'all' | 'unread' | 'community' | 'finance' | 'activity' | 'system' | 'ai' | 'account' | 'audit'
 /** CLB admin: 5 nhóm nội bộ CLB. */
 const CLUB_TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
@@ -119,6 +119,7 @@ const SUPER_TABS: [TabKey, string][] = [
   ['all', 'Tất cả'],
   ['unread', 'Chưa đọc'],
   ['account', 'Tài khoản & CLB'],
+  ['audit', 'Kiểm toán'],
   ['system', 'Hệ thống'],
 ]
 /**
@@ -136,6 +137,7 @@ function catOf(eventType: string): TabKey {
 /** Phân loại cho SUPER ADMIN: chỉ 'account' (tài khoản/CLB mới) vs 'system' (còn lại). */
 function superCatOf(eventType: string): TabKey {
   const s = (eventType || '').toLowerCase()
+  if (s.includes('audit')) return 'audit'
   if (s.includes('account') || s.includes('club') || s.includes('register') || s.includes('subscription')) return 'account'
   return 'system'
 }
@@ -151,6 +153,7 @@ function filterIcon(key: TabKey) {
     case 'system': return <Settings size={18} />
     case 'ai': return <Brain size={18} />
     case 'account': return <UserPlus size={18} />
+    case 'audit': return <ScrollText size={18} />
   }
 }
 

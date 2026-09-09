@@ -99,7 +99,7 @@ export class HermesController {
   ) {
     // Đồng bộ pushCategory: 5 key gốc (member dùng community/finance/activity/ai — KHÔNG có
     // system; admin gom community/finance/activity thành "Thông báo" + system + ai).
-    const PUSH_CATEGORIES = ['community', 'finance', 'activity', 'system', 'ai', 'account'];
+    const PUSH_CATEGORIES = ['community', 'finance', 'activity', 'system', 'ai', 'account', 'audit'];
     if (body.pushMutedCategories !== undefined) {
       if (!Array.isArray(body.pushMutedCategories))
         throw new BadRequestException('pushMutedCategories phải là mảng');

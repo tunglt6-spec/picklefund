@@ -28,6 +28,7 @@ export const ADMIN_PUSH_CATEGORIES: PushCategoryDef[] = [
 /** Super Admin: CHỈ nhóm cấp NỀN TẢNG (biến động app), KHÔNG có nhóm nội bộ CLB. */
 export const SUPER_PUSH_CATEGORIES: PushCategoryDef[] = [
   { label: 'Tài khoản & CLB', desc: 'Có tài khoản / CLB mới được lập', keys: ['account'] },
+  { label: 'Kiểm toán', desc: 'Xoá · khoá · reset mật khẩu · xuất dữ liệu', keys: ['audit'] },
   { label: 'Hệ thống', desc: 'Cảnh báo & biến động hệ thống', keys: ['system'] },
 ]
 

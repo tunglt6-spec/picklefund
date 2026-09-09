@@ -21,8 +21,10 @@ export function pushCategoryOf(eventType: string): string {
   const s = (eventType || '').toLowerCase();
   if (s.includes('community') || s.includes('matchmaking')) return 'community';
   if (s.includes('payment') || s.includes('fund')) return 'finance';
-  // Nhóm CẤP NỀN TẢNG cho Super Admin: tài khoản/CLB mới. Không sự kiện CLB nào chứa 'account'.
+  // Nhóm CẤP NỀN TẢNG cho Super Admin: tài khoản/CLB mới + kiểm toán (xoá/khoá/reset/xuất).
+  // Không sự kiện CLB nào chứa 'account'/'audit'.
   if (s.includes('account')) return 'account';
+  if (s.includes('audit')) return 'audit';
   if (/brief|report|maika|insight|suggest|recommend|\bai\b/.test(s)) return 'ai';
   if (/anomaly|health|system|config|error/.test(s)) return 'system';
   return 'activity';
