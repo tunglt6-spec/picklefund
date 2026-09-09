@@ -416,6 +416,9 @@ function NotificationsTab(_: { clubId: string }) {
   const [pref, setPref] = useState<HermesPref>(defaultPref)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  // Chat ID liên kết CLB (nguồn THẬT để gửi — quản ở tab Telegram). Dùng để đối chiếu trùng.
+  const [clubChatId, setClubChatId] = useState<string | null>(null)
+  const [clearingTg, setClearingTg] = useState(false)
 
   useEffect(() => {
     api.get('/hermes/preferences')
@@ -426,7 +429,33 @@ function NotificationsTab(_: { clubId: string }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
+    api.get('/telegram/link')
+      .then(res => setClubChatId(res.data?.data?.chatId ?? null))
+      .catch(() => {})
   }, [])
+
+  /** Xóa Chat ID cũ (per-user) ở tab Thông báo — cơ chế đã ngừng dùng để gửi. */
+  const handleClearTelegramId = async () => {
+    setClearingTg(true)
+    try {
+      await api.patch('/hermes/preferences', {
+        channels: pref.channels,
+        preferredChannel: pref.channels[0] ?? 'IN_APP',
+        telegramChatId: null,
+        quietHoursStart: pref.quietHoursStart,
+        quietHoursEnd: pref.quietHoursEnd,
+        maxDailyEmail: pref.maxDailyEmail,
+        maxDailyTelegram: pref.maxDailyTelegram,
+        enabled: pref.enabled,
+      })
+      setPref(p => ({ ...p, telegramChatId: null }))
+      toast.success('Đã xóa Chat ID cũ ở tab Thông báo')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Xóa thất bại')
+    } finally {
+      setClearingTg(false)
+    }
+  }
 
   const set = (patch: Partial<HermesPref>) => setPref(p => ({ ...p, ...patch }))
 
@@ -497,19 +526,39 @@ function NotificationsTab(_: { clubId: string }) {
         </div>
       </div>
 
-      {/* Telegram Chat ID */}
+      {/* Telegram Chat ID (đối chiếu với chat liên kết CLB ở tab Telegram) */}
       {pref.channels.includes('TELEGRAM') && (
         <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
           <h3 className="font-semibold [color:var(--pf-text)] mb-1">Liên kết Telegram</h3>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">
-            Nhắn tin cho <span className="font-mono [color:var(--pf-primary)]">@PickleFundBot</span> lệnh <span className="font-mono">/start</span> để lấy Chat ID
+            Thông báo Telegram của CLB được gửi qua <b>chat liên kết ở tab Telegram</b>
+            {clubChatId
+              ? <> (Chat ID <code className="font-mono [color:var(--pf-primary)]">{clubChatId}</code>)</>
+              : <> — hiện <b>chưa liên kết</b>, hãy vào <b>tab Telegram</b> để kết nối</>}.
           </p>
-          <input
-            className="w-full max-w-xs rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
-            placeholder="Ví dụ: 123456789"
-            value={pref.telegramChatId ?? ''}
-            onChange={e => set({ telegramChatId: e.target.value })}
-          />
+
+          {pref.telegramChatId ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
+              <p className="text-sm text-amber-800">
+                ⚠️ Ô này còn lưu Chat ID cũ: <code className="font-mono font-semibold">{pref.telegramChatId}</code>{' '}
+                {clubChatId
+                  ? (pref.telegramChatId === clubChatId
+                      ? <>— <b>TRÙNG</b> với chat ở tab Telegram.</>
+                      : <>— <b>KHÁC</b> chat ở tab Telegram (<code className="font-mono">{clubChatId}</code>).</>)
+                  : null}
+              </p>
+              <p className="text-xs text-amber-700">
+                Đây là cơ chế cũ (per-user) <b>không còn dùng để gửi</b>. Nên xóa để tránh nhầm lẫn — việc gửi Telegram do <b>tab Telegram</b> quyết định.
+              </p>
+              <Button variant="outline" onClick={handleClearTelegramId} disabled={clearingTg} className="mt-1">
+                {clearingTg ? 'Đang xóa…' : 'Xóa Chat ID cũ này'}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs [color:var(--pf-color-muted)]">
+              ✓ Không còn Chat ID cũ ở đây. Quản lý kết nối Telegram tại <b>tab Telegram</b>.
+            </p>
+          )}
         </div>
       )}
 
