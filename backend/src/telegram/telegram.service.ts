@@ -328,6 +328,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     this.logger.log(`[Telegram] Club ${clubId} linked to chat ${chatId}`);
   }
 
+  /** @username của bot app (bot đang chạy = TELEGRAM_BOT_TOKEN). null nếu chưa cấu hình/không lấy được.
+   *  Dùng để chỉ cho người dùng ĐÚNG bot cần /start (tránh nhầm với bot khác họ tự tạo). */
+  async getBotUsername(): Promise<string | null> {
+    if (!this.bot) return null;
+    try {
+      const me = await this.bot.telegram.getMe();
+      return me?.username ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   async getLinkedChatId(clubId: string): Promise<string | null> {
     const setting = await this.prisma.systemSetting
       .findFirst({

@@ -17,6 +17,13 @@ export class TelegramController {
     return ok({ chatId });
   }
 
+  /** @username bot của app — để hiển thị đúng bot cần /start ở giao diện. */
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Get('bot-info')
+  async botInfo() {
+    return ok({ username: await this.svc.getBotUsername() });
+  }
+
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Post('link')
   async linkChat(@CurrentUser() user: any, @Body() body: { chatId: string }) {

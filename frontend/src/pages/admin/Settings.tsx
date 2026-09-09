@@ -595,6 +595,7 @@ function TelegramTab() {
   const [linked, setLinked] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [botUsername, setBotUsername] = useState<string | null>(null)
 
   /** Gửi tin thử tới chat đã liên kết của CLB → hiện kết quả (kèm lý do lỗi cụ thể nếu có). */
   const handleTest = async () => {
@@ -628,6 +629,9 @@ function TelegramTab() {
       setCurrentChatId(id)
       if (id) setChatId(id)
     }).catch(() => {})
+    api.get('/telegram/bot-info').then(res => {
+      setBotUsername(res.data?.data?.username ?? null)
+    }).catch(() => {})
   }, [])
 
   const handleLink = async () => {
@@ -653,6 +657,17 @@ function TelegramTab() {
           Liên kết Telegram Bot với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
         </p>
 
+        {botUsername ? (
+          <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3 mb-4 text-sm text-sky-800">
+            Bot của hệ thống: <a href={`https://t.me/${botUsername}`} target="_blank" rel="noopener noreferrer" className="font-mono font-bold text-sky-700 hover:underline">@{botUsername}</a>.
+            {' '}Hãy mở <b>đúng bot này</b> trên Telegram và bấm <code className="bg-sky-100 px-1 rounded">/start</code> — mọi CLB dùng <b>chung một bot này</b> (tách theo Chat ID). Bot bạn tự tạo (tên khác) sẽ KHÔNG hoạt động với app.
+          </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 text-sm text-amber-700">
+            ⚠️ Hệ thống chưa cấu hình Telegram Bot (thiếu token phía máy chủ). Liên hệ quản trị hệ thống.
+          </div>
+        )}
+
         {currentChatId ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
             <CheckCircle size={15} className="text-emerald-600 shrink-0" />
@@ -669,7 +684,7 @@ function TelegramTab() {
         <div className="[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg p-4 mb-5 space-y-1.5">
           <p className="text-sm font-medium [color:var(--pf-primary)]">Hướng dẫn lấy Chat ID:</p>
           <ol className="text-sm [color:var(--pf-primary)] space-y-1 list-decimal list-inside">
-            <li>Mở Telegram, nhắn tin cho bot hoặc thêm bot vào nhóm CLB</li>
+            <li>Mở {botUsername ? <b>@{botUsername}</b> : 'bot của hệ thống'} trên Telegram, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code></li>
             <li>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code></li>
             <li>Bot trả về Chat ID — copy và dán vào ô bên dưới</li>
           </ol>
