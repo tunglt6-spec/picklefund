@@ -769,7 +769,7 @@ function TelegramTab() {
           <ol className="text-sm [color:var(--pf-primary)] space-y-1 list-decimal list-inside">
             <li>Mở {botUsername ? <b>@{botUsername}</b> : 'bot của CLB'} trên Telegram, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code></li>
             <li>{hasOwnBot
-              ? <>Lấy Chat ID bằng <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">@userinfobot</a> (bot riêng của CLB chưa có sẵn lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code>)</>
+              ? <>Mở <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">@userinfobot</a> và <b>gõ một tin nhắn bất kỳ</b> (vd <code className="[background:var(--pf-primary-soft)] px-1 rounded">hi</code>) — nó trả về ID của BẠN. <b>Đừng</b> dùng nút chia sẻ Bot/User/Group (sẽ ra ID của bot, không phải của bạn)</>
               : <>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code> — bot chung sẽ trả Chat ID</>}</li>
             <li>Copy Chat ID và dán vào ô bên dưới</li>
           </ol>
