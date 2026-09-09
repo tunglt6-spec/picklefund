@@ -17,11 +17,41 @@ export class TelegramController {
     return ok({ chatId });
   }
 
-  /** @username bot của app — để hiển thị đúng bot cần /start ở giao diện. */
+  /** Thông tin bot của CLB — hiển thị đúng bot cần /start ở giao diện.
+   *  Trả bot RIÊNG của CLB nếu đã đăng ký, else bot chung của hệ thống. KHÔNG trả token. */
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   @Get('bot-info')
-  async botInfo() {
-    return ok({ username: await this.svc.getBotUsername() });
+  async botInfo(@CurrentUser() user: { clubId: string }) {
+    return ok(await this.svc.getClubBotInfo(user.clubId));
+  }
+
+  /** CLUB_ADMIN đăng ký bot Telegram RIÊNG của CLB (token lấy từ @BotFather).
+   *  Xác thực token trước khi lưu; trả @username. Từ đây app gửi thông báo CLB qua bot này. */
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Post('club-bot')
+  async setClubBot(
+    @CurrentUser() user: { clubId: string },
+    @Body() body: { token: string },
+  ) {
+    const token = body?.token?.trim();
+    if (!token) throw new BadRequestException('Thiếu token bot');
+    try {
+      const info = await this.svc.setClubBotToken(user.clubId, token);
+      return ok(
+        { hasOwnBot: true, username: info.username },
+        `Đã đăng ký bot riêng của CLB: @${info.username}`,
+      );
+    } catch (e: any) {
+      throw new BadRequestException(e?.message ?? 'Token bot không hợp lệ');
+    }
+  }
+
+  /** Gỡ bot riêng của CLB → quay lại dùng bot chung của hệ thống (nếu có). */
+  @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  @Post('club-bot/clear')
+  async clearClubBot(@CurrentUser() user: { clubId: string }) {
+    await this.svc.clearClubBotToken(user.clubId);
+    return ok({ hasOwnBot: false }, 'Đã gỡ bot riêng — CLB dùng lại bot chung');
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
@@ -58,7 +88,8 @@ export class TelegramController {
         { sent: false, chatId: null },
         'CLB chưa link Telegram Bot — dùng /myid để lấy chat ID',
       );
-    const r = await this.svc.sendMessageResult(
+    const r = await this.svc.sendMessageForClub(
+      user.clubId,
       chatId,
       '✅ PickleFund — Kiểm tra kết nối Telegram CLB thành công. CLB sẽ nhận thông báo tại đây.',
     );

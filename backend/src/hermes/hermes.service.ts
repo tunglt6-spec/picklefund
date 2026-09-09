@@ -114,7 +114,13 @@ export class HermesService {
       try {
         const clubChat = await this.getClubTelegramChat(event.clubId);
         if (clubChat) {
-          await this.sendTelegram(clubChat, `*${event.title}*\n${event.body}`);
+          // Ưu tiên bot RIÊNG của CLB (nếu đã đăng ký), fallback bot chung của hệ thống.
+          const clubToken = await this.getClubBotToken(event.clubId);
+          await this.sendTelegram(
+            clubChat,
+            `*${event.title}*\n${event.body}`,
+            clubToken,
+          );
         }
       } catch (err: any) {
         this.logger.warn(
@@ -138,6 +144,14 @@ export class HermesService {
       })
       .catch(() => null);
     return s ? s.key.replace('telegram_chat_', '') : null;
+  }
+
+  /** Token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>). null → dùng bot chung. */
+  private async getClubBotToken(clubId: string): Promise<string | null> {
+    const s = await this.prisma.systemSetting
+      .findUnique({ where: { key: `telegram_bot_token_${clubId}` } })
+      .catch(() => null);
+    return s?.value?.trim() || null;
   }
 
   /**
@@ -179,9 +193,14 @@ export class HermesService {
     }
   }
 
-  /** Gửi tin nhắn qua Telegram Bot API (HTTP) — self-contained, không phụ thuộc TelegramModule. */
-  private async sendTelegram(chatId: string, text: string): Promise<void> {
-    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
+  /** Gửi tin nhắn qua Telegram Bot API (HTTP) — self-contained, không phụ thuộc TelegramModule.
+   *  `clubToken`: token bot RIÊNG của CLB (nếu có) → gửi qua chính bot của CLB; else bot chung. */
+  private async sendTelegram(
+    chatId: string,
+    text: string,
+    clubToken?: string | null,
+  ): Promise<void> {
+    const token = clubToken || this.config.get<string>('TELEGRAM_BOT_TOKEN');
     if (!token) return; // bot chưa cấu hình → bỏ qua (không lỗi)
     const res = await fetch(
       `https://api.telegram.org/bot${token}/sendMessage`,

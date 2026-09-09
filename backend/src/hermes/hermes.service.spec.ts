@@ -24,7 +24,11 @@ const mockPrisma = {
     create: jest.fn(),
   },
   // Telegram cấp CLB: getClubTelegramChat reverse-lookup ở đây (mặc định null = CLB chưa link).
-  systemSetting: { findFirst: jest.fn().mockResolvedValue(null) },
+  systemSetting: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    // getClubBotToken() → null nghĩa là CLB dùng bot CHUNG (TELEGRAM_BOT_TOKEN).
+    findUnique: jest.fn().mockResolvedValue(null),
+  },
 };
 
 const mockEmail = {
@@ -202,6 +206,8 @@ describe('HermesService', () => {
       mockPrisma.notification.count.mockResolvedValue(0);
       // Mặc định CLB CHƯA link chat Telegram → không gửi telegram.
       mockPrisma.systemSetting.findFirst.mockResolvedValue(null);
+      // Mặc định CLB KHÔNG có bot riêng → dùng bot chung (getClubBotToken → null).
+      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
     };
     /** Giả lập CLB đã LIÊN KẾT chat Telegram (kênh cấp CLB). */
     const linkClubChat = (chatId: string) =>

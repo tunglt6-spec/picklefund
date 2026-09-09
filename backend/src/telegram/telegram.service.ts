@@ -349,6 +349,122 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     return setting ? setting.key.replace('telegram_chat_', '') : null;
   }
 
+  // ─── Bot token RIÊNG theo CLB ─────────────────────────────────────────────
+  // Mỗi CLB có thể đăng ký bot Telegram RIÊNG (tự tạo qua @BotFather). App gửi thông báo
+  // của CLB đó qua CHÍNH token của CLB — không phụ thuộc bot chung của hệ thống. Gửi tin chỉ
+  // cần token + chatId (KHÔNG cần polling), nên bot riêng của CLB dùng để nhận thông báo được
+  // ngay mà không cần app chạy process polling cho từng bot.
+  //
+  // Lưu tại systemSetting key `telegram_bot_token_<clubId>` = token (chỉ CLB đó dùng).
+
+  private clubTokenKey(clubId: string): string {
+    return `telegram_bot_token_${clubId}`;
+  }
+
+  /** Token bot RIÊNG của CLB (nếu đã đăng ký), else null → caller fallback về TELEGRAM_BOT_TOKEN. */
+  async getClubBotToken(clubId: string): Promise<string | null> {
+    if (!clubId) return null;
+    const s = await this.prisma.systemSetting
+      .findUnique({ where: { key: this.clubTokenKey(clubId) } })
+      .catch(() => null);
+    return s?.value?.trim() || null;
+  }
+
+  /** Xác thực token với Telegram (getMe) → trả @username của bot. null nếu token sai. */
+  async verifyBotToken(token: string): Promise<{ username: string } | null> {
+    const t = token?.trim();
+    if (!t) return null;
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${t}/getMe`);
+      const data: any = await res.json().catch(() => null);
+      if (data?.ok && data?.result?.username) {
+        return { username: data.result.username as string };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Đăng ký/cập nhật bot RIÊNG cho CLB. Xác thực token trước khi lưu; trả @username.
+   *  Throw nếu token không hợp lệ (để controller báo lỗi rõ cho người dùng). */
+  async setClubBotToken(
+    clubId: string,
+    token: string,
+  ): Promise<{ username: string }> {
+    const info = await this.verifyBotToken(token);
+    if (!info) {
+      throw new Error(
+        'Token bot không hợp lệ. Kiểm tra lại token lấy từ @BotFather.',
+      );
+    }
+    const key = this.clubTokenKey(clubId);
+    await this.prisma.systemSetting.upsert({
+      where: { key },
+      create: { key, value: token.trim() },
+      update: { value: token.trim() },
+    });
+    this.logger.log(`[Telegram] Club ${clubId} set own bot @${info.username}`);
+    return info;
+  }
+
+  /** Gỡ bot riêng của CLB → CLB quay lại dùng bot chung (nếu có). */
+  async clearClubBotToken(clubId: string): Promise<void> {
+    await this.prisma.systemSetting
+      .deleteMany({ where: { key: this.clubTokenKey(clubId) } })
+      .catch(() => null);
+    this.logger.log(`[Telegram] Club ${clubId} cleared own bot token`);
+  }
+
+  /** Thông tin bot của CLB cho giao diện: có bot riêng không + @username (bot riêng hoặc bot chung).
+   *  KHÔNG bao giờ trả token ra ngoài. */
+  async getClubBotInfo(
+    clubId: string,
+  ): Promise<{ hasOwnBot: boolean; username: string | null }> {
+    const clubToken = await this.getClubBotToken(clubId);
+    if (clubToken) {
+      const info = await this.verifyBotToken(clubToken);
+      return { hasOwnBot: true, username: info?.username ?? null };
+    }
+    return { hasOwnBot: false, username: await this.getBotUsername() };
+  }
+
+  /** Gửi tin qua token TUỲ Ý (HTTP trực tiếp) — dùng cho bot riêng của CLB. */
+  private async sendViaToken(
+    token: string,
+    chatId: string,
+    text: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${token}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+        },
+      );
+      const data: any = await res.json().catch(() => null);
+      if (data?.ok) return { ok: true };
+      const desc = data?.description || `Telegram API ${res.status}`;
+      this.logger.warn(`[Telegram] sendViaToken failed to ${chatId}: ${desc}`);
+      return { ok: false, error: desc };
+    } catch (err: any) {
+      return { ok: false, error: err?.message ?? 'unknown' };
+    }
+  }
+
+  /** Gửi cho CLB: ưu tiên bot RIÊNG của CLB, fallback bot chung của hệ thống. */
+  async sendMessageForClub(
+    clubId: string,
+    chatId: string,
+    text: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    const clubToken = await this.getClubBotToken(clubId);
+    if (clubToken) return this.sendViaToken(clubToken, chatId, text);
+    return this.sendMessageResult(chatId, text);
+  }
+
   /**
    * TÁCH một chat id khỏi hệ thống: gỡ liên kết CLB (systemSetting telegram_chat_<id>) +
    * xoá pref.telegramChatId trùng. Dùng để chấm dứt việc nhiều CLB dùng chung một chat

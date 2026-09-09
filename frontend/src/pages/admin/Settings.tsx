@@ -596,6 +596,48 @@ function TelegramTab() {
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [botUsername, setBotUsername] = useState<string | null>(null)
+  const [hasOwnBot, setHasOwnBot] = useState(false)
+  const [botToken, setBotToken] = useState('')
+  const [savingBot, setSavingBot] = useState(false)
+
+  const loadBotInfo = () =>
+    api.get('/telegram/bot-info').then(res => {
+      setBotUsername(res.data?.data?.username ?? null)
+      setHasOwnBot(!!res.data?.data?.hasOwnBot)
+    }).catch(() => {})
+
+  /** Đăng ký bot RIÊNG của CLB (token từ @BotFather). App xác thực token trước khi lưu. */
+  const handleSaveBot = async () => {
+    if (!botToken.trim()) { toast.error('Vui lòng dán token bot từ @BotFather'); return }
+    setSavingBot(true)
+    const t = toast.loading('Đang xác thực token bot…')
+    try {
+      const res = await api.post('/telegram/club-bot', { token: botToken.trim() })
+      toast.dismiss(t)
+      toast.success(res.data?.message ?? 'Đã đăng ký bot riêng của CLB')
+      setBotToken('')
+      await loadBotInfo()
+    } catch (e: any) {
+      toast.dismiss(t)
+      toast.error(e?.response?.data?.message ?? 'Token bot không hợp lệ')
+    } finally {
+      setSavingBot(false)
+    }
+  }
+
+  /** Gỡ bot riêng → CLB dùng lại bot chung của hệ thống (nếu có). */
+  const handleClearBot = async () => {
+    setSavingBot(true)
+    try {
+      await api.post('/telegram/club-bot/clear')
+      toast.success('Đã gỡ bot riêng của CLB')
+      await loadBotInfo()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Không gỡ được bot riêng')
+    } finally {
+      setSavingBot(false)
+    }
+  }
 
   /** Gửi tin thử tới chat đã liên kết của CLB → hiện kết quả (kèm lý do lỗi cụ thể nếu có). */
   const handleTest = async () => {
@@ -610,7 +652,7 @@ function TelegramTab() {
       const e = String(d?.error ?? res.data?.message ?? '').toLowerCase()
       let guide = res.data?.message ?? 'Chưa gửi được'
       if (e.includes('chat not found') || e.includes('initiate'))
-        guide = 'Chưa gửi được: chat này chưa mở hội thoại với bot của app. Hãy mở đúng bot của app trong Telegram, bấm /start, rồi Gửi thử lại (kiểm tra cả Chat ID).'
+        guide = 'Chưa gửi được: chat này chưa mở hội thoại với bot đang dùng. Hãy mở đúng bot của CLB trong Telegram, bấm /start, rồi Gửi thử lại (kiểm tra cả Chat ID).'
       else if (e.includes('blocked'))
         guide = 'Chưa gửi được: bot đang bị chặn. Bỏ chặn bot trong Telegram rồi thử lại.'
       else if (e.includes('unauthorized'))
@@ -629,9 +671,7 @@ function TelegramTab() {
       setCurrentChatId(id)
       if (id) setChatId(id)
     }).catch(() => {})
-    api.get('/telegram/bot-info').then(res => {
-      setBotUsername(res.data?.data?.username ?? null)
-    }).catch(() => {})
+    loadBotInfo()
   }, [])
 
   const handleLink = async () => {
@@ -657,14 +697,55 @@ function TelegramTab() {
           Liên kết Telegram Bot với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
         </p>
 
-        {botUsername ? (
-          <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3 mb-4 text-sm text-sky-800">
-            Bot của hệ thống: <a href={`https://t.me/${botUsername}`} target="_blank" rel="noopener noreferrer" className="font-mono font-bold text-sky-700 hover:underline">@{botUsername}</a>.
-            {' '}Hãy mở <b>đúng bot này</b> trên Telegram và bấm <code className="bg-sky-100 px-1 rounded">/start</code> — mọi CLB dùng <b>chung một bot này</b> (tách theo Chat ID). Bot bạn tự tạo (tên khác) sẽ KHÔNG hoạt động với app.
+        {/* Bot RIÊNG của CLB — mỗi CLB tự tạo bot qua @BotFather và dán token vào đây.
+            App gửi thông báo của CLB qua CHÍNH bot này (độc lập với bot của CLB khác). */}
+        <div className="rounded-lg border border-[color:var(--pf-border)] p-4 mb-4 [background:var(--pf-surface-muted)]">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-sm font-semibold [color:var(--pf-text)]">Bot Telegram riêng của CLB</span>
+            {hasOwnBot && botUsername && (
+              <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                Đang dùng bot riêng: <a href={`https://t.me/${botUsername}`} target="_blank" rel="noopener noreferrer" className="font-mono font-bold hover:underline">@{botUsername}</a>
+              </span>
+            )}
           </div>
-        ) : (
+          <p className="text-sm [color:var(--pf-color-muted)] mb-3">
+            Mỗi CLB dùng <b>bot Telegram của riêng mình</b> để nhận thông báo — không phụ thuộc bot của CLB khác hay của quản trị hệ thống.
+          </p>
+          <ol className="text-sm [color:var(--pf-color-muted)] space-y-1 list-decimal list-inside mb-3">
+            <li>Mở <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="font-mono font-semibold text-sky-700 hover:underline">@BotFather</a> trên Telegram, gõ <code className="[background:var(--pf-primary-soft)] px-1 rounded">/newbot</code> để tạo bot của CLB</li>
+            <li>BotFather trả về một <b>token</b> (dạng <code className="[background:var(--pf-primary-soft)] px-1 rounded">123456:ABC-DEF…</code>) — dán vào ô dưới rồi bấm Lưu</li>
+            <li>Mở chính bot vừa tạo, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code>, rồi lấy Chat ID và kết nối ở phần bên dưới</li>
+          </ol>
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="password"
+              className="flex-1 min-w-[220px] rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm font-mono focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary)] outline-none"
+              placeholder="Dán token bot từ @BotFather"
+              value={botToken}
+              onChange={e => setBotToken(e.target.value)}
+              autoComplete="off"
+            />
+            <Button onClick={handleSaveBot} disabled={savingBot || !botToken.trim()} className="w-full sm:w-auto">
+              <Save size={14} className="mr-1.5" />
+              {savingBot ? 'Đang lưu…' : hasOwnBot ? 'Cập nhật token' : 'Lưu bot riêng'}
+            </Button>
+            {hasOwnBot && (
+              <Button variant="outline" onClick={handleClearBot} disabled={savingBot} className="w-full sm:w-auto">
+                Gỡ bot riêng
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {!hasOwnBot && botUsername && (
+          <div className="bg-sky-50 border border-sky-200 rounded-lg px-4 py-3 mb-4 text-sm text-sky-800">
+            Chưa đăng ký bot riêng — CLB đang dùng <b>bot chung của hệ thống</b>: <a href={`https://t.me/${botUsername}`} target="_blank" rel="noopener noreferrer" className="font-mono font-bold text-sky-700 hover:underline">@{botUsername}</a>.
+            {' '}Bạn có thể tiếp tục dùng bot chung (mở bot này, bấm <code className="bg-sky-100 px-1 rounded">/start</code>), hoặc đăng ký bot riêng ở trên để CLB hoàn toàn độc lập.
+          </div>
+        )}
+        {!hasOwnBot && !botUsername && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 text-sm text-amber-700">
-            ⚠️ Hệ thống chưa cấu hình Telegram Bot (thiếu token phía máy chủ). Liên hệ quản trị hệ thống.
+            ⚠️ Chưa có bot nào cho CLB. Hãy đăng ký <b>bot riêng của CLB</b> ở trên (khuyến nghị), hoặc liên hệ quản trị hệ thống để dùng bot chung.
           </div>
         )}
 
@@ -684,9 +765,11 @@ function TelegramTab() {
         <div className="[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg p-4 mb-5 space-y-1.5">
           <p className="text-sm font-medium [color:var(--pf-primary)]">Hướng dẫn lấy Chat ID:</p>
           <ol className="text-sm [color:var(--pf-primary)] space-y-1 list-decimal list-inside">
-            <li>Mở {botUsername ? <b>@{botUsername}</b> : 'bot của hệ thống'} trên Telegram, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code></li>
-            <li>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code></li>
-            <li>Bot trả về Chat ID — copy và dán vào ô bên dưới</li>
+            <li>Mở {botUsername ? <b>@{botUsername}</b> : 'bot của CLB'} trên Telegram, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code></li>
+            <li>{hasOwnBot
+              ? <>Lấy Chat ID bằng <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">@userinfobot</a> (bot riêng của CLB chưa có sẵn lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code>)</>
+              : <>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code> — bot chung sẽ trả Chat ID</>}</li>
+            <li>Copy Chat ID và dán vào ô bên dưới</li>
           </ol>
         </div>
 
@@ -718,7 +801,10 @@ function TelegramTab() {
       </div>
 
       <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
-        <h3 className="font-semibold [color:var(--pf-text)] mb-3">Các lệnh Bot hỗ trợ</h3>
+        <h3 className="font-semibold [color:var(--pf-text)] mb-1">Các lệnh Bot hỗ trợ</h3>
+        <p className="text-xs [color:var(--pf-color-muted)] mb-3">
+          Các lệnh tra cứu dưới đây chỉ hoạt động trên <b>bot chung của hệ thống</b>. Bot riêng của CLB dùng để <b>nhận thông báo</b> (không cần lệnh) — vẫn nhận đầy đủ thông báo tự động.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           {[
             { cmd: '/status',    desc: 'Tổng quan CLB' },
