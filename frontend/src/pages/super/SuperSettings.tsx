@@ -106,6 +106,27 @@ export function SuperSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState<Settings>(DEFAULTS)
+  const [tgBusy, setTgBusy] = useState(false)
+
+  /** Kiểm tra kết nối Telegram: lưu Chat ID hiện tại → gọi backend gửi tin thử → hiện kết quả. */
+  const testTelegram = async () => {
+    setTgBusy(true)
+    const t = toast.loading('Đang gửi thử Telegram…')
+    try {
+      // Lưu Chat ID trước (backend đọc từ cài đặt đã lưu). upsert theo key — không xoá key khác.
+      await api.put('/system-settings', { superTelegramChatId: settings.superTelegramChatId })
+      const res = await api.post('/account-notify/telegram-test')
+      const d = res.data?.data ?? res.data
+      toast.dismiss(t)
+      if (d?.ok) toast.success('Đã gửi tin thử — kiểm tra Telegram của bạn.')
+      else toast.error(`Chưa gửi được: ${d?.error ?? 'không rõ nguyên nhân'}`, { duration: 7000 })
+    } catch (e: any) {
+      toast.dismiss(t)
+      toast.error(e?.response?.data?.message ?? 'Không gọi được kiểm tra Telegram')
+    } finally {
+      setTgBusy(false)
+    }
+  }
 
   // Đổi mật khẩu cá nhân (đồng nhất với màn Cài đặt của admin CLB) — PATCH /auth/change-password.
   const [pw, setPw] = useState({ old: '', new: '', confirm: '' })
@@ -208,7 +229,11 @@ export function SuperSettings() {
               <S id="superTgChat" label="Telegram Chat ID (Super Admin)" value={settings.superTelegramChatId}
                 onChange={v => setSettings(p => ({ ...p, superTelegramChatId: v }))}
                 placeholder="VD: 123456789 — nhắn /myid cho bot để lấy" />
-              <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo “tài khoản mới” qua Telegram. Để trống = tắt kênh này.</p>
+              <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
+              <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
+                {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
+              </button>
             </div>
           </div>
         </Section>

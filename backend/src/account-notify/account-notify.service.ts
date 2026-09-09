@@ -90,9 +90,19 @@ export class AccountNotifyService {
     return { title, body };
   }
 
+  /** Token bot cho thông báo Super Admin: ưu tiên bot RIÊNG (SUPER_TELEGRAM_BOT_TOKEN),
+   *  fallback bot chung của app (TELEGRAM_BOT_TOKEN). */
+  private superBotToken(): string | undefined {
+    return (
+      this.config.get<string>('SUPER_TELEGRAM_BOT_TOKEN')?.trim() ||
+      this.config.get<string>('TELEGRAM_BOT_TOKEN')?.trim() ||
+      undefined
+    );
+  }
+
   /** Gửi Telegram Bot API (HTTP) — self-contained, không phụ thuộc TelegramModule/Maika/Lisa. */
   private async sendTelegram(chatId: string, text: string): Promise<void> {
-    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
+    const token = this.superBotToken();
     if (!token) return; // bot chưa cấu hình → bỏ qua (không lỗi)
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
@@ -100,6 +110,76 @@ export class AccountNotifyService {
       body: JSON.stringify({ chat_id: chatId, text }),
     });
     if (!res.ok) throw new Error(`Telegram API ${res.status}`);
+  }
+
+  /**
+   * Kiểm tra kết nối Telegram của Super Admin — gửi 1 tin THỬ tới superTelegramChatId.
+   * Trả kết quả CHI TIẾT (kèm mô tả lỗi từ Telegram: "chat not found" / token sai…) để chẩn đoán.
+   */
+  async telegramSelfTest(): Promise<{
+    configured: boolean;
+    hasChatId: boolean;
+    chatId: string | null;
+    ok: boolean;
+    error?: string;
+  }> {
+    const token = this.superBotToken();
+    const cfg = await this.settings
+      .getAll()
+      .catch(() => ({}) as Record<string, string>);
+    const chatId = cfg.superTelegramChatId?.trim() || null;
+    if (!token) {
+      return {
+        configured: false,
+        hasChatId: !!chatId,
+        chatId,
+        ok: false,
+        error: 'Máy chủ chưa cấu hình TELEGRAM_BOT_TOKEN / SUPER_TELEGRAM_BOT_TOKEN.',
+      };
+    }
+    if (!chatId) {
+      return {
+        configured: true,
+        hasChatId: false,
+        chatId: null,
+        ok: false,
+        error: 'Chưa nhập "Telegram Chat ID (Super Admin)" ở Cài đặt.',
+      };
+    }
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${token}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: 'PickleFund · Super Admin — ✅ Kiểm tra kết nối Telegram THÀNH CÔNG. Bạn sẽ nhận thông báo biến động hệ thống tại đây.',
+          }),
+        },
+      );
+      if (res.ok) return { configured: true, hasChatId: true, chatId, ok: true };
+      const data = (await res.json().catch(() => ({}))) as {
+        description?: string;
+      };
+      return {
+        configured: true,
+        hasChatId: true,
+        chatId,
+        ok: false,
+        error: data?.description
+          ? `${res.status}: ${data.description}`
+          : `Telegram API ${res.status}`,
+      };
+    } catch (e) {
+      return {
+        configured: true,
+        hasChatId: true,
+        chatId,
+        ok: false,
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
   }
 
   async onNewAccount(info: NewAccountInfo): Promise<void> {
