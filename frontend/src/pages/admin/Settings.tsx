@@ -603,10 +603,18 @@ function TelegramTab() {
     try {
       const res = await api.post('/telegram/test')
       const d = res.data?.data ?? {}
-      const msg = res.data?.message
       toast.dismiss(t)
-      if (d?.sent) toast.success(msg ?? 'Đã gửi — kiểm tra Telegram của CLB.')
-      else toast.error(msg ?? 'Chưa gửi được', { duration: 7000 })
+      if (d?.sent) { toast.success('Đã gửi — kiểm tra Telegram của CLB.'); return }
+      // Dịch lỗi Telegram thô sang hướng dẫn dễ hiểu.
+      const e = String(d?.error ?? res.data?.message ?? '').toLowerCase()
+      let guide = res.data?.message ?? 'Chưa gửi được'
+      if (e.includes('chat not found') || e.includes('initiate'))
+        guide = 'Chưa gửi được: chat này chưa mở hội thoại với bot của app. Hãy mở đúng bot của app trong Telegram, bấm /start, rồi Gửi thử lại (kiểm tra cả Chat ID).'
+      else if (e.includes('blocked'))
+        guide = 'Chưa gửi được: bot đang bị chặn. Bỏ chặn bot trong Telegram rồi thử lại.'
+      else if (e.includes('unauthorized'))
+        guide = 'Chưa gửi được: token bot sai/hết hạn — liên hệ quản trị hệ thống.'
+      toast.error(guide, { duration: 8000 })
     } catch (e: any) {
       toast.dismiss(t); toast.error(e?.response?.data?.message ?? 'Không gọi được kiểm tra Telegram')
     } finally {
