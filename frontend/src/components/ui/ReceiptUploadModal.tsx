@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { X, Upload, FileText, Image, Camera } from 'lucide-react'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
+import { Portal } from './Portal'
 
 interface Props {
   expenseId: string
@@ -66,7 +67,9 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.55)' }}>
+    <Portal>
+    {/* z cao hơn drawer chi tiết (z-50) để không bị đè/mờ khi mở từ trong drawer */}
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.55)' }}>
       <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         {/* header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
@@ -138,5 +141,6 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
