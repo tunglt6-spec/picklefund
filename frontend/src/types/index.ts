@@ -180,6 +180,7 @@ export interface LivingExpense {
   // shared
   amount: number
   description: string
+  notes?: string
   expenseDate: string
   receiptUrl?: string
   status?: ExpenseStatus

@@ -65,7 +65,7 @@ function toRich(e: LivingExpense, index: number): RichExpense {
     ...e,
     code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${String(index + 1).padStart(3, '0')}`,
     status: e.status ?? 'pending',
-    notes: '',
+    notes: e.notes ?? '',
   }
 }
 
@@ -424,6 +424,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
         ]
     ),
     { label: 'Trạng thái', value: <Badge variant={cfg.variant} dot>{cfg.label}</Badge> },
+    ...(exp.notes ? [{ label: 'Ghi chú', value: exp.notes }] : []),
     { label: 'Ngày tạo',   value: exp.createdAt.slice(0, 10) },
   ]
 
@@ -674,6 +675,7 @@ export function Expenses() {
       miniExpenseType: isMini ? form.miniExpenseType : undefined,
       receiverName: isMini && form.receiverName ? form.receiverName : undefined,
       categoryId: form.categoryId || undefined,
+      notes: form.notes || undefined,
     }
     try {
       const res = await api.post('/expenses', payload)
@@ -1173,6 +1175,7 @@ export function Expenses() {
       </div>
 
       {/* Drawers & modals */}
+      <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
       <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
       <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
 

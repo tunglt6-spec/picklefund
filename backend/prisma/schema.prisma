@@ -410,6 +410,7 @@ model LivingExpense {
   status              String           @default("pending")
   amount              Decimal          @db.Decimal(15, 2)
   description         String
+  notes               String?
   allocationRule      AllocationRule   @default(FUND_ONLY) @map("allocation_rule")
   costType            CostType         @default(LIVING) @map("cost_type")
   expenseDate         DateTime         @map("expense_date") @db.Date

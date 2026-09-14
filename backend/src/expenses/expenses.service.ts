@@ -28,6 +28,7 @@ export interface CreateExpenseDto {
   relatedMinigameId?: string;
   // shared
   description: string;
+  notes?: string;
   amount: number;
   expenseDate?: string;
   receiptUrl?: string;
@@ -168,6 +169,7 @@ export class ExpensesService {
         // Loại chi (luật Quỹ): COURT = tiền sân / LIVING = sinh hoạt. MINI không phân bổ → LIVING.
         costType: fundSource === 'MINI' ? 'LIVING' : (dto.costType ?? 'LIVING'),
         description: dto.description,
+        ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
         amount: new Decimal(dto.amount),
         expenseDate: dto.expenseDate ? new Date(dto.expenseDate) : new Date(),
         receiptUrl: dto.receiptUrl,
@@ -215,6 +217,7 @@ export class ExpensesService {
         ...(dto.description !== undefined
           ? { description: dto.description }
           : {}),
+        ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
         ...(dto.amount !== undefined
           ? { amount: new Decimal(dto.amount) }
           : {}),

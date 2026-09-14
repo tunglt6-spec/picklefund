@@ -135,8 +135,8 @@ export class HermesService {
     return { dispatched };
   }
 
-  /** Chat Telegram LIÊN KẾT của 1 CLB (reverse-lookup systemSetting telegram_chat_<id>=clubId).
-   *  Nguồn chân lý cho thông báo Telegram gửi đi của CLB (mỗi CLB một chat riêng). */
+  /** Chat Telegram LIÊN KẾT của 1 CLB (khóa-theo-CLB systemSetting telegram_club_chat_<clubId>=chatId).
+   *  Nguồn chân lý cho thông báo Telegram gửi đi của CLB (1 Chat ID có thể dùng chung nhiều CLB). */
   private async getClubTelegramChat(clubId: string): Promise<string | null> {
     // Khóa-theo-CLB: telegram_club_chat_<clubId> = chatId (1 chat có thể dùng chung nhiều CLB).
     const s = await this.prisma.systemSetting

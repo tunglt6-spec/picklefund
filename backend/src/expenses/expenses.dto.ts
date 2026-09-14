@@ -58,6 +58,10 @@ export class CreateExpenseDto {
   @IsString()
   description: string;
 
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
@@ -107,4 +111,31 @@ export class UpdateExpenseDto {
   @IsOptional()
   @IsBoolean()
   allocationEnabled?: boolean;
+
+  // Các trường FE gửi khi SỬA khoản chi + service.update đã xử lý. Thiếu ở đây +
+  // ValidationPipe forbidNonWhitelisted → sửa chi Quỹ Phụ (miniExpenseType) hoặc chi có
+  // danh mục (categoryId) sẽ bị 400. enum lấy từ Prisma để không lệch schema.
+  @IsOptional()
+  @IsEnum(MiniExpenseType)
+  miniExpenseType?: MiniExpenseType;
+
+  @IsOptional()
+  @IsString()
+  receiverName?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  fundPeriodId?: string;
+
+  @IsOptional()
+  @IsString()
+  attendanceSessionId?: string;
+
+  @IsOptional()
+  @IsString()
+  relatedMinigameId?: string;
 }
