@@ -351,7 +351,7 @@ describe('ExpensesService', () => {
           _count: 1,
         });
       mockPrisma.livingExpense.groupBy.mockResolvedValue([
-        { miniExpenseType: 'PRIZE', _sum: { amount: new Decimal(200_000) } },
+        { miniExpenseType: 'GAME_REWARD', _sum: { amount: new Decimal(200_000) } },
       ]);
 
       const result = await service.summary('club-1');

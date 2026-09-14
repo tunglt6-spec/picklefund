@@ -9,11 +9,10 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import type {
-  FundSource,
-  AllocationRule,
-  MiniExpenseType,
-} from '@prisma/client';
+import type { FundSource, AllocationRule } from '@prisma/client';
+// Import RUNTIME enum (không phải type) để @IsEnum lấy đúng danh sách giá trị từ Prisma —
+// tránh lệch với schema (bug cũ: hardcode ['PRIZE','EQUIPMENT',...] không khớp DB).
+import { MiniExpenseType } from '@prisma/client';
 
 export class CreateExpenseDto {
   @IsEnum(['COMMON', 'MINI'])
@@ -45,7 +44,7 @@ export class CreateExpenseDto {
   categoryId?: string;
 
   @IsOptional()
-  @IsEnum(['PRIZE', 'EQUIPMENT', 'FOOD', 'VENUE', 'OTHER'])
+  @IsEnum(MiniExpenseType)
   miniExpenseType?: MiniExpenseType;
 
   @IsOptional()
