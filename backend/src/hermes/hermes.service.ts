@@ -138,12 +138,11 @@ export class HermesService {
   /** Chat Telegram LIÊN KẾT của 1 CLB (reverse-lookup systemSetting telegram_chat_<id>=clubId).
    *  Nguồn chân lý cho thông báo Telegram gửi đi của CLB (mỗi CLB một chat riêng). */
   private async getClubTelegramChat(clubId: string): Promise<string | null> {
+    // Khóa-theo-CLB: telegram_club_chat_<clubId> = chatId (1 chat có thể dùng chung nhiều CLB).
     const s = await this.prisma.systemSetting
-      .findFirst({
-        where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
-      })
+      .findFirst({ where: { key: `telegram_club_chat_${clubId}` } })
       .catch(() => null);
-    return s ? s.key.replace('telegram_chat_', '') : null;
+    return s?.value ?? null;
   }
 
   /** Token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>). null → dùng bot chung. */

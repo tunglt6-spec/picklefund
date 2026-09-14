@@ -172,14 +172,12 @@ export class HermesActionExecutor implements ActionExecutor {
     return counts;
   }
 
-  /** Chat Telegram LIÊN KẾT của CLB (reverse-lookup systemSetting telegram_chat_<id>=clubId). */
+  /** Chat Telegram LIÊN KẾT của CLB (khóa-theo-CLB telegram_club_chat_<clubId>=chatId). */
   private async getClubTelegramChat(clubId: string): Promise<string | null> {
     const s = await this.prisma.systemSetting
-      .findFirst({
-        where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
-      })
+      .findFirst({ where: { key: `telegram_club_chat_${clubId}` } })
       .catch(() => null);
-    return s ? s.key.replace('telegram_chat_', '') : null;
+    return s?.value ?? null;
   }
 
   /** Token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>). null → dùng bot chung. */

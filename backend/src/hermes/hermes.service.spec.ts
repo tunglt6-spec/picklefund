@@ -209,11 +209,11 @@ describe('HermesService', () => {
       // Mặc định CLB KHÔNG có bot riêng → dùng bot chung (getClubBotToken → null).
       mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
     };
-    /** Giả lập CLB đã LIÊN KẾT chat Telegram (kênh cấp CLB). */
+    /** Giả lập CLB đã LIÊN KẾT chat Telegram (kênh cấp CLB) — khóa-theo-CLB, value = chatId. */
     const linkClubChat = (chatId: string) =>
       mockPrisma.systemSetting.findFirst.mockResolvedValue({
-        key: `telegram_chat_${chatId}`,
-        value: 'club-1',
+        key: `telegram_club_chat_club-1`,
+        value: chatId,
       });
 
     const notifChannels = () =>

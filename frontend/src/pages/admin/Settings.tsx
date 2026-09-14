@@ -809,6 +809,9 @@ function TelegramTab() {
           <p className="text-xs [color:var(--pf-color-muted)] mt-1.5">
             ⚠️ Nhập <b>Chat ID cá nhân của bạn</b> (hoặc ID nhóm đã thêm bot) — <b>KHÔNG</b> nhập ID của chính con bot, bot không tự gửi tin cho bot được.
           </p>
+          <p className="text-xs [color:var(--pf-color-muted)] mt-1">
+            ℹ️ Một Chat ID <b>có thể dùng chung cho nhiều CLB</b> (vd bạn quản lý nhiều CLB) — liên kết cho CLB này không làm mất liên kết ở CLB khác.
+          </p>
         </div>
 
         <div className="space-y-3">

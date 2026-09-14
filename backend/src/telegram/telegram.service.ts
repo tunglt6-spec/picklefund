@@ -14,9 +14,11 @@ import { LisaService } from '../lisa/lisa.service';
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TelegramService.name);
   private bot: Telegraf | null = null;
-  // Bot RIÊNG của từng CLB đang được app polling (để trả lời lệnh /start,/myid,/status…).
-  // Key = clubId. Gửi thông báo KHÔNG cần map này (chỉ cần token), map này chỉ phục vụ LỆNH.
-  private clubBots = new Map<string, Telegraf>();
+  // Bot RIÊNG của CLB đang được app polling (để trả lời lệnh /start,/myid,/status…).
+  // Key = TOKEN (không phải clubId) → nếu nhiều CLB dùng CHUNG một token thì chỉ 1 poller
+  // (tránh Telegram 409 "terminated by other getUpdates"). ownerClubId = CLB gắn với bot này
+  // (để lệnh /status… scope đúng CLB). Gửi thông báo KHÔNG cần map này (chỉ cần token).
+  private clubBots = new Map<string, { bot: Telegraf; ownerClubId: string }>();
 
   constructor(
     private config: ConfigService,
@@ -48,19 +50,20 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy() {
     this.bot?.stop('SIGTERM');
-    for (const [clubId, bot] of this.clubBots) {
+    for (const [token, entry] of this.clubBots) {
       try {
-        bot.stop('SIGTERM');
+        entry.bot.stop('SIGTERM');
       } catch (err: any) {
         this.logger.warn(
-          `[Telegram] stop club bot ${clubId} lỗi: ${err?.message ?? err}`,
+          `[Telegram] stop club bot (token …${token.slice(-6)}) lỗi: ${err?.message ?? err}`,
         );
       }
     }
     this.clubBots.clear();
   }
 
-  /** Nạp mọi token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>) và polling. */
+  /** Nạp mọi token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>) và polling.
+   *  Nhiều CLB trùng token → chỉ polling 1 lần (launchClubBot tự khử trùng theo token). */
   private async launchAllClubBots(): Promise<void> {
     const rows = await this.prisma.systemSetting
       .findMany({ where: { key: { startsWith: 'telegram_bot_token_' } } })
@@ -68,60 +71,61 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     for (const r of rows) {
       const clubId = r.key.replace('telegram_bot_token_', '');
       const token = r.value?.trim();
-      if (clubId && token) this.launchClubBot(clubId, token);
+      if (clubId && token) this.launchClubBot(token, clubId);
     }
-    if (rows.length) {
-      this.logger.log(`[Telegram] Đang polling ${rows.length} bot riêng của CLB`);
+    if (this.clubBots.size) {
+      this.logger.log(
+        `[Telegram] Đang polling ${this.clubBots.size} bot riêng của CLB`,
+      );
     }
   }
 
-  /** (Re)launch bot riêng của 1 CLB: dừng bot cũ (nếu có) rồi khởi động bot mới cùng bộ lệnh. */
-  private launchClubBot(clubId: string, token: string): void {
-    // Dừng instance cũ (nếu token đổi) để tránh 2 poller cùng token.
-    const existing = this.clubBots.get(clubId);
-    if (existing) {
-      try {
-        existing.stop('SIGTERM');
-      } catch {
-        /* bỏ qua */
-      }
-      this.clubBots.delete(clubId);
-    }
+  /** Khởi động polling cho 1 TOKEN bot riêng. Đã polling token này rồi → bỏ qua (khử trùng). */
+  private launchClubBot(token: string, ownerClubId: string): void {
+    if (this.clubBots.has(token)) return; // token đã có poller → không tạo poller thứ 2
     let bot: Telegraf;
     try {
       bot = new Telegraf(token);
     } catch (err: any) {
       this.logger.warn(
-        `[Telegram] Không tạo được bot riêng CLB ${clubId}: ${err?.message ?? err}`,
+        `[Telegram] Không tạo được bot riêng CLB ${ownerClubId}: ${err?.message ?? err}`,
       );
       return;
     }
-    this.registerCommands(bot);
-    this.clubBots.set(clubId, bot);
+    this.registerCommands(bot, ownerClubId);
+    this.clubBots.set(token, { bot, ownerClubId });
     bot
       .launch()
       .catch((err) =>
         this.logger.warn(
-          `[Telegram] Launch bot riêng CLB ${clubId} lỗi (token sai/trùng poller?): ${err?.message ?? err}`,
+          `[Telegram] Launch bot riêng CLB ${ownerClubId} lỗi (token sai/trùng poller?): ${err?.message ?? err}`,
         ),
       );
-    this.logger.log(`[Telegram] Bot riêng CLB ${clubId} started`);
+    this.logger.log(`[Telegram] Bot riêng CLB ${ownerClubId} started`);
   }
 
-  /** Dừng polling bot riêng của 1 CLB (khi gỡ token). */
-  private stopClubBot(clubId: string): void {
-    const bot = this.clubBots.get(clubId);
-    if (!bot) return;
+  /** Dừng polling 1 TOKEN (khi không CLB nào còn dùng token đó nữa). */
+  private stopClubBotToken(token: string): void {
+    const entry = this.clubBots.get(token);
+    if (!entry) return;
     try {
-      bot.stop('SIGTERM');
+      entry.bot.stop('SIGTERM');
     } catch {
       /* bỏ qua */
     }
-    this.clubBots.delete(clubId);
-    this.logger.log(`[Telegram] Bot riêng CLB ${clubId} stopped`);
+    this.clubBots.delete(token);
+    this.logger.log(`[Telegram] Bot riêng CLB ${entry.ownerClubId} stopped`);
   }
 
-  private registerCommands(bot: Telegraf) {
+  /** Còn CLB nào dùng token này không (để quyết định có dừng poller khi 1 CLB gỡ/đổi token). */
+  private async tokenStillUsed(token: string): Promise<boolean> {
+    const n = await this.prisma.systemSetting
+      .count({ where: { key: { startsWith: 'telegram_bot_token_' }, value: token } })
+      .catch(() => 0);
+    return n > 0;
+  }
+
+  private registerCommands(bot: Telegraf, ownerClubId?: string) {
 
     bot.start((ctx) =>
       ctx.reply(
@@ -150,7 +154,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     );
 
     bot.command('status', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -171,7 +175,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('brief', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -187,7 +191,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('health', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -207,7 +211,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('reminders', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -231,7 +235,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('balance', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -251,7 +255,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('debt', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -274,7 +278,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('report', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -293,7 +297,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('members', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -314,7 +318,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     bot.command('upcoming', async (ctx) => {
-      const clubId = await this.getClubIdForChat(ctx);
+      const clubId = await this.resolveClubId(ctx, ownerClubId);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
         return;
@@ -348,15 +352,27 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  /** CLB cho ngữ cảnh lệnh: ưu tiên CLB CHỦ của bot (bot riêng → xác định CLB chắc chắn),
+   *  fallback tra ngược theo chat (bot chung / chat dùng chung → CLB đầu tiên khớp). */
+  private async resolveClubId(
+    ctx: Context,
+    ownerClubId?: string,
+  ): Promise<string | null> {
+    if (ownerClubId) return ownerClubId;
+    return this.getClubIdForChat(ctx);
+  }
+
+  /** Tra ngược 1 chat → clubId (khóa-theo-CLB telegram_club_chat_<clubId>=chatId).
+   *  Chat dùng chung nhiều CLB → trả CLB đầu tiên (chỉ dùng cho bot chung; bot riêng đã có ownerClubId). */
   private async getClubIdForChat(ctx: Context): Promise<string | null> {
     const chatId = ctx.chat?.id?.toString();
     if (!chatId) return null;
     const setting = await this.prisma.systemSetting
-      .findUnique({
-        where: { key: `telegram_chat_${chatId}` },
+      .findFirst({
+        where: { key: { startsWith: 'telegram_club_chat_' }, value: chatId },
       })
       .catch(() => null);
-    return setting?.value ?? null;
+    return setting ? setting.key.replace('telegram_club_chat_', '') : null;
   }
 
   private progressBar(value: number, max: number, width = 10): string {
@@ -393,14 +409,13 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   // ─── Link a club's admin chat ─────────────────────────────────────────────
 
   async linkClubChat(clubId: string, chatId: string): Promise<void> {
-    // Remove any existing link for this club first (a club can only have one chat)
-    await this.prisma.systemSetting.deleteMany({
-      where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
-    });
+    // Khóa-theo-CLB: mỗi CLB một key telegram_club_chat_<clubId>=chatId. KHÔNG đè CLB khác →
+    // một Chat ID có thể DÙNG CHUNG cho nhiều CLB (link chat cho CLB B không mất ở CLB A).
+    const key = `telegram_club_chat_${clubId}`;
     await this.prisma.systemSetting.upsert({
-      where: { key: `telegram_chat_${chatId}` },
-      create: { key: `telegram_chat_${chatId}`, value: clubId },
-      update: { value: clubId },
+      where: { key },
+      create: { key, value: chatId },
+      update: { value: chatId },
     });
     this.logger.log(`[Telegram] Club ${clubId} linked to chat ${chatId}`);
   }
@@ -419,11 +434,9 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   async getLinkedChatId(clubId: string): Promise<string | null> {
     const setting = await this.prisma.systemSetting
-      .findFirst({
-        where: { key: { startsWith: 'telegram_chat_' }, value: clubId },
-      })
+      .findFirst({ where: { key: `telegram_club_chat_${clubId}` } })
       .catch(() => null);
-    return setting ? setting.key.replace('telegram_chat_', '') : null;
+    return setting?.value ?? null;
   }
 
   // ─── Bot token RIÊNG theo CLB ─────────────────────────────────────────────
@@ -476,23 +489,33 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       );
     }
     const key = this.clubTokenKey(clubId);
+    const newToken = token.trim();
+    const oldToken = await this.getClubBotToken(clubId); // để dừng poller token cũ nếu đổi
     await this.prisma.systemSetting.upsert({
       where: { key },
-      create: { key, value: token.trim() },
-      update: { value: token.trim() },
+      create: { key, value: newToken },
+      update: { value: newToken },
     });
-    // Bắt đầu (hoặc khởi động lại) polling bot riêng này → nó trả lời /start,/myid,/status…
-    this.launchClubBot(clubId, token.trim());
+    // CLB đổi token → dừng poller token cũ nếu không CLB nào khác còn dùng nó.
+    if (oldToken && oldToken !== newToken && !(await this.tokenStillUsed(oldToken))) {
+      this.stopClubBotToken(oldToken);
+    }
+    // Bắt đầu polling bot riêng này (khử trùng theo token) → nó trả lời /start,/myid,/status…
+    this.launchClubBot(newToken, clubId);
     this.logger.log(`[Telegram] Club ${clubId} set own bot @${info.username}`);
     return info;
   }
 
   /** Gỡ bot riêng của CLB → CLB quay lại dùng bot chung (nếu có). */
   async clearClubBotToken(clubId: string): Promise<void> {
+    const oldToken = await this.getClubBotToken(clubId);
     await this.prisma.systemSetting
       .deleteMany({ where: { key: this.clubTokenKey(clubId) } })
       .catch(() => null);
-    this.stopClubBot(clubId); // dừng polling bot riêng đã gỡ
+    // Chỉ dừng poller khi KHÔNG CLB nào khác còn dùng token này (tránh cắt bot của CLB khác).
+    if (oldToken && !(await this.tokenStillUsed(oldToken))) {
+      this.stopClubBotToken(oldToken);
+    }
     this.logger.log(`[Telegram] Club ${clubId} cleared own bot token`);
   }
 
@@ -546,15 +569,14 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * TÁCH một chat id khỏi hệ thống: gỡ liên kết CLB (systemSetting telegram_chat_<id>) +
-   * xoá pref.telegramChatId trùng. Dùng để chấm dứt việc nhiều CLB dùng chung một chat
-   * (vd chat super admin) — sau đó mỗi CLB phải liên kết chat riêng.
+   * TÁCH một chat id khỏi MỌI CLB (gỡ mọi key telegram_club_chat_<clubId> có value=chatId) +
+   * xoá pref.telegramChatId trùng. Dùng khi muốn chấm dứt việc dùng chung một chat cụ thể.
    */
   async detachChat(
     chatId: string,
   ): Promise<{ unlinkedClubs: number; clearedPrefs: number }> {
     const del = await this.prisma.systemSetting.deleteMany({
-      where: { key: `telegram_chat_${chatId}` },
+      where: { key: { startsWith: 'telegram_club_chat_' }, value: chatId },
     });
     const upd = await this.prisma.notificationPreference.updateMany({
       where: { telegramChatId: chatId },
