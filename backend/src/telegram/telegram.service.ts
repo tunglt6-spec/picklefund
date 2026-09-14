@@ -14,6 +14,9 @@ import { LisaService } from '../lisa/lisa.service';
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TelegramService.name);
   private bot: Telegraf | null = null;
+  // Bot RIÊNG của từng CLB đang được app polling (để trả lời lệnh /start,/myid,/status…).
+  // Key = clubId. Gửi thông báo KHÔNG cần map này (chỉ cần token), map này chỉ phục vụ LỆNH.
+  private clubBots = new Map<string, Telegraf>();
 
   constructor(
     private config: ConfigService,
@@ -30,23 +33,97 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.bot = new Telegraf(token);
-    this.registerCommands();
+    this.registerCommands(this.bot);
     this.bot
       .launch()
       .catch((err) =>
         this.logger.error(`[Telegram] Launch error: ${err.message}`),
       );
     this.logger.log('[Telegram] Bot started');
+
+    // Ngoài bot chung, app còn polling bot RIÊNG của từng CLB đã đăng ký → bot riêng
+    // cũng trả lời lệnh (/start,/myid,/status…). Fire-and-forget, không chặn khởi động.
+    void this.launchAllClubBots();
   }
 
   onModuleDestroy() {
     this.bot?.stop('SIGTERM');
+    for (const [clubId, bot] of this.clubBots) {
+      try {
+        bot.stop('SIGTERM');
+      } catch (err: any) {
+        this.logger.warn(
+          `[Telegram] stop club bot ${clubId} lỗi: ${err?.message ?? err}`,
+        );
+      }
+    }
+    this.clubBots.clear();
   }
 
-  private registerCommands() {
-    if (!this.bot) return;
+  /** Nạp mọi token bot RIÊNG của CLB (systemSetting telegram_bot_token_<clubId>) và polling. */
+  private async launchAllClubBots(): Promise<void> {
+    const rows = await this.prisma.systemSetting
+      .findMany({ where: { key: { startsWith: 'telegram_bot_token_' } } })
+      .catch(() => [] as { key: string; value: string }[]);
+    for (const r of rows) {
+      const clubId = r.key.replace('telegram_bot_token_', '');
+      const token = r.value?.trim();
+      if (clubId && token) this.launchClubBot(clubId, token);
+    }
+    if (rows.length) {
+      this.logger.log(`[Telegram] Đang polling ${rows.length} bot riêng của CLB`);
+    }
+  }
 
-    this.bot.start((ctx) =>
+  /** (Re)launch bot riêng của 1 CLB: dừng bot cũ (nếu có) rồi khởi động bot mới cùng bộ lệnh. */
+  private launchClubBot(clubId: string, token: string): void {
+    // Dừng instance cũ (nếu token đổi) để tránh 2 poller cùng token.
+    const existing = this.clubBots.get(clubId);
+    if (existing) {
+      try {
+        existing.stop('SIGTERM');
+      } catch {
+        /* bỏ qua */
+      }
+      this.clubBots.delete(clubId);
+    }
+    let bot: Telegraf;
+    try {
+      bot = new Telegraf(token);
+    } catch (err: any) {
+      this.logger.warn(
+        `[Telegram] Không tạo được bot riêng CLB ${clubId}: ${err?.message ?? err}`,
+      );
+      return;
+    }
+    this.registerCommands(bot);
+    this.clubBots.set(clubId, bot);
+    bot
+      .launch()
+      .catch((err) =>
+        this.logger.warn(
+          `[Telegram] Launch bot riêng CLB ${clubId} lỗi (token sai/trùng poller?): ${err?.message ?? err}`,
+        ),
+      );
+    this.logger.log(`[Telegram] Bot riêng CLB ${clubId} started`);
+  }
+
+  /** Dừng polling bot riêng của 1 CLB (khi gỡ token). */
+  private stopClubBot(clubId: string): void {
+    const bot = this.clubBots.get(clubId);
+    if (!bot) return;
+    try {
+      bot.stop('SIGTERM');
+    } catch {
+      /* bỏ qua */
+    }
+    this.clubBots.delete(clubId);
+    this.logger.log(`[Telegram] Bot riêng CLB ${clubId} stopped`);
+  }
+
+  private registerCommands(bot: Telegraf) {
+
+    bot.start((ctx) =>
       ctx.reply(
         '👋 Chào mừng đến với PickleFund Bot!\n\n' +
           '📋 *Các lệnh hỗ trợ:*\n' +
@@ -64,7 +141,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       ),
     );
 
-    this.bot.help((ctx) =>
+    bot.help((ctx) =>
       ctx.reply(
         '🤖 PickleFund Bot — Trợ lý quản lý CLB pickleball\n\n' +
           'Sử dụng /status để xem tổng quan CLB.\n' +
@@ -72,7 +149,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       ),
     );
 
-    this.bot.command('status', async (ctx) => {
+    bot.command('status', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -93,7 +170,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('brief', async (ctx) => {
+    bot.command('brief', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -109,7 +186,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('health', async (ctx) => {
+    bot.command('health', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -129,7 +206,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('reminders', async (ctx) => {
+    bot.command('reminders', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -153,7 +230,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('balance', async (ctx) => {
+    bot.command('balance', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -173,7 +250,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('debt', async (ctx) => {
+    bot.command('debt', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -196,7 +273,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('report', async (ctx) => {
+    bot.command('report', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -215,7 +292,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('members', async (ctx) => {
+    bot.command('members', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -236,7 +313,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('upcoming', async (ctx) => {
+    bot.command('upcoming', async (ctx) => {
       const clubId = await this.getClubIdForChat(ctx);
       if (!clubId) {
         ctx.reply('❌ Chat này chưa được liên kết với CLB nào.');
@@ -253,7 +330,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.bot.command('myid', (ctx) => {
+    bot.command('myid', (ctx) => {
       const chatId = ctx.chat?.id?.toString() ?? 'không xác định';
       ctx.reply(
         `🆔 *Chat ID của bạn:* \`${chatId}\`\n\n` +
@@ -264,7 +341,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       );
     });
 
-    this.bot.on('text', (ctx) => {
+    bot.on('text', (ctx) => {
       ctx.reply(
         'Gõ /help để xem các lệnh hỗ trợ. Gõ /myid để lấy Chat ID kết nối CLB.',
       );
@@ -404,6 +481,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       create: { key, value: token.trim() },
       update: { value: token.trim() },
     });
+    // Bắt đầu (hoặc khởi động lại) polling bot riêng này → nó trả lời /start,/myid,/status…
+    this.launchClubBot(clubId, token.trim());
     this.logger.log(`[Telegram] Club ${clubId} set own bot @${info.username}`);
     return info;
   }
@@ -413,6 +492,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     await this.prisma.systemSetting
       .deleteMany({ where: { key: this.clubTokenKey(clubId) } })
       .catch(() => null);
+    this.stopClubBot(clubId); // dừng polling bot riêng đã gỡ
     this.logger.log(`[Telegram] Club ${clubId} cleared own bot token`);
   }
 

@@ -803,9 +803,7 @@ function TelegramTab() {
           <p className="text-sm font-medium [color:var(--pf-primary)]">Hướng dẫn lấy Chat ID:</p>
           <ol className="text-sm [color:var(--pf-primary)] space-y-1 list-decimal list-inside">
             <li>Mở {botUsername ? <b>@{botUsername}</b> : 'bot của CLB'} trên Telegram, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code></li>
-            <li>{hasOwnBot
-              ? <>Mở <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 hover:underline">@userinfobot</a> và <b>gõ một tin nhắn bất kỳ</b> (vd <code className="[background:var(--pf-primary-soft)] px-1 rounded">hi</code>) — nó trả về ID của BẠN. <b>Đừng</b> dùng nút chia sẻ Bot/User/Group (sẽ ra ID của bot, không phải của bạn)</>
-              : <>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code> — bot chung sẽ trả Chat ID</>}</li>
+            <li>Gõ lệnh <code className="[background:var(--pf-primary-soft)] px-1 rounded">/myid</code> ngay trong {botUsername ? <b>@{botUsername}</b> : 'bot của CLB'} — bot sẽ trả về <b>Chat ID của BẠN</b>{hasOwnBot ? ' (bot riêng của CLB nay đã trả lời lệnh)' : ''}</li>
             <li>Copy Chat ID và dán vào ô bên dưới</li>
           </ol>
           <p className="text-xs [color:var(--pf-color-muted)] mt-1.5">
@@ -843,7 +841,7 @@ function TelegramTab() {
       <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Các lệnh Bot hỗ trợ</h3>
         <p className="text-xs [color:var(--pf-color-muted)] mb-3">
-          Các lệnh tra cứu dưới đây chỉ hoạt động trên <b>bot chung của hệ thống</b>. Bot riêng của CLB dùng để <b>nhận thông báo</b> (không cần lệnh) — vẫn nhận đầy đủ thông báo tự động.
+          Các lệnh tra cứu dưới đây hoạt động trên <b>cả bot riêng của CLB và bot chung</b>. Cần liên kết Chat ID với CLB trước để bot biết trả dữ liệu của CLB nào.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           {[
