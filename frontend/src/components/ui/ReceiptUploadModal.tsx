@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, FileText, Image } from 'lucide-react'
+import { X, Upload, FileText, Image, Camera } from 'lucide-react'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
@@ -11,6 +11,10 @@ interface Props {
 }
 
 const ALLOWED_EXT = /\.(jpe?g|png|pdf|webp)$/i
+// Ảnh chụp từ camera trên mobile có thể có tên file lạ/không đuôi → nhận theo cả MIME.
+const ALLOWED_MIME = /^(image\/(jpe?g|png|webp)|application\/pdf)$/i
+// accept dùng MIME (image/*) để iOS/Android mở được Camera + Thư viện ảnh, kèm PDF.
+const ACCEPT = 'image/*,application/pdf'
 const MAX_SIZE = 5 * 1024 * 1024
 
 export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose }: Props) {
@@ -18,9 +22,13 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
   const [preview, setPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const handleFile = (f: File) => {
-    if (!ALLOWED_EXT.test(f.name)) { toast.error('Chỉ hỗ trợ JPG, PNG, PDF, WEBP'); return }
+    // Chấp nhận nếu hợp lệ theo đuôi HOẶC theo MIME (ảnh camera thường không có đuôi rõ).
+    if (!ALLOWED_EXT.test(f.name) && !ALLOWED_MIME.test(f.type)) {
+      toast.error('Chỉ hỗ trợ ảnh (JPG, PNG, WEBP) hoặc PDF'); return
+    }
     if (f.size > MAX_SIZE) { toast.error('File tối đa 5 MB'); return }
     setFile(f)
     if (f.type.startsWith('image/')) {
@@ -93,8 +101,24 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
               </>
             )}
           </div>
-          <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.pdf,.webp" className="hidden"
-            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+          {/* Chọn từ thư viện ảnh / trình duyệt tệp (mobile: gallery + Files; desktop: file picker) */}
+          <input ref={inputRef} type="file" accept={ACCEPT} className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
+          {/* Chụp ảnh trực tiếp bằng camera (capture) — mobile mở thẳng camera; desktop bỏ qua capture */}
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
+
+          {/* Nút thao tác nhanh — rõ ràng trên mobile (Chụp ảnh vs Chọn ảnh/tệp) */}
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => cameraRef.current?.click()}
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-[color:var(--pf-border)] text-sm font-semibold [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
+              <Camera size={15} className="[color:var(--pf-primary)]" />Chụp ảnh
+            </button>
+            <button type="button" onClick={() => inputRef.current?.click()}
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-[color:var(--pf-border)] text-sm font-semibold [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
+              <Image size={15} className="[color:var(--pf-primary)]" />Chọn ảnh / tệp
+            </button>
+          </div>
 
           {file && (
             <p className="text-[11px] [color:var(--pf-color-muted)] text-center">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>

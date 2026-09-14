@@ -27,11 +27,28 @@ import { intQuery } from '../common/query';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads', 'receipts');
 
+// Ảnh chụp từ camera trên mobile có thể có originalname không đuôi → suy đuôi từ mimetype.
+const MIME_EXT: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'application/pdf': '.pdf',
+};
+const RECEIPT_EXT = /jpe?g|png|pdf|webp/i;
+
+/** Đuôi file hợp lệ: ưu tiên đuôi trong originalname, fallback theo mimetype. '' nếu không hợp lệ. */
+function receiptExt(file: { originalname: string; mimetype: string }): string {
+  const ext = extname(file.originalname || '').toLowerCase();
+  if (RECEIPT_EXT.test(ext)) return ext;
+  return MIME_EXT[file.mimetype?.toLowerCase()] ?? '';
+}
+
 const receiptStorage = diskStorage({
   destination: UPLOAD_DIR,
   filename: (_req, file, cb) => {
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `${unique}${extname(file.originalname)}`);
+    cb(null, `${unique}${receiptExt(file) || extname(file.originalname)}`);
   },
 });
 
@@ -131,8 +148,10 @@ export class ExpensesController implements OnModuleInit {
     storage: receiptStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
     fileFilter: (_req, file, cb) => {
-      const allowed = /jpeg|jpg|png|pdf|webp/i;
-      if (!allowed.test(extname(file.originalname))) {
+      // Hợp lệ nếu đuôi HOẶC mimetype khớp (ảnh camera mobile có thể không có đuôi rõ).
+      const okExt = RECEIPT_EXT.test(extname(file.originalname || ''));
+      const okMime = !!MIME_EXT[file.mimetype?.toLowerCase()];
+      if (!okExt && !okMime) {
         return cb(new BadRequestException('Chỉ hỗ trợ JPG, PNG, PDF, WEBP'), false);
       }
       cb(null, true);
