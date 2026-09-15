@@ -17,6 +17,49 @@ const ALLOWED_MIME = /^(image\/(jpe?g|png|webp)|application\/pdf)$/i
 // accept dùng MIME (image/*) để iOS/Android mở được Camera + Thư viện ảnh, kèm PDF.
 const ACCEPT = 'image/*,application/pdf'
 const MAX_SIZE = 5 * 1024 * 1024
+// Ảnh (trước khi nén) cho phép tới 25MB — ảnh camera mobile hay 3-12MB, sẽ tự nén xuống.
+const MAX_IMAGE_RAW = 25 * 1024 * 1024
+
+/** Nén/thu nhỏ ảnh trước khi upload (ảnh camera mobile rất nặng). PDF/không phải ảnh giữ nguyên.
+ *  Cạnh dài tối đa 1920px, JPEG q0.82. Lỗi/không nhỏ hơn → trả file gốc. */
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file
+  try {
+    const dataUrl: string = await new Promise((res, rej) => {
+      const r = new FileReader()
+      r.onload = () => res(r.result as string)
+      r.onerror = rej
+      r.readAsDataURL(file)
+    })
+    const img: HTMLImageElement = await new Promise((res, rej) => {
+      const im = new window.Image()
+      im.onload = () => res(im)
+      im.onerror = rej
+      im.src = dataUrl
+    })
+    const MAXD = 1920
+    let { width, height } = img
+    if (width > MAXD || height > MAXD) {
+      const scale = Math.min(MAXD / width, MAXD / height)
+      width = Math.round(width * scale)
+      height = Math.round(height * scale)
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(img, 0, 0, width, height)
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob(res, 'image/jpeg', 0.82),
+    )
+    if (!blob || blob.size >= file.size) return file // không nhỏ hơn → giữ gốc
+    const name = (file.name || 'receipt').replace(/\.(jpe?g|png|webp)$/i, '') + '.jpg'
+    return new File([blob], name, { type: 'image/jpeg' })
+  } catch {
+    return file
+  }
+}
 
 export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose }: Props) {
   const [file, setFile] = useState<File | null>(null)
@@ -30,7 +73,11 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
     if (!ALLOWED_EXT.test(f.name) && !ALLOWED_MIME.test(f.type)) {
       toast.error('Chỉ hỗ trợ ảnh (JPG, PNG, WEBP) hoặc PDF'); return
     }
-    if (f.size > MAX_SIZE) { toast.error('File tối đa 5 MB'); return }
+    const isImage = f.type.startsWith('image/')
+    // Ảnh sẽ được nén trước khi upload → cho phép tới 25MB; PDF/khác giữ giới hạn 5MB.
+    if (isImage ? f.size > MAX_IMAGE_RAW : f.size > MAX_SIZE) {
+      toast.error(isImage ? 'Ảnh tối đa 25 MB' : 'File tối đa 5 MB'); return
+    }
     setFile(f)
     if (f.type.startsWith('image/')) {
       const reader = new FileReader()
@@ -51,16 +98,31 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
     if (!file) return
     setUploading(true)
     try {
+      const toUpload = await compressImage(file) // ảnh: nén nhỏ; pdf: giữ nguyên
+      if (toUpload.size > MAX_SIZE) {
+        toast.error('File vẫn > 5MB sau khi nén — chọn ảnh/tệp nhỏ hơn.')
+        setUploading(false)
+        return
+      }
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', toUpload)
+      // KHÔNG tự set Content-Type: để axios tự thêm boundary của multipart/form-data.
       const res = await api.patch(`/expenses/${expenseId}/receipt`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': undefined },
       })
       const data = res.data?.data ?? res.data
       onSuccess(expenseId, data.receiptUrl)
       toast.success('Đã đính kèm hóa đơn!')
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'Lỗi upload')
+      const st = e?.response?.status
+      const msg =
+        st === 413
+          ? 'Ảnh vượt giới hạn máy chủ. Thử lại (đã tự nén) hoặc chọn ảnh nhỏ hơn.'
+          : (e?.response?.data?.message ??
+            (e?.message?.toLowerCase?.().includes('network')
+              ? 'Lỗi mạng khi upload — kiểm tra kết nối rồi thử lại.'
+              : 'Lỗi upload'))
+      toast.error(msg)
     } finally {
       setUploading(false)
     }
