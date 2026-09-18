@@ -9,6 +9,11 @@ export interface QuyReportSummary {
   memberCount: number
   sessionCount: number
   confirmedCount: number
+  /** Thẻ dashboard bổ sung (tùy chọn — thiếu thì builder ẩn hàng thẻ bổ sung). */
+  miniBalance?: number
+  carryForward?: number
+  totalAttendance?: number
+  activeMemberCount?: number
   /** Ví dụ "22/7/2026" */
   exportedDateText: string
   /** Ví dụ "18:38:59 22/7/2026" */
