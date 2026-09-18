@@ -550,20 +550,11 @@ QUAN TRỌNG: CHỈ dùng đúng các con số đã cung cấp ở trên; TUYỆ
   }
 
   async getHealthScore(clubId: string): Promise<HealthScoreResult> {
+    // HÀM ĐỌC THUẦN — KHÔNG gửi thông báo. Trước đây mỗi lần đọc điểm (lệnh /health,
+    // GET /maika/health FE poll…) đều dispatch 'health_score_low' KHÔNG idempotent → SPAM
+    // (bắn mỗi phút). Cảnh báo sức khỏe CLB nay CHỈ đi qua lịch tuần WEEKLY_CLUB_HEALTH_REPORT
+    // (đã khử trùng theo kỳ ở HermesActionExecutor). Xem [[picklefund-ai]].
     const snap = await this.getClubSnapshot(clubId);
-    const result = this.computeHealthScore(snap);
-
-    if (result.score < 50) {
-      await this.hermes.dispatch({
-        eventType: 'health_score_low',
-        clubId,
-        priority: 'HIGH',
-        title: `Điểm sức khỏe CLB thấp: ${result.score}/100`,
-        body: `CLB cần cải thiện: ${result.recommendations.join(', ')}`,
-        metadata: result as any,
-      });
-    }
-
-    return result;
+    return this.computeHealthScore(snap);
   }
 }
