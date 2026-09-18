@@ -14,6 +14,7 @@ export interface QuyReportSummary {
   carryForward?: number
   totalAttendance?: number
   activeMemberCount?: number
+  clubAssets?: number
   /** Ví dụ "22/7/2026" */
   exportedDateText: string
   /** Ví dụ "18:38:59 22/7/2026" */

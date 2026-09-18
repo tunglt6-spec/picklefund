@@ -144,6 +144,11 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     ? rows.filter((r) => !r.contributionPaid).length
     : Math.max(0, summary.memberCount - summary.confirmedCount)
   const chiThuPct = pct(summary.totalExpense, summary.totalIncome)
+  // Có dữ liệu "thẻ dashboard" (Reports truyền) → hiện thêm hàng thẻ LỚN quỹ + lưới chỉ số.
+  const hasExtra = [
+    summary.miniBalance, summary.carryForward,
+    summary.totalAttendance, summary.activeMemberCount,
+  ].some((v) => v != null)
 
   let y = drawHeader(
     'BÁO CÁO TÀI CHÍNH',
@@ -159,8 +164,11 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     { label: 'TỔNG THU', value: vnd(summary.totalIncome), sub: `${summary.confirmedCount}/${summary.memberCount} thành viên đóng`, color: C.green },
     { label: 'TỔNG CHI', value: vnd(summary.totalExpense), sub: `Tỷ lệ chi / thu: ${chiThuPct}%`, color: C.redDark },
     {
-      label: 'SỐ DƯ QUỸ', value: vnd(summary.balance),
-      sub: summary.balance < 0 ? 'Quỹ âm – cần bổ sung' : 'Quỹ còn dư',
+      // Khi có hàng "QUỸ CHÍNH" (thực có) bên dưới → đổi nhãn để KHÔNG lẫn: đây là kết quả THU−CHI của kỳ.
+      label: hasExtra ? 'SỐ DƯ THU − CHI' : 'SỐ DƯ QUỸ', value: vnd(summary.balance),
+      sub: hasExtra
+        ? 'Thu − Chi trong kỳ'
+        : (summary.balance < 0 ? 'Quỹ âm – cần bổ sung' : 'Quỹ còn dư'),
       color: summary.balance < 0 ? C.redDark : C.indigoDark, highlight: true,
     },
   ]
@@ -178,6 +186,36 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
     doc.text(k.sub, x + 5, y + 18.5)
   })
   y += 27
+
+  /* Hàng thẻ LỚN thứ 2 — SỐ DƯ CÁC QUỸ (chỉ khi có dữ liệu dashboard). 4 thẻ:
+     Quỹ Chính (thực có, gồm tồn đầu kỳ = clubAssets), Quỹ Phụ, Số dư chuyển kỳ, Tổng tài sản. */
+  if (hasExtra) {
+    const mainFund = summary.clubAssets != null
+      ? Number(summary.clubAssets)
+      : Number(summary.balance || 0) + Number(summary.carryForward || 0)
+    const totalAssets = mainFund + Number(summary.miniBalance || 0)
+    const fundW = (CONTENT_W - 12) / 4
+    const fundCards = [
+      { label: 'QUỸ CHÍNH', value: vnd(mainFund), sub: 'Số dư thực có (gồm tồn kỳ trước)', neg: mainFund < 0, hl: true },
+      { label: 'QUỸ PHỤ', value: vnd(Number(summary.miniBalance || 0)), sub: 'Độc lập Quỹ Chính', neg: Number(summary.miniBalance || 0) < 0 },
+      { label: 'SỐ DƯ CHUYỂN KỲ', value: vnd(Number(summary.carryForward || 0)), sub: 'Từ kỳ trước', neg: Number(summary.carryForward || 0) < 0 },
+      { label: 'TỔNG TÀI SẢN', value: vnd(totalAssets), sub: 'Quỹ Chính + Quỹ Phụ', neg: totalAssets < 0 },
+    ]
+    fundCards.forEach((k, i) => {
+      const x = MARGIN + i * (fundW + 4)
+      setFill(k.hl ? C.indigoSoft : C.white)
+      setDraw(k.hl ? C.indigoBorder : C.border)
+      doc.setLineWidth(0.35)
+      rrect(x, y, fundW, 22, 2, 'FD')
+      font('bold', 6.5, k.hl ? C.indigoDark : C.gray)
+      doc.text(clip(k.label, fundW - 7), x + 4, y + 6.5)
+      font('bold', 11.5, k.neg ? C.redDark : (k.hl ? C.indigoDark : C.textDark))
+      doc.text(clip(k.value, fundW - 7), x + 4, y + 13.5)
+      font('normal', 6, C.grayLight)
+      doc.text(clip(k.sub, fundW - 7), x + 4, y + 18.5)
+    })
+    y += 27
+  }
 
   /* Thanh Tỷ lệ Chi/Thu */
   setFill(C.white)
@@ -197,32 +235,17 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
   doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, barX + barW, y + 14.5, { align: 'right' })
   y += 22
 
-  /* Chỉ số nhanh — lưới 4 thẻ / hàng. Khi caller truyền thẻ dashboard (miniBalance…) →
-     2 hàng x 4 CÂN ĐỐI: hàng TRÊN = thẻ bổ sung (khớp dashboard), hàng dưới = chi tiết kỳ;
-     BỎ thẻ "Tổng thành viên" (trùng "Thành viên hoạt động"), thay bằng "Tổng tài sản (2 quỹ)".
-     Không có dữ liệu bổ sung (vd export từ Dashboard) → giữ nguyên 4 thẻ như cũ. */
+  /* Chỉ số nhanh (lưới 4 thẻ nhỏ / hàng). Khi có dữ liệu dashboard → 4 thẻ hoạt động/thành viên
+     (các thẻ TIỀN đã lên hàng thẻ LỚN ở trên). Không có → giữ nguyên 4 thẻ như cũ. */
   const statW = (CONTENT_W - 12) / 4
   const nfmt = (n) => Number(n || 0).toLocaleString('vi-VN')
-  const moneyColor = (n) => (Number(n) < 0 ? C.redDark : C.textDark)
-  const hasExtra = [
-    summary.miniBalance, summary.carryForward,
-    summary.totalAttendance, summary.activeMemberCount,
-  ].some((v) => v != null)
-
   let statCards
   if (hasExtra) {
-    const totalAssets = Number(summary.balance || 0) + Number(summary.miniBalance || 0)
     statCards = [
-      // Hàng 1 — thẻ bổ sung (khớp dashboard)
-      { label: 'Quỹ Phụ', text: vnd(Number(summary.miniBalance || 0)), color: moneyColor(summary.miniBalance) },
-      { label: 'Số dư chuyển kỳ', text: vnd(Number(summary.carryForward || 0)), color: moneyColor(summary.carryForward) },
-      { label: 'Tổng lượt điểm danh', text: `${nfmt(summary.totalAttendance)} lượt`, color: C.textDark },
       { label: 'Thành viên hoạt động', text: `${nfmt(summary.activeMemberCount ?? summary.memberCount)} người`, color: C.textDark },
-      // Hàng 2 — chi tiết kỳ
       { label: 'Số buổi tập', text: `${summary.sessionCount} buổi`, color: C.textDark },
-      { label: 'Đã đóng quỹ', text: `${summary.confirmedCount} / ${summary.memberCount}`, color: C.green },
-      { label: 'Chưa đóng quỹ', text: `${unpaidCount} người`, color: unpaidCount > 0 ? C.red : C.green },
-      { label: 'Tổng tài sản (2 quỹ)', text: vnd(totalAssets), color: moneyColor(totalAssets) },
+      { label: 'Tổng lượt điểm danh', text: `${nfmt(summary.totalAttendance)} lượt`, color: C.textDark },
+      { label: 'Chưa đóng quỹ', text: `${unpaidCount} / ${summary.memberCount} người`, color: unpaidCount > 0 ? C.red : C.green },
     ]
   } else {
     statCards = [

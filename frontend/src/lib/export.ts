@@ -1061,6 +1061,8 @@ export interface ReportSummary {
   carryForward?: number
   totalAttendance?: number
   activeMemberCount?: number
+  /** Số dư Quỹ Chính thực có (gồm tồn đầu kỳ) — thẻ "Quỹ Chính". */
+  clubAssets?: number
 }
 
 export interface MemberBillRow {
@@ -1133,6 +1135,7 @@ export async function exportReportsPDF(data: ReportSummary, memberBills?: Member
       carryForward: data.carryForward,
       totalAttendance: data.totalAttendance,
       activeMemberCount: data.activeMemberCount,
+      clubAssets: data.clubAssets,
       exportedDateText: now.toLocaleDateString('vi-VN'),
       exportedAtText: now.toLocaleString('vi-VN'),
     },

@@ -169,6 +169,9 @@ export function Reports() {
   const kCommonBalance = num(fs?.balance)
   const kMiniBalance = num(fs?.miniBalance)
   const kCarry = num(fs?.carryForward?.balance)
+  // Số dư Quỹ Chính THỰC CÓ (gồm tồn đầu kỳ) = clubAssets; thiếu → undefined để builder tự
+  // fallback (số dư kỳ + chuyển kỳ).
+  const kClubAssets = fs?.clubAssets?.balance != null ? num(fs.clubAssets.balance) : undefined
   const kAttendance = num(fs?.totalAttendance)
   const kUnpaid = num(fs?.unpaidCount)
   // Sĩ số TÍNH PHÍ của kỳ (billedMemberCount đã chốt ?? live) — dùng cho export để header
@@ -272,6 +275,7 @@ export function Reports() {
     // Bổ sung các thẻ dashboard vào Báo cáo Quỹ cho đầy đủ.
     miniBalance: kMiniBalance as number, carryForward: kCarry as number,
     totalAttendance: kAttendance as number, activeMemberCount,
+    clubAssets: kClubAssets, // Quỹ Chính thực có (gồm tồn đầu kỳ)
   })
   // Rows đầy đủ cho export/infographic — chỉ dùng khi officialReady (kSessions là số thật, không phải 0 giả).
   const billRowsForExport = () => memberBillRows.map(r => ({ ...r, totalSessions: r.totalSessions ?? (kSessions as number) }))
