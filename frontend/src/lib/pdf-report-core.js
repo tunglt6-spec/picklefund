@@ -197,56 +197,54 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
   doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, barX + barW, y + 14.5, { align: 'right' })
   y += 22
 
-  /* 4 chỉ số nhanh */
+  /* Chỉ số nhanh — lưới 4 thẻ / hàng. Khi caller truyền thẻ dashboard (miniBalance…) →
+     2 hàng x 4 CÂN ĐỐI: hàng TRÊN = thẻ bổ sung (khớp dashboard), hàng dưới = chi tiết kỳ;
+     BỎ thẻ "Tổng thành viên" (trùng "Thành viên hoạt động"), thay bằng "Tổng tài sản (2 quỹ)".
+     Không có dữ liệu bổ sung (vd export từ Dashboard) → giữ nguyên 4 thẻ như cũ. */
   const statW = (CONTENT_W - 12) / 4
-  const stats = [
-    { label: 'Tổng thành viên', value: `${summary.memberCount} người`, color: C.textDark },
-    { label: 'Số buổi tập', value: `${summary.sessionCount} buổi`, color: C.textDark },
-    { label: 'Đã đóng quỹ', value: `${summary.confirmedCount} / ${summary.memberCount}`, color: C.green },
-    { label: 'Chưa đóng quỹ', value: `${unpaidCount} người`, color: unpaidCount > 0 ? C.red : C.green },
-  ]
-  stats.forEach((s, i) => {
-    const x = MARGIN + i * (statW + 4)
+  const nfmt = (n) => Number(n || 0).toLocaleString('vi-VN')
+  const moneyColor = (n) => (Number(n) < 0 ? C.redDark : C.textDark)
+  const hasExtra = [
+    summary.miniBalance, summary.carryForward,
+    summary.totalAttendance, summary.activeMemberCount,
+  ].some((v) => v != null)
+
+  let statCards
+  if (hasExtra) {
+    const totalAssets = Number(summary.balance || 0) + Number(summary.miniBalance || 0)
+    statCards = [
+      // Hàng 1 — thẻ bổ sung (khớp dashboard)
+      { label: 'Quỹ Phụ', text: vnd(Number(summary.miniBalance || 0)), color: moneyColor(summary.miniBalance) },
+      { label: 'Số dư chuyển kỳ', text: vnd(Number(summary.carryForward || 0)), color: moneyColor(summary.carryForward) },
+      { label: 'Tổng lượt điểm danh', text: `${nfmt(summary.totalAttendance)} lượt`, color: C.textDark },
+      { label: 'Thành viên hoạt động', text: `${nfmt(summary.activeMemberCount ?? summary.memberCount)} người`, color: C.textDark },
+      // Hàng 2 — chi tiết kỳ
+      { label: 'Số buổi tập', text: `${summary.sessionCount} buổi`, color: C.textDark },
+      { label: 'Đã đóng quỹ', text: `${summary.confirmedCount} / ${summary.memberCount}`, color: C.green },
+      { label: 'Chưa đóng quỹ', text: `${unpaidCount} người`, color: unpaidCount > 0 ? C.red : C.green },
+      { label: 'Tổng tài sản (2 quỹ)', text: vnd(totalAssets), color: moneyColor(totalAssets) },
+    ]
+  } else {
+    statCards = [
+      { label: 'Tổng thành viên', text: `${summary.memberCount} người`, color: C.textDark },
+      { label: 'Số buổi tập', text: `${summary.sessionCount} buổi`, color: C.textDark },
+      { label: 'Đã đóng quỹ', text: `${summary.confirmedCount} / ${summary.memberCount}`, color: C.green },
+      { label: 'Chưa đóng quỹ', text: `${unpaidCount} người`, color: unpaidCount > 0 ? C.red : C.green },
+    ]
+  }
+  statCards.forEach((s, i) => {
+    const x = MARGIN + (i % 4) * (statW + 4)
+    const yy = y + Math.floor(i / 4) * 17
     setFill(C.white)
     setDraw(C.border)
-    rrect(x, y, statW, 13, 2, 'FD')
+    doc.setLineWidth(0.35)
+    rrect(x, yy, statW, 13, 2, 'FD')
     font('normal', 6.5, C.gray)
-    doc.text(s.label, x + 4, y + 5)
+    doc.text(clip(s.label, statW - 8), x + 4, yy + 5)
     font('bold', 9.5, s.color)
-    doc.text(s.value, x + 4, y + 10.5)
+    doc.text(clip(s.text, statW - 8), x + 4, yy + 10.5)
   })
-  y += 19
-
-  /* Hàng chỉ số BỔ SUNG (khớp thẻ dashboard) — chỉ vẽ khi caller truyền dữ liệu (tương thích
-     ngược: caller cũ không truyền → bỏ qua). Money âm tô đỏ; số đếm kèm đơn vị. */
-  const extraStats = [
-    { label: 'Quỹ Phụ', val: summary.miniBalance, money: true },
-    { label: 'Số dư chuyển kỳ', val: summary.carryForward, money: true },
-    { label: 'Tổng lượt điểm danh', val: summary.totalAttendance, unit: ' lượt' },
-    { label: 'Thành viên hoạt động', val: summary.activeMemberCount, unit: ' người' },
-  ]
-  if (extraStats.some((e) => e.val != null)) {
-    extraStats.forEach((e, i) => {
-      const x = MARGIN + i * (statW + 4)
-      setFill(C.white)
-      setDraw(C.border)
-      doc.setLineWidth(0.35)
-      rrect(x, y, statW, 13, 2, 'FD')
-      font('normal', 6.5, C.gray)
-      doc.text(clip(e.label, statW - 8), x + 4, y + 5)
-      const has = e.val != null
-      const num = has ? Number(e.val) : 0
-      const color = has ? (e.money && num < 0 ? C.redDark : C.textDark) : C.grayLight
-      const text = !has
-        ? '—'
-        : e.money
-          ? vnd(num)
-          : `${num.toLocaleString('vi-VN')}${e.unit || ''}`
-      font('bold', 9.5, color)
-      doc.text(clip(text, statW - 8), x + 4, y + 10.5)
-    })
-    y += 19
-  }
+  y += Math.ceil(statCards.length / 4) * 17 + 2
 
   /* Bảng chi tiết từng thành viên (tự phân trang, lặp header) */
   const COLS = [
