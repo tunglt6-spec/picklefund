@@ -19,6 +19,15 @@ import {
 } from '../../../components/shared'
 import { TRIGGER_LABELS as TRIGGER_LABEL } from '../../../hooks/useWorkflows'
 
+/** Chu kỳ tick sang chuỗi dễ đọc: ms → "2h" / "30 phút" / "60s". */
+function formatTick(ms: number): string {
+  if (!ms || ms <= 0) return '—'
+  if (ms % 3_600_000 === 0) return `${ms / 3_600_000}h`
+  if (ms >= 3_600_000) return `${(ms / 3_600_000).toFixed(1)}h`
+  if (ms % 60_000 === 0) return `${ms / 60_000} phút`
+  return `${Math.round(ms / 1000)}s`
+}
+
 interface SchedulerStatus {
   enabled: boolean
   intervalMs: number
@@ -203,7 +212,7 @@ export function SchedulerPage() {
             />
             <MetricCard
               label="Chu kỳ tick"
-              value={status ? `${Math.round((status.intervalMs ?? 0) / 1000)}s` : '—'}
+              value={status ? formatTick(status.intervalMs ?? 0) : '—'}
               icon={<Repeat size={16} />}
               tone="info"
             />
