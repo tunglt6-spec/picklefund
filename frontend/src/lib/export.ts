@@ -743,6 +743,8 @@ export function exportLedgerPDF(periodName: string, rows: LedgerRow[], totalInco
    EXPORT: Contributions (Thu Quỹ)
 ════════════════════════════════════════ */
 export interface ContribRow { member: string; date: string; amount: number; method: string; confirmed: boolean }
+/** Nhóm khoản thu theo 1 Kỳ quỹ (chỉ kỳ đang mở mới đưa vào file). */
+export interface ContribGroup { periodName: string; rows: ContribRow[] }
 
 export function exportContribExcel(periodName: string, rows: ContribRow[]) {
   exportExcel(`Thu_Quy_${periodName.replace(/\s/g, '_')}`, [{
@@ -752,33 +754,68 @@ export function exportContribExcel(periodName: string, rows: ContribRow[]) {
   }])
 }
 
-export function exportContribPDF(periodName: string, rows: ContribRow[], total: number) {
-  const confirmed = rows.filter(r => r.confirmed).length
+const methodLabel = (m: string) => (m === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt')
+const sumRows = (rows: ContribRow[]) => rows.reduce((s, r) => s + r.amount, 0)
+
+/**
+ * Xuất PDF Thu Quỹ — TÁCH theo từng Kỳ quỹ (mỗi kỳ 1 nhóm), CHỈ gồm kỳ đang mở (kỳ đã đóng
+ * đã quyết toán → không đưa vào). Kèm thẻ tổng Quỹ Chính / Quỹ Phụ.
+ * @param clubName   tên CLB (đầu báo cáo)
+ * @param groups     nhóm khoản thu Quỹ Chính theo kỳ đang mở (kỳ đã đóng đã lọc từ caller)
+ * @param miniRows   khoản thu Quỹ Phụ (không theo kỳ) — tùy chọn
+ */
+export function exportContribPDF(
+  groups: ContribGroup[],
+  miniRows: ContribRow[] = [],
+  clubNameArg?: string,
+) {
+  const clubName = clubNameArg || brandName()
+  const commonRows = groups.flatMap(g => g.rows)
+  const commonTotal = sumRows(commonRows)
+  const miniTotal = sumRows(miniRows)
+  const commonConfirmed = commonRows.filter(r => r.confirmed).length
+  const totalCount = commonRows.length + miniRows.length
+
+  // Ghép dòng: mỗi kỳ mở → 1 dải tiêu đề (__section) + các khoản của kỳ; cuối cùng nhóm Quỹ Phụ.
+  const tableRows: Record<string, string | number>[] = []
+  const pushRow = (r: ContribRow) => tableRows.push({
+    member: r.member,
+    date: r.date,
+    amount: formatVND(r.amount),
+    method: methodLabel(r.method),
+    status: r.confirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+  })
+  for (const g of groups) {
+    if (g.rows.length === 0) continue
+    tableRows.push({ __section: `KỲ QUỸ: ${g.periodName}`, __sectionRight: `${g.rows.length} khoản · ${formatVND(sumRows(g.rows))}` })
+    g.rows.forEach(pushRow)
+  }
+  if (miniRows.length > 0) {
+    tableRows.push({ __section: 'QUỸ PHỤ', __sectionRight: `${miniRows.length} khoản · ${formatVND(miniTotal)}` })
+    miniRows.forEach(pushRow)
+  }
+
+  const openNames = groups.filter(g => g.rows.length > 0).map(g => g.periodName)
   return buildVectorTable({
-    fileName: `Thu_Quy_${slugName(periodName)}`,
+    fileName: `Thu_Quy_${slugName(clubName)}`,
     title: 'DANH SÁCH THU QUỸ',
-    clubName: periodName,
-    headerLeft: `${periodName} · ${rows.length} khoản`,
-    note: `Tổng thu ${formatVND(total)} · Đã xác nhận ${confirmed}/${rows.length}`,
+    clubName,
+    headerLeft: openNames.length ? `Kỳ đang mở: ${openNames.join(', ')}` : clubName,
+    note: `Chỉ gồm các kỳ quỹ ĐANG MỞ · Tổng thu ${formatVND(commonTotal + miniTotal)} · Quỹ Chính đã xác nhận ${commonConfirmed}/${commonRows.length}`,
     columns: [
       { key: 'rank', label: '#', w: 10, align: 'center' },
-      { key: 'member', label: 'THÀNH VIÊN', w: 56, align: 'left', bold: true },
+      { key: 'member', label: 'THÀNH VIÊN / NỘI DUNG', w: 56, align: 'left', bold: true },
       { key: 'date', label: 'NGÀY ĐÓNG', w: 28, align: 'center' },
       { key: 'amount', label: 'SỐ TIỀN', w: 34, align: 'right', tone: 'points' },
       { key: 'method', label: 'HÌNH THỨC', w: 30, align: 'center' },
       { key: 'status', label: 'TRẠNG THÁI', w: 28, align: 'center' },
     ],
-    rows: rows.map(r => ({
-      member: r.member,
-      date: r.date,
-      amount: formatVND(r.amount),
-      method: r.method === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
-      status: r.confirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
-    })),
+    rows: tableRows,
     stats: [
-      { label: 'Số khoản', value: rows.length },
-      { label: 'Đã xác nhận', value: `${confirmed}/${rows.length}` },
-      { label: 'Tổng thu', value: formatVND(total) },
+      { label: 'Quỹ Chính', value: formatVND(commonTotal) },
+      { label: 'Quỹ Phụ', value: formatVND(miniTotal) },
+      { label: 'Tổng thu', value: formatVND(commonTotal + miniTotal) },
+      { label: 'Số khoản', value: totalCount },
     ],
   })
 }

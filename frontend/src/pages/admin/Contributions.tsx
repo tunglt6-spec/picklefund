@@ -162,6 +162,38 @@ export function Contributions() {
   const commonTotal = confirmed.reduce((s, c) => s + c.amount, 0)
   const miniTotal = miniContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
 
+  /** Dữ liệu xuất PDF Thu Quỹ: TÁCH theo từng Kỳ quỹ ĐANG MỞ (kỳ đã đóng/đã quyết toán không
+   *  đưa vào) + nhóm Quỹ Phụ. Không phụ thuộc bộ lọc "kỳ đang xem" trên màn hình. */
+  const buildContribExport = () => {
+    const toRow = (c: FundContribution) => ({
+      member: c.member?.fullName ?? c.payerName ?? '',
+      date: formatDate(c.paymentDate),
+      amount: c.amount,
+      method: c.paymentMethod,
+      confirmed: c.isConfirmed,
+    })
+    const openPeriods = chungPeriods
+      .filter(p => p.status !== 'closed' && p.status !== 'finalized')
+      .slice()
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+    const groups = openPeriods.map(p => ({
+      periodName: p.name,
+      rows: contributions
+        .filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && c.fundPeriodId === p.id)
+        .map(toRow),
+    }))
+    const miniRows = contributions
+      .filter(c => c.fundSource === 'MINI')
+      .map(c => ({
+        member: c.member?.fullName ?? c.payerName ?? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Phụ'),
+        date: formatDate(c.paymentDate),
+        amount: c.amount,
+        method: c.paymentMethod,
+        confirmed: c.isConfirmed,
+      }))
+    return { groups, miniRows }
+  }
+
   const openCreate = () => {
     const pid = activePeriod?.id ?? ''
     setFormPeriodId(pid)
@@ -359,7 +391,7 @@ export function Contributions() {
                   <FileSpreadsheet size={16} />Excel
                 </button>
                 <button
-                  onClick={() => exportContribPDF(activePeriod?.name ?? 'Thu Quỹ', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)}
+                  onClick={() => { const { groups, miniRows } = buildContribExport(); exportContribPDF(groups, miniRows); toast.success('Đã xuất PDF thu quỹ (các kỳ đang mở)!') }}
                   aria-label="Xuất PDF"
                   className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
@@ -595,9 +627,13 @@ export function Contributions() {
               toast.success('Đã xuất Excel danh sách thu quỹ!')
             }}><FileSpreadsheet size={14} />Xuất Excel</Button>
             <Button variant="outline" onClick={() => {
-              const pName = activePeriod?.name ?? 'Thu Quỹ'
-              exportContribPDF(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })), commonTotal + miniTotal)
-              toast.success('Đã xuất PDF danh sách thu quỹ!')
+              const { groups, miniRows } = buildContribExport()
+              if (groups.every(g => g.rows.length === 0) && miniRows.length === 0) {
+                toast.error('Không có khoản thu ở kỳ đang mở để xuất.')
+                return
+              }
+              exportContribPDF(groups, miniRows)
+              toast.success('Đã xuất PDF thu quỹ (các kỳ đang mở)!')
             }}><FileText size={14} />Xuất PDF</Button>
             {!isMember && (
               <Button onClick={openCreate}>

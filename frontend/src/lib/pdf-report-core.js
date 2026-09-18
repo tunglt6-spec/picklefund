@@ -533,12 +533,33 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns, rows, sta
 
   y = drawHead(y)
   const bottomLimit = PAGE_H - MARGIN - 12
-  rows.forEach((r, idx) => {
+  // Dòng nhóm (section header): row có khóa `__section` → vẽ dải tiêu đề nhóm (vd theo Kỳ quỹ),
+  // KHÔNG tính vào đánh số STT/zebra. `__sectionRight` (tùy chọn) hiện ở mép phải (vd tổng nhóm).
+  let dataNo = 0 // đếm riêng cho dòng dữ liệu → STT + zebra bỏ qua dòng nhóm
+  rows.forEach((r) => {
+    const isSection = r && r.__section !== undefined && r.__section !== null
     if (y + ROW_H > bottomLimit) {
       doc.addPage()
       y = drawHeader(meta.formatLabel) + 5
       y = drawHead(y)
     }
+    if (isSection) {
+      setFill(C.indigoSoft)
+      doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F')
+      setDraw(C.indigoBorder)
+      doc.setLineWidth(0.3)
+      doc.line(MARGIN, y + ROW_H, PAGE_W - MARGIN, y + ROW_H)
+      const midY = y + ROW_H / 2 + 1.6
+      font('bold', 7.5, C.indigoDark)
+      doc.text(clip(String(r.__section), CONTENT_W - 62), MARGIN + 3, midY)
+      if (r.__sectionRight != null && String(r.__sectionRight) !== '') {
+        doc.text(clip(String(r.__sectionRight), 58), PAGE_W - MARGIN - 3, midY, { align: 'right' })
+      }
+      y += ROW_H
+      return
+    }
+    const idx = dataNo
+    dataNo++
     // Tô nhẹ 3 hạng đầu (tắt cho bảng không xếp hạng, vd Lịch); các dòng lẻ còn lại zebra.
     if (meta.highlightTop3 !== false && idx < 3) { setFill(C.greenBg); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
     else if (idx % 2 === 1) { setFill(C.zebra); doc.rect(MARGIN, y, CONTENT_W, ROW_H, 'F') }
