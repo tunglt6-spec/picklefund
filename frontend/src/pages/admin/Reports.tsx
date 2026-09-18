@@ -172,6 +172,9 @@ export function Reports() {
   // Số dư Quỹ Chính THỰC CÓ (gồm tồn đầu kỳ) = clubAssets; thiếu → undefined để builder tự
   // fallback (số dư kỳ + chuyển kỳ).
   const kClubAssets = fs?.clubAssets?.balance != null ? num(fs.clubAssets.balance) : undefined
+  // SỐ DƯ QUỸ CHÍNH (hiển thị) = (Thu − Chi) + Số dư chuyển kỳ, KHÔNG cộng Quỹ Phụ.
+  // = clubAssets (backend: commonFund.balance + carryForward.balance). Thiếu clubAssets → tự cộng.
+  const kMainFund = kClubAssets ?? ((kCommonBalance as number) + (kCarry as number))
   const kAttendance = num(fs?.totalAttendance)
   const kUnpaid = num(fs?.unpaidCount)
   // Sĩ số TÍNH PHÍ của kỳ (billedMemberCount đã chốt ?? live) — dùng cho export để header
@@ -410,7 +413,7 @@ export function Reports() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
             {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
             {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />)}
-            {kpi('Số dư Quỹ Chính', kCommonBalance, 'Backend summary', 'green', <Wallet size={18} />)}
+            {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />)}
             {kpi('Quỹ Phụ', kMiniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />)}
             {kpi('Số dư chuyển kỳ', kCarry, 'Từ kỳ trước', 'blue', <ArrowLeftRight size={18} />)}
             {kpi('Tổng lượt điểm danh', kAttendance, 'Backend summary', 'teal', <Activity size={18} />, (v) => v.toLocaleString('vi-VN'))}
@@ -618,7 +621,7 @@ export function Reports() {
             periodLabel: periodName,
             totalIncome: kIncome as number,
             totalExpenses: kExpense as number,
-            displayBalance: kCommonBalance as number,
+            displayBalance: kMainFund as number,
             memberCount: activeMemberCount,
             sessionCount: kSessions as number,
             confirmedCount: memberBillRows.filter(r => r.contributionPaid).length,
