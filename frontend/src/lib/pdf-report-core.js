@@ -217,6 +217,37 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
   })
   y += 19
 
+  /* Hàng chỉ số BỔ SUNG (khớp thẻ dashboard) — chỉ vẽ khi caller truyền dữ liệu (tương thích
+     ngược: caller cũ không truyền → bỏ qua). Money âm tô đỏ; số đếm kèm đơn vị. */
+  const extraStats = [
+    { label: 'Quỹ Phụ', val: summary.miniBalance, money: true },
+    { label: 'Số dư chuyển kỳ', val: summary.carryForward, money: true },
+    { label: 'Tổng lượt điểm danh', val: summary.totalAttendance, unit: ' lượt' },
+    { label: 'Thành viên hoạt động', val: summary.activeMemberCount, unit: ' người' },
+  ]
+  if (extraStats.some((e) => e.val != null)) {
+    extraStats.forEach((e, i) => {
+      const x = MARGIN + i * (statW + 4)
+      setFill(C.white)
+      setDraw(C.border)
+      doc.setLineWidth(0.35)
+      rrect(x, y, statW, 13, 2, 'FD')
+      font('normal', 6.5, C.gray)
+      doc.text(clip(e.label, statW - 8), x + 4, y + 5)
+      const has = e.val != null
+      const num = has ? Number(e.val) : 0
+      const color = has ? (e.money && num < 0 ? C.redDark : C.textDark) : C.grayLight
+      const text = !has
+        ? '—'
+        : e.money
+          ? vnd(num)
+          : `${num.toLocaleString('vi-VN')}${e.unit || ''}`
+      font('bold', 9.5, color)
+      doc.text(clip(text, statW - 8), x + 4, y + 10.5)
+    })
+    y += 19
+  }
+
   /* Bảng chi tiết từng thành viên (tự phân trang, lặp header) */
   const COLS = [
     { key: 'idx', label: '#', w: 7, align: 'left' },

@@ -1056,6 +1056,11 @@ export interface ReportSummary {
   memberCount: number
   sessionCount: number
   confirmedCount: number
+  // Bổ sung để khớp các thẻ dashboard (tùy chọn — thiếu thì PDF ẩn hàng thẻ bổ sung).
+  miniBalance?: number
+  carryForward?: number
+  totalAttendance?: number
+  activeMemberCount?: number
 }
 
 export interface MemberBillRow {
@@ -1124,6 +1129,10 @@ export async function exportReportsPDF(data: ReportSummary, memberBills?: Member
       memberCount: data.memberCount,
       sessionCount: data.sessionCount,
       confirmedCount: data.confirmedCount,
+      miniBalance: data.miniBalance,
+      carryForward: data.carryForward,
+      totalAttendance: data.totalAttendance,
+      activeMemberCount: data.activeMemberCount,
       exportedDateText: now.toLocaleDateString('vi-VN'),
       exportedAtText: now.toLocaleString('vi-VN'),
     },

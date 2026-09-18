@@ -269,6 +269,9 @@ export function Reports() {
     // Sĩ số tính phí backend (khớp mẫu số chia phí bill); fallback đếm active khi BE cũ chưa expose.
     memberCount: kMemberCount ?? activeMemberCount, sessionCount: kSessions as number,
     confirmedCount: memberBillRows.filter(r => r.contributionPaid).length,
+    // Bổ sung các thẻ dashboard vào Báo cáo Quỹ cho đầy đủ.
+    miniBalance: kMiniBalance as number, carryForward: kCarry as number,
+    totalAttendance: kAttendance as number, activeMemberCount,
   })
   // Rows đầy đủ cho export/infographic — chỉ dùng khi officialReady (kSessions là số thật, không phải 0 giả).
   const billRowsForExport = () => memberBillRows.map(r => ({ ...r, totalSessions: r.totalSessions ?? (kSessions as number) }))
