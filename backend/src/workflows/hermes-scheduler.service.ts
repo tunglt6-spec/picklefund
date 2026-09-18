@@ -52,7 +52,7 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
   private readonly envDefault: boolean;
   // Chu kỳ tick (nhịp quét rule định kỳ). Rule vẫn theo lịch Ngày/Tuần/Tháng — tick chỉ là
   // nhịp KIỂM TRA, thưa hơn = ít churn hơn (không đổi số lần thông báo của rule DAILY/WEEKLY).
-  // Mặc định 2 GIỜ; chỉnh qua env HERMES_SCHEDULER_TICK_MS (ms, tối thiểu 30s).
+  // Mặc định 1 GIỜ; chỉnh qua env HERMES_SCHEDULER_TICK_MS (ms, tối thiểu 30s).
   private readonly intervalMs: number;
   private lastTick: TickSummary | null = null;
 
@@ -71,7 +71,7 @@ export class HermesSchedulerService implements OnModuleInit, OnModuleDestroy {
 
   /** Chu kỳ tick từ env (ms). Không hợp lệ / < 30s → mặc định 2 giờ (chặn cấu hình quá dày). */
   private static resolveIntervalMs(raw?: string): number {
-    const DEFAULT_MS = 2 * 60 * 60 * 1000; // 2 giờ
+    const DEFAULT_MS = 60 * 60 * 1000; // 1 giờ
     const MIN_MS = 30_000; // sàn an toàn tránh tick quá dày gây tải
     const n = Number(raw);
     return Number.isFinite(n) && n >= MIN_MS ? Math.floor(n) : DEFAULT_MS;
