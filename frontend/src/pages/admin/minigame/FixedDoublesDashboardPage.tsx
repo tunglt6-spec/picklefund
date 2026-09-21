@@ -555,6 +555,9 @@ export function FixedDoublesDashboardPage() {
   const [scoreModal, setScoreModal]     = useState<MiniGameTeamMatch | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [showScheduleChoice, setShowScheduleChoice] = useState(false)
+  // Đổi chỗ người chơi: chọn tối đa 2 slot (teamId+slot) rồi hoán đổi.
+  const [showSwap, setShowSwap] = useState(false)
+  const [swapSel, setSwapSel] = useState<{ teamId: string; slot: 1 | 2; label: string }[]>([])
 
   const hydrateFromApi = useCallback(async () => {
     if (!id) return
@@ -603,6 +606,44 @@ export function FixedDoublesDashboardPage() {
       toast.error(e?.response?.data?.message ?? 'Lỗi xóa lịch')
     }
   }, [id, setTeamMatchesFromApi])
+
+  // Xóa LƯỢT VỀ (giữ nguyên kết quả & thứ hạng Lượt đi).
+  const handleRemoveReturnLeg = useCallback(async () => {
+    if (!id) return
+    if (!window.confirm('Xóa toàn bộ LƯỢT VỀ? Kết quả và thứ hạng của Lượt đi được GIỮ NGUYÊN.')) return
+    try {
+      await api.post(`/minigames/${id}/remove-return-leg`)
+      await hydrateFromApi()
+      toast.success('Đã xóa lượt về')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi xóa lượt về')
+    }
+  }, [id, hydrateFromApi])
+
+  // Chọn/bỏ chọn 1 người chơi (teamId+slot) cho thao tác đổi chỗ — tối đa 2.
+  const toggleSwapSel = (teamId: string, slot: 1 | 2, label: string) => {
+    setSwapSel(prev => {
+      const dup = prev.find(s => s.teamId === teamId && s.slot === slot)
+      if (dup) return prev.filter(s => !(s.teamId === teamId && s.slot === slot))
+      if (prev.length >= 2) return prev
+      return [...prev, { teamId, slot, label }]
+    })
+  }
+
+  const handleSwapPlayers = useCallback(async () => {
+    if (!id || swapSel.length !== 2) return
+    const [a, b] = swapSel
+    try {
+      await api.post(`/minigames/${id}/swap-players`, {
+        teamAId: a.teamId, slotA: a.slot, teamBId: b.teamId, slotB: b.slot,
+      })
+      await hydrateFromApi()
+      setShowSwap(false); setSwapSel([])
+      toast.success('Đã đổi chỗ người chơi')
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Lỗi đổi chỗ người chơi')
+    }
+  }, [id, swapSel, hydrateFromApi])
 
   const handleSaveScoreApi = useCallback(async (matchId: string, s1: number, s2: number) => {
     try {
@@ -867,8 +908,24 @@ export function FixedDoublesDashboardPage() {
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap" data-html2canvas-ignore="true">
                   <ExportButtons onPng={doExportSchedulePng} onPdf={doExportSchedulePdf} ariaScope="lịch thi đấu" />
+                  {canEnter && teams.length >= 2 && (
+                    <button
+                      onClick={() => { setSwapSel([]); setShowSwap(true) }}
+                      className="text-[11px] font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Users size={12} /> Đổi chỗ người chơi
+                    </button>
+                  )}
+                  {canEnter && isDoubleLeg && (
+                    <button
+                      onClick={handleRemoveReturnLeg}
+                      className="text-[11px] font-semibold [color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={12} /> Xóa lượt về
+                    </button>
+                  )}
                   <button
                     onClick={handleClearSchedule}
                     className="text-[11px] font-semibold [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -992,6 +1049,62 @@ export function FixedDoublesDashboardPage() {
               style={{ borderColor: T.border }}>
               Hủy
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── đổi chỗ người chơi (giữ nguyên thứ hạng/kết quả các đôi) ── */}
+      {showSwap && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(15,23,42,0.6)' }}>
+          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center gap-2 mb-1">
+              <Users size={18} style={{ color: T.brand }} />
+              <p className="font-bold [color:var(--pf-text)]">Đổi chỗ người chơi</p>
+            </div>
+            <p className="text-sm [color:var(--pf-color-muted)] mb-4">
+              Chọn ĐÚNG 2 người chơi để hoán đổi vị trí. Kết quả, tỉ số và thứ hạng các đôi GIỮ NGUYÊN — chỉ đổi ai thuộc đôi nào.
+            </p>
+            <div className="space-y-2">
+              {teams.map(t => (
+                <div key={t.id} style={{ border: `1px solid ${T.border}` }} className="rounded-xl p-2.5">
+                  <div className="text-[12px] font-bold mb-1.5" style={{ color: T.txt1 }}>{t.name}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([1, 2] as const).map(slot => {
+                      const label = slot === 1 ? t.player1.memberName : t.player2.memberName
+                      const sel = swapSel.some(s => s.teamId === t.id && s.slot === slot)
+                      return (
+                        <button key={slot}
+                          onClick={() => toggleSwapSel(t.id, slot, label)}
+                          className="text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors truncate"
+                          style={sel
+                            ? { background: 'var(--pf-primary-soft)', color: T.brand, border: `1.5px solid ${T.brand}` }
+                            : { background: 'var(--pf-surface-muted)', color: T.txt1, border: `1px solid ${T.border}` }}>
+                          {sel ? '✓ ' : ''}{label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {swapSel.length === 2 && (
+              <p className="text-[12px] mt-3 [color:var(--pf-text)]">
+                Đổi: <b>{swapSel[0].label}</b> ↔ <b>{swapSel[1].label}</b>
+              </p>
+            )}
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setShowSwap(false); setSwapSel([]) }}
+                className="flex-1 py-2 rounded-xl border text-sm font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
+                style={{ borderColor: T.border }}>
+                Hủy
+              </button>
+              <button onClick={handleSwapPlayers} disabled={swapSel.length !== 2}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+                style={{ background: T.brand }}>
+                Đổi chỗ
+              </button>
+            </div>
           </div>
         </div>
       )}

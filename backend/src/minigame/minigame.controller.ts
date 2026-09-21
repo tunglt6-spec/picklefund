@@ -66,6 +66,13 @@ class UpdateMinigameDto {
   @IsOptional() settings?: Record<string, unknown>;
 }
 
+class SwapPlayersDto {
+  @IsString() teamAId!: string;
+  @IsInt() @IsIn([1, 2]) slotA!: 1 | 2;
+  @IsString() teamBId!: string;
+  @IsInt() @IsIn([1, 2]) slotB!: 1 | 2;
+}
+
 class CreateTeamDto {
   @IsString() @MaxLength(60) name!: string;
   @IsString() player1Id!: string;
@@ -556,6 +563,38 @@ export class MinigameController {
     return ok(
       await this.svc.clearSchedule(id, user.clubId),
       'Đã xóa lịch thi đấu',
+    );
+  }
+
+  // Xóa LƯỢT VỀ (leg=2), giữ nguyên kết quả & thứ hạng Lượt đi.
+  @Post(':id/remove-return-leg')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async removeReturnLeg(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(
+      await this.svc.removeReturnLeg(id, user.clubId),
+      'Đã xóa lượt về',
+    );
+  }
+
+  // Đổi chỗ 2 người chơi giữa 2 đôi (giữ nguyên thứ hạng/kết quả).
+  @Post(':id/swap-players')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async swapPlayers(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: SwapPlayersDto,
+  ) {
+    return ok(
+      await this.svc.swapPlayers(
+        id,
+        user.clubId,
+        { teamId: body.teamAId, slot: body.slotA },
+        { teamId: body.teamBId, slot: body.slotB },
+      ),
+      'Đã đổi chỗ người chơi',
     );
   }
 

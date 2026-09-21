@@ -543,6 +543,87 @@ export class MinigameService {
   }
 
   /**
+   * XÓA LƯỢT VỀ (leg=2) của giải vòng tròn 2 lượt — GIỮ NGUYÊN kết quả & thứ hạng Lượt đi.
+   * Trận lượt về đã COMPLETED (nếu có) được ĐẢO thống kê trước khi xóa (BXH khớp lại); tắt cờ
+   * settings.doubleRoundRobin để dashboard không còn hiển thị nhóm "Lượt về".
+   */
+  async removeReturnLeg(id: string, clubId: string) {
+    const mg = await this.assertOwnership(id, clubId);
+    const legMatches = await this.prisma.minigameMatch.findMany({
+      where: { minigameId: id, leg: 2 },
+      include: { minigame: true },
+    });
+    if (legMatches.length === 0)
+      throw new BadRequestException('Giải này không có lượt về để xóa.');
+    for (const m of legMatches) await this.reverseCompletedMatchStats(m);
+    const { count } = await this.prisma.minigameMatch.deleteMany({
+      where: { minigameId: id, leg: 2 },
+    });
+    const prev = this.asSettings(mg.settings);
+    await this.prisma.minigame.update({
+      where: { id },
+      data: { settings: { ...prev, doubleRoundRobin: false } },
+    });
+    return { deleted: count };
+  }
+
+  /**
+   * ĐỔI CHỖ 2 người chơi giữa 2 đôi (hoặc trong cùng 1 đôi). CHỈ hoán đổi các trường player*
+   * (id/guestId/name) của từng slot — GIỮ NGUYÊN wins/losses/points/thứ hạng của mỗi đôi và
+   * mọi tham chiếu trận (teamA/teamB không đổi). Dùng để sửa xếp cặp mà không phá kết quả.
+   */
+  async swapPlayers(
+    id: string,
+    clubId: string,
+    a: { teamId: string; slot: 1 | 2 },
+    b: { teamId: string; slot: 1 | 2 },
+  ) {
+    await this.assertOwnership(id, clubId);
+    if (a.teamId === b.teamId && a.slot === b.slot)
+      throw new BadRequestException('Phải chọn 2 người chơi khác nhau.');
+    const [ta, tb] = await Promise.all([
+      this.prisma.minigameTeam.findUnique({ where: { id: a.teamId } }),
+      this.prisma.minigameTeam.findUnique({ where: { id: b.teamId } }),
+    ]);
+    if (!ta || ta.minigameId !== id)
+      throw new NotFoundException('Đôi thứ nhất không tồn tại');
+    if (!tb || tb.minigameId !== id)
+      throw new NotFoundException('Đôi thứ hai không tồn tại');
+
+    type Slot = { pid: string | null; gid: string | null; nm: string | null };
+    const read = (t: typeof ta, slot: 1 | 2): Slot =>
+      slot === 1
+        ? { pid: t.player1Id, gid: t.player1GuestId, nm: t.player1Name }
+        : { pid: t.player2Id, gid: t.player2GuestId, nm: t.player2Name };
+    const write = (slot: 1 | 2, v: Slot) =>
+      slot === 1
+        ? { player1Id: v.pid, player1GuestId: v.gid, player1Name: v.nm }
+        : { player2Id: v.pid, player2GuestId: v.gid, player2Name: v.nm };
+
+    const va = read(ta, a.slot);
+    const vb = read(tb, b.slot);
+    if (a.teamId === b.teamId) {
+      // Cùng 1 đôi → gộp 2 slot vào 1 update.
+      await this.prisma.minigameTeam.update({
+        where: { id: a.teamId },
+        data: { ...write(a.slot, vb), ...write(b.slot, va) },
+      });
+    } else {
+      await this.prisma.$transaction([
+        this.prisma.minigameTeam.update({
+          where: { id: a.teamId },
+          data: write(a.slot, vb),
+        }),
+        this.prisma.minigameTeam.update({
+          where: { id: b.teamId },
+          data: write(b.slot, va),
+        }),
+      ]);
+    }
+    return this.findOne(id, clubId);
+  }
+
+  /**
    * Pool người chơi cho ghép cặp/đội = THÀNH VIÊN (minigame_participants) + KHÁCH MỜI
    * (settings.guests). Khách là người chơi hạng nhất — có thể đông hơn thành viên.
    */
