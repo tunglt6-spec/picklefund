@@ -210,10 +210,22 @@ jobs:
             echo "Waiting for services to initialize..."
             sleep 30
 
+            # Probe 1 URL có THỬ LẠI — chống chớp nhoáng (CF hairpin/timeout tức thời) làm
+            # fail gate oan → rollback nhầm dù app đã sống. OK nếu BẤT KỲ lần nào 2xx/3xx;
+            # thử tối đa 6 lần, cách 10s, 15s/lần (~90s) rồi mới kết luận DOWN.
+            check_url() {
+              local url="$1" i
+              for i in $(seq 1 6); do
+                curl -sf --max-time 15 "$url" >/dev/null 2>&1 && return 0
+                sleep 10
+              done
+              return 1
+            }
+
             # ── 6. Health checks ──────────────────────────────────────
             HEALTH_OK=true
 
-            if ! curl -sf https://api.picklefund.uk/health >/dev/null 2>&1; then
+            if ! check_url https://api.picklefund.uk/health; then
               echo "ERROR: Backend health check failed"
               docker compose ps
               docker compose logs backend --tail=100
@@ -221,7 +233,7 @@ jobs:
             fi
 
             if [ "$HEALTH_OK" = "true" ]; then
-              if ! curl -sf https://app.picklefund.uk/ >/dev/null 2>&1; then
+              if ! check_url https://app.picklefund.uk/; then
                 echo "ERROR: Frontend health check failed"
                 docker compose ps
                 docker compose logs nginx --tail=100
@@ -282,8 +294,8 @@ jobs:
             sleep 30
 
             ROLLBACK_OK=true
-            curl -sf https://api.picklefund.uk/health >/dev/null 2>&1 || ROLLBACK_OK=false
-            curl -sf https://app.picklefund.uk/ >/dev/null 2>&1      || ROLLBACK_OK=false
+            check_url https://api.picklefund.uk/health || ROLLBACK_OK=false
+            check_url https://app.picklefund.uk/       || ROLLBACK_OK=false
 
             if [ "$ROLLBACK_OK" = "true" ]; then
               send_telegram "$(printf '⚠️ PickleFund deploy failed, rollback success\nFailed commit: %s\nRolled back to: %s' "$SHORT_SHA" "${PREVIOUS_COMMIT:0:7}")"
