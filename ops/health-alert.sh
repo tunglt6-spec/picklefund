@@ -79,9 +79,24 @@ else
 fi
 
 # ── 2) API health ────────────────────────────────────────────────────────────
-CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$API_URL")"
+# Thử LẠI nhiều lần trước khi kết luận DOWN → bỏ qua chớp nhoáng 000/timeout (probe đơn
+# thỉnh thoảng fail rồi hồi ngay = KHÔNG phải sự cố thật). Chỉ báo khi TẤT CẢ lần thử đều xấu.
+API_TRIES="${PF_API_TRIES:-3}"       # số lần thử
+API_MAXTIME="${PF_API_MAXTIME:-15}"  # timeout mỗi lần (giây) — nới từ 10 để tha cho lần chậm
+API_GAP="${PF_API_GAP:-4}"           # nghỉ giữa các lần thử (giây)
+CODE=000
+i=1
+while [ "$i" -le "$API_TRIES" ]; do
+  CODE="$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 8 --max-time "$API_MAXTIME" "$API_URL")"
+  case "$CODE" in
+    502 | 503 | 504 | 000) ;;   # xấu → thử lại
+    *) break ;;                 # 200/404… = sống → dừng ngay
+  esac
+  [ "$i" -lt "$API_TRIES" ] && sleep "$API_GAP"
+  i=$((i + 1))
+done
 case "$CODE" in
-  502 | 503 | 504 | 000) API_BAD=1 ;;  # nginx/backend/DB chết hoặc không kết nối
+  502 | 503 | 504 | 000) API_BAD=1 ;;  # nginx/backend/DB chết hoặc không kết nối (SAU khi đã thử lại)
   *) API_BAD=0 ;;                        # 200/404... = API sống
 esac
 if [ "$API_BAD" = "1" ]; then
