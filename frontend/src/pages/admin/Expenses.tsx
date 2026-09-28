@@ -12,7 +12,7 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
-import { useEmbedded, BulkActionBar, RowCheckbox } from '../../components/shared'
+import { useEmbedded, BulkActionBar, RowCheckbox, MetricCard } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
 import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
@@ -70,23 +70,6 @@ function toRich(e: LivingExpense, index: number): RichExpense {
 }
 
 /* ── Sub-components ── */
-
-function KpiCard({ icon, iconBg, iconColor, label, value, isCount, unit }: {
-  icon: React.ReactNode; iconBg: string; iconColor: string
-  label: string; value: number; isCount?: boolean; unit?: string
-}) {
-  return (
-    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>{icon}</div>
-      </div>
-      <p className="text-xl font-bold [color:var(--pf-text)] leading-tight">
-        {isCount ? `${value.toLocaleString('vi-VN')} ${unit}` : formatVND(value)}
-      </p>
-      <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mt-1">{label}</p>
-    </div>
-  )
-}
 
 const emptyForm = {
   fundSource: 'COMMON' as FundSource,
@@ -1010,11 +993,11 @@ export function Expenses() {
       <div className="p-6 max-w-[1400px] mx-auto space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <KpiCard icon={<DollarSign size={18} />}  iconBg="[background:var(--pf-primary-soft)]"  iconColor="[color:var(--pf-primary)]"  label="Chi Quỹ Chính"  value={commonAmt} />
-          <KpiCard icon={<Wallet size={18} />}      iconBg="[background:var(--pf-primary-soft)]"  iconColor="[color:var(--pf-primary)]"  label="Chi Quỹ Phụ"   value={miniAmt} />
-          <KpiCard icon={<CheckCircle size={18} />} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Chi đã duyệt"   value={approvedAmt} />
-          <KpiCard icon={<Clock size={18} />}       iconBg="bg-amber-50"   iconColor="text-amber-600"   label="Chờ duyệt"      value={pendingAmt} />
-          <KpiCard icon={<FileText size={18} />}    iconBg="bg-orange-50"  iconColor="text-orange-500"  label="Số khoản chi"   value={periodFiltered.length} isCount unit="khoản" />
+          <MetricCard accent="violet" icon={<DollarSign size={18} />}  label="Chi Quỹ Chính" value={formatVND(commonAmt)} />
+          <MetricCard accent="violet" icon={<Wallet size={18} />}      label="Chi Quỹ Phụ"   value={formatVND(miniAmt)} />
+          <MetricCard accent="green"  icon={<CheckCircle size={18} />} label="Chi đã duyệt"   value={formatVND(approvedAmt)} />
+          <MetricCard accent="amber"  icon={<Clock size={18} />}       label="Chờ duyệt"      value={formatVND(pendingAmt)} />
+          <MetricCard accent="blue"   icon={<FileText size={18} />}    label="Số khoản chi"   value={`${periodFiltered.length.toLocaleString('vi-VN')} khoản`} />
         </div>
 
         {/* Table card */}
