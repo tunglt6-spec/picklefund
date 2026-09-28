@@ -13,6 +13,7 @@
  *  - Tự reset khi người dùng ĐỔI route (đổi `resetKey`) → không kẹt màn lỗi khi chuyển trang.
  */
 import { Component, useEffect, useState, type ReactNode } from 'react'
+import { AlertTriangle } from 'lucide-react'
 
 /** Nhận diện lỗi tải chunk lazy (import động thất bại/treo) — phân biệt với lỗi logic thường. */
 function laLoiTaiChunk(err: unknown): boolean {
@@ -121,10 +122,10 @@ function ManHinhLoi({
       style={{ background: 'var(--pf-bg, var(--pf-surface-muted))', color: 'var(--pf-text, #1e293b)' }}
     >
       <div
-        className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
+        className="flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{ background: 'var(--pf-primary-soft, #eef2ff)', color: 'var(--pf-primary, #6D5DFB)' }}
       >
-        ⚠️
+        <AlertTriangle size={26} />
       </div>
       <h1 className="text-lg font-bold">{tieuDe}</h1>
       <p className="max-w-sm text-sm" style={{ color: 'var(--pf-color-muted, var(--pf-color-muted))' }}>

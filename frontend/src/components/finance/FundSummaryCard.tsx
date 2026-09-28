@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, AlertTriangle } from 'lucide-react'
 import { formatVND } from '../../lib/utils'
 
 export interface FundSummaryCardProps {
@@ -58,7 +58,7 @@ export function FundSummaryCard({
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <p className="text-xs text-white/60">Số dư hiện tại</p>
           {balance < 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200">⚠ Âm</span>
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200"><AlertTriangle size={10} /> Âm</span>
           )}
           {statusLabel && balance >= 0 && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{statusLabel}</span>

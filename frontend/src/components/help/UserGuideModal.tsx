@@ -4,11 +4,11 @@
  * Nội dung viết cho NGƯỜI DÙNG (khác APP_GUIDE ở backend viết cho AI). ⚠️ Cập nhật khi đổi tính năng.
  */
 import { useState } from 'react'
-import { X, BookOpen } from 'lucide-react'
+import { X, BookOpen, Hand, Wallet, Users, Calendar, Trophy, Star, Settings, Bot, HandHelping, Lightbulb } from 'lucide-react'
 
 interface Section {
   id: string
-  icon: string
+  icon: React.ReactNode
   title: string
   body: React.ReactNode
 }
@@ -23,7 +23,7 @@ const B = ({ items }: { items: React.ReactNode[] }) => (
 
 const SECTIONS: Section[] = [
   {
-    id: 'gioi-thieu', icon: '👋', title: 'Giới thiệu',
+    id: 'gioi-thieu', icon: <Hand size={16} />, title: 'Giới thiệu',
     body: (
       <>
         <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">PickleFund là nền tảng quản lý <b>quỹ &amp; hoạt động</b> cho CLB thể thao <b>đa bộ môn</b>. Menu bên trái gồm các module chính; nút <b>Hướng dẫn</b> trên header mở lại tài liệu này bất cứ lúc nào. Cần hỏi nhanh, bấm <b>Lisa AI</b> (góc dưới trái) — trợ lý trả lời theo dữ liệu CLB của bạn.</p>
@@ -35,7 +35,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'tai-chinh', icon: '💰', title: 'Tài chính',
+    id: 'tai-chinh', icon: <Wallet size={16} />, title: 'Tài chính',
     body: (
       <B items={[
         <><b>Kỳ Quỹ</b>: tạo Quỹ Chính / Quỹ Phụ, Bắt đầu/Đóng/Mở lại kỳ, tạo phiếu thu cho cả kỳ, nhập Excel đóng quỹ, xem mã QR chuyển khoản.</>,
@@ -48,7 +48,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'thanh-vien', icon: '👥', title: 'Thành viên',
+    id: 'thanh-vien', icon: <Users size={16} />, title: 'Thành viên',
     body: (
       <B items={[
         <><b>Danh sách</b>: thêm/sửa/xóa thành viên, đổi trạng thái (Đang hoạt động / Tạm ngưng / Đã rời), xuất Excel/PDF.</>,
@@ -58,7 +58,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'hoat-dong', icon: '📅', title: 'Hoạt động CLB',
+    id: 'hoat-dong', icon: <Calendar size={16} />, title: 'Hoạt động CLB',
     body: (
       <B items={[
         <><b>Lịch sinh hoạt</b>: xem / tạo / sửa / xóa buổi chơi.</>,
@@ -69,7 +69,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'tao-giai-dau', icon: '🏆', title: 'Tạo Giải đấu',
+    id: 'tao-giai-dau', icon: <Trophy size={16} />, title: 'Tạo Giải đấu',
     body: (
       <>
         <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">Màn 2 cột: bên <b>trái</b> tạo giải, bên <b>phải</b> xem tổng quan theo bộ môn đang chọn. Nút <b>Danh sách giải</b> để xem tất cả giải.</p>
@@ -83,7 +83,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'cham-diem', icon: '⭐', title: 'Chấm điểm thành viên',
+    id: 'cham-diem', icon: <Star size={16} />, title: 'Chấm điểm thành viên',
     body: (
       <B items={[
         <>Mỗi thành viên bắt đầu 100 điểm; tự trừ theo điểm danh &amp; đóng quỹ, cộng/trừ điều chỉnh thủ công.</>,
@@ -92,7 +92,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'he-thong', icon: '⚙️', title: 'Hệ thống & Cài đặt',
+    id: 'he-thong', icon: <Settings size={16} />, title: 'Hệ thống & Cài đặt',
     body: (
       <B items={[
         <><b>Thông báo</b>: xem &amp; đánh dấu đã đọc (nhắc đóng quỹ, buổi chơi, cảnh báo). Chuông trên header hiện số chưa đọc.</>,
@@ -102,7 +102,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'ai', icon: '🤖', title: 'Trợ lý AI',
+    id: 'ai', icon: <Bot size={16} />, title: 'Trợ lý AI',
     body: (
       <B items={[
         <><b>Lisa</b> — trợ lý cho bạn: hỏi đáp về quỹ, buổi chơi, cách dùng app (bấm Lisa AI góc dưới trái).</>,
@@ -112,7 +112,7 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: 'thanh-vien-lam-gi', icon: '🙋', title: 'Nếu bạn là Thành viên',
+    id: 'thanh-vien-lam-gi', icon: <HandHelping size={16} />, title: 'Nếu bạn là Thành viên',
     body: (
       <B items={[
         <>Xem hồ sơ &amp; số dư; <b>phiếu thu</b> (có mã QR khi còn nợ, xuất PDF); lịch sử đóng quỹ &amp; sao kê.</>,
@@ -162,8 +162,9 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
                 <div className="mt-1.5">{s.body}</div>
               </section>
             ))}
-            <p className="mt-2 rounded-xl [background:var(--pf-surface-muted)] px-4 py-3 text-xs [color:var(--pf-color-muted)]">
-              💡 Cần trợ giúp cụ thể? Mở <b>Lisa AI</b> ở góc dưới bên trái và hỏi trực tiếp — Lisa trả lời theo dữ liệu CLB của bạn.
+            <p className="mt-2 flex items-start gap-2 rounded-xl [background:var(--pf-surface-muted)] px-4 py-3 text-xs [color:var(--pf-color-muted)]">
+              <Lightbulb size={14} className="shrink-0 mt-0.5 [color:var(--pf-color-warning)]" />
+              <span>Cần trợ giúp cụ thể? Mở <b>Lisa AI</b> ở góc dưới bên trái và hỏi trực tiếp — Lisa trả lời theo dữ liệu CLB của bạn.</span>
             </p>
           </div>
         </div>
