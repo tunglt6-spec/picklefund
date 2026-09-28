@@ -54,7 +54,7 @@ function pct(part, total) {
   return total > 0 ? Math.round((part / total) * 100) : 0
 }
 
-export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
+export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [], branding }) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   /* Nhúng font Việt */
@@ -344,6 +344,93 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, branding }) {
       doc.text((r.balance >= 0 ? '+' : '') + vnd(r.balance), cellX(7), midY, { align: 'right' })
       y += ROW_H
     })
+  }
+
+  /* ═══════════ TRANG KHOẢN CHI — danh sách các khoản chi trong kỳ ═══════════ */
+  if (expenseRows.length > 0) {
+    const ECOLS = [
+      { key: 'idx',    label: '#',          w: 8,  align: 'left' },
+      { key: 'date',   label: 'NGÀY',       w: 22, align: 'left' },
+      { key: 'desc',   label: 'NỘI DUNG',   w: 64, align: 'left' },
+      { key: 'kind',   label: 'LOẠI',       w: 26, align: 'left' },
+      { key: 'amount', label: 'SỐ TIỀN',    w: 30, align: 'right' },
+      { key: 'status', label: 'TRẠNG THÁI', w: 36, align: 'center' },
+    ]
+    const eColX = []
+    { let cx = MARGIN; for (const c of ECOLS) { eColX.push(cx); cx += c.w } }
+    const eCellX = (i) => {
+      const c = ECOLS[i]
+      if (c.align === 'right') return eColX[i] + c.w - 3
+      if (c.align === 'center') return eColX[i] + c.w / 2
+      return eColX[i] + 3
+    }
+    const eHead = (yy) => {
+      setFill(C.indigo)
+      doc.rect(MARGIN, yy, CONTENT_W, 8, 'F')
+      font('bold', 7, C.white)
+      ECOLS.forEach((c, i) => doc.text(c.label, eCellX(i), yy + 5.3, { align: c.align }))
+      return yy + 8
+    }
+    const stColor = (k) =>
+      k === 'approved' || k === 'paid' ? C.green : k === 'rejected' ? C.red : C.grayLight
+
+    doc.addPage()
+    let ey = drawHeader(
+      'BÁO CÁO TÀI CHÍNH — KHOẢN CHI',
+      `Xuất ngày ${summary.exportedDateText}`,
+      `${summary.clubName} · ${summary.periodName}`,
+      false,
+    ) + 5
+    font('bold', 8.5, C.indigoDark)
+    doc.text('DANH SÁCH KHOẢN CHI TRONG KỲ (Quỹ Chính)', MARGIN, ey + 2)
+    ey += 5
+    ey = eHead(ey)
+    const eBottom = PAGE_H - MARGIN - 12
+    const ROW_HE = 7.5
+    let approvedTotal = 0
+    expenseRows.forEach((e, idx) => {
+      if (ey + ROW_HE > eBottom) {
+        doc.addPage()
+        ey = drawHeader('BÁO CÁO TÀI CHÍNH — KHOẢN CHI (tiếp)', `Xuất ngày ${summary.exportedDateText}`, '', false) + 5
+        ey = eHead(ey)
+      }
+      if (idx % 2 === 1) {
+        setFill(C.zebra)
+        doc.rect(MARGIN, ey, CONTENT_W, ROW_HE, 'F')
+      }
+      setDraw(C.lineSoft)
+      doc.setLineWidth(0.2)
+      doc.line(MARGIN, ey + ROW_HE, PAGE_W - MARGIN, ey + ROW_HE)
+      const midY = ey + ROW_HE / 2 + 1.6
+      font('normal', 7, C.grayLight)
+      doc.text(String(idx + 1), eCellX(0), midY)
+      font('normal', 7.2, C.textDark)
+      doc.text(clip(e.date ?? '', ECOLS[1].w - 4), eCellX(1), midY)
+      font('bold', 7.5, C.textDark)
+      doc.text(clip(e.description ?? '', ECOLS[2].w - 5), eCellX(2), midY)
+      font('normal', 7, C.gray)
+      doc.text(clip(e.kindLabel ?? '', ECOLS[3].w - 4), eCellX(3), midY)
+      font('bold', 7.5, C.redDark)
+      doc.text(vnd(e.amount), eCellX(4), midY, { align: 'right' })
+      font('bold', 6.8, stColor(e.statusKey))
+      doc.text(clip(e.statusLabel ?? '', ECOLS[5].w - 3), eCellX(5), midY, { align: 'center' })
+      if (e.statusKey === 'approved' || e.statusKey === 'paid') approvedTotal += e.amount
+      ey += ROW_HE
+    })
+    /* Dòng tổng — khớp "Tổng chi kỳ" (chỉ tính đã duyệt/đã chi). */
+    if (ey + 12 > eBottom) {
+      doc.addPage()
+      ey = drawHeader('BÁO CÁO TÀI CHÍNH — KHOẢN CHI (tiếp)', `Xuất ngày ${summary.exportedDateText}`, '', false) + 5
+    }
+    ey += 2.5
+    setFill(C.indigoSoft)
+    setDraw(C.indigoBorder)
+    doc.setLineWidth(0.35)
+    rrect(MARGIN, ey, CONTENT_W, 10, 2, 'FD')
+    font('bold', 8, C.indigoDark)
+    doc.text('TỔNG CHI (đã duyệt / đã chi)', MARGIN + 5, ey + 6.5)
+    font('bold', 10.5, C.redDark)
+    doc.text(vnd(approvedTotal), PAGE_W - MARGIN - 5, ey + 6.7, { align: 'right' })
   }
 
   /* ═══════════ TRANG BILL — 6 thẻ/trang (2 cột × 3 hàng), toạ độ CỐ ĐỊNH ═══════════ */

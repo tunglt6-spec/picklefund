@@ -33,6 +33,15 @@ export interface QuyReportRow {
   balance: number
 }
 
+export interface QuyReportExpenseRow {
+  date: string
+  description: string
+  kindLabel: string
+  amount: number
+  statusKey: 'approved' | 'pending' | 'paid' | 'rejected'
+  statusLabel: string
+}
+
 export interface PdfLogo {
   /** data:image/png|jpeg;base64,... */
   dataUrl: string
@@ -54,6 +63,7 @@ export function buildQuyReportPDF(opts: {
   fonts: { regular: string; bold: string }
   summary: QuyReportSummary
   rows: QuyReportRow[]
+  expenseRows?: QuyReportExpenseRow[]
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any

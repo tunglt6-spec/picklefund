@@ -282,6 +282,26 @@ export function Reports() {
   })
   // Rows đầy đủ cho export/infographic — chỉ dùng khi officialReady (kSessions là số thật, không phải 0 giả).
   const billRowsForExport = () => memberBillRows.map(r => ({ ...r, totalSessions: r.totalSessions ?? (kSessions as number) }))
+  // Danh sách KHOẢN CHI (Quỹ Chính) của kỳ — thêm trang "Chi" vào PDF báo cáo tài chính.
+  const EXPENSE_STATUS_LABEL: Record<string, string> = {
+    approved: 'Đã duyệt', paid: 'Đã chi', pending: 'Chờ duyệt', rejected: 'Từ chối',
+  }
+  const buildExpenseRows = () => clubData.expenses
+    .filter(e => (e.fundSource ?? 'COMMON') === 'COMMON' && e.fundPeriodId === activePeriod?.id)
+    .slice()
+    .sort((a, b) => (a.expenseDate ?? '').localeCompare(b.expenseDate ?? ''))
+    .map(e => {
+      const d = (e.expenseDate ?? '').slice(0, 10)
+      const [y, m, dd] = d.split('-')
+      return {
+        date: dd ? `${dd}/${m}/${y}` : d,
+        description: e.description ?? '',
+        kindLabel: e.costType === 'COURT' ? 'Tiền sân' : 'Sinh hoạt',
+        amount: e.amount,
+        statusKey: (e.status ?? 'pending') as 'approved' | 'pending' | 'paid' | 'rejected',
+        statusLabel: EXPENSE_STATUS_LABEL[e.status ?? 'pending'] ?? (e.status ?? 'Chờ duyệt'),
+      }
+    })
   const EXPORT_FAILED = 'Không thể xuất báo cáo. Vui lòng thử lại.'
   const doExportPDF = async () => {
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
@@ -289,7 +309,7 @@ export function Reports() {
       // exportReportsPDF trả Promise (downloadPDF là async) → phải await để bắt lỗi
       // render/tải file; không báo success trước khi hoàn tất.
       // reportType 'financial' = tổng quan tài chính (không kèm bảng kê thành viên).
-      await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport())
+      await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport(), buildExpenseRows())
       toast.success(reportType === 'financial' ? 'Đã xuất PDF tổng quan tài chính!' : 'Đã xuất PDF báo cáo đầy đủ!')
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportPDF failed:', e)

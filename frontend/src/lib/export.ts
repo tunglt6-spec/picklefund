@@ -1107,7 +1107,20 @@ function loadVnFonts() {
   return vnFontsPromise
 }
 
-export async function exportReportsPDF(data: ReportSummary, memberBills?: MemberBillRow[]) {
+export interface ReportExpenseRow {
+  date: string
+  description: string
+  kindLabel: string
+  amount: number
+  statusKey: 'approved' | 'pending' | 'paid' | 'rejected'
+  statusLabel: string
+}
+
+export async function exportReportsPDF(
+  data: ReportSummary,
+  memberBills?: MemberBillRow[],
+  expenseRows: ReportExpenseRow[] = [],
+) {
   // PDF VECTOR (jsPDF vẽ trực tiếp, KHÔNG html2canvas): mẫu báo cáo chuẩn DÙNG CHUNG
   // mọi CLB — toạ độ mm cố định, chữ vector sắc nét → mọi máy/lần xuất giống hệt nhau,
   // chấm dứt chuỗi lỗi renderer (cắt dòng / trôi số / giãn thẻ) của cách chụp DOM.
@@ -1140,6 +1153,7 @@ export async function exportReportsPDF(data: ReportSummary, memberBills?: Member
       exportedAtText: now.toLocaleString('vi-VN'),
     },
     rows: memberBills ?? [],
+    expenseRows,
   })
   const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
   return savePdfDoc(doc, `BaoCao_Quy_${slug(data.clubName)}_${slug(data.periodName)}`)
