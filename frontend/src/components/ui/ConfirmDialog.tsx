@@ -39,18 +39,16 @@ export function ConfirmDialog({
 
   if (!open) return null
 
-  const iconBg = variant === 'danger' ? 'bg-red-50' : 'bg-amber-50'
-  const iconColor = variant === 'danger' ? 'text-red-500' : 'text-amber-500'
-  const btnClass = variant === 'danger'
-    ? 'bg-red-500 hover:bg-red-500 text-white'
-    : 'bg-amber-500 hover:bg-amber-500 text-white'
+  // Token-only (dark-safe): danger → đỏ token, warning → cam token.
+  const accent = variant === 'danger' ? 'var(--pf-color-danger)' : 'var(--pf-color-warning)'
+  const accentSoft = variant === 'danger' ? 'var(--pf-color-danger-soft)' : 'var(--pf-color-warning-soft)'
 
   return (
     <Portal>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onCancel} />
       <div role="dialog" aria-modal="true" aria-label={title}
-        className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl shadow-slate-900/10 overflow-hidden">
+        className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl overflow-hidden">
         {/* Close */}
         <button onClick={onCancel} aria-label="Đóng"
           className="absolute right-4 top-4 h-9 w-9 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]">
@@ -59,8 +57,8 @@ export function ConfirmDialog({
 
         <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
           {/* Icon */}
-          <div className={`h-12 w-12 rounded-full ${iconBg} flex items-center justify-center mb-4`}>
-            <AlertTriangle size={22} className={iconColor} />
+          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-4" style={{ background: accentSoft }}>
+            <AlertTriangle size={22} style={{ color: accent }} />
           </div>
 
           <h2 className="text-base font-bold [color:var(--pf-text)] mb-2">{title}</h2>
@@ -72,7 +70,8 @@ export function ConfirmDialog({
           <Button ref={cancelRef} variant="outline" className="flex-1 min-h-11" onClick={onCancel}>{cancelLabel}</Button>
           <button
             onClick={onConfirm}
-            className={`flex-1 min-h-11 px-4 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-colors ${btnClass}`}
+            style={{ background: accent }}
+            className="flex-1 min-h-11 px-4 text-sm font-medium rounded-lg text-white flex items-center justify-center gap-2 transition-all hover:brightness-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]"
           >
             <X size={14} />{confirmLabel}
           </button>

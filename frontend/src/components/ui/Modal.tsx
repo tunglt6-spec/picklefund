@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
       className="fixed inset-x-0 top-0 h-[100dvh] z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="pf-modal-backdrop absolute inset-0 bg-slate-900/40 pointer-events-none" />
+      <div className="pf-modal-backdrop absolute inset-0 bg-black/40 pointer-events-none" />
       <div
         ref={panelRef}
         role="dialog"
@@ -64,7 +64,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         aria-label={title}
         tabIndex={-1}
         className={cn(
-        'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl shadow-slate-900/10 overflow-hidden flex flex-col outline-none',
+        'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl overflow-hidden flex flex-col outline-none',
         'rounded-t-2xl max-h-[90dvh] sm:rounded-2xl sm:max-h-[calc(100dvh-2rem)]',
         sizeClasses[size]
       )}>
