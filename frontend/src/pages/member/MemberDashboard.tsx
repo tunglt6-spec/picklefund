@@ -384,7 +384,9 @@ export function MemberDashboard() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs" style={{ color: balance >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
-                  {balance >= 0 ? '✓ Bạn đã đóng đủ quỹ kỳ này' : 'Bạn chưa đóng đủ quỹ kỳ này.'}
+                  {balance >= 0
+                    ? <span className="inline-flex items-center gap-1"><CheckCircle2 size={13} /> Bạn đã đóng đủ quỹ kỳ này</span>
+                    : 'Bạn chưa đóng đủ quỹ kỳ này.'}
                 </p>
               </div>
             </div>

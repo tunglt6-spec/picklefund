@@ -6,7 +6,7 @@
  * theo clubId từ JWT. KHÔNG sửa admin Debts (dùng chung với trang quản trị).
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Wallet } from 'lucide-react'
+import { Users, AlertCircle, Wallet, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -228,7 +228,9 @@ export function MemberDebts() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs" style={{ color: stats.totalDebt > 0 ? 'var(--pf-color-danger)' : 'var(--pf-color-success)' }}>
-                  {stats.totalDebt > 0 ? `Còn ${stats.unpaid} thành viên chưa đóng đủ` : '✓ Đã thu đủ quỹ kỳ này'}
+                  {stats.totalDebt > 0
+                    ? `Còn ${stats.unpaid} thành viên chưa đóng đủ`
+                    : <span className="inline-flex items-center gap-1"><CheckCircle size={13} /> Đã thu đủ quỹ kỳ này</span>}
                 </p>
               </div>
             </div>

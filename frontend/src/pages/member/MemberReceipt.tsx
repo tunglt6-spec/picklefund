@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2 } from 'lucide-react'
+import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { PageShell, PageHeader, MetricCard, ChartCard, ActionButton } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'
@@ -550,7 +550,9 @@ export function MemberReceipt() {
                     </span>
                   </div>
                   <p className="mt-1 text-xs" style={{ color: n(live.balance) >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}>
-                    {n(live.balance) >= 0 ? '✓ Số dư dương — chuyển sang kỳ sau' : 'Bạn chưa đóng đủ quỹ kỳ này.'}
+                    {n(live.balance) >= 0
+                      ? <span className="inline-flex items-center gap-1"><CheckCircle size={13} /> Số dư dương — chuyển sang kỳ sau</span>
+                      : 'Bạn chưa đóng đủ quỹ kỳ này.'}
                   </p>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette } from 'lucide-react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -513,7 +513,10 @@ function NotificationsTab(_: { clubId: string }) {
                 }} className="accent-[var(--pf-primary)]" />
               <div>
                 <p className="text-sm font-medium [color:var(--pf-text)]">
-                  {ch === 'IN_APP' ? '📱 Trong ứng dụng' : ch === 'EMAIL' ? '📧 Email' : '✈️ Telegram'}
+                  <span className="inline-flex items-center gap-1.5">
+                    {ch === 'IN_APP' ? <Smartphone size={14} /> : ch === 'EMAIL' ? <Mail size={14} /> : <Send size={14} />}
+                    {ch === 'IN_APP' ? 'Trong ứng dụng' : ch === 'EMAIL' ? 'Email' : 'Telegram'}
+                  </span>
                 </p>
                 <p className="text-xs [color:var(--pf-color-muted)]">
                   {ch === 'IN_APP' ? 'Thông báo hiển thị trực tiếp trong app' :
@@ -781,8 +784,9 @@ function TelegramTab() {
           </div>
         )}
         {!hasOwnBot && !botUsername && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 text-sm text-amber-700">
-            ⚠️ Chưa có bot nào cho CLB. Hãy đăng ký <b>bot riêng của CLB</b> ở trên (khuyến nghị), hoặc liên hệ quản trị hệ thống để dùng bot chung.
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 text-sm text-amber-700 flex items-start gap-2">
+            <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+            <span>Chưa có bot nào cho CLB. Hãy đăng ký <b>bot riêng của CLB</b> ở trên (khuyến nghị), hoặc liên hệ quản trị hệ thống để dùng bot chung.</span>
           </div>
         )}
 
@@ -794,8 +798,9 @@ function TelegramTab() {
             </span>
           </div>
         ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
-            <span className="text-sm text-amber-700">⚠️ CLB này chưa được kết nối với Telegram Bot.</span>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+            <AlertTriangle size={15} className="shrink-0 text-amber-700" />
+            <span className="text-sm text-amber-700">CLB này chưa được kết nối với Telegram Bot.</span>
           </div>
         )}
 
@@ -1063,8 +1068,8 @@ function BillingTab() {
             <div><span className="[color:var(--pf-color-muted)]">Trạng thái:</span> <span className={sub.isActive ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{sub.isActive ? 'Hoạt động' : 'Hết hạn'}</span></div>
             <div><span className="[color:var(--pf-color-muted)]">Thành viên:</span> {sub.usage.members} / {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</div>
             <div><span className="[color:var(--pf-color-muted)]">Còn lại:</span> {sub.daysRemaining != null ? `${sub.daysRemaining} ngày` : 'Không giới hạn'}</div>
-            <div><span className="[color:var(--pf-color-muted)]">AI:</span> {sub.plan.aiFeatures ? '✓' : '✗'}</div>
-            <div><span className="[color:var(--pf-color-muted)]">Telegram:</span> {sub.plan.telegramBot ? '✓' : '✗'}</div>
+            <div><span className="[color:var(--pf-color-muted)]">AI:</span> {sub.plan.aiFeatures ? <Check size={14} className="inline align-middle [color:var(--pf-color-success)]" /> : <X size={14} className="inline align-middle [color:var(--pf-color-danger)]" />}</div>
+            <div><span className="[color:var(--pf-color-muted)]">Telegram:</span> {sub.plan.telegramBot ? <Check size={14} className="inline align-middle [color:var(--pf-color-success)]" /> : <X size={14} className="inline align-middle [color:var(--pf-color-danger)]" />}</div>
             {sub.expiresAt && <div className="col-span-2"><span className="[color:var(--pf-color-muted)]">Hết hạn:</span> {new Date(sub.expiresAt).toLocaleDateString('vi-VN')}</div>}
           </div>
         </div>

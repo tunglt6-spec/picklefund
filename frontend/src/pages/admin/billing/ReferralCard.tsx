@@ -97,7 +97,9 @@ export function ReferralCard() {
       {info.referredBy ? (
         <p className="mt-4 text-xs [color:var(--pf-color-muted)]">
           CLB của bạn đã được giới thiệu bằng mã <b className="[color:var(--pf-text)]">{info.referredBy.code}</b>
-          {info.referredBy.status === 'REWARDED' ? ' · đã nhận thưởng ✅' : ' · thưởng sẽ cộng khi bạn lên Pro'}
+          {info.referredBy.status === 'REWARDED'
+            ? <span className="inline-flex items-center gap-1"> · đã nhận thưởng <Check size={13} className="[color:var(--pf-color-success)]" /></span>
+            : ' · thưởng sẽ cộng khi bạn lên Pro'}
         </p>
       ) : (
         <div className="mt-4">
