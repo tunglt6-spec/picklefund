@@ -4,7 +4,7 @@ import { motion, AnimatePresence, type Easing } from 'framer-motion'
 import {
   Eye, EyeOff, Building2, ArrowLeft, ArrowRight,
   CheckCircle2, ChevronRight, UserPlus, Users, DollarSign,
-  BarChart3, Smartphone, ChevronDown, Lock, Gift,
+  BarChart3, Smartphone, ChevronDown, Lock, Gift, Star,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
@@ -78,11 +78,11 @@ function PickleFundLogo({ size = 48, className = '' }: { size?: number; classNam
       ))}
       <circle cx={cx} cy={cy} r="7" fill="white" />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-        fontSize="9" fontWeight="800" fill="#4F46E5" fontFamily="Inter,system-ui,sans-serif">P</text>
+        fontSize="9" fontWeight="800" fill="#6D5DFB" fontFamily="Inter,system-ui,sans-serif">P</text>
       <defs>
         <linearGradient id="lgNetL" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4F46E5" />
-          <stop offset="1" stopColor="#06B6D4" />
+          <stop stopColor="#6D5DFB" />
+          <stop offset="1" stopColor="#5B4BE8" />
         </linearGradient>
       </defs>
     </svg>
@@ -102,7 +102,8 @@ function Field({ label, right, children }: { label: string; right?: React.ReactN
   )
 }
 
-const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800 dark:focus:border-indigo-400 dark:focus:ring-indigo-900/50'
+// Brand tím (#6D5DFB) cho focus — thay indigo/cyan cũ để khớp nhận diện app.
+const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#6D5DFB] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#6D5DFB]/15 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800 dark:focus:border-[#6D5DFB] dark:focus:ring-[#6D5DFB]/25'
 
 /* ─── Register Flow ─── */
 interface ClubForm  { name: string; code: string; address: string; contactPhone: string; contactEmail: string }
@@ -188,7 +189,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
 
         {refLocked && referralCode && (
           <div className="mb-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
-            🎁 Bạn được giới thiệu bằng mã <b>{referralCode}</b> — lên Pro để cả hai nhận +1 tháng Pro.
+            <Gift size={14} className="shrink-0" />Bạn được giới thiệu bằng mã <b>{referralCode}</b> — lên Pro để cả hai nhận +1 tháng Pro.
           </div>
         )}
 
@@ -283,7 +284,7 @@ function GradientButton({ children, className = '', type = 'button', disabled = 
     <motion.button whileHover={{ scale: disabled ? 1 : 1.02, y: disabled ? 0 : -1 }} whileTap={{ scale: disabled ? 1 : 0.98 }}
       type={type} disabled={disabled} onClick={onClick}
       className={`btn-ripple flex items-center gap-2 py-3.5 px-6 rounded-xl text-white text-sm font-semibold transition-shadow duration-200 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
-      style={{ background: disabled ? '#94a3b8' : 'linear-gradient(135deg, #00C896 0%, #4F46E5 100%)', boxShadow: disabled ? 'none' : '0 4px 24px rgba(79,70,229,0.3)' }}
+      style={{ background: disabled ? '#94a3b8' : 'linear-gradient(135deg, #6D5DFB 0%, #5B4BE8 100%)', boxShadow: disabled ? 'none' : '0 4px 24px rgba(109,93,251,0.32)' }}
     >
       {children}
     </motion.button>
@@ -377,25 +378,13 @@ export function Login() {
       ═══════════════════════════════════════ */}
       <div className="hidden lg:flex w-[60%] relative flex-col overflow-hidden">
 
-        {/* Animated mesh gradient background */}
-        <div className="absolute inset-0 mesh-bg" />
-
-        {/* Aurora — lớp conic xoay chậm (chiều sâu động) */}
-        <div className="absolute inset-0 aurora pointer-events-none" />
-
-        {/* Gradient overlay for depth */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(15,23,42,0.62) 0%, rgba(79,70,229,0.32) 50%, rgba(6,182,212,0.22) 100%)' }} />
-
-        {/* Grain — nhiễu tinh tế cao cấp */}
-        <div className="absolute inset-0 grain pointer-events-none" />
-
-        {/* Floating orbs */}
+        {/* Nền brand TÍM tiết chế — 1 lớp gradient + 1 quầng sáng mềm + lưới chấm mờ
+            (thay stack mesh/aurora/grain/3-orb/overlay cũ nhiều lớp, off-brand indigo-cyan). */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #4C3FD6 0%, #6D5DFB 55%, #8B7BFF 100%)' }} />
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="orb-1 absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #4F46E5, transparent 70%)' }} />
-          <div className="orb-2 absolute top-1/2 -right-24 w-80 h-80 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #06B6D4, transparent 70%)' }} />
-          <div className="orb-3 absolute -bottom-24 left-1/4 w-64 h-64 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #818cf8, transparent 70%)' }} />
-          {/* Dot grid */}
-          <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+          <div className="absolute -top-40 -right-28 w-[30rem] h-[30rem] rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #FFFFFF, transparent 70%)' }} />
+          <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #C4B5FD, transparent 70%)' }} />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="grid" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
                 <circle cx="2" cy="2" r="1.5" fill="white" />
@@ -413,7 +402,7 @@ export function Login() {
             <PickleFundLogo size={44} />
             <div>
               <span className="text-white font-extrabold text-xl tracking-tight">PickleFund</span>
-              <p className="text-cyan-300 text-xs font-medium mt-0.5">Sports Community Platform</p>
+              <p className="text-white/70 text-xs font-medium mt-0.5">Sports Community Platform</p>
             </div>
           </motion.div>
 
@@ -428,7 +417,7 @@ export function Login() {
             <motion.h1 variants={fadeUp} custom={2} initial="hidden" animate="show"
               className="text-[46px] font-extrabold leading-[1.05] mb-4 tracking-tight"
               style={{ fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-              <span className="text-gradient-animate block">Kết nối đam mê.</span>
+              <span className="block" style={{ color: '#E9E5FF' }}>Kết nối đam mê.</span>
               <span className="text-white block">Quản lý chuyên nghiệp.</span>
             </motion.h1>
 
@@ -443,7 +432,7 @@ export function Login() {
               {features.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="glass-card rounded-2xl p-4 group hover:bg-white/15 transition-all duration-300 cursor-default">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-400 shadow-lg shadow-indigo-950/30 group-hover:scale-105 transition-transform">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20 shadow-lg shadow-black/10 group-hover:scale-105 transition-transform">
                       <Icon size={16} className="text-white" />
                     </div>
                     <div>
@@ -482,7 +471,7 @@ export function Login() {
               <p className="text-white/50 text-xs mt-0.5">— Admin CLB Pickleball Hà Nội, 45 thành viên</p>
             </div>
             <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => <span key={i} className="text-amber-400 text-sm">★</span>)}
+              {[...Array(5)].map((_, i) => <Star key={i} size={13} className="text-amber-400" fill="currentColor" />)}
             </div>
           </motion.div>
         </div>
@@ -544,7 +533,7 @@ export function Login() {
                     {/* Remember me toggle */}
                     <label className="flex items-center gap-3 cursor-pointer group py-1">
                       <div className="relative shrink-0" onClick={() => setRemember(!remember)}>
-                        <div className={`w-11 h-6 rounded-full transition-all duration-300 ${remember ? 'bg-gradient-to-r from-indigo-500 to-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                        <div className={`w-11 h-6 rounded-full transition-all duration-300 ${remember ? '[background:var(--pf-primary)]' : 'bg-slate-200 dark:bg-slate-700'}`} />
                         <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${remember ? 'translate-x-5' : 'translate-x-0'}`} />
                       </div>
                       <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Ghi nhớ đăng nhập</span>
