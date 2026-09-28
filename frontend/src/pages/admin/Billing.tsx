@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Star, Zap, Check, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
+import { Star, Zap, Check, X, CheckCircle2, XCircle, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
@@ -164,10 +164,10 @@ export function Billing() {
                 {sub.expiresAt ? (
                   <p className="text-sm mt-1" style={{ color: sub.inGrace ? 'var(--pf-accent-amber, #D97706)' : 'var(--pf-color-muted)' }}>
                     {sub.inGrace
-                      ? `⚠️ Đã hết hạn — đang ân hạn đến ${new Date(sub.graceUntil!).toLocaleDateString('vi-VN')}`
+                      ? `Đã hết hạn — đang ân hạn đến ${new Date(sub.graceUntil!).toLocaleDateString('vi-VN')}`
                       : (sub.daysRemaining ?? 0) > 0
                         ? `Còn ${sub.daysRemaining} ngày (hết hạn ${new Date(sub.expiresAt).toLocaleDateString('vi-VN')})`
-                        : '⚠️ Đã hết hạn'}
+                        : 'Đã hết hạn'}
                     {sub.cancelled && <span className="ml-1">· Đã hủy gia hạn</span>}
                   </p>
                 ) : currentTier !== 'STARTER' ? (
@@ -203,11 +203,15 @@ export function Billing() {
               </div>
               <div className="[background:var(--pf-surface)] rounded-lg p-3">
                 <p className="text-xs [color:var(--pf-color-muted)]">Tính năng AI</p>
-                <p className="text-sm font-semibold mt-1 [color:var(--pf-text)]">
-                  {sub.plan.aiFeatures ? '✅ Đã kích hoạt' : '❌ Chưa có'}
+                <p className="text-sm font-semibold mt-1">
+                  {sub.plan.aiFeatures
+                    ? <span className="inline-flex items-center gap-1 [color:var(--pf-green)]"><CheckCircle2 size={15} />Đã kích hoạt</span>
+                    : <span className="inline-flex items-center gap-1 [color:var(--pf-color-muted)]"><XCircle size={15} />Chưa có</span>}
                 </p>
-                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
-                  Telegram Bot: {sub.plan.telegramBot ? '✅' : '❌'}
+                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5 inline-flex items-center gap-1">
+                  Telegram Bot: {sub.plan.telegramBot
+                    ? <Check size={13} className="[color:var(--pf-green)]" />
+                    : <X size={13} className="[color:var(--pf-color-muted)]" />}
                 </p>
               </div>
             </div>
@@ -226,8 +230,8 @@ export function Billing() {
                     <th className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>
                     {plans.map(p => (
                       <th key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_BADGE[p.tier]}`}>
-                          {p.tier === currentTier ? `✓ ${p.name ?? PLAN_LABEL[p.tier]}` : (p.name ?? PLAN_LABEL[p.tier])}
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${PLAN_BADGE[p.tier]}`}>
+                          {p.tier === currentTier && <Check size={11} className="shrink-0" />}{p.name ?? PLAN_LABEL[p.tier]}
                         </span>
                       </th>
                     ))}

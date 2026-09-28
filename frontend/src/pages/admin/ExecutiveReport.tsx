@@ -6,7 +6,7 @@ import {
   Users, UserCheck, CalendarDays, TrendingUp, TrendingDown, Wallet,
   Trophy, Bot, Sparkles, AlertTriangle, Info, ListChecks, RefreshCw,
   FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
-  Fingerprint, LineChart, Mail, Send,
+  Fingerprint, LineChart, Mail, Send, Star, Flame, Moon, CheckCircle2,
 } from 'lucide-react'
 import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -32,8 +32,16 @@ function healthColor(v: number) {
   return '#E11D48'
 }
 function Stars({ n }: { n: number }) {
-  if (n <= 0) return <span title="Dưới 50 điểm">⚠️</span>
-  return <span className="tracking-tight">{'⭐'.repeat(n)}</span>
+  if (n <= 0) return <AlertTriangle size={14} className="inline align-middle" style={{ color: 'var(--pf-color-warning)' }} aria-label="Dưới 50 điểm" />
+  return (
+    <span className="inline-flex items-center gap-0.5 align-middle" title={`${n}/5`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} size={13} className="shrink-0"
+          fill={i < n ? 'var(--pf-color-warning)' : 'transparent'}
+          style={{ color: i < n ? 'var(--pf-color-warning)' : 'var(--pf-border)' }} />
+      ))}
+    </span>
+  )
 }
 function fmtDate(d: string | Date | null | undefined) {
   if (!d) return '—'
@@ -321,7 +329,7 @@ export function ExecutiveReport() {
             <h3 className="text-sm font-bold [color:var(--pf-text)]">Tóm tắt điều hành (AI)</h3>
             {aiSum && (
               <span className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>
-                {aiSum.generatedBy === 'ai' ? '✨ Maika AI viết' : 'Tổng hợp tự động'}
+                {aiSum.generatedBy === 'ai' ? <><Sparkles size={11} className="inline mr-1 align-middle" />Maika AI viết</> : 'Tổng hợp tự động'}
               </span>
             )}
           </div>
@@ -441,7 +449,7 @@ export function ExecutiveReport() {
               <span>{data.forecast.trendLabel} · dòng tiền ~{formatVND(data.forecast.dailyNet)}/ngày</span>
             </div>
             {data.forecast.runwayMonths != null && (
-              <p className="mt-1 text-xs font-medium" style={{ color: 'var(--pf-accent-rose,#E11D48)' }}>⚠️ Nếu tiếp tục âm, quỹ trụ được ~{data.forecast.runwayMonths} tháng.</p>
+              <p className="mt-1 text-xs font-medium flex items-center gap-1.5" style={{ color: 'var(--pf-accent-rose,#E11D48)' }}><AlertTriangle size={13} className="shrink-0" />Nếu tiếp tục âm, quỹ trụ được ~{data.forecast.runwayMonths} tháng.</p>
             )}
             <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">{data.forecast.note}</p>
           </div>
@@ -511,8 +519,8 @@ export function ExecutiveReport() {
               <Stat label="TB người/buổi" value={data.activity.avgPresentPerSession} />
             </div>
             <div className="mt-2 space-y-1 text-xs [color:var(--pf-color-muted)]">
-              {data.activity.busiest && <p>🔥 Đông nhất: <b className="[color:var(--pf-text)]">{data.activity.busiest.name}</b> ({data.activity.busiest.present} người · {fmtDate(data.activity.busiest.date)})</p>}
-              {data.activity.emptiest && <p>💤 Ít nhất: {data.activity.emptiest.name} ({data.activity.emptiest.present} người · {fmtDate(data.activity.emptiest.date)})</p>}
+              {data.activity.busiest && <p className="flex items-center gap-1.5"><Flame size={13} className="shrink-0" style={{ color: 'var(--pf-color-warning)' }} />Đông nhất: <b className="[color:var(--pf-text)]">{data.activity.busiest.name}</b> ({data.activity.busiest.present} người · {fmtDate(data.activity.busiest.date)})</p>}
+              {data.activity.emptiest && <p className="flex items-center gap-1.5"><Moon size={13} className="shrink-0 [color:var(--pf-color-muted)]" />Ít nhất: {data.activity.emptiest.name} ({data.activity.emptiest.present} người · {fmtDate(data.activity.emptiest.date)})</p>}
               <p className="italic">Tỷ lệ lấp đầy tính theo sĩ số hoạt động (hệ thống chưa có sức chứa/buổi).</p>
             </div>
           </div>
@@ -573,7 +581,7 @@ export function ExecutiveReport() {
           </div>
           <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
             <SectionTitle icon={<AlertTriangle size={15} />} title="Cảnh báo" compact />
-            {data.alerts.length === 0 ? <p className="text-xs [color:var(--pf-green)]">✓ Không có cảnh báo — CLB ổn định.</p> : (
+            {data.alerts.length === 0 ? <p className="text-xs [color:var(--pf-green)] flex items-center gap-1.5"><CheckCircle2 size={13} className="shrink-0" />Không có cảnh báo — CLB ổn định.</p> : (
               <ul className="space-y-2">
                 {data.alerts.map((a: any, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-xs [color:var(--pf-text)]">
