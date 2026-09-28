@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
+import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet, Clock } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -436,7 +436,7 @@ export function Contributions() {
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] text-emerald-600 shadow-sm' : '[color:var(--pf-color-muted)]'}`}
+            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Phụ
           </button>
@@ -663,8 +663,8 @@ export function Contributions() {
             </div>
             <p className="text-2xl font-bold [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
             <div className="flex gap-4 mt-2 text-xs [color:var(--pf-color-muted)]">
-              <span className="text-emerald-600">✓ {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
-              <span className="text-amber-600">⏳ {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
+              <span className="inline-flex items-center gap-1 [color:var(--pf-color-success)]"><CheckCircle size={13} /> {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
+              <span className="inline-flex items-center gap-1 [color:var(--pf-color-warning)]"><Clock size={13} /> {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
             </div>
           </div>
           {/* Quỹ Phụ */}
