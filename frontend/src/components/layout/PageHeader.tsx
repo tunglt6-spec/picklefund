@@ -1,5 +1,10 @@
+/**
+ * @deprecated Shim tương thích — implementation đã gộp về `components/shared/PageHeader`.
+ * Đây là kiểu app-bar (viền dưới) = shared PageHeader `variant="bar"`. 17 màn cũ import từ
+ * đây vẫn render Y HỆT. Khi rảnh nên đổi import sang shared + thêm variant="bar" rồi xoá file này.
+ */
 import type { ReactNode } from 'react'
-import { useEmbedded } from '../shared/ModuleTabs'
+import { PageHeader as SharedPageHeader } from '../shared/PageHeader'
 
 interface PageHeaderProps {
   title: string
@@ -8,26 +13,5 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
-  const embedded = useEmbedded()
-
-  // Trong module (embedded): bỏ h1 trùng, GIỮ phụ đề (thông tin) + actions trong thanh bar.
-  if (embedded) {
-    if (!subtitle && !actions) return null
-    return (
-      <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        {subtitle ? <p className="text-xs [color:var(--pf-color-muted)] min-w-0 truncate">{subtitle}</p> : <span />}
-        {actions && <div className="flex items-center gap-2 flex-wrap lg:justify-end">{actions}</div>}
-      </div>
-    )
-  }
-
-  return (
-    <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-base font-bold [color:var(--pf-text)]">{title}</h1>
-        {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
-      </div>
-      {actions && <div className="flex items-center gap-2 flex-wrap lg:justify-end">{actions}</div>}
-    </div>
-  )
+  return <SharedPageHeader title={title} subtitle={subtitle} actions={actions} variant="bar" />
 }

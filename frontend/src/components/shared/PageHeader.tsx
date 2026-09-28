@@ -1,6 +1,12 @@
 /**
  * PageHeader (UDP-01) — tiêu đề màn hình + mô tả ngắn + slot phụ (weather/next match)
  * + chuông thông báo + primary action. Responsive: action xuống dòng trên mobile.
+ *
+ * variant:
+ *  - 'inline' (mặc định): khối tiêu đề inline (chữ lớn, không chrome) — chuẩn hiện đại,
+ *    nằm trong padding nội dung trang.
+ *  - 'bar': app-bar edge-to-edge (nền surface + viền dưới + px-6) — GIỮ tương thích 17 màn
+ *    cũ từng dùng layout/PageHeader (nay là shim gọi variant="bar"). KHÔNG đổi render.
  */
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
@@ -14,6 +20,8 @@ interface PageHeaderProps {
   /** Primary action (vd ActionButton) + chuông. */
   actions?: ReactNode
   className?: string
+  /** Kiểu hiển thị: 'inline' (mặc định) hoặc 'bar' (app-bar viền dưới, tương thích cũ). */
+  variant?: 'inline' | 'bar'
 }
 
 export function PageHeader({
@@ -22,9 +30,43 @@ export function PageHeader({
   aside,
   actions,
   className,
+  variant = 'inline',
 }: PageHeaderProps) {
   const embedded = useEmbedded()
 
+  // ── Variant 'bar' — app-bar edge-to-edge (khớp layout/PageHeader cũ, zero render change) ──
+  if (variant === 'bar') {
+    if (embedded) {
+      if (!subtitle && !actions && !aside) return null
+      return (
+        <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
+          {subtitle ? <p className="text-xs [color:var(--pf-color-muted)] min-w-0 truncate">{subtitle}</p> : <span />}
+          {(aside || actions) && (
+            <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+              {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
+              {actions}
+            </div>
+          )}
+        </div>
+      )
+    }
+    return (
+      <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
+        <div className="min-w-0">
+          <h1 className="text-base font-bold [color:var(--pf-text)]">{title}</h1>
+          {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
+        </div>
+        {(aside || actions) && (
+          <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+            {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
+            {actions}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Variant 'inline' (mặc định) — tiêu đề hiện đại, chữ lớn, không chrome ──
   // Trong module (embedded): module + tab đã định danh → BỎ h1 trùng, GIỮ phụ đề + actions.
   if (embedded) {
     if (!subtitle && !actions && !aside) return null
