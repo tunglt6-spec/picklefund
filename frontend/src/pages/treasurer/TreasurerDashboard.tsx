@@ -1,9 +1,8 @@
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
-import { KpiCard } from '../../components/ui/KpiCard'
 import { Button } from '../../components/ui/Button'
 import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
-import { PageShell, PageHeader, DataTable, MobileCardList, StatusBadge, ActionButton, type Column } from '../../components/shared'
+import { PageShell, PageHeader, DataTable, MobileCardList, StatusBadge, ActionButton, MetricCard, type Column } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceData'
@@ -213,16 +212,16 @@ export function TreasurerDashboard() {
 
         {/* KPI grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <KpiCard title="Thu Quỹ Chính" value={canonIncome} isCurrency icon={<DollarSign size={18} />} color="green" />
-          <KpiCard title="Chi Quỹ Chính" value={canonExpense} isCurrency icon={<CreditCard size={18} />} color="orange" />
-          <KpiCard title="Số Dư Q.Chính" value={canonBalance} isCurrency icon={<Building2 size={18} />} color="blue" />
-          <KpiCard title="Khoản Chi" value={`${expenses.length} khoản`} icon={<FileText size={18} />} color="purple" />
+          <MetricCard label="Thu Quỹ Chính" value={formatVND(canonIncome)} icon={<DollarSign size={18} />} accent="green" />
+          <MetricCard label="Chi Quỹ Chính" value={formatVND(canonExpense)} icon={<CreditCard size={18} />} accent="amber" />
+          <MetricCard label="Số Dư Q.Chính" value={formatVND(canonBalance)} icon={<Building2 size={18} />} accent="blue" negative={canonBalance < 0} />
+          <MetricCard label="Khoản Chi" value={`${expenses.length} khoản`} icon={<FileText size={18} />} accent="violet" />
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <KpiCard title="Chưa Đóng Quỹ" value={`${unpaidMembers} người`} icon={<AlertTriangle size={18} />} color="orange" alert={unpaidMembers > 0} badge={unpaidMembers > 0 ? `${unpaidMembers}` : undefined} />
-          <KpiCard title="Chi Thiếu Hóa Đơn" value={`${noReceipt.length} khoản`} icon={<FileText size={18} />} color="yellow" alert={noReceipt.length > 0} />
-          <KpiCard title="Chờ Xác Nhận" value={`${pendingCount} khoản`} icon={<Clock size={18} />} color="gray" />
+          <MetricCard label="Chưa Đóng Quỹ" value={`${unpaidMembers} người`} icon={<AlertTriangle size={18} />} tone={unpaidMembers > 0 ? 'warning' : undefined} accent="amber" />
+          <MetricCard label="Chi Thiếu Hóa Đơn" value={`${noReceipt.length} khoản`} icon={<FileText size={18} />} tone={noReceipt.length > 0 ? 'warning' : undefined} accent="amber" />
+          <MetricCard label="Chờ Xác Nhận" value={`${pendingCount} khoản`} icon={<Clock size={18} />} tone="neutral" />
         </div>
 
         {/* Action items */}
