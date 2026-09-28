@@ -9,7 +9,7 @@ import {
   Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { PageShell, PageHeader } from '../../components/shared'
+import { PageShell, PageHeader, DataTable, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -884,6 +884,56 @@ export function FundPeriods() {
     )
   }
 
+  // ── Cột bảng "Danh sách kỳ quỹ" (desktop DataTable) — mobile dùng nhánh riêng ở trên ──
+  const periodCollected = (p: FundPeriod) => {
+    const isMiniPeriod = (p.type ?? 'chung') === 'game'
+    return contributions
+      .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
+      .reduce((a, c) => a + c.amount, 0)
+  }
+  const periodDays = (p: FundPeriod) => Math.round((new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) / 86400000)
+  const periodActions = (p: FundPeriod) => (
+    <div className="flex items-center justify-center gap-1">
+      <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"><Eye size={14} /></button>
+      {!isMember && (
+        <>
+          <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:text-amber-600 transition-colors"><Pencil size={14} /></button>
+          {p.status === 'draft' && (
+            <button title="Bắt đầu kỳ quỹ" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-green-50 text-green-500 hover:text-green-700 transition-colors"><Play size={14} /></button>
+          )}
+          {p.status === 'active' && (
+            <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><Lock size={14} /></button>
+          )}
+          {(p.status === 'closed' || p.status === 'finalized') && (
+            <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors"><LockOpen size={14} /></button>
+          )}
+          <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"><FileText size={14} /></button>
+          <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 [color:var(--pf-color-muted)] hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
+        </>
+      )}
+    </div>
+  )
+  const periodColumns: Column<FundPeriod>[] = [
+    ...(!isMember ? ([{
+      key: 'sel', align: 'center', className: 'w-10',
+      header: <input type="checkbox" aria-label="Chọn tất cả kỳ quỹ"
+        className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
+        checked={allFilteredSelected} ref={el => { if (el) el.indeterminate = someSelected && !allFilteredSelected }} onChange={toggleAllFiltered} />,
+      render: (p: FundPeriod) => <input type="checkbox" aria-label={`Chọn kỳ quỹ ${p.name}`}
+        className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
+        checked={selectedIds.has(p.id)} onChange={() => toggleOne(p.id)} />,
+    }] as Column<FundPeriod>[]) : []),
+    { key: 'name', header: 'Tên kỳ quỹ', render: (p) => <span className="font-medium [color:var(--pf-text)]">{p.name}</span> },
+    { key: 'type', header: 'Loại quỹ', render: (p) => (p.type ?? 'chung') === 'game'
+      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Wallet size={10} />Mini</span>
+      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Building2 size={10} />Chung</span> },
+    { key: 'time', header: 'Thời gian', render: (p) => <span className="[color:var(--pf-color-muted)] text-xs">{periodDays(p)} ngày</span> },
+    { key: 'amount', header: 'Mức đóng/người', align: 'right', render: (p) => <span className="font-medium [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span> },
+    { key: 'collected', header: 'Đã thu', align: 'right', render: (p) => <span className="text-green-600 font-medium">{formatVND(periodCollected(p))}</span> },
+    { key: 'status', header: 'Trạng thái', render: (p) => <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge> },
+    { key: 'actions', header: 'Thao tác', align: 'center', render: periodActions },
+  ]
+
   return (
     <PageShell>
       <PageHeader
@@ -1039,109 +1089,12 @@ export function FundPeriods() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">
-                        {!isMember && (
-                          <th className="w-10 px-4 py-3">
-                            <input
-                              type="checkbox"
-                              aria-label="Chọn tất cả kỳ quỹ"
-                              className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
-                              checked={allFilteredSelected}
-                              ref={el => { if (el) el.indeterminate = someSelected && !allFilteredSelected }}
-                              onChange={toggleAllFiltered}
-                            />
-                          </th>
-                        )}
-                        <th className="text-left px-5 py-3 font-semibold">Tên kỳ quỹ</th>
-                        <th className="text-left px-4 py-3 font-semibold">Loại quỹ</th>
-                        <th className="text-left px-4 py-3 font-semibold">Thời gian</th>
-                        <th className="text-right px-4 py-3 font-semibold">Mức đóng/người</th>
-                        <th className="text-right px-4 py-3 font-semibold">Đã thu</th>
-                        <th className="text-left px-4 py-3 font-semibold">Trạng thái</th>
-                        <th className="text-center px-4 py-3 font-semibold">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginated.map(p => {
-                        // Khoản thu mở: chỉ hiện "Đã thu" (số tiền thật). KHÔNG tính Mục tiêu/
-                        // Còn thiếu/Tiến độ vì mức đóng thực tế mỗi CLB khác cấu hình → % gây hiểu nhầm.
-                        // Kỳ Mini gộp mọi khoản MINI (fundPeriodId=null); Kỳ Chung lọc theo kỳ.
-                        const isMiniPeriod = (p.type ?? 'chung') === 'game'
-                        const collected = contributions
-                          .filter(c => c.isConfirmed && (isMiniPeriod ? c.fundSource === 'MINI' : c.fundPeriodId === p.id))
-                          .reduce((a, c) => a + c.amount, 0)
-                        const startMs = new Date(p.startDate).getTime()
-                        const endMs = new Date(p.endDate).getTime()
-                        const days = Math.round((endMs - startMs) / 86400000)
-                        const pType = p.type ?? 'chung'
-                        return (
-                          <tr key={p.id} className={`border-b border-[color:var(--pf-border)] transition-colors ${selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:[background:var(--pf-color-muted-soft)]'}`}>
-                            {!isMember && (
-                              <td className="px-4 py-3.5">
-                                <input
-                                  type="checkbox"
-                                  aria-label={`Chọn kỳ quỹ ${p.name}`}
-                                  className="h-4 w-4 rounded border-slate-300 [accent-color:var(--pf-primary)] cursor-pointer align-middle"
-                                  checked={selectedIds.has(p.id)}
-                                  onChange={() => toggleOne(p.id)}
-                                />
-                              </td>
-                            )}
-                            <td className="px-5 py-3.5 font-medium [color:var(--pf-text)]">{p.name}</td>
-                            <td className="px-4 py-3.5">
-                              {pType === 'game'
-                                ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Wallet size={10} />Mini</span>
-                                : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Building2 size={10} />Chung</span>
-                              }
-                            </td>
-                            <td className="px-4 py-3.5 [color:var(--pf-color-muted)] text-xs">{days} ngày</td>
-                            <td className="px-4 py-3.5 text-right font-medium [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</td>
-                            <td className="px-4 py-3.5 text-right text-green-600 font-medium">{formatVND(collected)}</td>
-                            <td className="px-4 py-3.5">
-                              <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <div className="flex items-center justify-center gap-1">
-                                <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors">
-                                  <Eye size={14} />
-                                </button>
-                                {!isMember && (
-                                  <>
-                                    <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:text-amber-600 transition-colors">
-                                      <Pencil size={14} />
-                                    </button>
-                                    {p.status === 'draft' && (
-                                      <button title="Bắt đầu kỳ quỹ" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-green-50 text-green-500 hover:text-green-700 transition-colors">
-                                        <Play size={14} />
-                                      </button>
-                                    )}
-                                    {p.status === 'active' && (
-                                      <button title="Đóng kỳ quỹ" onClick={() => handleSetStatus(p, 'closed')} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors">
-                                        <Lock size={14} />
-                                      </button>
-                                    )}
-                                    {(p.status === 'closed' || p.status === 'finalized') && (
-                                      <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors">
-                                        <LockOpen size={14} />
-                                      </button>
-                                    )}
-                                    <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors">
-                                      <FileText size={14} />
-                                    </button>
-                                    <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 [color:var(--pf-color-muted)] hover:text-red-600 transition-colors">
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  <DataTable
+                    columns={periodColumns}
+                    rows={paginated}
+                    rowKey={(p) => p.id}
+                    rowClassName={(p) => selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:[background:var(--pf-color-muted-soft)]'}
+                  />
                 </div>
               )}
 
