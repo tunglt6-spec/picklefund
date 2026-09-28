@@ -1455,17 +1455,28 @@ export function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
   `], `Phieu_Chi_Mini_${data.receiverName.replace(/\s/g, '_')}`)
 }
 
-export function exportReportsExcel(data: ReportSummary, memberDetails: { name: string; attended: number; paid: string; cost: number; balance: number }[]) {
-  exportExcel(`Bao_Cao_${data.periodName.replace(/\s/g, '_')}`, [
+export function exportReportsExcel(
+  data: ReportSummary,
+  memberDetails: { name: string; attended: number; paid: string; cost: number; balance: number }[],
+  expenseRows: ReportExpenseRow[] = [],
+) {
+  // Số dư Quỹ Chính = clubAssets (Thu − Chi + chuyển kỳ) — KHỚP màn hình & PDF (không phải balance thô).
+  const mainFund = data.clubAssets ?? (data.balance + (data.carryForward ?? 0))
+  const totalAssets = (data.clubAssets ?? data.balance) + (data.miniBalance ?? 0)
+  const sheets: { name: string; headers: string[]; rows: (string | number)[][] }[] = [
     {
       name: 'Tổng Quan',
       headers: ['Chỉ số', 'Giá trị'],
       rows: [
-        ['Tổng thu', data.totalIncome],
-        ['Tổng chi', data.totalExpense],
-        ['Số dư', data.balance],
-        ['Số thành viên', data.memberCount],
-        ['Buổi tập', data.sessionCount],
+        ['Tổng thu kỳ', data.totalIncome],
+        ['Tổng chi kỳ', data.totalExpense],
+        ['Số dư Quỹ Chính (Thu − Chi + chuyển kỳ)', mainFund],
+        ['Quỹ Phụ', data.miniBalance ?? 0],
+        ['Số dư chuyển kỳ', data.carryForward ?? 0],
+        ['Tổng tài sản (2 quỹ)', totalAssets],
+        ['Tổng lượt điểm danh', data.totalAttendance ?? 0],
+        ['Thành viên hoạt động', data.activeMemberCount ?? data.memberCount],
+        ['Số buổi tập', data.sessionCount],
         ['Đã đóng quỹ', data.confirmedCount],
       ],
     },
@@ -1474,5 +1485,14 @@ export function exportReportsExcel(data: ReportSummary, memberDetails: { name: s
       headers: ['Thành viên', 'Buổi tham gia', 'Đã đóng', 'Chi phí (VNĐ)', 'Số dư (VNĐ)'],
       rows: memberDetails.map(m => [m.name, m.attended, m.paid, m.cost, m.balance]),
     },
-  ])
+  ]
+  // Sheet "Khoản Chi" — parity với trang Chi trong PDF (chỉ thêm khi có dữ liệu).
+  if (expenseRows.length > 0) {
+    sheets.push({
+      name: 'Khoản Chi',
+      headers: ['Ngày', 'Nội dung', 'Nguồn', 'Loại', 'Số tiền (VNĐ)', 'Trạng thái'],
+      rows: expenseRows.map(e => [e.date, e.description, e.fundLabel, e.kindLabel, e.amount, e.statusLabel]),
+    })
+  }
+  exportExcel(`Bao_Cao_${data.periodName.replace(/\s/g, '_')}`, sheets)
 }

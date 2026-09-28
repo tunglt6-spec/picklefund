@@ -175,7 +175,9 @@ export function Reports() {
   const kClubAssets = fs?.clubAssets?.balance != null ? num(fs.clubAssets.balance) : undefined
   // SỐ DƯ QUỸ CHÍNH (hiển thị) = (Thu − Chi) + Số dư chuyển kỳ, KHÔNG cộng Quỹ Phụ.
   // = clubAssets (backend: commonFund.balance + carryForward.balance). Thiếu clubAssets → tự cộng.
-  const kMainFund = kClubAssets ?? ((kCommonBalance as number) + (kCarry as number))
+  const kMainFund = kClubAssets ?? (
+    kCommonBalance != null && kCarry != null ? kCommonBalance + kCarry : undefined
+  )
   const kAttendance = num(fs?.totalAttendance)
   const kUnpaid = num(fs?.unpaidCount)
   // Sĩ số TÍNH PHÍ của kỳ (billedMemberCount đã chốt ?? live) — dùng cho export để header
@@ -332,12 +334,13 @@ export function Reports() {
       toast.error(EXPORT_FAILED)
     }
   }
-  const doExportExcel = () => {
+  const doExportExcel = async () => {
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
     try {
+      const expenseRows = await buildExpenseRows()
       exportReportsExcel(buildExportSummary(), reportType === 'financial' ? [] : memberBillRows.map(r => ({
         name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
-      })))
+      })), expenseRows)
       toast.success(reportType === 'financial' ? 'Đã xuất Excel tổng quan tài chính!' : 'Đã xuất Excel báo cáo đầy đủ!')
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportExcel failed:', e)
@@ -658,7 +661,7 @@ export function Reports() {
             totalIncome: kIncome as number,
             totalExpenses: kExpense as number,
             displayBalance: kMainFund as number,
-            memberCount: activeMemberCount,
+            memberCount: (kMemberCount ?? activeMemberCount) as number,
             sessionCount: kSessions as number,
             confirmedCount: memberBillRows.filter(r => r.contributionPaid).length,
             memberBillRows: billRowsForExport(),
