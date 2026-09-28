@@ -1110,6 +1110,8 @@ function loadVnFonts() {
 export interface ReportExpenseRow {
   date: string
   description: string
+  fundKey: 'COMMON' | 'MINI'
+  fundLabel: string
   kindLabel: string
   amount: number
   statusKey: 'approved' | 'pending' | 'paid' | 'rejected'

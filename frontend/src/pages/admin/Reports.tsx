@@ -28,6 +28,7 @@ import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
+import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import toast from 'react-hot-toast'
 import { InfographicPreviewModal } from '../../components/reports/infographic/InfographicPreviewModal'
 import { mapToInfographicData } from '../../components/reports/infographic/infographic.utils'
@@ -292,21 +293,28 @@ export function Reports() {
     try {
       const res = await api.get(`/expenses?clubId=${user?.clubId ?? ''}`)
       const raw: any[] = res.data?.data ?? []
-      return raw
-        .filter(e => (e.fundSource ?? 'COMMON') === 'COMMON' && e.fundPeriodId === activePeriod.id)
-        .sort((a, b) => String(a.expenseDate ?? '').localeCompare(String(b.expenseDate ?? '')))
-        .map(e => {
-          const d = String(e.expenseDate ?? '').slice(0, 10)
-          const [y, m, dd] = d.split('-')
-          return {
-            date: dd ? `${dd}/${m}/${y}` : d,
-            description: e.description ?? '',
-            kindLabel: e.costType === 'COURT' ? 'Tiền sân' : 'Sinh hoạt',
-            amount: Number(e.amount),
-            statusKey: (e.status ?? 'pending') as ReportExpenseRow['statusKey'],
-            statusLabel: EXPENSE_STATUS_LABEL[e.status ?? 'pending'] ?? (e.status ?? 'Chờ duyệt'),
-          }
-        })
+      const toRow = (e: any): ReportExpenseRow => {
+        const isMini = (e.fundSource ?? 'COMMON') === 'MINI'
+        const d = String(e.expenseDate ?? '').slice(0, 10)
+        const [y, m, dd] = d.split('-')
+        return {
+          date: dd ? `${dd}/${m}/${y}` : d,
+          description: e.description ?? '',
+          fundKey: isMini ? 'MINI' : 'COMMON',
+          fundLabel: isMini ? 'Quỹ Phụ' : 'Quỹ Chính',
+          kindLabel: isMini
+            ? (MINI_EXPENSE_TYPE_LABELS[e.miniExpenseType as keyof typeof MINI_EXPENSE_TYPE_LABELS] ?? 'Chi khác')
+            : (e.costType === 'COURT' ? 'Tiền sân' : 'Sinh hoạt'),
+          amount: Number(e.amount),
+          statusKey: (e.status ?? 'pending') as ReportExpenseRow['statusKey'],
+          statusLabel: EXPENSE_STATUS_LABEL[e.status ?? 'pending'] ?? (e.status ?? 'Chờ duyệt'),
+        }
+      }
+      const byDate = (a: any, b: any) => String(a.expenseDate ?? '').localeCompare(String(b.expenseDate ?? ''))
+      // Quỹ Chính lọc theo kỳ; Quỹ Phụ độc lập kỳ (pool riêng) → liệt kê tất cả. Quỹ Chính trước.
+      const common = raw.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON' && e.fundPeriodId === activePeriod.id).sort(byDate)
+      const mini = raw.filter(e => e.fundSource === 'MINI').sort(byDate)
+      return [...common, ...mini].map(toRow)
     } catch { return [] }
   }
   const EXPORT_FAILED = 'Không thể xuất báo cáo. Vui lòng thử lại.'

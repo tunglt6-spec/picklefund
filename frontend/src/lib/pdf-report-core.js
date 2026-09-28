@@ -349,12 +349,13 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   /* ═══════════ TRANG KHOẢN CHI — danh sách các khoản chi trong kỳ ═══════════ */
   if (expenseRows.length > 0) {
     const ECOLS = [
-      { key: 'idx',    label: '#',          w: 8,  align: 'left' },
-      { key: 'date',   label: 'NGÀY',       w: 22, align: 'left' },
-      { key: 'desc',   label: 'NỘI DUNG',   w: 64, align: 'left' },
-      { key: 'kind',   label: 'LOẠI',       w: 26, align: 'left' },
-      { key: 'amount', label: 'SỐ TIỀN',    w: 30, align: 'right' },
-      { key: 'status', label: 'TRẠNG THÁI', w: 36, align: 'center' },
+      { key: 'idx',    label: '#',          w: 7,  align: 'left' },
+      { key: 'date',   label: 'NGÀY',       w: 20, align: 'left' },
+      { key: 'desc',   label: 'NỘI DUNG',   w: 54, align: 'left' },
+      { key: 'fund',   label: 'NGUỒN',      w: 22, align: 'center' },
+      { key: 'kind',   label: 'LOẠI',       w: 27, align: 'left' },
+      { key: 'amount', label: 'SỐ TIỀN',    w: 28, align: 'right' },
+      { key: 'status', label: 'TRẠNG THÁI', w: 28, align: 'center' },
     ]
     const eColX = []
     { let cx = MARGIN; for (const c of ECOLS) { eColX.push(cx); cx += c.w } }
@@ -382,12 +383,13 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       false,
     ) + 5
     font('bold', 8.5, C.indigoDark)
-    doc.text('DANH SÁCH KHOẢN CHI TRONG KỲ (Quỹ Chính)', MARGIN, ey + 2)
+    doc.text('DANH SÁCH KHOẢN CHI (Quỹ Chính & Quỹ Phụ)', MARGIN, ey + 2)
     ey += 5
     ey = eHead(ey)
     const eBottom = PAGE_H - MARGIN - 12
     const ROW_HE = 7.5
-    let approvedTotal = 0
+    let approvedCommon = 0
+    let approvedMini = 0
     expenseRows.forEach((e, idx) => {
       if (ey + ROW_HE > eBottom) {
         doc.addPage()
@@ -402,35 +404,48 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       doc.setLineWidth(0.2)
       doc.line(MARGIN, ey + ROW_HE, PAGE_W - MARGIN, ey + ROW_HE)
       const midY = ey + ROW_HE / 2 + 1.6
+      const isMini = e.fundKey === 'MINI'
       font('normal', 7, C.grayLight)
       doc.text(String(idx + 1), eCellX(0), midY)
       font('normal', 7.2, C.textDark)
       doc.text(clip(e.date ?? '', ECOLS[1].w - 4), eCellX(1), midY)
       font('bold', 7.5, C.textDark)
       doc.text(clip(e.description ?? '', ECOLS[2].w - 5), eCellX(2), midY)
+      font('bold', 6.6, isMini ? C.cyan : C.indigo)
+      doc.text(clip(e.fundLabel ?? (isMini ? 'Quỹ Phụ' : 'Quỹ Chính'), ECOLS[3].w - 3), eCellX(3), midY, { align: 'center' })
       font('normal', 7, C.gray)
-      doc.text(clip(e.kindLabel ?? '', ECOLS[3].w - 4), eCellX(3), midY)
+      doc.text(clip(e.kindLabel ?? '', ECOLS[4].w - 4), eCellX(4), midY)
       font('bold', 7.5, C.redDark)
-      doc.text(vnd(e.amount), eCellX(4), midY, { align: 'right' })
-      font('bold', 6.8, stColor(e.statusKey))
-      doc.text(clip(e.statusLabel ?? '', ECOLS[5].w - 3), eCellX(5), midY, { align: 'center' })
-      if (e.statusKey === 'approved' || e.statusKey === 'paid') approvedTotal += e.amount
+      doc.text(vnd(e.amount), eCellX(5), midY, { align: 'right' })
+      font('bold', 6.6, stColor(e.statusKey))
+      doc.text(clip(e.statusLabel ?? '', ECOLS[6].w - 3), eCellX(6), midY, { align: 'center' })
+      if (e.statusKey === 'approved' || e.statusKey === 'paid') {
+        if (isMini) approvedMini += e.amount
+        else approvedCommon += e.amount
+      }
       ey += ROW_HE
     })
-    /* Dòng tổng — khớp "Tổng chi kỳ" (chỉ tính đã duyệt/đã chi). */
-    if (ey + 12 > eBottom) {
-      doc.addPage()
-      ey = drawHeader('BÁO CÁO TÀI CHÍNH — KHOẢN CHI (tiếp)', `Xuất ngày ${summary.exportedDateText}`, '', false) + 5
+    /* Dòng tổng theo NGUỒN — Quỹ Chính khớp "Tổng chi kỳ"; Quỹ Phụ độc lập. Chỉ tính đã duyệt/đã chi. */
+    const drawSum = (label, val) => {
+      if (ey + 12 > eBottom) {
+        doc.addPage()
+        ey = drawHeader('BÁO CÁO TÀI CHÍNH — KHOẢN CHI (tiếp)', `Xuất ngày ${summary.exportedDateText}`, '', false) + 5
+      }
+      ey += 2.5
+      setFill(C.indigoSoft)
+      setDraw(C.indigoBorder)
+      doc.setLineWidth(0.35)
+      rrect(MARGIN, ey, CONTENT_W, 10, 2, 'FD')
+      font('bold', 8, C.indigoDark)
+      doc.text(label, MARGIN + 5, ey + 6.5)
+      font('bold', 10.5, C.redDark)
+      doc.text(vnd(val), PAGE_W - MARGIN - 5, ey + 6.7, { align: 'right' })
+      ey += 10
     }
-    ey += 2.5
-    setFill(C.indigoSoft)
-    setDraw(C.indigoBorder)
-    doc.setLineWidth(0.35)
-    rrect(MARGIN, ey, CONTENT_W, 10, 2, 'FD')
-    font('bold', 8, C.indigoDark)
-    doc.text('TỔNG CHI (đã duyệt / đã chi)', MARGIN + 5, ey + 6.5)
-    font('bold', 10.5, C.redDark)
-    doc.text(vnd(approvedTotal), PAGE_W - MARGIN - 5, ey + 6.7, { align: 'right' })
+    const hasCommon = expenseRows.some((e) => e.fundKey !== 'MINI')
+    const hasMini = expenseRows.some((e) => e.fundKey === 'MINI')
+    if (hasCommon) drawSum('TỔNG CHI QUỸ CHÍNH (đã duyệt / đã chi)', approvedCommon)
+    if (hasMini) drawSum('TỔNG CHI QUỸ PHỤ (đã duyệt / đã chi)', approvedMini)
   }
 
   /* ═══════════ TRANG BILL — 6 thẻ/trang (2 cột × 3 hàng), toạ độ CỐ ĐỊNH ═══════════ */
