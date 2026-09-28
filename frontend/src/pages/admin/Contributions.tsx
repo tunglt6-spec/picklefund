@@ -16,7 +16,7 @@ import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
-import { BulkActionBar, RowCheckbox } from '../../components/shared'
+import { BulkActionBar, RowCheckbox, DataTable, type Column } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
 
 const BLANK_COMMON = {
@@ -614,6 +614,60 @@ export function Contributions() {
     )
   }
 
+  // ── Bảng desktop (DataTable) — mobile dùng nhánh riêng ở trên (MobileTransactionCard) ──
+  const rowCls = (c: FundContribution) => bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')
+  const selCol = (list: FundContribution[], label: string): Column<FundContribution> => ({
+    key: 'sel', align: 'center', className: 'w-10',
+    header: <RowCheckbox label={label} checked={subsetAllSelected(list)}
+      indeterminate={list.some(c => bulk.selectedIds.has(c.id)) && !subsetAllSelected(list)} onChange={() => toggleSubset(list)} />,
+    render: (c) => <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />,
+  })
+  const methodBadge = (c: FundContribution) => <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
+  const statusBadge = (c: FundContribution) => c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>
+  const confirmToggle = (c: FundContribution) => (
+    <button onClick={() => toggleConfirm(c.id)} title={c.isConfirmed ? 'Bỏ xác nhận' : 'Xác nhận'}
+      className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:[color:var(--pf-color-muted)]' : 'text-slate-200 hover:text-emerald-500'}`}>
+      {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+    </button>
+  )
+  const editDeleteActions = (c: FundContribution, withReceipt?: boolean) => (
+    <div className="flex items-center justify-center gap-1">
+      {withReceipt && (
+        <button onClick={() => exportMiniReceipt(c)} title="Xuất phiếu thu"
+          className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-violet-50 hover:text-violet-600 transition-colors"><FileText size={13} /></button>
+      )}
+      <button onClick={() => openEdit(c)} title="Sửa"
+        className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"><Edit2 size={13} /></button>
+      <button onClick={() => setDeleteId(c.id)} title="Xóa"
+        className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={13} /></button>
+    </div>
+  )
+  const commonColumns: Column<FundContribution>[] = [
+    ...(!isMember ? [selCol(commonContribs, 'Chọn tất cả khoản thu Quỹ Chính')] : []),
+    { key: 'member', header: 'Thành viên', render: (c) => <span className="font-medium [color:var(--pf-text)]">{c.member?.fullName ?? c.memberId}</span> },
+    { key: 'date', header: 'Ngày đóng', align: 'center', render: (c) => <span className="[color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</span> },
+    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold [color:var(--pf-text)]">{formatVND(c.amount)}</span> },
+    { key: 'method', header: 'Hình thức', align: 'center', render: methodBadge },
+    { key: 'status', header: 'Trạng thái', align: 'center', render: statusBadge },
+    ...(!isMember ? ([
+      { key: 'confirm', header: 'Xác nhận', align: 'center', className: 'w-16', render: confirmToggle },
+      { key: 'actions', header: 'Thao tác', align: 'center', className: 'w-20', render: (c: FundContribution) => editDeleteActions(c) },
+    ] as Column<FundContribution>[]) : []),
+  ]
+  const miniColumns: Column<FundContribution>[] = [
+    ...(!isMember ? [selCol(miniContribs, 'Chọn tất cả khoản thu Quỹ Phụ')] : []),
+    { key: 'payer', header: 'Người nộp', render: (c) => <span className="font-medium [color:var(--pf-text)]">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</span> },
+    { key: 'type', header: 'Loại thu', render: (c) => <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge> },
+    { key: 'date', header: 'Ngày', align: 'center', render: (c) => <span className="[color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</span> },
+    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold [color:var(--pf-primary)]">{formatVND(c.amount)}</span> },
+    { key: 'method', header: 'Hình thức', align: 'center', render: methodBadge },
+    { key: 'status', header: 'Trạng thái', align: 'center', render: statusBadge },
+    ...(!isMember ? ([
+      { key: 'confirm', header: 'Xác nhận', align: 'center', className: 'w-16', render: confirmToggle },
+      { key: 'actions', header: 'Thao tác', align: 'center', className: 'w-20', render: (c: FundContribution) => editDeleteActions(c, true) },
+    ] as Column<FundContribution>[]) : []),
+  ]
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader
@@ -711,67 +765,8 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
-              <table className="table-base">
-                <thead>
-                  <tr>
-                    {!isMember && (
-                      <th className="w-10 text-center">
-                        <RowCheckbox label="Chọn tất cả khoản thu Quỹ Chính" checked={subsetAllSelected(commonContribs)} indeterminate={commonContribs.some(c => bulk.selectedIds.has(c.id)) && !subsetAllSelected(commonContribs)} onChange={() => toggleSubset(commonContribs)} />
-                      </th>
-                    )}
-                    <th>Thành viên</th>
-                    <th className="text-center">Ngày đóng</th>
-                    <th className="text-right">Số tiền</th>
-                    <th className="text-center">Hình thức</th>
-                    <th className="text-center">Trạng thái</th>
-                    {!isMember && <th className="text-center w-16">Xác nhận</th>}
-                    {!isMember && <th className="text-center w-20">Thao tác</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {commonPageRows.map(c => (
-                    <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
-                      {!isMember && (
-                        <td className="text-center">
-                          <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
-                        </td>
-                      )}
-                      <td className="font-medium [color:var(--pf-text)]">{c.member?.fullName ?? c.memberId}</td>
-                      <td className="text-center [color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</td>
-                      <td className="text-right font-semibold [color:var(--pf-text)]">{formatVND(c.amount)}</td>
-                      <td className="text-center">
-                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
-                      </td>
-                      <td className="text-center">
-                        {c.isConfirmed
-                          ? <Badge variant="green" dot>Xác nhận</Badge>
-                          : <Badge variant="yellow" dot>Chờ</Badge>}
-                      </td>
-                      {!isMember && (
-                        <td className="text-center">
-                          <button onClick={() => toggleConfirm(c.id)}
-                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:[color:var(--pf-color-muted)]' : 'text-slate-200 hover:text-emerald-500'}`}>
-                            {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                          </button>
-                        </td>
-                      )}
-                      {!isMember && (
-                        <td className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => openEdit(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
-                              title="Sửa"><Edit2 size={13} /></button>
-                            <button onClick={() => setDeleteId(c.id)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
-                              title="Xóa"><Trash2 size={13} /></button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
+              <DataTable columns={commonColumns} rows={commonPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}
           {commonPages > 1 && (
@@ -796,74 +791,8 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
-              <table className="table-base">
-                <thead>
-                  <tr>
-                    {!isMember && (
-                      <th className="w-10 text-center">
-                        <RowCheckbox label="Chọn tất cả khoản thu Quỹ Phụ" checked={subsetAllSelected(miniContribs)} indeterminate={miniContribs.some(c => bulk.selectedIds.has(c.id)) && !subsetAllSelected(miniContribs)} onChange={() => toggleSubset(miniContribs)} />
-                      </th>
-                    )}
-                    <th>Người nộp</th>
-                    <th>Loại thu</th>
-                    <th className="text-center">Ngày</th>
-                    <th className="text-right">Số tiền</th>
-                    <th className="text-center">Hình thức</th>
-                    <th className="text-center">Trạng thái</th>
-                    {!isMember && <th className="text-center w-16">Xác nhận</th>}
-                    {!isMember && <th className="text-center w-20">Thao tác</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {miniPageRows.map(c => (
-                    <tr key={c.id} className={bulk.selectedIds.has(c.id) ? 'bg-red-50/50' : (!c.isConfirmed ? 'bg-amber-50/30' : '')}>
-                      {!isMember && (
-                        <td className="text-center">
-                          <RowCheckbox label="Chọn khoản thu" checked={bulk.selectedIds.has(c.id)} onChange={() => bulk.toggleOne(c.id)} />
-                        </td>
-                      )}
-                      <td className="font-medium [color:var(--pf-text)]">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</td>
-                      <td>
-                        <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge>
-                      </td>
-                      <td className="text-center [color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</td>
-                      <td className="text-right font-semibold [color:var(--pf-primary)]">{formatVND(c.amount)}</td>
-                      <td className="text-center">
-                        <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
-                      </td>
-                      <td className="text-center">
-                        {c.isConfirmed
-                          ? <Badge variant="green" dot>Xác nhận</Badge>
-                          : <Badge variant="yellow" dot>Chờ</Badge>}
-                      </td>
-                      {!isMember && (
-                        <td className="text-center">
-                          <button onClick={() => toggleConfirm(c.id)}
-                            className={`transition-colors ${c.isConfirmed ? 'text-emerald-500 hover:[color:var(--pf-color-muted)]' : 'text-slate-200 hover:text-emerald-500'}`}>
-                            {c.isConfirmed ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                          </button>
-                        </td>
-                      )}
-                      {!isMember && (
-                        <td className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => exportMiniReceipt(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-violet-50 hover:text-violet-600 transition-colors"
-                              title="Xuất phiếu thu"><FileText size={13} /></button>
-                            <button onClick={() => openEdit(c)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"
-                              title="Sửa"><Edit2 size={13} /></button>
-                            <button onClick={() => setDeleteId(c.id)}
-                              className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
-                              title="Xóa"><Trash2 size={13} /></button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
+              <DataTable columns={miniColumns} rows={miniPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}
           {miniPages > 1 && (
