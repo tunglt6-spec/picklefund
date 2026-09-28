@@ -12,7 +12,7 @@ import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { useAuthStore } from '../../store/authStore'
-import { useEmbedded, BulkActionBar, RowCheckbox, MetricCard } from '../../components/shared'
+import { useEmbedded, BulkActionBar, RowCheckbox, MetricCard, DataTable, MobileCardList, type Column } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
 import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource, MiniExpenseType } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
@@ -954,6 +954,85 @@ export function Expenses() {
     )
   }
 
+  // ── Hành động 1 dòng chi (dùng chung bảng desktop + card mobile) ──
+  const renderExpenseActions = (exp: RichExpense) => (
+    <div className="flex items-center justify-center gap-1">
+      {!isMember && exp.status === 'pending' && (
+        <>
+          <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
+            className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+            <CheckCircle size={13} />
+          </button>
+          <button onClick={() => handleReject(exp.id)} title="Từ chối"
+            className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
+            <X size={13} />
+          </button>
+        </>
+      )}
+      <button onClick={() => setDetailExp(exp)} title="Xem"
+        className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+        <Eye size={13} />
+      </button>
+      {!isMember && (
+        <button onClick={() => setConfirmId(exp.id)} title="Xóa"
+          className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-600 transition-colors">
+          <Trash2 size={13} />
+        </button>
+      )}
+    </div>
+  )
+
+  const allocLabel = (e: RichExpense) => (e.fundSource ?? 'COMMON') === 'MINI'
+    ? (e.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[e.miniExpenseType] : 'Quỹ Phụ')
+    : `${e.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleLabels[e.allocationRule]}`
+  const fundBadge = (e: RichExpense) => (e.fundSource ?? 'COMMON') === 'MINI'
+    ? <Badge variant="indigo">Quỹ Phụ</Badge> : <Badge variant="gray">Quỹ Chính</Badge>
+
+  // Cột bảng Chi (desktop) — giữ nguyên checkbox chọn hàng loạt + trạng thái + hành động.
+  const expenseColumns: Column<RichExpense>[] = [
+    ...(!isMember ? ([{
+      key: 'sel', align: 'center', className: 'w-10',
+      header: <RowCheckbox label="Chọn tất cả khoản chi" checked={bulk.allSelected}
+        indeterminate={bulk.someSelected && !bulk.allSelected} onChange={bulk.toggleAll} />,
+      render: (e: RichExpense) => <RowCheckbox label={`Chọn khoản chi ${e.code}`}
+        checked={bulk.selectedIds.has(e.id)} onChange={() => bulk.toggleOne(e.id)} />,
+    }] as Column<RichExpense>[]) : []),
+    { key: 'code', header: 'Mã chi', render: (e) => <span className="font-mono text-xs [color:var(--pf-primary)]">{e.code}</span> },
+    { key: 'description', header: 'Nội dung', render: (e) => <span className="font-medium [color:var(--pf-text)] block max-w-[200px] truncate">{e.description}</span> },
+    { key: 'fund', header: 'Nguồn quỹ', align: 'center', render: fundBadge },
+    { key: 'date', header: 'Ngày chi', align: 'center', render: (e) => <span className="[color:var(--pf-color-muted)] text-xs">{e.expenseDate}</span> },
+    { key: 'amount', header: 'Số Tiền (VND)', align: 'right', render: (e) => <span className="font-semibold [color:var(--pf-text)]">{formatVND(e.amount)}</span> },
+    { key: 'alloc', header: 'Phân bổ', render: (e) => <span className="[color:var(--pf-color-muted)] text-xs">{allocLabel(e)}</span> },
+    { key: 'status', header: 'Trạng thái', align: 'center', render: (e) => <Badge variant={statusCfg[e.status].variant} dot>{statusCfg[e.status].label}</Badge> },
+    { key: 'actions', header: 'Hành động', align: 'center', className: 'w-24', render: renderExpenseActions },
+  ]
+
+  // Card mobile (thay bảng cuộn ngang) — parity đủ dữ liệu + hành động.
+  const renderExpenseCard = (exp: RichExpense) => (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {!isMember && <RowCheckbox label={`Chọn khoản chi ${exp.code}`}
+            checked={bulk.selectedIds.has(exp.id)} onChange={() => bulk.toggleOne(exp.id)} />}
+          <span className="font-mono text-[11px] [color:var(--pf-primary)]">{exp.code}</span>
+        </div>
+        <Badge variant={statusCfg[exp.status].variant} dot>{statusCfg[exp.status].label}</Badge>
+      </div>
+      <p className="text-sm font-semibold [color:var(--pf-text)] break-words">{exp.description}</p>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-base font-bold [color:var(--pf-text)] tabular-nums">{formatVND(exp.amount)}</span>
+        {fundBadge(exp)}
+      </div>
+      <div className="flex items-center justify-between gap-2 text-xs [color:var(--pf-color-muted)]">
+        <span>{exp.expenseDate}</span>
+        <span className="truncate max-w-[55%] text-right">{allocLabel(exp)}</span>
+      </div>
+      <div className="flex items-center justify-end gap-1 pt-1.5 border-t border-[color:var(--pf-border-soft)]">
+        {renderExpenseActions(exp)}
+      </div>
+    </div>
+  )
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       {/* Header */}
@@ -1046,92 +1125,21 @@ export function Expenses() {
               <p className="text-sm [color:var(--pf-color-muted)]">Không có khoản chi nào</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table-base">
-                <thead>
-                  <tr>
-                    {!isMember && (
-                      <th className="w-10 text-center">
-                        <RowCheckbox
-                          label="Chọn tất cả khoản chi"
-                          checked={bulk.allSelected}
-                          indeterminate={bulk.someSelected && !bulk.allSelected}
-                          onChange={bulk.toggleAll}
-                        />
-                      </th>
-                    )}
-                    <th>Mã chi</th>
-                    <th>Nội dung</th>
-                    <th className="text-center">Nguồn quỹ</th>
-                    <th className="text-center">Ngày chi</th>
-                    <th className="text-right">Số Tiền (VND)</th>
-                    <th>Phân bổ</th>
-                    <th className="text-center">Trạng thái</th>
-                    <th className="text-center w-24">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.map(exp => {
-                    const cfg = statusCfg[exp.status]
-                    const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
-                    return (
-                      <tr key={exp.id} className={bulk.selectedIds.has(exp.id) ? 'bg-red-50/50' : undefined}>
-                        {!isMember && (
-                          <td className="text-center">
-                            <RowCheckbox
-                              label={`Chọn khoản chi ${exp.code}`}
-                              checked={bulk.selectedIds.has(exp.id)}
-                              onChange={() => bulk.toggleOne(exp.id)}
-                            />
-                          </td>
-                        )}
-                        <td className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</td>
-                        <td className="font-medium [color:var(--pf-text)] max-w-[200px] truncate">{exp.description}</td>
-                        <td className="text-center">
-                          {isMini
-                            ? <Badge variant="indigo">Quỹ Phụ</Badge>
-                            : <Badge variant="gray">Quỹ Chính</Badge>}
-                        </td>
-                        <td className="text-center [color:var(--pf-color-muted)] text-xs">{exp.expenseDate}</td>
-                        <td className="text-right font-semibold [color:var(--pf-text)]">{formatVND(exp.amount)}</td>
-                        <td className="[color:var(--pf-color-muted)] text-xs">{isMini
-                          ? (exp.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[exp.miniExpenseType] : 'Quỹ Phụ')
-                          : `${exp.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleLabels[exp.allocationRule]}`}</td>
-                        <td className="text-center">
-                          <Badge variant={cfg.variant} dot>{cfg.label}</Badge>
-                        </td>
-                        <td>
-                          <div className="flex items-center justify-center gap-1">
-                            {!isMember && exp.status === 'pending' && (
-                              <>
-                                <button onClick={() => handleApprove(exp.id)} title="Duyệt chi"
-                                  className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-                                  <CheckCircle size={13} />
-                                </button>
-                                <button onClick={() => handleReject(exp.id)} title="Từ chối"
-                                  className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
-                                  <X size={13} />
-                                </button>
-                              </>
-                            )}
-                            <button onClick={() => setDetailExp(exp)} title="Xem"
-                              className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
-                              <Eye size={13} />
-                            </button>
-                            {!isMember && (
-                              <button onClick={() => setConfirmId(exp.id)} title="Xóa"
-                                className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-600 transition-colors">
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Desktop: bảng chuẩn DataTable */}
+              <div className="hidden md:block overflow-x-auto">
+                <DataTable
+                  columns={expenseColumns}
+                  rows={paginated}
+                  rowKey={(e) => e.id}
+                  rowClassName={(e) => bulk.selectedIds.has(e.id) ? 'bg-red-50/50' : ''}
+                />
+              </div>
+              {/* Mobile: card list (thay bảng cuộn ngang) */}
+              <div className="md:hidden p-3">
+                <MobileCardList items={paginated} itemKey={(e) => e.id} renderCard={renderExpenseCard} />
+              </div>
+            </>
           )}
 
           {/* Pagination */}

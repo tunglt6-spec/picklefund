@@ -22,6 +22,8 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   className?: string
   emptyText?: string
+  /** Class tuỳ biến cho <tr> theo row (vd highlight dòng đang chọn). */
+  rowClassName?: (row: T, index: number) => string
 }
 
 export function DataTable<T>({
@@ -31,6 +33,7 @@ export function DataTable<T>({
   onRowClick,
   className,
   emptyText = 'Không có dữ liệu',
+  rowClassName,
 }: DataTableProps<T>) {
   const alignCls = (a?: Column<T>['align']) =>
     a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'
@@ -71,6 +74,7 @@ export function DataTable<T>({
                 className={cn(
                   'border-b transition-colors border-[color:var(--pf-border-soft)]',
                   onRowClick && 'cursor-pointer hover:[background:var(--pf-color-muted-soft)]',
+                  rowClassName?.(row, i),
                 )}
               >
                 {columns.map((c) => {
