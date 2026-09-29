@@ -2,7 +2,6 @@ export { FundSummaryCard } from './FundSummaryCard'
 export type { FundSummaryCardProps } from './FundSummaryCard'
 export { FinanceKpiGrid } from './FinanceKpiGrid'
 export { FinanceFormula } from './FinanceFormula'
-export { FinanceStatusBadge } from './FinanceStatusBadge'
 export { FinanceLegend } from './FinanceLegend'
 
 export const FUND_COLORS = {

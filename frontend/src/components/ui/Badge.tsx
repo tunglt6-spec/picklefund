@@ -1,17 +1,23 @@
-import { cn } from '../../lib/utils'
+/**
+ * Badge — pill trạng thái theo `variant` (API cũ, 11 màn đang dùng). Nay là WRAPPER mỏng
+ * bọc shared StatusBadge (một nguồn màu semantic --pf-color-*). variant → tone map 1-1,
+ * MÀU GIỮ Y HỆT (green→success, red→danger, orange/yellow→warning, blue→info,
+ * purple/indigo→ai(=primary #6D5DFB), gray→neutral). Zero render change.
+ */
+import type { ReactNode } from 'react'
+import { StatusBadge, type StatusTone } from '../shared/StatusBadge'
 
 type Variant = 'green' | 'red' | 'orange' | 'blue' | 'purple' | 'gray' | 'yellow' | 'indigo'
 
-// Token semantic (`--pf-*`) — an toàn dark mode, đồng bộ StatusBadge. Không dùng palette Tailwind cứng.
-const cfg: Record<Variant, { bg: string; text: string; dot: string }> = {
-  green:  { bg: '[background:var(--pf-color-success-soft)]', text: '[color:var(--pf-color-success)]', dot: '[background:var(--pf-color-success)]' },
-  red:    { bg: '[background:var(--pf-color-danger-soft)]',  text: '[color:var(--pf-color-danger)]',  dot: '[background:var(--pf-color-danger)]' },
-  orange: { bg: '[background:var(--pf-color-warning-soft)]', text: '[color:var(--pf-color-warning)]', dot: '[background:var(--pf-color-warning)]' },
-  blue:   { bg: '[background:var(--pf-color-info-soft)]',    text: '[color:var(--pf-color-info)]',    dot: '[background:var(--pf-color-info)]' },
-  purple: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
-  gray:   { bg: '[background:var(--pf-color-muted-soft)]',   text: '[color:var(--pf-color-muted)]',   dot: '[background:var(--pf-color-muted)]' },
-  yellow: { bg: '[background:var(--pf-color-warning-soft)]', text: '[color:var(--pf-color-warning)]', dot: '[background:var(--pf-color-warning)]' },
-  indigo: { bg: '[background:var(--pf-primary-soft)]', text: '[color:var(--pf-primary)]', dot: '[background:var(--pf-primary)]' },
+const VARIANT_TONE: Record<Variant, StatusTone> = {
+  green: 'success',
+  red: 'danger',
+  orange: 'warning',
+  yellow: 'warning',
+  blue: 'info',
+  purple: 'ai',
+  indigo: 'ai',
+  gray: 'neutral',
 }
 
 export function Badge({
@@ -20,19 +26,14 @@ export function Badge({
   dot = false,
   className,
 }: {
-  children: React.ReactNode
+  children: ReactNode
   variant?: Variant
   dot?: boolean
   className?: string
 }) {
-  const c = cfg[variant]
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-      c.bg, c.text, className
-    )}>
-      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', c.dot)} />}
+    <StatusBadge tone={VARIANT_TONE[variant]} dot={dot} className={className}>
       {children}
-    </span>
+    </StatusBadge>
   )
 }
