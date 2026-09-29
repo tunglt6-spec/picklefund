@@ -13,7 +13,7 @@ import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { PairBuilder } from '../../../components/minigame/PairBuilder'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { MetricCard } from '../../../components/shared/MetricCard'
 import { StatusBadge, type StatusTone } from '../../../components/shared/StatusBadge'
 import type { MiniGame, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
@@ -820,7 +820,7 @@ export function FixedDoublesDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
-      <PageHeader
+      <PageHeader variant="bar"
         title={`🤝 Đôi Cố Định – ${mg.name}`}
         subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
         actions={

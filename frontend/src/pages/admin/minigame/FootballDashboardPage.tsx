@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
 import { MetricCard } from '../../../components/shared/MetricCard'
 import { PairBuilder } from '../../../components/minigame/PairBuilder'
@@ -546,7 +546,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title={`${ui.emoji} ${ui.name} – ${mg.name}`}
         subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
         actions={canFinish ? (

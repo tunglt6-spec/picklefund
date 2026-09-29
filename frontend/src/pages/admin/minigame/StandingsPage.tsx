@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import toast from 'react-hot-toast'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
@@ -241,7 +241,7 @@ export function StandingsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title={`Bảng Xếp Hạng – ${mg.name}`}
         subtitle={`${standings.length} thành viên`}
         actions={

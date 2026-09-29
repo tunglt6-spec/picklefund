@@ -14,7 +14,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, ChevronLeft, Check, UserPlus, X, Info } from 'lucide-react'
 import api from '../../../lib/api'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
@@ -287,7 +287,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
 
   return (
     <div className={embedded ? '' : 'flex-1 overflow-y-auto [background:var(--pf-surface-muted)]'}>
-      <PageHeader title={isEdit ? '✏️ Chỉnh Sửa Giải Đấu' : '🏆 Tạo Giải Đấu Mới'} subtitle={`Bước ${stepIdx + 1}/${steps.length}: ${STEP_LABEL[step]}`} />
+      <PageHeader variant="bar" title={isEdit ? '✏️ Chỉnh Sửa Giải Đấu' : '🏆 Tạo Giải Đấu Mới'} subtitle={`Bước ${stepIdx + 1}/${steps.length}: ${STEP_LABEL[step]}`} />
 
       {/* Step indicator */}
       <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-3 overflow-x-auto no-scrollbar', !embedded && 'sticky top-0 z-10')}>

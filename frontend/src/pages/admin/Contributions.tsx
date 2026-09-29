@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet, Clock } from 'lucide-react'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -670,7 +670,7 @@ export function Contributions() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title="Thu Quỹ"
         subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={

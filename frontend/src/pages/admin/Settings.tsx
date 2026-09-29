@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
 import api from '../../lib/api'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { cn } from '../../lib/utils'
@@ -1171,7 +1171,7 @@ export function Settings() {
 
   return (
     <div className="min-h-screen [background:var(--pf-surface-muted)]">
-      <PageHeader title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
+      <PageHeader variant="bar" title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-4xl">
         {/* Tab bar */}

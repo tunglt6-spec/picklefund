@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Star, Zap, Check, X, CheckCircle2, XCircle, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -392,7 +392,7 @@ export function Billing() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader title="Gói dịch vụ" subtitle="Quản lý subscription và theo dõi chi phí AI" />
+      <PageHeader variant="bar" title="Gói dịch vụ" subtitle="Quản lý subscription và theo dõi chi phí AI" />
       <div className="p-6 mx-auto">{content}</div>
     </div>
   )

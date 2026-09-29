@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown, Plus, Trash2, Pencil, Check } from 'lucide-react'
 import api from '../../../lib/api'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { isGuestId } from '../../../types/minigame'
@@ -179,7 +179,7 @@ export function GroupAssignment() {
           <div className="flex gap-2 overflow-x-auto pb-0.5">{toolbar}</div>
         </div>
       ) : (
-        <PageHeader title={`Xếp Bảng – ${mg.name}`} subtitle={`${myParts.length} người tham gia · tự động hoặc thủ công`} actions={toolbar} />
+        <PageHeader variant="bar" title={`Xếp Bảng – ${mg.name}`} subtitle={`${myParts.length} người tham gia · tự động hoặc thủ công`} actions={toolbar} />
       )}
 
       <div className={isMobile ? 'px-4 py-4' : 'p-6'}>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bell, Send, CheckCircle, Clock, FileSpreadsheet, FileText } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
@@ -262,7 +262,7 @@ export function TreasurerReminders() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title="Nhắc Nhở Đóng Quỹ"
         subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
         actions={

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
 
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { MinigameKpiCards } from '../../../components/minigame/v2/MinigameKpiCards'
 import { GroupAssignmentPanel } from '../../../components/minigame/v2/GroupAssignmentPanel'
 import { CurrentRoundPanel } from '../../../components/minigame/v2/CurrentRoundPanel'
@@ -317,7 +317,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title={`🏓 Đánh Đôi Ngẫu Nhiên – ${mg.name}`}
         subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
         actions={

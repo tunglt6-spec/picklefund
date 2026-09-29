@@ -11,7 +11,7 @@ import toast from 'react-hot-toast'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { useAuthStore } from '../../../store/authStore'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { LoadingState } from '../../../components/shared/LoadingState'
 import api from '../../../lib/api'
@@ -90,7 +90,7 @@ export function RunningDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu" />
+      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu" />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
         <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 

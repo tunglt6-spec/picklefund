@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus, ScrollText } from 'lucide-react'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -406,7 +406,7 @@ export function Notifications() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
         actions={

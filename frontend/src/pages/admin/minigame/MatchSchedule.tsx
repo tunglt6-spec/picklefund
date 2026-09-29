@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ClipboardEdit, Pencil, Trash2 } from 'lucide-react'
 import api from '../../../lib/api'
-import { PageHeader } from '../../../components/layout/PageHeader'
+import { PageHeader } from '../../../components/shared/PageHeader'
 import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
 import { Button } from '../../../components/ui/Button'
 import { ScoreEntryModal } from '../../../components/minigame/ScoreEntryModal'
@@ -265,7 +265,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title={`Lịch Thi Đấu – ${minigameName}`}
         subtitle={`${myMatches.length} trận · ${myRounds.length} vòng`}
         actions={
@@ -640,7 +640,7 @@ export function MatchSchedule() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title={`Lịch Thi Đấu – ${mg.name}`}
         subtitle={`${myMatches.length} trận`}
         actions={

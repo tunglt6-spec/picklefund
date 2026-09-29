@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Send, Bot, User, RefreshCw, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageHeader } from '../../components/layout/PageHeader'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
@@ -268,7 +268,7 @@ export function LisaChat() {
 
   return (
     <div className="pf-fill flex flex-col h-full [background:var(--pf-surface-muted)]">
-      <PageHeader
+      <PageHeader variant="bar"
         title="Lisa AI"
         subtitle="Trợ lý cá nhân thông minh"
         actions={
