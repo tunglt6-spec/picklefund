@@ -103,7 +103,7 @@ function Field({ label, right, children }: { label: string; right?: React.ReactN
 }
 
 // Brand tím (#6D5DFB) cho focus — thay indigo/cyan cũ để khớp nhận diện app.
-const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#6D5DFB] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#6D5DFB]/15 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800 dark:focus:border-[#6D5DFB] dark:focus:ring-[#6D5DFB]/25'
+const inputBase = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:[color:var(--pf-color-muted)] focus:border-[#6D5DFB] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#6D5DFB]/15 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:[color:var(--pf-color-muted)] dark:focus:bg-slate-800 dark:focus:border-[#6D5DFB] dark:focus:ring-[#6D5DFB]/25'
 
 /* ─── Register Flow ─── */
 interface ClubForm  { name: string; code: string; address: string; contactPhone: string; contactEmail: string }
@@ -156,11 +156,11 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
         <CheckCircle2 size={40} className="text-white" />
       </div>
       <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Đăng ký thành công!</h3>
-      <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">CLB <strong className="text-indigo-600">{club.name}</strong> đã sẵn sàng. Tài khoản <strong className="text-slate-700 dark:text-slate-200">@{admin.username}</strong> đã được kích hoạt.</p>
+      <p className="[color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] text-sm mb-6">CLB <strong className="text-indigo-600">{club.name}</strong> đã sẵn sàng. Tài khoản <strong className="text-slate-700 dark:text-slate-200">@{admin.username}</strong> đã được kích hoạt.</p>
       <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 text-left mb-6 space-y-2.5 border border-slate-100 dark:border-slate-700">
         {[['Tên CLB', club.name], ['Mã CLB', club.code], ['Tài khoản', `@${admin.username}`]].map(([k, v]) => (
           <div key={k} className="flex justify-between text-sm">
-            <span className="text-slate-500">{k}</span>
+            <span className="[color:var(--pf-color-muted)]">{k}</span>
             <span className="font-semibold text-slate-900 dark:text-slate-100 font-mono">{v}</span>
           </div>
         ))}
@@ -178,10 +178,10 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
         <div className="flex items-center mb-6">
           {stepLabel.map((lbl, i) => (
             <div key={i} className="flex items-center flex-1 last:flex-none">
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${step > i + 1 ? 'bg-emerald-500 text-white' : step === i + 1 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}`}>
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${step > i + 1 ? 'bg-emerald-500 text-white' : step === i + 1 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 [color:var(--pf-color-muted)] dark:bg-slate-800'}`}>
                 {step > i + 1 ? '✓' : i + 1}
               </div>
-              <span className={`ml-2 text-xs font-medium ${step === i + 1 ? 'text-indigo-600' : 'text-slate-400'}`}>{lbl}</span>
+              <span className={`ml-2 text-xs font-medium ${step === i + 1 ? 'text-indigo-600' : '[color:var(--pf-color-muted)]'}`}>{lbl}</span>
               {i === 0 && <div className={`flex-1 h-px mx-3 transition-all ${step >= 2 ? 'bg-indigo-400' : 'bg-slate-200 dark:bg-slate-700'}`} />}
             </div>
           ))}
@@ -198,7 +198,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
             <Field label="Tên CLB *"><input required value={club.name} onChange={e => setClub({ ...club, name: e.target.value })} placeholder="VD: CLB Pickleball Hà Nội" className={inputBase} /></Field>
             <Field label="Mã CLB *">
               <input required value={club.code} onChange={e => setClub({ ...club, code: e.target.value.toUpperCase() })} placeholder="VD: PBHN" maxLength={10} className={inputBase + ' font-mono uppercase'} />
-              <p className="text-xs text-slate-400 mt-1">Mã định danh duy nhất, không thể thay đổi sau này</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-1">Mã định danh duy nhất, không thể thay đổi sau này</p>
             </Field>
             <Field label="Địa chỉ sân"><input value={club.address} onChange={e => setClub({ ...club, address: e.target.value })} placeholder="Sân Pickleball Mỹ Đình, Hà Nội" className={inputBase} /></Field>
             <div className="grid grid-cols-2 gap-3">
@@ -239,7 +239,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
                   <input required type={f.show ? 'text' : 'password'} value={admin[f.key as keyof AdminForm]}
                     onChange={e => setAdmin({ ...admin, [f.key]: e.target.value })} placeholder={f.placeholder}
                     className={`${inputBase} pr-11 ${f.key === 'confirmPassword' && admin.confirmPassword && admin.password !== admin.confirmPassword ? '!border-red-400 !ring-red-100' : ''}`} />
-                  <button type="button" onClick={f.toggle} className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 transition-colors">{f.show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                  <button type="button" onClick={f.toggle} className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 transition-colors">{f.show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                 </div>
                 {f.key === 'confirmPassword' && admin.confirmPassword && admin.password !== admin.confirmPassword && (
                   <p className="text-xs text-red-500 mt-1">Mật khẩu không khớp</p>
@@ -257,7 +257,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
                   maxLength={20}
                   className={`${inputBase} pl-10 font-mono uppercase ${refLocked ? 'opacity-70 cursor-not-allowed' : ''}`} />
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs [color:var(--pf-color-muted)] mt-1">
                 {refLocked
                   ? 'Đã tự điền từ link giới thiệu.'
                   : 'Có mã? Cả bạn và người giới thiệu cùng nhận +1 tháng Pro khi bạn nâng cấp.'}
@@ -294,7 +294,7 @@ function GradientButton({ children, className = '', type = 'button', disabled = 
 function OutlineButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
     <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} type="button" onClick={onClick}
-      className="flex items-center gap-1.5 px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-150"
+      className="flex items-center gap-1.5 px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:[color:var(--pf-color-muted)] text-sm font-medium hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-150"
     >
       {children}
     </motion.button>
@@ -487,7 +487,7 @@ export function Login() {
           className="lg:hidden flex flex-col items-center mb-4">
           <PickleFundLogo size={48} className="mb-2" />
           <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">PickleFund</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-[13px] mt-0.5">Quản lý quỹ CLB thể thao</p>
+          <p className="[color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] text-[13px] mt-0.5">Quản lý quỹ CLB thể thao</p>
         </motion.div>
 
         <div className="w-full max-w-[480px]">
@@ -504,7 +504,7 @@ export function Login() {
                     <PickleFundLogo size={36} />
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Chào mừng trở lại!</h2>
-                      <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Đăng nhập để tiếp tục quản lý CLB của bạn.</p>
+                      <p className="[color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] text-xs mt-0.5">Đăng nhập để tiếp tục quản lý CLB của bạn.</p>
                     </div>
                   </div>
 
@@ -524,7 +524,7 @@ export function Login() {
                         <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                           placeholder="Nhập mật khẩu" className={`${inputBase} pr-11`} required autoComplete="current-password" />
                         <button type="button" onClick={() => setShowPwd(!showPwd)}
-                          className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                          className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                           {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
@@ -536,7 +536,7 @@ export function Login() {
                         <div className={`w-11 h-6 rounded-full transition-all duration-300 ${remember ? '[background:var(--pf-primary)]' : 'bg-slate-200 dark:bg-slate-700'}`} />
                         <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${remember ? 'translate-x-5' : 'translate-x-0'}`} />
                       </div>
-                      <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Ghi nhớ đăng nhập</span>
+                      <span className="text-sm text-slate-600 dark:[color:var(--pf-color-muted)] group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Ghi nhớ đăng nhập</span>
                     </label>
 
                     {/* Login button */}
@@ -550,7 +550,7 @@ export function Login() {
                   <div className="mt-4 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                     <motion.button whileTap={{ scale: 0.99 }}
                       onClick={() => setShowDemo(!showDemo)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium [color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <span className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-400" />
                         Tài khoản dùng thử
@@ -570,7 +570,7 @@ export function Login() {
                               onClick={() => { setUsername(a.username); setPassword(a.password); setShowDemo(false) }}
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left border-b border-slate-50 dark:border-slate-800 last:border-0">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${badgeStyle[a.badge]}`}>{a.label}</span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400 flex-1">{a.desc}</span>
+                              <span className="text-xs [color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] flex-1">{a.desc}</span>
                               <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono shrink-0">{a.username}</span>
                             </button>
                           ))}
@@ -583,7 +583,7 @@ export function Login() {
 
                 {/* Register CTA */}
                 <div className="mt-3 text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">CLB mới chưa có tài khoản?</p>
+                  <p className="text-sm [color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] mb-2">CLB mới chưa có tài khoản?</p>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => setMode('register')}
                     className="inline-flex items-center gap-2 py-2.5 px-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all duration-200 w-full justify-center">
@@ -594,10 +594,10 @@ export function Login() {
 
                 {/* Footer links */}
                 <div className="mt-2.5 text-center">
-                  <p className="text-xs text-slate-400 dark:text-slate-600 mb-1.5">© 2026 PickleFund · SportsTech Vietnam</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] dark:text-slate-600 mb-1.5">© 2026 PickleFund · SportsTech Vietnam</p>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     {['Giới thiệu', 'Hướng dẫn', 'Bảo mật', 'Điều khoản', 'Liên hệ'].map(l => (
-                      <button key={l} className="text-xs text-slate-400 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{l}</button>
+                      <button key={l} className="text-xs [color:var(--pf-color-muted)] dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{l}</button>
                     ))}
                   </div>
                 </div>
@@ -610,12 +610,12 @@ export function Login() {
                   <div className="flex items-center gap-3 mb-7">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       onClick={() => setMode('login')}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 [color:var(--pf-color-muted)] hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                       <ArrowLeft size={16} />
                     </motion.button>
                     <div>
                       <h2 className="text-xl font-bold text-slate-900 dark:text-white">Đăng ký CLB mới</h2>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Tạo câu lạc bộ và tài khoản quản lý</p>
+                      <p className="text-xs [color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] mt-0.5">Tạo câu lạc bộ và tài khoản quản lý</p>
                     </div>
                   </div>
                   <RegisterFlow onBack={() => setMode('login')} />
