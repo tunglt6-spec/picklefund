@@ -47,7 +47,7 @@ export function VideoDemo() {
             <div className="flex aspect-video items-center justify-center rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="text-center">
                 <PlayCircle size={44} className="mx-auto [color:var(--pf-primary)]" />
-                <p className="mt-3 px-6 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+                <p className="mt-3 px-6 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                   Video hướng dẫn quay sẵn đang được sản xuất. Trong lúc chờ, bản demo tương tác cho bạn trải nghiệm đầy đủ hơn cả video.
                 </p>
               </div>
@@ -69,8 +69,8 @@ export function VideoDemo() {
                 <w.icon size={20} />
               </div>
               <div className="min-w-0">
-                <p className="text-[15px] font-bold">{w.title}</p>
-                <p className="mt-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{w.desc}</p>
+                <p className="text-base font-bold">{w.title}</p>
+                <p className="mt-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{w.desc}</p>
               </div>
             </div>
           ))}

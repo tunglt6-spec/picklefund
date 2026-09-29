@@ -14,8 +14,8 @@ function Field({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <label className="text-[13px] font-semibold [color:var(--pf-text)]">{label}</label>
-        <span className="text-[13px] font-bold [color:var(--pf-primary)]">
+        <label className="text-sm font-semibold [color:var(--pf-text)]">{label}</label>
+        <span className="text-sm font-bold [color:var(--pf-primary)]">
           {value.toLocaleString('vi-VN')}{suffix ? ` ${suffix}` : ''}
         </span>
       </div>
@@ -100,8 +100,8 @@ export function RoiCalculator() {
             </div>
 
             <div className="mt-6 rounded-2xl border p-6 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
-              <p className="text-[15px] font-bold [color:var(--pf-text)]">Con số này đến từ đâu?</p>
-              <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+              <p className="text-base font-bold [color:var(--pf-text)]">Con số này đến từ đâu?</p>
+              <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                 Giờ tiết kiệm = (giờ thủ công/tháng) × (mức tự động hóa). Quy đổi tiền = giờ tiết kiệm × giá trị giờ công. Tất cả tham số do bạn nhập, nên kết quả phản ánh đúng giả định của bạn — hãy xem đây là công cụ tham khảo, không phải kết quả đảm bảo.
               </p>
               <Link to="/login" className="mt-4 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>

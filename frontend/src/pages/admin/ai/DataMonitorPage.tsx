@@ -98,7 +98,7 @@ export function DataMonitorPage() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Database size={16} className="[color:var(--pf-color-muted)]" /> Kiểm Tra Chất Lượng Dữ Liệu
               </h3>
-              <span className="text-[11px] [color:var(--pf-color-muted)]">
+              <span className="text-xs [color:var(--pf-color-muted)]">
                 {new Date(report.generatedAt).toLocaleString('vi-VN', { hour12: false })}
               </span>
             </div>
@@ -110,14 +110,14 @@ export function DataMonitorPage() {
                       {LEVEL_ICON[c.level]}
                       <div className="min-w-0">
                         <p className="text-sm font-medium [color:var(--pf-text)]">{c.label}</p>
-                        <p className="text-[11px] [color:var(--pf-color-muted)]">{c.dimension} · {c.count} mục</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">{c.dimension} · {c.count} mục</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {c.level !== 'ok' && FIX_LINK[c.key] && (
                         <button
                           onClick={() => navigate(FIX_LINK[c.key].to)}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold [color:var(--pf-primary)] hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline"
                         >
                           {FIX_LINK[c.key].label} <ArrowRight size={12} />
                         </button>
@@ -140,7 +140,7 @@ export function DataMonitorPage() {
             </div>
           </section>
 
-          <p className="text-[11px] [color:var(--pf-color-muted)] px-1">
+          <p className="text-xs [color:var(--pf-color-muted)] px-1">
             Toàn vẹn tham chiếu (khóa ngoại) được cơ sở dữ liệu đảm bảo. Các kiểm tra ở đây là read-only,
             không thay đổi dữ liệu — hãy sửa trực tiếp ở màn Thành viên / Kỳ Quỹ khi cần.
           </p>

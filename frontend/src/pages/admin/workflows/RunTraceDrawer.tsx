@@ -18,10 +18,10 @@ function QBlock({ n, q, children }: { n: number; q: string; children: ReactNode 
   return (
     <div className="rounded-xl border border-[color:var(--pf-border)] p-3">
       <div className="mb-1.5 flex items-center gap-2">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white [background:var(--pf-primary)]">{n}</span>
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white [background:var(--pf-primary)]">{n}</span>
         <span className="text-xs font-semibold [color:var(--pf-text)]">{q}</span>
       </div>
-      <div className="pl-7 text-[13px] [color:var(--pf-text)]">{children}</div>
+      <div className="pl-7 text-sm [color:var(--pf-text)]">{children}</div>
     </div>
   )
 }
@@ -29,7 +29,7 @@ function QBlock({ n, q, children }: { n: number; q: string; children: ReactNode 
 function Chip({ children, tone }: { children: ReactNode; tone?: 'muted' | 'warn' | 'ok' | 'danger' }) {
   const bg = tone === 'warn' ? 'var(--pf-color-warning-soft)' : tone === 'ok' ? 'var(--pf-color-success-soft)' : tone === 'danger' ? 'var(--pf-color-danger-soft)' : 'var(--pf-color-muted-soft)'
   const fg = tone === 'warn' ? 'var(--pf-color-warning)' : tone === 'ok' ? 'var(--pf-color-success)' : tone === 'danger' ? 'var(--pf-color-danger)' : 'var(--pf-color-muted)'
-  return <span className="mr-1.5 mb-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: bg, color: fg }}>{children}</span>
+  return <span className="mr-1.5 mb-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: bg, color: fg }}>{children}</span>
 }
 
 export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClose: () => void }) {
@@ -48,7 +48,7 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
   return (
     <Modal open={!!runId} onClose={onClose} title="Giải trình lần chạy" subtitle={r?.ruleName ?? (r ? triggerLabel(r.triggerType) : undefined)} size="xl">
       {loading || !trace || !r ? (
-        <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải giải trình…</div>
+        <div className="py-10 text-center text-sm [color:var(--pf-color-muted)]">Đang tải giải trình…</div>
       ) : (
         <div className="space-y-3">
           {/* Tóm tắt run */}

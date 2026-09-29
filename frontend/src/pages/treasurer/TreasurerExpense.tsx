@@ -162,16 +162,16 @@ export function TreasurerExpense() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
-          <div className="text-[17px] font-[800] [color:var(--pf-text)]">Khoản Chi</div>
+          <div className="text-lg font-[800] [color:var(--pf-text)]">Khoản Chi</div>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {expenses.length > 0 && (
               <>
                 <button onClick={doExportExcel} aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileSpreadsheet size={14} />Excel
                 </button>
                 <button onClick={doExportPdf} aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileText size={14} />PDF
                 </button>
               </>
@@ -186,23 +186,23 @@ export function TreasurerExpense() {
           {activePeriods.length === 0 ? (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-14 text-center">
               <Receipt size={28} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-[13px] [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-2">
                 <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
-                  <div className="text-[15px] font-[800] text-red-600">{formatVND(totalExpenses)}</div>
-                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
+                  <div className="text-base font-[800] text-red-600">{formatVND(totalExpenses)}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
                 </div>
                 <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
-                  <div className="text-[15px] font-[800] text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
-                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">Thiếu hóa đơn</div>
+                  <div className="text-base font-[800] text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">Thiếu hóa đơn</div>
                 </div>
               </div>
 
               {expenses.length === 0 ? (
-                <div className="text-center py-12 text-[13px] [color:var(--pf-color-muted)]">Chưa có khoản chi nào</div>
+                <div className="text-center py-12 text-sm [color:var(--pf-color-muted)]">Chưa có khoản chi nào</div>
               ) : (
                 <div className="space-y-2">
                   {expenses.map(e => {
@@ -212,9 +212,9 @@ export function TreasurerExpense() {
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-[700] [color:var(--pf-text)] truncate">{e.description}</div>
-                            <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
+                            <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
                           </div>
-                          <div className="text-[15px] font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>
+                          <div className="text-base font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">

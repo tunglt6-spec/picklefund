@@ -345,16 +345,16 @@ export function Billing() {
                     <div key={o.orderCode} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
                       <div className="min-w-0">
                         <p className="text-sm font-medium [color:var(--pf-text)] truncate">{PLAN_LABEL[o.planTier]} · {o.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</p>
-                        <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{o.orderCode} · {new Date(o.paidAt ?? o.createdAt).toLocaleString('vi-VN')}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)] truncate">{o.orderCode} · {new Date(o.paidAt ?? o.createdAt).toLocaleString('vi-VN')}</p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
                           <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{Number(o.amount).toLocaleString('vi-VN')}đ</p>
-                          <span className={`text-[11px] font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
+                          <span className={`text-xs font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
                         </div>
                         {paid && (
                           <button onClick={() => doReceipt(o)} title="Tải biên nhận"
-                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
                             Biên nhận
                           </button>
                         )}
@@ -382,7 +382,7 @@ export function Billing() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-          <p className="text-[17px] font-[800] [color:var(--pf-text)]">Gói dịch vụ</p>
+          <p className="text-lg font-[800] [color:var(--pf-text)]">Gói dịch vụ</p>
           <p className="text-xs [color:var(--pf-color-muted)]">Quản lý subscription & AI usage</p>
         </div>
         <div className="px-4 py-4 pb-24">{content}</div>

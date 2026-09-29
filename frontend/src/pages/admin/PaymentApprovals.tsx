@@ -112,7 +112,7 @@ export function PaymentApprovals() {
                   <div className="flex items-center gap-2">
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><User size={15} /></span>
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-bold [color:var(--pf-text)]">{p.member?.fullName ?? 'Thành viên'}</p>
+                      <p className="truncate text-base font-bold [color:var(--pf-text)]">{p.member?.fullName ?? 'Thành viên'}</p>
                       <p className="text-[11.5px] [color:var(--pf-color-muted)]">{formatDate(p.createdAt)}{p.member?.phone ? ` · ${p.member.phone}` : ''}</p>
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export function PaymentApprovals() {
           </div>
         }
       >
-        <p className="mb-2 text-[13px] [color:var(--pf-color-muted)]">
+        <p className="mb-2 text-sm [color:var(--pf-color-muted)]">
           Khoản báo nộp sẽ được đánh dấu cần kiểm tra lại (giữ lịch sử), và thành viên nhận thông báo để báo nộp lại.
         </p>
         <textarea

@@ -110,7 +110,7 @@ export function BottomNav() {
 
                   {/* Label */}
                   <span
-                    className={`text-[11px] font-[600] leading-none ${isActive ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}
+                    className={`text-xs font-[600] leading-none ${isActive ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}
                   >
                     {item.label}
                   </span>
@@ -129,7 +129,7 @@ export function BottomNav() {
               className="flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors [color:var(--pf-color-muted)]"
             >
               <Menu size={22} />
-              <span className="text-[10px] font-[600]">Thêm</span>
+              <span className="text-xs font-[600]">Thêm</span>
             </button>
           )}
         </div>
@@ -153,7 +153,7 @@ export function BottomNav() {
                   className="flex flex-col items-center gap-1.5 p-3 min-h-11 rounded-[14px] [background:var(--pf-surface-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors"
                 >
                   <span className="[color:var(--pf-primary)]">{item.icon}</span>
-                  <span className="text-[11px] font-[600] [color:var(--pf-text)]">{item.label}</span>
+                  <span className="text-xs font-[600] [color:var(--pf-text)]">{item.label}</span>
                 </button>
               ))}
             </div>

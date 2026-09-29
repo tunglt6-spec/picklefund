@@ -152,7 +152,7 @@ export function TreasurerReminders() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Nhắc Nhở Đóng Quỹ</div>
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Nhắc Nhở Đóng Quỹ</div>
             {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {formatVND(amount)}/người</div>}
           </div>
           {unpaidMembers.length > 0 && (
@@ -175,7 +175,7 @@ export function TreasurerReminders() {
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
                 <div className={`text-base font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
               </div>
             ))}
           </div>
@@ -185,7 +185,7 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Bell size={13} className="text-red-500" />
-                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chưa đóng quỹ</span>
+                <span className="text-sm font-[700] [color:var(--pf-text)]">Chưa đóng quỹ</span>
                 <span className="ml-auto text-xs font-[600] text-red-500">{unpaidMembers.length} người</span>
               </div>
               {unpaidMembers.map(m => {
@@ -210,7 +210,7 @@ export function TreasurerReminders() {
                             <Send size={12} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>
                         ) : (
-                          <div className="flex-1 h-8 flex items-center justify-center rounded-[10px] text-[11px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border border-dashed border-[color:var(--pf-border)]">
+                          <div className="flex-1 h-8 flex items-center justify-center rounded-[10px] text-xs [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border border-dashed border-[color:var(--pf-border)]">
                             Chưa có tài khoản app
                           </div>
                         )}
@@ -231,7 +231,7 @@ export function TreasurerReminders() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <Clock size={13} className="text-amber-500" />
-                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chờ xác nhận</span>
+                <span className="text-sm font-[700] [color:var(--pf-text)]">Chờ xác nhận</span>
                 <span className="ml-auto text-xs font-[600] text-amber-600">{pendingMembers.length} người</span>
               </div>
               {pendingMembers.map(m => {

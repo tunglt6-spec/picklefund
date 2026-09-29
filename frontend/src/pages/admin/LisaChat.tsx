@@ -147,15 +147,15 @@ export function LisaChat() {
       {brief && messages.length <= 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
-            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Đóng quỹ</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Đóng quỹ</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.paymentStatus}</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
-            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Hoạt động</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Hoạt động</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.activitySummary}</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
-            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Gợi ý</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Gợi ý</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.tips[0] ?? '—'}</p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export function LisaChat() {
                 ? '[background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-text)] rounded-tl-sm'
                 : '[background:var(--pf-primary)] text-white rounded-tr-sm'}`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{m.text}</p>
-              <p className={`text-[10px] mt-1 ${m.role === 'lisa' ? '[color:var(--pf-color-muted)]' : 'text-white/70'}`}>{m.time}</p>
+              <p className={`text-xs mt-1 ${m.role === 'lisa' ? '[color:var(--pf-color-muted)]' : 'text-white/70'}`}>{m.time}</p>
             </div>
           </div>
         ))}
@@ -235,8 +235,8 @@ export function LisaChat() {
               <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0">
-              <p className="text-[15px] font-[800] [color:var(--pf-text)] truncate">Lisa AI</p>
-              <p className="text-[11px] text-emerald-500 font-medium">● Trực tuyến</p>
+              <p className="text-base font-[800] [color:var(--pf-text)] truncate">Lisa AI</p>
+              <p className="text-xs text-emerald-500 font-medium">● Trực tuyến</p>
             </div>
           </div>
           <button onClick={() => fetchBrief()} disabled={briefLoading} aria-label="Làm mới thông tin" className="shrink-0 p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none">

@@ -56,7 +56,7 @@ export function DemoSelector() {
         >
           <PlayCircle size={13} /> Trải nghiệm demo
         </span>
-        <h1 className="mx-auto mt-4 max-w-2xl text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-[40px]">
+        <h1 className="mx-auto mt-4 max-w-2xl text-3xl font-extrabold leading-[1.15] tracking-tight sm:text-4xl">
           Chọn hồ sơ CLB để khám phá PickleFund
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm [color:var(--pf-color-muted)] sm:text-base">
@@ -79,7 +79,7 @@ export function DemoSelector() {
                 <p.icon size={22} />
               </div>
               <span
-                className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                className="rounded-full px-2.5 py-1 text-xs font-semibold"
                 style={{ background: 'var(--pf-surface-muted)', color: 'var(--pf-color-muted)' }}
               >
                 Demo

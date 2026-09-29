@@ -478,7 +478,7 @@ function Composer({
             aria-label="Nội dung bài đăng cộng đồng"
             placeholder="Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)"
             rows={4}
-            className="min-h-[112px] w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-[15px] leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
+            className="min-h-[112px] w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-base leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
           />
 
           {/* Thẻ thành viên đã gắn — xác nhận trực quan "đã tag" */}
@@ -680,7 +680,7 @@ function LinkPreviewCard({ data }: { data: LinkPreviewData }) {
         />
       )}
       <div className="min-w-0 flex-1 p-3">
-        <p className="truncate text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{data.siteName || domain}</p>
+        <p className="truncate text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{data.siteName || domain}</p>
         {data.title && <p className="mt-0.5 line-clamp-2 text-sm font-semibold [color:var(--pf-text)]">{data.title}</p>}
         {data.description && <p className="mt-0.5 line-clamp-2 text-xs [color:var(--pf-color-muted)]">{data.description}</p>}
       </div>
@@ -935,7 +935,7 @@ function PostCard({
             </span>
             {badge && <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>}
           </div>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">
+          <p className="text-xs [color:var(--pf-color-muted)]">
             {timeAgo(post.createdAt)}
             {edited ? ' · đã sửa' : ''}
           </p>
@@ -1126,7 +1126,7 @@ function PostCard({
                       </div>
                       {!isEditing && (
                         <div className="mt-1 flex items-center gap-2 pl-1">
-                          <span className="text-[11px] [color:var(--pf-color-muted)]">
+                          <span className="text-xs [color:var(--pf-color-muted)]">
                             {timeAgo(c.createdAt)}
                             {cEdited ? ' · đã sửa' : ''}
                           </span>

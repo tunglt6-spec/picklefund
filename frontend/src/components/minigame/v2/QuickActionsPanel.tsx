@@ -109,7 +109,7 @@ export function QuickActionsPanel({
             <span className="text-xs font-medium text-white leading-tight">
               {action.label}
               {action.disabled && (
-                <span className="block text-[10px] font-normal text-white/80 mt-0.5">
+                <span className="block text-xs font-normal text-white/80 mt-0.5">
                   Chưa có vòng đang diễn ra
                 </span>
               )}

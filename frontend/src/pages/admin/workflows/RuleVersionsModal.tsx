@@ -51,20 +51,20 @@ export function RuleVersionsModal({
   return (
     <Modal open={!!rule} onClose={onClose} title="Lịch sử phiên bản rule" subtitle={rule?.name} size="lg">
       {loading ? (
-        <div className="py-8 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải…</div>
+        <div className="py-8 text-center text-sm [color:var(--pf-color-muted)]">Đang tải…</div>
       ) : versions.length === 0 ? (
-        <div className="py-8 text-center text-[13px] [color:var(--pf-color-muted)]">Chưa có phiên bản nào.</div>
+        <div className="py-8 text-center text-sm [color:var(--pf-color-muted)]">Chưa có phiên bản nào.</div>
       ) : (
         <div className="space-y-2">
           {versions.map((v, idx) => (
             <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full [background:var(--pf-primary-soft)] px-2 py-0.5 text-[11px] font-bold [color:var(--pf-primary)]">v{v.version}</span>
-                  {idx === 0 && <span className="rounded-full [background:var(--pf-color-success-soft)] px-2 py-0.5 text-[10px] font-semibold [color:var(--pf-color-success)]">Hiện tại</span>}
-                  <span className="truncate text-[13px] font-semibold [color:var(--pf-text)]">{v.name}</span>
+                  <span className="rounded-full [background:var(--pf-primary-soft)] px-2 py-0.5 text-xs font-bold [color:var(--pf-primary)]">v{v.version}</span>
+                  {idx === 0 && <span className="rounded-full [background:var(--pf-color-success-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-success)]">Hiện tại</span>}
+                  <span className="truncate text-sm font-semibold [color:var(--pf-text)]">{v.name}</span>
                 </div>
-                <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
                   {v.changeNote ?? '—'} · {fmt(v.createdAt)} · {v.scheduleType} · {v.enabled ? 'Bật' : 'Tắt'}
                 </p>
               </div>

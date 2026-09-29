@@ -548,7 +548,7 @@ export function FundPeriods() {
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <span className="text-[17px] font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
+          <span className="text-lg font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
           <div className="flex gap-1.5 items-center">
             {bankInfo && (
               <button
@@ -570,14 +570,14 @@ export function FundPeriods() {
                   title="Nhập dữ liệu CLB mới"
                 ><FileSpreadsheet size={16} /></button>
                 <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-white active:opacity-80"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] text-white active:opacity-80"
                   style={{ background: 'var(--pf-primary)' }}
                   onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
                 >
                   <Plus size={14} />Chung
                 </button>
                 <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                   onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
                 >
                   <Plus size={14} />Mini
@@ -591,12 +591,12 @@ export function FundPeriods() {
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
-              <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
+              <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
               <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
             </div>
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
-              <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
+              <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
               <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
             </div>
@@ -607,21 +607,21 @@ export function FundPeriods() {
             <div className="[background:var(--pf-surface)] rounded-[16px] border [border-color:var(--pf-primary-soft)] p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <QrCode size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
+                <span className="text-sm font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
               </div>
               <div className="flex gap-3 items-start">
                 <img src={buildQrUrl(qrPeriodId)!} alt="QR" className="w-24 h-24 rounded-lg border border-[color:var(--pf-border)] flex-shrink-0" />
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="text-[11px] [color:var(--pf-color-muted)]">Ngân hàng</div>
-                  <div className="text-[13px] font-[600] [color:var(--pf-text)]">{bankInfo.bank_code}</div>
-                  <div className="text-[11px] [color:var(--pf-color-muted)]">Số tài khoản</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">Ngân hàng</div>
+                  <div className="text-sm font-[600] [color:var(--pf-text)]">{bankInfo.bank_code}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)]">Số tài khoản</div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-[600] font-mono [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
+                    <span className="text-sm font-[600] font-mono [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
                     <button onClick={copyAcctNumber} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)]">
                       {copiedAcct ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                     </button>
                   </div>
-                  <div className="text-[11px] [color:var(--pf-color-muted)] truncate">{bankInfo.bank_account_name}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)] truncate">{bankInfo.bank_account_name}</div>
                 </div>
               </div>
               {commonPeriods.length > 1 && (
@@ -654,40 +654,40 @@ export function FundPeriods() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Building2 size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Quỹ Chính ({chungPeriods.length})</span>
+                <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Chính ({chungPeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {chungPeriods.map(p => (
                   <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
+                        <div className="text-base font-[700] [color:var(--pf-text)]">{p.name}</div>
                         <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
-                    <div className="flex items-center justify-between text-[13px] mb-3">
+                    <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
                           onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
                         {p.status === 'draft' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
                         )}
                         {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
                         )}
                         {(p.status === 'closed' || p.status === 'finalized') && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                         )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                           onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
                           onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
                       </div>
                     )}
@@ -702,40 +702,40 @@ export function FundPeriods() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Trophy size={14} className="[color:var(--pf-primary)]" />
-                <span className="text-[13px] font-[700] [color:var(--pf-text)]">Quỹ Phụ ({gamePeriods.length})</span>
+                <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Phụ ({gamePeriods.length})</span>
               </div>
               <div className="space-y-2">
                 {gamePeriods.map(p => (
                   <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
+                        <div className="text-base font-[700] [color:var(--pf-text)]">{p.name}</div>
                         <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
-                    <div className="flex items-center justify-between text-[13px] mb-3">
+                    <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
                           onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
                         {p.status === 'draft' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
                         )}
                         {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
                         )}
                         {(p.status === 'closed' || p.status === 'finalized') && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-[13px] font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
+                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                         )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                           onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                        <button className="px-3 py-1.5 rounded-[10px] text-[13px] font-[600] text-red-500 border border-red-200 active:bg-red-50"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
                           onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
                       </div>
                     )}
@@ -1688,7 +1688,7 @@ function HistoryTab({ contributions, periods, members }: {
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-[10px] font-bold [color:var(--pf-primary)] shrink-0">
+                        <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-xs font-bold [color:var(--pf-primary)] shrink-0">
                           {(member?.fullName ?? c.payerName ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-xs font-medium [color:var(--pf-text)]">{member?.fullName ?? c.payerName ?? '—'}</span>
@@ -1696,7 +1696,7 @@ function HistoryTab({ contributions, periods, members }: {
                     </td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'}</td>
                     <td className="px-4 py-2.5">
-                      <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'}`}>
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'}`}>
                         {c.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
                       </span>
                     </td>
@@ -1705,8 +1705,8 @@ function HistoryTab({ contributions, periods, members }: {
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       {c.isConfirmed
-                        ? <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đã xác nhận</span>
-                        : <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Chờ xác nhận</span>
+                        ? <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đã xác nhận</span>
+                        : <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Chờ xác nhận</span>
                       }
                     </td>
                   </tr>
@@ -1805,7 +1805,7 @@ function HighlightsTab({ contributions, periods, members }: {
                         style={{ width: `${Math.round((c.total / (topContributors[0]?.total || 1)) * 100)}%` }} />
                     </div>
                   </div>
-                  <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{c.count} lần</span>
+                  <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{c.count} lần</span>
                 </div>
               ))}
             </div>
@@ -1829,7 +1829,7 @@ function HighlightsTab({ contributions, periods, members }: {
                     <span className="text-sm w-5 text-center shrink-0 font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold [color:var(--pf-text)] truncate">{member?.fullName ?? c.payerName ?? '—'}</p>
-                      <p className="text-[10px] [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
                     </div>
                     <span className="text-xs font-bold text-emerald-600 shrink-0">{formatVND(c.amount)}</span>
                   </div>
@@ -1890,18 +1890,18 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
       </div>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Số dư</p>
+          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Số dư</p>
           <p className={`text-base font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
-            <p className="text-[10px] text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
+            <p className="text-xs text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
           )}
         </div>
         <div>
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Chờ xác nhận</p>
+          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Chờ xác nhận</p>
           <p className={`text-base font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
         </div>
         <div>
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Giao dịch</p>
+          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Giao dịch</p>
           <p className="text-base font-bold [color:var(--pf-text)]">{stats.txCount}</p>
         </div>
       </div>
@@ -2019,13 +2019,13 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hạn đóng quỹ</label>
             <input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
-            <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
+            <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ)</label>
             <input type="number" min={0} value={form.contributionAmount}
               onChange={e => setForm({ ...form, contributionAmount: e.target.value === '' ? 0 : Number(e.target.value) })} className="input-base" />
-            <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Tùy chọn — để trống hoặc 0 nếu là khoản thu mở.</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-1">Tùy chọn — để trống hoặc 0 nếu là khoản thu mở.</p>
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến</label>
@@ -2045,7 +2045,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
                 disabled={prevPeriodError || prevPeriodInfo === null || prevPeriodInfo === undefined}
                 onChange={e => setForm({ ...form, copyMembersFromPreviousPeriod: e.target.checked })}
               />
-              <span className="flex items-center gap-2 flex-wrap text-[13px] font-medium [color:var(--pf-text)]">
+              <span className="flex items-center gap-2 flex-wrap text-sm font-medium [color:var(--pf-text)]">
                 Sao chép thành viên từ kỳ quỹ trước
                 <Badge variant="green">Đề xuất</Badge>
               </span>
@@ -2075,12 +2075,12 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
                   Hệ thống sẽ sao chép danh sách thành viên từ kỳ quỹ gần nhất cùng loại.
                 </p>
                 <div className="rounded-[12px] border p-3 [background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] space-y-1">
-                  <p className="text-[11px] font-[600] uppercase tracking-wide [color:var(--pf-color-muted)]">Kỳ quỹ gần nhất</p>
+                  <p className="text-xs font-[600] uppercase tracking-wide [color:var(--pf-color-muted)]">Kỳ quỹ gần nhất</p>
                   <p className="text-sm font-semibold [color:var(--pf-text)]">{prevPeriodInfo.name}</p>
                   <p className="text-xs [color:var(--pf-color-muted)]">Thời gian: {formatDate(prevPeriodInfo.startDate)} - {formatDate(prevPeriodInfo.endDate)}</p>
                   <p className="text-xs [color:var(--pf-color-muted)]">Số lượng thành viên: {prevPeriodInfo.memberCount} thành viên</p>
                 </div>
-                <p className="text-[11px] leading-relaxed [color:var(--pf-color-muted)]">
+                <p className="text-xs leading-relaxed [color:var(--pf-color-muted)]">
                   Danh sách thành viên sẽ được sao chép sang kỳ quỹ mới.<br />
                   Mức đóng/người sẽ áp dụng theo giá trị bạn nhập ở trên.<br />
                   Trạng thái mặc định: Chưa đóng (0 đ).

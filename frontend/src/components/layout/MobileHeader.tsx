@@ -113,7 +113,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
               <div className="px-4 py-3 border-b border-[color:var(--pf-border-soft)]">
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="h-8 w-8 rounded-xl flex items-center justify-center text-[11px] font-[800] text-white shrink-0"
+                    className="h-8 w-8 rounded-xl flex items-center justify-center text-xs font-[800] text-white shrink-0"
                     style={{ background: 'var(--pf-primary)' }}
                   >
                     {initials}

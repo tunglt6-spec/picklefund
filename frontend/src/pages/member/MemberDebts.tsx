@@ -211,8 +211,8 @@ export function MemberDebts() {
                   style={{ background: `conic-gradient(var(--pf-primary) ${Math.min(100, collectRate) * 3.6}deg, var(--pf-color-muted-soft) 0deg)` }}
                 />
                 <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full [background:var(--pf-surface)]">
-                  <span className="text-[22px] font-extrabold [color:var(--pf-text)]">{collectRate}%</span>
-                  <span className="text-[10px] [color:var(--pf-color-muted)]">đã thu</span>
+                  <span className="text-2xl font-extrabold [color:var(--pf-text)]">{collectRate}%</span>
+                  <span className="text-xs [color:var(--pf-color-muted)]">đã thu</span>
                 </div>
               </div>
               <span className="text-xs [color:var(--pf-color-muted)]">{stats.paid}/{rows.length} thành viên đã đóng đủ</span>

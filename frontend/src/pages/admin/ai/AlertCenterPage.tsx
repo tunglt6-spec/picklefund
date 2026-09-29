@@ -108,7 +108,7 @@ export function AlertCenterPage() {
         <div key={`${s.code}-${i}`} className="flex items-start justify-between gap-3 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5">
           <div className="min-w-0">
             <p className="text-sm [color:var(--pf-text)]">{s.message}</p>
-            <p className="text-[10px] [color:var(--pf-color-muted)] mt-0.5">{s.code}</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{s.code}</p>
           </div>
           <StatusBadge tone={LEVEL_TONE[s.level]}>{LEVEL_LABEL[s.level]}</StatusBadge>
         </div>
@@ -202,7 +202,7 @@ export function AlertCenterPage() {
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
                       <p className="text-sm [color:var(--pf-text)] truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
-                      <p className="text-[11px] [color:var(--pf-color-muted)]">{fmt(r.startedAt ?? r.createdAt)}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{fmt(r.startedAt ?? r.createdAt)}</p>
                     </div>
                     <StatusBadge tone="danger">Lỗi</StatusBadge>
                   </div>
@@ -229,7 +229,7 @@ export function AlertCenterPage() {
                   <div key={a.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
                       <p className="text-sm [color:var(--pf-text)] truncate">{a.title}</p>
-                      <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{a.errorMessage ?? a.actionType} · {fmt(a.createdAt)}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.errorMessage ?? a.actionType} · {fmt(a.createdAt)}</p>
                     </div>
                     <StatusBadge tone="danger">Thất bại</StatusBadge>
                   </div>

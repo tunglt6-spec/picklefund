@@ -448,7 +448,7 @@ export function Reports() {
           </div>
 
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
-          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp chính thức · nguồn: backend summary</p>
+          <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp chính thức · nguồn: backend summary</p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
             {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
             {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />)}
@@ -463,7 +463,7 @@ export function Reports() {
           {/* ── Charts (visualization từ store — không phải KPI chính thức) ── */}
           {(showFinance || showAttendance) && (
             <>
-              <p className="mb-2 mt-5 text-[11px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Biểu đồ trực quan</p>
+              <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Biểu đồ trực quan</p>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {showFinance && (
                   <ChartCard title="Thu / Chi theo kỳ quỹ" subtitle="6 kỳ gần nhất">
@@ -625,7 +625,7 @@ export function Reports() {
             </div>
             <div className="space-y-5 overflow-y-auto px-5 py-5">
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Nguồn quỹ</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Nguồn quỹ</p>
                 <div className="flex flex-wrap gap-2">
                   {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as ['ALL' | FundSource, string][]).map(([v, l]) => (
                     <button key={v} onClick={() => setFundFilter(v)} aria-pressed={fundFilter === v}
@@ -635,7 +635,7 @@ export function Reports() {
                 </div>
               </div>
               <div>
-                <label htmlFor="rp-period-m" className="mb-2 block text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ</label>
+                <label htmlFor="rp-period-m" className="mb-2 block text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ</label>
                 <select id="rp-period-m" value={selectedPeriodId} onChange={e => setSelectedPeriodId(e.target.value)} className="input-base">
                   {[...clubData.fundPeriods].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? '')).map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>

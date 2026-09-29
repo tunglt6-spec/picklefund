@@ -172,8 +172,8 @@ export function GroupAssignment() {
           <div className="flex items-center gap-3 mb-2">
             <button onClick={() => navigate(`/minigames/${id}`)} className="[color:var(--pf-color-muted)]"><ArrowLeft size={18} /></button>
             <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Xếp Bảng</p>
-              <p className="text-[11px] [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
+              <p className="text-base font-bold [color:var(--pf-text)] truncate">Xếp Bảng</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
             </div>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-0.5">{toolbar}</div>
@@ -208,7 +208,7 @@ export function GroupAssignment() {
                     <div key={p.memberId} className="flex items-center justify-between py-1.5">
                       <span className="text-sm [color:var(--pf-color-warning)] flex items-center gap-1.5">
                         {p.memberName}
-                        {(p.isGuest || isGuestId(p.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-surface)] [color:var(--pf-color-warning)] border [border-color:var(--pf-color-warning-soft)]">Khách</span>}
+                        {(p.isGuest || isGuestId(p.memberId)) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-surface)] [color:var(--pf-color-warning)] border [border-color:var(--pf-color-warning-soft)]">Khách</span>}
                       </span>
                       <MoveMenu memberId={p.memberId} />
                     </div>
@@ -252,7 +252,7 @@ export function GroupAssignment() {
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
+                          <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
                           {grp.status !== 'LOCKED' && <MoveMenu memberId={memberId} excludeGroupId={grp.id} />}
                         </div>
                       )

@@ -245,7 +245,7 @@ export function SuperSettings() {
               <S id="superTgChat" label="Telegram Chat ID (Super Admin)" value={settings.superTelegramChatId}
                 onChange={v => setSettings(p => ({ ...p, superTelegramChatId: v }))}
                 placeholder="VD: 123456789 — nhắn /myid cho bot để lấy" />
-              <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
                   className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">

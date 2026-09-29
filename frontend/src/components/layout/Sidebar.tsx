@@ -144,7 +144,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         )}
         <div className="leading-tight min-w-0 flex-1">
           <p className="text-sm font-bold [color:var(--pf-text)] truncate">{branding.displayName ?? 'PickleFund'}</p>
-          <p className="text-[10px] font-medium [color:var(--pf-color-muted)] truncate">{branding.shortName ?? 'Sports Community Platform'}</p>
+          <p className="text-xs font-medium [color:var(--pf-color-muted)] truncate">{branding.shortName ?? 'Sports Community Platform'}</p>
         </div>
       </div>
 
@@ -161,9 +161,9 @@ export function Sidebar({ onClose }: SidebarProps) {
                 {clubData.settings?.name || user.username || 'CLB của tôi'}
               </p>
               {clubData.settings?.code ? (
-                <p className="text-[10px] mt-0.5 [color:var(--pf-color-muted)]">Mã CLB: {clubData.settings.code}</p>
+                <p className="text-xs mt-0.5 [color:var(--pf-color-muted)]">Mã CLB: {clubData.settings.code}</p>
               ) : (
-                <span className="inline-block text-[10px] rounded-full px-1.5 py-px font-medium mt-0.5 [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">
+                <span className="inline-block text-xs rounded-full px-1.5 py-px font-medium mt-0.5 [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">
                   {roleLabels[user.role]}
                 </span>
               )}
@@ -172,7 +172,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           {activePeriod && (
             <div className="mt-2 flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] truncate [color:var(--pf-color-muted)]">Kỳ Quỹ {activePeriod.name}</span>
+              <span className="text-xs truncate [color:var(--pf-color-muted)]">Kỳ Quỹ {activePeriod.name}</span>
             </div>
           )}
         </div>
@@ -203,7 +203,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 {/* Số thứ tự (chỉ thẻ có desc) */}
                 {item.desc && (
                   <span className={cn(
-                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold',
+                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-xs font-extrabold',
                     isActive ? 'bg-white/20 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary)]'
                   )}>
                     {i + 1}
@@ -219,14 +219,14 @@ export function Sidebar({ onClose }: SidebarProps) {
                     {item.label}
                   </p>
                   {item.desc && (
-                    <p className={cn('mt-0.5 truncate text-[11px] leading-tight', isActive ? 'text-white/70' : '[color:var(--pf-color-muted)]')}>
+                    <p className={cn('mt-0.5 truncate text-xs leading-tight', isActive ? 'text-white/70' : '[color:var(--pf-color-muted)]')}>
                       {item.desc}
                     </p>
                   )}
                 </div>
                 {item.badge && (
                   <span className={cn(
-                    'flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                    'flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-xs font-bold',
                     isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
                   )}>
                     {item.badge}
@@ -254,7 +254,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold leading-tight [color:var(--pf-primary)]">Lisa AI</p>
-              <p className="truncate text-[11px] leading-tight [color:var(--pf-color-muted)]">Trợ lý AI · hỏi đáp nhanh</p>
+              <p className="truncate text-xs leading-tight [color:var(--pf-color-muted)]">Trợ lý AI · hỏi đáp nhanh</p>
             </div>
             <Sparkles size={16} className="shrink-0 [color:var(--pf-primary)]" />
           </button>

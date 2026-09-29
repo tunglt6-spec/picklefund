@@ -34,8 +34,8 @@ export function MobileClubCard({ name, code, memberCount, fundPeriodCount, statu
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-0.5">
-          <span className="text-[15px] font-[700] [color:var(--pf-text)] truncate">{name}</span>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+          <span className="text-base font-[700] [color:var(--pf-text)] truncate">{name}</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
             style={{ color: s.color, background: s.bg }}>
             {s.label}
           </span>

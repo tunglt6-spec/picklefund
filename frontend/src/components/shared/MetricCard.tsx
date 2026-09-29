@@ -67,7 +67,7 @@ export function MetricCard({
       style={t ? { background: t.bg, borderColor: t.border, borderTop: `3px solid ${t.bar}` } : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
+        <span className="text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
           {label}
         </span>
         {icon && (

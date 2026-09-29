@@ -89,7 +89,7 @@ function BrandingTab() {
           value={form[key]} maxLength={7} placeholder="#RRGGBB"
           onChange={e => set({ [key]: e.target.value })} />
       </div>
-      {badHex(form[key]) && <p className="text-[11px] text-red-500 mt-1">Định dạng hex #RRGGBB</p>}
+      {badHex(form[key]) && <p className="text-xs text-red-500 mt-1">Định dạng hex #RRGGBB</p>}
     </div>
   )
 
@@ -1135,8 +1135,8 @@ export function Settings() {
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-          <p className="text-[15px] font-bold [color:var(--pf-text)]">Cài đặt</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
+          <p className="text-base font-bold [color:var(--pf-text)]">Cài đặt</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
         </div>
 
         {/* Tab bar */}

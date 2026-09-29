@@ -125,7 +125,7 @@ export function NotificationSettingsModal({ open, onClose, categories = MEMBER_P
       }
     >
       {loading ? (
-        <div className="py-8 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải…</div>
+        <div className="py-8 text-center text-sm [color:var(--pf-color-muted)]">Đang tải…</div>
       ) : (
         <div className="space-y-4">
           <div>
@@ -152,7 +152,7 @@ export function NotificationSettingsModal({ open, onClose, categories = MEMBER_P
               <Toggle on={quietOn} onChange={setQuietOn} />
             </div>
             {quietOn && (
-              <div className="mt-3 flex items-center gap-2 text-[13px] [color:var(--pf-text)]">
+              <div className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)]">
                 <span className="[color:var(--pf-color-muted)]">Từ</span>
                 <select value={quietStart} onChange={(e) => setQuietStart(Number(e.target.value))}
                   className="rounded-lg border px-2 py-1.5 [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]">

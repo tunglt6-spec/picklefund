@@ -433,7 +433,7 @@ export function ThuChiHub() {
       ) : (
       <>
         {/* ── KPI tài chính CHÍNH THỨC (Backend Summary = Source of Truth) ── */}
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp tài chính · nguồn: backend summary</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp tài chính · nguồn: backend summary</p>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
           {kpiFund('Quỹ Chính', summary?.commonBalance, 'Số dư kỳ (backend)', 'green', <Wallet size={18} />)}
           {kpiFund('Quỹ Phụ', summary?.miniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />)}
@@ -443,7 +443,7 @@ export function ThuChiHub() {
         </div>
 
         {/* ── Transaction View Metrics (chỉ mô tả danh sách ĐANG LỌC — KHÔNG phải số liệu tài chính chính thức) ── */}
-        <p className="mb-2 mt-5 text-[11px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Giao dịch đang lọc · không phải số liệu tài chính chính thức</p>
+        <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Giao dịch đang lọc · không phải số liệu tài chính chính thức</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <MetricCard label="Thu đang lọc" value={formatVND(filteredIncomeTotal)} sub="Tổng khoản thu đang hiển thị" accent="teal" icon={<TrendingUp size={18} />} />
           <MetricCard label="Chi đang lọc" value={formatVND(filteredExpenseTotal)} sub="Không tính từ chối" accent="teal" icon={<TrendingDown size={18} />} />
@@ -588,7 +588,7 @@ export function ThuChiHub() {
         >
           <div className="space-y-5 px-5 py-5">
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Loại giao dịch</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Loại giao dịch</p>
               <div className="flex flex-wrap gap-2">
                 {([['all', 'Tất cả'], ['income', 'Thu'], ['expense', 'Chi']] as [TypeFilter, string][]).map(([v, l]) => (
                   <button key={v} onClick={() => setTypeFilter(v)} aria-pressed={typeFilter === v}
@@ -600,7 +600,7 @@ export function ThuChiHub() {
               </div>
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Nguồn quỹ</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Nguồn quỹ</p>
               <div className="flex flex-wrap gap-2">
                 {([['all', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as [FundTab, string][]).map(([v, l]) => (
                   <button key={v} onClick={() => setFundTab(v)} aria-pressed={fundTab === v}
@@ -612,7 +612,7 @@ export function ThuChiHub() {
               </div>
             </div>
             <div>
-              <label htmlFor="fx-period" className="mb-2 block text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ</label>
+              <label htmlFor="fx-period" className="mb-2 block text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ</label>
               <select id="fx-period" value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className="input-base">
                 <option value="all">Tất cả kỳ</option>
                 {fundPeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -653,7 +653,7 @@ export function ThuChiHub() {
             </dl>
             {detailTx.notes && (
               <div>
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
+                <p className="mb-1 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
                 <p className="text-sm [color:var(--pf-text)]">{detailTx.notes}</p>
               </div>
             )}

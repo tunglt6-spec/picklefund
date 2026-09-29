@@ -255,7 +255,7 @@ export function FinanceDashboard() {
                 {alerts.map((a, i) => (
                   <div key={i} className="flex items-center gap-1.5 pt-1">
                     <StatusBadge tone={a.tone} dot>{a.tone === 'success' ? 'Ổn định' : a.tone === 'warning' ? 'Chú ý' : 'Cảnh báo'}</StatusBadge>
-                    <span className="text-[11px] [color:var(--pf-color-muted)]">{a.msg}</span>
+                    <span className="text-xs [color:var(--pf-color-muted)]">{a.msg}</span>
                   </div>
                 ))}
               </div>

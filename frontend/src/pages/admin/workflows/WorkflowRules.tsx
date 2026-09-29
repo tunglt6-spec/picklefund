@@ -201,7 +201,7 @@ export function WorkflowRules() {
                 style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
               >
                 <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
-                <p className="text-[11px] font-medium [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
+                <p className="text-xs font-medium [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
               </div>
             )
           })}
@@ -216,7 +216,7 @@ export function WorkflowRules() {
             <div className="space-y-4">
               {templateGroups.map(([cat, tpls]) => (
                 <div key={cat}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat}</p>
                   <div className="flex flex-wrap gap-2">
                     {tpls.map((t) => (
                       <button
@@ -243,7 +243,7 @@ export function WorkflowRules() {
                   <p className="text-xs font-semibold text-amber-800">
                     Rule “{dup.existingRuleName || dup.template.name}” đã tồn tại cho CLB này.
                   </p>
-                  <p className="text-[11px] text-amber-700 mt-0.5">Chọn mở rule hiện có để chỉnh sửa, hoặc vẫn tạo một bản mới (biến thể).</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Chọn mở rule hiện có để chỉnh sửa, hoặc vẫn tạo một bản mới (biến thể).</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button onClick={() => openExistingRule(dup.existingRuleId)}
                       className="inline-flex items-center gap-1.5 rounded-lg [background:var(--pf-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:[background:var(--pf-primary-hover)]">
@@ -276,7 +276,7 @@ export function WorkflowRules() {
               <div key={t} className="flex flex-wrap items-center gap-2">
                 <div className="w-44 shrink-0" title={t}>
                   <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(t)}</p>
-                  <p className="text-[10px] font-mono [color:var(--pf-color-muted)]">{t}</p>
+                  <p className="text-xs font-mono [color:var(--pf-color-muted)]">{t}</p>
                 </div>
                 <button
                   onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
@@ -313,22 +313,22 @@ export function WorkflowRules() {
                   ] as const).map(([label, value]) => (
                     <div key={label} className="rounded-lg [background:var(--pf-surface)] border border-[color:var(--pf-border)] px-2 py-1.5">
                       <p className="text-sm font-bold [color:var(--pf-text)]">{value}</p>
-                      <p className="text-[10px] [color:var(--pf-color-muted)]">{label}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{label}</p>
                     </div>
                   ))}
                 </div>
                 {isLive && (
-                  <div className="mt-2 text-[11px] [color:var(--pf-color-muted)]">
+                  <div className="mt-2 text-xs [color:var(--pf-color-muted)]">
                     Số liệu CLB: {Object.entries(liveResult!.liveContext).map(([k, v]) => `${k}=${String(v)}`).join(' · ') || '(trống)'}
                   </div>
                 )}
                 {r.matchedRules === 0 && (
-                  <p className="mt-2 text-[11px] text-amber-600">
+                  <p className="mt-2 text-xs text-amber-600">
                     Không rule nào khớp {isLive ? '(số liệu CLB chưa thoả điều kiện, hoặc chưa có rule bật cho trigger này)' : '(ngữ cảnh rỗng — thử "Dữ liệu thật")'}.
                   </p>
                 )}
                 {r.createdActions > 0 && (
-                  <p className="mt-2 text-[11px] text-emerald-600">
+                  <p className="mt-2 text-xs text-emerald-600">
                     Đã tạo {r.createdActions} AiAction → xem/duyệt tại <b>AI Operations Center · Hộp Duyệt</b>.
                   </p>
                 )}
@@ -355,18 +355,18 @@ export function WorkflowRules() {
             <div className="space-y-4">
               {ruleGroups.map(([cat, grpRules]) => (
                 <div key={cat}>
-                  <p className="text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat} · {grpRules.length}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat} · {grpRules.length}</p>
                   <div className="space-y-2">
               {grpRules.map((r) => (
                 <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-[color:var(--pf-border)] p-3 transition-shadow">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold [color:var(--pf-text)]">{r.name}</p>
-                      <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">
+                      <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
                         {r.triggerType} · ưu tiên {r.priority}
                       </p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${r.enabled ? 'bg-emerald-50 text-emerald-700' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${r.enabled ? 'bg-emerald-50 text-emerald-700' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${r.enabled ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                       {r.enabled ? 'Đang bật' : 'Đã tắt'}
                     </span>
@@ -434,8 +434,8 @@ export function WorkflowRules() {
                     style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
                   >
                     <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
-                    <p className="mt-0.5 text-[11px] font-medium [color:var(--pf-color-muted)]">{k.label}</p>
-                    <p className="text-[10px] [color:var(--pf-color-muted)]">{k.sub}</p>
+                    <p className="mt-0.5 text-xs font-medium [color:var(--pf-color-muted)]">{k.label}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{k.sub}</p>
                   </div>
                 )
               })}
@@ -445,7 +445,7 @@ export function WorkflowRules() {
           {/* Chi phí AI theo MODEL (30 ngày) — bằng chứng để quyết định multi-model routing. */}
           {obs && obs.aiCost.byModel.length > 0 && (
             <div className="mb-4 rounded-xl border border-[color:var(--pf-border)] p-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi phí AI theo model (30 ngày)</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi phí AI theo model (30 ngày)</p>
               <div className="space-y-1">
                 {obs.aiCost.byModel.map((m) => {
                   const pct = obs.aiCost.estimatedCostUsd > 0 ? Math.round((m.estimatedCostUsd / obs.aiCost.estimatedCostUsd) * 100) : 0
@@ -460,7 +460,7 @@ export function WorkflowRules() {
                   )
                 })}
               </div>
-              <p className="mt-2 text-[10px] [color:var(--pf-color-muted)]">Chỉ chỉnh routing khi 1 model chi phí cao chiếm ưu thế VÀ có model rẻ hơn đủ chất lượng cho tác vụ đó.</p>
+              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chỉ chỉnh routing khi 1 model chi phí cao chiếm ưu thế VÀ có model rẻ hơn đủ chất lượng cho tác vụ đó.</p>
             </div>
           )}
 
@@ -479,10 +479,10 @@ export function WorkflowRules() {
                 >
                   <div className="min-w-0">
                     <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(run.triggerType)}</p>
-                    <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)} · <span className="font-mono">{run.triggerType}</span></p>
-                    {run.errorMessage && <p className="text-[10px] text-red-500 truncate">{run.errorMessage}</p>}
+                    <p className="text-xs [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)} · <span className="font-mono">{run.triggerType}</span></p>
+                    {run.errorMessage && <p className="text-xs text-red-500 truncate">{run.errorMessage}</p>}
                   </div>
-                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                     {run.status}
                   </span>
                 </button>

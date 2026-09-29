@@ -63,14 +63,14 @@ export function ExecutiveReportShowcase() {
                 <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                   <c.icon size={20} />
                 </div>
-                <p className="text-[15px] font-bold">{c.title}</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{c.desc}</p>
+                <p className="text-base font-bold">{c.title}</p>
+                <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">{c.desc}</p>
               </div>
             ))}
           </div>
           <div className="mx-auto mt-8 flex max-w-2xl items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
             <ShieldCheck size={20} className="mt-0.5 shrink-0 [color:var(--pf-green)]" />
-            <p className="text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+            <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">
               <b className="[color:var(--pf-text)]">Mọi con số đến từ dữ liệu thật của CLB bạn.</b> Báo cáo lấy theo mốc thời gian của kỳ quỹ; thời gian xuất là thời điểm thực khi bạn tạo báo cáo.
             </p>
           </div>

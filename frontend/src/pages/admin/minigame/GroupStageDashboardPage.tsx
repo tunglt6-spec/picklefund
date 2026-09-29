@@ -203,7 +203,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 shrink-0">{c.icon}</span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-white">{c.label}</span>
-                <span className="block text-[11px] text-white/80 leading-tight">{c.desc}</span>
+                <span className="block text-xs text-white/80 leading-tight">{c.desc}</span>
               </span>
             </button>
           ))}
@@ -244,7 +244,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                 </div>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[color:var(--pf-border)] text-[11px] [color:var(--pf-color-muted)] uppercase">
+                    <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)] uppercase">
                       <th className="text-left px-3 py-2 font-semibold">#</th>
                       <th className="text-left px-2 py-2 font-semibold">Người chơi</th>
                       <th className="text-center px-2 py-2 font-semibold" title="Đã đấu">Đ</th>
@@ -263,7 +263,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                           <span className="inline-flex items-center gap-1.5">
                             {s.memberName}
                             {isGuestId(s.memberId) && (
-                              <span className="text-[9px] font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
+                              <span className="text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
                             )}
                           </span>
                         </td>

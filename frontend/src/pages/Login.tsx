@@ -415,7 +415,7 @@ export function Login() {
             </motion.div>
 
             <motion.h1 variants={fadeUp} custom={2} initial="hidden" animate="show"
-              className="text-[46px] font-extrabold leading-[1.05] mb-4 tracking-tight"
+              className="text-5xl font-extrabold leading-[1.05] mb-4 tracking-tight"
               style={{ fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
               <span className="block" style={{ color: '#E9E5FF' }}>Kết nối đam mê.</span>
               <span className="text-white block">Quản lý chuyên nghiệp.</span>
@@ -487,7 +487,7 @@ export function Login() {
           className="lg:hidden flex flex-col items-center mb-4">
           <PickleFundLogo size={48} className="mb-2" />
           <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">PickleFund</h1>
-          <p className="[color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] text-[13px] mt-0.5">Quản lý quỹ CLB thể thao</p>
+          <p className="[color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] text-sm mt-0.5">Quản lý quỹ CLB thể thao</p>
         </motion.div>
 
         <div className="w-full max-w-[480px]">
@@ -571,7 +571,7 @@ export function Login() {
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left border-b border-slate-50 dark:border-slate-800 last:border-0">
                               <span className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${badgeStyle[a.badge]}`}>{a.label}</span>
                               <span className="text-xs [color:var(--pf-color-muted)] dark:[color:var(--pf-color-muted)] flex-1">{a.desc}</span>
-                              <span className="text-[10px] text-slate-300 dark:text-slate-600 font-mono shrink-0">{a.username}</span>
+                              <span className="text-xs text-slate-300 dark:text-slate-600 font-mono shrink-0">{a.username}</span>
                             </button>
                           ))}
                         </motion.div>

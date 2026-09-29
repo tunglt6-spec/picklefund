@@ -132,7 +132,7 @@ export function MemberOffice() {
           caption="Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · kết quả THẬT ở bảng dưới"
           badge={
             <div
-              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
               style={{ background: 'rgba(17,24,39,0.72)' }}
             >
               <span
@@ -170,15 +170,15 @@ export function MemberOffice() {
                     borderTop: `3px solid ${c.color}`,
                   }}
                 >
-                  <span className="text-[13px] font-semibold" style={{ color: c.color }}>{c.name}</span>
+                  <span className="text-sm font-semibold" style={{ color: c.color }}>{c.name}</span>
                   <p className="mt-1 text-2xl font-bold leading-none" style={{ color: c.color }}>
                     {c.value}
                     {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
                   </p>
-                  <p className="mt-1 text-[11px] font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
+                  <p className="mt-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
                   <div className="mt-2 space-y-0.5 border-t pt-2" style={{ borderColor: `color-mix(in srgb, ${c.color} 15%, var(--pf-border))` }}>
                     {c.details.map((d, i) => (
-                      <p key={i} className="text-[11px] leading-snug [color:var(--pf-color-muted)]">{d}</p>
+                      <p key={i} className="text-xs leading-snug [color:var(--pf-color-muted)]">{d}</p>
                     ))}
                   </div>
                 </div>

@@ -145,7 +145,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
             <button
               onClick={handleExportPng}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
               style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
             >
               {exporting === 'png' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
@@ -155,7 +155,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
             <button
               onClick={handleExportPdf}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
               style={{ background: 'linear-gradient(135deg, #6D5DFB, #7C3AED)' }}
             >
               {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
@@ -166,7 +166,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               <button
                 onClick={handleShare}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
                 style={{ background: 'linear-gradient(135deg, #0891B2, #5B4BE8)' }}
               >
                 {exporting === 'share' ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
@@ -176,7 +176,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               <button
                 disabled
                 title="Trình duyệt hiện không hỗ trợ chia sẻ trực tiếp"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] [color:var(--pf-color-muted)] bg-slate-700 cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] [color:var(--pf-color-muted)] bg-slate-700 cursor-not-allowed"
               >
                 <Share2 size={14} />
                 Chia sẻ
@@ -185,7 +185,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-[700] [color:var(--pf-color-muted)] bg-slate-700 hover:bg-slate-600 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] [color:var(--pf-color-muted)] bg-slate-700 hover:bg-slate-600 transition-all active:scale-95"
             >
               <X size={14} />
               Đóng
@@ -193,7 +193,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           </div>
 
           {isLoading && (
-            <p className="text-center text-[11px] [color:var(--pf-color-muted)] mt-2">
+            <p className="text-center text-xs [color:var(--pf-color-muted)] mt-2">
               {exporting === 'png' ? 'Đang xuất ảnh...' : exporting === 'pdf' ? 'Đang tạo PDF...' : 'Đang chuẩn bị chia sẻ...'}
             </p>
           )}

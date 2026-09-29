@@ -17,14 +17,14 @@ export function MobileWelcomeCard({ title, subtitle, stats }: MobileWelcomeCardP
         strokeWidth={1}
       />
 
-      <p className="text-[13px] font-semibold text-white/70 uppercase tracking-widest mb-1">{subtitle}</p>
-      <h2 className="text-[22px] font-[700] text-white leading-tight mb-4">{title}</h2>
+      <p className="text-sm font-semibold text-white/70 uppercase tracking-widest mb-1">{subtitle}</p>
+      <h2 className="text-2xl font-[700] text-white leading-tight mb-4">{title}</h2>
 
       <div className="flex gap-4 flex-wrap">
         {stats.map(s => (
           <div key={s.label} className="flex flex-col">
-            <span className="text-[22px] font-[800] text-white leading-none tabular-nums">{s.value}</span>
-            <span className="text-[11px] text-white/70 mt-0.5">{s.label}</span>
+            <span className="text-2xl font-[800] text-white leading-none tabular-nums">{s.value}</span>
+            <span className="text-xs text-white/70 mt-0.5">{s.label}</span>
           </div>
         ))}
       </div>

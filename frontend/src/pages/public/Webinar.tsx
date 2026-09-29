@@ -37,7 +37,7 @@ export function Webinar() {
           <div className="rounded-3xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
             <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><CalendarClock size={14} /> Lịch sắp tới</div>
             <p className="text-base font-extrabold [color:var(--pf-text)]">Chưa có buổi nào được lên lịch công khai</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+            <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
               Chúng tôi sẽ thông báo ngay khi có lịch. Nhập email để được nhắc — email của bạn chỉ dùng cho mục đích này.
             </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -61,7 +61,7 @@ export function Webinar() {
 
           {/* Chủ đề dự kiến */}
           <div className="rounded-3xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
-            <p className="text-[15px] font-extrabold [color:var(--pf-text)]">Chủ đề dự kiến</p>
+            <p className="text-base font-extrabold [color:var(--pf-text)]">Chủ đề dự kiến</p>
             <ul className="mt-3 space-y-2">
               {TOPICS.map((t) => (
                 <li key={t} className="flex gap-2 text-[13.5px] leading-relaxed [color:var(--pf-text)]">
@@ -77,8 +77,8 @@ export function Webinar() {
         <div className="mx-auto mt-10 flex max-w-3xl flex-col items-center gap-4 rounded-2xl border p-6 text-center [border-color:var(--pf-border)] sm:flex-row sm:text-left" style={{ background: 'var(--pf-primary-soft)' }}>
           <Video size={28} className="shrink-0 [color:var(--pf-primary)]" />
           <div className="flex-1">
-            <p className="text-[15px] font-bold [color:var(--pf-text)]">Không muốn chờ?</p>
-            <p className="mt-0.5 text-[13px] [color:var(--pf-color-muted)]">Trải nghiệm sản phẩm ngay với bản demo tương tác — sẵn sàng bất cứ lúc nào.</p>
+            <p className="text-base font-bold [color:var(--pf-text)]">Không muốn chờ?</p>
+            <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Trải nghiệm sản phẩm ngay với bản demo tương tác — sẵn sàng bất cứ lúc nào.</p>
           </div>
           <Link to="/resources/video" className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>
             Xem demo ngay <ArrowRight size={15} />

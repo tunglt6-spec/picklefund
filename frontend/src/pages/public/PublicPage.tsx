@@ -53,15 +53,15 @@ export function PageHero({
     >
       <div className={`${PUBLIC_CONTAINER} py-14 sm:py-16 text-center`}>
         {eyebrow && (
-          <div className="mb-3 inline-block rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] [border-color:var(--pf-border)] [color:var(--pf-primary)]">
+          <div className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] [border-color:var(--pf-border)] [color:var(--pf-primary)]">
             {eyebrow}
           </div>
         )}
-        <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight sm:text-[42px] sm:leading-[1.1]">
+        <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl sm:leading-[1.1]">
           {title}
         </h1>
         {desc && (
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed [color:var(--pf-color-muted)]">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed [color:var(--pf-color-muted)]">
             {desc}
           </p>
         )}

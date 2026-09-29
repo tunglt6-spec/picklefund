@@ -81,23 +81,23 @@ export function MemberDashboard() {
           style={{ background: 'var(--pf-primary)' }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white text-[15px] font-[800]">
+            <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white text-base font-[800]">
               {initials}
             </div>
             <div>
               <p className="text-white/70 text-xs">Xin chào 👋</p>
-              <p className="text-white text-[17px] font-[700]">{memberName}</p>
+              <p className="text-white text-lg font-[700]">{memberName}</p>
             </div>
           </div>
 
           {hasData ? (
             <div className="bg-white/15 rounded-2xl px-4 py-3">
-              <p className="text-white/70 text-[11px] font-[600] uppercase tracking-wide mb-2">
+              <p className="text-white/70 text-xs font-[600] uppercase tracking-wide mb-2">
                 {activePeriod?.name ?? 'Kỳ gần nhất'}
               </p>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/70 text-[11px]">Số dư</p>
+                  <p className="text-white/70 text-xs">Số dư</p>
                   <p className={`text-2xl font-[800] ${balance >= 0 ? 'text-white' : 'text-red-300'}`}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </p>
@@ -114,13 +114,13 @@ export function MemberDashboard() {
                       <span className="text-red-200 text-xs font-[600]">Chưa đóng quỹ</span>
                     </div>
                   )}
-                  <p className="text-white/60 text-[11px] mt-1 text-right">{myAttendance}/{totalSessions} buổi</p>
+                  <p className="text-white/60 text-xs mt-1 text-right">{myAttendance}/{totalSessions} buổi</p>
                 </div>
               </div>
             </div>
           ) : (
             <div className="bg-white/15 rounded-2xl px-4 py-3">
-              <p className="text-white/70 text-[13px]">CLB chưa tạo kỳ quỹ nào</p>
+              <p className="text-white/70 text-sm">CLB chưa tạo kỳ quỹ nào</p>
             </div>
           )}
         </div>
@@ -135,7 +135,7 @@ export function MemberDashboard() {
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-3 py-3 text-center">
                 <p className={`text-base font-[800] ${k.color} tabular-nums`}>{k.value}</p>
-                <p className="text-[10px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
+                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
               </div>
             ))}
           </div>
@@ -151,8 +151,8 @@ export function MemberDashboard() {
               <Send size={15} className="[color:var(--pf-primary)]" />
             </div>
             <div className="text-left">
-              <p className="text-[13px] font-[700] [color:var(--pf-text)]">Báo nộp quỹ</p>
-              <p className="text-[11px] [color:var(--pf-color-muted)]">Đã CK → chờ duyệt</p>
+              <p className="text-sm font-[700] [color:var(--pf-text)]">Báo nộp quỹ</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">Đã CK → chờ duyệt</p>
             </div>
           </button>
           <button
@@ -163,8 +163,8 @@ export function MemberDashboard() {
               <Calendar size={15} className="[color:var(--pf-color-info)]" />
             </div>
             <div className="text-left">
-              <p className="text-[13px] font-[700] [color:var(--pf-text)]">Lịch chơi</p>
-              <p className="text-[11px] [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</p>
+              <p className="text-sm font-[700] [color:var(--pf-text)]">Lịch chơi</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</p>
             </div>
           </button>
         </div>
@@ -174,7 +174,7 @@ export function MemberDashboard() {
           <div className="px-4 pt-3 pb-28">
             <div className="[background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
-                <p className="text-[15px] font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
+                <p className="text-base font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
                 <button
                   onClick={handleExportPDF}
                   className="flex items-center gap-1.5 [color:var(--pf-primary)] text-xs font-[600]"
@@ -184,7 +184,7 @@ export function MemberDashboard() {
                 </button>
               </div>
 
-              <div className="px-4 py-3 space-y-2.5 text-[13px]">
+              <div className="px-4 py-3 space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="[color:var(--pf-color-muted)]">Kỳ quỹ</span>
                   <span className="font-[600] [color:var(--pf-text)]">{activePeriod?.name ?? '—'}</span>
@@ -227,7 +227,7 @@ export function MemberDashboard() {
             {completedSessions.length > 0 && (
               <div className="mt-3 [background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
-                  <p className="text-[15px] font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
+                  <p className="text-base font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
                   <button
                     onClick={() => navigate('/member/attendance')}
                     className="flex items-center gap-0.5 [color:var(--pf-primary)] text-xs font-[600]"
@@ -239,13 +239,13 @@ export function MemberDashboard() {
                   {completedSessions.slice(-5).reverse().map(s => (
                     <div key={s.id} className="px-4 py-2.5 flex items-center justify-between">
                       <div>
-                        <p className="text-[13px] font-[600] [color:var(--pf-text)]">{s.courtName || 'Sân chơi'}</p>
-                        <p className="text-[11px] [color:var(--pf-color-muted)]">{formatDate(s.sessionDate)}</p>
+                        <p className="text-sm font-[600] [color:var(--pf-text)]">{s.courtName || 'Sân chơi'}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">{formatDate(s.sessionDate)}</p>
                       </div>
                       {attended.has(s.id) ? (
-                        <span className="text-[11px] font-[600] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">Tham gia</span>
+                        <span className="text-xs font-[600] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">Tham gia</span>
                       ) : (
-                        <span className="text-[11px] font-[600] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] px-2 py-0.5 rounded-full">Vắng</span>
+                        <span className="text-xs font-[600] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] px-2 py-0.5 rounded-full">Vắng</span>
                       )}
                     </div>
                   ))}
@@ -303,8 +303,8 @@ export function MemberDashboard() {
                       style={{ background: `conic-gradient(var(--pf-primary) ${Math.min(100, attendanceRate) * 3.6}deg, var(--pf-color-muted-soft) 0deg)` }}
                     />
                     <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full [background:var(--pf-surface)]">
-                      <span className="text-[22px] font-extrabold [color:var(--pf-text)]">{attendanceRate}%</span>
-                      <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
+                      <span className="text-2xl font-extrabold [color:var(--pf-text)]">{attendanceRate}%</span>
+                      <span className="text-xs [color:var(--pf-color-muted)]">tham gia</span>
                     </div>
                   </div>
                   <span className="text-xs [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</span>
@@ -313,8 +313,8 @@ export function MemberDashboard() {
                 {/* Đóng quỹ kỳ này — khoản thu mở: hiện SỐ TIỀN THẬT, không mục tiêu/tiến độ % */}
                 <div className="w-full min-w-0 flex-1">
                   <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-[13px] font-semibold [color:var(--pf-text)]">Đóng quỹ kỳ này</span>
-                    <span className="text-[15px] font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
+                    <span className="text-sm font-semibold [color:var(--pf-text)]">Đóng quỹ kỳ này</span>
+                    <span className="text-base font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
                   </div>
                   <div className="mt-1">
                     <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>

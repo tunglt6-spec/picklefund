@@ -22,7 +22,7 @@ export function AiLogPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors"
+            className="rounded-full px-4 py-1.5 text-sm font-semibold transition-colors"
             style={
               tab === t.key
                 ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on, #fff)' }

@@ -183,7 +183,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
                     <span className="inline-flex h-7 w-7 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
                       <User size={14} />
                     </span>
-                    <p className="min-w-0 truncate text-[13px] [color:var(--pf-color-muted)]">
+                    <p className="min-w-0 truncate text-sm [color:var(--pf-color-muted)]">
                       Người báo cáo:{' '}
                       <span className="font-semibold [color:var(--pf-text)]">{r.reporter}</span>
                     </p>
@@ -196,7 +196,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
                   )}
 
                   <div className="mt-2 rounded-xl border p-3 [border-color:var(--pf-border)] [background:var(--pf-bg)]">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">
                       Nội dung bị báo cáo
                     </p>
                     <p className="whitespace-pre-wrap break-words text-sm font-medium [color:var(--pf-text)]">

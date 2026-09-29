@@ -162,7 +162,7 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
               <>
                 <Image size={28} className="[color:var(--pf-color-muted)]" />
                 <p className="text-xs [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file</span></p>
-                <p className="text-[10px] [color:var(--pf-color-muted)]">JPG, PNG, PDF, WEBP · Tối đa 5 MB</p>
+                <p className="text-xs [color:var(--pf-color-muted)]">JPG, PNG, PDF, WEBP · Tối đa 5 MB</p>
               </>
             )}
           </div>
@@ -186,7 +186,7 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
           </div>
 
           {file && (
-            <p className="text-[11px] [color:var(--pf-color-muted)] text-center">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>
+            <p className="text-xs [color:var(--pf-color-muted)] text-center">{file.name} · {(file.size / 1024).toFixed(0)} KB</p>
           )}
         </div>
 

@@ -34,14 +34,14 @@ export function Partners() {
                 <t.icon size={20} />
               </div>
               <div className="min-w-0">
-                <p className="text-[15px] font-bold [color:var(--pf-text)]">{t.title}</p>
-                <p className="mt-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{t.desc}</p>
+                <p className="text-base font-bold [color:var(--pf-text)]">{t.title}</p>
+                <p className="mt-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{t.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <p className="mx-auto mt-8 flex max-w-2xl items-start gap-2 rounded-2xl border p-4 text-[13px] leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
+        <p className="mx-auto mt-8 flex max-w-2xl items-start gap-2 rounded-2xl border p-4 text-sm leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
           <Info size={15} className="mt-0.5 shrink-0" />
           Chúng tôi chưa công bố danh sách đối tác cụ thể. Khi có, thông tin sẽ được cập nhật tại đây một cách minh bạch.
         </p>

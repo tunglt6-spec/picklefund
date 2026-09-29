@@ -32,7 +32,7 @@ function Wordmark() {
       >
         P
       </span>
-      <span className="text-[17px]">
+      <span className="text-lg">
         Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span>
       </span>
     </Link>
@@ -135,7 +135,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <a
             key={n.label}
             href={n.href}
-            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium [color:var(--pf-color-muted)]"
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium [color:var(--pf-color-muted)]"
           >
             <span className="[color:var(--pf-primary)]">{n.icon}</span>
             {n.label}

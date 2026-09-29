@@ -96,7 +96,7 @@ export function MemberActivity() {
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium [color:var(--pf-text)]">{r.m.fullName}</span>
-                  <span className="text-[11px] [color:var(--pf-color-muted)]">{r.contribs.length} lần đóng · {r.rate != null ? `${r.rate}% chuyên cần` : 'chưa có buổi'}</span>
+                  <span className="text-xs [color:var(--pf-color-muted)]">{r.contribs.length} lần đóng · {r.rate != null ? `${r.rate}% chuyên cần` : 'chưa có buổi'}</span>
                 </span>
                 <span className="shrink-0 text-xs font-semibold [color:var(--pf-green)]">{formatVND(r.totalPaid)}</span>
               </button>

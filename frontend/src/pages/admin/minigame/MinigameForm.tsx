@@ -372,7 +372,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                         <input type="radio" name="format" checked={active} disabled={!f.implemented || isEdit}
                           onChange={() => f.implemented && set({ formatType: f.dbFormat as MinigameFormatType, formatCode: f.code })} className="accent-[var(--pf-primary)]" />
                         {f.label}
-                        {!f.implemented && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">Sắp có</span>}
+                        {!f.implemented && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">Sắp có</span>}
                       </span>
                       <span className="text-xs [color:var(--pf-color-muted)] ml-5">{f.implemented ? (f.sub ?? '') : (f.note ?? 'M2')}</span>
                     </label>
@@ -427,7 +427,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   {form.formatType === 'GROUP_STAGE' ? (
                     <div><Label>Số {isPairComp ? 'cặp' : 'người'} mỗi bảng ({form.groupSize})</Label>
                       <input type="range" min={2} max={16} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })} className="w-full accent-[var(--pf-primary)]" />
-                      <div className="mt-1 flex justify-between text-[10px] [color:var(--pf-color-muted)]"><span>2</span><span>16</span></div></div>
+                      <div className="mt-1 flex justify-between text-xs [color:var(--pf-color-muted)]"><span>2</span><span>16</span></div></div>
                   ) : (
                     <div><Label>Chế độ bốc thăm mặc định</Label>
                       <select value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]">

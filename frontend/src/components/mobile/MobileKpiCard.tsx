@@ -17,7 +17,7 @@ export function MobileKpiCard({ label, value, icon, accent = '#6D5DFB' }: Mobile
       </div>
       <div className="min-w-0">
         <div className="text-xl sm:text-2xl font-[800] leading-tight [color:var(--pf-text)] tabular-nums break-words whitespace-normal max-w-full">{value}</div>
-        <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] leading-tight">{label}</div>
+        <div className="mt-1 text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] leading-tight">{label}</div>
       </div>
     </div>
   )

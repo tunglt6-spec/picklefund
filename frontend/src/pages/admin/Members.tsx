@@ -157,7 +157,7 @@ function MemberFormDrawer({
     >
       <form id="member-form" onSubmit={handleSubmit} className="space-y-5 px-5 py-5">
         <div>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin cá nhân</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin cá nhân</p>
           <div className="space-y-3.5">
             <div>
               <label htmlFor="mf-name" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">
@@ -186,7 +186,7 @@ function MemberFormDrawer({
           </div>
         </div>
         <div>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin bổ sung</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin bổ sung</p>
           <div className="mb-3">
             <label htmlFor="mf-skill" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">Trình độ <span className="[color:var(--pf-color-muted)]">(1–5, cho ghép cặp cân bằng)</span></label>
             <select id="mf-skill" value={form.skillLevel} onChange={e => setForm({ ...form, skillLevel: e.target.value })} className="input-base">
@@ -279,7 +279,7 @@ function MemberDetailDrawer({
         {/* Thông tin cá nhân */}
         {tab === 'info' && (
         <section>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin cá nhân</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thông tin cá nhân</p>
           <dl className="space-y-2 text-sm">
             <DetailRow icon={<Phone size={14} />} label="Số điện thoại" value={m.phone || 'Chưa có'} />
             <DetailRow icon={<Mail size={14} />} label="Email" value={m.email || 'Chưa có'} />
@@ -292,7 +292,7 @@ function MemberDetailDrawer({
         {/* Ghi chú (thuộc tab Thông tin) */}
         {tab === 'info' && (
         <section>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ghi chú</p>
           <p className="text-sm [color:var(--pf-text)]">{m.notes?.trim() || <span className="[color:var(--pf-color-muted)]">Không có ghi chú</span>}</p>
         </section>
         )}
@@ -301,7 +301,7 @@ function MemberDetailDrawer({
         {tab === 'stats' && (
         <>
         <section>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ hiện tại</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ hiện tại</p>
           {row.periodName ? (
             <div className="rounded-2xl border p-4 border-[color:var(--pf-border)]">
               <div className="flex items-center justify-between text-sm">
@@ -324,7 +324,7 @@ function MemberDetailDrawer({
 
         {/* Lịch sử đóng quỹ */}
         <section>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Lịch sử đóng quỹ</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Lịch sử đóng quỹ</p>
           {row.contributions.length === 0 ? (
             <p className="rounded-2xl border px-4 py-6 text-center text-sm border-[color:var(--pf-border)] [color:var(--pf-color-muted)]">Chưa có dữ liệu đóng quỹ</p>
           ) : (
@@ -849,7 +849,7 @@ export function Members() {
         >
           <div className="space-y-5 px-5 py-5">
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Trạng thái</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Trạng thái</p>
               <div className="flex flex-wrap gap-2">
                 {STATUS_FILTERS.map(([v, l]) => (
                   <button
@@ -867,7 +867,7 @@ export function Members() {
               </div>
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ngày gia nhập</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ngày gia nhập</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="ff-from" className="mb-1 block text-xs [color:var(--pf-color-muted)]">Từ ngày</label>

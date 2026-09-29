@@ -396,7 +396,7 @@ export function AiDigitalOffice() {
         actions={
           <div className="flex items-center gap-2">
             <span
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium [border-color:var(--pf-border)]"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium [border-color:var(--pf-border)]"
               style={{ color: alive ? 'var(--pf-green)' : 'var(--pf-color-muted, var(--pf-color-muted))' }}
               title={beatAt ? `Nhịp nền lúc ${new Date(beatAt).toLocaleTimeString('vi-VN')}` : 'Chưa nhận nhịp nền'}
             >
@@ -441,7 +441,7 @@ export function AiDigitalOffice() {
             caption="Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · trạng thái THẬT ở bảng dưới"
             badge={
               <div
-                className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+                className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
               >
                 <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
@@ -464,15 +464,15 @@ export function AiDigitalOffice() {
                     borderTop: `3px solid ${c.color}`,
                   }}
                 >
-                  <span className="text-[13px] font-semibold" style={{ color: c.color }}>{c.name}</span>
+                  <span className="text-sm font-semibold" style={{ color: c.color }}>{c.name}</span>
                   <p className="mt-1 text-2xl font-bold leading-none" style={{ color: c.color }}>
                     {c.value}
                     {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
                   </p>
-                  <p className="mt-1 text-[11px] font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
+                  <p className="mt-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
                   <div className="mt-2 space-y-0.5 border-t pt-2" style={{ borderColor: `color-mix(in srgb, ${c.color} 15%, var(--pf-border))` }}>
                     {c.details.map((d, i) => (
-                      <p key={i} className="text-[11px] leading-snug [color:var(--pf-color-muted)]">{d}</p>
+                      <p key={i} className="text-xs leading-snug [color:var(--pf-color-muted)]">{d}</p>
                     ))}
                   </div>
                 </div>
@@ -555,7 +555,7 @@ export function AiDigitalOffice() {
                     return (
                       <button key={p.id} onClick={() => navigate('/admin/ai-approvals?from=aido')}
                         className="flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors [border-color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
-                        <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold"
+                        <span className="mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-bold"
                           style={{ background: `color-mix(in srgb, ${rk.color} 16%, transparent)`, color: rk.color }}>{rk.label}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium [color:var(--pf-text)] truncate">{p.title}</p>

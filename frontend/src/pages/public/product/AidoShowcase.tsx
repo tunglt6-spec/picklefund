@@ -44,8 +44,8 @@ export function AidoShowcase() {
                   <img src={a.avatar} alt={a.name} className="h-full w-full object-cover" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-extrabold" style={{ color: a.color }}>{a.name}</p>
-                  <p className="truncate text-[11px] font-medium [color:var(--pf-color-muted)]">{a.role}</p>
+                  <p className="truncate text-base font-extrabold" style={{ color: a.color }}>{a.name}</p>
+                  <p className="truncate text-xs font-medium [color:var(--pf-color-muted)]">{a.role}</p>
                 </div>
               </div>
               <p className="mt-3 text-sm leading-relaxed [color:var(--pf-color-muted)]">{a.desc}</p>
@@ -66,13 +66,13 @@ export function AidoShowcase() {
               <div key={f.step} className="relative rounded-2xl border p-5 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold text-white" style={{ background: 'var(--pf-primary)' }}>{f.step}</div>
                 <p className="text-sm font-bold">{f.title}</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{f.desc}</p>
+                <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">{f.desc}</p>
               </div>
             ))}
           </div>
           <div className="mx-auto mt-8 flex max-w-2xl items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
             <ShieldCheck size={20} className="mt-0.5 shrink-0 [color:var(--pf-green)]" />
-            <p className="text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+            <p className="text-sm leading-relaxed [color:var(--pf-color-muted)]">
               <b className="[color:var(--pf-text)]">Con người luôn ở vị trí quyết định.</b> AI đề xuất và thực thi các tác vụ lặp lại, nhưng mọi việc liên quan tiền bạc/quan trọng đều cần Ban quản trị phê duyệt. Mọi con số đến từ dữ liệu thật của CLB.
             </p>
           </div>

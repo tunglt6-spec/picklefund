@@ -33,8 +33,8 @@ export function News() {
         <div className="mb-10 flex flex-col items-center gap-4 rounded-3xl border p-6 text-center [border-color:var(--pf-border)] sm:flex-row sm:text-left" style={{ background: 'var(--pf-primary-soft)' }}>
           <Megaphone size={28} className="shrink-0 [color:var(--pf-primary)]" />
           <div className="flex-1">
-            <p className="text-[15px] font-bold [color:var(--pf-text)]">Có gì mới trong sản phẩm?</p>
-            <p className="mt-0.5 text-[13px] [color:var(--pf-color-muted)]">Xem nhật ký các tính năng đã phát hành, nhóm theo chủ đề.</p>
+            <p className="text-base font-bold [color:var(--pf-text)]">Có gì mới trong sản phẩm?</p>
+            <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Xem nhật ký các tính năng đã phát hành, nhóm theo chủ đề.</p>
           </div>
           <Link to="/resources/release-notes" className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>
             Nhật ký cập nhật <ArrowRight size={15} />
@@ -49,22 +49,22 @@ export function News() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {latest.map((p) => (
             <Link key={p.slug} to={`/resources/blog/${p.slug}`} className="group flex flex-col rounded-2xl border p-5 [border-color:var(--pf-border)] [background:var(--pf-surface)] transition-shadow hover:shadow-lg">
-              <span className="inline-flex items-center gap-1 text-[11px] [color:var(--pf-color-muted)]"><Clock size={12} /> {p.readMins} phút đọc</span>
-              <h3 className="mt-2 text-[15px] font-extrabold leading-snug [color:var(--pf-text)]">{p.title}</h3>
-              <p className="mt-2 flex-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{p.excerpt}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold [color:var(--pf-primary)]">Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span>
+              <span className="inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={12} /> {p.readMins} phút đọc</span>
+              <h3 className="mt-2 text-base font-extrabold leading-snug [color:var(--pf-text)]">{p.title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{p.excerpt}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-primary)]">Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span>
             </Link>
           ))}
         </div>
         <div className="mt-4 text-center">
-          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-[13px] font-semibold [color:var(--pf-primary)]">Xem tất cả bài viết <ArrowRight size={14} /></Link>
+          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary)]">Xem tất cả bài viết <ArrowRight size={14} /></Link>
         </div>
 
         {/* Đăng ký nhận thông báo */}
         <div className="mx-auto mt-12 max-w-2xl rounded-3xl border p-6 text-center [border-color:var(--pf-border)] [background:var(--pf-surface)]">
           <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><Newspaper size={14} /> Nhận thông báo</div>
-          <p className="text-[15px] font-bold [color:var(--pf-text)]">Không bỏ lỡ cập nhật quan trọng</p>
-          <p className="mt-1 text-[13px] [color:var(--pf-color-muted)]">Để lại email — chúng tôi sẽ báo khi có tính năng mới hoặc thông báo đáng chú ý.</p>
+          <p className="text-base font-bold [color:var(--pf-text)]">Không bỏ lỡ cập nhật quan trọng</p>
+          <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Để lại email — chúng tôi sẽ báo khi có tính năng mới hoặc thông báo đáng chú ý.</p>
           <div className="mx-auto mt-4 flex max-w-md flex-col gap-2 sm:flex-row">
             <input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}

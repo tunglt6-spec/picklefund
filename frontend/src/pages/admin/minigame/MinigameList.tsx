@@ -437,7 +437,7 @@ export function MinigameList() {
             </div>
             <div className="space-y-5 overflow-y-auto px-5 py-5">
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thể thức</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Thể thức</p>
                 <div className="flex flex-wrap gap-2">
                   {MODE_TABS.map(t => (
                     <button key={t.key} onClick={() => setModeTab(t.key as ModeTab)} aria-pressed={modeTab === t.key}
@@ -447,7 +447,7 @@ export function MinigameList() {
                 </div>
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Trạng thái</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Trạng thái</p>
                 <div className="flex flex-wrap gap-2">
                   {STATUS_FILTERS.map(([v, l]) => (
                     <button key={v} onClick={() => setStatusFilter(v)} aria-pressed={statusFilter === v}

@@ -39,7 +39,7 @@ export function MobileBottomSheet({ open, onClose, title, children, actions }: M
         {/* Header */}
         {title && (
           <div className="px-5 py-3 border-b border-[color:var(--pf-border)] flex-shrink-0">
-            <h3 className="text-[17px] font-[700] [color:var(--pf-text)]">{title}</h3>
+            <h3 className="text-lg font-[700] [color:var(--pf-text)]">{title}</h3>
           </div>
         )}
 

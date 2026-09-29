@@ -63,7 +63,7 @@ export function ReleaseNotes() {
           {RELEASES.map((r) => (
             <div key={r.title} className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="flex items-center gap-2">
-                <span className="rounded-full px-2.5 py-1 text-[11px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{r.tag}</span>
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{r.tag}</span>
                 <h2 className="text-base font-extrabold [color:var(--pf-text)]">{r.title}</h2>
               </div>
               <ul className="mt-3 space-y-2">
@@ -76,7 +76,7 @@ export function ReleaseNotes() {
               </ul>
             </div>
           ))}
-          <p className="flex items-start gap-2 rounded-2xl border p-4 text-[13px] leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
+          <p className="flex items-start gap-2 rounded-2xl border p-4 text-sm leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
             <Info size={15} className="mt-0.5 shrink-0" />
             Danh sách sắp xếp theo nhóm tính năng, không theo mốc ngày cụ thể. Xem thêm định hướng sắp tới tại <Link to="/roadmap" className="font-semibold [color:var(--pf-primary)]">Lộ trình phát triển</Link>.
           </p>

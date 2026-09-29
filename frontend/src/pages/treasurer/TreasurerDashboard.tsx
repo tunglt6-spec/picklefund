@@ -197,14 +197,14 @@ export function TreasurerDashboard() {
                 <p className="text-xs font-bold uppercase tracking-wide [color:var(--pf-primary)]">{f.label}</p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div><p className="text-[10px] [color:var(--pf-color-muted)]">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(f.income)}</p></div>
-                <div><p className="text-[10px] [color:var(--pf-color-muted)]">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(f.expense)}</p></div>
-                <div><p className="text-[10px] [color:var(--pf-color-muted)]">Số dư</p><p className={`text-sm font-bold ${f.bal >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>{formatVND(f.bal)}</p></div>
+                <div><p className="text-xs [color:var(--pf-color-muted)]">Thu</p><p className="text-sm font-bold text-emerald-600">{formatVND(f.income)}</p></div>
+                <div><p className="text-xs [color:var(--pf-color-muted)]">Chi</p><p className="text-sm font-bold text-orange-500">{formatVND(f.expense)}</p></div>
+                <div><p className="text-xs [color:var(--pf-color-muted)]">Số dư</p><p className={`text-sm font-bold ${f.bal >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>{formatVND(f.bal)}</p></div>
               </div>
             </div>
           ))}
           <div className="rounded-2xl p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))]">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-white/70">Tổng Tài Sản CLB</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/70">Tổng Tài Sản CLB</p>
             <p className="text-xl font-bold">{formatVND(clubAssetsBalance)}</p>
             <p className="mt-1 text-xs text-white/70">Quỹ Chính + Số dư chuyển kỳ</p>
           </div>
@@ -273,14 +273,14 @@ export function TreasurerDashboard() {
                           {row.type === 'income' ? <TrendingUp size={13} className="text-emerald-600" /> : <TrendingDown size={13} className="text-red-500" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13px] font-semibold [color:var(--pf-text)]">{row.description}</div>
-                          <div className="text-[11px] [color:var(--pf-color-muted)]">{formatDate(row.date)}</div>
+                          <div className="truncate text-sm font-semibold [color:var(--pf-text)]">{row.description}</div>
+                          <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(row.date)}</div>
                         </div>
                         <div className="shrink-0 text-right">
-                          <div className={`text-[13px] font-bold ${row.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
+                          <div className={`text-sm font-bold ${row.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
                             {row.type === 'income' ? '+' : '-'}{formatVND(row.amount)}
                           </div>
-                          <div className="text-[11px] [color:var(--pf-color-muted)]">{formatVND(row.balance)}</div>
+                          <div className="text-xs [color:var(--pf-color-muted)]">{formatVND(row.balance)}</div>
                         </div>
                       </div>
                     )}

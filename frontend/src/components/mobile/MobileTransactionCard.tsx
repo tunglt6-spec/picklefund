@@ -30,7 +30,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
           {isIncome ? '+' : '−'}{formatted}
         </span>
         {status && (
-          <span className="text-[11px] [color:var(--pf-color-muted)] mt-0.5 text-right leading-tight">{status}</span>
+          <span className="text-xs [color:var(--pf-color-muted)] mt-0.5 text-right leading-tight">{status}</span>
         )}
       </div>
       {actions && (

@@ -655,7 +655,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                       {(team.members ?? []).map(rm => (
                         <li key={rm.id} className="flex items-center justify-between gap-2 rounded-lg [background:var(--pf-surface-muted)] px-3 py-1.5 text-sm">
                           <span className="[color:var(--pf-text)] truncate">
-                            {nameOf(rm)}{rm.guestName && <span className="ml-1.5 text-[10px] rounded [background:var(--pf-color-warning-soft)][color:var(--pf-color-warning)] px-1.5 py-0.5">Khách</span>}
+                            {nameOf(rm)}{rm.guestName && <span className="ml-1.5 text-xs rounded [background:var(--pf-color-warning-soft)][color:var(--pf-color-warning)] px-1.5 py-0.5">Khách</span>}
                           </span>
                           <button onClick={() => removeMember(rm.id)} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)]" title="Bỏ khỏi đội"><X size={14} /></button>
                         </li>
@@ -884,7 +884,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
               ) : (
                 <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
                   <div className="overflow-x-auto">{renderTable(standings)}</div>
-                  <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
+                  <p className="px-3 py-2 text-xs [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
                     Xếp theo: Điểm → Hiệu số → {ui.scoreWord}. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.
                   </p>
                 </div>

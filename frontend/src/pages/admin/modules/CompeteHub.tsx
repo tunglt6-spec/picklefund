@@ -142,7 +142,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
                 className="text-left rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-2xl leading-none">{sportEmoji(mg.sport) || '🏓'}</span>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">{STATUS_LABEL[st] ?? st}</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">{STATUS_LABEL[st] ?? st}</span>
                 </div>
                 <div className="mt-2 text-sm font-bold [color:var(--pf-text)] line-clamp-2">{mg.name}</div>
                 <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)]">

@@ -37,12 +37,12 @@ export function FundSummaryCard({
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
             {icon}
           </div>
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-white/70 leading-tight">
+          <span className="text-xs font-semibold tracking-wider uppercase text-white/70 leading-tight">
             {title}
           </span>
         </div>
         {tag && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white flex-shrink-0">
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white flex-shrink-0">
             {tag}
           </span>
         )}
@@ -58,15 +58,15 @@ export function FundSummaryCard({
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <p className="text-xs text-white/60">Số dư hiện tại</p>
           {balance < 0 && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200"><AlertTriangle size={10} /> Âm</span>
+            <span className="inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500/30 text-red-200"><AlertTriangle size={10} /> Âm</span>
           )}
           {statusLabel && balance >= 0 && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{statusLabel}</span>
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{statusLabel}</span>
           )}
         </div>
       </div>
 
-      {subtitle && <p className="text-[10px] -mt-1 text-white/60 truncate">{subtitle}</p>}
+      {subtitle && <p className="text-xs -mt-1 text-white/60 truncate">{subtitle}</p>}
 
       <div className="h-px bg-white/20" />
 
@@ -76,10 +76,10 @@ export function FundSummaryCard({
             <div key={i}>
               {line.isTotal && <div className="h-px bg-white/30 my-1" />}
               <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className={`text-[10px] min-w-0 shrink ${line.isTotal ? 'text-white font-semibold' : 'text-white/60'}`}>
+                <span className={`text-xs min-w-0 shrink ${line.isTotal ? 'text-white font-semibold' : 'text-white/60'}`}>
                   {line.label}
                 </span>
-                <span className={`text-[11px] font-semibold tabular-nums text-right break-words min-w-0 max-w-[55%] ${
+                <span className={`text-xs font-semibold tabular-nums text-right break-words min-w-0 max-w-[55%] ${
                   line.isTotal
                     ? (typeof line.value === 'number' && line.value < 0 ? 'text-red-300' : 'text-white')
                     : 'text-white/80'
@@ -95,21 +95,21 @@ export function FundSummaryCard({
           <div>
             <div className="flex items-center gap-1 mb-0.5">
               <ArrowUpRight size={11} className="text-green-300" />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Thu</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-white/60">Thu</span>
             </div>
             <p className="text-sm font-semibold tabular-nums text-white">{formatVND(income ?? 0)}</p>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-0.5">
               <ArrowDownLeft size={11} className="text-red-300" />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-white/60">Chi</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-white/60">Chi</span>
             </div>
             <p className="text-sm font-semibold tabular-nums text-white">{formatVND(expense ?? 0)}</p>
           </div>
         </div>
       )}
 
-      {note && <p className="text-[10px] text-white/50 leading-snug">{note}</p>}
+      {note && <p className="text-xs text-white/50 leading-snug">{note}</p>}
     </div>
   )
 }

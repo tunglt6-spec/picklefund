@@ -81,15 +81,15 @@ export function ReferralCard() {
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg [background:var(--pf-surface-muted)] py-2">
           <p className="text-lg font-bold [color:var(--pf-text)]">{info.referredCount}</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Đã giới thiệu</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Đã giới thiệu</p>
         </div>
         <div className="rounded-lg [background:var(--pf-surface-muted)] py-2">
           <p className="text-lg font-bold text-emerald-600">{info.rewardedCount}</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Đã thưởng</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Đã thưởng</p>
         </div>
         <div className="rounded-lg [background:var(--pf-surface-muted)] py-2">
           <p className="text-lg font-bold text-amber-500">{info.pendingCount}</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Chờ lên Pro</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Chờ lên Pro</p>
         </div>
       </div>
 

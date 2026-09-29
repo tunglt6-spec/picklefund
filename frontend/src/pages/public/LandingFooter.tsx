@@ -8,7 +8,7 @@ import { useLandingNav } from './useLandingNav'
 
 function FooterLink({ item, onNavigate }: { item: MenuItem; onNavigate: (href?: string) => void }) {
   if (item.soon) {
-    return <span className="cursor-default text-sm [color:var(--pf-color-muted)] opacity-70">{item.title} · <span className="text-[11px]">đang cập nhật</span></span>
+    return <span className="cursor-default text-sm [color:var(--pf-color-muted)] opacity-70">{item.title} · <span className="text-xs">đang cập nhật</span></span>
   }
   return (
     <button onClick={() => onNavigate(item.href)} className="text-left text-sm [color:var(--pf-color-muted)] transition-colors hover:[color:var(--pf-primary)]">
@@ -28,7 +28,7 @@ export function LandingFooter() {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PickleFund">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg text-sm text-white" style={{ background: 'var(--pf-primary)' }}>P</span>
-              <span className="text-[17px]">Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span></span>
+              <span className="text-lg">Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span></span>
             </Link>
             <p className="mt-3 max-w-xs text-xs leading-relaxed [color:var(--pf-color-muted)]">{CONTACT.brandDesc}</p>
             <a href={`mailto:${CONTACT.email}`} className="mt-3 inline-block text-xs font-semibold [color:var(--pf-primary)]">{CONTACT.email}</a>

@@ -192,7 +192,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
             <div key={k.label} className="text-center">
               <div className="flex justify-center opacity-90">{k.icon}</div>
               <p className="mt-1 text-xl font-bold leading-none">{k.value}</p>
-              <p className="mt-1 text-[11px] opacity-80">{k.label}</p>
+              <p className="mt-1 text-xs opacity-80">{k.label}</p>
             </div>
           ))}
         </div>
@@ -235,7 +235,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
             <div className="overflow-x-auto">
             <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
+              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
               <tbody>
                 {golfStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">
@@ -253,7 +253,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           teamStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có đội.</p> : (
             <div className="overflow-x-auto">
             <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-[11px] uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
+              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
               <tbody>
                 {teamStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">
@@ -301,7 +301,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
               <li key={i} className="flex items-start gap-2 text-sm">
                 <span className="shrink-0">{a.icon}</span>
                 <span className="flex-1 [color:var(--pf-text)] leading-snug">{a.text}</span>
-                <span className="shrink-0 text-[11px] [color:var(--pf-color-muted)]">{ago(a.time)}</span>
+                <span className="shrink-0 text-xs [color:var(--pf-color-muted)]">{ago(a.time)}</span>
               </li>
             ))}
           </ul>

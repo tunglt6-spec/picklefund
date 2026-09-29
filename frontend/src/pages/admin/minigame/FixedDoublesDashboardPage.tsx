@@ -93,7 +93,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
           {sides.map((side, i) => (
             <div key={i}>
               <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: T.brand }}>{side.name}</p>
-              <p className="text-[11px] mb-2" style={{ color: T.txt2 }}>{side.members}</p>
+              <p className="text-xs mb-2" style={{ color: T.txt2 }}>{side.members}</p>
               <div className="flex items-center gap-3">
                 <button onClick={() => adj(side.set, -1)}
                   className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors"
@@ -179,25 +179,25 @@ function MatchRow({
       style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderColor: T.border }}
     >
       {/* match # */}
-      <span className="text-[11px] font-bold [color:var(--pf-color-muted)] tabular-nums text-center">#{matchNumber}</span>
+      <span className="text-xs font-bold [color:var(--pf-color-muted)] tabular-nums text-center">#{matchNumber}</span>
 
       {/* team 1 */}
       <div className="min-w-0">
         <p className={cn('text-sm font-bold truncate', t1Win ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
           {t1Win && <span className="mr-1">🏆</span>}{team1.name}
         </p>
-        <p className="text-[11px] truncate mt-0.5" style={{ color: T.txt2 }}>{team1.members}</p>
+        <p className="text-xs truncate mt-0.5" style={{ color: T.txt2 }}>{team1.members}</p>
       </div>
 
       {/* VS */}
-      <div className="text-center text-[11px] font-bold" style={{ color: T.txt2 }}>VS</div>
+      <div className="text-center text-xs font-bold" style={{ color: T.txt2 }}>VS</div>
 
       {/* team 2 */}
       <div className="min-w-0">
         <p className={cn('text-sm font-bold truncate', t2Win ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
           {t2Win && <span className="mr-1">🏆</span>}{team2.name}
         </p>
-        <p className="text-[11px] truncate mt-0.5" style={{ color: T.txt2 }}>{team2.members}</p>
+        <p className="text-xs truncate mt-0.5" style={{ color: T.txt2 }}>{team2.members}</p>
       </div>
 
       {/* score */}
@@ -218,7 +218,7 @@ function MatchRow({
         {!isDone && canEnter ? (
           <button
             onClick={() => onEnterScore(match)}
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white whitespace-nowrap"
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg text-white whitespace-nowrap"
             style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>
             Nhập điểm
           </button>
@@ -238,7 +238,7 @@ function MatchRow({
   const mobileCard = (
     <div className="md:hidden p-4 border-b last:border-0" style={{ borderColor: T.border }}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-bold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
+        <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
         <div className="flex items-center gap-1.5">
           <StatusBadge tone={st.tone}>{st.label}</StatusBadge>
           <MatchMenu isDone={isDone} onScore={() => onEnterScore(match)} onDelete={() => onDelete(match.id)} />
@@ -249,7 +249,7 @@ function MatchRow({
           <p className={cn('text-sm font-bold', t1Win ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
             {t1Win && '🏆 '}{team1.name}
           </p>
-          <p className="text-[11px]" style={{ color: T.txt2 }}>{team1.members}</p>
+          <p className="text-xs" style={{ color: T.txt2 }}>{team1.members}</p>
         </div>
         <div className="shrink-0 text-center px-2">
           {isDone ? (
@@ -264,7 +264,7 @@ function MatchRow({
           <p className={cn('text-sm font-bold', t2Win ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
             {team2.name}{t2Win && ' 🏆'}
           </p>
-          <p className="text-[11px]" style={{ color: T.txt2 }}>{team2.members}</p>
+          <p className="text-xs" style={{ color: T.txt2 }}>{team2.members}</p>
         </div>
       </div>
       {!isDone && canEnter && (
@@ -313,18 +313,18 @@ function RoundCard({
         onClick={() => setOpen(v => !v)}
       >
         <div className="flex items-center gap-3">
-          <span className="w-6 h-6 rounded-full text-[11px] font-extrabold text-white flex items-center justify-center"
+          <span className="w-6 h-6 rounded-full text-xs font-extrabold text-white flex items-center justify-center"
             style={{ background: `linear-gradient(135deg,${T.brand},${T.cyan})` }}>
             {round}
           </span>
           <span className="font-bold text-sm" style={{ color: T.txt1 }}>Vòng {round}</span>
-          <span className="text-[11px]" style={{ color: T.txt2 }}>{done}/{matches.length} trận</span>
+          <span className="text-xs" style={{ color: T.txt2 }}>{done}/{matches.length} trận</span>
           {allDone && (
-            <span className="text-[10px] font-semibold rounded-full px-2 py-0.5"
+            <span className="text-xs font-semibold rounded-full px-2 py-0.5"
               style={{ background: 'var(--pf-color-success-soft)', color: 'var(--pf-color-success)' }}>✓ Hoàn thành</span>
           )}
           {!allDone && done === 0 && (
-            <span className="text-[10px] font-semibold rounded-full px-2 py-0.5"
+            <span className="text-xs font-semibold rounded-full px-2 py-0.5"
               style={{ background: 'var(--pf-surface-muted)', color: T.txt2 }}>Chưa diễn ra</span>
           )}
         </div>
@@ -349,7 +349,7 @@ function RoundCard({
             style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderBottom: `1px solid ${T.border}` }}
           >
             {['Trận', 'Đội 1', '', 'Đội 2', 'Tỷ số', 'Trạng thái', ''].map((h, i) => (
-              <span key={i} className="text-[10px] font-bold uppercase tracking-wider text-center" style={{ color: T.txt2 }}>
+              <span key={i} className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: T.txt2 }}>
                 {h}
               </span>
             ))}
@@ -426,7 +426,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
             <tr style={{ borderBottom: `1px solid ${T.border}` }}>
               {['#', 'Đội', 'TĐ', 'H.Số', 'Điểm'].map((h, i) => (
                 <th key={i}
-                  className={cn('py-2 text-[10px] font-bold uppercase tracking-wider', i === 1 ? 'text-left pl-3' : 'text-center px-2')}
+                  className={cn('py-2 text-xs font-bold uppercase tracking-wider', i === 1 ? 'text-left pl-3' : 'text-center px-2')}
                   style={{ color: T.txt2 }}>
                   {h}
                 </th>
@@ -443,7 +443,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
                 </td>
                 <td className="py-2.5 pl-3 pr-2">
                   <p className="text-sm font-bold truncate" style={{ color: T.txt1 }}>{s.teamName}</p>
-                  <p className="text-[10px] truncate" style={{ color: T.txt2 }}>
+                  <p className="text-xs truncate" style={{ color: T.txt2 }}>
                     {s.player1Name} &amp; {s.player2Name}
                   </p>
                 </td>
@@ -485,7 +485,7 @@ function QuickStatsCard({ totalFor, totalAgainst, completedMatches }: {
       <div className="grid grid-cols-2 gap-px" style={{ background: T.border }}>
         {stats.map((s, i) => (
           <div key={i} className="[background:var(--pf-surface)] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: T.txt2 }}>{s.label}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: T.txt2 }}>{s.label}</p>
             <p className="text-xl font-extrabold mt-1 leading-none" style={{ color: s.color }}>{s.value}</p>
           </div>
         ))}
@@ -903,8 +903,8 @@ export function FixedDoublesDashboardPage() {
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   <Calendar size={14} style={{ color: T.brand }} className="shrink-0" />
                   <span className="font-bold text-sm" style={{ color: T.txt1 }}>Lịch Thi Đấu</span>
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">Đội &amp; lịch đã cố định</span>
-                  <span className="text-[11px]" style={{ color: T.txt2 }}>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">Đội &amp; lịch đã cố định</span>
+                  <span className="text-xs" style={{ color: T.txt2 }}>
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
                 </div>
@@ -913,7 +913,7 @@ export function FixedDoublesDashboardPage() {
                   {canEnter && teams.length >= 2 && (
                     <button
                       onClick={() => { setSwapSel([]); setShowSwap(true) }}
-                      className="text-[11px] font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                      className="text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
                     >
                       <Users size={12} /> Đổi chỗ người chơi
                     </button>
@@ -921,14 +921,14 @@ export function FixedDoublesDashboardPage() {
                   {canEnter && isDoubleLeg && (
                     <button
                       onClick={handleRemoveReturnLeg}
-                      className="text-[11px] font-semibold [color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                      className="text-xs font-semibold [color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
                     >
                       <Trash2 size={12} /> Xóa lượt về
                     </button>
                   )}
                   <button
                     onClick={handleClearSchedule}
-                    className="text-[11px] font-semibold [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-semibold [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
                   >
                     <Trash2 size={12} /> Xóa lịch
                   </button>
@@ -942,7 +942,7 @@ export function FixedDoublesDashboardPage() {
                       <span className="text-xs font-extrabold uppercase tracking-wide" style={{ color: T.brand }}>
                         {leg === 1 ? '↗ Lượt đi' : '↘ Lượt về'}
                       </span>
-                      <span className="text-[11px]" style={{ color: T.txt2 }}>
+                      <span className="text-xs" style={{ color: T.txt2 }}>
                         {schedule.filter(m => (m.leg ?? 1) === leg && m.status === 'COMPLETED').length}/{schedule.filter(m => (m.leg ?? 1) === leg).length} trận
                       </span>
                       <div className="flex-1 h-px [background:var(--pf-border)]" />
@@ -1076,7 +1076,7 @@ export function FixedDoublesDashboardPage() {
                       return (
                         <button key={slot}
                           onClick={() => toggleSwapSel(t.id, slot, label)}
-                          className="text-left px-3 py-2 rounded-lg text-[13px] font-medium transition-colors truncate"
+                          className="text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors truncate"
                           style={sel
                             ? { background: 'var(--pf-primary-soft)', color: T.brand, border: `1.5px solid ${T.brand}` }
                             : { background: 'var(--pf-surface-muted)', color: T.txt1, border: `1px solid ${T.border}` }}>

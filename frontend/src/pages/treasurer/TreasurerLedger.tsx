@@ -86,7 +86,7 @@ export function TreasurerLedger() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
             {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name}</div>}
           </div>
           <div className="flex gap-2">
@@ -115,8 +115,8 @@ export function TreasurerLedger() {
               { label: 'Số dư', value: formatVND(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[13px] font-[800] ${k.color} truncate`}>{k.value}</div>
-                <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
+                <div className={`text-sm font-[800] ${k.color} truncate`}>{k.value}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
               </div>
             ))}
           </div>
@@ -150,14 +150,14 @@ export function TreasurerLedger() {
                         : <ArrowDownCircle size={16} className="text-red-500" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-[600] [color:var(--pf-text)] leading-tight">{row.desc}</div>
-                      <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{formatDate(row.date)}</div>
+                      <div className="text-sm font-[600] [color:var(--pf-text)] leading-tight">{row.desc}</div>
+                      <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatDate(row.date)}</div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className={`text-sm font-[800] ${row.amount > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                         {row.amount > 0 ? '+' : ''}{formatVND(row.amount)}
                       </div>
-                      <div className={`text-[11px] font-[600] mt-0.5 ${row.balance >= 0 ? '[color:var(--pf-color-muted)]' : 'text-red-500'}`}>
+                      <div className={`text-xs font-[600] mt-0.5 ${row.balance >= 0 ? '[color:var(--pf-color-muted)]' : 'text-red-500'}`}>
                         Dư: {formatVND(row.balance)}
                       </div>
                     </div>

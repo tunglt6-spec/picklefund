@@ -169,10 +169,10 @@ function SectionCard({
         </span>
         <div className="flex items-center gap-1.5">
           {s.status === 'here' && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ background: palette.bar }}>Đang xem</span>
+            <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-white" style={{ background: palette.bar }}>Đang xem</span>
           )}
           {badge && (
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeCls}`}>{badge.text}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badgeCls}`}>{badge.text}</span>
           )}
           {clickable && (
             <ChevronRight size={15} className="[color:var(--pf-color-muted)]" />
@@ -181,14 +181,14 @@ function SectionCard({
       </div>
       <div className="min-w-0">
         <p className={`text-sm font-semibold truncate ${soon ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{s.label}</p>
-        <p className="text-[11px] [color:var(--pf-color-muted)] leading-snug line-clamp-2">{s.desc}</p>
+        <p className="text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{s.desc}</p>
       </div>
       {metrics && metrics.length > 0 && (
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
             <div key={m.label} className="rounded-md px-0.5 py-1 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-surface))` }}>
               <p className="text-sm font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
-              <p className="mt-0.5 text-[9px] leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
+              <p className="mt-0.5 text-xs leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
             </div>
           ))}
         </div>
@@ -493,17 +493,17 @@ export function AiManagerDashboard() {
         {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
         <div>
           <div className="mb-2.5 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng quan runtime hôm nay</p>
+            <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng quan runtime hôm nay</p>
             <div className="flex items-center gap-2">
               {rt.stale && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Không thể cập nhật</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Không thể cập nhật</span>
               )}
               {rt.generatedAt && !rt.stale && (
-                <span className="hidden sm:inline text-[11px] [color:var(--pf-color-muted)]">Cập nhật {fmtTime(rt.generatedAt)}</span>
+                <span className="hidden sm:inline text-xs [color:var(--pf-color-muted)]">Cập nhật {fmtTime(rt.generatedAt)}</span>
               )}
               <button
                 onClick={rt.refresh}
-                className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-[11px] font-medium [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-surface-muted)]"
+                className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-xs font-medium [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-surface-muted)]"
                 title="Làm mới số liệu runtime"
               >
                 <RefreshCw size={12} className={rt.loading ? 'animate-spin' : ''} /> Làm mới
@@ -536,7 +536,7 @@ export function AiManagerDashboard() {
                     <p className="mt-1.5 text-xl font-bold leading-none tabular-nums" style={{ color: c.fg }}>
                       {rt.summary ? k.pick(rt.summary.overview) : '—'}
                     </p>
-                    <p className="mt-1 text-[10px] leading-tight [color:var(--pf-color-muted)] line-clamp-2">{k.label}</p>
+                    <p className="mt-1 text-xs leading-tight [color:var(--pf-color-muted)] line-clamp-2">{k.label}</p>
                   </div>
                 )
               })}
@@ -606,7 +606,7 @@ export function AiManagerDashboard() {
                     <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
                       <Bot size={16} />
                     </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       Hoạt động
                     </span>
@@ -620,7 +620,7 @@ export function AiManagerDashboard() {
                       {t.stats.map(s => (
                         <div key={s.l} className="rounded-lg py-1.5" style={{ background: `color-mix(in srgb, ${color} 8%, var(--pf-surface))` }}>
                           <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
-                          <p className="text-[10px] [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
                         </div>
                       ))}
                     </div>
@@ -631,7 +631,7 @@ export function AiManagerDashboard() {
                       ))}
                     </div>
                   )}
-                  <p className="text-[10px] [color:var(--pf-color-muted)]">{t.foot}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">{t.foot}</p>
                 </div>
                 )
               })}
@@ -661,12 +661,12 @@ export function AiManagerDashboard() {
                     <p className="text-xs [color:var(--pf-color-muted)] mt-1.5">{p.description}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {p.requiresSafetyCheck && (
-                        <span className="rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">Safety check</span>
+                        <span className="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">Safety check</span>
                       )}
                       {p.requiresManualConfirmation && (
-                        <span className="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">Xác nhận thủ công</span>
+                        <span className="rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Xác nhận thủ công</span>
                       )}
-                      <span className="rounded-md [background:var(--pf-surface-muted)] px-2 py-0.5 text-[10px] font-medium [color:var(--pf-color-muted)]">
+                      <span className="rounded-md [background:var(--pf-surface-muted)] px-2 py-0.5 text-xs font-medium [color:var(--pf-color-muted)]">
                         Vai trò: {p.requiredRoles.join(', ')}
                       </span>
                     </div>
@@ -694,14 +694,14 @@ export function AiManagerDashboard() {
                   return (
                     <div key={`${s.code}-${i}`} className={`rounded-xl px-3 py-2.5 ${st.bg}`}>
                       <div className="flex items-center justify-between">
-                        <span className={`text-[11px] font-semibold uppercase ${st.text}`}>{st.label}</span>
-                        <span className="text-[10px] [color:var(--pf-color-muted)]">{s.code}</span>
+                        <span className={`text-xs font-semibold uppercase ${st.text}`}>{st.label}</span>
+                        <span className="text-xs [color:var(--pf-color-muted)]">{s.code}</span>
                       </div>
                       <p className="text-xs [color:var(--pf-color-muted)] mt-1">{s.message}</p>
                       {s.code === 'DQ_NO_CLUB_MEMORY' && (
                         <button
                           onClick={() => navigate('/admin/ai-manager/club-memory?from=aido')}
-                          className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold ${st.text} hover:underline`}
+                          className={`mt-1.5 inline-flex items-center gap-1 text-xs font-semibold ${st.text} hover:underline`}
                         >
                           Bổ sung ngay <ChevronRight size={12} />
                         </button>
@@ -728,7 +728,7 @@ export function AiManagerDashboard() {
                         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${HEALTH_DOT[h.tone]}`} />
                         <span className="text-xs font-medium [color:var(--pf-text)] truncate">{h.label}</span>
                       </div>
-                      <p className="mt-0.5 pl-3.5 text-[11px] [color:var(--pf-color-muted)] truncate">{h.detail}</p>
+                      <p className="mt-0.5 pl-3.5 text-xs [color:var(--pf-color-muted)] truncate">{h.detail}</p>
                     </div>
                   ))}
                 </div>
@@ -766,7 +766,7 @@ export function AiManagerDashboard() {
                         >
                           <div className="min-w-0">
                             <p className="text-xs font-medium [color:var(--pf-text)] truncate group-hover:[color:var(--pf-primary)]">{a.label}</p>
-                            <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
+                            <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
                           </div>
                           <ChevronRight size={14} className="[color:var(--pf-color-muted)] shrink-0 transition-colors group-hover:[color:var(--pf-primary)]" />
                         </button>
@@ -776,9 +776,9 @@ export function AiManagerDashboard() {
                       <div key={i} title={a.reason} className="flex items-center justify-between rounded-lg border border-[color:var(--pf-border)] px-3 py-2">
                         <div className="min-w-0">
                           <p className="text-xs font-medium [color:var(--pf-text)] truncate">{a.label}</p>
-                          <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
                         </div>
-                        <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">chỉ đọc</span>
+                        <span className="text-xs [color:var(--pf-color-muted)] shrink-0">chỉ đọc</span>
                       </div>
                     )
                   })}

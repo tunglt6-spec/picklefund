@@ -138,14 +138,14 @@ export function StandingsPage() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Bảng Xếp Hạng</p>
-            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{mg.name} · {standings.length} thành viên</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Bảng Xếp Hạng</p>
+            <p className="text-xs [color:var(--pf-color-muted)] truncate">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
               <ImageIcon size={14} /> Ảnh
             </button>
-            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
               <FileText size={14} /> PDF
             </button>
             {canShare() && (
@@ -174,7 +174,7 @@ export function StandingsPage() {
           {/* Bar chart */}
           {sorted.length > 0 && (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
-              <p className="text-[13px] font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
+              <p className="text-sm font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
               <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} barSize={22}>
@@ -193,14 +193,14 @@ export function StandingsPage() {
           {/* Rank cards */}
           {sorted.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-center">
-              <p className="[color:var(--pf-color-muted)] text-[13px]">Chưa có dữ liệu xếp hạng</p>
+              <p className="[color:var(--pf-color-muted)] text-sm">Chưa có dữ liệu xếp hạng</p>
             </div>
           ) : sorted.map(s => (
             <div key={`${s.memberId}-${s.groupId}`}
               className={cn('[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm', RANK_CLASS[s.overallRank] ?? '')}
             >
               <div className="flex items-center gap-3 mb-3">
-                <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-[13px] font-bold',
+                <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-sm font-bold',
                   s.overallRank === 1 ? '[background:var(--pf-color-warning)] text-white' :
                   s.overallRank === 2 ? '[background:var(--pf-color-muted)] text-white' :
                   s.overallRank === 3 ? '[background:var(--pf-color-warning)] text-white' :
@@ -209,12 +209,12 @@ export function StandingsPage() {
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
-                  <p className="text-[11px] [color:var(--pf-color-muted)]">{s.groupName}</p>
+                  <p className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">{s.groupName}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
-                  <p className="text-[10px] [color:var(--pf-color-muted)]">điểm</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">điểm</p>
                 </div>
               </div>
 
@@ -227,8 +227,8 @@ export function StandingsPage() {
                   { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]' },
                 ].map(item => (
                   <div key={item.label} className="[background:var(--pf-surface-muted)] rounded-[8px] py-1.5 text-center">
-                    <p className={cn('text-[13px] font-bold', item.cls)}>{item.value}</p>
-                    <p className="text-[9px] [color:var(--pf-color-muted)] mt-0.5">{item.label}</p>
+                    <p className={cn('text-sm font-bold', item.cls)}>{item.value}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{item.label}</p>
                   </div>
                 ))}
               </div>

@@ -147,7 +147,7 @@ export function ClubMemoryManager() {
       render: m => (
         <div className="flex flex-wrap gap-1 max-w-[180px]">
           {m.tags.map(t => (
-            <span key={t} className="rounded-full px-2 py-0.5 text-[11px] [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{t}</span>
+            <span key={t} className="rounded-full px-2 py-0.5 text-xs [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{t}</span>
           ))}
         </div>
       ),
@@ -217,10 +217,10 @@ export function ClubMemoryManager() {
                 <p className="text-xs [color:var(--pf-color-muted)] line-clamp-3">{m.content}</p>
                 {m.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {m.tags.map(t => <span key={t} className="rounded-full px-2 py-0.5 text-[11px] [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{t}</span>)}
+                    {m.tags.map(t => <span key={t} className="rounded-full px-2 py-0.5 text-xs [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]">{t}</span>)}
                   </div>
                 )}
-                <p className="text-[11px] [color:var(--pf-color-muted)]">Cập nhật {formatDate(m.updatedAt)}</p>
+                <p className="text-xs [color:var(--pf-color-muted)]">Cập nhật {formatDate(m.updatedAt)}</p>
               </div>
             )}
           />

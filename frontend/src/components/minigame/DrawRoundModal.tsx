@@ -261,7 +261,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                             {m.label}
                           </span>
                           {m.mode === 'SMART_DRAW' && (
-                            <span className="text-[10px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-1.5 py-0.5 rounded-full">MẶC ĐỊNH</span>
+                            <span className="text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-1.5 py-0.5 rounded-full">MẶC ĐỊNH</span>
                           )}
                         </div>
                         <p className="text-xs [color:var(--pf-color-muted)] truncate">{m.sublabel}</p>
@@ -388,7 +388,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         className="w-3.5 h-3.5 accent-[var(--pf-primary)] shrink-0"
                       />
                       <span className="truncate font-medium text-xs">{p.memberName}</span>
-                      {isGuestId(p.memberId) && <span className="shrink-0 text-[9px] font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
+                      {isGuestId(p.memberId) && <span className="shrink-0 text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
                     </label>
                   ))}
                 </div>
@@ -451,9 +451,9 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{m.matchNumber}</span>
                         <div className="flex items-center gap-1.5">
                           {m.isGenderBalanced && (
-                            <span className="text-[10px] [background:var(--pf-color-info-soft)] [color:var(--pf-color-info)] px-1.5 py-0.5 rounded-full font-semibold">Nam/Nữ</span>
+                            <span className="text-xs [background:var(--pf-color-info-soft)] [color:var(--pf-color-info)] px-1.5 py-0.5 rounded-full font-semibold">Nam/Nữ</span>
                           )}
-                          <span className="text-[10px] [color:var(--pf-color-muted)]">Chênh KN: {m.skillDiff}</span>
+                          <span className="text-xs [color:var(--pf-color-muted)]">Chênh KN: {m.skillDiff}</span>
                         </div>
                       </div>
                       {!isManualEdit ? (

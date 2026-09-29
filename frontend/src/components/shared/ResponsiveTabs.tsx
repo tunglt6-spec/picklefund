@@ -48,7 +48,7 @@ export function ResponsiveTabs({
               {t.label}
               {typeof t.badge === 'number' && t.badge > 0 && (
                 <span className={cn(
-                  'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                  'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-xs font-bold',
                   isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white',
                 )}>
                   {t.badge}

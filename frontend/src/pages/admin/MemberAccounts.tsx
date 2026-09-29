@@ -385,7 +385,7 @@ export function MemberAccounts() {
             <div className="flex items-center gap-1.5">
               {noAccountMembers.length > 0 && (
                 <button onClick={() => setShowBulk(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11px] font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] active:opacity-80">
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] active:opacity-80">
                   <Users size={11} />{noAccountMembers.length}
                 </button>
               )}
@@ -404,7 +404,7 @@ export function MemberAccounts() {
             ].map(s => (
               <div key={s.label} className="[background:var(--pf-surface-muted)] rounded-[10px] py-2 text-center">
                 <div className={`text-sm font-[800] ${s.color}`}>{s.value}</div>
-                <div className="text-[9px] [color:var(--pf-color-muted)] mt-0.5">{s.label}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>

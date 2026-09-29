@@ -41,9 +41,9 @@ export function MobileSystemHealthCard({ suspendedClubs, loginsLast24h, activeCl
               }>
                 {row.status === 'warn' ? <AlertTriangle size={15} /> : row.icon}
               </span>
-              <span className="text-[13px] font-medium">{row.label}</span>
+              <span className="text-sm font-medium">{row.label}</span>
             </div>
-            <span className={`text-[13px] font-[700] tabular-nums px-2.5 py-0.5 rounded-full ${
+            <span className={`text-sm font-[700] tabular-nums px-2.5 py-0.5 rounded-full ${
               row.status === 'warn' && row.value > 0
                 ? 'bg-amber-50 text-amber-600'
                 : row.status === 'ok'

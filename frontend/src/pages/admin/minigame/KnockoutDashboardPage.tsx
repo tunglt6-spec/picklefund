@@ -124,7 +124,7 @@ export function KnockoutDashboardPage() {
             <Save size={12} /> Lưu tỉ số
           </button>
         )}
-        {bye && <div className="px-3 py-1 text-[11px] italic [color:var(--pf-color-muted)]">BYE — tự vào vòng trong</div>}
+        {bye && <div className="px-3 py-1 text-xs italic [color:var(--pf-color-muted)]">BYE — tự vào vòng trong</div>}
       </div>
     )
   }

@@ -112,9 +112,9 @@ export function ReportPaymentModal({
   return (
     <Modal open={open} onClose={onClose} title="Báo đã nộp quỹ" subtitle={ctx?.period ? `Kỳ ${ctx.period.name}` : 'Chuyển khoản quỹ CLB'} size="md">
       {loading ? (
-        <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải…</div>
+        <div className="py-10 text-center text-sm [color:var(--pf-color-muted)]">Đang tải…</div>
       ) : !ctx ? (
-        <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Không có dữ liệu.</div>
+        <div className="py-10 text-center text-sm [color:var(--pf-color-muted)]">Không có dữ liệu.</div>
       ) : ctx.pending ? (
         <div className="space-y-3 py-2">
           <div className="flex items-start gap-3 rounded-xl border p-3.5 [border-color:var(--pf-border)] [background:var(--pf-color-warning-soft)]">
@@ -163,14 +163,14 @@ export function ReportPaymentModal({
               ].map(([label, val]) => (
                 <div key={label} className="flex items-center justify-between gap-2 py-1">
                   <span className="text-[12.5px] [color:var(--pf-color-muted)]">{label}</span>
-                  <button onClick={() => copy(val, label.toLowerCase())} className="inline-flex items-center gap-1 text-[13px] font-semibold [color:var(--pf-text)]">
+                  <button onClick={() => copy(val, label.toLowerCase())} className="inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-text)]">
                     {val} <Copy size={12} className="[color:var(--pf-color-muted)]" />
                   </button>
                 </div>
               ))}
               <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-[color:var(--pf-border)] pt-2">
                 <span className="text-[12.5px] [color:var(--pf-color-muted)]">Nội dung CK</span>
-                <button onClick={() => copy(ctx.memo, 'nội dung')} className="inline-flex items-center gap-1 text-right text-[13px] font-semibold [color:var(--pf-primary)]">
+                <button onClick={() => copy(ctx.memo, 'nội dung')} className="inline-flex items-center gap-1 text-right text-sm font-semibold [color:var(--pf-primary)]">
                   {ctx.memo} <Copy size={12} />
                 </button>
               </div>
@@ -196,7 +196,7 @@ export function ReportPaymentModal({
               type="number"
               value={amount || ''}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full rounded-xl border px-3 py-2.5 text-[15px] font-semibold outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
+              className="w-full rounded-xl border px-3 py-2.5 text-base font-semibold outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
               inputMode="numeric"
             />
           </div>
@@ -227,7 +227,7 @@ export function ReportPaymentModal({
           <button
             onClick={submit}
             disabled={submitting}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-base font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
             style={{ background: 'var(--pf-primary)' }}
           >
             <CheckCircle2 size={18} /> {submitting ? 'Đang gửi…' : 'Tôi đã chuyển khoản'}

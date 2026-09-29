@@ -65,7 +65,7 @@ export function MemberAttendance() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-          <div className="text-[17px] font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
+          <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
           {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
@@ -77,8 +77,8 @@ export function MemberAttendance() {
               { label: 'Sắp TG', value: `${periodSessions.filter(s => s.status === 'scheduled').length}`, color: 'text-amber-600' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[15px] font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
+                <div className={`text-base font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
               </div>
             ))}
           </div>
@@ -86,9 +86,9 @@ export function MemberAttendance() {
           <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin size={14} className="text-emerald-500" />
-              <span className="text-[13px] [color:var(--pf-color-muted)]">Chi phí sân cá nhân</span>
+              <span className="text-sm [color:var(--pf-color-muted)]">Chi phí sân cá nhân</span>
             </div>
-            <span className="text-[15px] font-[800] text-emerald-600">{formatVND(myCourtCost)}</span>
+            <span className="text-base font-[800] text-emerald-600">{formatVND(myCourtCost)}</span>
           </div>
           {/* Search */}
           <div className="relative">
@@ -119,7 +119,7 @@ export function MemberAttendance() {
                 return (
                   <div key={s.id} className={`[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm ${!present && s.status === 'completed' ? 'opacity-60' : ''}`}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[15px] font-[700] [color:var(--pf-text)]">{formatDate(s.sessionDate)}</span>
+                      <span className="text-base font-[700] [color:var(--pf-text)]">{formatDate(s.sessionDate)}</span>
                       {s.status === 'cancelled'
                         ? <Badge variant="gray" dot>Đã hủy</Badge>
                         : s.status === 'scheduled'
@@ -253,8 +253,8 @@ export function MemberAttendance() {
                 style={{ background: `conic-gradient(var(--pf-primary) ${Math.min(100, rate) * 3.6}deg, var(--pf-color-muted-soft) 0deg)` }}
               />
               <div className="absolute inset-[10px] flex flex-col items-center justify-center rounded-full [background:var(--pf-surface)]">
-                <span className="text-[22px] font-extrabold [color:var(--pf-text)]">{rate}%</span>
-                <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
+                <span className="text-2xl font-extrabold [color:var(--pf-text)]">{rate}%</span>
+                <span className="text-xs [color:var(--pf-color-muted)]">tham gia</span>
               </div>
             </div>
             <span className="text-xs [color:var(--pf-color-muted)]">{attendedCount}/{completedSessions.length} buổi hoàn thành</span>

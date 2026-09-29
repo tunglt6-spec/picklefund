@@ -159,7 +159,7 @@ export function CheckoutModal({
                       <p className="text-xs font-medium [color:var(--pf-color-muted)]">{c === 'YEARLY' ? 'Theo năm' : 'Theo tháng'}</p>
                       <p className="text-base font-bold [color:var(--pf-text)]">{p != null ? vnd(p) : '—'}</p>
                       {c === 'YEARLY' && yearlySaving > 0 && (
-                        <p className="text-[11px] font-medium text-emerald-600">Tiết kiệm {vnd(yearlySaving)}</p>
+                        <p className="text-xs font-medium text-emerald-600">Tiết kiệm {vnd(yearlySaving)}</p>
                       )}
                     </button>
                   )
@@ -215,7 +215,7 @@ export function CheckoutModal({
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
                 {loading ? 'Đang tạo đơn…' : `Thanh toán an toàn · ${vnd(total)}`}
               </button>
-              <p className="text-[11px] text-center [color:var(--pf-color-muted)]">Số tiền & ưu đãi do hệ thống tính — an toàn, không sửa được từ trình duyệt.</p>
+              <p className="text-xs text-center [color:var(--pf-color-muted)]">Số tiền & ưu đãi do hệ thống tính — an toàn, không sửa được từ trình duyệt.</p>
             </>
           )}
 

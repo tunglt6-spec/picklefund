@@ -90,7 +90,7 @@ export function MaikaInsightsLog() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold [color:var(--pf-text)]">{it.title}</p>
-                      <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">
+                      <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
                         {fmt(it.createdAt)}{it.score != null ? ` · sức khỏe ${it.score}/100` : ''}
                       </p>
                     </div>

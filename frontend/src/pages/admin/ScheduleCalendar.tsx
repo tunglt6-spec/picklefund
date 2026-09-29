@@ -289,7 +289,7 @@ export function ScheduleCalendar() {
               <div className="rounded-2xl border p-2.5 sm:p-3 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                   {WEEKDAYS.map((w) => (
-                    <div key={w} className="pb-1.5 text-center text-[11px] font-semibold [color:var(--pf-color-muted)]">{w}</div>
+                    <div key={w} className="pb-1.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">{w}</div>
                   ))}
                   {cells.map((d, i) => {
                     if (d === null) return <div key={`b${i}`} className="min-h-[52px] sm:min-h-[112px] rounded-xl opacity-40" />
@@ -310,7 +310,7 @@ export function ScheduleCalendar() {
                       >
                         <span
                           className={cn(
-                            'flex h-6 w-6 items-center justify-center rounded-full text-xs sm:text-[13px] leading-none',
+                            'flex h-6 w-6 items-center justify-center rounded-full text-xs sm:text-sm leading-none',
                             isToday ? 'font-bold text-white [background:var(--pf-primary)]'
                               : isSel ? 'font-bold [color:var(--pf-primary)]' : 'font-medium [color:var(--pf-text)]',
                           )}
@@ -323,12 +323,12 @@ export function ScheduleCalendar() {
                           <div className="hidden sm:flex flex-col gap-1 overflow-hidden">
                             {daySessions.slice(0, 2).map((s) => (
                               <div key={s.id} className="rounded-md border-l-2 px-1.5 py-1 [border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
-                                <p className="truncate text-[10px] font-semibold [color:var(--pf-primary)]">{timeRange(s)}</p>
-                                <p className="truncate text-[10px] [color:var(--pf-color-muted)]">{sessionLabel(s)} · {regText(s)}</p>
+                                <p className="truncate text-xs font-semibold [color:var(--pf-primary)]">{timeRange(s)}</p>
+                                <p className="truncate text-xs [color:var(--pf-color-muted)]">{sessionLabel(s)} · {regText(s)}</p>
                               </div>
                             ))}
                             {daySessions.length > 2 && (
-                              <span className="text-[10px] font-semibold [color:var(--pf-primary)]">+{daySessions.length - 2} buổi</span>
+                              <span className="text-xs font-semibold [color:var(--pf-primary)]">+{daySessions.length - 2} buổi</span>
                             )}
                           </div>
                         )}
@@ -382,7 +382,7 @@ export function ScheduleCalendar() {
 
                         {/* Progress đăng ký */}
                         <div className="mt-3">
-                          <div className="mb-1 flex items-center justify-between text-[11px] [color:var(--pf-color-muted)]">
+                          <div className="mb-1 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
                             <span>Đăng ký</span>
                             <span className="font-semibold [color:var(--pf-text)]">{info ? `${reg}/${pool}` : `${reg}`}</span>
                           </div>
@@ -394,18 +394,18 @@ export function ScheduleCalendar() {
                         {/* Người tham gia */}
                         {registeredMembers.length > 0 && (
                           <div className="mt-3">
-                            <p className="mb-1.5 text-[11px] font-semibold [color:var(--pf-color-muted)]">Người tham gia ({registeredMembers.length})</p>
+                            <p className="mb-1.5 text-xs font-semibold [color:var(--pf-color-muted)]">Người tham gia ({registeredMembers.length})</p>
                             <div className="flex flex-col gap-1.5">
                               {visible.map((m) => (
                                 <div key={m.memberId} className="flex items-center gap-2">
-                                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{initials(m.memberName)}</span>
+                                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{initials(m.memberName)}</span>
                                   <span className="truncate text-xs [color:var(--pf-text)]">{m.memberName}</span>
                                   <UserCheck size={12} className="ml-auto [color:var(--pf-color-secondary,var(--pf-primary))]" />
                                 </div>
                               ))}
                             </div>
                             {registeredMembers.length > 6 && (
-                              <button onClick={() => setShowAllMembers(showAll ? null : s.id)} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold [color:var(--pf-primary)]">
+                              <button onClick={() => setShowAllMembers(showAll ? null : s.id)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)]">
                                 {showAll ? 'Thu gọn' : `Xem tất cả (${registeredMembers.length})`}<ArrowRight size={11} />
                               </button>
                             )}
@@ -443,13 +443,13 @@ export function ScheduleCalendar() {
                         {/* Thao tác nhanh (chỉ admin) */}
                         {!isMember && (
                           <div className="mt-2 flex items-center gap-1 border-t pt-2 [border-color:var(--pf-border)]">
-                            <button onClick={() => navigate('/attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
+                            <button onClick={() => navigate('/attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
                               <Pencil size={12} />Sửa
                             </button>
-                            <button onClick={() => handleCopy(s)} aria-label="Sao chép buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
+                            <button onClick={() => handleCopy(s)} aria-label="Sao chép buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
                               <Copy size={12} />Sao chép
                             </button>
-                            <button onClick={() => setConfirmDel(s)} aria-label="Xóa buổi" className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
+                            <button onClick={() => setConfirmDel(s)} aria-label="Xóa buổi" className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
                               <Trash2 size={12} />Xóa
                             </button>
                           </div>

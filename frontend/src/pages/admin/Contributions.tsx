@@ -386,14 +386,14 @@ export function Contributions() {
                 <button
                   onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
                   aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
                   <FileSpreadsheet size={16} />Excel
                 </button>
                 <button
                   onClick={() => { const { groups, miniRows } = buildContribExport(); exportContribPDF(groups, miniRows); toast.success('Đã xuất PDF thu quỹ (các kỳ đang mở)!') }}
                   aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
+                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
                   <FileText size={16} />PDF
                 </button>
@@ -417,11 +417,11 @@ export function Contributions() {
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
-            <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Chính</p>
+            <p className="text-xs [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Chính</p>
             <p className="text-lg font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
-            <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Phụ</p>
+            <p className="text-xs [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Phụ</p>
             <p className="text-lg font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>

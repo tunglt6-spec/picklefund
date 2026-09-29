@@ -34,11 +34,11 @@ export function Download() {
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                 <p.icon size={20} />
               </div>
-              <p className="text-[15px] font-bold [color:var(--pf-text)]">{p.title}</p>
+              <p className="text-base font-bold [color:var(--pf-text)]">{p.title}</p>
               <ol className="mt-3 space-y-2">
                 {p.steps.map((s, i) => (
-                  <li key={s} className="flex gap-2.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: 'var(--pf-primary)' }}>{i + 1}</span>
+                  <li key={s} className="flex gap-2.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: 'var(--pf-primary)' }}>{i + 1}</span>
                     {s}
                   </li>
                 ))}
@@ -51,8 +51,8 @@ export function Download() {
         <div className="mx-auto mt-10 flex max-w-3xl flex-col items-center gap-4 rounded-2xl border p-6 text-center [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] sm:flex-row sm:text-left">
           <FileText size={28} className="shrink-0 [color:var(--pf-color-muted)]" />
           <div className="flex-1">
-            <p className="text-[15px] font-bold [color:var(--pf-text)]">Brochure giới thiệu (PDF)</p>
-            <p className="mt-0.5 text-[13px] [color:var(--pf-color-muted)]">Đang được chuẩn bị. Trong lúc chờ, bạn có thể xem tổng quan tính năng hoặc liên hệ để nhận tư vấn.</p>
+            <p className="text-base font-bold [color:var(--pf-text)]">Brochure giới thiệu (PDF)</p>
+            <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Đang được chuẩn bị. Trong lúc chờ, bạn có thể xem tổng quan tính năng hoặc liên hệ để nhận tư vấn.</p>
           </div>
           <Link to="/product/aido" className="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
             <DownloadIcon size={15} /> Xem tổng quan

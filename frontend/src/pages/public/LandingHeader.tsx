@@ -14,7 +14,7 @@ function Wordmark() {
   return (
     <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight shrink-0" aria-label="PickleFund — trang chủ">
       <span className="flex h-8 w-8 items-center justify-center rounded-lg text-sm text-white" style={{ background: 'var(--pf-primary)' }}>P</span>
-      <span className="text-[17px]">Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span></span>
+      <span className="text-lg">Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span></span>
     </Link>
   )
 }
@@ -38,7 +38,7 @@ function MegaPanel({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (href?: s
           {menu.groups.map((group, gi) => (
             <div key={gi}>
               {group.title && (
-                <p className="px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{group.title}</p>
+                <p className="px-2 pb-1 pt-2 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{group.title}</p>
               )}
               {group.items.map((item) => (
                 <MegaItem key={item.title} item={item} onNavigate={onNavigate} />
@@ -77,7 +77,7 @@ function MegaItem({ item, onNavigate }: { item: MenuItem; onNavigate: (href?: st
         <span className="flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-text)]">
           {item.title}
           {item.soon && (
-            <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
+            <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
               <Clock size={9} /> Đang cập nhật
             </span>
           )}
@@ -109,7 +109,7 @@ function MobileAccordion({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (hr
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between px-1 py-3.5 text-left text-[15px] font-semibold [color:var(--pf-text)]"
+        className="flex w-full items-center justify-between px-1 py-3.5 text-left text-base font-semibold [color:var(--pf-text)]"
       >
         {menu.label}
         <ChevronDown size={18} className="transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
@@ -118,12 +118,12 @@ function MobileAccordion({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (hr
         <div id={panelId} className="pb-2">
           {menu.groups.map((group, gi) => (
             <div key={gi} className="mb-1">
-              {group.title && <p className="px-1 pb-1 pt-1 text-[11px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{group.title}</p>}
+              {group.title && <p className="px-1 pb-1 pt-1 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{group.title}</p>}
               {group.items.map((item) =>
                 item.soon ? (
                   <div key={item.title} className="flex items-center gap-1.5 px-3 py-2 text-sm opacity-60 [color:var(--pf-color-muted)]">
                     {item.title}
-                    <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold [background:var(--pf-surface-muted)]"><Clock size={9} /> Đang cập nhật</span>
+                    <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold [background:var(--pf-surface-muted)]"><Clock size={9} /> Đang cập nhật</span>
                   </div>
                 ) : (
                   <button
@@ -294,7 +294,7 @@ function MobileDrawer({
                 {menu.key === 'product' && (
                   <button
                     onClick={() => { onClose(); navigate('/pricing') }}
-                    className="block w-full border-b px-1 py-3.5 text-left text-[15px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
+                    className="block w-full border-b px-1 py-3.5 text-left text-base font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)]"
                   >
                     Bảng giá
                   </button>

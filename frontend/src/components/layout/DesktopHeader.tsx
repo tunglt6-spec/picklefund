@@ -77,7 +77,7 @@ export function DesktopHeader() {
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}
-        className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-white transition-transform active:scale-95"
+        className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
         style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         title="Hướng dẫn sử dụng app"
       >
@@ -86,7 +86,7 @@ export function DesktopHeader() {
       {user.role === 'CLUB_ADMIN' && (
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
-          className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-white transition-transform active:scale-95"
+          className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
           title="Nâng cấp gói"
         >
@@ -102,7 +102,7 @@ export function DesktopHeader() {
       <button onClick={() => navigate(notifRouteByRole[user.role] ?? '/')} className={cn(iconBtn, 'relative')} title="Thông báo" aria-label="Thông báo">
         <Bell size={17} />
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -120,12 +120,12 @@ export function DesktopHeader() {
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}
           title={user.username ?? 'Tài khoản'}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/20 text-[13px] font-extrabold">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/20 text-sm font-extrabold">
             {(user.username ?? avatarText).slice(0, 2).toUpperCase()}
           </span>
           <div className="min-w-0 text-left leading-tight">
-            <p className="max-w-[150px] truncate text-[13px] font-bold">{user.username}</p>
-            <p className="max-w-[150px] truncate text-[10px] font-medium text-white/75">
+            <p className="max-w-[150px] truncate text-sm font-bold">{user.username}</p>
+            <p className="max-w-[150px] truncate text-xs font-medium text-white/75">
               {ROLE_LABEL[user.role] ?? user.role}{data.settings?.code ? ` · ${data.settings.code}` : ''}
             </p>
           </div>

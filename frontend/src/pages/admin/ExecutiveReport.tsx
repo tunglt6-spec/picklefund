@@ -48,11 +48,11 @@ function fmtDate(d: string | Date | null | undefined) {
   return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
 }
 function DeltaBadge({ v }: { v: number | null }) {
-  if (v == null) return <span className="text-[11px] [color:var(--pf-color-muted)]">— (không có kỳ trước)</span>
+  if (v == null) return <span className="text-xs [color:var(--pf-color-muted)]">— (không có kỳ trước)</span>
   const up = v >= 0
   return (
     <span
-      className="inline-flex items-center gap-0.5 text-[11px] font-semibold"
+      className="inline-flex items-center gap-0.5 text-xs font-semibold"
       style={{ color: up ? 'var(--pf-green)' : 'var(--pf-accent-rose, #E11D48)' }}
     >
       {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
@@ -299,7 +299,7 @@ export function ExecutiveReport() {
           <Mail size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold [color:var(--pf-text)]">Tự gửi báo cáo qua email đầu mỗi tháng</p>
-            <p className="text-[11px] [color:var(--pf-color-muted)]">
+            <p className="text-xs [color:var(--pf-color-muted)]">
               Gửi cho admin CLB{emailCfg.recipients?.length ? `: ${emailCfg.recipients.filter((r: any) => !r.isPlaceholder).map((r: any) => r.email).join(', ') || '(chưa có email hợp lệ)'}` : ''}
               {emailCfg.recipients?.some((r: any) => r.isPlaceholder) && ' · một số admin chưa đặt email thật'}
               {!emailCfg.smtpReady && ' · ⚠️ server chưa cấu hình SMTP (chưa gửi được)'}
@@ -328,7 +328,7 @@ export function ExecutiveReport() {
             <Bot size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
             <h3 className="text-sm font-bold [color:var(--pf-text)]">Tóm tắt điều hành (AI)</h3>
             {aiSum && (
-              <span className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>
+              <span className="rounded-md px-1.5 py-0.5 text-xs font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>
                 {aiSum.generatedBy === 'ai' ? <><Sparkles size={11} className="inline mr-1 align-middle" />Maika AI viết</> : 'Tổng hợp tự động'}
               </span>
             )}
@@ -338,10 +338,10 @@ export function ExecutiveReport() {
               <div className="h-3 w-3/4 animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
               <div className="h-3 w-full animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
               <div className="h-3 w-5/6 animate-pulse rounded" style={{ background: 'var(--pf-border)' }} />
-              <p className="pt-1 text-[11px] [color:var(--pf-color-muted)]">Maika đang soạn tóm tắt…</p>
+              <p className="pt-1 text-xs [color:var(--pf-color-muted)]">Maika đang soạn tóm tắt…</p>
             </div>
           ) : aiSum ? (
-            <p className="whitespace-pre-line text-[13px] leading-relaxed [color:var(--pf-text)]">{aiSum.text}</p>
+            <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]">{aiSum.text}</p>
           ) : (
             <p className="text-xs [color:var(--pf-color-muted)]">Chưa tạo được tóm tắt. <button className="underline" onClick={() => void loadAi(periodId)}>Thử lại</button></p>
           )}
@@ -356,7 +356,7 @@ export function ExecutiveReport() {
             <div className="relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full" style={{ background: `conic-gradient(${healthColor(health.overall)} ${health.overall}%, var(--pf-border) 0)` }}>
               <div className="flex h-[76px] w-[76px] flex-col items-center justify-center rounded-full" style={{ background: 'var(--pf-surface)' }}>
                 <span className="text-2xl font-bold tabular-nums" style={{ color: healthColor(health.overall) }}>{health.overall}</span>
-                <span className="text-[10px] [color:var(--pf-color-muted)]">/ 100</span>
+                <span className="text-xs [color:var(--pf-color-muted)]">/ 100</span>
               </div>
             </div>
             <div>
@@ -365,14 +365,14 @@ export function ExecutiveReport() {
                 <h3 className="text-base font-bold [color:var(--pf-text)]">Điểm sức khỏe CLB</h3>
               </div>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{data.meta.clubName} · {data.meta.periodName}</p>
-              <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">Tổng hợp 6 chiều · số liệu thật từ kỳ quỹ</p>
+              <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Tổng hợp 6 chiều · số liệu thật từ kỳ quỹ</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-0 lg:flex-1">
             {(health?.dimensions ?? []).map((d: any) => (
               <div key={d.key} className="rounded-xl border p-2.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
                 <div className="flex items-center justify-between gap-1.5">
-                  <span className="min-w-0 truncate text-[11px] font-medium [color:var(--pf-color-muted)]">{d.key}</span>
+                  <span className="min-w-0 truncate text-xs font-medium [color:var(--pf-color-muted)]">{d.key}</span>
                   <span className="shrink-0 text-xs font-bold tabular-nums" style={{ color: d.score == null ? 'var(--pf-color-muted)' : healthColor(d.score) }}>
                     {d.score == null ? '—' : d.score}
                   </span>
@@ -439,7 +439,7 @@ export function ExecutiveReport() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[['+30 ngày', data.forecast.projected30], ['+60 ngày', data.forecast.projected60], ['+90 ngày', data.forecast.projected90]].map(([lbl, val]) => (
                 <div key={lbl as string} className="flex items-center justify-between rounded-xl border px-3 py-2 text-center [border-color:var(--pf-border)] sm:block">
-                  <p className="text-[11px] [color:var(--pf-color-muted)]">{lbl}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">{lbl}</p>
                   <p className="text-sm font-bold tabular-nums [font-variant-numeric:tabular-nums] sm:mt-0.5" style={{ color: (val as number) < 0 ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-text)' }}>{formatVND(val as number)}</p>
                 </div>
               ))}
@@ -451,7 +451,7 @@ export function ExecutiveReport() {
             {data.forecast.runwayMonths != null && (
               <p className="mt-1 text-xs font-medium flex items-center gap-1.5" style={{ color: 'var(--pf-accent-rose,#E11D48)' }}><AlertTriangle size={13} className="shrink-0" />Nếu tiếp tục âm, quỹ trụ được ~{data.forecast.runwayMonths} tháng.</p>
             )}
-            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">{data.forecast.note}</p>
+            <p className="mt-2 text-xs italic [color:var(--pf-color-muted)]">{data.forecast.note}</p>
           </div>
           <div className="rounded-2xl border p-4 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
             <SectionTitle icon={<Fingerprint size={15} />} title="Club DNA" note="phong cách vận hành" compact />
@@ -459,7 +459,7 @@ export function ExecutiveReport() {
             <div className="space-y-1.5">
               {(data.dna?.traits ?? []).map((t: any) => (
                 <div key={t.key}>
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="[color:var(--pf-color-muted)]">{t.key}</span>
                     <span className="font-semibold tabular-nums" style={{ color: healthColor(t.score) }}>{t.score}</span>
                   </div>
@@ -469,7 +469,7 @@ export function ExecutiveReport() {
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">{data.dna.note}</p>
+            <p className="mt-2 text-xs italic [color:var(--pf-color-muted)]">{data.dna.note}</p>
           </div>
         </div>
 
@@ -540,7 +540,7 @@ export function ExecutiveReport() {
                     <span className="[color:var(--pf-color-muted)]">{p.wins}T · {p.winRate}%</span>
                   </div>
                 ))}
-                <p className="pt-1 text-[11px] italic [color:var(--pf-color-muted)]">Người dẫn đầu BXH (chưa có giải MVP chính thức).</p>
+                <p className="pt-1 text-xs italic [color:var(--pf-color-muted)]">Người dẫn đầu BXH (chưa có giải MVP chính thức).</p>
               </div>
             ) : (
               <p className="mt-3 text-xs [color:var(--pf-color-muted)]">Chưa có giải/minigame trong kỳ.</p>
@@ -559,7 +559,7 @@ export function ExecutiveReport() {
             <AiCard color="#C026D3" name="Thông báo" main={String(ai.notification.sent)} unit="đã gửi" detail={`In-app ${ai.notification.byChannel.IN_APP} · Email ${ai.notification.byChannel.EMAIL} · TG ${ai.notification.byChannel.TELEGRAM}`} />
           </div>
           {ai.automationScore.noActivity && (
-            <p className="mt-2 text-[11px] italic [color:var(--pf-color-muted)]">CLB chưa dùng tự động hóa AI trong kỳ này — điểm AI chưa phản ánh (không tính là "kém").</p>
+            <p className="mt-2 text-xs italic [color:var(--pf-color-muted)]">CLB chưa dùng tự động hóa AI trong kỳ này — điểm AI chưa phản ánh (không tính là "kém").</p>
           )}
         </div>
 
@@ -573,7 +573,7 @@ export function ExecutiveReport() {
                   <li key={i} className="relative">
                     <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full" style={{ background: t.type === 'income' ? 'var(--pf-green)' : t.type === 'expense' ? 'var(--pf-accent-rose,#E11D48)' : 'var(--pf-primary,#6D5DFB)' }} />
                     <p className="text-xs font-medium [color:var(--pf-text)]">{fmtDate(t.date)} · {t.label}</p>
-                    {t.amount != null && <p className="text-[11px] [color:var(--pf-color-muted)]">{formatVND(t.amount)}</p>}
+                    {t.amount != null && <p className="text-xs [color:var(--pf-color-muted)]">{formatVND(t.amount)}</p>}
                   </li>
                 ))}
               </ol>
@@ -598,17 +598,17 @@ export function ExecutiveReport() {
               <ul className="space-y-2">
                 {data.recommendations.map((r: any, i: number) => (
                   <li key={i} className="text-xs [color:var(--pf-text)]">
-                    <span className="mr-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>{r.agent}</span>
+                    <span className="mr-1.5 rounded-md px-1.5 py-0.5 text-xs font-semibold" style={{ background: 'color-mix(in srgb, var(--pf-primary,#6D5DFB) 14%, transparent)', color: 'var(--pf-primary,#6D5DFB)' }}>{r.agent}</span>
                     {r.text}
                   </li>
                 ))}
               </ul>
             )}
-            <p className="mt-2 text-[10px] italic [color:var(--pf-color-muted)]">Gợi ý suy ra từ dữ liệu thật của kỳ · xem "Tóm tắt điều hành (AI)" ở đầu trang.</p>
+            <p className="mt-2 text-xs italic [color:var(--pf-color-muted)]">Gợi ý suy ra từ dữ liệu thật của kỳ · xem "Tóm tắt điều hành (AI)" ở đầu trang.</p>
           </div>
         </div>
 
-        <p className="pt-1 text-center text-[11px] [color:var(--pf-color-muted)]">
+        <p className="pt-1 text-center text-xs [color:var(--pf-color-muted)]">
           AIDO Executive Report v1.0 · mốc dữ liệu {new Date(data.generatedAt).toLocaleString('vi-VN')} · mọi con số từ CSDL thật
         </p>
       </div>
@@ -622,7 +622,7 @@ function SectionTitle({ icon, title, note, compact }: { icon?: React.ReactNode; 
     <div className={compact ? 'mb-2 flex items-center gap-1.5' : 'mb-2.5 flex items-center gap-2'}>
       <span className="[color:var(--pf-primary,#6D5DFB)]">{icon}</span>
       <h3 className="text-sm font-bold [color:var(--pf-text)]">{title}</h3>
-      {note && <span className="text-[11px] [color:var(--pf-color-muted)]">· {note}</span>}
+      {note && <span className="text-xs [color:var(--pf-color-muted)]">· {note}</span>}
     </div>
   )
 }
@@ -648,7 +648,7 @@ function DistRow({ label, value, color }: { label: string; value: number; color:
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl border px-3 py-2 [border-color:var(--pf-border)]">
-      <p className="text-[11px] [color:var(--pf-color-muted)]">{label}</p>
+      <p className="text-xs [color:var(--pf-color-muted)]">{label}</p>
       <p className="text-lg font-bold tabular-nums [color:var(--pf-text)]">{value}</p>
     </div>
   )
@@ -656,9 +656,9 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 function AiCard({ color, name, main, unit, detail }: { color: string; name: string; main: string; unit: string; detail: string }) {
   return (
     <div className="rounded-2xl border p-3.5" style={{ background: `color-mix(in srgb, ${color} 7%, var(--pf-surface))`, borderColor: `color-mix(in srgb, ${color} 22%, var(--pf-border))`, borderTop: `3px solid ${color}` }}>
-      <span className="text-[13px] font-semibold" style={{ color }}>{name}</span>
+      <span className="text-sm font-semibold" style={{ color }}>{name}</span>
       <p className="mt-1 text-2xl font-bold leading-none" style={{ color }}>{main}<span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{unit}</span></p>
-      <p className="mt-1.5 border-t pt-1.5 text-[11px] leading-snug [color:var(--pf-color-muted)]" style={{ borderColor: `color-mix(in srgb, ${color} 15%, var(--pf-border))` }}>{detail}</p>
+      <p className="mt-1.5 border-t pt-1.5 text-xs leading-snug [color:var(--pf-color-muted)]" style={{ borderColor: `color-mix(in srgb, ${color} 15%, var(--pf-border))` }}>{detail}</p>
     </div>
   )
 }

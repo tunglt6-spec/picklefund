@@ -30,7 +30,7 @@ const GROUPS: { title: string; items: { q: string; a: string }[] }[] = [
 function Item({ q, a }: { q: string; a: string }) {
   return (
     <details className="group border-b [border-color:var(--pf-border)]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-[15px] font-semibold [color:var(--pf-text)] marker:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-base font-semibold [color:var(--pf-text)] marker:hidden">
         {q}
         <ChevronDown size={18} className="shrink-0 [color:var(--pf-color-muted)] transition-transform group-open:rotate-180" />
       </summary>
@@ -58,7 +58,7 @@ export function Faq() {
             </div>
           ))}
           <div className="rounded-2xl border p-6 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
-            <p className="text-[15px] font-bold">Vẫn còn thắc mắc?</p>
+            <p className="text-base font-bold">Vẫn còn thắc mắc?</p>
             <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Đội ngũ hỗ trợ sẵn sàng đồng hành cùng bạn.</p>
             <Link to="/contact" className="mt-4 inline-block rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Liên hệ hỗ trợ</Link>
           </div>

@@ -117,7 +117,7 @@ export function ClubDashboard() {
                           <p className="truncate text-sm font-medium [color:var(--pf-text)]">
                             {[s.startTime, s.endTime].filter(Boolean).join(' – ') || 'Buổi chơi'}
                           </p>
-                          <p className="text-[11px] [color:var(--pf-color-muted)]">{s.courtName || 'Chưa rõ sân'}</p>
+                          <p className="text-xs [color:var(--pf-color-muted)]">{s.courtName || 'Chưa rõ sân'}</p>
                         </div>
                       </div>
                       <span className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
@@ -147,7 +147,7 @@ export function ClubDashboard() {
                           </span>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium [color:var(--pf-text)]">{name}</p>
-                            <p className="text-[11px] [color:var(--pf-color-muted)]">
+                            <p className="text-xs [color:var(--pf-color-muted)]">
                               đóng quỹ · {(c.paymentDate ?? '').slice(0, 10).split('-').reverse().join('/')}
                             </p>
                           </div>

@@ -269,7 +269,7 @@ export function MemberNotifications() {
             {!isRead && <span className="h-2 w-2 shrink-0 rounded-full [background:var(--pf-primary)]" />}
           </div>
           <p className="text-xs leading-relaxed [color:var(--pf-color-muted)]">{n.body}</p>
-          <p className="mt-1 text-[11px] [color:var(--pf-color-muted)]">{timeAgo(n.createdAt)}</p>
+          <p className="mt-1 text-xs [color:var(--pf-color-muted)]">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
     )

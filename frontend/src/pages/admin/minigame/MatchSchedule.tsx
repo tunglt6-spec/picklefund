@@ -137,8 +137,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
-            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-xs [color:var(--pf-color-muted)] truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
           {myRounds.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
@@ -157,7 +157,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <p className="[color:var(--pf-color-muted)] font-medium text-sm">Chưa có lịch thi đấu</p>
             <p className="[color:var(--pf-color-muted)] text-xs mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
             <button onClick={() => navigate(`/minigames/${minigameId}`)}
-              className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
+              className="text-sm font-semibold text-white px-4 py-2 rounded-[10px]"
               style={{ background: 'var(--pf-primary)' }}>
               Tới Rút Thăm
             </button>
@@ -168,7 +168,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               {tabs.map(t => (
                 <button key={t.id} onClick={() => setFilter(t.id)}
                   className={cn(
-                    'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
+                    'shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-[8px]',
                     filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
                   )}
                   style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
@@ -179,7 +179,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
             <div id={MS_DOUBLES_ID} className="px-4 py-4 space-y-3">
               {filtered.length === 0 ? (
-                <p className="text-center [color:var(--pf-color-muted)] text-[13px] py-8">Không có trận nào</p>
+                <p className="text-center [color:var(--pf-color-muted)] text-sm py-8">Không có trận nào</p>
               ) : filtered.map((m, idx) => {
                 const rnd = myRounds.find(r => r.id === m.roundId)
                 const team1Won = m.winningTeam === 1
@@ -187,8 +187,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 return (
                   <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
-                      <span className={cn('text-[11px] font-medium',
+                      <span className="text-xs [color:var(--pf-color-muted)]">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
+                      <span className={cn('text-xs font-medium',
                         m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
                         m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                       )}>
@@ -205,7 +205,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                       <div className="shrink-0 text-center">
                         {m.status === 'COMPLETED'
                           ? <p className="text-base font-black [color:var(--pf-text)] font-mono">{m.team1Score}–{m.team2Score}</p>
-                          : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
+                          : <p className="text-sm font-bold [color:var(--pf-color-muted)]">vs</p>}
                       </div>
                       <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
                         <p className={cn('text-xs font-semibold leading-tight', team2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
@@ -246,14 +246,14 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
               </p>
               {deleteTarget.status === 'COMPLETED' && (
-                <p className="text-[11px] [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-[10px] px-3 py-2 mb-3">
+                <p className="text-xs [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] rounded-[10px] px-3 py-2 mb-3">
                   Trận này đã có kết quả. Xóa sẽ hủy kết quả.
                 </p>
               )}
               <div className="flex gap-2">
-                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
+                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-[10px] text-sm font-medium [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                 <button onClick={() => { const t = deleteTarget.id; setDeleteTarget(null); handleDeleteMatch(t) }}
-                  className="flex-1 py-2.5 rounded-[10px] text-[13px] font-medium text-white [background:var(--pf-color-danger)] hover:[filter:brightness(0.92)]">Xóa</button>
+                  className="flex-1 py-2.5 rounded-[10px] text-sm font-medium text-white [background:var(--pf-color-danger)] hover:[filter:brightness(0.92)]">Xóa</button>
               </div>
             </div>
           </div>
@@ -555,8 +555,8 @@ export function MatchSchedule() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
-            <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{mg.name} · {myMatches.length} trận</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-xs [color:var(--pf-color-muted)] truncate">{mg.name} · {myMatches.length} trận</p>
           </div>
           {myMatches.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
@@ -574,7 +574,7 @@ export function MatchSchedule() {
           {mTabs.map(t => (
             <button key={t.id} onClick={() => setFilter(t.id)}
               className={cn(
-                'shrink-0 text-[11px] font-medium px-2.5 py-1.5 rounded-[8px]',
+                'shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-[8px]',
                 filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
               )}
               style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
@@ -585,7 +585,7 @@ export function MatchSchedule() {
 
         <div id={MS_GROUP_ID} className="px-4 py-4 space-y-3">
           {mFiltered.length === 0 ? (
-            <p className="text-center [color:var(--pf-color-muted)] text-[13px] py-8">Không có trận nào</p>
+            <p className="text-center [color:var(--pf-color-muted)] text-sm py-8">Không có trận nào</p>
           ) : mFiltered.map((m, idx) => {
             const grp = myGroups.find(g => g.id === m.groupId)
             const p1Won = m.winnerId === m.player1Id
@@ -593,8 +593,8 @@ export function MatchSchedule() {
             return (
               <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] [color:var(--pf-color-muted)]">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
-                  <span className={cn('text-[11px] font-medium',
+                  <span className="text-xs [color:var(--pf-color-muted)]">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
+                  <span className={cn('text-xs font-medium',
                     m.status === 'COMPLETED' ? '[color:var(--pf-color-success)]' :
                     m.status === 'PLAYING' ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]'
                   )}>
@@ -609,7 +609,7 @@ export function MatchSchedule() {
                   <div className="shrink-0">
                     {m.status === 'COMPLETED'
                       ? <p className="text-base font-black [color:var(--pf-text)] font-mono">{m.player1Score}–{m.player2Score}</p>
-                      : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
+                      : <p className="text-sm font-bold [color:var(--pf-color-muted)]">vs</p>}
                   </div>
                   <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
                     <p className={cn('text-xs font-semibold', p2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player2Name}</p>

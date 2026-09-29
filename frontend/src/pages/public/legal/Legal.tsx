@@ -9,12 +9,12 @@ import { LEGAL_DOCS, type LegalDoc } from './legal-content'
 function ContactCard({ org, website, email }: { org: string; website: string; email: string }) {
   return (
     <div className="my-3 rounded-2xl border p-5 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
-      <p className="text-[15px] font-extrabold [color:var(--pf-text)]">{org}</p>
+      <p className="text-base font-extrabold [color:var(--pf-text)]">{org}</p>
       <div className="mt-2 space-y-1.5">
-        <a href={website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[13px] font-medium [color:var(--pf-primary)]">
+        <a href={website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary)]">
           <Globe size={14} /> {website.replace(/^https?:\/\//, '')}
         </a>
-        <a href={`mailto:${email}`} className="flex items-center gap-2 text-[13px] font-medium [color:var(--pf-primary)]">
+        <a href={`mailto:${email}`} className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary)]">
           <Mail size={14} /> {email}
         </a>
       </div>
@@ -35,7 +35,7 @@ function LegalBody({ doc }: { doc: LegalDoc }) {
           <div className="space-y-7">
             {doc.sections.map((s) => (
               <section key={s.h}>
-                <h2 className="mb-2.5 text-[17px] font-extrabold tracking-tight [color:var(--pf-text)]">{s.h}</h2>
+                <h2 className="mb-2.5 text-lg font-extrabold tracking-tight [color:var(--pf-text)]">{s.h}</h2>
                 {s.blocks.map((b, i) => {
                   if (b.sub) return <p key={i} className="mb-1.5 mt-3 text-sm font-bold [color:var(--pf-text)]">{b.sub}</p>
                   if (b.p) return <p key={i} className="mb-2 text-sm leading-relaxed [color:var(--pf-color-muted)]">{b.p}</p>

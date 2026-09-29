@@ -257,7 +257,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
               {entrants.map(e => (
                 <div key={e.key} className="rounded-[12px] border p-2.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center justify-between gap-2">
                   <span className="text-sm font-medium [color:var(--pf-text)] truncate flex items-center gap-1.5">
-                    {e.name}{e.isGuest && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">Khách</span>}
+                    {e.name}{e.isGuest && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">Khách</span>}
                   </span>
                   <button onClick={() => deleteEntrant(e.key)} className="shrink-0 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors" title="Xóa VĐV"><Trash2 size={15} /></button>
                 </div>

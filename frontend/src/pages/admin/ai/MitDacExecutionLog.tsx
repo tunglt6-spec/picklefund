@@ -93,10 +93,10 @@ export function MitDacExecutionLog() {
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-semibold [color:var(--pf-text)]">{a.title}</p>
                       {a.retryCount > 0 && (
-                        <span className="text-[11px] [color:var(--pf-color-muted)]">· thử lại {a.retryCount}×</span>
+                        <span className="text-xs [color:var(--pf-color-muted)]">· thử lại {a.retryCount}×</span>
                       )}
                     </div>
-                    <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">
+                    <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
                       {a.actionType} · {fmt(a.createdAt)}
                     </p>
                   </div>

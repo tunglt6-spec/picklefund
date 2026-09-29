@@ -148,7 +148,7 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
           <nav className="hidden w-52 shrink-0 overflow-y-auto border-r p-3 sm:block" style={{ borderColor: 'var(--pf-border)' }}>
             {SECTIONS.map((s) => (
               <button key={s.id} onClick={() => jump(s.id)}
-                className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium transition-colors ${active === s.id ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]'}`}>
+                className={`mb-0.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm font-medium transition-colors ${active === s.id ? 'text-white [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]'}`}>
                 <span>{s.icon}</span> {s.title}
               </button>
             ))}
@@ -158,7 +158,7 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
           <div className="min-w-0 flex-1 overflow-y-auto px-5 py-4">
             {SECTIONS.map((s) => (
               <section key={s.id} id={`guide-${s.id}`} className="mb-6 scroll-mt-2">
-                <h3 className="flex items-center gap-2 text-[15px] font-bold [color:var(--pf-text)]"><span>{s.icon}</span> {s.title}</h3>
+                <h3 className="flex items-center gap-2 text-base font-bold [color:var(--pf-text)]"><span>{s.icon}</span> {s.title}</h3>
                 <div className="mt-1.5">{s.body}</div>
               </section>
             ))}

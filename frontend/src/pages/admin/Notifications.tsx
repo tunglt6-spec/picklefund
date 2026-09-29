@@ -42,8 +42,8 @@ function eventBg(eventType: string) {
 }
 
 function priorityBadge(priority: string) {
-  if (priority === 'HIGH') return <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">Khẩn</span>
-  if (priority === 'MEDIUM') return <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Quan trọng</span>
+  if (priority === 'HIGH') return <span className="text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full">Khẩn</span>
+  if (priority === 'MEDIUM') return <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Quan trọng</span>
   return null
 }
 
@@ -77,7 +77,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
             {priorityBadge(n.priority)}
           </div>
           <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
-          <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">{timeAgo(n.createdAt)}</p>
+          <p className="text-xs [color:var(--pf-color-muted)] mt-1">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
     )
@@ -98,7 +98,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
         </div>
         <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
       </div>
-      <p className="text-[11px] [color:var(--pf-color-muted)] shrink-0">{timeAgo(n.createdAt)}</p>
+      <p className="text-xs [color:var(--pf-color-muted)] shrink-0">{timeAgo(n.createdAt)}</p>
     </div>
   )
 }
@@ -341,7 +341,7 @@ export function Notifications() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Thông báo</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
           <div className="flex items-center gap-2.5">
@@ -377,7 +377,7 @@ export function Notifications() {
 
           {!loading && unread.length > 0 && (
             <div>
-              <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Chưa đọc</p>
+              <p className="text-xs font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Chưa đọc</p>
               <div className="space-y-2">
                 {unread.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} mobile />)}
               </div>
@@ -386,7 +386,7 @@ export function Notifications() {
 
           {!loading && read.length > 0 && (
             <div>
-              <p className="text-[11px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Đã đọc</p>
+              <p className="text-xs font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-2">Đã đọc</p>
               <div className="space-y-2">
                 {read.map(n => <NotifCard key={n.id} n={n} onOpen={handleOpen} mobile />)}
               </div>

@@ -219,7 +219,7 @@ export function Attendance() {
             {sessions.length > 0 && (
               <button
                 onClick={() => setShowMovePeriod(true)}
-                className="min-h-11 rounded-lg border px-3 text-[13px] font-semibold [color:var(--pf-primary)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                className="min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
               >
                 Chuyển kỳ ({sessions.length} buổi)
               </button>

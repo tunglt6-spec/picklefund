@@ -249,7 +249,7 @@ export function SchedulerPage() {
                   <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium [color:var(--pf-text)] truncate">{r.name}</p>
-                      <p className="text-[11px] [color:var(--pf-color-muted)]">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {/* Chỉnh chu kỳ */}
@@ -280,7 +280,7 @@ export function SchedulerPage() {
                 ))}
               </div>
             )}
-            <p className="mt-3 text-[11px] [color:var(--pf-color-muted)]">
+            <p className="mt-3 text-xs [color:var(--pf-color-muted)]">
               Chu kỳ <b>Thủ công</b> = chỉ chạy khi bấm "Chạy định kỳ ngay". Luật đã tắt sẽ không được scheduler dispatch.
             </p>
           </section>
@@ -290,7 +290,7 @@ export function SchedulerPage() {
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1 flex items-center gap-2">
               <Clock size={16} className="[color:var(--pf-color-muted)]" /> Cron Hệ Thống (cố định)
             </h3>
-            <p className="text-[11px] [color:var(--pf-color-muted)] mb-4">Lịch tự động của Maika/Lisa — cố định theo hệ thống, không cấu hình tại đây.</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mb-4">Lịch tự động của Maika/Lisa — cố định theo hệ thống, không cấu hình tại đây.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SYSTEM_CRONS.map((c, i) => (
                 <div key={i} className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">
@@ -299,7 +299,7 @@ export function SchedulerPage() {
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium [color:var(--pf-text)] truncate">{c.label}</p>
-                    <p className="text-[11px] [color:var(--pf-color-muted)]">{c.agent} · {c.when}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{c.agent} · {c.when}</p>
                   </div>
                 </div>
               ))}
@@ -319,7 +319,7 @@ export function SchedulerPage() {
                   <div key={r.id} className="flex items-center justify-between py-2.5">
                     <div className="min-w-0">
                       <p className="text-sm [color:var(--pf-text)] truncate">{TRIGGER_LABEL[r.triggerType] ?? r.triggerType}</p>
-                      <p className="text-[11px] [color:var(--pf-color-muted)] truncate">{fmt(r.startedAt ?? r.createdAt)}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)] truncate">{fmt(r.startedAt ?? r.createdAt)}</p>
                     </div>
                     <StatusBadge tone={RUN_TONE[r.status] ?? 'neutral'}>{r.status}</StatusBadge>
                   </div>

@@ -269,13 +269,13 @@ export function TreasurerIncome() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <div className="text-[17px] font-[800] [color:var(--pf-text)] shrink-0">Khoản Thu</div>
+          <div className="text-lg font-[800] [color:var(--pf-text)] shrink-0">Khoản Thu</div>
           <div className="flex flex-wrap items-center justify-end gap-1.5 ml-auto">
             {unconfirmedIds.length > 0 && (
               <button
                 onClick={bulkConfirm}
                 disabled={isBulkConfirming}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11px] font-[700] bg-amber-500 text-white active:opacity-80 disabled:opacity-50"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] bg-amber-500 text-white active:opacity-80 disabled:opacity-50"
               >
                 <CheckCircle size={11} />{isBulkConfirming ? '…' : `XN tất cả (${unconfirmedIds.length})`}
               </button>
@@ -283,11 +283,11 @@ export function TreasurerIncome() {
             {contributions.length > 0 && (
               <>
                 <button onClick={exportExcel} aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <Download size={14} />Excel
                 </button>
                 <button onClick={exportPdf} aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+                  className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileText size={14} />PDF
                 </button>
               </>
@@ -308,7 +308,7 @@ export function TreasurerIncome() {
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
                 <div className={`text-xs font-[800] ${k.color} truncate`}>{k.value}</div>
-                <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
               </div>
             ))}
           </div>
@@ -316,7 +316,7 @@ export function TreasurerIncome() {
           {contributions.length === 0 ? (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-14 text-center">
               <DollarSign size={28} className="mx-auto text-slate-200 mb-2" />
-              <p className="text-[13px] [color:var(--pf-color-muted)]">Chưa có khoản thu nào</p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu nào</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -330,14 +330,14 @@ export function TreasurerIncome() {
                         <div className="text-sm font-[700] [color:var(--pf-text)] truncate">
                           {isMiniRow ? (c.payerName || 'Quỹ Phụ') : (c.member?.fullName ?? c.memberId)}
                         </div>
-                        <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">
+                        <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">
                           {isMiniRow
                             ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Phụ')
                             : (period?.name ?? '—')} · {formatDate(c.paymentDate)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[15px] font-[800] [color:var(--pf-text)]">{formatVND(c.amount)}</div>
+                        <div className="text-base font-[800] [color:var(--pf-text)]">{formatVND(c.amount)}</div>
                         {isMiniRow
                           ? <Badge variant="indigo">Mini</Badge>
                           : (c.isConfirmed
@@ -381,7 +381,7 @@ export function TreasurerIncome() {
         >
           <form id="form-income-m" onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <p className="text-[10px] font-bold [color:var(--pf-color-muted)] uppercase tracking-widest mb-2">Nguồn quỹ</p>
+              <p className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-widest mb-2">Nguồn quỹ</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button key={fs} type="button" onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
@@ -660,7 +660,7 @@ export function TreasurerIncome() {
         <form id="form-income" onSubmit={handleSubmit} className="space-y-4">
           {/* Fund source selector */}
           <div>
-            <p className="text-[10px] font-bold [color:var(--pf-color-muted)] uppercase tracking-widest mb-2">Nguồn quỹ</p>
+            <p className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-widest mb-2">Nguồn quỹ</p>
             <div className="grid grid-cols-2 gap-2">
               {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                 <button key={fs} type="button"

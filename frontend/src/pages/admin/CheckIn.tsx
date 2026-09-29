@@ -230,7 +230,7 @@ export function CheckIn() {
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium [color:var(--pf-text)]">{r.memberName}</span>
                         {r.registered && (
-                          <span className="text-[11px] font-semibold" style={{ color: 'var(--pf-primary)' }}>Đã đăng ký</span>
+                          <span className="text-xs font-semibold" style={{ color: 'var(--pf-primary)' }}>Đã đăng ký</span>
                         )}
                       </span>
                       <span

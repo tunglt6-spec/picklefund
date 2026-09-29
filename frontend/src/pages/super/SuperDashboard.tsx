@@ -59,8 +59,8 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, color: accent }}>{icon}</span>
         )}
       </div>
-      <p className="mt-auto text-[19px] font-extrabold leading-tight" style={{ color: alert ? accent : 'var(--pf-text)' }}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">{sub}</p>}
+      <p className="mt-auto text-xl font-extrabold leading-tight" style={{ color: alert ? accent : 'var(--pf-text)' }}>{value}</p>
+      {sub && <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{sub}</p>}
     </div>
   )
 }
@@ -78,7 +78,7 @@ function Section({ title, desc, icon, children }: { title: string; desc?: string
     <section className="mt-6">
       <div className="mb-3 flex items-center gap-2">
         {icon && <span className="[color:var(--pf-primary)]">{icon}</span>}
-        <h2 className="text-[15px] font-extrabold tracking-tight [color:var(--pf-text)]">{title}</h2>
+        <h2 className="text-base font-extrabold tracking-tight [color:var(--pf-text)]">{title}</h2>
         {desc && <span className="text-xs [color:var(--pf-color-muted)]">· {desc}</span>}
       </div>
       {children}
@@ -185,7 +185,7 @@ export function SuperDashboard() {
         <div className="min-w-0">
           <h1 className="text-xl font-extrabold tracking-tight [color:var(--pf-text)] sm:text-2xl">Trung tâm điều hành PickleFund</h1>
           <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Tổng quan kinh doanh, vận hành, AI và sức khỏe hệ thống</p>
-          {refreshedAt && <p className="mt-1 inline-flex items-center gap-1 text-[11px] [color:var(--pf-color-muted)]"><Clock size={11} /> Cập nhật: {refreshedAt.toLocaleString('vi-VN')}</p>}
+          {refreshedAt && <p className="mt-1 inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={11} /> Cập nhật: {refreshedAt.toLocaleString('vi-VN')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select value={range} onChange={(e) => setRange(e.target.value)} aria-label="Khoảng thời gian"
@@ -241,7 +241,7 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
   return (
     <div className="mt-3 rounded-xl border p-3" style={{ borderColor: 'color-mix(in srgb, var(--pf-primary) 24%, var(--pf-border))', background: 'color-mix(in srgb, var(--pf-primary) 5%, var(--pf-surface))' }}>
       <p className="mb-1 inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider [color:var(--pf-primary)]"><Sparkles size={12} /> Maika nhận định</p>
-      <p className="whitespace-pre-line text-[13px] leading-relaxed [color:var(--pf-text)]">{t}</p>
+      <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]">{t}</p>
     </div>
   )
 }
@@ -266,8 +266,8 @@ function ConclusionBlock({ review }: { review: { sections: any; byAi: boolean } 
               const text = m ? m[2] : p
               return (
                 <li key={i} className="flex items-start gap-2.5 rounded-xl border p-3" style={{ borderColor: 'color-mix(in srgb, var(--pf-primary) 22%, var(--pf-border))', background: 'color-mix(in srgb, var(--pf-primary) 5%, var(--pf-surface))' }}>
-                  <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold text-white [background:var(--pf-primary)]">{label}</span>
-                  <span className="text-[13px] leading-relaxed [color:var(--pf-text)]">{text}</span>
+                  <span className="shrink-0 rounded-md px-2 py-0.5 text-xs font-bold text-white [background:var(--pf-primary)]">{label}</span>
+                  <span className="text-sm leading-relaxed [color:var(--pf-text)]">{text}</span>
                 </li>
               )
             })}
@@ -313,8 +313,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       <div className="mt-4">
         <ChartCard title="AIDO Executive Summary" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}
           actions={<div className="flex items-center gap-1.5">
-            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
-            <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
+            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
+            <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
           </div>}>
           <SummaryBlock summary={data.summary} />
           <div className="mt-4 border-t pt-4 [border-color:var(--pf-border)]">
@@ -436,7 +436,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <Kpi label="Lỗi (5xx)" value={infra.errorRate != null ? `${infra.errorRate}%` : <NoData hint="Chưa có request trong 5 phút gần đây" />} icon={<AlertTriangle size={16} />} alert={infra.errorRate >= 5 ? 'danger' : infra.errorRate > 0 ? 'warning' : undefined} />
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ (Node os/statfs, process, ping DB, pg_stat_activity, uploads, hàng đợi DB, telemetry request cửa sổ 5').</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ (Node os/statfs, process, ping DB, pg_stat_activity, uploads, hàng đợi DB, telemetry request cửa sổ 5').</p>
           <button onClick={onRunBackup} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]"><ShieldCheck size={13} /> Chạy sao lưu ngay</button>
         </div>
         <MaikaNote review={review} k="infra" />
@@ -451,8 +451,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                 <li key={i} className="flex items-start gap-2 rounded-xl border p-2.5 [border-color:var(--pf-border)]">
                   <StatusBadge tone={a.severity === 'critical' ? 'danger' : a.severity === 'high' ? 'warning' : 'info'}>{a.severity === 'critical' ? 'Critical' : a.severity === 'high' ? 'High' : 'Medium'}</StatusBadge>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium [color:var(--pf-text)]">{a.title}</p>
-                    <p className="text-[11px] [color:var(--pf-color-muted)]">{a.source}{a.clubName ? ` · ${a.clubName}` : ''} · {new Date(a.time).toLocaleString('vi-VN')}</p>
+                    <p className="text-sm font-medium [color:var(--pf-text)]">{a.title}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{a.source}{a.clubName ? ` · ${a.clubName}` : ''} · {new Date(a.time).toLocaleString('vi-VN')}</p>
                   </div>
                   {a.clubId && <Link to={`/super/clubs/${a.clubId}`} className="shrink-0 text-xs font-semibold [color:var(--pf-primary)]">Chi tiết</Link>}
                 </li>
@@ -482,7 +482,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           {audit.length ? (
             <ul>
               {audit.map((e: any) => (
-                <li key={e.id} className="flex items-center gap-3 border-b py-2 text-[13px] [border-color:var(--pf-border)] last:border-0">
+                <li key={e.id} className="flex items-center gap-3 border-b py-2 text-sm [border-color:var(--pf-border)] last:border-0">
                   <StatusBadge tone="neutral">{e.action}</StatusBadge>
                   <span className="min-w-0 flex-1 truncate [color:var(--pf-text)]">{e.resource}{e.detail ? ` — ${e.detail}` : ''}</span>
                   <span className="hidden shrink-0 sm:inline [color:var(--pf-color-muted)]">{e.user?.username ?? '—'}{e.club?.name ? ` · ${e.club.name}` : ''}</span>
@@ -500,7 +500,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
 
       <Modal open={pendOpen} onClose={() => setPendOpen(false)} title="Khoản chi chờ duyệt" subtitle="Toàn nền tảng · trạng thái pending" size="xl">
         {pendLoading ? (
-          <div className="py-10 text-center text-[13px] [color:var(--pf-color-muted)]">Đang tải…</div>
+          <div className="py-10 text-center text-sm [color:var(--pf-color-muted)]">Đang tải…</div>
         ) : !pendList?.length ? (
           <EmptyState icon={<ClipboardList size={22} />} title="Không có khoản chờ duyệt" description="Tất cả CLB đã duyệt hết." />
         ) : (
@@ -509,11 +509,11 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
               <li key={e.id} className="rounded-xl border p-3 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold [color:var(--pf-text)]">{e.description || '(không có mô tả)'}</p>
+                    <p className="truncate text-sm font-semibold [color:var(--pf-text)]">{e.description || '(không có mô tả)'}</p>
                     <p className="mt-0.5 text-[11.5px] [color:var(--pf-color-muted)]">
                       {e.clubName}{e.periodName ? ` · ${e.periodName}` : ''} · {e.fundSource === 'MAIN' ? 'Quỹ Chính' : e.fundSource === 'SUB' ? 'Quỹ Phụ' : e.fundSource}{e.miniExpenseType ? ` · ${e.miniExpenseType}` : ''}
                     </p>
-                    <p className="mt-0.5 text-[11px] [color:var(--pf-color-muted)]">
+                    <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
                       {e.createdBy ? `Người tạo: ${e.createdBy}` : ''}{e.expenseDate ? ` · ${new Date(e.expenseDate).toLocaleDateString('vi-VN')}` : ''}
                     </p>
                   </div>
@@ -534,7 +534,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
 function SummaryBlock({ summary }: { summary: { status: string[]; risks: string[]; priorities: string[] } }) {
   const Group = ({ title, items, tone }: { title: string; items: string[]; tone: 'info' | 'danger' | 'success' }) => (
     <div>
-      <p className="mb-1 text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)]">{title}</p>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)]">{title}</p>
       <ul className="space-y-1">
         {items?.length ? items.map((t, i) => (
           <li key={i} className="flex gap-1.5 text-[12.5px] leading-relaxed [color:var(--pf-text)]">
@@ -567,13 +567,13 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
     >
       <div className="mb-2.5 flex items-center gap-2">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>
-        <div className="min-w-0"><p className="text-sm font-extrabold [color:var(--pf-text)]">{name}</p><p className="truncate text-[10px] [color:var(--pf-color-muted)]">{role}</p></div>
+        <div className="min-w-0"><p className="text-sm font-extrabold [color:var(--pf-text)]">{name}</p><p className="truncate text-xs [color:var(--pf-color-muted)]">{role}</p></div>
       </div>
       <div className="mt-auto grid grid-cols-2 gap-1.5">
         {rows.map(([lbl, val]) => (
           <div key={lbl} className="rounded-lg border px-2 py-1.5 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
-            <p className="text-[10px] [color:var(--pf-color-muted)]">{lbl}</p>
-            <p className="text-[15px] font-extrabold [color:var(--pf-text)]">{typeof val === 'number' ? formatNumber(val) : val}</p>
+            <p className="text-xs [color:var(--pf-color-muted)]">{lbl}</p>
+            <p className="text-base font-extrabold [color:var(--pf-text)]">{typeof val === 'number' ? formatNumber(val) : val}</p>
           </div>
         ))}
       </div>
@@ -584,12 +584,12 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
 function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: number) => string }) {
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider [color:var(--pf-color-muted)]">{title}</p>
+      <p className="mb-1.5 text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)]">{title}</p>
       {rows?.length ? (
         <ol className="space-y-1">
           {rows.map((r, i) => (
-            <li key={r.clubId ?? i} className="flex items-center gap-2 text-[13px]">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{i + 1}</span>
+            <li key={r.clubId ?? i} className="flex items-center gap-2 text-sm">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{i + 1}</span>
               <span className="min-w-0 flex-1 truncate [color:var(--pf-text)]">{r.name}</span>
               <span className="shrink-0 font-semibold [color:var(--pf-text)]">{fmt(r.value)}</span>
             </li>

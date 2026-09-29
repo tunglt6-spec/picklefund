@@ -64,11 +64,11 @@ export function Guide() {
                 <s.icon size={20} />
               </div>
               <div className="min-w-0">
-                <p className="text-[15px] font-bold">{s.title}</p>
-                <p className="mt-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{s.desc}</p>
+                <p className="text-base font-bold">{s.title}</p>
+                <p className="mt-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{s.desc}</p>
                 <ul className="mt-2.5 flex flex-wrap gap-2">
                   {s.points.map((p) => (
-                    <li key={p} className="rounded-full border px-2.5 py-1 text-[11px] font-medium [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">{p}</li>
+                    <li key={p} className="rounded-full border px-2.5 py-1 text-xs font-medium [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">{p}</li>
                   ))}
                 </ul>
               </div>
@@ -77,7 +77,7 @@ export function Guide() {
         </div>
 
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border p-6 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
-          <p className="text-[15px] font-bold [color:var(--pf-text)]">Cần hỗ trợ khi triển khai?</p>
+          <p className="text-base font-bold [color:var(--pf-text)]">Cần hỗ trợ khi triển khai?</p>
           <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Hướng dẫn chi tiết từng màn hình có sẵn ngay trong app (nút “Hướng dẫn”). Bạn cũng có thể liên hệ đội ngũ hỗ trợ.</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Dùng thử ngay <ArrowRight size={15} /></Link>

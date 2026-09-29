@@ -109,7 +109,7 @@ export function MemberContributions() {
           return (
             <div key={p.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[15px] font-bold [color:var(--pf-text)]">{formatVND(toNum(p.amount))}</span>
+                <span className="text-base font-bold [color:var(--pf-text)]">{formatVND(toNum(p.amount))}</span>
                 <StatusBadge tone={meta.tone} dot>{meta.label}</StatusBadge>
               </div>
               <p className="mt-0.5 text-[11.5px] [color:var(--pf-color-muted)]">{formatDate(p.createdAt)}</p>
@@ -118,7 +118,7 @@ export function MemberContributions() {
               )}
               {p.status === 'CANCELLED' && (
                 <button onClick={() => setReportOpen(true)}
-                  className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white active:scale-[0.98] [background:var(--pf-primary)]">
+                  className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white active:scale-[0.98] [background:var(--pf-primary)]">
                   <Send size={14} /> Báo nộp lại
                 </button>
               )}
@@ -159,17 +159,17 @@ export function MemberContributions() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Lịch Sử Đóng Quỹ</div>
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Sử Đóng Quỹ</div>
             <div className="text-xs [color:var(--pf-color-muted)] truncate">{memberName}</div>
           </div>
           {filtered.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
               <button onClick={doExportExcel} aria-label="Xuất Excel"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileSpreadsheet size={14} />Excel
               </button>
               <button onClick={doExportPdf} aria-label="Xuất PDF"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-[11px] font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
+                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileText size={14} />PDF
               </button>
             </div>
@@ -178,7 +178,7 @@ export function MemberContributions() {
         <div className="px-4 pt-4 pb-6 space-y-4">
           <button
             onClick={() => setReportOpen(true)}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[14px] text-[15px] font-bold text-white active:scale-[0.98]"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[14px] text-base font-bold text-white active:scale-[0.98]"
             style={{ background: 'var(--pf-primary)' }}
           >
             <Send size={17} /> Báo đã nộp quỹ
@@ -191,8 +191,8 @@ export function MemberContributions() {
               { label: 'Chờ', value: `${pendingCount}`, color: 'text-amber-600' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[15px] font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
+                <div className={`text-base font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
               </div>
             ))}
           </div>
@@ -209,11 +209,11 @@ export function MemberContributions() {
                 return (
                   <div key={c.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[15px] font-[700] [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span>
+                      <span className="text-base font-[700] [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span>
                       {c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>}
                     </div>
                     <div className="text-xs [color:var(--pf-color-muted)] mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
-                    <div className="text-[17px] font-[800] text-emerald-600">{formatVND(c.amount)}</div>
+                    <div className="text-lg font-[800] text-emerald-600">{formatVND(c.amount)}</div>
                   </div>
                 )
               })}
@@ -222,7 +222,7 @@ export function MemberContributions() {
           {receipts.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
-                <Receipt size={14} className="[color:var(--pf-color-muted)]" /><span className="text-[13px] font-[700] [color:var(--pf-text)]">Sao Kê Đã Chốt</span>
+                <Receipt size={14} className="[color:var(--pf-color-muted)]" /><span className="text-sm font-[700] [color:var(--pf-text)]">Sao Kê Đã Chốt</span>
               </div>
               {receipts.map(r => {
                 const bal = toNum(r.balance)
@@ -233,7 +233,7 @@ export function MemberContributions() {
                       className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
                         <div className="text-sm font-[700] [color:var(--pf-text)]">{r.fundPeriod?.name ?? 'Kỳ đã chốt'}</div>
-                        <div className="text-[11px] [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                        <div className="text-xs [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-sm font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>

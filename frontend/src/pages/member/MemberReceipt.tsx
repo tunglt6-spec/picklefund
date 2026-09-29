@@ -184,7 +184,7 @@ export function MemberReceipt() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-[17px] font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{memberName}</div>
           </div>
           <button onClick={handleExport} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70">
@@ -200,8 +200,8 @@ export function MemberReceipt() {
               { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[13px] font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
+                <div className={`text-sm font-[800] ${k.color}`}>{k.value}</div>
+                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
               </div>
             ))}
           </div>
@@ -210,7 +210,7 @@ export function MemberReceipt() {
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Kỳ hiện tại</span>
-                <span className="text-[10px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính</span>
+                <span className="text-xs font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính</span>
               </div>
               <div className="space-y-1">
                 <LiveRow label="Đã tham gia" value={`${live.attendedSessions}/${live.totalSessions} buổi`} />
@@ -219,7 +219,7 @@ export function MemberReceipt() {
                 <LiveRow label="Đã đóng" value={formatVND(n(live.paidAmount))} />
                 <div className="flex justify-between pt-1.5 mt-0.5 border-t border-[color:var(--pf-border)]">
                   <span className="text-sm font-bold [color:var(--pf-text)]">Tổng chi phí</span>
-                  <span className="text-[15px] font-extrabold [color:var(--pf-text)]">{formatVND(n(live.totalCost))}</span>
+                  <span className="text-base font-extrabold [color:var(--pf-text)]">{formatVND(n(live.totalCost))}</span>
                 </div>
               </div>
             </div>
@@ -227,7 +227,7 @@ export function MemberReceipt() {
 
           {/* Receipt cards */}
           {displayReceipts.length === 0 ? (
-            <div className="text-center py-10 [color:var(--pf-color-muted)] text-[13px]">Chưa có phiếu thu chính thức — số liệu trên là tạm tính; phiếu thu tạo sau khi kỳ kết thúc.</div>
+            <div className="text-center py-10 [color:var(--pf-color-muted)] text-sm">Chưa có phiếu thu chính thức — số liệu trên là tạm tính; phiếu thu tạo sau khi kỳ kết thúc.</div>
           ) : (
             <div className="space-y-2">
               {displayReceipts.map(r => {
@@ -243,7 +243,7 @@ export function MemberReceipt() {
                       className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
                         <div className="text-sm font-[700] [color:var(--pf-text)]">Kỳ {period?.name ?? r.fundPeriodId}</div>
-                        <div className="text-[11px] [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
+                        <div className="text-xs [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
                       </div>
                       <div className="flex items-center gap-2">
                         {needToPay > 0 && <Badge variant="orange">Nợ {formatVND(needToPay)}</Badge>}
@@ -277,7 +277,7 @@ export function MemberReceipt() {
                                 <>
                                   <div className="flex gap-3 items-center">
                                     <img src={qr} alt="QR" className="w-24 h-24 rounded-lg [background:var(--pf-surface)] border border-amber-200" />
-                                    <div className="text-[11px] [color:var(--pf-color-muted)] space-y-0.5">
+                                    <div className="text-xs [color:var(--pf-color-muted)] space-y-0.5">
                                       <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
                                       <p>{bankInfo!.bank_account_name}</p>
                                       <p className="[color:var(--pf-color-warning)] font-bold">{formatVND(needToPay)}</p>
@@ -305,7 +305,7 @@ export function MemberReceipt() {
                             <span>Đóng dư <strong>{formatVND(bal)}</strong> — khấu trừ kỳ sau</span>
                           </div>
                         )}
-                        <p className="text-[11px] [color:var(--pf-color-muted)] text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)] text-right pt-1">Cập nhật: {formatDate(r.snapshotAt)}</p>
                       </div>
                     )}
                   </div>
@@ -426,7 +426,7 @@ export function MemberReceipt() {
                             Kỳ {period?.name ?? r.fundPeriodId}
                           </p>
                           {r.fundPeriodId === activePeriod?.id && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />LIVE
                             </span>
                           )}
@@ -509,7 +509,7 @@ export function MemberReceipt() {
                         </div>
                       )}
 
-                      <p className="text-[11px] [color:var(--pf-color-muted)] text-right">
+                      <p className="text-xs [color:var(--pf-color-muted)] text-right">
                         Cập nhật lần cuối: {formatDate(r.snapshotAt)}
                       </p>
                     </div>
@@ -527,7 +527,7 @@ export function MemberReceipt() {
             title="Kỳ hiện tại (tạm tính)"
             subtitle={activePeriod?.name ?? undefined}
             actions={live && activePeriod ? (
-              <span className="inline-block whitespace-nowrap text-[11px] font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
+              <span className="inline-block whitespace-nowrap text-xs font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính — đang diễn ra</span>
             ) : undefined}
           >
             {live && activePeriod ? (

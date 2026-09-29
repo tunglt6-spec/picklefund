@@ -62,7 +62,7 @@ export function Roadmap() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `color-mix(in srgb, ${col.tone} 16%, transparent)`, color: col.tone }}>
                   <col.icon size={16} />
                 </span>
-                <p className="text-[15px] font-extrabold [color:var(--pf-text)]">{col.label}</p>
+                <p className="text-base font-extrabold [color:var(--pf-text)]">{col.label}</p>
               </div>
               <ul className="space-y-2.5">
                 {col.items.map((it) => (
@@ -75,7 +75,7 @@ export function Roadmap() {
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-8 flex max-w-2xl items-start gap-2 rounded-2xl border p-4 text-[13px] leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
+        <p className="mx-auto mt-8 flex max-w-2xl items-start gap-2 rounded-2xl border p-4 text-sm leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
           <Info size={15} className="mt-0.5 shrink-0" />
           Mục "Đang phát triển" và "Định hướng" thể hiện dự định phát triển, <b className="[color:var(--pf-text)]">có thể thay đổi và không phải cam kết về mốc thời gian</b>. Tính năng chỉ được xem là sẵn sàng khi xuất hiện ở cột "Đã phát hành".
         </p>

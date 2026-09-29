@@ -315,7 +315,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 {golfers.map(g => (
                   <div key={g.id} className="rounded-[14px] border p-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] flex items-center justify-between gap-2">
                     <span className="[color:var(--pf-text)] truncate text-sm font-medium">
-                      {nameOf(g)}{g.guestName && <span className="ml-1.5 text-[10px] rounded [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] px-1.5 py-0.5">Khách</span>}
+                      {nameOf(g)}{g.guestName && <span className="ml-1.5 text-xs rounded [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] px-1.5 py-0.5">Khách</span>}
                     </span>
                     <button onClick={() => removeGolfer(g.id, nameOf(g))} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)]" title="Xóa golfer"><Trash2 size={15} /></button>
                   </div>
@@ -414,7 +414,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                   </tbody>
                 </table>
               </div>
-              <p className="px-3 py-2 text-[11px] [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
+              <p className="px-3 py-2 text-xs [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
                 {stableford ? <>Stableford: <b>tổng điểm cao nhất</b> đứng đầu.</> : <>Stroke-play: <b>tổng gậy nhỏ nhất</b> đứng đầu.</>} Golfer chưa ghi điểm xếp cuối.
               </p>
             </div>

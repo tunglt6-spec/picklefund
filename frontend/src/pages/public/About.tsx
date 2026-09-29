@@ -26,10 +26,10 @@ export function About() {
       <section className={`${PUBLIC_CONTAINER} py-10`}>
         <div className="mx-auto max-w-3xl space-y-4">
           <h2 className="text-xl font-extrabold tracking-tight [color:var(--pf-text)]">Câu chuyện</h2>
-          <p className="text-[15px] leading-relaxed [color:var(--pf-color-muted)]">
+          <p className="text-base leading-relaxed [color:var(--pf-color-muted)]">
             Hầu hết câu lạc bộ thể thao phong trào bắt đầu từ một nhóm bạn cùng đam mê. Nhưng khi số thành viên tăng lên, việc quản lý quỹ, điểm danh, chia chi phí và tổ chức giải đấu nhanh chóng trở thành gánh nặng — rải rác trên nhóm chat, bảng tính và trí nhớ của một vài người.
           </p>
-          <p className="text-[15px] leading-relaxed [color:var(--pf-color-muted)]">
+          <p className="text-base leading-relaxed [color:var(--pf-color-muted)]">
             PickleFund ra đời để gom tất cả những việc đó về một nơi: minh bạch, dễ dùng và có đội ngũ AI hỗ trợ phần lặp lại. Mục tiêu không phải là thay thế con người, mà là để Ban quản trị dành thời gian cho điều quan trọng nhất — cộng đồng và sân chơi.
           </p>
         </div>
@@ -41,12 +41,12 @@ export function About() {
           <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
             <div className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><Target size={20} /></div>
-              <p className="text-[15px] font-extrabold [color:var(--pf-text)]">Sứ mệnh</p>
+              <p className="text-base font-extrabold [color:var(--pf-text)]">Sứ mệnh</p>
               <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">Giúp các câu lạc bộ thể thao vận hành minh bạch, chuyên nghiệp và bền vững — với công cụ mà ai cũng dùng được.</p>
             </div>
             <div className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><Compass size={20} /></div>
-              <p className="text-[15px] font-extrabold [color:var(--pf-text)]">Tầm nhìn</p>
+              <p className="text-base font-extrabold [color:var(--pf-text)]">Tầm nhìn</p>
               <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">Trở thành nền tảng quản trị cộng đồng thể thao được tin dùng, nơi AI đồng hành cùng con người một cách có trách nhiệm.</p>
             </div>
           </div>
@@ -62,8 +62,8 @@ export function About() {
           {VALUES.map((v) => (
             <div key={v.title} className="rounded-2xl border p-5 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><v.icon size={20} /></div>
-              <p className="text-[15px] font-bold [color:var(--pf-text)]">{v.title}</p>
-              <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{v.desc}</p>
+              <p className="text-base font-bold [color:var(--pf-text)]">{v.title}</p>
+              <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">{v.desc}</p>
             </div>
           ))}
         </div>

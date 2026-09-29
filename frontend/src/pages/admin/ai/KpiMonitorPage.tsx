@@ -133,17 +133,17 @@ export function KpiMonitorPage() {
                     <span className={`text-3xl font-bold ${
                       healthTone === 'emerald' ? 'text-emerald-600' : healthTone === 'amber' ? 'text-amber-600' : 'text-red-600'
                     }`}>{health.score}</span>
-                    <span className="text-[10px] [color:var(--pf-color-muted)]">/100</span>
+                    <span className="text-xs [color:var(--pf-color-muted)]">/100</span>
                   </div>
                   <div>
                     <p className="text-sm font-semibold [color:var(--pf-text)]">{health.label ?? '—'}</p>
-                    <p className="text-[11px] [color:var(--pf-color-muted)]">Điểm tổng hợp</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">Điểm tổng hợp</p>
                   </div>
                 </div>
                 <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(breakdown).map(([k, v]) => (
                     <div key={k} className="rounded-xl border border-[color:var(--pf-border)] px-3 py-2">
-                      <p className="text-[11px] [color:var(--pf-color-muted)]">{BREAKDOWN_LABEL[k] ?? k}</p>
+                      <p className="text-xs [color:var(--pf-color-muted)]">{BREAKDOWN_LABEL[k] ?? k}</p>
                       <p className="text-lg font-bold [color:var(--pf-text)]">{v}</p>
                     </div>
                   ))}
@@ -206,7 +206,7 @@ export function KpiMonitorPage() {
             )}
           </section>
 
-          <p className="text-[11px] [color:var(--pf-color-muted)] px-1 flex items-center gap-1.5">
+          <p className="text-xs [color:var(--pf-color-muted)] px-1 flex items-center gap-1.5">
             <Gauge size={12} /> Số liệu tài chính đọc từ Finance Engine (nguồn tài chính duy nhất) — read-only, không tự tính.
           </p>
         </div>

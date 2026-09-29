@@ -135,8 +135,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <div>
-            <h2 className="text-[15px] font-bold [color:var(--pf-text)]">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'}</h2>
-            <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">
+            <h2 className="text-base font-bold [color:var(--pf-text)]">{isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'}</h2>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
               {isMini ? 'Quỹ Phụ · không phân bổ cho thành viên' : 'Quỹ Chính · phân bổ cho thành viên'}
             </p>
           </div>
@@ -217,7 +217,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
-                <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-[11px] [color:var(--pf-primary)]">
+                <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
                   <Wallet size={13} className="mt-0.5 shrink-0" />
                   <span>Khoản Quỹ Phụ không phân bổ cho thành viên, không ảnh hưởng công nợ cá nhân.</span>
                 </div>
@@ -238,7 +238,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                         }`}>
                         {active && <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-white" style={{ background: 'var(--pf-primary)' }}><Check size={11} /></span>}
                         <span className={active ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}>{c.icon}</span>
-                        <span className={`text-[13px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{c.title}</span>
+                        <span className={`text-sm font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{c.title}</span>
                         <span className="text-[10.5px] leading-tight [color:var(--pf-color-muted)]">{c.hint}</span>
                       </button>
                     )
@@ -247,7 +247,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
                 {/* Sân → chia đều; Sinh hoạt → chọn cách chia bằng chip */}
                 {form.costType === 'COURT' ? (
-                  <div className="mt-2.5 flex items-center gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-[11px] [color:var(--pf-primary)]">
+                  <div className="mt-2.5 flex items-center gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
                     <Users size={13} className="shrink-0" />
                     <span>Chia đều cho <b>{memberCount > 0 ? `${memberCount} thành viên` : 'tất cả thành viên'}</b> (luật Quỹ).</span>
                   </div>
@@ -266,7 +266,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                                 : 'border-[color:var(--pf-border)] hover:border-slate-300'
                             }`}>
                             <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{r.label}</span>
-                            <span className="block text-[10px] leading-tight [color:var(--pf-color-muted)]">{r.hint}</span>
+                            <span className="block text-xs leading-tight [color:var(--pf-color-muted)]">{r.hint}</span>
                           </button>
                         )
                       })}
@@ -295,7 +295,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 maxLength={200} rows={2} className="input-base resize-none"
                 placeholder="Ghi chú thêm cho khoản chi…" />
-              <p className="text-right text-[10px] [color:var(--pf-color-muted)] mt-1">{form.notes.length}/200</p>
+              <p className="text-right text-xs [color:var(--pf-color-muted)] mt-1">{form.notes.length}/200</p>
             </div>
           </div>
 
@@ -437,7 +437,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
             {fields.map((f, i) => (
               <div key={i} className={f.span ? 'col-span-2' : ''}>
-                <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">{f.label}</p>
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">{f.label}</p>
                 <div className="text-xs [color:var(--pf-text)]">{f.value}</div>
               </div>
             ))}
@@ -445,7 +445,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
 
           {/* Chứng từ / hóa đơn */}
           <div className="px-6 pb-6">
-            <p className="text-[10px] font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
+            <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Chứng từ / hóa đơn</p>
             {exp.receiptUrl ? (
               <div className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] p-3">
                 {/\.(jpe?g|png|webp)$/i.test(exp.receiptUrl) ? (
@@ -809,15 +809,15 @@ export function Expenses() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>
-              {(selectedPeriodId || activePeriod) && <p className="text-[11px] [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
+              {(selectedPeriodId || activePeriod) && <p className="text-xs [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-1.5">
               <button onClick={exportExcel} aria-label="Xuất Excel"
-                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
                 <Download size={16} />Excel
               </button>
               <button onClick={exportPDF} aria-label="Xuất PDF"
-                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
+                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200">
                 <FileDown size={16} />PDF
               </button>
               <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
@@ -843,7 +843,7 @@ export function Expenses() {
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm khoản chi..." className="input-base pl-8 w-full text-[13px] py-1.5" />
+              placeholder="Tìm khoản chi..." className="input-base pl-8 w-full text-sm py-1.5" />
           </div>
 
           {/* Status tabs */}
@@ -869,8 +869,8 @@ export function Expenses() {
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
             <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] px-3 py-2.5 shadow-sm">
-              <p className="text-[10px] [color:var(--pf-color-muted)] truncate">{k.label}</p>
-              <p className={`text-[13px] font-[700] tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
+              <p className="text-xs [color:var(--pf-color-muted)] truncate">{k.label}</p>
+              <p className={`text-sm font-[700] tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
             </div>
           ))}
         </div>
@@ -886,12 +886,12 @@ export function Expenses() {
             <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
-                  <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
+                  <div className="text-sm font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
-                  <span className={`text-[10px] font-[600] px-1.5 py-0.5 rounded-full ${
+                  <span className={`text-xs font-[600] px-1.5 py-0.5 rounded-full ${
                     e.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
                     e.status === 'pending' ? 'bg-amber-50 text-amber-600' :
                     'bg-red-50 text-red-500'
@@ -904,17 +904,17 @@ export function Expenses() {
                 {!isMember && e.status === 'pending' && (
                   <>
                     <button onClick={() => handleApprove(e.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-emerald-50 text-emerald-600 active:bg-emerald-100">
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] bg-emerald-50 text-emerald-600 active:bg-emerald-100">
                       <CheckCircle size={12} />Duyệt
                     </button>
                     <button onClick={() => handleReject(e.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] bg-red-50 text-red-500 active:bg-red-100">
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] bg-red-50 text-red-500 active:bg-red-100">
                       <X size={12} />Từ chối
                     </button>
                   </>
                 )}
                 <button onClick={() => setDetailExp(e)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-[600] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)] ml-auto">
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)] ml-auto">
                   <Eye size={12} />Chi tiết
                 </button>
                 {!isMember && (
@@ -1014,7 +1014,7 @@ export function Expenses() {
         <div className="flex items-center gap-2 min-w-0">
           {!isMember && <RowCheckbox label={`Chọn khoản chi ${exp.code}`}
             checked={bulk.selectedIds.has(exp.id)} onChange={() => bulk.toggleOne(exp.id)} />}
-          <span className="font-mono text-[11px] [color:var(--pf-primary)]">{exp.code}</span>
+          <span className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</span>
         </div>
         <Badge variant={statusCfg[exp.status].variant} dot>{statusCfg[exp.status].label}</Badge>
       </div>
@@ -1093,7 +1093,7 @@ export function Expenses() {
                   }`}>
                   {t.label}
                   {t.key === 'pending' && pendingCount > 0 && (
-                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold px-1">
+                    <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xs font-bold px-1">
                       {pendingCount}
                     </span>
                   )}

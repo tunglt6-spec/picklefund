@@ -169,7 +169,7 @@ export function Pricing() {
             }}
           >
             {t.badge && (
-              <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-bold text-white" style={{ background: 'var(--pf-primary)' }}>
+              <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold text-white" style={{ background: 'var(--pf-primary)' }}>
                 <Star size={12} /> {t.badge}
               </span>
             )}
@@ -206,7 +206,7 @@ export function Pricing() {
               ))}
             </ul>
             {t.note && (
-              <p className="mt-4 rounded-xl px-3 py-2 text-[11px] font-medium" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
+              <p className="mt-4 rounded-xl px-3 py-2 text-xs font-medium" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                 ⭐ {t.note}
               </p>
             )}

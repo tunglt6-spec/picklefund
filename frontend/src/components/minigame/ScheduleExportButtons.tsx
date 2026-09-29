@@ -14,7 +14,7 @@ export function ScheduleExportButtons({ onPng, onPdf, ariaScope, size = 'md' }: 
   if (!onPng && !onPdf) return null
   // Mobile (sm): nhãn ngắn để không vỡ header sticky. Desktop (md): nhãn đầy đủ "Xuất ảnh/Xuất PDF".
   const compact = size === 'sm'
-  const pad = compact ? 'px-2.5 py-1.5 text-[11px]' : 'px-3 py-2 text-xs'
+  const pad = compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-xs'
   const icon = compact ? 13 : 15
   return (
     <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">

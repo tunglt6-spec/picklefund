@@ -126,9 +126,9 @@ function DashboardMock() {
       {/* Topbar mock */}
       <div className="flex items-center justify-between border-b px-3 py-2 [border-color:var(--pf-border)]">
         <div className="flex items-center gap-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-white" style={{ background: 'var(--pf-primary)' }}>P</span>
-          <span className="text-[11px] font-bold">PickleFund</span>
-          <span className="ml-1 rounded px-1.5 py-0.5 text-[9px] font-semibold [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">CLB B32</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded text-xs font-bold text-white" style={{ background: 'var(--pf-primary)' }}>P</span>
+          <span className="text-xs font-bold">PickleFund</span>
+          <span className="ml-1 rounded px-1.5 py-0.5 text-xs font-semibold [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">CLB B32</span>
         </div>
         <div className="flex items-center gap-1.5 [color:var(--pf-color-muted)]">
           <Search size={12} /><Bell size={12} /><Maximize2 size={12} />
@@ -138,12 +138,12 @@ function DashboardMock() {
         {/* Sidebar mini */}
         <div className="hidden w-24 shrink-0 flex-col gap-0.5 border-r p-2 sm:flex [border-color:var(--pf-border)]">
           {['Tổng quan', 'Quỹ & TC', 'Thành viên', 'Điểm danh', 'Hoạt động', 'Giải đấu', 'AI Center'].map((s, i) => (
-            <span key={s} className={`rounded px-1.5 py-1 text-[9px] font-medium ${i === 0 ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}>{s}</span>
+            <span key={s} className={`rounded px-1.5 py-1 text-xs font-medium ${i === 0 ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}>{s}</span>
           ))}
         </div>
         {/* Main */}
         <div className="min-w-0 flex-1 p-3">
-          <p className="text-[13px] font-bold">AIDO – AI Digital Office</p>
+          <p className="text-sm font-bold">AIDO – AI Digital Office</p>
           <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-4">
             {[
               { l: 'Tổng quỹ', v: '125.750.000đ', d: '+12.5%', tone: 'var(--pf-primary)' },
@@ -152,37 +152,37 @@ function DashboardMock() {
               { l: 'Thành viên', v: '128', d: '', tone: 'var(--pf-color-info)' },
             ].map((k) => (
               <div key={k.l} className="rounded-lg border p-2 [border-color:var(--pf-border)]">
-                <p className="text-[8px] [color:var(--pf-color-muted)]">{k.l}</p>
+                <p className="text-xs [color:var(--pf-color-muted)]">{k.l}</p>
                 <p className="text-xs font-extrabold leading-tight tabular-nums" style={{ color: k.tone }}>{k.v}</p>
-                {k.d && <p className="text-[8px] font-semibold [color:var(--pf-green)]">{k.d} vs tuần trước</p>}
+                {k.d && <p className="text-xs font-semibold [color:var(--pf-green)]">{k.d} vs tuần trước</p>}
               </div>
             ))}
           </div>
           <div className="mt-2 grid grid-cols-1 gap-1.5 lg:grid-cols-3">
             <div className="rounded-lg border p-2 lg:col-span-2 [border-color:var(--pf-border)]">
-              <p className="mb-1 text-[9px] font-semibold [color:var(--pf-color-muted)]">Hoạt động 7 ngày qua</p>
+              <p className="mb-1 text-xs font-semibold [color:var(--pf-color-muted)]">Hoạt động 7 ngày qua</p>
               <div className="flex h-14 items-end gap-1">
                 {bars.map((h, i) => (
                   <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: 'var(--pf-primary)', opacity: 0.3 + (i / bars.length) * 0.6 }} />
                 ))}
               </div>
-              <div className="mt-1 flex justify-between text-[7px] [color:var(--pf-color-muted)]">
+              <div className="mt-1 flex justify-between text-xs [color:var(--pf-color-muted)]">
                 {days.map((d) => <span key={d}>{d}</span>)}
               </div>
             </div>
             <div className="rounded-lg border p-2 [border-color:var(--pf-border)]">
-              <p className="mb-1 text-[9px] font-semibold [color:var(--pf-color-muted)]">Cảnh báo hôm nay</p>
+              <p className="mb-1 text-xs font-semibold [color:var(--pf-color-muted)]">Cảnh báo hôm nay</p>
               {['Quỹ chính đang âm 2.350.000đ', '3 thành viên chưa đóng quỹ', 'Chuyên cần thấp: 1 buổi'].map((a) => (
-                <p key={a} className="mb-1 flex items-start gap-1 text-[8px] [color:var(--pf-text)]"><span className="mt-0.5 h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--pf-color-warning)' }} />{a}</p>
+                <p key={a} className="mb-1 flex items-start gap-1 text-xs [color:var(--pf-text)]"><span className="mt-0.5 h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--pf-color-warning)' }} />{a}</p>
               ))}
             </div>
           </div>
           {/* AI agents row */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-lg border p-2 [border-color:var(--pf-border)]">
-            <span className="text-[8px] font-semibold [color:var(--pf-color-muted)]">AI Agents đang hoạt động:</span>
+            <span className="text-xs font-semibold [color:var(--pf-color-muted)]">AI Agents đang hoạt động:</span>
             {AGENTS.map((a) => (
-              <span key={a.name} className="inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-[8px] font-semibold" style={{ background: a.soft, color: a.color }}>
-                <AgentAvatar agent={a} className="h-3.5 w-3.5 shrink-0 rounded-full text-[7px]" imgClass="h-3.5 w-3.5 rounded-full object-cover object-center" />{a.name === 'Notification AI' ? 'Noti AI' : a.name}
+              <span key={a.name} className="inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-xs font-semibold" style={{ background: a.soft, color: a.color }}>
+                <AgentAvatar agent={a} className="h-3.5 w-3.5 shrink-0 rounded-full text-xs" imgClass="h-3.5 w-3.5 rounded-full object-cover object-center" />{a.name === 'Notification AI' ? 'Noti AI' : a.name}
               </span>
             ))}
           </div>
@@ -198,19 +198,19 @@ function PhoneMock() {
     <div className="w-[150px] overflow-hidden rounded-[22px] border-4 [background:var(--pf-surface)] [border-color:var(--pf-text)]" style={{ boxShadow: '0 24px 48px -12px rgb(15 23 42 / 0.35), 0 8px 20px -8px rgb(15 23 42 / 0.25)' }}>
       <div className="relative [background:var(--pf-primary)] px-3 pb-4 pt-3 text-white">
         <div className="absolute left-1/2 top-1 h-1 w-8 -translate-x-1/2 rounded-full bg-white/40" />
-        <p className="mt-1 text-[8px] opacity-80">Tổng quan hôm nay</p>
-        <p className="text-[15px] font-extrabold">125.750.000đ</p>
-        <p className="text-[7px] opacity-80">+12.5% so với tuần trước</p>
+        <p className="mt-1 text-xs opacity-80">Tổng quan hôm nay</p>
+        <p className="text-base font-extrabold">125.750.000đ</p>
+        <p className="text-xs opacity-80">+12.5% so với tuần trước</p>
       </div>
       <div className="space-y-2 p-2.5">
         <div className="rounded-lg border p-2 [border-color:var(--pf-border)]">
-          <p className="text-[8px] font-semibold">Lịch hôm nay</p>
-          <p className="mt-0.5 text-[7px] [color:var(--pf-color-muted)]">18:00–20:00 · Sân 3, 4</p>
-          <p className="text-[7px] [color:var(--pf-color-muted)]">Minigame: Đánh đôi ngẫu nhiên</p>
+          <p className="text-xs font-semibold">Lịch hôm nay</p>
+          <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">18:00–20:00 · Sân 3, 4</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Minigame: Đánh đôi ngẫu nhiên</p>
         </div>
         <div className="rounded-lg border p-2 [border-color:var(--pf-color-warning)]">
-          <p className="flex items-center gap-1 text-[8px] font-semibold" style={{ color: 'var(--pf-color-warning)' }}><AlertCircle size={9} /> Cảnh báo</p>
-          <p className="mt-0.5 text-[7px] [color:var(--pf-color-muted)]">Quỹ chính đang âm 2.350.000đ</p>
+          <p className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--pf-color-warning)' }}><AlertCircle size={9} /> Cảnh báo</p>
+          <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Quỹ chính đang âm 2.350.000đ</p>
         </div>
       </div>
     </div>
@@ -229,7 +229,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         aria-controls={id}
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:[background:var(--pf-surface-muted)]"
       >
-        <span className="text-[15px] font-semibold [color:var(--pf-text)]">{q}</span>
+        <span className="text-base font-semibold [color:var(--pf-text)]">{q}</span>
         <ChevronDown size={18} className="shrink-0 transition-transform duration-300 [color:var(--pf-color-muted)]" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       <div
@@ -247,7 +247,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 function SectionHead({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div data-reveal className="pf-reveal mx-auto max-w-2xl text-center">
-      <h2 className="text-2xl font-bold tracking-tight sm:text-[28px]">{title}</h2>
+      <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
       {subtitle && <p className="mx-auto mt-2 text-sm [color:var(--pf-color-muted)] sm:text-base">{subtitle}</p>}
     </div>
   )
@@ -289,7 +289,7 @@ export function Landing() {
             <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
               <ShieldCheck size={13} /> Nền tảng vận hành CLB thể thao có AI
             </span>
-            <h1 className="mt-4 text-[32px] font-extrabold leading-[1.1] tracking-tight sm:text-[42px] lg:text-[52px]">
+            <h1 className="mt-4 text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-5xl">
               Quản lý CLB thể thao<br />
               <span style={{ color: 'var(--pf-primary)' }}>toàn diện – thông minh – hiệu quả</span>
             </h1>
@@ -359,21 +359,21 @@ export function Landing() {
             {FEATURES.map((f) => (
               <div key={f.title} className="pf-elev flex h-full flex-col rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><f.icon size={18} /></div>
-                <h3 className="mt-3 text-[15px] font-semibold">{f.title}</h3>
+                <h3 className="mt-3 text-base font-semibold">{f.title}</h3>
                 <p className="mt-1 flex-1 text-sm [color:var(--pf-color-muted)]">{f.desc}</p>
                 {f.stats && (
                   <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${f.stats.length}, minmax(0,1fr))` }}>
                     {f.stats.map((st) => (
                       <div key={st.label} className="rounded-lg [background:var(--pf-surface-muted)] p-2">
-                        <p className="text-[13px] font-extrabold tabular-nums leading-tight" style={{ color: st.tone ?? 'var(--pf-text)' }}>{st.value}</p>
-                        <p className="text-[10px] [color:var(--pf-color-muted)]">{st.label}</p>
+                        <p className="text-sm font-extrabold tabular-nums leading-tight" style={{ color: st.tone ?? 'var(--pf-text)' }}>{st.value}</p>
+                        <p className="text-xs [color:var(--pf-color-muted)]">{st.label}</p>
                       </div>
                     ))}
                   </div>
                 )}
                 {f.progress && (
                   <div className="mt-3">
-                    <div className="mb-1 flex justify-between text-[11px] [color:var(--pf-color-muted)]"><span>{f.progress.label}</span><span className="font-semibold" style={{ color: 'var(--pf-green)' }}>{f.progress.percent}%</span></div>
+                    <div className="mb-1 flex justify-between text-xs [color:var(--pf-color-muted)]"><span>{f.progress.label}</span><span className="font-semibold" style={{ color: 'var(--pf-green)' }}>{f.progress.percent}%</span></div>
                     <div className="h-1.5 w-full rounded-full [background:var(--pf-surface-muted)]"><div className="h-1.5 rounded-full" style={{ width: `${f.progress.percent}%`, background: 'var(--pf-primary)' }} /></div>
                   </div>
                 )}
@@ -382,7 +382,7 @@ export function Landing() {
                     {AGENTS.map((a) => (
                       <div key={a.name} className="flex min-w-0 flex-col items-center gap-1" title={`${a.name} · ${a.shortLabel}`}>
                         <AgentAvatar agent={a} className="h-10 w-10 rounded-full border-2 border-white text-sm sm:h-11 sm:w-11" imgClass="h-10 w-10 rounded-full object-cover object-center sm:h-11 sm:w-11" />
-                        <span className="max-w-full truncate text-[9px] font-semibold [color:var(--pf-color-muted)]">{a.name === 'Notification AI' ? 'Noti AI' : a.name}</span>
+                        <span className="max-w-full truncate text-xs font-semibold [color:var(--pf-color-muted)]">{a.name === 'Notification AI' ? 'Noti AI' : a.name}</span>
                       </div>
                     ))}
                   </div>
@@ -398,7 +398,7 @@ export function Landing() {
             <div className="grid lg:grid-cols-[280px_1fr]">
               {/* Panel tím trái */}
               <div className="flex flex-col justify-center gap-4 p-8 text-white" style={{ background: 'linear-gradient(160deg, var(--pf-primary), var(--pf-secondary))' }}>
-                <h2 className="text-2xl font-extrabold leading-tight sm:text-[28px]">Đội ngũ AI đồng hành</h2>
+                <h2 className="text-2xl font-extrabold leading-tight sm:text-3xl">Đội ngũ AI đồng hành</h2>
                 <p className="text-sm leading-relaxed text-white/85">AI hỗ trợ vận hành – luôn bên bạn để mỗi việc đi đúng hướng.</p>
                 <button onClick={() => navigate('/login')} className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]" style={{ color: 'var(--pf-primary)' }}>
                   Tìm hiểu AIDO <ArrowRight size={15} />
@@ -414,7 +414,7 @@ export function Landing() {
                     </div>
                     <div className="flex flex-1 flex-col p-3.5 text-center">
                       <p className="text-[13.5px] font-bold leading-tight">{a.name}</p>
-                      <p className="mt-0.5 text-[11px] font-semibold leading-snug" style={{ color: a.color }}>{a.role}</p>
+                      <p className="mt-0.5 text-xs font-semibold leading-snug" style={{ color: a.color }}>{a.role}</p>
                       <p className="mt-1.5 text-[10.5px] leading-snug [color:var(--pf-color-muted)]">{a.desc}</p>
                     </div>
                   </div>
@@ -432,7 +432,7 @@ export function Landing() {
               <div key={b.title} className="pf-elev flex items-start gap-3.5 rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><b.icon size={20} /></span>
                 <div>
-                  <h3 className="text-[15px] font-semibold">{b.title}</h3>
+                  <h3 className="text-base font-semibold">{b.title}</h3>
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{b.desc}</p>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export function Landing() {
                   <span className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: t.color }}>{t.initials}</span>
                   <span>
                     <span className="block text-sm font-semibold [color:var(--pf-text)]">{t.name}</span>
-                    <span className="block text-[11px] [color:var(--pf-color-muted)]">{t.role}</span>
+                    <span className="block text-xs [color:var(--pf-color-muted)]">{t.role}</span>
                   </span>
                 </figcaption>
               </figure>
@@ -471,10 +471,10 @@ export function Landing() {
                     <ShieldCheck size={16} />
                   </span>
                 ))}
-                <span className="-ml-2.5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-[11px] font-extrabold text-white" style={{ background: 'var(--pf-primary)' }}>+30</span>
+                <span className="-ml-2.5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-xs font-extrabold text-white" style={{ background: 'var(--pf-primary)' }}>+30</span>
               </div>
               <p className="text-sm font-bold [color:var(--pf-text)]">Và hơn 30+ CLB khác</p>
-              <p className="text-[11px] [color:var(--pf-color-muted)]">đang tin dùng PickleFund mỗi ngày</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">đang tin dùng PickleFund mỗi ngày</p>
             </div>
           </div>
         </section>
@@ -485,7 +485,7 @@ export function Landing() {
           <div data-reveal className="pf-reveal mx-auto mt-8 grid max-w-5xl grid-cols-1 gap-5 md:grid-cols-3">
             {PRICING_TIERS.map((t) => (
               <div key={t.name} className={`pf-price relative flex flex-col rounded-3xl border p-6 [background:var(--pf-surface)] ${t.featured ? 'pf-price-feat [border-color:var(--pf-primary)]' : '[border-color:var(--pf-border)]'}`}>
-                {t.featured && <span className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1.5 text-[11px] font-bold text-white shadow-sm" style={{ background: 'var(--pf-primary)' }}><Star size={12} /> Phổ biến</span>}
+                {t.featured && <span className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold text-white shadow-sm" style={{ background: 'var(--pf-primary)' }}><Star size={12} /> Phổ biến</span>}
                 <h3 className="text-lg font-bold">{t.name}</h3>
                 <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{t.desc}</p>
                 <div className="mt-4 flex items-end gap-1">

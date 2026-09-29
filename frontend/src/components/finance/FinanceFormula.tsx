@@ -21,7 +21,7 @@ export function FinanceFormula({ lines, className = '' }: FinanceFormulaProps) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               {line.sign && (
-                <span className="text-[11px] font-bold [color:var(--pf-color-muted)] w-3 shrink-0">{line.sign}</span>
+                <span className="text-xs font-bold [color:var(--pf-color-muted)] w-3 shrink-0">{line.sign}</span>
               )}
               <span className={`text-xs ${line.highlight ? 'font-bold [color:var(--pf-text)]' : '[color:var(--pf-color-muted)]'}`}>
                 {line.label}

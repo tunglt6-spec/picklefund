@@ -168,15 +168,15 @@ export function AiApprovalInbox() {
                       <div className="flex items-center gap-1.5 min-w-0">
                         <Bot size={13} className="[color:var(--pf-primary)] shrink-0" />
                         <span className="text-xs font-semibold [color:var(--pf-color-muted)]">{a.requestedByAi}</span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                           {a.riskLevel}
                         </span>
                       </div>
-                      <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
+                      <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
                     </div>
                     <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
                     {a.summary && <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 mt-0.5">{a.summary}</p>}
-                    <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] mt-1">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         onClick={() => void runMutation(() => approveAiAction(a.id), 'Đã duyệt')}
@@ -293,12 +293,12 @@ export function AiApprovalInbox() {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <Bot size={13} className="text-emerald-500 shrink-0" />
                       <span className="text-xs font-semibold [color:var(--pf-color-muted)]">{a.requestedByAi}</span>
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>{a.riskLevel}</span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>{a.riskLevel}</span>
                     </div>
-                    <span className="text-[10px] [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
+                    <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
                   </div>
                   <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
-                  <p className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       onClick={() => void runMutation(() => executeAiAction(a.id), 'Đã thực thi')}
@@ -369,7 +369,7 @@ export function AiApprovalInbox() {
 
                 {/* Payload summary — chỉ liệt kê TÊN trường, KHÔNG lộ giá trị nhạy cảm */}
                 <div>
-                  <p className="text-[11px] font-semibold [color:var(--pf-color-muted)] uppercase mb-1">Tóm tắt payload</p>
+                  <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase mb-1">Tóm tắt payload</p>
                   <p className="text-xs [color:var(--pf-color-muted)]">
                     {payloadKeys.length
                       ? `${payloadKeys.length} trường (~${payloadSize}B): ${payloadKeys.join(', ')}`
@@ -379,7 +379,7 @@ export function AiApprovalInbox() {
 
                 {/* Execution history / audit trail */}
                 <div>
-                  <p className="text-[11px] font-semibold [color:var(--pf-color-muted)] uppercase mb-2">Lịch sử sự kiện</p>
+                  <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase mb-2">Lịch sử sự kiện</p>
                   <div className="space-y-2">
                     {detail.events.length === 0 ? (
                       <p className="text-xs [color:var(--pf-color-muted)]">Chưa có sự kiện.</p>
@@ -389,8 +389,8 @@ export function AiApprovalInbox() {
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />
                           <div className="min-w-0">
                             <p className="text-xs font-medium [color:var(--pf-text)]">{ev.type}</p>
-                            {ev.message && <p className="text-[11px] [color:var(--pf-color-muted)]">{ev.message}</p>}
-                            <p className="text-[10px] [color:var(--pf-color-muted)]">{fmtTime(ev.createdAt)}</p>
+                            {ev.message && <p className="text-xs [color:var(--pf-color-muted)]">{ev.message}</p>}
+                            <p className="text-xs [color:var(--pf-color-muted)]">{fmtTime(ev.createdAt)}</p>
                           </div>
                         </div>
                       ))
@@ -456,7 +456,7 @@ export function AiApprovalInbox() {
                 )}
 
                 {policies.length > 0 && (
-                  <p className="text-[10px] [color:var(--pf-color-muted)]">
+                  <p className="text-xs [color:var(--pf-color-muted)]">
                     Duyệt KHÔNG tự thực thi. Hành động APPROVED được thực thi thủ công qua Mít Đặc (bridge no-op hiện tại).
                   </p>
                 )}

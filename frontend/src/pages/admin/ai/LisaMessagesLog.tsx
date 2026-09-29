@@ -77,7 +77,7 @@ export function LisaMessagesLog() {
                     <User size={13} className="[color:var(--pf-color-muted)]" />
                     {m.memberName ?? 'Thành viên'}
                   </span>
-                  <span className="text-[11px] [color:var(--pf-color-muted)]">{fmt(m.createdAt)}</span>
+                  <span className="text-xs [color:var(--pf-color-muted)]">{fmt(m.createdAt)}</span>
                 </div>
                 <p className="whitespace-pre-line rounded-xl px-3 py-2 text-sm [color:var(--pf-text)] [background:var(--pf-primary-soft)]">
                   {m.question}

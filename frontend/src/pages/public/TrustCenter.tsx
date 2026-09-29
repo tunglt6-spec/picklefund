@@ -33,8 +33,8 @@ export function TrustCenter() {
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                 <p.icon size={20} />
               </div>
-              <p className="text-[15px] font-bold">{p.title}</p>
-              <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{p.desc}</p>
+              <p className="text-base font-bold">{p.title}</p>
+              <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">{p.desc}</p>
             </div>
           ))}
         </div>
@@ -55,7 +55,7 @@ export function TrustCenter() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
+          <p className="mt-4 text-sm leading-relaxed [color:var(--pf-color-muted)]">
             Cần thông tin bảo mật cụ thể cho quyết định triển khai? <Link to="/contact" className="font-semibold [color:var(--pf-primary)]">Liên hệ đội ngũ</Link> — chúng tôi trả lời trung thực theo đúng hiện trạng.
           </p>
         </div>

@@ -91,7 +91,7 @@ export function RolesPermissions() {
               return (
                 <tr key={u.id}>
                   <td className="font-mono text-xs font-semibold [color:var(--pf-text)]">
-                    {u.username}{isMe && <span className="ml-1 text-[10px] [color:var(--pf-color-muted)]">(bạn)</span>}
+                    {u.username}{isMe && <span className="ml-1 text-xs [color:var(--pf-color-muted)]">(bạn)</span>}
                   </td>
                   <td className="[color:var(--pf-text)]">{u.fullName}</td>
                   <td className="text-xs [color:var(--pf-color-muted)]">{u.email}</td>
