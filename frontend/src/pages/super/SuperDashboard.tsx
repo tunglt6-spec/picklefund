@@ -320,7 +320,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <div className="mt-4 border-t pt-4 [border-color:var(--pf-border)]">
             {reviewText(review, 'overview')
               ? <MaikaNote review={review} k="overview" />
-              : <p className="text-[12px] leading-relaxed [color:var(--pf-color-muted)]">Bấm <b>"Maika đánh giá"</b> để Maika viết nhận định điều hành chi tiết (theo giọng chuyên gia từng lĩnh vực) cho cả 9 mục — hiển thị đầy đủ tại đây và dưới mỗi khối.</p>}
+              : <p className="text-xs leading-relaxed [color:var(--pf-color-muted)]">Bấm <b>"Maika đánh giá"</b> để Maika viết nhận định điều hành chi tiết (theo giọng chuyên gia từng lĩnh vực) cho cả 9 mục — hiển thị đầy đủ tại đây và dưới mỗi khối.</p>}
           </div>
         </ChartCard>
       </div>
@@ -454,7 +454,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                     <p className="text-[13px] font-medium [color:var(--pf-text)]">{a.title}</p>
                     <p className="text-[11px] [color:var(--pf-color-muted)]">{a.source}{a.clubName ? ` · ${a.clubName}` : ''} · {new Date(a.time).toLocaleString('vi-VN')}</p>
                   </div>
-                  {a.clubId && <Link to={`/super/clubs/${a.clubId}`} className="shrink-0 text-[12px] font-semibold [color:var(--pf-primary)]">Chi tiết</Link>}
+                  {a.clubId && <Link to={`/super/clubs/${a.clubId}`} className="shrink-0 text-xs font-semibold [color:var(--pf-primary)]">Chi tiết</Link>}
                 </li>
               ))}
             </ul>
@@ -492,7 +492,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             </ul>
           ) : <EmptyState icon={<ClipboardList size={22} />} title="Chưa có nhật ký" />}
           <MaikaNote review={review} k="syslog" />
-          <div className="mt-3"><Link to="/super/audit-logs" className="text-[12px] font-semibold [color:var(--pf-primary)]">Xem toàn bộ nhật ký →</Link></div>
+          <div className="mt-3"><Link to="/super/audit-logs" className="text-xs font-semibold [color:var(--pf-primary)]">Xem toàn bộ nhật ký →</Link></div>
         </ChartCard>
       </Section>
 
@@ -518,7 +518,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className="text-[14px] font-extrabold [color:var(--pf-color-warning)]">{vnd(e.amount)}</span>
+                    <span className="text-sm font-extrabold [color:var(--pf-color-warning)]">{vnd(e.amount)}</span>
                     {e.clubId && <Link to={`/super/clubs/${e.clubId}`} className="mt-1 block text-[11.5px] font-semibold [color:var(--pf-primary)]">Vào CLB →</Link>}
                   </div>
                 </div>
@@ -541,7 +541,7 @@ function SummaryBlock({ summary }: { summary: { status: string[]; risks: string[
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: tone === 'danger' ? 'var(--pf-color-danger)' : tone === 'success' ? 'var(--pf-color-success)' : 'var(--pf-primary)' }} />
             {t}
           </li>
-        )) : <li className="text-[12px] [color:var(--pf-color-muted)]">—</li>}
+        )) : <li className="text-xs [color:var(--pf-color-muted)]">—</li>}
       </ul>
     </div>
   )
@@ -595,7 +595,7 @@ function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: n
             </li>
           ))}
         </ol>
-      ) : <p className="text-[12px] [color:var(--pf-color-muted)]">—</p>}
+      ) : <p className="text-xs [color:var(--pf-color-muted)]">—</p>}
     </div>
   )
 }

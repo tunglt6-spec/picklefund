@@ -19,7 +19,7 @@ function QBlock({ n, q, children }: { n: number; q: string; children: ReactNode 
     <div className="rounded-xl border border-[color:var(--pf-border)] p-3">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white [background:var(--pf-primary)]">{n}</span>
-        <span className="text-[12px] font-semibold [color:var(--pf-text)]">{q}</span>
+        <span className="text-xs font-semibold [color:var(--pf-text)]">{q}</span>
       </div>
       <div className="pl-7 text-[13px] [color:var(--pf-text)]">{children}</div>
     </div>
@@ -52,13 +52,13 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
       ) : (
         <div className="space-y-3">
           {/* Tóm tắt run */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl [background:var(--pf-color-muted-soft)] px-3 py-2 text-[12px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl [background:var(--pf-color-muted-soft)] px-3 py-2 text-xs">
             <Chip tone={statusTone as any}>{r.status}</Chip>
             <span className="[color:var(--pf-color-muted)]">Thời lượng: <strong className="[color:var(--pf-text)]">{fmtMs(r.durationMs)}</strong></span>
             <span className="[color:var(--pf-color-muted)]">Lịch: <strong className="[color:var(--pf-text)]">{r.scheduleType ?? '—'}</strong></span>
             {r.matched != null && <span className="[color:var(--pf-color-muted)]">Khớp điều kiện: <strong className="[color:var(--pf-text)]">{r.matched ? 'Có' : 'Không'}</strong></span>}
           </div>
-          {r.error && <p className="rounded-lg [background:var(--pf-color-danger-soft)] px-3 py-2 text-[12px] [color:var(--pf-color-danger)]">{r.error}</p>}
+          {r.error && <p className="rounded-lg [background:var(--pf-color-danger-soft)] px-3 py-2 text-xs [color:var(--pf-color-danger)]">{r.error}</p>}
 
           <QBlock n={1} q="Rule nào chạy?">
             <strong>{trace.q1_rule.ruleName ?? '(rule đã xoá)'}</strong> · <span className="[color:var(--pf-color-muted)]">{triggerLabel(trace.q1_rule.triggerType)}</span>
@@ -73,7 +73,7 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
             {trace.q3_actions.items.length > 0 && (
               <div className="space-y-1">
                 {trace.q3_actions.items.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-[12px]">
+                  <div key={a.id} className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-xs">
                     <span className="min-w-0 truncate">{a.title || a.actionType}</span>
                     <span className="flex shrink-0 items-center gap-1">
                       <Chip tone="muted">{a.riskLevel}</Chip>

@@ -808,7 +808,7 @@ export function Expenses() {
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Chi Phí</h2>
+              <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>
               {(selectedPeriodId || activePeriod) && <p className="text-[11px] [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-1.5">
@@ -850,7 +850,7 @@ export function Expenses() {
           <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
             {statusTabs.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-[600] transition-all ${
+                className={`flex-shrink-0 px-3 py-1 rounded-lg text-xs font-[600] transition-all ${
                   tab === t.key ? 'text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
                 }`}
                 style={tab === t.key ? { background: 'var(--pf-primary)' } : {}}>
@@ -890,7 +890,7 @@ export function Expenses() {
                   <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-[14px] font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
+                  <div className="text-sm font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
                   <span className={`text-[10px] font-[600] px-1.5 py-0.5 rounded-full ${
                     e.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
                     e.status === 'pending' ? 'bg-amber-50 text-amber-600' :

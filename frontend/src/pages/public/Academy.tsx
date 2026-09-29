@@ -30,7 +30,7 @@ export function Academy() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                 <r.icon size={20} />
               </div>
-              <p className="mt-4 text-[16px] font-extrabold [color:var(--pf-text)]">{r.title}</p>
+              <p className="mt-4 text-base font-extrabold [color:var(--pf-text)]">{r.title}</p>
               <p className="mt-1.5 flex-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{r.desc}</p>
               <Link to={r.to} className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold [color:var(--pf-primary)]">
                 {r.cta} <ArrowRight size={14} />

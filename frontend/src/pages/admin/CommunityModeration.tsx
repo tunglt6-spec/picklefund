@@ -199,10 +199,10 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">
                       Nội dung bị báo cáo
                     </p>
-                    <p className="whitespace-pre-wrap break-words text-[14px] font-medium [color:var(--pf-text)]">
+                    <p className="whitespace-pre-wrap break-words text-sm font-medium [color:var(--pf-text)]">
                       {r.preview || '(Không có nội dung xem trước)'}
                     </p>
-                    <p className="mt-2 text-[12px] [color:var(--pf-color-muted)]">
+                    <p className="mt-2 text-xs [color:var(--pf-color-muted)]">
                       Tác giả: <span className="[color:var(--pf-text)]">{r.contentAuthor}</span>
                     </p>
                   </div>

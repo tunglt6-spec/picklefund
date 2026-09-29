@@ -161,7 +161,7 @@ export function StandingsPage() {
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={cn(
-                'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition-colors',
+                'shrink-0 text-xs font-medium px-3 py-1.5 rounded-[8px] transition-colors',
                 activeTab === t.id ? 'text-white shadow-sm' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
               )}
               style={activeTab === t.id ? { background: 'var(--pf-primary)' } : {}}>
@@ -209,11 +209,11 @@ export function StandingsPage() {
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold [color:var(--pf-text)] text-[14px] flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
+                  <p className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
                   <p className="text-[11px] [color:var(--pf-color-muted)]">{s.groupName}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[20px] font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
+                  <p className="text-xl font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
                   <p className="text-[10px] [color:var(--pf-color-muted)]">điểm</p>
                 </div>
               </div>

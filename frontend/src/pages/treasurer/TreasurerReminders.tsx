@@ -153,13 +153,13 @@ export function TreasurerReminders() {
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Nhắc Nhở Đóng Quỹ</div>
-            {activePeriod && <div className="text-[12px] [color:var(--pf-color-muted)]">{activePeriod.name} · {formatVND(amount)}/người</div>}
+            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {formatVND(amount)}/người</div>}
           </div>
           {unpaidMembers.length > 0 && (
             <button
               onClick={sendAll}
               disabled={sendingAll}
-              className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50"
+              className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50"
             >
               <Send size={13} />{sendingAll ? 'Đang gửi…' : 'Nhắc tất cả'}
             </button>
@@ -174,7 +174,7 @@ export function TreasurerReminders() {
               { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[16px] font-[800] ${k.color}`}>{k.value}</div>
+                <div className={`text-base font-[800] ${k.color}`}>{k.value}</div>
                 <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
               </div>
             ))}
@@ -186,7 +186,7 @@ export function TreasurerReminders() {
               <div className="flex items-center gap-2 px-1">
                 <Bell size={13} className="text-red-500" />
                 <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chưa đóng quỹ</span>
-                <span className="ml-auto text-[12px] font-[600] text-red-500">{unpaidMembers.length} người</span>
+                <span className="ml-auto text-xs font-[600] text-red-500">{unpaidMembers.length} người</span>
               </div>
               {unpaidMembers.map(m => {
                 const sent = sentIds.has(m.id)
@@ -194,10 +194,10 @@ export function TreasurerReminders() {
                   <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="text-[14px] font-[700] [color:var(--pf-text)]">{m.fullName}</div>
-                        <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{m.phone ?? m.email ?? '—'}</div>
+                        <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
+                        <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{m.phone ?? m.email ?? '—'}</div>
                       </div>
-                      <div className="text-[14px] font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
+                      <div className="text-sm font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
                     </div>
                     {!sent ? (
                       <div className="flex gap-2 mt-3">
@@ -205,7 +205,7 @@ export function TreasurerReminders() {
                           <button
                             onClick={() => sendReminder(m)}
                             disabled={loadingIds.has(m.id)}
-                            className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-[12px] font-[600] bg-blue-50 text-blue-600 active:bg-blue-100 disabled:opacity-50"
+                            className="flex-1 h-8 flex items-center justify-center gap-1 rounded-[10px] text-xs font-[600] bg-blue-50 text-blue-600 active:bg-blue-100 disabled:opacity-50"
                           >
                             <Send size={12} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>
@@ -216,7 +216,7 @@ export function TreasurerReminders() {
                         )}
                       </div>
                     ) : (
-                      <div className="mt-3 flex items-center gap-1 text-[12px] text-emerald-600 font-[600]">
+                      <div className="mt-3 flex items-center gap-1 text-xs text-emerald-600 font-[600]">
                         <CheckCircle size={13} />Đã gửi nhắc nhở
                       </div>
                     )}
@@ -232,17 +232,17 @@ export function TreasurerReminders() {
               <div className="flex items-center gap-2 px-1">
                 <Clock size={13} className="text-amber-500" />
                 <span className="text-[13px] font-[700] [color:var(--pf-text)]">Chờ xác nhận</span>
-                <span className="ml-auto text-[12px] font-[600] text-amber-600">{pendingMembers.length} người</span>
+                <span className="ml-auto text-xs font-[600] text-amber-600">{pendingMembers.length} người</span>
               </div>
               {pendingMembers.map(m => {
                 const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
                 return (
                   <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-amber-100 p-4 shadow-sm flex items-center justify-between">
                     <div>
-                      <div className="text-[14px] font-[700] [color:var(--pf-text)]">{m.fullName}</div>
-                      {contrib?.notes && <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{contrib.notes}</div>}
+                      <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
+                      {contrib?.notes && <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{contrib.notes}</div>}
                     </div>
-                    <div className="text-[14px] font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? amount)}</div>
+                    <div className="text-sm font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? amount)}</div>
                   </div>
                 )
               })}
@@ -252,7 +252,7 @@ export function TreasurerReminders() {
           {unpaidMembers.length === 0 && pendingMembers.length === 0 && (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-16 text-center">
               <CheckCircle size={32} className="mx-auto text-emerald-300 mb-3" />
-              <p className="text-[14px] font-[600] [color:var(--pf-color-muted)]">Tất cả thành viên đã đóng quỹ!</p>
+              <p className="text-sm font-[600] [color:var(--pf-color-muted)]">Tất cả thành viên đã đóng quỹ!</p>
             </div>
           )}
         </div>

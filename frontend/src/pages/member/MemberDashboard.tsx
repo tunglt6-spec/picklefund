@@ -85,7 +85,7 @@ export function MemberDashboard() {
               {initials}
             </div>
             <div>
-              <p className="text-white/70 text-[12px]">Xin chào 👋</p>
+              <p className="text-white/70 text-xs">Xin chào 👋</p>
               <p className="text-white text-[17px] font-[700]">{memberName}</p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export function MemberDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/70 text-[11px]">Số dư</p>
-                  <p className={`text-[24px] font-[800] ${balance >= 0 ? 'text-white' : 'text-red-300'}`}>
+                  <p className={`text-2xl font-[800] ${balance >= 0 ? 'text-white' : 'text-red-300'}`}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </p>
                 </div>
@@ -106,12 +106,12 @@ export function MemberDashboard() {
                   {isPaid ? (
                     <div className="flex items-center gap-1 bg-emerald-400/30 px-2.5 py-1 rounded-full">
                       <CheckCircle2 size={13} className="text-emerald-300" />
-                      <span className="text-emerald-200 text-[12px] font-[600]">Đã đóng quỹ</span>
+                      <span className="text-emerald-200 text-xs font-[600]">Đã đóng quỹ</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1 bg-red-400/30 px-2.5 py-1 rounded-full">
                       <XCircle size={13} className="text-red-300" />
-                      <span className="text-red-200 text-[12px] font-[600]">Chưa đóng quỹ</span>
+                      <span className="text-red-200 text-xs font-[600]">Chưa đóng quỹ</span>
                     </div>
                   )}
                   <p className="text-white/60 text-[11px] mt-1 text-right">{myAttendance}/{totalSessions} buổi</p>
@@ -134,7 +134,7 @@ export function MemberDashboard() {
               { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? 'text-emerald-600' : 'text-amber-500' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-3 py-3 text-center">
-                <p className={`text-[16px] font-[800] ${k.color} tabular-nums`}>{k.value}</p>
+                <p className={`text-base font-[800] ${k.color} tabular-nums`}>{k.value}</p>
                 <p className="text-[10px] [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
               </div>
             ))}
@@ -177,7 +177,7 @@ export function MemberDashboard() {
                 <p className="text-[15px] font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
                 <button
                   onClick={handleExportPDF}
-                  className="flex items-center gap-1.5 [color:var(--pf-primary)] text-[12px] font-[600]"
+                  className="flex items-center gap-1.5 [color:var(--pf-primary)] text-xs font-[600]"
                 >
                   <Download size={14} />
                   PDF
@@ -209,7 +209,7 @@ export function MemberDashboard() {
                 </div>
                 <div className="border-t border-[color:var(--pf-border)] pt-2.5 flex justify-between items-center">
                   <span className="font-[700] [color:var(--pf-text)]">Số dư</span>
-                  <span className={`text-[18px] font-[800] ${balance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
+                  <span className={`text-lg font-[800] ${balance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </span>
                 </div>
@@ -218,7 +218,7 @@ export function MemberDashboard() {
               {!isPaid && (
                 <div className="mx-4 mb-4 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 flex items-center gap-2">
                   <AlertCircle size={14} className="text-amber-500 shrink-0" />
-                  <p className="text-[12px] text-amber-700">Bạn chưa đóng quỹ kỳ này. Vui lòng đóng sớm!</p>
+                  <p className="text-xs text-amber-700">Bạn chưa đóng quỹ kỳ này. Vui lòng đóng sớm!</p>
                 </div>
               )}
             </div>
@@ -230,7 +230,7 @@ export function MemberDashboard() {
                   <p className="text-[15px] font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
                   <button
                     onClick={() => navigate('/member/attendance')}
-                    className="flex items-center gap-0.5 [color:var(--pf-primary)] text-[12px] font-[600]"
+                    className="flex items-center gap-0.5 [color:var(--pf-primary)] text-xs font-[600]"
                   >
                     Xem tất cả <ChevronRight size={13} />
                   </button>
@@ -307,7 +307,7 @@ export function MemberDashboard() {
                       <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
                     </div>
                   </div>
-                  <span className="text-[12px] [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</span>
+                  <span className="text-xs [color:var(--pf-color-muted)]">{myAttendance}/{totalSessions} buổi</span>
                 </div>
 
                 {/* Đóng quỹ kỳ này — khoản thu mở: hiện SỐ TIỀN THẬT, không mục tiêu/tiến độ % */}

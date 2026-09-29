@@ -66,7 +66,7 @@ export function MemberAttendance() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <div className="text-[17px] font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
-          {activePeriod && <div className="text-[12px] [color:var(--pf-color-muted)]">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
+          {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
@@ -94,14 +94,14 @@ export function MemberAttendance() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo ngày hoặc sân..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           {/* Rate bar */}
           {completedSessions.length > 0 && (
             <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
               <div className="flex justify-between mb-1.5">
-                <span className="text-[12px] font-[600] [color:var(--pf-color-muted)]">Tỷ lệ tham gia</span>
-                <span className={`text-[12px] font-[700] ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'}`}>{rate}%</span>
+                <span className="text-xs font-[600] [color:var(--pf-color-muted)]">Tỷ lệ tham gia</span>
+                <span className={`text-xs font-[700] ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'}`}>{rate}%</span>
               </div>
               <div className="h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                 <div className={`h-full rounded-full ${rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${rate}%` }} />
@@ -110,7 +110,7 @@ export function MemberAttendance() {
           )}
           {/* Session list */}
           {filtered.length === 0 ? (
-            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">Chưa có buổi tập nào</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có buổi tập nào</div>
           ) : (
             <div className="space-y-2">
               {[...filtered].reverse().map((s) => {
@@ -128,13 +128,13 @@ export function MemberAttendance() {
                           ? <Badge variant="green" dot>Có mặt</Badge>
                           : <Badge variant="gray" dot>Vắng</Badge>}
                     </div>
-                    <div className="flex items-center gap-3 text-[12px] [color:var(--pf-color-muted)]">
+                    <div className="flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
                       <span className="flex items-center gap-1"><MapPin size={11} />{s.courtName ?? 'Sân chưa đặt'}</span>
                       {s.startTime && s.endTime && <span><Clock size={11} className="inline mr-0.5" />{s.startTime}–{s.endTime}</span>}
                       {s.status === 'scheduled' && (s.registeredCount ?? 0) > 0 && <span>· {s.registeredCount} đăng ký</span>}
                     </div>
                     {present && costShare > 0 && (
-                      <div className="mt-2 text-[12px] [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
+                      <div className="mt-2 text-xs [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
                     )}
                     {s.status === 'scheduled' && (
                       <div className="mt-3">
@@ -142,11 +142,11 @@ export function MemberAttendance() {
                           <div className="flex items-center justify-between gap-2">
                             <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-color-success)]"><UserCheck size={14} /> Đã đăng ký – Chờ tham gia</span>
                             <button onClick={() => toggleRegister(s.id, false)} disabled={busyId === s.id}
-                              className="inline-flex min-h-11 items-center px-2 text-[12px] font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
+                              className="inline-flex min-h-11 items-center px-2 text-xs font-semibold [color:var(--pf-color-muted)] underline disabled:opacity-50">Hủy</button>
                           </div>
                         ) : (
                           <button onClick={() => toggleRegister(s.id, true)} disabled={busyId === s.id}
-                            className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-[12px] text-[14px] font-bold [color:var(--pf-primary-on)] active:scale-[0.98] disabled:opacity-50"
+                            className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-[12px] text-sm font-bold [color:var(--pf-primary-on)] active:scale-[0.98] disabled:opacity-50"
                             style={{ background: 'var(--pf-primary)' }}>
                             <UserPlus size={15} /> Đăng ký tham gia
                           </button>
@@ -257,12 +257,12 @@ export function MemberAttendance() {
                 <span className="text-[10px] [color:var(--pf-color-muted)]">tham gia</span>
               </div>
             </div>
-            <span className="text-[12px] [color:var(--pf-color-muted)]">{attendedCount}/{completedSessions.length} buổi hoàn thành</span>
+            <span className="text-xs [color:var(--pf-color-muted)]">{attendedCount}/{completedSessions.length} buổi hoàn thành</span>
             <div className="w-full">
               <div className="h-3 w-full overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
                 <div className={`h-full rounded-full transition-all ${rateBar}`} style={{ width: `${rate}%` }} />
               </div>
-              <div className="mt-2 flex items-center justify-between text-[12px] [color:var(--pf-color-muted)]">
+              <div className="mt-2 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
                 <span>Sắp diễn ra: {scheduledCount}</span>
                 <span>Chi phí: {formatVND(myCourtCost)}</span>
               </div>

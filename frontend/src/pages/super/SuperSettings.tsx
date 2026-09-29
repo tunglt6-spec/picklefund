@@ -248,11 +248,11 @@ export function SuperSettings() {
               <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
                   {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
                 </button>
                 <button type="button" onClick={detachSharedChat}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold text-amber-700 border-amber-200 hover:bg-amber-50">
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-amber-700 border-amber-200 hover:bg-amber-50">
                   Tách chat dùng chung khỏi CLB
                 </button>
               </div>

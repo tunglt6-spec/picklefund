@@ -592,13 +592,13 @@ export function FundPeriods() {
           <div className="grid grid-cols-2 gap-3">
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
               <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
-              <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
-              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
+              <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
+              <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
             </div>
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
               <div className="text-[11px] font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
-              <div className="text-[20px] font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
-              <div className="text-[12px] [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
+              <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
+              <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
             </div>
           </div>
 
@@ -629,7 +629,7 @@ export function FundPeriods() {
                   <select
                     value={qrPeriodId}
                     onChange={e => setQrPeriodId(e.target.value)}
-                    className="w-full text-[12px] rounded-[8px] border border-[color:var(--pf-border)] px-2.5 py-1.5 [background:var(--pf-surface-muted)] [color:var(--pf-text)]"
+                    className="w-full text-xs rounded-[8px] border border-[color:var(--pf-border)] px-2.5 py-1.5 [background:var(--pf-surface-muted)] [color:var(--pf-text)]"
                   >
                     {commonPeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
@@ -645,7 +645,7 @@ export function FundPeriods() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm kỳ quỹ..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-[14px] [color:var(--pf-text)] outline-none focus:[border-color:var(--pf-primary)]"
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm [color:var(--pf-text)] outline-none focus:[border-color:var(--pf-primary)]"
             />
           </div>
 
@@ -662,7 +662,7 @@ export function FundPeriods() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
-                        <div className="text-[12px] [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                        <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
@@ -710,7 +710,7 @@ export function FundPeriods() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <div className="text-[15px] font-[700] [color:var(--pf-text)]">{p.name}</div>
-                        <div className="text-[12px] [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
+                        <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(p.startDate)} – {formatDate(p.endDate)}</div>
                       </div>
                       <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
                     </div>
@@ -746,7 +746,7 @@ export function FundPeriods() {
           )}
 
           {filtered.length === 0 && (
-            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">Chưa có kỳ quỹ nào</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có kỳ quỹ nào</div>
           )}
         </div>
 

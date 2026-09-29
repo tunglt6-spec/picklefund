@@ -42,7 +42,7 @@ export function TrustCenter() {
         {/* Minh bạch về phần chưa có */}
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
           <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-color-muted)]"><Info size={14} /> Đang hoàn thiện</div>
-          <p className="text-[14px] font-bold [color:var(--pf-text)]">Chúng tôi nói thẳng những gì chưa có</p>
+          <p className="text-sm font-bold [color:var(--pf-text)]">Chúng tôi nói thẳng những gì chưa có</p>
           <ul className="mt-3 space-y-2">
             {[
               'Chứng chỉ tuân thủ chính thức (ví dụ ISO/SOC): chưa có — sẽ công bố tại đây nếu đạt được.',

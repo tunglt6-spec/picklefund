@@ -120,7 +120,7 @@ export function ReportPaymentModal({
           <div className="flex items-start gap-3 rounded-xl border p-3.5 [border-color:var(--pf-border)] [background:var(--pf-color-warning-soft)]">
             <Clock size={20} className="[color:var(--pf-color-warning)] mt-0.5 shrink-0" />
             <div>
-              <p className="text-[14px] font-bold [color:var(--pf-text)]">Đang chờ Admin xác nhận</p>
+              <p className="text-sm font-bold [color:var(--pf-text)]">Đang chờ Admin xác nhận</p>
               <p className="text-[12.5px] [color:var(--pf-color-muted)] mt-0.5">
                 Bạn đã báo nộp {formatVND(ctx.pending.amount)}. Admin sẽ kiểm tra và xác nhận đã nhận tiền. Bạn không cần gửi lại.
               </p>
@@ -153,7 +153,7 @@ export function ReportPaymentModal({
           {/* Bank info */}
           {ctx.bank ? (
             <div className="rounded-xl border p-3.5 [border-color:var(--pf-border)]">
-              <div className="mb-2 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">
                 <Landmark size={14} /> Tài khoản nhận
               </div>
               {[
@@ -184,7 +184,7 @@ export function ReportPaymentModal({
           {/* QR (same-origin, chỉ hiện khi có số tiền cần nộp) */}
           {qrObj && (
             <div className="flex flex-col items-center gap-2 rounded-xl border p-3 [border-color:var(--pf-border)]">
-              <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]"><QrCode size={14} /> Quét QR để chuyển khoản</div>
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]"><QrCode size={14} /> Quét QR để chuyển khoản</div>
               <img src={qrObj} alt="QR chuyển khoản" className="h-52 w-52 max-w-full rounded-lg object-contain" />
             </div>
           )}
@@ -209,7 +209,7 @@ export function ReportPaymentModal({
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="VD: chuyển lúc 20h, MB Bank…"
-              className="w-full resize-none rounded-xl border px-3 py-2 text-[14px] outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
+              className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
             />
           </div>
 
@@ -220,7 +220,7 @@ export function ReportPaymentModal({
               value={proofUrl}
               onChange={(e) => setProofUrl(e.target.value)}
               placeholder="Dán link ảnh biên lai nếu có"
-              className="w-full rounded-xl border px-3 py-2 text-[14px] outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
+              className="w-full rounded-xl border px-3 py-2 text-sm outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
             />
           </div>
 

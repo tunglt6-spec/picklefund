@@ -42,12 +42,12 @@ export function About() {
             <div className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><Target size={20} /></div>
               <p className="text-[15px] font-extrabold [color:var(--pf-text)]">Sứ mệnh</p>
-              <p className="mt-1.5 text-[14px] leading-relaxed [color:var(--pf-color-muted)]">Giúp các câu lạc bộ thể thao vận hành minh bạch, chuyên nghiệp và bền vững — với công cụ mà ai cũng dùng được.</p>
+              <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">Giúp các câu lạc bộ thể thao vận hành minh bạch, chuyên nghiệp và bền vững — với công cụ mà ai cũng dùng được.</p>
             </div>
             <div className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><Compass size={20} /></div>
               <p className="text-[15px] font-extrabold [color:var(--pf-text)]">Tầm nhìn</p>
-              <p className="mt-1.5 text-[14px] leading-relaxed [color:var(--pf-color-muted)]">Trở thành nền tảng quản trị cộng đồng thể thao được tin dùng, nơi AI đồng hành cùng con người một cách có trách nhiệm.</p>
+              <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">Trở thành nền tảng quản trị cộng đồng thể thao được tin dùng, nơi AI đồng hành cùng con người một cách có trách nhiệm.</p>
             </div>
           </div>
         </div>

@@ -40,8 +40,8 @@ export function MobileClubCard({ name, code, memberCount, fundPeriodCount, statu
             {s.label}
           </span>
         </div>
-        <div className="text-[12px] [color:var(--pf-color-muted)] mb-1.5">Mã: {code}</div>
-        <div className="flex items-center gap-3 text-[12px] [color:var(--pf-color-muted)]">
+        <div className="text-xs [color:var(--pf-color-muted)] mb-1.5">Mã: {code}</div>
+        <div className="flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
           <span className="flex items-center gap-1"><Users size={11} /> {memberCount} thành viên</span>
           <span className="flex items-center gap-1"><Calendar size={11} /> {fundPeriodCount} kỳ quỹ</span>
         </div>

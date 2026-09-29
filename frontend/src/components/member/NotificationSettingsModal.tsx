@@ -129,13 +129,13 @@ export function NotificationSettingsModal({ open, onClose, categories = MEMBER_P
       ) : (
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-[12px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">Nhận thông báo đẩy theo nhóm</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">Nhận thông báo đẩy theo nhóm</p>
             <div className="space-y-2">
               {categories.map((c) => (
                 <div key={c.label} className="flex items-center justify-between gap-3 rounded-xl border p-3 [border-color:var(--pf-border)]">
                   <div className="min-w-0">
-                    <p className="text-[14px] font-semibold [color:var(--pf-text)]">{c.label}</p>
-                    <p className="text-[12px] [color:var(--pf-color-muted)]">{c.desc}</p>
+                    <p className="text-sm font-semibold [color:var(--pf-text)]">{c.label}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{c.desc}</p>
                   </div>
                   <Toggle on={c.keys.every((k) => !muted.has(k))} onChange={(v) => toggleCat(c.keys, v)} />
                 </div>
@@ -146,8 +146,8 @@ export function NotificationSettingsModal({ open, onClose, categories = MEMBER_P
           <div className="rounded-xl border p-3 [border-color:var(--pf-border)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[14px] font-semibold [color:var(--pf-text)]">Không làm phiền ban đêm</p>
-                <p className="text-[12px] [color:var(--pf-color-muted)]">Không đẩy push trong khung giờ này (thông báo vẫn có trong app)</p>
+                <p className="text-sm font-semibold [color:var(--pf-text)]">Không làm phiền ban đêm</p>
+                <p className="text-xs [color:var(--pf-color-muted)]">Không đẩy push trong khung giờ này (thông báo vẫn có trong app)</p>
               </div>
               <Toggle on={quietOn} onChange={setQuietOn} />
             </div>

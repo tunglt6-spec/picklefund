@@ -27,7 +27,7 @@ function Card({ post }: { post: BlogPost }) {
         </span>
         <span className="inline-flex items-center gap-1 text-[11px] [color:var(--pf-color-muted)]"><Clock size={12} /> {post.readMins} phút đọc</span>
       </div>
-      <h3 className="mt-3 text-[16px] font-extrabold leading-snug [color:var(--pf-text)]">{post.title}</h3>
+      <h3 className="mt-3 text-base font-extrabold leading-snug [color:var(--pf-text)]">{post.title}</h3>
       <p className="mt-2 flex-1 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{post.excerpt}</p>
       <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold [color:var(--pf-primary)]">
         Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
@@ -92,7 +92,7 @@ export function BlogArticle() {
           </div>
           <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl [color:var(--pf-text)]">{post.title}</h1>
           <p className="mt-3 text-[15px] leading-relaxed [color:var(--pf-color-muted)]">{post.excerpt}</p>
-          <p className="mt-2 text-[12px] font-medium [color:var(--pf-color-muted)]">Biên soạn bởi Đội ngũ PickleFund</p>
+          <p className="mt-2 text-xs font-medium [color:var(--pf-color-muted)]">Biên soạn bởi Đội ngũ PickleFund</p>
 
           <div className="mt-8 space-y-6">
             {post.body.map((s, i) => (

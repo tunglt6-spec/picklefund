@@ -70,7 +70,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         ) : (
           <div className="shrink-0"><PickleFundLogoMark size={26} /></div>
         )}
-        <span className="text-[18px] font-[800] [color:var(--pf-text)] tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
+        <span className="text-lg font-[800] [color:var(--pf-text)] tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
       </div>
 
       {/* Right: Hướng dẫn + Bell + Avatar */}
@@ -101,7 +101,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <div className="relative" ref={ref}>
           <button
             onClick={() => setOpen(v => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-[12px] font-[800] text-white active:opacity-80"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-[800] text-white active:opacity-80"
             style={{ background: 'var(--pf-primary)' }}
           >
             {initials}

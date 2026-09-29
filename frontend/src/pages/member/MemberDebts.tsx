@@ -215,7 +215,7 @@ export function MemberDebts() {
                   <span className="text-[10px] [color:var(--pf-color-muted)]">đã thu</span>
                 </div>
               </div>
-              <span className="text-[12px] [color:var(--pf-color-muted)]">{stats.paid}/{rows.length} thành viên đã đóng đủ</span>
+              <span className="text-xs [color:var(--pf-color-muted)]">{stats.paid}/{rows.length} thành viên đã đóng đủ</span>
 
               <div
                 className="w-full rounded-xl px-4 py-3"

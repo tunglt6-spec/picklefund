@@ -28,7 +28,7 @@ function LegalBody({ doc }: { doc: LegalDoc }) {
       <PageHero eyebrow="Pháp lý" title={doc.title} desc={doc.intro} />
       <section className={`${PUBLIC_CONTAINER} py-10`}>
         <div className="mx-auto max-w-3xl">
-          <p className="mb-8 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
+          <p className="mb-8 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
             <CalendarClock size={13} /> Cập nhật lần cuối: {doc.updatedAt}
           </p>
 
@@ -37,12 +37,12 @@ function LegalBody({ doc }: { doc: LegalDoc }) {
               <section key={s.h}>
                 <h2 className="mb-2.5 text-[17px] font-extrabold tracking-tight [color:var(--pf-text)]">{s.h}</h2>
                 {s.blocks.map((b, i) => {
-                  if (b.sub) return <p key={i} className="mb-1.5 mt-3 text-[14px] font-bold [color:var(--pf-text)]">{b.sub}</p>
-                  if (b.p) return <p key={i} className="mb-2 text-[14px] leading-relaxed [color:var(--pf-color-muted)]">{b.p}</p>
+                  if (b.sub) return <p key={i} className="mb-1.5 mt-3 text-sm font-bold [color:var(--pf-text)]">{b.sub}</p>
+                  if (b.p) return <p key={i} className="mb-2 text-sm leading-relaxed [color:var(--pf-color-muted)]">{b.p}</p>
                   if (b.ul) return (
                     <ul key={i} className="mb-2 mt-1 space-y-1.5">
                       {b.ul.map((li) => (
-                        <li key={li} className="flex gap-2 text-[14px] leading-relaxed [color:var(--pf-color-muted)]">
+                        <li key={li} className="flex gap-2 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />
                           {li}
                         </li>

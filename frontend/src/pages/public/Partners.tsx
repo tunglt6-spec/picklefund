@@ -48,7 +48,7 @@ export function Partners() {
 
         <div className="mx-auto mt-8 max-w-2xl rounded-3xl border p-8 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
           <Handshake size={30} className="mx-auto [color:var(--pf-primary)]" />
-          <p className="mt-3 text-[16px] font-extrabold [color:var(--pf-text)]">Bạn muốn trở thành đối tác?</p>
+          <p className="mt-3 text-base font-extrabold [color:var(--pf-text)]">Bạn muốn trở thành đối tác?</p>
           <p className="mt-1.5 text-sm [color:var(--pf-color-muted)]">Gửi cho chúng tôi vài dòng về tổ chức của bạn và mong muốn hợp tác — chúng tôi sẽ phản hồi sớm.</p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Link to="/contact" className="inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>

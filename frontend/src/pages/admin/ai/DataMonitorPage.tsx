@@ -128,7 +128,7 @@ export function DataMonitorPage() {
                   {c.items.length > 0 && (
                     <ul className="mt-2.5 space-y-1 border-t border-[color:var(--pf-border)] pt-2.5">
                       {c.items.map((it, i) => (
-                        <li key={i} className="text-[12px] [color:var(--pf-color-muted)] flex items-start gap-1.5">
+                        <li key={i} className="text-xs [color:var(--pf-color-muted)] flex items-start gap-1.5">
                           <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
                           <span className="min-w-0">{it}</span>
                         </li>

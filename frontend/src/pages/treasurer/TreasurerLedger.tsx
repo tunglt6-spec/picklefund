@@ -87,21 +87,21 @@ export function TreasurerLedger() {
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
-            {activePeriod && <div className="text-[12px] [color:var(--pf-color-muted)]">{activePeriod.name}</div>}
+            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name}</div>}
           </div>
           <div className="flex gap-2">
             <button onClick={() => {
               const pName = activePeriod?.name ?? 'So_Quy'
               exportLedgerExcel(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })))
               toast.success('Đã xuất Excel!')
-            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-[12px] font-[600] [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
               <FileSpreadsheet size={13} />Excel
             </button>
             <button onClick={() => {
               const pName = activePeriod?.name ?? 'Sổ Quỹ'
               exportLedgerPDF(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })), totalIncome, totalExpense, currentBalance)
               toast.success('Đã xuất PDF!')
-            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-[12px] font-[600] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
+            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
               <FileText size={13} />PDF
             </button>
           </div>
@@ -125,12 +125,12 @@ export function TreasurerLedger() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm giao dịch..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           <div className="flex gap-1 [background:var(--pf-surface)] rounded-[12px] border border-[color:var(--pf-border)] p-1">
             {(['all', 'Thu', 'Chi'] as const).map(t => (
               <button key={t} onClick={() => setTypeFilter(t)}
-                className={`flex-1 py-1.5 rounded-[9px] text-[12px] font-[600] transition-all ${typeFilter === t ? '[background:var(--pf-primary)] text-white shadow-sm' : '[color:var(--pf-color-muted)]'}`}>
+                className={`flex-1 py-1.5 rounded-[9px] text-xs font-[600] transition-all ${typeFilter === t ? '[background:var(--pf-primary)] text-white shadow-sm' : '[color:var(--pf-color-muted)]'}`}>
                 {t === 'all' ? 'Tất cả' : t}
               </button>
             ))}
@@ -138,7 +138,7 @@ export function TreasurerLedger() {
 
           {/* Transactions */}
           {filtered.length === 0 ? (
-            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">Chưa có giao dịch nào</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có giao dịch nào</div>
           ) : (
             <div className="space-y-2">
               {[...filtered].reverse().map(row => (
@@ -154,7 +154,7 @@ export function TreasurerLedger() {
                       <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{formatDate(row.date)}</div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className={`text-[14px] font-[800] ${row.amount > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <div className={`text-sm font-[800] ${row.amount > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                         {row.amount > 0 ? '+' : ''}{formatVND(row.amount)}
                       </div>
                       <div className={`text-[11px] font-[600] mt-0.5 ${row.balance >= 0 ? '[color:var(--pf-color-muted)]' : 'text-red-500'}`}>

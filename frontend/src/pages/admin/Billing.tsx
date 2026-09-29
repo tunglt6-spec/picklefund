@@ -383,7 +383,7 @@ export function Billing() {
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <p className="text-[17px] font-[800] [color:var(--pf-text)]">Gói dịch vụ</p>
-          <p className="text-[12px] [color:var(--pf-color-muted)]">Quản lý subscription & AI usage</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Quản lý subscription & AI usage</p>
         </div>
         <div className="px-4 py-4 pb-24">{content}</div>
       </div>

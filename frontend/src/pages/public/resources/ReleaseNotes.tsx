@@ -64,7 +64,7 @@ export function ReleaseNotes() {
             <div key={r.title} className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="flex items-center gap-2">
                 <span className="rounded-full px-2.5 py-1 text-[11px] font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{r.tag}</span>
-                <h2 className="text-[16px] font-extrabold [color:var(--pf-text)]">{r.title}</h2>
+                <h2 className="text-base font-extrabold [color:var(--pf-text)]">{r.title}</h2>
               </div>
               <ul className="mt-3 space-y-2">
                 {r.items.map((it) => (

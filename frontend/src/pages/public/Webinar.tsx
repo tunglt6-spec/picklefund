@@ -36,7 +36,7 @@ export function Webinar() {
           {/* Đăng ký nhận thông báo — trung thực, chưa có lịch */}
           <div className="rounded-3xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
             <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><CalendarClock size={14} /> Lịch sắp tới</div>
-            <p className="text-[16px] font-extrabold [color:var(--pf-text)]">Chưa có buổi nào được lên lịch công khai</p>
+            <p className="text-base font-extrabold [color:var(--pf-text)]">Chưa có buổi nào được lên lịch công khai</p>
             <p className="mt-1.5 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">
               Chúng tôi sẽ thông báo ngay khi có lịch. Nhập email để được nhắc — email của bạn chỉ dùng cho mục đích này.
             </p>

@@ -177,7 +177,7 @@ export function TreasurerExpense() {
               </>
             )}
             <button onClick={openCreate} disabled={activePeriods.length === 0}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white disabled:opacity-40 active:opacity-80">
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-xs font-[700] [background:var(--pf-primary)] text-white disabled:opacity-40 active:opacity-80">
               <Plus size={13} />Thêm
             </button>
           </div>
@@ -211,7 +211,7 @@ export function TreasurerExpense() {
                       <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
-                            <div className="text-[14px] font-[700] [color:var(--pf-text)] truncate">{e.description}</div>
+                            <div className="text-sm font-[700] [color:var(--pf-text)] truncate">{e.description}</div>
                             <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
                           </div>
                           <div className="text-[15px] font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>

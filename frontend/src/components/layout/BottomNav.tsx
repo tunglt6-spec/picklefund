@@ -142,7 +142,7 @@ export function BottomNav() {
           {/* Drawer */}
           <div className="fixed bottom-16 left-0 right-0 z-50 [background:var(--pf-surface)] rounded-t-2xl shadow-2xl border-t border-[color:var(--pf-border)] p-4 pb-6">
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
-            <div className="text-[12px] font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-3 px-1">
+            <div className="text-xs font-[700] [color:var(--pf-color-muted)] uppercase tracking-wider mb-3 px-1">
               Điều hướng
             </div>
             <div className="grid grid-cols-3 gap-3">

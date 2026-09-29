@@ -87,22 +87,22 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
         {/* Top bar */}
         <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-800 border-b border-slate-700">
           <div className="flex items-center gap-2">
-            <span className="text-white font-[700] text-[14px]">Infographic</span>
-            <span className="[color:var(--pf-color-muted)] text-[12px] hidden sm:block">· {data.periodLabel}</span>
+            <span className="text-white font-[700] text-sm">Infographic</span>
+            <span className="[color:var(--pf-color-muted)] text-xs hidden sm:block">· {data.periodLabel}</span>
           </div>
 
           {/* Tab switcher */}
           <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1">
             <button
               onClick={() => setTab('A')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
             >
               <BarChart3 size={13} />
               Tổng quan
             </button>
             <button
               onClick={() => setTab('B')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
             >
               <Users size={13} />
               Bill thành viên

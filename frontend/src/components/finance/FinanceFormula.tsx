@@ -23,11 +23,11 @@ export function FinanceFormula({ lines, className = '' }: FinanceFormulaProps) {
               {line.sign && (
                 <span className="text-[11px] font-bold [color:var(--pf-color-muted)] w-3 shrink-0">{line.sign}</span>
               )}
-              <span className={`text-[12px] ${line.highlight ? 'font-bold [color:var(--pf-text)]' : '[color:var(--pf-color-muted)]'}`}>
+              <span className={`text-xs ${line.highlight ? 'font-bold [color:var(--pf-text)]' : '[color:var(--pf-color-muted)]'}`}>
                 {line.label}
               </span>
             </div>
-            <span className={`text-[12px] tabular-nums font-semibold shrink-0 ${
+            <span className={`text-xs tabular-nums font-semibold shrink-0 ${
               line.highlight
                 ? (line.value < 0 ? 'text-red-600 font-bold' : '[color:var(--pf-primary)] font-bold')
                 : (line.value < 0 ? 'text-red-500' : '[color:var(--pf-text)]')

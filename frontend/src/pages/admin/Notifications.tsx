@@ -72,11 +72,11 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <p className={`text-[14px] font-[700] ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
+            <p className={`text-sm font-[700] ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
             {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
             {priorityBadge(n.priority)}
           </div>
-          <p className="text-[12px] [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
+          <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
           <p className="text-[11px] [color:var(--pf-color-muted)] mt-1">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
@@ -342,23 +342,23 @@ export function Notifications() {
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Thông báo</div>
-            <div className="text-[12px] [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
+            <div className="text-xs [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
           <div className="flex items-center gap-2.5">
             {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
               <button onClick={onEnablePush} disabled={pushBusy}
-                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] font-[600] text-white disabled:opacity-60 [background:var(--pf-primary)]">
+                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-[600] text-white disabled:opacity-60 [background:var(--pf-primary)]">
                 <BellRing size={13} />{pushBusy ? 'Đang bật…' : 'Bật push'}
               </button>
             )}
             {pushPerm === 'granted' && (
               <button onClick={onTestPush} disabled={pushBusy}
-                className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] disabled:opacity-60 active:opacity-70">
+                className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] disabled:opacity-60 active:opacity-70">
                 <BellRing size={13} />{pushBusy ? 'Đang gửi…' : 'Gửi thử'}
               </button>
             )}
             {unreadCount > 0 && (
-              <button onClick={handleReadAll} className="flex items-center gap-1 text-[12px] font-[600] [color:var(--pf-primary)] active:opacity-70">
+              <button onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70">
                 <Check size={13} />Đã đọc
               </button>
             )}
@@ -394,7 +394,7 @@ export function Notifications() {
           )}
 
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">
               <Bell size={32} className="mx-auto mb-3 [color:var(--pf-color-muted)]" />
               Không có thông báo trong mục này
             </div>

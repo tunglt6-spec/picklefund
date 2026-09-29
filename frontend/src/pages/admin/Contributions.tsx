@@ -377,8 +377,8 @@ export function Contributions() {
         <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[16px] font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>
-            <p className="text-[12px] [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
+            <h2 className="text-base font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>
+            <p className="text-xs [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {contributions.length > 0 && (
@@ -418,11 +418,11 @@ export function Contributions() {
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
             <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Chính</p>
-            <p className="text-[18px] font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
+            <p className="text-lg font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
             <p className="text-[11px] [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Phụ</p>
-            <p className="text-[18px] font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
+            <p className="text-lg font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
           </div>
         </div>
 
@@ -430,13 +430,13 @@ export function Contributions() {
         <div className="flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
+            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Chính
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
-            className={`flex-1 py-2 rounded-[10px] text-[12px] font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
+            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Phụ
           </button>

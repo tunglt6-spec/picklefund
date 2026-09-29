@@ -36,7 +36,7 @@ function Stat({ icon: Icon, label, value, tone }: { icon: typeof Clock; label: s
         <Icon size={18} />
       </div>
       <p className="text-2xl font-extrabold tracking-tight [color:var(--pf-text)]">{value}</p>
-      <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">{label}</p>
+      <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{label}</p>
     </div>
   )
 }
@@ -78,7 +78,7 @@ export function RoiCalculator() {
               <Field label="Mức tự động hóa ước tính" value={autoRate} onChange={setAutoRate} min={10} max={80} step={5} suffix="%" />
               <Field label="Giá trị 1 giờ công (tùy chọn)" value={hourValue} onChange={setHourValue} min={0} max={300000} step={10000} suffix="đ" />
             </div>
-            <p className="mt-5 flex items-start gap-2 rounded-xl border p-3 text-[12px] leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
+            <p className="mt-5 flex items-start gap-2 rounded-xl border p-3 text-xs leading-relaxed [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">
               <Info size={14} className="mt-0.5 shrink-0" />
               "Mức tự động hóa" là ước lượng phần công việc lặp lại (nhập liệu, tổng hợp, nhắc việc, chia chi phí) có thể giảm nhờ số hóa. Bạn tự điều chỉnh theo thực tế CLB.
             </p>

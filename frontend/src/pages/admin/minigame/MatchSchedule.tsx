@@ -145,7 +145,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           )}
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
-            className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
+            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-[10px]"
             style={{ background: 'var(--pf-primary)' }}
           >
             Nhập KQ
@@ -154,8 +154,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
         {myRounds.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-            <p className="[color:var(--pf-color-muted)] font-medium text-[14px]">Chưa có lịch thi đấu</p>
-            <p className="[color:var(--pf-color-muted)] text-[12px] mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
+            <p className="[color:var(--pf-color-muted)] font-medium text-sm">Chưa có lịch thi đấu</p>
+            <p className="[color:var(--pf-color-muted)] text-xs mt-1 mb-4">Vào tổng quan và bấm "Rút Thăm Vòng Mới"</p>
             <button onClick={() => navigate(`/minigames/${minigameId}`)}
               className="text-[13px] font-semibold text-white px-4 py-2 rounded-[10px]"
               style={{ background: 'var(--pf-primary)' }}>
@@ -198,17 +198,17 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
                     <div className="flex items-center gap-2 mb-3">
                       <div className={cn('flex-1 text-center py-2 rounded-[10px]', team1Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
+                        <p className={cn('text-xs font-semibold leading-tight', team1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team1.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
                       <div className="shrink-0 text-center">
                         {m.status === 'COMPLETED'
-                          ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.team1Score}–{m.team2Score}</p>
+                          ? <p className="text-base font-black [color:var(--pf-text)] font-mono">{m.team1Score}–{m.team2Score}</p>
                           : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                       </div>
                       <div className={cn('flex-1 text-center py-2 rounded-[10px]', team2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
-                        <p className={cn('text-[12px] font-semibold leading-tight', team2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
+                        <p className={cn('text-xs font-semibold leading-tight', team2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>
                           {m.team2.map(p => p.memberName.split(' ').pop()).join(' & ')}
                         </p>
                       </div>
@@ -217,7 +217,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     <div className="flex gap-2">
                       <button
                         onClick={() => setScoreMatch(m)}
-                        className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
+                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                       >
                         <Pencil size={12} /> {m.status === 'PENDING' ? 'Nhập KQ' : 'Sửa KQ'}
                       </button>
@@ -242,7 +242,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
             <div className="[background:var(--pf-surface)] rounded-t-[20px] p-6 w-full">
               <p className="font-semibold [color:var(--pf-text)] mb-1">Xóa trận đấu?</p>
-              <p className="text-[12px] [color:var(--pf-color-muted)] mb-3">
+              <p className="text-xs [color:var(--pf-color-muted)] mb-3">
                 {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
               </p>
               {deleteTarget.status === 'COMPLETED' && (
@@ -563,7 +563,7 @@ export function MatchSchedule() {
           )}
           <button
             onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
-            className="shrink-0 text-[12px] font-semibold text-white px-3 py-1.5 rounded-[10px]"
+            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-[10px]"
             style={{ background: 'var(--pf-primary)' }}
           >
             Nhập KQ
@@ -604,22 +604,22 @@ export function MatchSchedule() {
 
                 <div className="flex items-center gap-2 mb-3">
                   <div className={cn('flex-1 text-center py-2 rounded-[10px]', p1Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
-                    <p className={cn('text-[12px] font-semibold', p1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player1Name}</p>
+                    <p className={cn('text-xs font-semibold', p1Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player1Name}</p>
                   </div>
                   <div className="shrink-0">
                     {m.status === 'COMPLETED'
-                      ? <p className="text-[16px] font-black [color:var(--pf-text)] font-mono">{m.player1Score}–{m.player2Score}</p>
+                      ? <p className="text-base font-black [color:var(--pf-text)] font-mono">{m.player1Score}–{m.player2Score}</p>
                       : <p className="text-[13px] font-bold [color:var(--pf-color-muted)]">vs</p>}
                   </div>
                   <div className={cn('flex-1 text-center py-2 rounded-[10px]', p2Won ? '[background:var(--pf-color-success-soft)]' : '[background:var(--pf-surface-muted)]')}>
-                    <p className={cn('text-[12px] font-semibold', p2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player2Name}</p>
+                    <p className={cn('text-xs font-semibold', p2Won ? '[color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{m.player2Name}</p>
                   </div>
                 </div>
 
                 {m.status === 'PENDING' && (
                   <button
                     onClick={() => setScoreMatch(m)}
-                    className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                   >
                     <ClipboardEdit size={12} /> Nhập Kết Quả
                   </button>

@@ -125,7 +125,7 @@ export function PaymentApprovals() {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-[18px] font-extrabold [color:var(--pf-primary)]">{formatVND(Number(p.amount))}</div>
+                  <div className="text-lg font-extrabold [color:var(--pf-primary)]">{formatVND(Number(p.amount))}</div>
                   {p.reportedByMember && <StatusBadge tone="info">Member báo</StatusBadge>}
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function PaymentApprovals() {
           onChange={(e) => setRecheckNote(e.target.value)}
           rows={3}
           placeholder="Lý do (VD: chưa thấy tiền về, sai nội dung CK…)"
-          className="w-full resize-none rounded-xl border px-3 py-2 text-[14px] outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
+          className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)]"
         />
       </Modal>
     </PageShell>

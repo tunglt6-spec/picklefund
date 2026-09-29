@@ -101,7 +101,7 @@ export function MemberContributions() {
     <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-[var(--pf-shadow)] p-4">
       <div className="mb-2 flex items-center gap-2">
         <Send size={15} className="[color:var(--pf-primary)]" />
-        <span className="text-[14px] font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
+        <span className="text-sm font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
       </div>
       <div className="space-y-2">
         {myPayments.map((p) => {
@@ -160,7 +160,7 @@ export function MemberContributions() {
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="text-[17px] font-[800] [color:var(--pf-text)]">Lịch Sử Đóng Quỹ</div>
-            <div className="text-[12px] [color:var(--pf-color-muted)] truncate">{memberName}</div>
+            <div className="text-xs [color:var(--pf-color-muted)] truncate">{memberName}</div>
           </div>
           {filtered.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
@@ -199,10 +199,10 @@ export function MemberContributions() {
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo kỳ quỹ..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-[14px] outline-none focus:[border-color:var(--pf-primary)]" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm outline-none focus:[border-color:var(--pf-primary)]" />
           </div>
           {filtered.length === 0 ? (
-            <div className="text-center py-12 [color:var(--pf-color-muted)] text-[14px]">Chưa có khoản đóng quỹ nào</div>
+            <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có khoản đóng quỹ nào</div>
           ) : (
             <div className="space-y-2">
               {filtered.map(c => {
@@ -212,7 +212,7 @@ export function MemberContributions() {
                       <span className="text-[15px] font-[700] [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span>
                       {c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>}
                     </div>
-                    <div className="text-[12px] [color:var(--pf-color-muted)] mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
+                    <div className="text-xs [color:var(--pf-color-muted)] mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
                     <div className="text-[17px] font-[800] text-emerald-600">{formatVND(c.amount)}</div>
                   </div>
                 )
@@ -232,18 +232,18 @@ export function MemberContributions() {
                     <button onClick={() => setExpandedReceipt(isExp ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
-                        <div className="text-[14px] font-[700] [color:var(--pf-text)]">{r.fundPeriod?.name ?? 'Kỳ đã chốt'}</div>
+                        <div className="text-sm font-[700] [color:var(--pf-text)]">{r.fundPeriod?.name ?? 'Kỳ đã chốt'}</div>
                         <div className="text-[11px] [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-[14px] font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <span className={`text-sm font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                           {bal >= 0 ? '+' : ''}{formatVND(bal)}
                         </span>
                         {isExp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </div>
                     </button>
                     {isExp && (
-                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)] space-y-1.5 text-[12px]">
+                      <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)] space-y-1.5 text-xs">
                         {[['Đã đóng quỹ', toNum(r.amountPaid), 'text-emerald-600'], ['Chi phí sân', toNum(r.courtCost), ''], ['Chi phí SH', toNum(r.livingCost), ''], ['Tổng chi phí', toNum(r.totalCost), '']].map(([lbl, val, cls]) => (
                           <div key={lbl as string} className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">{lbl}</span>

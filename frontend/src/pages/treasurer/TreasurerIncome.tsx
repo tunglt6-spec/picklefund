@@ -293,7 +293,7 @@ export function TreasurerIncome() {
               </>
             )}
             <button onClick={openCreate}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-[12px] font-[700] [background:var(--pf-primary)] text-white active:opacity-80">
+              className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-xs font-[700] [background:var(--pf-primary)] text-white active:opacity-80">
               <Plus size={13} />Ghi nhận
             </button>
           </div>
@@ -307,7 +307,7 @@ export function TreasurerIncome() {
               { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '[color:var(--pf-primary)]' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-[12px] font-[800] ${k.color} truncate`}>{k.value}</div>
+                <div className={`text-xs font-[800] ${k.color} truncate`}>{k.value}</div>
                 <div className="text-[10px] [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
               </div>
             ))}
@@ -327,7 +327,7 @@ export function TreasurerIncome() {
                   <div key={c.id} className={`[background:var(--pf-surface)] rounded-[16px] border p-4 shadow-sm ${!c.isConfirmed ? 'border-amber-100' : 'border-[color:var(--pf-border)]'}`}>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <div className="text-[14px] font-[700] [color:var(--pf-text)] truncate">
+                        <div className="text-sm font-[700] [color:var(--pf-text)] truncate">
                           {isMiniRow ? (c.payerName || 'Quỹ Phụ') : (c.member?.fullName ?? c.memberId)}
                         </div>
                         <div className="text-[11px] [color:var(--pf-color-muted)] mt-0.5">

@@ -939,7 +939,7 @@ export function FixedDoublesDashboardPage() {
                 legs.map(leg => (
                   <div key={`leg-${leg}`} className="space-y-3">
                     <div className="flex items-center gap-2 px-1 pt-1">
-                      <span className="text-[12px] font-extrabold uppercase tracking-wide" style={{ color: T.brand }}>
+                      <span className="text-xs font-extrabold uppercase tracking-wide" style={{ color: T.brand }}>
                         {leg === 1 ? '↗ Lượt đi' : '↘ Lượt về'}
                       </span>
                       <span className="text-[11px]" style={{ color: T.txt2 }}>
@@ -1035,13 +1035,13 @@ export function FixedDoublesDashboardPage() {
                 className="w-full text-left px-4 py-3 rounded-xl border hover:[background:var(--pf-surface-muted)] transition-colors"
                 style={{ borderColor: T.border }}>
                 <div className="font-semibold [color:var(--pf-text)] text-sm">1 lượt (vòng tròn)</div>
-                <div className="text-[12px] [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 1 lần.</div>
+                <div className="text-xs [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 1 lần.</div>
               </button>
               <button onClick={() => doCreateSchedule(true)}
                 className="w-full text-left px-4 py-3 rounded-xl border-2 transition-colors"
                 style={{ borderColor: T.brand, background: 'var(--pf-primary-soft)' }}>
                 <div className="font-semibold text-sm" style={{ color: T.brand }}>Lượt đi &amp; lượt về</div>
-                <div className="text-[12px] [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
+                <div className="text-xs [color:var(--pf-color-muted)]">Mỗi cặp đội gặp nhau 2 lần (đi &amp; về), tính điểm chung.</div>
               </button>
             </div>
             <button onClick={() => setShowScheduleChoice(false)}
@@ -1068,7 +1068,7 @@ export function FixedDoublesDashboardPage() {
             <div className="space-y-2">
               {teams.map(t => (
                 <div key={t.id} style={{ border: `1px solid ${T.border}` }} className="rounded-xl p-2.5">
-                  <div className="text-[12px] font-bold mb-1.5" style={{ color: T.txt1 }}>{t.name}</div>
+                  <div className="text-xs font-bold mb-1.5" style={{ color: T.txt1 }}>{t.name}</div>
                   <div className="grid grid-cols-2 gap-2">
                     {([1, 2] as const).map(slot => {
                       const label = slot === 1 ? t.player1.memberName : t.player2.memberName
@@ -1089,7 +1089,7 @@ export function FixedDoublesDashboardPage() {
               ))}
             </div>
             {swapSel.length === 2 && (
-              <p className="text-[12px] mt-3 [color:var(--pf-text)]">
+              <p className="text-xs mt-3 [color:var(--pf-text)]">
                 Đổi: <b>{swapSel[0].label}</b> ↔ <b>{swapSel[1].label}</b>
               </p>
             )}

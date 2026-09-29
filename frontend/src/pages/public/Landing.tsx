@@ -153,7 +153,7 @@ function DashboardMock() {
             ].map((k) => (
               <div key={k.l} className="rounded-lg border p-2 [border-color:var(--pf-border)]">
                 <p className="text-[8px] [color:var(--pf-color-muted)]">{k.l}</p>
-                <p className="text-[12px] font-extrabold leading-tight tabular-nums" style={{ color: k.tone }}>{k.v}</p>
+                <p className="text-xs font-extrabold leading-tight tabular-nums" style={{ color: k.tone }}>{k.v}</p>
                 {k.d && <p className="text-[8px] font-semibold [color:var(--pf-green)]">{k.d} vs tuần trước</p>}
               </div>
             ))}

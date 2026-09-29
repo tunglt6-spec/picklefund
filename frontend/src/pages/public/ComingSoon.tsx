@@ -20,7 +20,7 @@ export function ComingSoon() {
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight">Nội dung đang được hoàn thiện</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed [color:var(--pf-color-muted)]">
-          Trang <code className="rounded [background:var(--pf-surface-muted)] px-1.5 py-0.5 text-[12px]">{loc.pathname}</code> sẽ ra mắt trong phiên bản kế tiếp của website PickleFund. Trong lúc chờ, bạn có thể khám phá các nội dung đã sẵn sàng bên dưới.
+          Trang <code className="rounded [background:var(--pf-surface-muted)] px-1.5 py-0.5 text-xs">{loc.pathname}</code> sẽ ra mắt trong phiên bản kế tiếp của website PickleFund. Trong lúc chờ, bạn có thể khám phá các nội dung đã sẵn sàng bên dưới.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link to="/" className="rounded-full border px-5 py-2.5 text-sm font-semibold [border-color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]">Trang chủ</Link>

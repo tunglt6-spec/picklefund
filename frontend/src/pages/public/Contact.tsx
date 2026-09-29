@@ -39,14 +39,14 @@ export function Contact() {
               <div className="min-w-0">
                 <p className="text-sm font-bold">Email hỗ trợ</p>
                 <p className="truncate text-[13px] [color:var(--pf-primary)]">{CONTACT.email}</p>
-                <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">Kênh chính thức cho mọi yêu cầu hỗ trợ.</p>
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Kênh chính thức cho mọi yêu cầu hỗ trợ.</p>
               </div>
             </a>
             <div className="flex items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><LifeBuoy size={18} /></div>
               <div>
                 <p className="text-sm font-bold">Hỗ trợ trong app</p>
-                <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">Đã là khách hàng? Dùng trợ lý Lisa AI và mục “Hướng dẫn” ngay trong ứng dụng.</p>
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Đã là khách hàng? Dùng trợ lý Lisa AI và mục “Hướng dẫn” ngay trong ứng dụng.</p>
                 <Link to="/login" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Đăng nhập →</Link>
               </div>
             </div>
@@ -54,7 +54,7 @@ export function Contact() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><MessageSquare size={18} /></div>
               <div>
                 <p className="text-sm font-bold">Dùng thử trước khi hỏi</p>
-                <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">Trải nghiệm đầy đủ tính năng miễn phí — nhiều câu hỏi sẽ được giải đáp ngay khi dùng.</p>
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Trải nghiệm đầy đủ tính năng miễn phí — nhiều câu hỏi sẽ được giải đáp ngay khi dùng.</p>
                 <Link to="/pricing" className="mt-2 inline-block text-[13px] font-semibold [color:var(--pf-primary)]">Xem bảng giá →</Link>
               </div>
             </div>
@@ -63,7 +63,7 @@ export function Contact() {
           {/* Soạn thư (mailto) */}
           <div className="rounded-2xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
             <p className="text-[15px] font-extrabold">Gửi tin nhắn cho chúng tôi</p>
-            <p className="mt-1 text-[12px] [color:var(--pf-color-muted)]">Điền nội dung rồi bấm gửi — trình email của bạn sẽ mở sẵn thư tới {CONTACT.email}.</p>
+            <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Điền nội dung rồi bấm gửi — trình email của bạn sẽ mở sẵn thư tới {CONTACT.email}.</p>
             <div className="mt-4 space-y-3">
               <input className={inputCls} placeholder="Tên của bạn / CLB" value={name} onChange={(e) => setName(e.target.value)} />
               <input className={inputCls} placeholder="Tiêu đề" value={subject} onChange={(e) => setSubject(e.target.value)} />

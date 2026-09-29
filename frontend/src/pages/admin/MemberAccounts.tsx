@@ -403,7 +403,7 @@ export function MemberAccounts() {
               { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
             ].map(s => (
               <div key={s.label} className="[background:var(--pf-surface-muted)] rounded-[10px] py-2 text-center">
-                <div className={`text-[14px] font-[800] ${s.color}`}>{s.value}</div>
+                <div className={`text-sm font-[800] ${s.color}`}>{s.value}</div>
                 <div className="text-[9px] [color:var(--pf-color-muted)] mt-0.5">{s.label}</div>
               </div>
             ))}

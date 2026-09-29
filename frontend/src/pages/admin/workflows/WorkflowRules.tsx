@@ -450,7 +450,7 @@ export function WorkflowRules() {
                 {obs.aiCost.byModel.map((m) => {
                   const pct = obs.aiCost.estimatedCostUsd > 0 ? Math.round((m.estimatedCostUsd / obs.aiCost.estimatedCostUsd) * 100) : 0
                   return (
-                    <div key={m.model} className="flex items-center gap-2 text-[12px]">
+                    <div key={m.model} className="flex items-center gap-2 text-xs">
                       <span className="w-40 shrink-0 truncate font-medium [color:var(--pf-text)]">{m.model === 'unknown' ? '(rule-based/free)' : m.model}</span>
                       <div className="h-2 flex-1 overflow-hidden rounded-full [background:var(--pf-color-muted-soft)]">
                         <div className="h-full rounded-full [background:var(--pf-primary)]" style={{ width: `${pct}%` }} />

@@ -64,7 +64,7 @@ export function SuccessStories() {
           {STATS.map((s) => (
             <div key={s.label} className="text-center">
               <p className="text-2xl font-extrabold tracking-tight [color:var(--pf-primary)]">{s.value}</p>
-              <p className="mt-0.5 text-[12px] [color:var(--pf-color-muted)]">{s.label}</p>
+              <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{s.label}</p>
             </div>
           ))}
         </div>
@@ -81,7 +81,7 @@ export function SuccessStories() {
                 </div>
                 <span className="rounded-full px-2.5 py-1 text-[11px] font-bold [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]">{s.tag}</span>
               </div>
-              <h3 className="mt-4 text-[16px] font-extrabold leading-snug [color:var(--pf-text)]">{s.title}</h3>
+              <h3 className="mt-4 text-base font-extrabold leading-snug [color:var(--pf-text)]">{s.title}</h3>
               <p className="mt-2 text-[13px] leading-relaxed [color:var(--pf-color-muted)]">{s.desc}</p>
               <ul className="mt-4 space-y-2">
                 {s.wins.map((w) => (
