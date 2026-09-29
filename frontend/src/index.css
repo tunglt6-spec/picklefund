@@ -34,7 +34,7 @@
   --pf-surface-muted: #F1F5F9;
   --pf-border:        #E2E8F0;
   --pf-text:          #0F172A;
-  --pf-text-muted:    #64748B;
+  --pf-text-muted:    #5A6678; /* WCAG AA: đạt 4.5:1 cả trên surface-muted #F1F5F9 (slate-500 cũ #64748B rớt 4.34) */
   /* V2.2 Brand primary — TÍM (Clean Modern SaaS). Dùng cho brand/primary UI:
      nút primary, tab active, pill chọn, focus ring, link. */
   --pf-primary:       #6D5DFB;
@@ -73,7 +73,7 @@
   --pf-color-danger:  #EF4444;  --pf-color-danger-soft:  #FEECEC;
   --pf-color-info:    #0EA5E9;  --pf-color-info-soft:    #E8F7FE;
   --pf-color-ai:      #6D5DFB;  --pf-color-ai-soft:      #EEEDFE;
-  --pf-color-muted:   #64748B;  --pf-color-muted-soft:   #F1F5F9;
+  --pf-color-muted:   #5A6678;  --pf-color-muted-soft:   #F1F5F9; /* muted: WCAG AA trên mọi nền sáng */
   --pf-text-on-primary: #FFFFFF; /* chữ trên nền primary (tím) */
   --pf-border-soft:     #EEF2F6; /* viền rất nhẹ (row divider) */
   --pf-focus-ring:      rgb(109 93 251 / 0.22); /* focus ring theo primary tím */
