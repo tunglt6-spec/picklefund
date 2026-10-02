@@ -381,7 +381,7 @@ export function buildExecutiveReportPdf(
           doc.text('—', cx + 2.8 + vw + 2.5, cy + 12);
         } else {
           const txt = deltaText(r.delta);
-          const good = r.delta >= 0;
+          const good = (r.delta >= 0) !== (r.label === 'Tổng chi');
           font(TYPE.caption, true, good ? COLORS.pos : COLORS.neg);
           const tw = doc.getTextWidth(txt) + 3.4;
           fill(WHITE);

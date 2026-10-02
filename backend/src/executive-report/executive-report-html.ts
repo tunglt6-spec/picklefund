@@ -89,10 +89,11 @@ export function buildReportHtml(
   const dots = (n: number) =>
     `<span class="dots">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span><span class="dno">${n}/5</span>`;
 
-  const delta = (v: number | null | undefined) =>
+  // inverse=true: chỉ số "càng giảm càng tốt" (Tổng chi) → giảm hiện xanh, tăng hiện đỏ.
+  const delta = (v: number | null | undefined, inverse = false) =>
     v == null
       ? '<span class="mut">—</span>'
-      : `<span class="delta ${v >= 0 ? 'pos' : 'neg'}">${deltaText(v)}</span>`;
+      : `<span class="delta ${(v >= 0) !== inverse ? 'pos' : 'neg'}">${deltaText(v)}</span>`;
 
   // Biểu đồ cột: toàn bề rộng, lưới ngang mảnh + nhãn trục; cột chiếm tối đa 85% chiều cao để chừa chỗ nhãn giá trị.
   const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
@@ -390,7 +391,7 @@ ${css}
   <div class="fstrip">${m.finRows
     .map(
       (r) =>
-        `<div class="fcell ${tn(r.tone, r.value)}"><div class="kl">${esc(r.label)}</div><div class="fval"><span class="fv">${esc(r.value)}</span>${r.delta !== undefined ? delta(r.delta) : ''}</div></div>`,
+        `<div class="fcell ${tn(r.tone, r.value)}"><div class="kl">${esc(r.label)}</div><div class="fval"><span class="fv">${esc(r.value)}</span>${r.delta !== undefined ? delta(r.delta, r.label === 'Tổng chi') : ''}</div></div>`,
     )
     .join('')}</div>
   ${chart}

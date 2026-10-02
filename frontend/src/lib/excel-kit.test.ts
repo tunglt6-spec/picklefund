@@ -372,3 +372,12 @@ test('brand amber/vàng: header + băng tiêu đề đủ tương phản với c
     assert.match(unzipText(bytes)('xl/worksheets/sheet1.xml'), /<tabColor rgb="FFF59E0B"\/>/) // tab giữ đúng màu CLB
   } finally { setExportBranding({ primaryColor: null }) }
 })
+
+test('moneyTone: dòng % thay đổi — Chi giảm xanh, Thu giảm đỏ', async () => {
+  const { moneyTone } = await import('./excel-kit.ts')
+  const row = (label: string) => ({ header: 'Giá trị', rowTexts: ['So với kỳ trước', label, '% thay đổi'] })
+  assert.equal(moneyTone({ ...row('Chi'), value: -12.8 }), 'pos')
+  assert.equal(moneyTone({ ...row('Chi'), value: 5 }), 'neg')
+  assert.equal(moneyTone({ ...row('Thu'), value: -16 }), 'neg')
+  assert.equal(moneyTone({ ...row('Thu'), value: 8 }), 'pos')
+})

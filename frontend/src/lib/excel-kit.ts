@@ -150,6 +150,13 @@ export const isIndexHeader = (h: string) => ['stt', 'hang', '#', 'tt'].includes(
 /** Màu ngữ nghĩa của MỘT ô số: âm → neg; cột/dòng "chi, nợ" → neg; "thu, số dư, đã nộp…" → pos; không rõ → null (màu thường).
  *  Chỉ áp cho cột TIỀN (header có "VNĐ"/"Số tiền", hoặc cột "Giá trị" của dòng có đơn vị VNĐ). */
 export function moneyTone(o: { header: string; value: number; rowTexts: string[]; sheetTone?: SheetTone; total?: boolean }): MoneyTone {
+  const allRows = o.rowTexts.map(stripAccent).filter(Boolean)
+  if (allRows.some(t => /^% thay doi/.test(t))) {
+    // Dòng "% thay đổi so với kỳ trước": Chi giảm là tin tốt (xanh), Thu/Cân đối giảm là xấu (đỏ).
+    if (o.value === 0) return null
+    const isExpense = allRows.some(t => /^chi$/.test(t))
+    return (o.value < 0) !== isExpense ? 'neg' : 'pos'
+  }
   if (o.value < 0) return 'neg'
   if (o.value === 0) return null
   const h = stripAccent(o.header)
