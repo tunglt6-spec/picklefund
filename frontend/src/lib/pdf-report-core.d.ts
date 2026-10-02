@@ -52,7 +52,7 @@ export interface PdfLogo {
   /** Kích thước gốc (px) để giữ tỉ lệ khi vẽ */
   w: number
   h: number
-  /** Logo TRẮNG (mặc định PickleFund): vẽ trên ô brandInk thay vì nền trắng. */
+  /** Logo TRẮNG (mặc định PickleFund): vẽ thẳng trên băng brandDark (logo màu → chip trắng). */
   onDark?: boolean
 }
 
@@ -161,7 +161,7 @@ export interface StandingsReportColumn {
   w: number
   align: 'left' | 'center' | 'right'
   /** status = chấm màu + chữ ink2 (Hoạt động / Đã đóng / Chờ xác nhận…). */
-  tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign' | 'status'
+  tone?: 'win' | 'pos' | 'loss' | 'neg' | 'warn' | 'info' | 'points' | 'brand' | 'muted' | 'ink2' | 'sign' | 'status'
   bold?: boolean
   /** Xuống dòng (tăng chiều cao hàng) thay vì cắt "…". Mặc định: true cho cột căn trái (trừ 'rank'). */
   wrap?: boolean
@@ -174,7 +174,7 @@ export function buildStandingsReportPDF(opts: {
   meta: StandingsReportMeta
   columns: StandingsReportColumn[]
   rows: Record<string, string | number>[]
-  stats?: { label: string; value: string | number }[]
+  stats?: { label: string; value: string | number; tone?: 'pos' | 'neg' | 'warn' | 'brand' }[]
   /** Dòng tổng cuối bảng (key theo columns). Không truyền → không vẽ. */
   footerRow?: Record<string, string | number>
   branding: QuyReportBranding

@@ -24,8 +24,8 @@ function T({ top, left, width, height, children, style }: {
   )
 }
 
-/* Bill thành viên — bố cục FROZEN; chỉ màu/tương phản/cỡ chữ tối thiểu (≥14px) theo chuẩn Luxury SaaS:
-   1 màu nhấn = màu CLB (tự tối cho chữ trắng AA), không navy/vàng/đa màu avatar, không emoji/gradient/bóng. */
+/* Bill thành viên — bố cục FROZEN; chỉ đổi MÀU theo màu app (SINH ĐỘNG): nền đặc = màu CLB đậm (mặc định tím #4F46E5),
+   vạch/chip trạng thái xanh (đã đóng) / đỏ (chưa đóng), số đậm theo tông, chữ nhỏ AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji/gradient/bóng. */
 function MemberCard({ member, index, P }: { member: InfographicReportData['members'][number]; index: number; P: InfographicPalette }) {
   const col = index % 2
   const row = Math.floor(index / 2)
@@ -48,7 +48,7 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       overflow: 'hidden',
     }}>
       {/* Top accent strip */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:5, background:P.brand }}/>
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:6, background: member.isPaid ? P.posFill : P.negFill }}/>
 
       {/* Jersey number (decorative) */}
       <div style={{ position:'absolute', top:14, left:10, fontSize:38, fontWeight:950, color:P.brand, opacity:0.1, lineHeight:1, userSelect:'none' }}>
@@ -80,9 +80,9 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
         <span style={{
           display:'inline-block', fontSize:14, fontWeight:800,
           padding:'1px 10px', borderRadius:99,
-          background: member.isPaid ? P.posTint : P.warnTint,
-          color: member.isPaid ? P.pos : P.warn,
-          border: `1px solid ${member.isPaid ? P.posFill : P.warnFill}`,
+          background: member.isPaid ? P.posTint : P.negTint,
+          color: member.isPaid ? P.pos : P.neg,
+          border: `1px solid ${member.isPaid ? P.posFill : P.negFill}`,
           whiteSpace:'nowrap',
         }}>
           {member.isPaid ? 'Đã đóng' : 'Chưa đóng'}
@@ -108,19 +108,19 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       </div>
 
       {/* Finance box bg */}
-      <div style={{ position:'absolute', top:144, left:16, width:468, height:76, background:P.surface2, borderRadius:14, border:`1px solid ${P.line}` }}/>
+      <div style={{ position:'absolute', top:144, left:16, width:468, height:76, background:P.soft, borderRadius:14, border:`1px solid ${P.softBorder}` }}/>
 
       {/* Phí sân */}
       <div style={{ ...cut, top:151, left:28, width:160, height:20, fontSize:14, color:P.muted }}>Phí sân</div>
       <div style={{ ...cut, top:151, left:190, width:282, height:20, fontSize:14, fontWeight:900, color:P.text, textAlign:'right' }}>{VND(member.courtFee)}</div>
-      <div style={{ position:'absolute', top:173, left:28, width:456, height:1, background:P.line }}/>
+      <div style={{ position:'absolute', top:173, left:28, width:456, height:1, background:P.softBorder }}/>
       {/* Sinh hoạt */}
       <div style={{ ...cut, top:176, left:28, width:160, height:20, fontSize:14, color:P.muted }}>Sinh hoạt</div>
       <div style={{ ...cut, top:176, left:190, width:282, height:20, fontSize:14, fontWeight:900, color:P.text, textAlign:'right' }}>{VND(member.livingFee)}</div>
-      <div style={{ position:'absolute', top:198, left:28, width:456, height:1, background:P.line }}/>
+      <div style={{ position:'absolute', top:198, left:28, width:456, height:1, background:P.softBorder }}/>
       {/* Total */}
       <div style={{ ...cut, top:201, left:28, width:140, height:18, fontSize:14, fontWeight:800, color:P.text }}>Tổng chi phí</div>
-      <div style={{ ...cut, top:198, left:190, width:282, height:22, fontSize:15, fontWeight:950, color:P.text, textAlign:'right' }}>{VND(member.totalCost)}</div>
+      <div style={{ ...cut, top:198, left:190, width:282, height:22, fontSize:15, fontWeight:950, color:P.ink, textAlign:'right' }}>{VND(member.totalCost)}</div>
 
       {/* Balance highlight */}
       <div style={{ position:'absolute', top:224, left:16, width:468, height:28, background:mBalPos?P.posTint:P.negTint, borderRadius:10, border:`1px solid ${mBalPos?P.posFill:P.negFill}`, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', boxSizing:'border-box' }}>
@@ -210,7 +210,7 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
       </T>
 
       <T top={216} left={360} width={360} height={18} style={stripLabel}>TỔNG CHI</T>
-      <T top={238} left={360} width={360} height={26} style={{ fontSize:18, fontWeight:800, color:P.warnOnDark, textAlign:'center' }}>
+      <T top={238} left={360} width={360} height={26} style={{ fontSize:18, fontWeight:800, color:P.negOnDark, textAlign:'center' }}>
         {VND(data.totalExpense)}
       </T>
 
@@ -233,7 +233,7 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
       </div>
 
       <div style={{ position:'absolute', top:296, left:656, width:180, height:40, display:'flex', alignItems:'center' }}>
-        <div style={{ display:'inline-flex', alignItems:'center', background:P.warnTint, border:`1px solid ${P.warnFill}`, borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.warn }}>
+        <div style={{ display:'inline-flex', alignItems:'center', background:P.negTint, border:`1px solid ${P.negFill}`, borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.neg }}>
           {data.unpaidMembers} chưa đóng
         </div>
       </div>

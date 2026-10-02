@@ -10,7 +10,9 @@ export const CONTENT_W_LANDSCAPE: number
 export const THEME: {
   color: Record<
     | 'ink' | 'ink2' | 'muted' | 'line' | 'lineStrong' | 'connector' | 'surface2' | 'white'
-    | 'pos' | 'neg' | 'warn' | 'info' | 'posFill' | 'negFill' | 'warnFill' | 'posTint' | 'negTint' | 'warnTint',
+    | 'lineSoft' | 'pos' | 'neg' | 'orange' | 'cyan' | 'amber' | 'posText' | 'negText' | 'warn' | 'info'
+    | 'posFill' | 'negFill' | 'warnFill' | 'posTint' | 'posEdge' | 'negTint' | 'negEdge' | 'warnTint' | 'warnEdge'
+    | 'goldTint' | 'silverTint' | 'bronzeTint',
     RGB
   >
   type: { display: number; h1: number; kpi: number; h2: number; body: number; cell: number; label: number; caption: number }
@@ -31,9 +33,16 @@ export const THEME: {
 
 export interface BrandPalette {
   brand: RGB
+  /** Băng masthead + chữ tiêu đề mục (mặc định #4F46E5). */
+  brandDark: RGB
+  /** Alias của brandDark (tương thích mã cũ). */
   brandInk: RGB
+  /** Nền header bảng: nhạt nhất mà chữ trắng ≥ 4.5:1. */
+  brandMid: RGB
   brandSoft: RGB
   brandEdge: RGB
+  brandBorder: RGB
+  badgeOnBrand: RGB
   hex: string
   inkHex: string
   softHex: string

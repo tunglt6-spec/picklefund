@@ -1,11 +1,12 @@
 /**
- * THEME "Luxury SaaS" — nguồn token DUY NHẤT cho mọi PDF vector / phiếu / PNG xuất từ FE.
+ * THEME "Luxury SaaS · SINH ĐỘNG" — nguồn token DUY NHẤT cho mọi PDF vector / phiếu / PNG xuất từ FE.
  *
  * JS thuần (ESM) như pdf-report-core.js để chạy được cả trong app, cả harness/test Node.
  * Luật: mọi exporter ĐỌC token ở đây, không hard-code màu/cỡ chữ riêng.
- *  - Chữ: chỉ dùng ink / ink2 / muted / pos / neg / warn / info / brandInk (đều ≥ 4.5:1 trên nền trắng).
- *  - Màu tươi (posFill/negFill/warnFill, brand thô) CHỈ cho chấm / thanh / vạch — không làm màu chữ.
- *  - Màu brand = màu CLB (mặc định #6D5DFB) qua makeBrand (tự tối dần để đạt tương phản).
+ *  - Bản sắc = tím app (#6D5DFB / #4F46E5): băng masthead ĐẶC, header bảng ĐẶC, thẻ KPI nhấn tím nhạt.
+ *  - Màu chữ SINH ĐỘNG (pos #16A34A, neg #DC2626, cyan, orange, amber, brandDark) chỉ cho chữ ĐẬM ≥ 8.5pt
+ *    (≥ 3:1 — chuẩn chữ lớn WCAG). Chữ thường nhỏ dùng bản AA: ink / ink2 / muted / posText / negText / warn / info.
+ *  - Tuyệt đối không dùng #94A3B8 làm màu chữ. Chữ trắng chỉ trên nền đặc đạt ≥ 4.5:1 (makeBrand tự tối).
  */
 
 export const DEFAULT_BRAND_HEX = '#6D5DFB'
@@ -15,24 +16,38 @@ export const THEME = {
   color: {
     ink: [30, 41, 59], // #1E293B
     ink2: [71, 85, 105], // #475569
-    muted: [90, 102, 120], // #5A6678
-    line: [226, 232, 240], // #E2E8F0 (hairline — trang trí)
-    lineStrong: [203, 213, 225], // #CBD5E1 (viền thẻ, đường ký)
+    muted: [100, 116, 139], // #64748B (gray — chữ nhỏ AA)
+    line: [226, 232, 240], // #E2E8F0 (border)
+    lineStrong: [203, 213, 225], // #CBD5E1 (đường ký, viền nhấn)
+    lineSoft: [241, 245, 249], // #F1F5F9
     connector: [100, 116, 139], // #64748B (đường nối sơ đồ — phi văn bản ≥ 3:1)
-    surface2: [248, 250, 252], // #F8FAFC
+    surface2: [248, 250, 252], // #F8FAFC (zebra)
     white: [255, 255, 255],
-    // semantic CHỮ
-    pos: [21, 128, 61], // #15803D
-    neg: [185, 28, 28], // #B91C1C
+    // semantic SINH ĐỘNG (chữ ĐẬM ≥ 8.5pt / chấm / thanh)
+    pos: [22, 163, 74], // #16A34A
+    neg: [220, 38, 38], // #DC2626
+    orange: [234, 88, 12], // #EA580C
+    cyan: [8, 145, 178], // #0891B2
+    amber: [217, 119, 6], // #D97706
+    // semantic bản AA (chữ thường nhỏ ≥ 4.5:1)
+    posText: [21, 128, 61], // #15803D
+    negText: [185, 28, 28], // #B91C1C
     warn: [180, 83, 9], // #B45309
     info: [14, 116, 144], // #0E7490
-    // semantic FILL (chấm/thanh — KHÔNG làm màu chữ)
+    // semantic FILL (chấm/thanh/nền)
     posFill: [22, 163, 74], // #16A34A
     negFill: [239, 68, 68], // #EF4444
     warnFill: [217, 119, 6], // #D97706
-    posTint: [240, 253, 244],
-    negTint: [254, 242, 242],
-    warnTint: [255, 251, 235],
+    posTint: [240, 253, 244], // #F0FDF4
+    posEdge: [187, 247, 208], // #BBF7D0
+    negTint: [254, 242, 242], // #FEF2F2
+    negEdge: [254, 202, 202], // #FECACA
+    warnTint: [255, 251, 235], // #FFFBEB
+    warnEdge: [253, 230, 138], // #FDE68A
+    // top 3 BXH (nền nhẹ)
+    goldTint: [254, 249, 195], // #FEF9C3
+    silverTint: [241, 245, 249], // #F1F5F9
+    bronzeTint: [255, 237, 213], // #FFEDD5
   },
   /** Thang chữ 7 bậc (pt). Sàn tuyệt đối = MIN_PT. */
   type: { display: 22, h1: 16, kpi: 14, h2: 11, body: 8.5, cell: 8, label: 7, caption: 7 },
@@ -84,28 +99,39 @@ export function hexToRgb(hex) {
 
 /**
  * Từ màu CLB → bộ màu brand cho tài liệu:
- *  - brand     : màu thô (CHỈ vạch/thanh/chấm/viền thẻ — không làm màu chữ)
- *  - brandInk  : brand tối ~20% rồi tối dần cho tới khi (a) chữ TRẮNG trên brandInk ≥ 4.5 và
- *                (b) brandInk trên brandSoft/trắng ≥ 4.5 → dùng làm màu chữ + nền logo + thẻ nhãn
- *  - brandSoft : brand pha 8% với trắng (nền header bảng / hàng tổng / thẻ nhấn)
- *  - brandEdge : brand pha 60% với trắng (viền thẻ nhấn)
- * Hex không hợp lệ → màu mặc định.
+ *  - brand      : màu thô (vạch/thanh/chấm/dải nhấn; mặc định #6D5DFB)
+ *  - brandDark  : brand tối ~20% rồi tối dần cho tới khi (a) chữ TRẮNG trên brandDark ≥ 4.5 và
+ *                 (b) brandDark trên brandSoft/trắng ≥ 4.5 → BĂNG MASTHEAD + chữ tiêu đề mục/link (mặc định #4F46E5)
+ *  - brandMid   : màu giữa brand → brandDark, nhạt nhất mà chữ TRẮNG vẫn ≥ 4.5 → nền HEADER BẢNG
+ *  - brandSoft  : nền thẻ nhấn / hàng tổng (mặc định #EEF2FF)
+ *  - brandEdge  : viền thẻ nhấn (mặc định #C7D2FE) — alias brandBorder
+ *  - badgeOnBrand: nền chip phụ trên băng đặc (mặc định #988CFC) — KHÔNG để chữ trắng lên (chỉ vật trang trí)
+ *  brandInk = alias của brandDark (tương thích mã cũ). Hex không hợp lệ → màu mặc định.
  */
 export function makeBrand(hex) {
   const rgb = hexToRgb(hex) || hexToRgb(DEFAULT_BRAND_HEX)
   const isDefault = toHex(rgb) === DEFAULT_BRAND_HEX
-  const brandSoft = mix(rgb, THEME.color.white, 0.92)
-  // Mặc định giữ indigo-600 (#4F46E5) theo spec; CLB tự chọn màu → tối 20%.
+  const brandSoft = isDefault ? [238, 242, 255] : mix(rgb, THEME.color.white, 0.92)
   let ink = isDefault ? [79, 70, 229] : mix(rgb, [0, 0, 0], 0.2)
   for (let k = 0; k < 40; k++) {
     if (contrast(ink, THEME.color.white) >= 4.5 && contrast(ink, brandSoft) >= 4.5) break
     ink = mix(ink, [0, 0, 0], 0.08)
   }
+  let mid = ink
+  for (let k = 0; k <= 10; k++) {
+    const c = mix(rgb, ink, k / 10)
+    if (contrast(c, THEME.color.white) >= 4.5) { mid = c; break }
+  }
+  const edge = isDefault ? [199, 210, 254] : mix(rgb, THEME.color.white, 0.7)
   return {
     brand: rgb,
+    brandDark: ink,
     brandInk: ink,
+    brandMid: mid,
     brandSoft,
-    brandEdge: mix(rgb, THEME.color.white, 0.6),
+    brandEdge: edge,
+    brandBorder: edge,
+    badgeOnBrand: isDefault ? [152, 140, 252] : mix(rgb, THEME.color.white, 0.3),
     hex: toHex(rgb),
     inkHex: toHex(ink),
     softHex: toHex(brandSoft),

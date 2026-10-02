@@ -2,6 +2,9 @@ import {
   COLORS,
   CONTENT_W,
   DEFAULT_BRAND,
+  DEFAULT_BRAND_BADGE,
+  DEFAULT_BRAND_BORDER,
+  DEFAULT_BRAND_DARK,
   DEFAULT_BRAND_INK,
   DEFAULT_BRAND_SOFT,
   MIN_FONT_PT,
@@ -45,13 +48,62 @@ function report(clubName = 'CLB Thăng Long', members = 3): any {
   };
 }
 
+const AA_LARGE = 3; // số ĐẬM cỡ lớn (≥ 8.5pt bold) — WCAG large text
+
 describe('export-tokens', () => {
+  it('palette SINH ĐỘNG khớp bản sắc app (tím #6D5DFB/#4F46E5, xanh thu, đỏ chi)', () => {
+    expect(DEFAULT_BRAND).toBe('#6D5DFB');
+    expect(DEFAULT_BRAND_DARK).toBe('#4F46E5');
+    expect(DEFAULT_BRAND_BORDER).toBe('#C7D2FE');
+    expect(DEFAULT_BRAND_BADGE).toBe('#988CFC');
+    expect(COLORS.posVivid).toBe('#16A34A');
+    expect(COLORS.negVivid).toBe('#DC2626');
+    expect(COLORS.negFill).toBe('#EF4444');
+    expect(COLORS.orange).toBe('#EA580C');
+    expect(COLORS.infoFill).toBe('#0891B2');
+    expect(COLORS.warnFill).toBe('#D97706');
+    expect(COLORS.posTint).toBe('#F0FDF4');
+    expect(COLORS.posBorder).toBe('#BBF7D0');
+    expect(COLORS.negTint).toBe('#FEF2F2');
+    expect(COLORS.negBorder).toBe('#FECACA');
+    expect(COLORS.surface2).toBe('#F8FAFC');
+    expect(makeBrand(null)).toMatchObject({
+      brand: '#6D5DFB', brandDeep: '#4F46E5', brandInk: '#4F46E5', brandSoft: '#EEF2FF', brandBorder: '#C7D2FE', badge: '#988CFC',
+    });
+  });
+
+  it('chữ TRẮNG trên băng/bìa/header bảng (brandDeep) ≥ 4.5 và số vivid lớn ≥ 3 trên trắng/nền nhạt', () => {
+    expect(contrast('#FFFFFF', makeBrand(null).brandDeep)).toBeGreaterThanOrEqual(AA);
+    const pairs: Array<[string, string, string]> = [
+      ['posVivid/white', COLORS.posVivid, '#FFFFFF'],
+      ['posVivid/posTint', COLORS.posVivid, COLORS.posTint],
+      ['negVivid/white', COLORS.negVivid, '#FFFFFF'],
+      ['negVivid/negTint', COLORS.negVivid, COLORS.negTint],
+      ['orange/white', COLORS.orange, '#FFFFFF'],
+      ['orange/warnTint', COLORS.orange, COLORS.warnTint],
+      ['cyan/white', COLORS.infoFill, '#FFFFFF'],
+      ['cyan/infoTint', COLORS.infoFill, COLORS.infoTint],
+      ['brandInk/brandSoft', DEFAULT_BRAND_INK, DEFAULT_BRAND_SOFT],
+    ];
+    for (const [n, fg, bg] of pairs) expect({ n, c: contrast(fg, bg) >= AA_LARGE }).toEqual({ n, c: true });
+    // chữ THƯỜNG nhỏ trên nền nhạt vẫn dùng bản AA
+    for (const bg of [COLORS.posTint, COLORS.negTint, COLORS.warnTint, COLORS.infoTint, DEFAULT_BRAND_SOFT, '#FFFFFF']) {
+      expect(contrast(COLORS.muted, bg)).toBeGreaterThanOrEqual(AA);
+    }
+    expect(contrast(COLORS.gray, '#FFFFFF')).toBeGreaterThanOrEqual(AA);
+    for (const c of ['#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#22D3EE']) {
+      const b = makeBrand(c);
+      expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
+      expect(contrast(b.brandInk, b.brandBorder)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it('khớp giá trị spec Luxury SaaS', () => {
     expect(COLORS.ink).toBe('#1E293B');
     expect(COLORS.ink2).toBe('#475569');
     expect(COLORS.muted).toBe('#5A6678');
     expect(COLORS.hairline).toBe('#E2E8F0');
-    expect(COLORS.pos).toBe('#15803D');
+    expect(COLORS.pos).toBe('#15803D'); // bản AA cho chữ thường nhỏ
     expect(COLORS.neg).toBe('#B91C1C');
     expect(COLORS.warn).toBe('#B45309');
     expect(COLORS.info).toBe('#0E7490');
@@ -109,6 +161,7 @@ describe('export-tokens', () => {
       expect(makeBrand(null).brand).toBe(DEFAULT_BRAND);
       expect(makeBrand('red').brand).toBe(DEFAULT_BRAND);
       expect(makeBrand('#6d5dfb')).toMatchObject({ brand: DEFAULT_BRAND, brandInk: DEFAULT_BRAND_INK, brandSoft: DEFAULT_BRAND_SOFT });
+    expect(makeBrand('#6d5dfb').brandDeep).toBe(DEFAULT_BRAND_DARK);
     });
   });
 
@@ -194,6 +247,22 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
   const html = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { brandColor: '#F59E0B', now: new Date('2026-10-02T03:15:00Z') });
   const css = html.replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,');
 
+  it('SINH ĐỘNG: băng/bìa/header bảng nền ĐẶC brandDeep chữ trắng, KPI số xanh/đỏ, hộp AI brandSoft', () => {
+    const b = makeBrand('#F59E0B');
+    expect(css).toMatch(/\.cv-hero\{background:var\(--brandDeep\);color:#fff/);
+    expect(css).toMatch(/\.mast\{[^}]*background:var\(--brandDeep\);color:#fff/);
+    expect(css).toMatch(/thead th\{background:var\(--brandDeep\);color:#fff/);
+    expect(css).toMatch(/\.aibox\{background:var\(--brandSoft\);border:[^;]*solid var\(--brandBorder\)/);
+    expect(css).toContain(`--brandBorder:${b.brandBorder}`);
+    expect(css).toContain(`.tn-pos{--t:${COLORS.posTint};--b:${COLORS.posBorder};--f:${COLORS.posFill};--v:${COLORS.posVivid}}`);
+    expect(css).toContain(`.tn-neg{--t:${COLORS.negTint};--b:${COLORS.negBorder};--f:${COLORS.negFill};--v:${COLORS.negVivid}}`);
+    expect(css).toContain(`.tb.thu{background:${COLORS.posFill}}.tb.chi{background:${COLORS.negFill}}`);
+    // Tổng thu = tông pos, Tổng chi = tông neg, Tổng tài sản âm = neg
+    expect(html).toMatch(/class="kpi tn-pos"><div class="kl">Tổng thu</);
+    expect(html).toMatch(/class="kpi tn-neg"><div class="kl">Tổng chi</);
+    expect(html).toMatch(/class="kpi tn-brand acc"><div class="kl">Tổng tài sản</);
+  });
+
   it('chữ ≥ 7pt: không còn font-size px, mọi pt ≥ 7', () => {
     expect(css).not.toMatch(/font-size:\s*[\d.]+px/);
     const sizes = [...css.matchAll(/font-size:\s*([\d.]+)pt/g)].map((x) => parseFloat(x[1]));
@@ -203,13 +272,14 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
 
   it('không gradient / đổ bóng / emoji / glyph ngoài font', () => {
     expect(css).not.toMatch(/gradient\(|box-shadow|backdrop-filter/);
+    expect(css).not.toMatch(/linear-gradient|radial-gradient|drop-shadow/);
     expect(css).not.toMatch(/[◆▲▼★⚠✓✨🏓🎮]/u);
   });
 
   it('màu hex trong HTML chỉ thuộc token (COLORS) hoặc bộ màu thương hiệu', () => {
     const b = makeBrand('#F59E0B');
     const allowed = new Set<string>(
-      [...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, '#FFFFFF'].map((c) => c.toUpperCase()),
+      [...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF'].map((c) => c.toUpperCase()),
     );
     const found = [...css.matchAll(/#[0-9a-fA-F]{6}\b/g)].map((x) => x[0].toUpperCase());
     expect(found.length).toBeGreaterThan(10);
@@ -226,6 +296,20 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
     const b = makeBrand('#F59E0B');
     expect(css).toContain(`--brandDeep:${b.brandDeep}`);
     expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it('model: tông số liệu — thu pos, chi neg, số âm luôn neg, dự báo theo dấu', () => {
+    const m = buildExecModel(report(), 'AI', new Date('2026-10-02T03:15:00Z'));
+    expect(m.kpis.find((k) => k.l === 'Tổng thu')?.tone).toBe('pos');
+    expect(m.kpis.find((k) => k.l === 'Tổng chi')?.tone).toBe('neg');
+    expect(m.finRows[2].tone).toBe('pos'); // cân đối dương
+    expect(m.forecast.tiles.map((t) => t.tone)).toEqual(['pos', 'neg', 'neg']);
+    expect(healthTone(90).vivid).toBe(COLORS.posVivid);
+    expect(healthTone(20).vivid).toBe(COLORS.negVivid);
+    for (const v of [90, 70, 55, 10]) {
+      const t = healthTone(v);
+      expect(contrast(t.vivid, '#FFFFFF')).toBeGreaterThanOrEqual(AA_LARGE);
+    }
   });
 
   it('đơn vị tiền kiểu vi-VN, không còn "Mđ"; không có placeholder logo "C" khi có tên CLB', () => {

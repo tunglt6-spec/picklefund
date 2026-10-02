@@ -2,7 +2,9 @@
  * Token thiết kế "Luxury SaaS" cho PDF phía SERVER (Chrome HTML→PDF + fallback jsPDF).
  * BẢN SAO có CÙNG giá trị với spec xuất tài liệu của FE (ink/ink2/muted/hairline/semantic/brand mặc định);
  * export-tokens.spec.ts khoá giá trị + tương phản WCAG ≥ 4.5 cho mọi cặp chữ/nền dùng thật.
- * Luật: 1 màu chủ đạo (màu CLB), không gradient/đổ bóng/emoji, chữ ≥ 7pt, đơn vị pt/mm sinh từ token.
+ * Luật: màu chủ đạo = màu CLB (mặc định tím app), nền ĐẶC cho băng/bìa/header bảng (chữ trắng ≥ 4.5:1),
+ * số liệu/tiêu đề dùng màu SINH ĐỘNG (xanh thu / đỏ chi), chữ nhỏ dùng bản AA; không gradient/đổ bóng/emoji,
+ * chữ ≥ 7pt, đơn vị pt/mm sinh từ token.
  */
 
 // ── Màu cố định (hex) ───────────────────────────────────────────────────
@@ -24,16 +26,32 @@ export const COLORS = {
   negFill: '#EF4444',
   warnFill: '#D97706',
   infoFill: '#0891B2',
+  // semantic SINH ĐỘNG cho SỐ/TIÊU ĐỀ ĐẬM cỡ lớn (≥ 8.5pt bold; ≥ 3:1 trên trắng) — KHÔNG dùng cho chữ thường nhỏ
+  posVivid: '#16A34A',
+  negVivid: '#DC2626',
+  orange: '#EA580C',
+  gray: '#64748B', // chữ phụ trên nền TRẮNG (AA 4.76); trên nền màu dùng muted
   // nền nhấn trạng thái
   posTint: '#F0FDF4',
   negTint: '#FEF2F2',
   warnTint: '#FFFBEB',
   infoTint: '#ECFEFF',
+  // viền nhấn trạng thái
+  posBorder: '#BBF7D0',
+  negBorder: '#FECACA',
+  warnBorder: '#FDE68A',
+  infoBorder: '#A5F3FC',
 } as const;
 
 export const DEFAULT_BRAND = '#6D5DFB';
 export const DEFAULT_BRAND_INK = '#4F46E5';
 export const DEFAULT_BRAND_SOFT = '#EEF2FF';
+/** Viền indigo nhạt quanh thẻ/khối nhấn brandSoft. */
+export const DEFAULT_BRAND_BORDER = '#C7D2FE';
+/** Nền ĐẶC mặc định cho băng/bìa/header bảng (chữ trắng 6.3:1). */
+export const DEFAULT_BRAND_DARK = '#4F46E5';
+/** Huy hiệu/đường trang trí trên nền brandDark (KHÔNG làm màu chữ). */
+export const DEFAULT_BRAND_BADGE = '#988CFC';
 
 // ── Thang chữ (pt) — sàn 7pt ───────────────────────────────────────────
 export const TYPE = {
@@ -118,8 +136,12 @@ export interface Brand {
   brandDeep: string;
   /** Chữ màu brand trên nền trắng / brandSoft (≥ 4.5:1 trên cả hai). */
   brandInk: string;
-  /** Brand pha 8% với trắng (nền header bảng, thẻ nhấn). */
+  /** Brand pha 8% với trắng (nền thẻ nhấn, hộp AI). */
   brandSoft: string;
+  /** Viền của khối brandSoft. */
+  brandBorder: string;
+  /** Huy hiệu/đường trang trí trên nền brandDeep (không dùng làm chữ). */
+  badge: string;
 }
 
 /** Sinh bộ màu thương hiệu AN TOÀN tương phản từ màu CLB (rỗng/sai định dạng → mặc định). */
@@ -127,11 +149,13 @@ export function makeBrand(primary?: string | null): Brand {
   const p = typeof primary === 'string' && HEX_RE.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_BRAND;
   const isDefault = p === DEFAULT_BRAND;
   const brandSoft = isDefault ? DEFAULT_BRAND_SOFT : mix(p, '#FFFFFF', 0.92);
-  const brandDeep = ensureContrast(p, '#FFFFFF', 4.5);
+  const brandDeep = isDefault ? DEFAULT_BRAND_DARK : ensureContrast(p, '#FFFFFF', 4.5);
+  const brandBorder = isDefault ? DEFAULT_BRAND_BORDER : mix(p, '#FFFFFF', 0.75);
+  const badge = isDefault ? DEFAULT_BRAND_BADGE : mix(brandDeep, '#FFFFFF', 0.35);
   const brandInk = isDefault
     ? DEFAULT_BRAND_INK
     : ensureContrast(mix(p, '#000000', 0.2), brandSoft, 4.5);
-  return { brand: p, brandDeep, brandInk, brandSoft };
+  return { brand: p, brandDeep, brandInk, brandSoft, brandBorder, badge };
 }
 
 // ── Định dạng số / tiền / ngày (vi-VN) ─────────────────────────────────

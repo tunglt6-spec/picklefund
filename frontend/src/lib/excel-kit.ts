@@ -19,10 +19,21 @@ export const XL_COLOR = {
   line: 'E2E8F0',
   surface2: 'F8FAFC',
   white: 'FFFFFF',
+  /* Bản AA (chữ thường nhỏ trên nền trắng >= 4.5:1). */
   pos: '15803D',
   neg: 'B91C1C',
   warn: 'B45309',
   info: '0E7490',
+  gray: '64748B',
+} as const
+
+/** Màu "sinh động" cho số/chip ĐẬM + nền nhạt tương ứng (khớp palette PDF/app). */
+export const XL_VIVID = {
+  pos: '16A34A', posBg: 'F0FDF4',
+  neg: 'DC2626', negBg: 'FEF2F2',
+  orange: 'EA580C', orangeBg: 'FFF7ED',
+  info: '0891B2', infoBg: 'ECFEFF',
+  warn: 'D97706', warnBg: 'FFFBEB',
 } as const
 
 export const XL_FONT = 'Calibri'
@@ -49,17 +60,30 @@ export function contrastRatio(a: string, b: string): number {
 const mixWith = (hex: string, other: [number, number, number], t: number) =>
   toHex(parseHex(hex).map((v, i) => v * (1 - t) + other[i] * t) as [number, number, number])
 
-export interface ExcelBrand { brand: string; ink: string; soft: string }
-/** `brand` = màu CLB. `ink` = brand tối 20%, tối thêm cho tới khi chữ trên nền `soft` đạt >= 4.5:1.
- *  `soft` = brand pha 8% với trắng. Mặc định #6D5DFB dùng cặp chuẩn của spec (#4F46E5 / #EEF2FF). */
+export interface ExcelBrand {
+  brand: string
+  /** brandDark: chữ trên nền `soft` (>= 4.5:1) VÀ nền băng tiêu đề (chữ trắng >= 4.5:1). */
+  ink: string
+  soft: string
+  /** Nền header bảng: brand đặc, tự tối nếu brand sáng để chữ trắng đạt >= 4.5:1. */
+  head: string
+  /** Viền nhạt cùng tông brand (indigo #C7D2FE với màu mặc định). */
+  border: string
+}
+/** `brand` = màu CLB. `ink` = brand tối 20%, tối thêm cho tới khi chữ trên nền `soft` đạt >= 4.5:1 và
+ *  chữ trắng trên `ink` đạt >= 4.5:1. `soft` = brand pha 8% với trắng. `head` = brand (tối dần nếu cần).
+ *  Mặc định #6D5DFB dùng bộ chuẩn: brandDark #4F46E5, soft #EEF2FF, border #C7D2FE. */
 export function makeBrand(primaryHex?: string | null): ExcelBrand {
   const raw = (primaryHex ?? '').replace('#', '').trim().toUpperCase()
   const brand = /^[0-9A-F]{6}$/.test(raw) ? raw : DEFAULT_BRAND_HEX
-  if (brand === DEFAULT_BRAND_HEX) return { brand, ink: '4F46E5', soft: 'EEF2FF' }
+  if (brand === DEFAULT_BRAND_HEX) return { brand, ink: '4F46E5', soft: 'EEF2FF', head: brand, border: 'C7D2FE' }
   const soft = mixWith(brand, [255, 255, 255], 0.92)
+  const border = mixWith(brand, [255, 255, 255], 0.7)
   let ink = mixWith(brand, [0, 0, 0], 0.2)
-  for (let i = 0; i < 12 && contrastRatio(ink, soft) < 4.5; i++) ink = mixWith(ink, [0, 0, 0], 0.12)
-  return { brand, ink, soft }
+  for (let i = 0; i < 16 && (contrastRatio(ink, soft) < 4.5 || contrastRatio(ink, 'FFFFFF') < 4.5); i++) ink = mixWith(ink, [0, 0, 0], 0.12)
+  let head = brand
+  for (let i = 0; i < 16 && contrastRatio(head, 'FFFFFF') < 4.5; i++) head = mixWith(head, [0, 0, 0], 0.1)
+  return { brand, ink, soft, head, border }
 }
 
 /* ─── Mã tài liệu: PF-{LOẠI}-{yyMMdd}-{HHmm} ─── */
@@ -95,10 +119,11 @@ export function displayNumber(n: number): string {
 
 export type StatusTone = 'pos' | 'neg' | 'warn' | 'info'
 const STATUS_WORDS: Record<StatusTone, string[]> = {
-  pos: ['da dong', 'da xac nhan', 'hoat dong', 'da duyet', 'da chi', 'co mat', 'da thanh toan', 'hoan thanh', 'dang mo', 'da thu', 'thanh cong'],
-  neg: ['chua dong', 'tu choi', 'vang', 'qua han', 'da huy', 'that bai', 'con no', 'no'],
-  warn: ['cho xac nhan', 'cho duyet', 'tam nghi', 'cho xu ly', 'sap het han', 'dang cho', 'cho thanh toan'],
-  info: ['quy phu'],
+  pos: ['da dong', 'da xac nhan', 'hoat dong', 'dang hoat dong', 'da duyet', 'da chi', 'co mat', 'da thanh toan', 'hoan thanh', 'da hoan thanh',
+    'dang mo', 'da thu', 'thanh cong', 'da nop', 'thu', 'khoan thu', 'xuat sac', 'tot', 'dong du', 'da nhan'],
+  neg: ['chua dong', 'tu choi', 'vang', 'qua han', 'da huy', 'that bai', 'con no', 'no', 'chua nop', 'chi', 'khoan chi', 'het han', 'ngung hoat dong', 'da khoa'],
+  warn: ['cho xac nhan', 'cho duyet', 'tam nghi', 'cho xu ly', 'sap het han', 'dang cho', 'cho thanh toan', 'canh bao', 'can quan tam'],
+  info: ['quy phu', 'thong tin', 'dang dien ra', 'sap dien ra'],
 }
 const stripAccent = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim()
 /** Chữ trạng thái chuẩn (khớp NGUYÊN CHUỖI, không phân biệt dấu/hoa-thường) → tông semantic. */
@@ -109,6 +134,36 @@ export function statusTone(text: string): StatusTone | null {
   return null
 }
 
+/* ─── Tông tiền (số dương thu = xanh, chi/nợ/âm = đỏ) ─── */
+export type SheetTone = 'income' | 'expense' | null
+export type MoneyTone = 'pos' | 'neg' | 'warn' | null
+/** Loại sheet suy từ tên sheet + loại tài liệu (TQ = thu, BCC = chi). */
+export function inferSheetTone(sheetName: string, docType?: string): SheetTone {
+  const n = stripAccent(sheetName)
+  if (/^(khoan chi|chi phi|chi quy|chi thu quy)/.test(n)) return 'expense'
+  if (/^(thu quy|khoan thu|dong quy)/.test(n)) return 'income'
+  if (docType === 'BCC') return 'expense'
+  if (docType === 'TQ') return 'income'
+  return null
+}
+export const isIndexHeader = (h: string) => ['stt', 'hang', '#', 'tt'].includes(stripAccent(h))
+/** Màu ngữ nghĩa của MỘT ô số: âm → neg; cột/dòng "chi, nợ" → neg; "thu, số dư, đã nộp…" → pos; không rõ → null (màu thường).
+ *  Chỉ áp cho cột TIỀN (header có "VNĐ"/"Số tiền", hoặc cột "Giá trị" của dòng có đơn vị VNĐ). */
+export function moneyTone(o: { header: string; value: number; rowTexts: string[]; sheetTone?: SheetTone; total?: boolean }): MoneyTone {
+  if (o.value < 0) return 'neg'
+  if (o.value === 0) return null
+  const h = stripAccent(o.header)
+  const rows = o.rowTexts.map(stripAccent).filter(Boolean)
+  const kvRow = /gia tri/.test(h) && rows.some(t => /^vnd\b/.test(t))
+  if (!(/vnd|so tien/.test(h) || kvRow)) return null
+  if (/(^| )(chi|con no|no|thieu|phat)( |$)|chi phi|sinh hoat/.test(h)) return 'neg'
+  if (/so du|can doi|chenh lech|luy ke|da nop|da dong|muc dong|(^| )thu( |$)|tai san/.test(h)) return 'pos'
+  if (o.total && rows.some(t => /^cho /.test(t))) return 'warn'
+  if (rows.some(t => /^(khoan )?chi$|^(tong )?chi\b|\bchi$|^con no|^no$/.test(t))) return 'neg'
+  if (rows.some(t => /^(khoan )?thu$|^(tong )?thu\b|\bthu$|tai san|can doi|so du/.test(t))) return 'pos'
+  return o.sheetTone === 'expense' ? 'neg' : o.sheetTone === 'income' ? 'pos' : null
+}
+
 /* ─── Bộ style ─── */
 type Align = 'left' | 'right' | 'center'
 const hair = { style: 'thin', color: { rgb: XL_COLOR.line } }
@@ -116,21 +171,35 @@ const hair = { style: 'thin', color: { rgb: XL_COLOR.line } }
 export function xlStyles(b: ExcelBrand) {
   const font = (sz: number, o: Record<string, unknown> = {}) => ({ name: XL_FONT, sz, color: { rgb: XL_COLOR.ink }, ...o })
   const solid = (rgb: string) => ({ patternType: 'solid', fgColor: { rgb } })
-  const rule = { style: 'thin', color: { rgb: b.brand } }
+  const WHITE = { rgb: XL_COLOR.white }
+  const rule = { style: 'medium', color: { rgb: b.ink } }
+  const band = solid(b.ink)
+  const left = { horizontal: 'left', vertical: 'center', indent: 1 }
+  const tone = (t: StatusTone) => ({
+    pos: [XL_VIVID.pos, XL_VIVID.posBg], neg: [XL_VIVID.neg, XL_VIVID.negBg], warn: [XL_VIVID.warn, XL_VIVID.warnBg], info: [XL_VIVID.info, XL_VIVID.infoBg],
+  })[t]
   return {
-    club: { font: font(9, { bold: true, color: { rgb: b.ink } }), alignment: { horizontal: 'left', vertical: 'center' } },
-    title: { font: font(16, { bold: true }), alignment: { horizontal: 'left', vertical: 'center' } },
-    scope: { font: font(10, { color: { rgb: XL_COLOR.ink2 } }), alignment: { horizontal: 'left', vertical: 'center' } },
+    /* Băng tiêu đề: tên CLB + tên tài liệu trên nền brandDark chữ trắng; phạm vi + xuất lúc trên nền brandSoft. */
+    club: { font: font(10, { bold: true, color: WHITE }), fill: band, alignment: left },
+    title: { font: font(16, { bold: true, color: WHITE }), fill: band, alignment: left },
+    scope: { font: font(10, { bold: true, color: { rgb: b.ink } }), fill: solid(b.soft), alignment: left },
     meta: {
-      font: font(9, { color: { rgb: XL_COLOR.muted } }),
-      alignment: { horizontal: 'left', vertical: 'center' },
+      font: font(9, { color: { rgb: b.ink } }), fill: solid(b.soft), alignment: left,
       border: { bottom: { style: 'medium', color: { rgb: b.brand } } },
     },
-    metaRule: { border: { bottom: { style: 'medium', color: { rgb: b.brand } } } },
+    metaRule: {
+      fill: solid(b.soft), border: { bottom: { style: 'medium', color: { rgb: b.brand } } },
+    },
+    /* Văn bản thường (file mẫu / sheet hướng dẫn). */
+    text: { font: font(10, { color: { rgb: XL_COLOR.ink2 } }), alignment: { horizontal: 'left', vertical: 'center', wrapText: true } },
+    section: {
+      font: font(10, { bold: true, color: { rgb: b.ink } }), fill: solid(b.soft),
+      border: { bottom: { style: 'thin', color: { rgb: b.border } } }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+    },
     header: (a: Align) => ({
-      font: font(10, { bold: true, color: { rgb: b.ink } }),
-      fill: solid(b.soft),
-      border: { bottom: rule },
+      font: font(10, { bold: true, color: WHITE }),
+      fill: solid(b.head),
+      border: { bottom: { style: 'medium', color: { rgb: b.ink } }, left: { style: 'thin', color: { rgb: b.border } }, right: { style: 'thin', color: { rgb: b.border } } },
       alignment: { horizontal: a, vertical: 'center', wrapText: true, indent: a === 'center' ? 0 : 1 },
     }),
     cell: (a: Align, o: { wrap?: boolean; zebra?: boolean; color?: string; bold?: boolean } = {}) => ({
@@ -139,10 +208,19 @@ export function xlStyles(b: ExcelBrand) {
       ...(o.zebra ? { fill: solid(XL_COLOR.surface2) } : {}),
       alignment: { horizontal: a, vertical: 'center', wrapText: !!o.wrap, indent: a === 'center' ? 0 : 1 },
     }),
+    /** Chip trạng thái: nền nhạt + chữ đậm sinh động. */
+    chip: (t: StatusTone) => {
+      const [fg, bg] = tone(t)
+      return {
+        font: font(10, { bold: true, color: { rgb: fg } }), fill: solid(bg),
+        border: { bottom: hair },
+        alignment: { horizontal: 'center', vertical: 'center' },
+      }
+    },
     total: (a: Align, o: { first?: boolean; color?: string; wrap?: boolean } = {}) => ({
-      font: font(10, { bold: true, color: { rgb: o.color ?? XL_COLOR.ink } }),
+      font: font(10, { bold: true, color: { rgb: o.color ?? b.ink } }),
       fill: solid(b.soft),
-      border: { top: o.first ? rule : hair, bottom: hair },
+      border: { top: o.first ? rule : { style: 'thin', color: { rgb: b.border } }, bottom: { style: 'thin', color: { rgb: b.border } } },
       alignment: { horizontal: a, vertical: 'center', wrapText: !!o.wrap, indent: a === 'center' ? 0 : 1 },
     }),
     empty: {
@@ -153,7 +231,12 @@ export function xlStyles(b: ExcelBrand) {
   }
 }
 
-export const statusColor = (t: StatusTone) => XL_COLOR[t]
+/** Màu chữ số theo tông tiền (sinh động, dùng cùng chữ ĐẬM). */
+export const moneyColor = (t: Exclude<MoneyTone, null>) => ({ pos: XL_VIVID.pos, neg: XL_VIVID.neg, warn: XL_VIVID.warn })[t]
+/** Màu tab sheet: thu = xanh, chi = đỏ, còn lại = brand. */
+export const tabColorFor = (tone: SheetTone, brand: string) => (tone === 'income' ? XL_VIVID.pos : tone === 'expense' ? XL_VIVID.neg : brand)
+
+export const statusColor = (t: StatusTone) => XL_VIVID[t]
 
 /* ─── Độ rộng cột: đo trên chuỗi ĐÃ định dạng; clamp 10..48; header ×1.15 (bold) ─── */
 export const COL_MIN = 10

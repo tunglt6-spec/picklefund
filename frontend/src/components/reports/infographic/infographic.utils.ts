@@ -17,11 +17,14 @@ export function fmtDate(date: string | Date): string {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-/* ── Palette Infographic (brand CLB, tự tối cho chữ trắng AA) ──
-   Poster 1080x1920: bố cục FROZEN, chỉ đổi MÀU → 1 màu nhấn = màu CLB (branding), chữ ≥ 4.5:1 trên mọi nền.
+/* ── Palette Infographic SINH ĐỘNG (màu app: tím CLB + xanh thu / đỏ chi) ──
+   Poster 1080x1920: bố cục FROZEN, chỉ đổi MÀU. Nền đặc = brand đậm (mặc định #4F46E5, tự tối cho chữ trắng ≥ 4.5:1);
+   số lớn đậm dùng màu sinh động (xanh #16A34A / đỏ #DC2626, ≥ 3:1), chữ nhỏ dùng bản AA (≥ 4.5:1).
    Hàm thuần (không DOM) để node --test kiểm chứng. */
 export const INFOGRAPHIC_MIN_FONT_PX = 14
 export const DEFAULT_INFOGRAPHIC_BRAND = '#6D5DFB'
+/** Nền đặc mặc định cho băng/header (chữ trắng 6.3:1). */
+export const DEFAULT_INFOGRAPHIC_DEEP = '#4F46E5'
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
 const toRgb = (h: string): [number, number, number] =>
@@ -58,7 +61,11 @@ export interface InfographicPalette {
   /** Chữ màu brand trên trắng / soft (≥ 4.5). */
   ink: string
   soft: string
-  /** 3 bậc nền tối (từ deep) cho vùng tổng kết / chân / thanh đáy. */
+  /** Viền của khối soft / thẻ nhấn (indigo nhạt). */
+  softBorder: string
+  /** Huy hiệu/đường trang trí trên nền deep (KHÔNG làm màu chữ). */
+  badge: string
+  /** 3 bậc nền (đậm dần từ deep, vẫn giữ sắc tím/brand) cho vùng tổng kết / chân / thanh đáy. */
   dark: string
   darker: string
   darkest: string
@@ -77,9 +84,17 @@ export interface InfographicPalette {
   posFill: string
   negFill: string
   warnFill: string
+  /** Số ĐẬM cỡ lớn (≥ 3:1 trên trắng/tint): xanh thu, đỏ chi, cam. KHÔNG dùng cho chữ nhỏ. */
+  posVivid: string
+  negVivid: string
+  orange: string
+  cyan: string
   posTint: string
   negTint: string
   warnTint: string
+  posBorder: string
+  negBorder: string
+  warnBorder: string
   posOnDark: string
   negOnDark: string
   warnOnDark: string
@@ -89,11 +104,13 @@ export function makeInfographicPalette(primary?: string | null): InfographicPale
   const brand = typeof primary === 'string' && HEX6.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_INFOGRAPHIC_BRAND
   const isDefault = brand === DEFAULT_INFOGRAPHIC_BRAND
   const soft = isDefault ? '#EEF2FF' : mixHex(brand, '#FFFFFF', 0.92)
-  const deep = darkenUntil(brand, ['#FFFFFF'])
+  const softBorder = isDefault ? '#C7D2FE' : mixHex(brand, '#FFFFFF', 0.75)
+  const deep = isDefault ? DEFAULT_INFOGRAPHIC_DEEP : darkenUntil(brand, ['#FFFFFF'])
+  const badge = isDefault ? '#988CFC' : mixHex(deep, '#FFFFFF', 0.35)
   const ink = isDefault ? '#4F46E5' : darkenUntil(mixHex(brand, '#000000', 0.2), ['#FFFFFF', soft])
-  const dark = mixHex(deep, '#000000', 0.65)
-  const darker = mixHex(deep, '#000000', 0.78)
-  const darkest = mixHex(deep, '#000000', 0.88)
+  const dark = mixHex(deep, '#000000', 0.45)
+  const darker = mixHex(deep, '#000000', 0.58)
+  const darkest = mixHex(deep, '#000000', 0.7)
   let onDarkMuted = '#CBD5E1'
   for (let i = 0; i < 20 && contrastRatio(onDarkMuted, dark) < 4.5; i++) onDarkMuted = mixHex(onDarkMuted, '#FFFFFF', 0.15)
   return {
@@ -101,10 +118,12 @@ export function makeInfographicPalette(primary?: string | null): InfographicPale
     deep,
     ink,
     soft,
+    softBorder,
+    badge,
     dark,
     darker,
     darkest,
-    pill: mixHex(deep, '#000000', 0.25),
+    pill: mixHex(deep, '#000000', 0.22),
     onDark: '#FFFFFF',
     onDarkMuted,
     text: '#1E293B',
@@ -118,12 +137,19 @@ export function makeInfographicPalette(primary?: string | null): InfographicPale
     posFill: '#16A34A',
     negFill: '#EF4444',
     warnFill: '#D97706',
+    posVivid: '#16A34A',
+    negVivid: '#DC2626',
+    orange: '#EA580C',
+    cyan: '#0891B2',
     posTint: '#F0FDF4',
     negTint: '#FEF2F2',
     warnTint: '#FFFBEB',
-    posOnDark: '#34D399',
+    posBorder: '#BBF7D0',
+    negBorder: '#FECACA',
+    warnBorder: '#FDE68A',
+    posOnDark: '#4ADE80',
     negOnDark: '#FCA5A5',
-    warnOnDark: '#FB923C',
+    warnOnDark: '#FDBA74',
   }
 }
 

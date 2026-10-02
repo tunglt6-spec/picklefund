@@ -204,9 +204,9 @@ test('báo cáo chi phí: nhãn tổng tùy chỉnh + rỗng in câu chuẩn "Ch
    Quét mọi builder bằng SpyPDF: cỡ chữ ≥ 7pt, mọi màu chữ thuộc THEME + tương phản ≥ 4.5:1 trên trắng,
    không emoji / ký tự ngoài font, màu brand CLB tới mọi PDF, mã tài liệu + footer chuẩn. */
 
-/** jsPDF gián điệp thứ 2: ghi (chuỗi, cỡ chữ hiệu lực, màu chữ hiệu lực) tại MỖI lệnh text. */
+/** jsPDF gián điệp thứ 2: ghi (chuỗi, cỡ chữ, đậm?, màu chữ, màu nền hiện hành) tại MỖI lệnh text. */
 function makeStyleSpy() {
-  const rec: { text: string; size: number; color: number[] }[] = []
+  const rec: { text: string; size: number; bold: boolean; color: number[]; fill: number[] }[] = []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   class StylePDF extends (BaseJsPDF as any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,10 +215,11 @@ function makeStyleSpy() {
       const orig = this.text.bind(this)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.text = (t: any, ...rest: any[]) => {
-        const hex = String(this.getTextColor()) // '#rrggbb' (có thể lệch ±1 do làm tròn 3 chữ số)
-        const color = hexToRgb(hex) as number[]
+        const color = hexToRgb(String(this.getTextColor())) as number[] // '#rrggbb' (có thể lệch ±1 do làm tròn)
+        const fill = hexToRgb(String(this.getFillColor())) as number[]
+        const bold = String(this.getFont().fontStyle) === 'bold'
         for (const s of Array.isArray(t) ? t : [t]) {
-          if (typeof s === 'string' && s.trim() !== '') rec.push({ text: s, size: this.getFontSize(), color })
+          if (typeof s === 'string' && s.trim() !== '') rec.push({ text: s, size: this.getFontSize(), bold, color, fill })
         }
         return orig(t, ...rest)
       }
@@ -254,31 +255,58 @@ function buildAll(primaryColor: string | null, logo: unknown = null) {
 }
 
 const EMOJI = /[\u{1F300}-\u{1FAFF}☀-➿⭐⏳✓✔▲▼◆]/u
-const TEXT_COLORS = ['ink', 'ink2', 'muted', 'pos', 'neg', 'warn', 'info'] as const
+const col = (k: string) => THEME.color[k as keyof typeof THEME.color] as number[]
+/** Chữ thường nhỏ: bản AA (≥ 4.5:1 trên trắng). */
+const AA_KEYS = ['ink', 'ink2', 'muted', 'posText', 'negText', 'warn', 'info', 'neg']
+/** Màu SINH ĐỘNG: chỉ cho chữ ĐẬM ≥ 8.5pt (≥ 3:1 — chuẩn chữ lớn). */
+const VIVID_KEYS = ['pos', 'cyan', 'orange', 'amber']
 
 for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
-  test(`conformance (brand ${hex ?? 'mặc định'}): mọi chữ ≥ 7pt, màu chữ ∈ THEME + tương phản ≥ 4.5 trên trắng, không emoji`, () => {
+  test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 8.5pt (≥ 3:1); chữ trắng chỉ trên nền đặc ≥ 4.5:1; không #94A3B8/emoji`, () => {
     const { rec } = buildAll(hex)
     assert.ok(rec.length > 200, 'phải ghi được nhiều chuỗi')
     const brand = makeBrand(hex)
-    const allowed = [...TEXT_COLORS.map(k => THEME.color[k] as number[]), brand.brandInk as number[]]
+    const aa = [...AA_KEYS.map(col), brand.brandDark as number[]]
+    const vivid = VIVID_KEYS.map(col)
+    let whiteCount = 0
+    let vividCount = 0
     for (const r of rec) {
       assert.ok(r.size >= MIN_PT - 1e-6, `cỡ chữ ${r.size} < ${MIN_PT} ở "${r.text}"`)
       assert.ok(!EMOJI.test(r.text), `emoji trong "${r.text}"`)
-      const ok = allowed.some(c => near(r.color, c))
-      assert.ok(ok, `màu chữ ${JSON.stringify(r.color)} ngoài THEME ở "${r.text}"`)
-      assert.ok(contrast(r.color, THEME.color.white) >= 4.4, `tương phản thấp ở "${r.text}" ${JSON.stringify(r.color)}`)
+      assert.ok(!near(r.color, [148, 163, 184], 1), `#94A3B8 làm màu chữ ở "${r.text}"`)
+      if (near(r.color, THEME.color.white as number[], 1)) {
+        whiteCount++
+        assert.ok(contrast(r.fill, THEME.color.white) >= 4.4, `chữ trắng trên nền ${JSON.stringify(r.fill)} (${contrast(r.fill, THEME.color.white).toFixed(2)}) ở "${r.text}"`)
+        continue
+      }
+      if (aa.some(c => near(r.color, c))) {
+        assert.ok(contrast(r.color, THEME.color.white) >= 4.4, `tương phản thấp ở "${r.text}" ${JSON.stringify(r.color)}`)
+        continue
+      }
+      assert.ok(vivid.some(c => near(r.color, c)), `màu chữ ${JSON.stringify(r.color)} ngoài THEME ở "${r.text}"`)
+      vividCount++
+      assert.ok(r.bold && r.size >= 8.5 - 1e-6, `chữ sinh động phải ĐẬM ≥ 8.5pt: "${r.text}" ${r.size}pt bold=${r.bold}`)
+      assert.ok(contrast(r.color, THEME.color.white) >= 2.95, `sinh động < 3:1 ở "${r.text}"`)
     }
+    assert.ok(whiteCount > 20, 'masthead/header bảng phải có chữ trắng trên nền đặc')
+    assert.ok(vividCount > 20, 'phải có chữ xanh/đỏ sinh động')
   })
 }
 
+test('toàn bộ nội dung PDF không có gradient/shading/bóng đổ (băng màu ĐẶC)', () => {
+  for (const d of buildAll(null).docs) {
+    const out = String(d.output())
+    assert.ok(!/\/ShadingType|\/Shading |\/PatternType 2|\/SMask/.test(out), 'có gradient/shading/mask trong PDF')
+  }
+})
+
 test('brand CLB tới MỌI PDF: màu brand xuất hiện trong luồng PDF của từng tài liệu; emerald không lẫn tím mặc định', () => {
-  const stroke = (hex: string | null) => pdfRgb(makeBrand(hex).brand) + ' RG'
+  const stroke = (hex: string | null) => pdfRgb(makeBrand(hex).brand) + ' rg'
   const emerald = buildAll('#0F766E').docs
   const def = buildAll(null).docs
   emerald.forEach((d, i) => {
     const out = String(d.output())
-    assert.ok(out.includes(stroke('#0F766E')), `tài liệu #${i} thiếu vạch brand emerald`)
+    assert.ok(out.includes(stroke('#0F766E')), `tài liệu #${i} thiếu màu brand emerald`)
     assert.ok(!out.includes(stroke(null)), `tài liệu #${i} còn màu tím mặc định`)
   })
   def.forEach((d, i) => assert.ok(String(d.output()).includes(stroke(null)), `tài liệu #${i} thiếu màu tím mặc định`))
@@ -323,11 +351,11 @@ test('ngày/nhóm KHÔNG bị cắt "…": ô ngày ở cột hẹp tự co, ti�
   assert.ok(s.texts.includes('05/03/2026'))
 })
 
-test('số âm: ô số bắt đầu "-" dùng màu neg (#B91C1C), không đỏ tươi', () => {
+test('số âm: ô số bắt đầu "-" dùng đỏ neg (đậm sinh động) / negText / ink', () => {
   const { rec } = buildAll(null)
   const neg = rec.filter(r => /^-\s?\d/.test(r.text))
   assert.ok(neg.length > 0)
-  for (const r of neg) assert.ok(near(r.color, THEME.color.neg as number[]) || near(r.color, THEME.color.ink as number[]), `${r.text} ${JSON.stringify(r.color)}`)
+  for (const r of neg) assert.ok(near(r.color, THEME.color.neg as number[]) || near(r.color, THEME.color.negText as number[]) || near(r.color, THEME.color.ink as number[]), `${r.text} ${JSON.stringify(r.color)}`)
 })
 
 test('phiếu thu cá nhân: tiếng Việt, "Số 0012", không "No.", không emoji, payload HTML chỉ là chữ thuần; vector 1 trang', () => {
@@ -407,6 +435,18 @@ test('knockout: trận hoà tỉ số có winner ghi "đi tiếp" / "pen x-y"; �
 
 test('lề/CONTENT_W một nơi: THEME.page → 186mm', () => {
   assert.equal(THEME.page.portrait.w - THEME.page.margin * 2, 186)
+})
+
+test('masthead = băng màu ĐẶC brandDark: stream có fill brandDark + dải brand; header bảng = brandMid; mọi tài liệu', () => {
+  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) {
+    const m = makeBrand(hex)
+    assert.ok(contrast(m.brandMid, THEME.color.white) >= 4.5, `${hex}: chữ trắng trên brandMid`)
+    for (const [i, d] of buildAll(hex).docs.entries()) {
+      const out = String(d.output())
+      assert.ok(out.includes(pdfRgb(m.brandDark) + ' rg'), `tài liệu #${i} thiếu băng brandDark (${hex})`)
+      assert.ok(out.includes(pdfRgb(m.brand) + ' rg'), `tài liệu #${i} thiếu dải brand (${hex})`)
+    }
+  }
 })
 
 test('nguồn không hard-code: pdf-report-core/pdf-kit không còn mảng màu [r,g,b] / hex; mọi font(…, cỡ) ≥ 7', () => {

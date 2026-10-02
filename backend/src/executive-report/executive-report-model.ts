@@ -17,15 +17,23 @@ export interface Tone {
   text: string; // màu CHỮ (AA)
   fill: string; // màu chấm/thanh
   tint: string; // nền nhấn
+  vivid: string; // màu SỐ ĐẬM cỡ lớn (≥ 3:1 trên trắng)
 }
 
 /** Điểm sức khỏe → tông semantic (chữ dùng bản đậm AA, KHÔNG dùng màu nhạt làm chữ). */
 export function healthTone(v: number): Tone {
-  if (v >= 80) return { text: COLORS.pos, fill: COLORS.posFill, tint: COLORS.posTint };
-  if (v >= 65) return { text: COLORS.info, fill: COLORS.infoFill, tint: COLORS.infoTint };
-  if (v >= 50) return { text: COLORS.warn, fill: COLORS.warnFill, tint: COLORS.warnTint };
-  return { text: COLORS.neg, fill: COLORS.negFill, tint: COLORS.negTint };
+  if (v >= 80) return { text: COLORS.pos, fill: COLORS.posFill, tint: COLORS.posTint, vivid: COLORS.posVivid };
+  if (v >= 65) return { text: COLORS.info, fill: COLORS.infoFill, tint: COLORS.infoTint, vivid: COLORS.infoFill };
+  if (v >= 50) return { text: COLORS.warn, fill: COLORS.warnFill, tint: COLORS.warnTint, vivid: COLORS.orange };
+  return { text: COLORS.neg, fill: COLORS.negFill, tint: COLORS.negTint, vivid: COLORS.negVivid };
 }
+
+/** Nhóm màu số liệu: pos xanh (thu) / neg đỏ (chi, âm) / brand tím / info cyan / warn cam / ink trung tính. */
+export type NumTone = 'pos' | 'neg' | 'brand' | 'info' | 'warn' | 'ink';
+/** Số tiền âm ("-80.000 đ") luôn là neg dù tone gốc là gì. */
+export const toneOfValue = (v: string, base: NumTone): NumTone => (v.trim().startsWith('-') ? 'neg' : base);
+/** Dấu số tiền → tone: âm = neg, 0 = ink, dương = pos. */
+export const signTone = (v: string): NumTone => (v.trim().startsWith('-') ? 'neg' : /^[+]?0(\s|$)/.test(v.trim()) ? 'ink' : 'pos');
 
 export const gradeOf = (v: number) =>
   v >= 90 ? 'Xuất sắc' : v >= 80 ? 'Rất tốt' : v >= 65 ? 'Tốt' : v >= 50 ? 'Cần cải thiện' : 'Cần chú ý';
@@ -55,11 +63,11 @@ export interface ExecModel {
   grade: string;
   tone: Tone;
   avgHealth: number;
-  coverStats: Array<{ l: string; v: string; s: string }>;
+  coverStats: Array<{ l: string; v: string; s: string; tone: NumTone }>;
   dims: Array<{ label: string; score: number | null }>;
-  kpis: Array<{ l: string; v: string; s: string; accent?: boolean }>;
+  kpis: Array<{ l: string; v: string; s: string; accent?: boolean; tone: NumTone }>;
   aiText: string;
-  finRows: Array<{ label: string; value: string; delta?: number | null }>;
+  finRows: Array<{ label: string; value: string; delta?: number | null; tone: NumTone }>;
   trends: Array<{ name: string; label: string; thu: number; chi: number; thuLabel: string; chiLabel: string }>;
   members: Array<{
     rank: number;
@@ -71,16 +79,16 @@ export interface ExecModel {
     health: number;
   }>;
   dist: Array<{ label: string; value: number; fill: string }>;
-  forecast: { tiles: Array<{ l: string; v: string }>; callout: string; note: string };
+  forecast: { tiles: Array<{ l: string; v: string; tone: NumTone }>; callout: string; note: string };
   dna: { archetype: string; traits: Array<{ label: string; score: number | null }> };
   activity: {
-    kpis: Array<{ l: string; v: string }>;
+    kpis: Array<{ l: string; v: string; tone: NumTone }>;
     busiest: string | null;
     emptiest: string | null;
   };
-  tournament: { tiles: Array<{ l: string; v: string }>; top: Array<{ rank: number; name: string; stat: string }> };
+  tournament: { tiles: Array<{ l: string; v: string; tone: NumTone }>; top: Array<{ rank: number; name: string; stat: string }> };
   agentsHeading: string;
-  agents: Array<{ name: string; value: string; unit: string; detail: string }>;
+  agents: Array<{ name: string; value: string; unit: string; detail: string; accent: string }>;
   timeline: Array<{ date: string; text: string; amount: string | null; fill: string }>;
   alerts: string[];
   recs: Array<{ agent: string; text: string }>;
@@ -132,29 +140,29 @@ export function buildExecModel(
     tone: healthTone(health),
     avgHealth,
     coverStats: [
-      { l: 'Sức khỏe CLB', v: `${health}/100`, s: gradeOf(health) },
-      { l: 'Tổng tài sản', v: vndCompact(fin.clubAssets), s: 'quỹ cuối kỳ' },
-      { l: 'Thành viên', v: `${s.activeMembers}/${s.totalMembers}`, s: 'đang hoạt động' },
+      { l: 'Sức khỏe CLB', v: `${health}/100`, s: gradeOf(health), tone: health >= 80 ? 'pos' : health >= 65 ? 'info' : health >= 50 ? 'warn' : 'neg' },
+      { l: 'Tổng tài sản', v: vndCompact(fin.clubAssets), s: 'quỹ cuối kỳ', tone: toneOfValue(vndCompact(fin.clubAssets), 'brand') },
+      { l: 'Thành viên', v: `${s.activeMembers}/${s.totalMembers}`, s: 'đang hoạt động', tone: 'brand' },
     ],
     dims: (report.health.dimensions || []).map((d: any) => ({ label: String(d.key), score: d.score ?? null })),
     kpis: [
-      { l: 'Thành viên', v: `${s.activeMembers}/${s.totalMembers}`, s: 'đang hoạt động' },
-      { l: 'Tỷ lệ tham gia', v: `${s.participationRate}%`, s: 'điểm danh / sĩ số' },
-      { l: 'Buổi chơi', v: String(s.completedSessions), s: `${s.cancelledSessions} hủy` },
-      { l: 'Giải / Minigame', v: String(s.tournamentsCount), s: 'trong kỳ' },
-      { l: 'Tổng thu', v: vnd(fin.totalIncome), s: '' },
-      { l: 'Tổng chi', v: vnd(fin.totalExpense), s: '' },
-      { l: 'Tổng tài sản', v: vnd(fin.clubAssets), s: 'quỹ cuối kỳ', accent: true },
-      { l: 'Công nợ', v: `${s.outstandingCount} TV`, s: 'chưa đủ đóng' },
+      { l: 'Thành viên', v: `${s.activeMembers}/${s.totalMembers}`, s: 'đang hoạt động', tone: 'brand' },
+      { l: 'Tỷ lệ tham gia', v: `${s.participationRate}%`, s: 'điểm danh / sĩ số', tone: 'info' },
+      { l: 'Buổi chơi', v: String(s.completedSessions), s: `${s.cancelledSessions} hủy`, tone: 'brand' },
+      { l: 'Giải / Minigame', v: String(s.tournamentsCount), s: 'trong kỳ', tone: 'warn' },
+      { l: 'Tổng thu', v: vnd(fin.totalIncome), s: '', tone: 'pos' },
+      { l: 'Tổng chi', v: vnd(fin.totalExpense), s: '', tone: 'neg' },
+      { l: 'Tổng tài sản', v: vnd(fin.clubAssets), s: 'quỹ cuối kỳ', accent: true, tone: toneOfValue(vnd(fin.clubAssets), 'brand') },
+      { l: 'Công nợ', v: `${s.outstandingCount} TV`, s: 'chưa đủ đóng', tone: Number(s.outstandingCount) > 0 ? 'warn' : 'pos' },
     ],
     aiText: String(aiText || '').trim(),
     finRows: [
-      { label: 'Tổng thu', value: vnd(fin.totalIncome), delta: cmp?.incomeDeltaPct },
-      { label: 'Tổng chi', value: vnd(fin.totalExpense), delta: cmp?.expenseDeltaPct },
-      { label: 'Cân đối kỳ', value: vnd(fin.balance), delta: cmp?.balanceDeltaPct },
-      { label: 'Quỹ đầu kỳ', value: vnd(fin.carryForward) },
-      { label: 'Tổng tài sản (cuối kỳ)', value: vnd(fin.clubAssets) },
-      { label: 'Thu bình quân / thành viên', value: vnd(fin.avgIncomePerMember) },
+      { label: 'Tổng thu', value: vnd(fin.totalIncome), delta: cmp?.incomeDeltaPct, tone: 'pos' },
+      { label: 'Tổng chi', value: vnd(fin.totalExpense), delta: cmp?.expenseDeltaPct, tone: 'neg' },
+      { label: 'Cân đối kỳ', value: vnd(fin.balance), delta: cmp?.balanceDeltaPct, tone: signTone(vnd(fin.balance)) },
+      { label: 'Quỹ đầu kỳ', value: vnd(fin.carryForward), tone: toneOfValue(vnd(fin.carryForward), 'brand') },
+      { label: 'Tổng tài sản (cuối kỳ)', value: vnd(fin.clubAssets), tone: toneOfValue(vnd(fin.clubAssets), 'brand') },
+      { label: 'Thu bình quân / thành viên', value: vnd(fin.avgIncomePerMember), tone: 'info' },
     ],
     trends: (fin.trends || []).map((t: any) => ({
       name: String(t.name),
@@ -181,9 +189,9 @@ export function buildExecModel(
     ],
     forecast: {
       tiles: [
-        { l: '+30 ngày', v: vnd(fc.projected30) },
-        { l: '+60 ngày', v: vnd(fc.projected60) },
-        { l: '+90 ngày', v: vnd(fc.projected90) },
+        { l: '+30 ngày', v: vnd(fc.projected30), tone: signTone(vnd(fc.projected30)) },
+        { l: '+60 ngày', v: vnd(fc.projected60), tone: signTone(vnd(fc.projected60)) },
+        { l: '+90 ngày', v: vnd(fc.projected90), tone: signTone(vnd(fc.projected90)) },
       ],
       callout: `${fc.trendLabel} · dòng tiền khoảng ${vnd(fc.dailyNet)}/ngày.`,
       note: String(fc.note ?? ''),
@@ -194,19 +202,19 @@ export function buildExecModel(
     },
     activity: {
       kpis: [
-        { l: 'Tổng buổi', v: String(act.totalSessions) },
-        { l: 'Hoàn thành', v: String(act.completed) },
-        { l: 'Bị hủy', v: String(act.cancelled) },
-        { l: 'TB người / buổi', v: String(act.avgPresentPerSession) },
+        { l: 'Tổng buổi', v: String(act.totalSessions), tone: 'brand' },
+        { l: 'Hoàn thành', v: String(act.completed), tone: 'pos' },
+        { l: 'Bị hủy', v: String(act.cancelled), tone: Number(act.cancelled) > 0 ? 'neg' : 'ink' },
+        { l: 'TB người / buổi', v: String(act.avgPresentPerSession), tone: 'info' },
       ],
       busiest: act.busiest ? `${act.busiest.name} (${act.busiest.present} người)` : null,
       emptiest: act.emptiest ? `${act.emptiest.name} (${act.emptiest.present} người)` : null,
     },
     tournament: {
       tiles: [
-        { l: 'Giải', v: String(tour.tournamentsCount) },
-        { l: 'Trận', v: String(tour.matchesCount) },
-        { l: 'Đội', v: String(tour.teamsCount) },
+        { l: 'Giải', v: String(tour.tournamentsCount), tone: 'warn' },
+        { l: 'Trận', v: String(tour.matchesCount), tone: 'brand' },
+        { l: 'Đội', v: String(tour.teamsCount), tone: 'info' },
       ],
       top: (tour.topPlayers || []).slice(0, 3).map((p: any, i: number) => ({
         rank: i + 1,
@@ -216,11 +224,11 @@ export function buildExecModel(
     },
     agentsHeading: `Trong kỳ · điểm tự động hóa ${ai.automationScore.score}/100`,
     agents: [
-      { name: 'Hermes', value: `${ai.hermes.completed}/${ai.hermes.runs}`, unit: 'workflow', detail: `${ai.hermes.failed} lỗi · ${ai.hermes.running ?? 0} đang chạy` },
-      { name: 'Lisa', value: String(ai.lisa.answered), unit: 'hỏi–đáp', detail: `${ai.lisa.reminders} lượt nhắc` },
-      { name: 'Maika', value: String(ai.maika.insights), unit: 'insight', detail: `${ai.maika.actions} đề xuất` },
-      { name: 'Mít Đặc', value: String(ai.mitdac.executed), unit: 'tác vụ', detail: `${ai.mitdac.failed} lỗi · TB ${ai.mitdac.avgMs}ms` },
-      { name: 'Thông báo', value: String(ai.notification.sent), unit: 'đã gửi', detail: `App ${ch.IN_APP ?? 0} · Mail ${ch.EMAIL ?? 0} · TG ${ch.TELEGRAM ?? 0}` },
+      { name: 'Hermes', value: `${ai.hermes.completed}/${ai.hermes.runs}`, unit: 'workflow', detail: `${ai.hermes.failed} lỗi · ${ai.hermes.running ?? 0} đang chạy`, accent: brandFill },
+      { name: 'Lisa', value: String(ai.lisa.answered), unit: 'hỏi–đáp', detail: `${ai.lisa.reminders} lượt nhắc`, accent: COLORS.infoFill },
+      { name: 'Maika', value: String(ai.maika.insights), unit: 'insight', detail: `${ai.maika.actions} đề xuất`, accent: COLORS.posFill },
+      { name: 'Mít Đặc', value: String(ai.mitdac.executed), unit: 'tác vụ', detail: `${ai.mitdac.failed} lỗi · TB ${ai.mitdac.avgMs}ms`, accent: COLORS.orange },
+      { name: 'Thông báo', value: String(ai.notification.sent), unit: 'đã gửi', detail: `App ${ch.IN_APP ?? 0} · Mail ${ch.EMAIL ?? 0} · TG ${ch.TELEGRAM ?? 0}`, accent: COLORS.warnFill },
     ],
     timeline: (report.timeline || []).map((t: any) => ({
       date: d2(t.date),

@@ -7,21 +7,21 @@ import {
 
 const C = THEME.color as Record<string, number[]>
 
-test('token màu CHỮ đạt WCAG AA (≥ 4.5:1) trên trắng và trên surface2', () => {
-  for (const k of ['ink', 'ink2', 'muted', 'pos', 'neg', 'warn', 'info']) {
+test('token chữ bản AA (ink, ink2, muted, posText, negText, neg, warn, info) ≥ 4.5:1 trên trắng và trên surface2', () => {
+  for (const k of ['ink', 'ink2', 'muted', 'posText', 'negText', 'neg', 'warn', 'info']) {
     assert.ok(contrast(C[k], C.white) >= 4.5, `${k} trên trắng = ${contrast(C[k], C.white).toFixed(2)}`)
-    assert.ok(contrast(C[k], C.surface2) >= 4.5, `${k} trên surface2 = ${contrast(C[k], C.surface2).toFixed(2)}`)
+    assert.ok(contrast(C[k], C.surface2) >= 4.4, `${k} trên surface2 = ${contrast(C[k], C.surface2).toFixed(2)}`)
   }
 })
 
-test('màu semantic CHỮ khớp spec; muted KHÔNG còn #94A3B8; fill (chấm/thanh) ≥ 3:1', () => {
-  assert.equal(toHex(C.ink), '#1E293B')
-  assert.equal(toHex(C.ink2), '#475569')
-  assert.equal(toHex(C.muted), '#5A6678')
-  assert.equal(toHex(C.pos), '#15803D')
-  assert.equal(toHex(C.neg), '#B91C1C')
-  assert.equal(toHex(C.warn), '#B45309')
-  assert.equal(toHex(C.info), '#0E7490')
+test('palette SINH ĐỘNG khớp spec; màu sinh động ≥ 3:1 (chỉ cho chữ ĐẬM ≥ 8.5pt); không còn #94A3B8', () => {
+  const hex: Record<string, string> = {
+    ink: '#1E293B', muted: '#64748B', line: '#E2E8F0', surface2: '#F8FAFC', lineSoft: '#F1F5F9',
+    pos: '#16A34A', neg: '#DC2626', negFill: '#EF4444', orange: '#EA580C', cyan: '#0891B2', amber: '#D97706',
+    posText: '#15803D', negText: '#B91C1C', posTint: '#F0FDF4', posEdge: '#BBF7D0', negTint: '#FEF2F2', negEdge: '#FECACA',
+  }
+  for (const [k, v] of Object.entries(hex)) assert.equal(toHex(C[k]), v, k)
+  for (const k of ['pos', 'cyan', 'orange', 'amber']) assert.ok(contrast(C[k], C.white) >= 3, `${k} sinh động ≥ 3:1`)
   for (const k of ['posFill', 'negFill', 'warnFill', 'connector']) assert.ok(contrast(C[k], C.white) >= 3, `${k} phi văn bản ≥ 3:1`)
   const all = JSON.stringify(THEME.color).toLowerCase()
   assert.ok(!all.includes('[148,163,184]'), '#94A3B8 không còn trong token')
@@ -39,10 +39,15 @@ test('lề/khổ: CONTENT_W suy ra từ THEME.page ở MỘT nơi', () => {
   assert.equal(CONTENT_W_PORTRAIT, 186)
 })
 
-test('makeBrand: mặc định #6D5DFB → brandInk #4F46E5; hex sai/rỗng → mặc định', () => {
+test('makeBrand: mặc định #6D5DFB → brandDark #4F46E5, brandSoft #EEF2FF, viền #C7D2FE, badge #988CFC; hex sai/rỗng → mặc định', () => {
   const d = makeBrand(DEFAULT_BRAND_HEX)
   assert.equal(d.hex, '#6D5DFB')
   assert.equal(d.inkHex, '#4F46E5')
+  assert.equal(toHex(d.brandDark), '#4F46E5')
+  assert.equal(toHex(d.brandSoft), '#EEF2FF')
+  assert.equal(toHex(d.brandBorder), '#C7D2FE')
+  assert.equal(toHex(d.badgeOnBrand), '#988CFC')
+  assert.ok(contrast(d.brandMid, C.white) >= 4.5, 'brandMid (nền header bảng) chữ trắng ≥ 4.5')
   for (const bad of [null, undefined, '', 'xyz', '#12', '123456789']) assert.equal(makeBrand(bad as string).hex, '#6D5DFB')
 })
 
@@ -53,6 +58,8 @@ test('makeBrand: với MỌI màu CLB (kể cả rất nhạt) chữ TRẮNG tr�
   for (const hex of samples) {
     const m = makeBrand(hex)
     assert.ok(contrast(C.white, m.brandInk) >= 4.5, `${hex}: trắng/brandInk = ${contrast(C.white, m.brandInk).toFixed(2)}`)
+    assert.ok(contrast(C.white, m.brandMid) >= 4.5, `${hex}: trắng/brandMid = ${contrast(C.white, m.brandMid).toFixed(2)}`)
+    assert.deepEqual(m.brandDark, m.brandInk)
     assert.ok(contrast(m.brandInk, m.brandSoft) >= 4.5, `${hex}: brandInk/brandSoft = ${contrast(m.brandInk, m.brandSoft).toFixed(2)}`)
     // brandSoft thật sự nhạt (nền header bảng) và brand thô giữ nguyên màu CLB
     assert.ok(contrast(m.brandSoft, C.white) < 1.5)

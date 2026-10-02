@@ -27,28 +27,29 @@ interface Props {
   brand?: string | null
 }
 
-/* Poster 1080x1920 — bố cục FROZEN; chỉ màu/tương phản/cỡ chữ tối thiểu (≥14px) đổi theo chuẩn Luxury SaaS:
-   1 màu nhấn = màu CLB (tự tối cho chữ trắng AA), không navy/vàng cố định, không emoji/gradient/bóng. */
+/* Poster 1080x1920 — bố cục FROZEN; chỉ đổi MÀU theo màu app (SINH ĐỘNG): nền đặc = màu CLB đậm (mặc định tím #4F46E5),
+   số lớn xanh/đỏ/tím đậm, chữ nhỏ bản AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji/gradient/bóng. */
 export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgroundUrl, brand }: Props) {
   const P: InfographicPalette = makeInfographicPalette(brand)
   const balPos = data.fundBalance >= 0
   const expRatio = Math.min(100, Math.round(data.expenseIncomeRatio * 100))
   const paidPct = data.totalMembers > 0 ? Math.round(data.paidMembers / data.totalMembers * 100) : 0
   const balColor = balPos ? P.pos : P.neg
+  const balVivid = balPos ? P.posVivid : P.negVivid
   const label: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: P.muted, textTransform: 'uppercase', letterSpacing: 1 }
   const sub: React.CSSProperties = { fontSize: 14, color: P.muted }
   const statLabel: React.CSSProperties = { fontSize: 14, color: P.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }
   const rowLabel: React.CSSProperties = { fontSize: 18, color: P.onDarkMuted, fontWeight: 600 }
 
-  const kpiCard = (top: number, left: number, border: string, bar: string) => (
+  const kpiCard = (top: number, left: number, border: string, bar: string, bg: string = 'white') => (
     <div style={{ position: 'absolute', top, left, width: 490, height: 156,
-      background: 'white', borderRadius: 20, border: `1px solid ${border}`, overflow: 'hidden' }}>
+      background: bg, borderRadius: 20, border: `1px solid ${border}`, overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 5, background: bar }}/>
     </div>
   )
-  const statBox = (top: number, left: number, w: number) => (
+  const statBox = (top: number, left: number, w: number, bg: string = P.soft, border: string = P.softBorder) => (
     <div style={{ position: 'absolute', top, left, width: w, height: 136,
-      background: P.surface2, borderRadius: 16, border: `1px solid ${P.line}`, overflow: 'hidden' }}/>
+      background: bg, borderRadius: 16, border: `1px solid ${border}`, overflow: 'hidden' }}/>
   )
   const divider = (top: number, alpha: number) => (
     <div style={{ position: 'absolute', top, left: 60, width: 960, height: 1, background: `rgba(255,255,255,${alpha})` }}/>
@@ -183,10 +184,10 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       {/* ═══════════ SECTION 2: KPI CARDS (top 340 → 720) ═══════════ */}
 
       {/* Card 1 — Tổng thu */}
-      {kpiCard(368, 32, P.line, P.posFill)}
+      {kpiCard(368, 32, P.posBorder, P.posFill, P.posTint)}
       <T top={384} left={56} width={300} height={18} style={label}>TỔNG THU</T>
       <T top={408} left={56} width={440} height={52}
-        style={{ fontSize: 38, fontWeight: 950, color: P.pos, letterSpacing: -1 }}>
+        style={{ fontSize: 38, fontWeight: 950, color: P.posVivid, letterSpacing: -1 }}>
         {VND(data.totalIncome)}
       </T>
       <T top={470} left={56} width={440} height={24} style={sub}>
@@ -194,10 +195,10 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
 
       {/* Card 2 — Tổng chi */}
-      {kpiCard(368, 558, P.line, P.warnFill)}
+      {kpiCard(368, 558, P.negBorder, P.negFill, P.negTint)}
       <T top={384} left={582} width={300} height={18} style={label}>TỔNG CHI</T>
       <T top={408} left={582} width={440} height={52}
-        style={{ fontSize: 38, fontWeight: 950, color: P.warn, letterSpacing: -1 }}>
+        style={{ fontSize: 38, fontWeight: 950, color: P.negVivid, letterSpacing: -1 }}>
         {VND(data.totalExpense)}
       </T>
       <T top={470} left={582} width={440} height={24} style={sub}>
@@ -205,10 +206,10 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
 
       {/* Card 3 — Số dư */}
-      {kpiCard(548, 32, P.line, balPos ? P.posFill : P.negFill)}
+      {kpiCard(548, 32, balPos ? P.posBorder : P.negBorder, balPos ? P.posFill : P.negFill, balPos ? P.posTint : P.negTint)}
       <T top={564} left={56} width={300} height={18} style={label}>SỐ DƯ QUỸ</T>
       <T top={588} left={56} width={440} height={52}
-        style={{ fontSize: 38, fontWeight: 950, color: balColor, letterSpacing: -1 }}>
+        style={{ fontSize: 38, fontWeight: 950, color: balVivid, letterSpacing: -1 }}>
         {balPos ? '+' : '-'}{VND(data.fundBalance)}
       </T>
       <T top={650} left={56} width={440} height={24}
@@ -217,7 +218,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
 
       {/* Card 4 — Đóng quỹ */}
-      {kpiCard(548, 558, P.line, P.brand)}
+      {kpiCard(548, 558, P.softBorder, P.brand, P.soft)}
       <T top={564} left={582} width={300} height={18} style={label}>ĐÓNG QUỸ</T>
       <T top={588} left={582} width={440} height={52}
         style={{ fontSize: 38, fontWeight: 950, color: P.ink, letterSpacing: -1 }}>
@@ -234,7 +235,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
         Tỷ lệ Chi / Thu
       </T>
       <T top={740} left={700} width={340} height={32}
-        style={{ fontSize: 22, fontWeight: 950, color: balColor, textAlign: 'right' }}>
+        style={{ fontSize: 22, fontWeight: 950, color: balVivid, textAlign: 'right' }}>
         {expRatio}%
       </T>
 
@@ -264,35 +265,35 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
 
       {statBox(948, 32, 310)}
       <T top={966} left={52} width={270} height={18} style={statLabel}>Tổng buổi</T>
-      <T top={990} left={52} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.text }}>
+      <T top={990} left={52} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.ink }}>
         {data.totalSessions}
       </T>
       <T top={1052} left={52} width={270} height={20} style={sub}>buổi tập trong kỳ</T>
 
       {statBox(948, 386, 310)}
       <T top={966} left={406} width={270} height={18} style={statLabel}>Thành viên</T>
-      <T top={990} left={406} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.text }}>
+      <T top={990} left={406} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.cyan }}>
         {data.totalMembers}
       </T>
       <T top={1052} left={406} width={270} height={20} style={sub}>người tham gia kỳ</T>
 
-      {statBox(948, 740, 308)}
+      {statBox(948, 740, 308, P.posTint, P.posBorder)}
       <T top={966} left={760} width={268} height={18} style={statLabel}>Đã đóng quỹ</T>
-      <T top={990} left={760} width={268} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.pos }}>
+      <T top={990} left={760} width={268} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.posVivid }}>
         {data.paidMembers}
       </T>
       <T top={1052} left={760} width={268} height={20} style={sub}>/ {data.totalMembers} thành viên</T>
 
-      {statBox(1108, 32, 310)}
+      {statBox(1108, 32, 310, P.negTint, P.negBorder)}
       <T top={1126} left={52} width={270} height={18} style={statLabel}>Chưa đóng</T>
-      <T top={1150} left={52} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.neg }}>
+      <T top={1150} left={52} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.negVivid }}>
         {data.unpaidMembers}
       </T>
       <T top={1212} left={52} width={270} height={20} style={sub}>thành viên nợ quỹ</T>
 
       {statBox(1108, 386, 310)}
       <T top={1126} left={406} width={270} height={18} style={statLabel}>Phí sân TB</T>
-      <T top={1150} left={406} width={270} height={44} style={{ fontSize: 30, fontWeight: 950, color: P.text }}>
+      <T top={1150} left={406} width={270} height={44} style={{ fontSize: 30, fontWeight: 950, color: P.orange }}>
         {data.totalSessions > 0
           ? VND(Math.round(data.totalExpense / data.totalSessions))
           : '—'}
@@ -329,7 +330,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
 
       <T top={1512} left={60} width={520} height={28} style={rowLabel}>Tổng chi phí kỳ</T>
       <T top={1512} left={580} width={440} height={28}
-        style={{ fontSize: 20, fontWeight: 900, color: P.warnOnDark, textAlign: 'right' }}>
+        style={{ fontSize: 20, fontWeight: 900, color: P.negOnDark, textAlign: 'right' }}>
         - {VND(data.totalExpense)}
       </T>
 

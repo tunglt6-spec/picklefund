@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import {
   makeBrand, contrastRatio, makeDocCode, docTypeFromFile, statusTone, columnWidth, estimateLines, displayNumber,
-  patchWorkbookXml, sheetXmlPatch, XL_COLOR,
+  patchWorkbookXml, sheetXmlPatch, XL_COLOR, XL_VIVID, moneyTone, inferSheetTone, tabColorFor,
 } from './excel-kit.ts'
 import {
   buildExcelBytes, exportExcel, exportLedgerExcel, exportReportsExcel, exportTemplateExcel, setExportBranding,
@@ -117,9 +117,9 @@ test('số: format 3 vế (âm / 0 → "–"), số âm đỏ AA #B91C1C, 0 mute
   assert.equal(ws.A7.t, 'n'); assert.equal(ws.A7.z, 'dd/mm/yyyy')
   const styles = unzipText(bytes)('xl/styles.xml')
   assert.ok(styles.includes('&quot;–&quot;') || styles.includes('"–"'), 'numFmt có ký tự "–" cho 0')
-  assert.match(styles, new RegExp(`<color rgb="${XL_COLOR.neg}"`)) // font số âm
-  assert.match(styles, new RegExp(`<color rgb="${XL_COLOR.pos}"`)) // trạng thái dương
-  assert.match(styles, new RegExp(`<color rgb="${XL_COLOR.warn}"`))
+  assert.match(styles, new RegExp(`<color rgb="(?:FF)?${XL_VIVID.neg}"`)) // số âm: đỏ sinh động đậm
+  assert.match(styles, new RegExp(`<color rgb="(?:FF)?${XL_VIVID.pos}"`)) // số thu/chip dương: xanh
+  assert.match(styles, new RegExp(`<color rgb="(?:FF)?${XL_VIVID.warn}"`)) // chip chờ: amber
   assert.ok(!styles.includes('[Red]'), 'không dùng [Red] (đỏ FF0000 không đạt AA)')
 })
 
@@ -169,13 +169,18 @@ test('trạng thái: tông semantic theo nguyên chuỗi (không phân biệt d�
   assert.equal(statusTone(''), null)
 })
 
-test('makeBrand: brand sáng (vàng) vẫn cho chữ header đạt tương phản >= 4.5 trên nền soft; mặc định = cặp chuẩn', () => {
-  assert.deepEqual(makeBrand('#6D5DFB'), { brand: '6D5DFB', ink: '4F46E5', soft: 'EEF2FF' })
-  assert.deepEqual(makeBrand('xyz'), { brand: '6D5DFB', ink: '4F46E5', soft: 'EEF2FF' })
-  for (const hex of ['#F59E0B', '#0F766E', '#FACC15', '#112233', '#FFFFFF']) {
+test('makeBrand: mọi brand (cả vàng/amber sáng) → chữ ink trên soft >= 4.5, chữ TRẮNG trên header/băng >= 4.5; mặc định = bộ chuẩn', () => {
+  const def = { brand: '6D5DFB', ink: '4F46E5', soft: 'EEF2FF', head: '6D5DFB', border: 'C7D2FE' }
+  assert.deepEqual(makeBrand('#6D5DFB'), def)
+  assert.deepEqual(makeBrand('xyz'), def)
+  for (const hex of ['#F59E0B', '#0F766E', '#FACC15', '#112233', '#FFFFFF', '#10B981', '#6D5DFB']) {
     const b = makeBrand(hex)
-    assert.ok(contrastRatio(b.ink, b.soft) >= 4.5, `${hex}: ${contrastRatio(b.ink, b.soft)}`)
+    assert.ok(contrastRatio(b.ink, b.soft) >= 4.5, `${hex}: ink/soft ${contrastRatio(b.ink, b.soft)}`)
+    assert.ok(contrastRatio('FFFFFF', b.ink) >= 4.5, `${hex}: trắng/băng ${contrastRatio('FFFFFF', b.ink)}`)
+    assert.ok(contrastRatio('FFFFFF', b.head) >= 4.5, `${hex}: trắng/header ${contrastRatio('FFFFFF', b.head)}`)
   }
+  assert.equal(makeBrand('#F59E0B').brand, 'F59E0B') // brand giữ nguyên (tab/viền); chỉ header tự tối
+  assert.notEqual(makeBrand('#F59E0B').head, 'F59E0B')
   assert.ok(contrastRatio(XL_COLOR.neg, 'FFFFFF') >= 4.5 && contrastRatio(XL_COLOR.pos, 'FFFFFF') >= 4.5 && contrastRatio(XL_COLOR.warn, 'FFFFFF') >= 4.5)
 })
 
@@ -255,4 +260,115 @@ test('file mẫu nhập liệu: header ở hàng 1 (importer đọc theo tên c�
   assert.match(x('xl/worksheets/sheet2.xml'), /<sheetView showGridLines="0"[^>]*><pane ySplit="1" topLeftCell="A2"/)
   assert.match(x('xl/worksheets/sheet1.xml'), /showGridLines="0"/)
   assert.ok(!/<pane/.test(x('xl/worksheets/sheet1.xml')), 'sheet hướng dẫn không freeze')
+})
+
+/* ── Màu sinh động ── */
+interface CellStyle { fill?: string; font?: string; bold: boolean; sz?: number; topBorder?: string }
+/** Đọc style THẬT của 1 ô từ XML (styles.xml: fonts/fills/borders/cellXfs; sheetN.xml: s="idx"). */
+function styleOf(bytes: Uint8Array, ref: string, sheet = 1): CellStyle {
+  const x = unzipText(bytes)
+  const st = x('xl/styles.xml')
+  const list = (group: string, tag: string) => {
+    const inner = new RegExp('<' + group + '[ >][^]*?</' + group + '>').exec(st)?.[0] ?? ''
+    return [...inner.matchAll(new RegExp('<' + tag + '(?: [^>]*?)?(?:/>|>[^]*?</' + tag + '>)', 'g'))].map(m => m[0])
+  }
+  const fonts = list('fonts', 'font'), fills = list('fills', 'fill'), borders = list('borders', 'border'), xfs = list('cellXfs', 'xf')
+  const sx = x(`xl/worksheets/sheet${sheet}.xml`)
+  const idx = Number(new RegExp('<c r="' + ref + '"[^>]*? s="([0-9]+)"').exec(sx)?.[1] ?? 0)
+  const xf = xfs[idx]
+  const attr = (n: string) => Number(new RegExp(n + '="([0-9]+)"').exec(xf)?.[1] ?? 0)
+  const font = fonts[attr('fontId')] ?? '', fill = fills[attr('fillId')] ?? '', border = borders[attr('borderId')] ?? ''
+  const rgb = (t: string) => /rgb="(?:FF)?([0-9A-F]{6})"/.exec(t)?.[1]
+  return {
+    fill: /patternType="solid"/.test(fill) ? rgb(/<fgColor[^>]*>/.exec(fill)?.[0] ?? '') : undefined,
+    font: rgb(/<color[^>]*>/.exec(font)?.[0] ?? ''),
+    bold: /<b\/>/.test(font),
+    sz: Number(/<sz val="(\d+)"/.exec(font)?.[1]),
+    topBorder: /<top style="(\w+)"/.exec(border)?.[1],
+  }
+}
+
+test('băng tiêu đề: hàng 1-2 nền brandDark chữ trắng đậm (title cỡ 16), hàng 3-4 nền brandSoft chữ brandDark, phủ hết bề ngang', async () => {
+  const bytes = await fixture()
+  for (const ref of ['A1', 'B1', 'D1', 'A2', 'D2']) {
+    const c = styleOf(bytes, ref)
+    assert.equal(c.fill, '4F46E5', ref); assert.equal(c.font, 'FFFFFF', ref); assert.ok(c.bold, ref)
+  }
+  assert.equal(styleOf(bytes, 'A2').sz, 16)
+  for (const ref of ['A3', 'D3', 'A4', 'D4']) assert.equal(styleOf(bytes, ref).fill, 'EEF2FF', ref)
+  for (const ref of ['A3', 'A4']) assert.equal(styleOf(bytes, ref).font, '4F46E5', ref)
+  assert.ok(contrastRatio('FFFFFF', '4F46E5') >= 4.5)
+})
+
+test('header bảng = brand đặc chữ trắng đậm; zebra #F8FAFC ở dòng lẻ (bảng nhỏ cũng có); hàng tổng brandSoft chữ brandDark + viền trên đậm', async () => {
+  const bytes = await fixture()
+  for (const ref of ['A6', 'B6', 'C6', 'D6']) { const c = styleOf(bytes, ref); assert.equal(c.fill, '6D5DFB', ref); assert.equal(c.font, 'FFFFFF', ref); assert.ok(c.bold, ref) }
+  assert.equal(styleOf(bytes, 'B7').fill, undefined) // dòng thân 0: nền trắng
+  assert.equal(styleOf(bytes, 'B8').fill, 'F8FAFC') // dòng thân 1: zebra
+  assert.equal(styleOf(bytes, 'B9').fill, undefined)
+  const t = styleOf(bytes, 'B15')
+  assert.equal(t.fill, 'EEF2FF'); assert.equal(t.font, '4F46E5'); assert.ok(t.bold); assert.equal(t.topBorder, 'medium')
+})
+
+test('số: âm đỏ đậm, 0 xám; chip trạng thái nền nhạt + chữ đậm theo tông', async () => {
+  const bytes = await fixture()
+  const neg = styleOf(bytes, 'C8')
+  assert.equal(neg.font, XL_VIVID.neg); assert.ok(neg.bold) // -450000
+  assert.equal(styleOf(bytes, 'C9').font, XL_COLOR.gray) // 0
+  assert.equal(styleOf(bytes, 'C7').font, XL_VIVID.pos) // dòng 'Thu quỹ' → số tiền xanh
+  assert.equal(styleOf(bytes, 'C7').bold, true)
+  const ok = styleOf(bytes, 'D7') // Đã xác nhận
+  assert.equal(ok.fill, XL_VIVID.posBg); assert.equal(ok.font, XL_VIVID.pos); assert.ok(ok.bold)
+  const wait = styleOf(bytes, 'D8') // Chờ xác nhận
+  assert.equal(wait.fill, XL_VIVID.warnBg); assert.equal(wait.font, XL_VIVID.warn)
+  const no = styleOf(bytes, 'D9') // Từ chối
+  assert.equal(no.fill, XL_VIVID.negBg); assert.equal(no.font, XL_VIVID.neg)
+})
+
+test('moneyTone: theo tên cột / nhãn dòng / loại sheet; số đếm không bị tô', () => {
+  const base = { rowTexts: [] as string[] }
+  assert.equal(moneyTone({ ...base, header: 'Thu (VNĐ)', value: 5 }), 'pos')
+  assert.equal(moneyTone({ ...base, header: 'Chi (VNĐ)', value: 5 }), 'neg')
+  assert.equal(moneyTone({ ...base, header: 'Còn nợ (VNĐ)', value: 5 }), 'neg')
+  assert.equal(moneyTone({ ...base, header: 'Chi phí sân (VNĐ)', value: 5 }), 'neg')
+  assert.equal(moneyTone({ ...base, header: 'Số dư (VNĐ)', value: 5 }), 'pos')
+  assert.equal(moneyTone({ ...base, header: 'Số dư (VNĐ)', value: -5 }), 'neg')
+  assert.equal(moneyTone({ header: 'Số tiền (VNĐ)', value: 5, rowTexts: ['01/07', 'Chi'] }), 'neg')
+  assert.equal(moneyTone({ header: 'Số tiền (VNĐ)', value: 5, rowTexts: ['Thu'] }), 'pos')
+  assert.equal(moneyTone({ header: 'Giá trị', value: 5, rowTexts: ['Tài chính kỳ', 'Tổng chi', 'VNĐ'] }), 'neg')
+  assert.equal(moneyTone({ header: 'Giá trị', value: 5, rowTexts: ['Tài chính kỳ', 'Tổng thu', 'VNĐ'] }), 'pos')
+  assert.equal(moneyTone({ header: 'Giá trị', value: 5, rowTexts: ['Chỉ số', 'Tổng số buổi', 'buổi'] }), null) // không phải tiền
+  assert.equal(moneyTone({ header: 'Buổi tham gia', value: 5, rowTexts: ['Chi'] }), null)
+  assert.equal(moneyTone({ header: 'Số tiền (VNĐ)', value: 5, rowTexts: [], sheetTone: 'expense' }), 'neg')
+  assert.equal(moneyTone({ header: 'Số tiền (VNĐ)', value: 5, rowTexts: [], sheetTone: 'income' }), 'pos')
+  assert.equal(moneyTone({ header: 'Số tiền (VNĐ)', value: 5, rowTexts: ['Chờ xác nhận (chưa tính vào quỹ)'], sheetTone: 'income', total: true }), 'warn')
+  assert.equal(inferSheetTone('Thu Quỹ'), 'income'); assert.equal(inferSheetTone('Khoản Chi'), 'expense'); assert.equal(inferSheetTone('Chi Tiết Thành Viên'), null)
+})
+
+test('tab color: thu = xanh, chi = đỏ, còn lại = brand; số tiền tô theo loại sheet / loại dòng', async () => {
+  const bytes = await buildExcelBytes([
+    { name: 'Thu Quỹ', headers: ['A', 'Số tiền (VNĐ)'], rows: [['x', 10]] },
+    { name: 'Khoản Chi', headers: ['A', 'Số tiền (VNĐ)'], rows: [['x', 10]] },
+    { name: 'Tổng quan', headers: ['A', 'Loại', 'Số tiền (VNĐ)'], rows: [['a', 'Thu', 10], ['b', 'Chi', 20]] },
+  ], { docType: 'BK' })
+  const x = unzipText(bytes)
+  assert.match(x('xl/worksheets/sheet1.xml'), new RegExp(`<tabColor rgb="FF${XL_VIVID.pos}"/>`))
+  assert.match(x('xl/worksheets/sheet2.xml'), new RegExp(`<tabColor rgb="FF${XL_VIVID.neg}"/>`))
+  assert.match(x('xl/worksheets/sheet3.xml'), /<tabColor rgb="FF6D5DFB"\/>/)
+  assert.equal(styleOf(bytes, 'B7', 1).font, XL_VIVID.pos); assert.equal(styleOf(bytes, 'B7', 2).font, XL_VIVID.neg)
+  assert.equal(styleOf(bytes, 'C7', 3).font, XL_VIVID.pos); assert.equal(styleOf(bytes, 'C8', 3).font, XL_VIVID.neg)
+  assert.equal(tabColorFor('income', 'ABCDEF'), XL_VIVID.pos)
+})
+
+test('brand amber/vàng: header + băng tiêu đề đủ tương phản với chữ trắng', async () => {
+  setExportBranding({ primaryColor: '#F59E0B' })
+  try {
+    const bytes = await fixture()
+    const head = styleOf(bytes, 'A6'), band = styleOf(bytes, 'A1')
+    assert.equal(head.font, 'FFFFFF')
+    assert.ok(contrastRatio('FFFFFF', head.fill!) >= 4.5, head.fill)
+    assert.ok(contrastRatio('FFFFFF', band.fill!) >= 4.5, band.fill)
+    assert.notEqual(head.fill, 'F59E0B')
+    assert.match(unzipText(bytes)('xl/worksheets/sheet1.xml'), /<tabColor rgb="FFF59E0B"\/>/) // tab giữ đúng màu CLB
+  } finally { setExportBranding({ primaryColor: null }) }
 })

@@ -80,7 +80,7 @@ async function loadBrandLogo(): Promise<BrandLogo | null> {
       img.onerror = reject
       img.src = dataUrl
     })
-    // Logo mặc định là con-quay TRẮNG (nền trong suốt) → onDark: vẽ trên ô màu brandInk, không mất trên nền trắng.
+    // Logo mặc định là con-quay TRẮNG (nền trong suốt) → onDark: vẽ thẳng trên băng brandDark của masthead.
     brandLogoCache = { url, logo: { dataUrl, w: dims.w, h: dims.h, onDark: url === DEFAULT_LOGO_URL } }
   } catch {
     brandLogoCache = { url, logo: null }
@@ -221,8 +221,8 @@ async function savePdfDoc(pdf: any, filename: string, opts: { log?: boolean } = 
   done()
 }
 
-/* ── Xuất ẢNH (PNG) theo CÙNG token với PDF vector (THEME): masthead nền trắng + vạch brand,
-   thẻ KPI, bảng hairline, footer "CLB · Tên TL · Mã TL". Font Be Vietnam Pro (nạp qua FontFace),
+/* ── Xuất ẢNH (PNG) theo CÙNG token với PDF vector (THEME): masthead BĂNG MÀU ĐẶC brandDark,
+   thẻ KPI nhấn, header bảng brand đặc, footer "CLB · Tên TL · Mã TL". Font Be Vietnam Pro (nạp qua FontFace),
    logo CLB, màu brand CLB. Render off-screen HTML rồi rasterize 1 khung ảnh sắc nét. ── */
 const PNG_ROOT = 'pf-png-render-root'
 const ptPx = (pt: number) => `${((pt * 4) / 3).toFixed(2)}px`
@@ -260,31 +260,42 @@ function pngCss(): string {
   .${PNG_ROOT}, .${PNG_ROOT} * { box-sizing: border-box; margin: 0; padding: 0; }
   .${PNG_ROOT} { font-family: ${THEME.fontFamily}; color: ${r(C.ink)}; background: #fff; }
   .${PNG_ROOT} .page { width: 794px; padding: 45px 45px 30px; background: #fff; }
-  .${PNG_ROOT} .m-head { display: flex; align-items: flex-start; gap: 15px; padding-bottom: 14px; border-bottom: 2.3px solid ${r(b.brand)}; }
-  .${PNG_ROOT} .m-logo { width: 45px; height: 45px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .${PNG_ROOT} .m-logo.dark { background: ${r(b.brandInk)}; padding: 6px; }
+  .${PNG_ROOT} .m-head { display: flex; align-items: center; gap: 18px; padding: 22px 26px 24px; background: ${r(b.brandDark)}; border-radius: 10px; border-bottom: 6px solid ${r(b.brand)}; color: #fff; }
+  .${PNG_ROOT} .m-logo { width: 58px; height: 58px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .${PNG_ROOT} .m-logo.dark { padding: 2px; }
+  .${PNG_ROOT} .m-logo:not(.dark):not(.ini) { background: #fff; padding: 7px; }
   .${PNG_ROOT} .m-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .${PNG_ROOT} .m-logo.ini { background: ${r(b.brandSoft)}; color: ${r(b.brandInk)}; border-radius: 50%; font-weight: 700; font-size: ${ptPx(T.h2 + 3)}; }
+  .${PNG_ROOT} .m-logo.ini { background: #fff; color: ${r(b.brandDark)}; border-radius: 50%; font-weight: 700; font-size: ${ptPx(T.h1 + 4)}; }
   .${PNG_ROOT} .m-main { flex: 1; min-width: 0; }
-  .${PNG_ROOT} .m-club { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: ${r(b.brandInk)}; }
-  .${PNG_ROOT} .m-title { font-size: ${ptPx(T.h1)}; font-weight: 700; line-height: 1.2; margin-top: 3px; color: ${r(C.ink)}; }
-  .${PNG_ROOT} .m-sub { font-size: ${ptPx(T.body)}; color: ${r(C.ink2)}; margin-top: 3px; }
-  .${PNG_ROOT} .m-right { text-align: right; font-size: ${ptPx(T.caption)}; line-height: 1.55; color: ${r(C.muted)}; flex-shrink: 0; max-width: 210px; }
+  .${PNG_ROOT} .m-club { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: #fff; }
+  .${PNG_ROOT} .m-title { font-size: ${ptPx(T.h1 + 2)}; font-weight: 700; line-height: 1.2; margin-top: 4px; color: #fff; }
+  .${PNG_ROOT} .m-sub { font-size: ${ptPx(T.body)}; color: #fff; margin-top: 4px; }
+  .${PNG_ROOT} .m-right { text-align: right; font-size: ${ptPx(T.caption)}; line-height: 1.6; color: #fff; flex-shrink: 0; max-width: 230px; }
   .${PNG_ROOT} .kpis { display: flex; gap: 12px; margin-top: 22px; }
-  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; border: 1px solid ${r(C.line)}; border-radius: 6px; padding: 12px 14px; }
+  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; background: #fff; border: 1px solid ${r(C.line)}; border-radius: 8px; padding: 13px 15px; }
   .${PNG_ROOT} .kpi.accent { background: ${r(b.brandSoft)}; border: 1px solid ${r(b.brandEdge)}; }
   .${PNG_ROOT} .kpi .l { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: ${r(C.muted)}; }
-  .${PNG_ROOT} .kpi.accent .l { color: ${r(b.brandInk)}; }
-  .${PNG_ROOT} .kpi .v { font-size: ${ptPx(T.kpi)}; font-weight: 700; margin-top: 6px; white-space: nowrap; }
-  .${PNG_ROOT} .kpi.accent .v { color: ${r(b.brandInk)}; }
+  .${PNG_ROOT} .kpi.accent .l { color: ${r(b.brandDark)}; }
+  .${PNG_ROOT} .kpi .v { font-size: ${ptPx(T.kpi)}; font-weight: 700; margin-top: 6px; white-space: nowrap; color: ${r(C.ink)}; }
+  .${PNG_ROOT} .kpi.accent .v { color: ${r(b.brandDark)}; }
+  .${PNG_ROOT} .kpi .v.pos { color: ${r(C.pos)}; }
   .${PNG_ROOT} .kpi .v.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} table { width: 100%; border-collapse: collapse; margin-top: 22px; }
-  .${PNG_ROOT} th { background: ${r(b.brandSoft)}; color: ${r(b.brandInk)}; padding: 9px 14px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; border-bottom: 1.9px solid ${r(b.brand)}; }
+  .${PNG_ROOT} table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 22px; }
+  .${PNG_ROOT} th { background: ${r(b.brandMid)}; color: #fff; padding: 10px 14px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; }
+  .${PNG_ROOT} th { box-shadow: 1px 0 0 0 ${r(b.brandMid)}; }
+  .${PNG_ROOT} th:first-child { border-radius: 6px 0 0 6px; }
+  .${PNG_ROOT} th:last-child { border-radius: 0 6px 6px 0; }
   .${PNG_ROOT} th.right, .${PNG_ROOT} td.right { text-align: right; }
-  .${PNG_ROOT} td { padding: 9px 14px; border-bottom: 1px solid ${r(C.line)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
-  .${PNG_ROOT} td.right { font-weight: 700; white-space: nowrap; }
+  .${PNG_ROOT} td { padding: 9px 14px; border-bottom: 1px solid ${r(C.lineSoft)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
+  .${PNG_ROOT} tbody tr:nth-child(even) td { background: ${r(C.surface2)}; }
+  .${PNG_ROOT} td.right { font-weight: 700; white-space: nowrap; font-size: ${ptPx(T.body)}; }
+  .${PNG_ROOT} td.pos { color: ${r(C.pos)}; }
   .${PNG_ROOT} td.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} tr.total td { background: ${r(b.brandSoft)}; border-top: 1.9px solid ${r(b.brand)}; font-weight: 700; color: ${r(C.ink)}; }
+  .${PNG_ROOT} tr.total td { background: ${r(b.brandSoft)}; border-top: 1px solid ${r(b.brandEdge)}; border-bottom: 1px solid ${r(b.brandEdge)}; font-weight: 700; color: ${r(b.brandDark)}; }
+  .${PNG_ROOT} tr.total td:first-child { border-left: 1px solid ${r(b.brandEdge)}; border-radius: 8px 0 0 8px; }
+  .${PNG_ROOT} tr.total td:last-child { border-right: 1px solid ${r(b.brandEdge)}; border-radius: 0 8px 8px 0; color: ${r(C.ink)}; }
+  .${PNG_ROOT} tr.total td.pos { color: ${r(C.pos)}; }
+  .${PNG_ROOT} tr.total td.neg { color: ${r(C.neg)}; }
   .${PNG_ROOT} .foot { margin-top: 26px; padding-top: 9px; border-top: 1px solid ${r(C.line)}; display: flex; justify-content: space-between; gap: 12px; font-size: ${ptPx(T.caption)}; color: ${r(C.muted)}; }
   `
 }
@@ -408,18 +419,18 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
   const TITLE = 'Tổng quan tài chính'
   const docCode = themeFmt.docCode('TQ')
   const e = escHtml
-  const kpi = (label: string, value: number, accent = false) =>
-    `<div class="kpi${accent ? ' accent' : ''}"><div class="l">${e(label)}</div><div class="v${value < 0 ? ' neg' : ''}">${e(themeFmt.vnd(value))}</div></div>`
-  const row = (label: string, value: number) =>
-    `<tr><td>${e(label)}</td><td class="right${value < 0 ? ' neg' : ''}">${e(themeFmt.vnd(value))}</td></tr>`
+  const kpi = (label: string, value: number, accent = false, tone = '') =>
+    `<div class="kpi${accent ? ' accent' : ''}"><div class="l">${e(label)}</div><div class="v${value < 0 ? ' neg' : tone ? ' ' + tone : ''}">${e(themeFmt.vnd(value))}</div></div>`
+  const row = (label: string, value: number, tone = '') =>
+    `<tr><td>${e(label)}</td><td class="right${value < 0 ? ' neg' : tone ? ' ' + tone : ''}">${e(themeFmt.vnd(value))}</td></tr>`
   const sections = `
     ${reportMastheadHtml({ title: TITLE, subtitle: `${d.clubName} · ${d.periodName}`, meta: `${d.memberCount} thành viên · ${d.sessionCount} buổi · đã đóng ${d.confirmedCount}/${d.memberCount}`, logo, docCode })}
-    <div class="kpis">${kpi('Tổng thu', d.totalIncome)}${kpi('Tổng chi', d.totalExpense)}${kpi('Tồn Quỹ Chính', d.balance, true)}</div>
+    <div class="kpis">${kpi('Tổng thu', d.totalIncome, false, 'pos')}${kpi('Tổng chi', d.totalExpense, false, 'neg')}${kpi('Tồn Quỹ Chính', d.balance, true)}</div>
     <table>
       <thead><tr><th>Chỉ số</th><th class="right">Giá trị</th></tr></thead>
       <tbody>
-        ${row('Tổng thu (Quỹ Chính)', d.totalIncome)}
-        ${row('Tổng chi (Quỹ Chính)', d.totalExpense)}
+        ${row('Tổng thu (Quỹ Chính)', d.totalIncome, 'pos')}
+        ${row('Tổng chi (Quỹ Chính)', d.totalExpense, 'neg')}
         ${row('Tồn Quỹ Chính', d.balance)}
         ${row('Tồn Quỹ Phụ', d.miniBalance)}
         ${row('Số dư chuyển kỳ', d.carryForward)}
@@ -487,6 +498,8 @@ export interface ExcelSheet {
   /** Định dạng số riêng từng ô thân (cùng kích thước `rows`; undefined = mặc định theo số nguyên/thập phân),
    *  vd '0"%"' cho phần trăm. */
   cellFormats?: (string | undefined)[][]
+  /** Loại sheet: 'income' (thu → tab xanh) / 'expense' (chi → tab đỏ). Thiếu → suy từ tên sheet + loại tài liệu. */
+  tone?: 'income' | 'expense' | null
 }
 
 /** Tên sheet hợp lệ của Excel: bỏ : \ / ? * [ ], cắt 31 ký tự, KHÔNG trùng (không phân biệt hoa/thường). */
@@ -605,6 +618,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     const totalW = widths.reduce((s, w) => s + w, 0)
 
     // ── Khối tiêu đề 4 hàng (gộp ô theo bề ngang bảng) ──
+    const sheetTone = sheet.tone !== undefined ? sheet.tone : kit.inferSheetTone(sheet.name, opts.docType)
     const blockRows: [string, unknown][] = [
       [club.toUpperCase(), st.club],
       [opts.docTitle ? `${opts.docTitle} — ${sheet.name}` : sheet.name, st.title],
@@ -622,9 +636,15 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     // ── Ô thân ──
     const rowHeights: Record<number, number> = {}
     const merges: { s: { r: number; c: number }; e: { r: number; c: number } }[] = []
-    const zebra = nRows > 30
+    const zebra = true // zebra nhẹ cho MỌI bảng (không chỉ > 30 dòng)
     const numFmt = (n: number) => (Number.isInteger(n) ? kit.XL_NUM_INT : kit.XL_NUM_DEC)
-    const numColor = (n: number) => (n < 0 ? kit.XL_COLOR.neg : n === 0 ? kit.XL_COLOR.muted : undefined)
+    // Số tiền: dương thu/số dư = xanh, chi/nợ/âm = đỏ (ĐẬM); số đếm thường giữ màu chữ; STT/Hạng xám; 0 xám.
+    const numStyle = (n: number, c: number, rowTexts: string[]) => {
+      if (n === 0) return { color: kit.XL_COLOR.gray, bold: false }
+      if (kit.isIndexHeader(sheet.headers[c] ?? '')) return { color: kit.XL_COLOR.gray, bold: false }
+      const t = kit.moneyTone({ header: sheet.headers[c] ?? '', value: n, rowTexts, sheetTone })
+      return t ? { color: kit.moneyColor(t), bold: true } : { color: undefined, bold: false }
+    }
     if (nRows === 0) {
       for (let c = 0; c <= maxCol; c++) set(ws, XL_HEAD + 1, c, { t: 's', v: c === 0 ? 'Chưa có dữ liệu để hiển thị' : '', s: st.empty })
       if (maxCol > 0) merges.push({ s: { r: XL_HEAD + 1, c: 0 }, e: { r: XL_HEAD + 1, c: maxCol } })
@@ -633,11 +653,12 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     body.forEach((row, ri) => {
       const r = bodyStart + ri
       let lines = 1
+      const rowTexts = row.filter((v): v is string => typeof v === 'string')
       for (let c = 0; c < nCols; c++) {
         const raw = row[c] ?? ''
         const zb = zebra && ri % 2 === 1
         if (typeof raw === 'number') {
-          set(ws, r, c, { t: 'n', v: raw, z: sheet.cellFormats?.[ri]?.[c] ?? numFmt(raw), s: st.cell('right', { zebra: zb, color: numColor(raw) }) })
+          set(ws, r, c, { t: 'n', v: raw, z: sheet.cellFormats?.[ri]?.[c] ?? numFmt(raw), s: st.cell(kit.isIndexHeader(sheet.headers[c] ?? '') ? 'center' : 'right', { zebra: zb, ...numStyle(raw, c, rowTexts) }) })
         } else if (raw === '') {
           set(ws, r, c, { t: 's', v: '', s: st.cell(kinds[c] === 'num' ? 'right' : kinds[c] === 'text' ? 'left' : 'center', { zebra: zb }) })
         } else {
@@ -646,7 +667,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
             set(ws, r, c, { t: 'n', v: serial, z: kit.XL_DATE, s: st.cell('center', { zebra: zb }) })
           } else if (kinds[c] === 'status') {
             const tone = kit.statusTone(raw)
-            set(ws, r, c, { t: 's', v: raw, s: st.cell('center', { zebra: zb, color: tone && tone !== 'info' ? kit.statusColor(tone) : undefined, bold: !!tone }) })
+            set(ws, r, c, { t: 's', v: raw, s: tone ? st.chip(tone) : st.cell('center', { zebra: zb }) })
           } else {
             // Chữ: wrap + tự cao hàng. Mã/SĐT số có số 0 đầu giữ dạng văn bản (@) để không mất số 0 khi sửa.
             lines = Math.max(lines, kit.estimateLines(raw, widths[c]))
@@ -664,6 +685,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     const pureTotal = foot.length === 1 && nRows > 0 && /^(tổng|cộng|total)/i.test(String(foot[0][labelOf(foot[0])] ?? '').trim())
     foot.forEach((row, fi) => {
       const r = bodyStart + nRows + fi
+      const footTexts = row.filter((v): v is string => typeof v === 'string')
       const li = labelOf(row)
       let nextFilled = nCols
       if (li >= 0) for (let c = li + 1; c < nCols; c++) { if (row[c] !== '' && row[c] != null) { nextFilled = c; break } }
@@ -679,7 +701,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
             const sum = col.reduce((s, x) => s + x, 0)
             if (col.length > 0 && Math.abs(sum - raw) < 0.5) cell = { ...cell, f: `SUBTOTAL(9,${colLetter(c)}${firstBody}:${colLetter(c)}${lastBody})` }
           }
-          set(ws, r, c, { ...cell, s: st.total('right', { first, color: raw < 0 ? kit.XL_COLOR.neg : undefined }) })
+          set(ws, r, c, { ...cell, s: st.total('right', { first, color: (() => { const t = kit.moneyTone({ header: sheet.headers[c] ?? '', value: raw, rowTexts: footTexts, sheetTone, total: true }); return t ? kit.moneyColor(t) : undefined })() }) })
         } else if (c === li) {
           if (nextFilled - li > 1) merges.push({ s: { r, c: li }, e: { r, c: nextFilled - 1 } })
           lines = Math.max(lines, kit.estimateLines(raw, Math.max(spanW, 10)))
@@ -699,7 +721,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     ws['!cols'] = widths.map(wch => ({ wch }))
     const headerWraps = sheet.headers.some((h, c) => kit.estimateLines(h, widths[c] - 1) > 1)
     const rowsMeta: { hpt?: number }[] = []
-    ;[16, 28, 16, 18, 6].forEach((h, r) => { rowsMeta[r] = { hpt: h } })
+    ;[20, 34, 18, 18, 6].forEach((h, r) => { rowsMeta[r] = { hpt: h } })
     rowsMeta[XL_HEAD] = headerWraps ? {} : { hpt: 26 }
     for (const [r, h] of Object.entries(rowHeights)) rowsMeta[+r] = h > 0 ? { hpt: h } : {}
     for (let r = 0; r <= lastRow; r++) rowsMeta[r] = rowsMeta[r] ?? {}
@@ -713,7 +735,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
       footerLeft: `${club} · ${opts.docTitle ?? sheet.name}`,
       docCode,
       headerRow: XL_HEAD + 1,
-      tabRgb: b.brand,
+      tabRgb: kit.tabColorFor(sheetTone, b.brand),
     })
   })
   // Thuộc tính file (docProps): tiêu đề = tên tài liệu, tác giả/đơn vị = tên CLB, chủ đề = mã TL.
@@ -767,10 +789,10 @@ export async function exportTemplateExcel(fileName: string, sheets: TemplateShee
       sh.lines.forEach((line, r) => {
         const isTitle = r === 0
         const isHead = !isTitle && /^[\p{Lu}\s]{5,}/u.test(line)
-        const style = isTitle ? st.title : isHead ? st.club : st.scope
+        const style = isTitle ? st.title : isHead ? st.section : st.text
         ws[XLSX.utils.encode_cell({ r, c: 0 })] = {
           t: 's', v: line,
-          s: { ...(style as object), alignment: { horizontal: 'left', vertical: 'center', wrapText: true } },
+          s: { ...(style as object), alignment: { horizontal: 'left', vertical: 'center', wrapText: true, indent: isTitle || isHead ? 1 : 0 } },
         }
       })
       ws['!cols'] = [{ wch: 110 }]
@@ -787,8 +809,8 @@ export async function exportTemplateExcel(fileName: string, sheets: TemplateShee
     })
     rows.forEach((row, ri) => row.forEach((v, c) => {
       const ref = XLSX.utils.encode_cell({ r: ri + 1, c })
-      if (typeof v === 'number') ws[ref] = { t: 'n', v, z: Number.isInteger(v) ? kit.XL_NUM_INT : kit.XL_NUM_DEC, s: st.cell('right', { color: kit.XL_COLOR.ink2 }) }
-      else ws[ref] = { t: 's', v: String(v ?? ''), ...(/^0\d+$/.test(String(v)) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, color: kit.XL_COLOR.ink2 }) }
+      if (typeof v === 'number') ws[ref] = { t: 'n', v, z: Number.isInteger(v) ? kit.XL_NUM_INT : kit.XL_NUM_DEC, s: st.cell('right', { color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1 }) }
+      else ws[ref] = { t: 's', v: String(v ?? ''), ...(/^0\d+$/.test(String(v)) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1 }) }
     }))
     ws['!cols'] = headers.map((h, c) => ({ wch: sh.widths?.[c] ?? kit.columnWidth(h.length, 12) }))
     ws['!rows'] = [{ hpt: 28 }, ...rows.map(() => ({ hpt: 20 }))]
@@ -848,7 +870,7 @@ async function buildVectorTable(input: {
   note?: string
   columns: VectorTableColumn[]
   rows: Record<string, string | number>[]
-  stats?: { label: string; value: string | number }[]
+  stats?: { label: string; value: string | number; tone?: 'pos' | 'neg' | 'warn' | 'brand' }[]
   /** Dòng tổng cuối bảng (key theo columns). */
   footerRow?: Record<string, string | number>
   /** Loại tài liệu cho mã TL (PF-{LOẠI}-yyMMdd-HHmm), vd 'SQ' sổ quỹ, 'TQ' thu quỹ. */
@@ -1023,8 +1045,8 @@ export function exportLedgerPDF(
     ],
     rows: tableRows,
     stats: [
-      { label: 'Tổng thu', value: formatVND(totalIncome) },
-      { label: 'Tổng chi', value: formatVND(totalExpense) },
+      { label: 'Tổng thu', value: formatVND(totalIncome), tone: 'pos' },
+      { label: 'Tổng chi', value: formatVND(totalExpense), tone: 'neg' },
       { label: 'Số dư cuối kỳ', value: formatVND(balance) },
     ],
   })
@@ -1143,8 +1165,8 @@ export function exportContribPDF(
     stats: [
       { label: 'Quỹ Chính (đã xác nhận)', value: formatVND(commonTotal) },
       { label: 'Quỹ Phụ (đã xác nhận)', value: formatVND(miniTotal) },
-      { label: 'Tổng thu (đã xác nhận)', value: formatVND(commonTotal + miniTotal) },
-      { label: 'Chờ xác nhận', value: formatVND(pendingTotal) },
+      { label: 'Tổng thu (đã xác nhận)', value: formatVND(commonTotal + miniTotal), tone: 'pos' },
+      { label: 'Chờ xác nhận', value: formatVND(pendingTotal), tone: 'warn' },
       { label: 'Số khoản', value: totalCount },
     ],
   })
@@ -1176,9 +1198,9 @@ export function exportMembersPDF(clubName: string, rows: MemberRow[]) {
       { key: 'rank', label: '#', w: 10, align: 'center' },
       { key: 'name', label: 'HỌ VÀ TÊN', w: 44, align: 'left', bold: true },
       { key: 'phone', label: 'ĐIỆN THOẠI', w: 30, align: 'left' },
-      { key: 'email', label: 'EMAIL', w: 56, align: 'left' },
+      { key: 'email', label: 'EMAIL', w: 52, align: 'left' },
       { key: 'joinDate', label: 'NGÀY THAM GIA', w: 24, align: 'center' },
-      { key: 'status', label: 'TRẠNG THÁI', w: 22, align: 'center', tone: 'status' },
+      { key: 'status', label: 'TRẠNG THÁI', w: 26, align: 'center', tone: 'status' },
     ],
     rows: rows.map(r => ({ name: r.name, phone: r.phone, email: r.email, joinDate: r.joinDate, status: r.status })),
     stats: [
@@ -1430,7 +1452,7 @@ export interface StandingsPdfInput {
   rankNote?: string
   columns: StandingsColumn[]
   rows: Record<string, string | number>[]
-  stats?: { label: string; value: string | number }[]
+  stats?: { label: string; value: string | number; tone?: 'pos' | 'neg' | 'warn' | 'brand' }[]
   /** Tiêu đề header (mặc định 'BẢNG XẾP HẠNG'). */
   title?: string
   /** Tô nhẹ 3 dòng đầu (mặc định true). Tắt cho bảng không xếp hạng (vd Lịch). */

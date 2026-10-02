@@ -1,5 +1,5 @@
 /**
- * MẪU BÁO CÁO QUỸ CHUẨN (dùng chung mọi CLB) — PDF VECTOR thuần jsPDF, chuẩn "Luxury SaaS".
+ * MẪU BÁO CÁO QUỸ CHUẨN (dùng chung mọi CLB) — PDF VECTOR thuần jsPDF, chuẩn "Luxury SaaS · sinh động" (băng masthead tím đặc, header bảng đặc, thẻ KPI nhấn, xanh/đỏ semantic).
  *
  * KHÔNG dùng html2canvas (chụp DOM): cách đó phụ thuộc renderer từng máy. Ở đây mọi phần tử được
  * VẼ bằng toạ độ mm cố định → mọi máy, mọi lần xuất cho ra pixel GIỐNG HỆT.
@@ -70,8 +70,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   })
 
   y = kit.kpiGrid([
-    { label: 'Tổng thu', value: vnd(summary.totalIncome), caption: `${summary.confirmedCount}/${summary.memberCount} thành viên đóng`, accent: false },
-    { label: 'Tổng chi', value: vnd(summary.totalExpense), caption: `Tỷ lệ chi / thu: ${chiThuPct}%`, accent: false },
+    { label: 'Tổng thu', value: vnd(summary.totalIncome), caption: `${summary.confirmedCount}/${summary.memberCount} thành viên đóng`, accent: false, tone: 'pos' },
+    { label: 'Tổng chi', value: vnd(summary.totalExpense), caption: `Tỷ lệ chi / thu: ${chiThuPct}%`, accent: false, tone: 'neg' },
     {
       // Khi có hàng "QUỸ CHÍNH" (thực có) bên dưới → đổi nhãn để KHÔNG lẫn: đây là kết quả THU−CHI của kỳ.
       label: hasExtra ? 'Số dư thu − chi' : 'Số dư quỹ',
@@ -102,9 +102,9 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   }
 
   /* Thanh tiến độ Chi / Thu (cao 2mm, track line, fill brand → warn ≥ 90% → neg ≥ 100%) */
-  kit.font('bold', T.type.body, C.ink)
+  kit.font('bold', T.type.body, B.brandDark)
   doc.text('Tỷ lệ chi / thu', M, y + 3)
-  kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : C.ink)
+  kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : B.brandDark)
   doc.text(`${chiThuPct}%`, W - M, y + 3, { align: 'right' })
   kit.fill(C.line)
   kit.rrect(M, y + 5.4, CW, 2, T.radius.bar, 'F')
@@ -138,7 +138,7 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   const memberCols = normalizeCols(kit, [
     { key: 'idx', label: '#', w: 9, align: 'left' },
     { key: 'name', label: 'Thành viên', w: 43, align: 'left', bold: true },
-    { key: 'sess', label: 'Buổi', w: 13, align: 'center' },
+    { key: 'sess', label: 'Buổi', w: 13, align: 'center', tone: 'points' },
     { key: 'status', label: 'Trạng thái', w: 25, align: 'center' },
     { key: 'court', label: 'Chi phí sân', w: 24, align: 'right' },
     { key: 'living', label: 'Sinh hoạt', w: 24, align: 'right' },
@@ -199,16 +199,16 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
         idx: i + 1,
         date: e.date ?? '',
         desc: e.description ?? '',
-        fund: { t: e.fundLabel ?? (isMini ? 'Quỹ Phụ' : 'Quỹ Chính'), tone: isMini ? 'info' : 'ink2' },
-        kind: { t: e.kindLabel ?? '', tone: 'ink2' },
-        amount: vnd(e.amount),
+        fund: { t: e.fundLabel ?? (isMini ? 'Quỹ Phụ' : 'Quỹ Chính'), tone: isMini ? 'info' : 'brand' },
+        kind: { t: e.kindLabel ?? '', tone: 'muted' },
+        amount: { t: vnd(e.amount), tone: e.statusKey === 'rejected' ? 'muted' : 'neg' },
         status: { t: e.statusLabel ?? '', tone: 'status', dot: dotOf(e.statusKey) },
       }
     })
     const foots = []
     /* Tổng theo NGUỒN — Quỹ Chính khớp "Tổng chi kỳ"; Quỹ Phụ độc lập. Chỉ tính đã duyệt/đã chi. */
-    if (expenseRows.some((e) => e.fundKey !== 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ CHÍNH (đã duyệt / đã chi)', __span: 5, amount: vnd(approvedCommon) })
-    if (expenseRows.some((e) => e.fundKey === 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ PHỤ (đã duyệt / đã chi)', __span: 5, amount: vnd(approvedMini) })
+    if (expenseRows.some((e) => e.fundKey !== 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ CHÍNH (đã duyệt / đã chi)', __span: 5, amount: { t: vnd(approvedCommon), tone: 'neg' } })
+    if (expenseRows.some((e) => e.fundKey === 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ PHỤ (đã duyệt / đã chi)', __span: 5, amount: { t: vnd(approvedMini), tone: 'neg' } })
     drawTable(kit, { columns: ecols, y: ey, rows: erows, footerRows: foots, onNewPage: () => cont('Khoản chi'), emptyText: 'Chưa có khoản chi trong kỳ này' })
   }
 
@@ -223,39 +223,41 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     const rate = pct(m.attendedSessions, m.totalSessions)
     const px = 5
     kit.fill(C.white)
-    kit.stroke(C.lineStrong)
+    kit.stroke(C.line)
     kit.lw(T.line.border)
-    kit.rrect(x, yy, CARD_W, CARD_H, T.radius.card, 'FD')
+    kit.rrect(x, yy, CARD_W, CARD_H, T.radius.card + 0.5, 'FD')
 
-    /* tên + trạng thái (không header đặc) */
+    /* header thẻ: nền brandMid ĐẶC (chữ trắng) — tên + số buổi + chip trạng thái */
+    kit.fill(B.brandMid)
+    kit.rrect(x, yy, CARD_W, 15, T.radius.card + 0.5, 'F')
+    doc.rect(x, yy + 8, CARD_W, 7, 'F')
     const badgeTxt = m.contributionPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'
-    kit.font('bold', T.type.caption, C.ink2)
-    const bw = doc.getTextWidth(badgeTxt) + 4
-    kit.font('bold', T.type.h2, C.ink)
-    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - bw - 3, T.type.h2, 8.5), x + px, yy + 7.6)
-    kit.fill(m.contributionPaid ? C.posFill : C.negFill)
-    doc.circle(x + CARD_W - px - bw + 1, yy + 6.5, 1, 'F')
-    kit.font('bold', T.type.caption, C.ink2)
-    doc.text(badgeTxt, x + CARD_W - px, yy + 7.6, { align: 'right' })
-    kit.font('normal', T.type.caption, C.muted)
-    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 12.2)
-    kit.hline(x + px, x + CARD_W - px, yy + 15.4, C.line, T.line.hair)
+    kit.font('bold', T.type.caption, C.white)
+    const bw = doc.getTextWidth(badgeTxt) + 5
+    kit.font('bold', T.type.h2, C.white)
+    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - 2, T.type.h2, 8.5), x + px, yy + 6.8)
+    kit.font('normal', T.type.caption, C.white)
+    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 11.6)
+    kit.fill(C.white)
+    kit.rrect(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, 'F')
+    kit.font('bold', T.type.caption, m.contributionPaid ? C.posText : C.negText)
+    doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 11.6, { align: 'center' })
 
     /* tỷ lệ tham gia */
     kit.tracked('Tỷ lệ tham gia', x + px, yy + 21, { color: C.muted })
-    kit.font('bold', T.type.body, C.ink)
-    doc.text(`${rate}%`, x + CARD_W - px, yy + 21, { align: 'right' })
+    kit.font('bold', 9, B.brandDark)
+    doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 21, { align: 'right' })
     kit.fill(C.line)
     kit.rrect(x + px, yy + 23.4, CARD_W - px * 2, 2, T.radius.bar, 'F')
     kit.fill(B.brand)
     kit.rrect(x + px, yy + 23.4, Math.max(2, ((CARD_W - px * 2) * Math.min(rate, 100)) / 100), 2, T.radius.bar, 'F')
 
-    /* 4 dòng chi phí — label trái / số phải; nhãn đúng công thức backend */
+    /* 4 dòng chi phí — label trái / số phải (màu theo nghĩa); nhãn đúng công thức backend */
     const lines = [
-      { label: 'Đã nộp quỹ', note: '', val: vnd(m.amountPaid) },
-      { label: 'Chi phí sân', note: ' (chia đều)', val: vnd(m.courtCost) },
-      { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost) },
-      { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), total: true },
+      { label: 'Đã nộp quỹ', note: '', val: vnd(m.amountPaid), color: C.pos },
+      { label: 'Chi phí sân', note: ' (chia đều)', val: vnd(m.courtCost), color: B.brandDark },
+      { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost), color: C.cyan },
+      { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), color: C.orange, total: true },
     ]
     let cy = yy + 29
     lines.forEach((ln) => {
@@ -272,19 +274,22 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
         kit.font('normal', T.type.caption, C.muted)
         doc.text(ln.note, x + px + lw, mid)
       }
-      kit.font('bold', T.type.body, C.ink)
+      kit.font('bold', T.type.body, ln.color)
       doc.text(ln.val, x + CARD_W - px, mid, { align: 'right' })
       cy += 6.4
     })
 
-    /* ô số dư — âm: hiện SỐ TIỀN CẦN NỘP (dương), nhãn "Cần nộp thêm" đã nói rõ chiều */
+    /* ô số dư — nền xanh/đỏ nhạt viền; âm: hiện SỐ TIỀN CẦN NỘP (dương), nhãn "Cần nộp thêm" đã nói rõ chiều */
     const boxY = cy + 1.4
     const tone = pos ? C.pos : C.neg
+    const toneAA = pos ? C.posText : C.negText
     kit.fill(pos ? C.posTint : C.negTint)
-    kit.rrect(x + px, boxY, CARD_W - px * 2, 11.4, T.radius.card, 'F')
-    kit.font('bold', T.type.cell, tone)
+    kit.stroke(pos ? C.posEdge : C.negEdge)
+    kit.lw(T.line.border)
+    kit.rrect(x + px, boxY, CARD_W - px * 2, 11.4, T.radius.card, 'FD')
+    kit.font('bold', T.type.cell, toneAA)
     doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 3, boxY + 4.8)
-    kit.font('normal', T.type.caption, tone)
+    kit.font('normal', T.type.caption, toneAA)
     doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 3, boxY + 8.8)
     kit.font('bold', T.type.h2, tone)
     doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 3, boxY + 7.6, { align: 'right' })
@@ -336,7 +341,7 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns: rawColumn
     right: [meta.formatLabel],
   })
 
-  const st = (stats || []).map((s) => ({ label: s.label, value: String(s.value), compact: false, accent: false }))
+  const st = (stats || []).map((s) => ({ label: s.label, value: String(s.value), tone: s.tone, compact: false, accent: false }))
   if (st.length > 0) {
     st[0].accent = true
     y = kit.kpiGrid(st, y, { max: 4, after: T.space.m })
@@ -409,9 +414,14 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
       top = kit.masthead({ first: false, club, title: TITLE, docCode, right: [`Phần ${pageIdx + 1} / ${pagesPlan.length}`] })
     }
     if (meta.championName) {
-      kit.tracked('Vô địch', M, top + 3, { color: B.brandInk })
+      const cw0 = kit.trackedWidth('Vô địch') + 6
+      kit.fill(C.goldTint)
+      kit.stroke(C.warnEdge)
+      kit.lw(T.line.border)
+      kit.rrect(M, top - 1.2, cw0, 5.6, 2.8, 'FD')
+      kit.tracked('Vô địch', M + 3, top + 2.7, { color: C.warn })
       kit.font('bold', T.type.h2, C.ink)
-      doc.text(kit.clip(String(meta.championName), CW / 2), M + kit.trackedWidth('Vô địch') + 3, top + 3.4)
+      doc.text(kit.clip(String(meta.championName), CW / 2), M + cw0 + 3, top + 3.1)
       top += 8
     }
 
@@ -480,32 +490,34 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
       const my = y + boxH / 4 + 1.3
       let rightEdge = x + w - 2.5
       if (score != null && score !== '') {
-        kit.font('bold', T.type.cell, isWinner ? B.brandInk : C.ink2)
+        kit.font('bold', T.type.cell, isWinner ? B.brandDark : C.ink2)
         doc.text(String(score), rightEdge, my, { align: 'right' })
         rightEdge -= doc.getTextWidth(String(score)) + 2
       }
       if (tieNote) {
-        kit.font('bold', T.type.caption, B.brandInk)
+        kit.font('bold', T.type.caption, B.brandDark)
         doc.text(tieNote, rightEdge, my, { align: 'right' })
         rightEdge -= doc.getTextWidth(tieNote) + 2
       }
-      kit.font(isWinner ? 'bold' : 'normal', T.type.cell, isBye ? C.muted : isWinner ? B.brandInk : C.ink)
+      kit.font(isWinner ? 'bold' : 'normal', T.type.cell, isBye ? C.muted : isWinner ? B.brandDark : C.ink)
       doc.text(kit.fit(name, rightEdge - (x + 3), T.type.cell, T.type.label), x + 3, my)
     }
     rs.forEach((rd, r) => {
       const x = M + r * colW
       // Nhãn vòng đặt ngay trên hộp đầu tiên của cột (gắn với nội dung, không lơ lửng).
       if (rd.matches.length > 0) {
-        kit.tracked(rd.label, x + boxW / 2, centers[r][0] - boxH / 2 - 2.6, { color: B.brandInk, align: 'center', maxW: boxW })
+        kit.fill(B.brandMid)
+        kit.rrect(x, centers[r][0] - boxH / 2 - 7.2, boxW, 4.8, 2.4, 'F')
+        kit.tracked(rd.label, x + boxW / 2, centers[r][0] - boxH / 2 - 3.8, { color: C.white, align: 'center', maxW: boxW - 4 })
       }
       rd.matches.forEach((m, i) => {
         const cy = centers[r][i]
         const y = cy - boxH / 2
         kit.fill(C.white)
-        kit.stroke(C.lineStrong)
+        kit.stroke(B.brandEdge)
         kit.lw(T.line.border)
         kit.rrect(x, y, boxW, boxH, 1.5, 'FD')
-        kit.hline(x, x + boxW, y + boxH / 2, C.line, T.line.hair)
+        kit.hline(x, x + boxW, y + boxH / 2, B.brandEdge, T.line.hair)
         const tie = m.winner && m.scoreA != null && m.scoreB != null && m.scoreA !== '' && String(m.scoreA) === String(m.scoreB)
         const tieNote = tie ? (m.pen ? `pen ${m.pen}` : 'đi tiếp') : ''
         drawSide(x, y, boxW, m.teamA || 'Chờ...', m.scoreA, m.winner === 'A', false, m.winner === 'A' ? tieNote : '')
@@ -526,7 +538,7 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
 function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
   const doc = newDoc(jsPDF, fonts)
   const kit = createKit(doc, branding)
-  const { T, C, M, W } = kit
+  const { T, C, B, M, W } = kit
   const docCode = spec.docCode || fmt.docCode(spec.docType)
   const club = spec.club || branding.name
 
@@ -564,7 +576,7 @@ function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
   } else {
     y = Math.max(y, kit.bottom - noteH - 4)
   }
-  kit.hline(M, W - M, y, C.line, T.line.hair)
+  kit.hline(M, W - M, y, B.brandEdge, T.line.border)
   kit.font('normal', T.type.caption, C.muted)
   const noteLines = kit.wrap(spec.note || '', kit.CW * 0.6, 2)
   noteLines.forEach((ln, i) => doc.text(ln, M, y + 4.4 + i * 3.6))
@@ -595,6 +607,7 @@ export function buildMiniReceiptPDF({ jsPDF, fonts, receipt, branding }) {
       printedDateText: receipt.printedDateText,
       location: receipt.clubLocation,
       amountLabel: 'Số tiền thu Quỹ Phụ',
+      amountTone: 'pos',
       amount: receipt.amount,
       amountCaption: receipt.paymentDate ? `Ngày nộp: ${receipt.paymentDate}` : '',
       sections: [{
@@ -633,7 +646,7 @@ export function buildMiniExpensePDF({ jsPDF, fonts, receipt, branding }) {
       location: receipt.clubLocation,
       amountLabel: 'Số tiền chi Quỹ Phụ',
       amount: receipt.amount,
-      amountTone: 'ink',
+      amountTone: 'neg',
       amountCaption: receipt.expenseDate ? `Ngày chi: ${receipt.expenseDate}` : '',
       sections: [{
         title: 'Thông tin khoản chi',
@@ -678,6 +691,7 @@ export function buildPersonalReceiptPDF({ jsPDF, fonts, receipt: d, branding }) 
       printedDateText: d.printedDateText,
       location: d.clubLocation,
       amountLabel: 'Số tiền đã đóng quỹ',
+      amountTone: d.amountPaid > 0 ? 'pos' : 'ink',
       amount: d.amountPaid,
       amountCaption: d.paymentDate ? `Ngày đóng: ${d.paymentDate}` : '',
       status: { text: d.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận', dot: d.isConfirmed ? THEME.color.posFill : THEME.color.warnFill },
@@ -744,6 +758,7 @@ export function buildBillingReceiptPDF({ jsPDF, fonts, receipt: d, branding }) {
       printedAtText: d.printedAtText,
       printedDateText: d.printedDateText,
       amountLabel: 'Đã thanh toán',
+      amountTone: 'brand',
       amount: d.amount,
       amountCaption: d.paidAtText ? `Ngày thanh toán: ${d.paidAtText}` : '',
       status: { text: 'Thành công', dot: THEME.color.posFill },
@@ -815,11 +830,11 @@ export function buildExpenseReportPDF({ jsPDF, fonts, summary, rows, branding })
 
   /* Dải KPI: Tổng chi (nhấn) / Quỹ Chính / Quỹ Phụ / Đã duyệt / Chờ duyệt */
   const items = [
-    { label: summary.totalLabel || 'Tổng chi', value: vnd(summary.totalAll) },
+    { label: summary.totalLabel || 'Tổng chi', value: vnd(summary.totalAll), tone: 'neg' },
     { label: 'Quỹ Chính', value: vnd(summary.totalCommon) },
     { label: 'Quỹ Phụ', value: vnd(summary.totalMini) },
-    { label: 'Đã duyệt', value: vnd(summary.totalApproved) },
-    { label: 'Chờ duyệt', value: vnd(summary.totalPending) },
+    { label: 'Đã duyệt', value: vnd(summary.totalApproved), tone: 'pos' },
+    { label: 'Chờ duyệt', value: vnd(summary.totalPending), tone: 'warn' },
   ]
   y = kit.kpiGrid(items, y, { perRow: 5, after: T.space.m })
 
@@ -843,13 +858,13 @@ export function buildExpenseReportPDF({ jsPDF, fonts, summary, rows, branding })
         idx: i + 1,
         code: { t: r.code, tone: 'ink2' },
         desc: r.description,
-        kind: { t: r.kindLabel, tone: 'ink2' },
+        kind: { t: r.kindLabel, tone: 'muted' },
         date: r.dateText,
-        amount: vnd(r.amount),
+        amount: { t: vnd(r.amount), tone: r.statusKey === 'rejected' ? 'muted' : 'neg' },
         status: { t: st.label, tone: 'status', dot: st.dot },
       }
     }),
-    footerRows: [{ __label: summary.totalRowLabel || 'TỔNG CỘNG', __span: 5, amount: vnd(summary.totalAll) }],
+    footerRows: [{ __label: summary.totalRowLabel || 'TỔNG CỘNG', __span: 5, amount: { t: vnd(summary.totalAll), tone: 'neg' } }],
   })
 
   drawFooterAll(kit, { club, title: TITLE, docCode })
