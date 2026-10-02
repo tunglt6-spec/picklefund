@@ -19,6 +19,8 @@ export interface QuyReportSummary {
   exportedDateText: string
   /** Ví dụ "18:38:59 22/7/2026" */
   exportedAtText: string
+  /** Mã tài liệu (mặc định sinh PF-BCQ-yyMMdd-HHmm theo giờ VN). */
+  docCode?: string
 }
 
 export interface QuyReportRow {
@@ -50,13 +52,17 @@ export interface PdfLogo {
   /** Kích thước gốc (px) để giữ tỉ lệ khi vẽ */
   w: number
   h: number
+  /** Logo TRẮNG (mặc định PickleFund): vẽ trên ô brandInk thay vì nền trắng. */
+  onDark?: boolean
 }
 
 export interface QuyReportBranding {
   name: string
   footer: string
-  /** Logo CLB (tùy chọn) — vẽ thẳng trên band màu ở header (không chip nền) */
+  /** Logo CLB (tùy chọn) — vẽ ở masthead nền trắng (logo trắng → onDark: ô màu brand) */
   logo?: PdfLogo | null
+  /** Màu chủ đạo CLB (#RRGGBB) — thiếu/sai → tím mặc định #6D5DFB. makeBrand tự tối dần để chữ đạt ≥ 4.5:1. */
+  primaryColor?: string | null
 }
 
 export function buildQuyReportPDF(opts: {
@@ -105,6 +111,7 @@ export interface ExpenseReportSummary {
   totalLabel?: string
   /** Nhãn dòng tổng cuối bảng (mặc định 'TỔNG CỘNG'). */
   totalRowLabel?: string
+  docCode?: string
   exportedDateText: string
   exportedAtText: string
 }
@@ -138,8 +145,12 @@ export interface StandingsReportMeta {
   title?: string
   /** Tô nhẹ 3 dòng đầu (mặc định true). Đặt false cho bảng không xếp hạng (vd Lịch). */
   highlightTop3?: boolean
-  /** Thông điệp khi bảng không có dòng nào (mặc định 'Không có dữ liệu'). */
+  /** Thông điệp khi bảng không có dòng nào (mặc định 'Chưa có dữ liệu trong phạm vi này'). */
   emptyText?: string
+  /** Loại tài liệu trong mã TL PF-{LOẠI}-yyMMdd-HHmm (mặc định 'BXH'). */
+  docType?: string
+  /** Mã tài liệu đã dựng sẵn (ưu tiên hơn docType). */
+  docCode?: string
   exportedDateText: string
   exportedAtText: string
 }
@@ -149,7 +160,8 @@ export interface StandingsReportColumn {
   label: string
   w: number
   align: 'left' | 'center' | 'right'
-  tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign'
+  /** status = chấm màu + chữ ink2 (Hoạt động / Đã đóng / Chờ xác nhận…). */
+  tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign' | 'status'
   bold?: boolean
   /** Xuống dòng (tăng chiều cao hàng) thay vì cắt "…". Mặc định: true cho cột căn trái (trừ 'rank'). */
   wrap?: boolean
@@ -178,6 +190,8 @@ export interface KnockoutReportRound {
     scoreB?: number | string | null
     winner: 'A' | 'B' | null
     walkover?: boolean
+    /** Tỉ số pen (vd "4-3"). Trận hoà tỉ số có winner: hiện "pen …" nếu có, ngược lại "đi tiếp". */
+    pen?: string
   }[]
 }
 
@@ -191,10 +205,97 @@ export function buildKnockoutReportPDF(opts: {
     sportLabel: string
     championName?: string
     emptyText?: string
+    docCode?: string
     exportedDateText: string
     exportedAtText: string
   }
   rounds: KnockoutReportRound[]
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
+
+export interface MiniExpenseReceiptInput {
+  receiptNo?: number
+  receiverName: string
+  expenseType: string
+  amount: number
+  expenseDate: string
+  description: string
+  notes?: string
+  clubName: string
+  clubLocation?: string
+  printedDateText: string
+  printedAtText: string
+}
+
+/** Phiếu chi Quỹ Phụ — PDF vector (thay HTML + html2canvas). */
+export function buildMiniExpensePDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  receipt: MiniExpenseReceiptInput
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
+
+export interface PersonalReceiptInput {
+  receiptNo?: number
+  memberName: string
+  loginName?: string
+  periodName: string
+  periodStartDate?: string
+  periodEndDate?: string
+  contributionAmount?: number
+  clubName: string
+  clubLocation?: string
+  amountPaid: number
+  paymentDate?: string
+  attendedSessions: number
+  totalSessions: number
+  totalCourtFee?: number
+  memberCountForSplit?: number
+  courtCost: number
+  totalOtherFee?: number
+  livingCost: number
+  totalCost: number
+  balance: number
+  isConfirmed: boolean
+  printedDateText: string
+  printedAtText: string
+}
+
+/** Phiếu thu cá nhân (đóng quỹ thành viên) — PDF vector. */
+export function buildPersonalReceiptPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  receipt: PersonalReceiptInput
+  branding: QuyReportBranding
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}): any
+
+export interface BillingReceiptInput {
+  clubName: string
+  invoiceNumber: string
+  orderCode: string
+  planLabel: string
+  cycleLabel: string
+  amount: number
+  discount?: number
+  /** Thời điểm thanh toán đã định dạng (ngày trước giờ). */
+  paidAtText?: string
+  gateway: string
+  billingInfo?: { buyerName?: string; taxCode?: string; address?: string } | null
+  printedDateText: string
+  printedAtText: string
+}
+
+/** Biên nhận thanh toán gói dịch vụ — PDF vector. */
+export function buildBillingReceiptPDF(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  jsPDF: any
+  fonts: { regular: string; bold: string }
+  receipt: BillingReceiptInput
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any

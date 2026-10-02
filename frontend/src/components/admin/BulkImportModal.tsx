@@ -4,6 +4,7 @@ import { Upload, FileSpreadsheet, Download, CheckCircle2, AlertCircle, ChevronDo
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import api from '../../lib/api'
+import { exportTemplateExcel } from '../../lib/export'
 import toast from 'react-hot-toast'
 
 /**
@@ -91,80 +92,35 @@ function num(row: Record<string, unknown>, ...keys: string[]): number {
 // xlsx tải ĐỘNG (chỉ khi bấm tải mẫu / chọn file) — không nằm trong bundle khởi động.
 type XLSXMod = typeof XLSXNS
 
-function buildTemplate(XLSX: XLSXMod) {
-  const wb = XLSX.utils.book_new()
-
-  const guide = XLSX.utils.aoa_to_sheet([
-    ['HƯỚNG DẪN NHẬP DỮ LIỆU HÀNG LOẠT — PickleFund'],
-    [''],
-    ['Dùng khi CLB mới thành lập cần nhập lại dữ liệu quá khứ (thay vì nhập tay từng buổi/từng khoản thu).'],
-    ['Điền dữ liệu vào các sheet bên dưới, giữ nguyên tên cột (dòng 1). Có thể để trống sheet không cần dùng.'],
-    [''],
-    ['THỨ TỰ XỬ LÝ (quan trọng — Tên kỳ / Họ và tên phải khớp CHÍNH XÁC giữa các sheet):'],
-    ['1. Thành viên — tạo mới thành viên (bỏ qua nếu tên đã tồn tại trong CLB).'],
-    ['2. Kỳ Quỹ — tạo mới kỳ quỹ (bỏ qua nếu Tên kỳ đã tồn tại).'],
-    ['3. Lịch sinh hoạt — tạo buổi chơi, PHẢI tham chiếu đúng "Tên kỳ" ở sheet Kỳ Quỹ.'],
-    ['4. Đăng ký buổi — PHẢI tham chiếu đúng Tên kỳ + Ngày buổi + Họ và tên đã có.'],
-    ['5. Điểm danh — tương tự Đăng ký buổi, thêm cột Trạng thái (Có mặt / Vắng).'],
-    ['6. Thu quỹ — khoản đóng góp của thành viên cho 1 kỳ quỹ.'],
-    ['7. Chi quỹ — khoản chi từ 1 kỳ quỹ (vd. tiền sân).'],
-    [''],
-    ['Ngày tháng: định dạng YYYY-MM-DD (vd. 2024-01-15). Số tiền: chỉ nhập số, không ký hiệu đ/VNĐ.'],
-    ['Sau khi điền xong, quay lại app > Kỳ Quỹ > "Nhập dữ liệu CLB mới" > tải file này lên.'],
+async function buildTemplate() {
+  // File mẫu dùng kit Excel chung: header brandSoft, ẩn gridlines, freeze hàng 1, print setup; GIỮ header ở hàng 1 (importer đọc theo tên cột).
+  await exportTemplateExcel('mau_nhap_du_lieu_clb.xlsx', [
+    { name: 'Hướng dẫn', lines: [
+      'HƯỚNG DẪN NHẬP DỮ LIỆU HÀNG LOẠT — PickleFund',
+      '',
+      'Dùng khi CLB mới thành lập cần nhập lại dữ liệu quá khứ (thay vì nhập tay từng buổi/từng khoản thu).',
+      'Điền dữ liệu vào các sheet bên dưới, giữ nguyên tên cột (dòng 1). Có thể để trống sheet không cần dùng.',
+      '',
+      'THỨ TỰ XỬ LÝ (quan trọng — Tên kỳ / Họ và tên phải khớp CHÍNH XÁC giữa các sheet):',
+      '1. Thành viên — tạo mới thành viên (bỏ qua nếu tên đã tồn tại trong CLB).',
+      '2. Kỳ Quỹ — tạo mới kỳ quỹ (bỏ qua nếu Tên kỳ đã tồn tại).',
+      '3. Lịch sinh hoạt — tạo buổi chơi, PHẢI tham chiếu đúng "Tên kỳ" ở sheet Kỳ Quỹ.',
+      '4. Đăng ký buổi — PHẢI tham chiếu đúng Tên kỳ + Ngày buổi + Họ và tên đã có.',
+      '5. Điểm danh — tương tự Đăng ký buổi, thêm cột Trạng thái (Có mặt / Vắng).',
+      '6. Thu quỹ — khoản đóng góp của thành viên cho 1 kỳ quỹ.',
+      '7. Chi quỹ — khoản chi từ 1 kỳ quỹ (vd. tiền sân).',
+      '',
+      'Ngày tháng: định dạng YYYY-MM-DD (vd. 2024-01-15). Số tiền: chỉ nhập số, không ký hiệu đ/VNĐ.',
+      'Sau khi điền xong, quay lại app > Kỳ Quỹ > "Nhập dữ liệu CLB mới" > tải file này lên.',
+    ] },
+    { name: 'Thành viên', headers: ['Họ và tên', 'Số điện thoại', 'Email', 'Ngày gia nhập (YYYY-MM-DD)', 'Ghi chú'], rows: [['Nguyễn Văn A', '0901234567', '', '2024-01-01', '']], widths: [25, 15, 22, 20, 20] },
+    { name: 'Kỳ Quỹ', headers: ['Tên kỳ', 'Loại quỹ (Chung/Phụ)', 'Ngày bắt đầu (YYYY-MM-DD)', 'Ngày kết thúc (YYYY-MM-DD)', 'Mức đóng/người (VNĐ)', 'Số buổi dự kiến', 'Ghi chú'], rows: [['Tháng 1_2024', 'Chung', '2024-01-01', '2024-01-31', 150000, 5, '']], widths: [18, 18, 22, 22, 18, 15, 20] },
+    { name: 'Lịch sinh hoạt', headers: ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Giờ bắt đầu (HH:mm)', 'Giờ kết thúc (HH:mm)', 'Tiền sân (VNĐ)', 'Địa điểm', 'Ghi chú'], rows: [['Tháng 1_2024', '2024-01-03', '18:00', '20:00', 750000, '', '']], widths: [18, 22, 18, 18, 15, 20, 20] },
+    { name: 'Đăng ký buổi', headers: ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Họ và tên'], rows: [['Tháng 1_2024', '2024-01-03', 'Nguyễn Văn A']], widths: [18, 22, 25] },
+    { name: 'Điểm danh', headers: ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Họ và tên', 'Trạng thái (Có mặt/Vắng)'], rows: [['Tháng 1_2024', '2024-01-03', 'Nguyễn Văn A', 'Có mặt']], widths: [18, 22, 25, 22] },
+    { name: 'Thu quỹ', headers: ['Tên kỳ', 'Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Phương thức', 'Đã xác nhận (Có/Không)', 'Ghi chú'], rows: [['Tháng 1_2024', 'Nguyễn Văn A', 150000, '2024-01-01', 'bank_transfer', 'Có', '']], widths: [18, 25, 15, 22, 15, 20, 20] },
+    { name: 'Chi quỹ', headers: ['Tên kỳ', 'Nội dung', 'Số tiền (VNĐ)', 'Ngày chi (YYYY-MM-DD)', 'Quy tắc phân bổ', 'Trạng thái'], rows: [['Tháng 1_2024', 'Tiền sân cố định (5 buổi × 750.000đ)', 3750000, '2024-01-05', 'Chia đều', 'Đã thanh toán']], widths: [18, 35, 15, 22, 18, 16] },
   ])
-  guide['!cols'] = [{ wch: 100 }]
-  XLSX.utils.book_append_sheet(wb, guide, 'Hướng dẫn')
-
-  const members = XLSX.utils.aoa_to_sheet([
-    ['Họ và tên', 'Số điện thoại', 'Email', 'Ngày gia nhập (YYYY-MM-DD)', 'Ghi chú'],
-    ['Nguyễn Văn A', '0901234567', '', '2024-01-01', ''],
-  ])
-  members['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 22 }, { wch: 20 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, members, 'Thành viên')
-
-  const periods = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Loại quỹ (Chung/Phụ)', 'Ngày bắt đầu (YYYY-MM-DD)', 'Ngày kết thúc (YYYY-MM-DD)', 'Mức đóng/người (VNĐ)', 'Số buổi dự kiến', 'Ghi chú'],
-    ['Tháng 1_2024', 'Chung', '2024-01-01', '2024-01-31', 150000, 5, ''],
-  ])
-  periods['!cols'] = [{ wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 15 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, periods, 'Kỳ Quỹ')
-
-  const sessions = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Giờ bắt đầu (HH:mm)', 'Giờ kết thúc (HH:mm)', 'Tiền sân (VNĐ)', 'Địa điểm', 'Ghi chú'],
-    ['Tháng 1_2024', '2024-01-03', '18:00', '20:00', 750000, '', ''],
-  ])
-  sessions['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 20 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, sessions, 'Lịch sinh hoạt')
-
-  const registrations = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Họ và tên'],
-    ['Tháng 1_2024', '2024-01-03', 'Nguyễn Văn A'],
-  ])
-  registrations['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 25 }]
-  XLSX.utils.book_append_sheet(wb, registrations, 'Đăng ký buổi')
-
-  const attendance = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Ngày buổi (YYYY-MM-DD)', 'Họ và tên', 'Trạng thái (Có mặt/Vắng)'],
-    ['Tháng 1_2024', '2024-01-03', 'Nguyễn Văn A', 'Có mặt'],
-  ])
-  attendance['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 25 }, { wch: 22 }]
-  XLSX.utils.book_append_sheet(wb, attendance, 'Điểm danh')
-
-  const contributions = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Phương thức', 'Đã xác nhận (Có/Không)', 'Ghi chú'],
-    ['Tháng 1_2024', 'Nguyễn Văn A', 150000, '2024-01-01', 'bank_transfer', 'Có', ''],
-  ])
-  contributions['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 15 }, { wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, contributions, 'Thu quỹ')
-
-  const expenses = XLSX.utils.aoa_to_sheet([
-    ['Tên kỳ', 'Nội dung', 'Số tiền (VNĐ)', 'Ngày chi (YYYY-MM-DD)', 'Quy tắc phân bổ', 'Trạng thái'],
-    ['Tháng 1_2024', 'Tiền sân cố định (5 buổi × 750.000đ)', 3750000, '2024-01-05', 'Chia đều', 'Đã thanh toán'],
-  ])
-  expenses['!cols'] = [{ wch: 18 }, { wch: 35 }, { wch: 15 }, { wch: 22 }, { wch: 18 }, { wch: 16 }]
-  XLSX.utils.book_append_sheet(wb, expenses, 'Chi quỹ')
-
-  XLSX.writeFile(wb, 'mau_nhap_du_lieu_clb.xlsx')
 }
 
 function parseWorkbook(XLSX: XLSXMod, wb: XLSXNS.WorkBook): ParsedData {
@@ -259,7 +215,7 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
 
   const handleDownloadTemplate = async () => {
     try {
-      buildTemplate(await import('xlsx'))
+      await buildTemplate()
     } catch {
       toast.error('Không thể tạo file mẫu. Vui lòng thử lại.')
     }

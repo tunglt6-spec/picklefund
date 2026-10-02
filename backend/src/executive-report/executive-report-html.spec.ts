@@ -80,13 +80,13 @@ describe('executive-report-html', () => {
   describe('buildReportHtml', () => {
     it('nhãn thương hiệu dùng tên CLB (escape), không còn PICKLEFUND cứng', () => {
       const html = buildReportHtml(report('CLB Thăng Long'), 'AI');
-      expect(html).toContain('◆ CLB THĂNG LONG');
-      expect(html).not.toContain('◆ PICKLEFUND');
+      expect(html).toContain('>CLB THĂNG LONG<');
+      expect(html).not.toContain('>PICKLEFUND<');
     });
 
     it('thiếu tên CLB → fallback PICKLEFUND', () => {
       const html = buildReportHtml(report(''), 'AI');
-      expect(html).toContain('◆ PICKLEFUND');
+      expect(html).toContain('>PICKLEFUND<');
     });
 
     it('tên CLB chứa HTML/ngoặc kép bị vô hiệu ở mọi vị trí', () => {

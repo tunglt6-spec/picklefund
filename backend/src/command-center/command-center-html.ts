@@ -3,30 +3,11 @@
  * Chrome (Puppeteer). Có TRANG BÌA riêng + mỗi khối page-break-inside:avoid (không cắt chữ, co
  * gọn trong trang A4). Kèm ô "Maika nhận định" cho từng mục. Font BeVietnamPro base64 (tiếng Việt).
  */
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { loadFontsBase64 } from '../executive-report/export-fonts';
+import { COLORS, PAGE, PAGE_CSS, SPACE, TYPE, escHtml, makeBrand, mm, pt, vnd } from '../executive-report/export-tokens';
 
-let fontCache: { regular: string; bold: string } | null = null;
-function loadFontsBase64(): { regular: string; bold: string } | null {
-  if (fontCache) return fontCache;
-  const dirs = [
-    join(__dirname, '..', 'assets', 'fonts'),
-    join(process.cwd(), 'dist', 'assets', 'fonts'),
-    join(process.cwd(), 'src', 'assets', 'fonts'),
-  ];
-  for (const d of dirs) {
-    const reg = join(d, 'BeVietnamPro-Regular.ttf');
-    const bold = join(d, 'BeVietnamPro-Bold.ttf');
-    if (existsSync(reg) && existsSync(bold)) {
-      fontCache = { regular: readFileSync(reg).toString('base64'), bold: readFileSync(bold).toString('base64') };
-      return fontCache;
-    }
-  }
-  return null;
-}
-
-const esc = (x: unknown) => String(x ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const money = (n: number | null | undefined) => (n == null ? '—' : new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + 'đ');
+export const esc = escHtml;
+const money = (n: number | null | undefined) => (n == null ? '—' : vnd(n));
 const num = (n: number | null | undefined) => (n == null ? '—' : new Intl.NumberFormat('vi-VN').format(Number(n) || 0));
 const pct = (n: number | null | undefined) => (n == null ? '—' : `${n}%`);
 const RANGE_LABEL: Record<string, string> = { today: 'Hôm nay', '7d': '7 ngày', '30d': '30 ngày', quarter: 'Quý', year: 'Năm', custom: 'Tùy chỉnh' };
@@ -77,27 +58,29 @@ function buildConclusion(text: string): string {
 
 export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt: string): string {
   const fonts = loadFontsBase64();
+  const B = makeBrand(null); // Command Center = báo cáo nền tảng → màu thương hiệu mặc định
   const fontFace = fonts
     ? `@font-face{font-family:'BVP';font-weight:400;src:url(data:font/ttf;base64,${fonts.regular}) format('truetype');}
        @font-face{font-family:'BVP';font-weight:700;src:url(data:font/ttf;base64,${fonts.bold}) format('truetype');}`
     : '';
-  const fam = fonts ? "'BVP','Be Vietnam Pro',Arial,sans-serif" : 'Arial,sans-serif';
+  const fam = fonts ? "'BVP','Be Vietnam Pro',Arial,sans-serif" : "'Be Vietnam Pro',Arial,sans-serif";
 
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards;
   const rangeLabel = RANGE_LABEL[data.range?.key] ?? '';
 
-  // Cover — full-width vừa khít khung in đối xứng (không full-bleed lệch).
+  // Cover — sạch, nằm trong lề in; 1 panel đặc (brandDeep) duy nhất; không glyph ngoài font.
   const cover = `<section class="cover">
-    <div class="cv-glow"></div>
     <div class="cv-head">
-      <span class="cv-brand"><span class="cv-mark">◆</span>PICKLEFUND</span>
+      <span class="cv-brand">PICKLEFUND</span>
       <span class="cv-tag">Command Center</span>
     </div>
     <div class="cv-mid">
-      <div class="cv-eyb">Trung tâm điều hành · Báo cáo định kỳ</div>
-      <h1 class="cv-title">Báo cáo điều hành<br/>toàn hệ thống</h1>
-      <div class="cv-rule"></div>
-      <div class="cv-period">Phạm vi dữ liệu: ${esc(rangeLabel)}${data.clubId ? ' · 1 CLB' : ' · Toàn hệ thống'}</div>
+      <div class="cv-panel">
+        <div class="cv-eyb">Trung tâm điều hành · Báo cáo định kỳ</div>
+        <h1 class="cv-title">Báo cáo điều hành<br/>toàn hệ thống</h1>
+        <div class="cv-rule"></div>
+        <div class="cv-period">Phạm vi dữ liệu: ${esc(rangeLabel)}${data.clubId ? ' · 1 CLB' : ' · Toàn hệ thống'}</div>
+      </div>
       <div class="cv-stats">
         <div class="gcard"><div class="l">Tổng CLB</div><div class="v">${num(k.totalClubs)}</div><div class="s">${num(k.activeClubs)} hoạt động</div></div>
         <div class="gcard"><div class="l">Thành viên</div><div class="v">${num(k.totalMembers)}</div><div class="s">${num(k.logins24h)} đăng nhập 24h</div></div>
@@ -205,78 +188,76 @@ export function buildCommandCenterHtml(data: any, sections: Sections, exportedAt
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"/><style>
 ${fontFace}
 *{margin:0;padding:0;box-sizing:border-box}
-@page{size:A4}
-html,body{font-family:${fam};color:#334155;font-size:10.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+${PAGE_CSS}
+:root{--ink:${COLORS.ink};--ink2:${COLORS.ink2};--muted:${COLORS.muted};--line:${COLORS.hairline};--brand:${B.brand};--brandDeep:${B.brandDeep};--brandInk:${B.brandInk};--brandSoft:${B.brandSoft}}
+html,body{font-family:${fam};color:var(--ink);font-size:${pt(TYPE.body)};line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 p{orphans:3;widows:3}
-.mut{color:#94A3B8}.r{text-align:right}
-/* ===== TRANG BÌA — full-width vừa khít khung in đối xứng ===== */
-.cover{position:relative;overflow:hidden;height:262mm;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:22mm 18mm;page-break-after:always;background:radial-gradient(130% 90% at 100% 0%,rgba(124,109,251,.55) 0%,rgba(124,109,251,0) 52%),linear-gradient(135deg,#1E1B4B 0%,#312E81 38%,#4338CA 74%,#6D5DFB 100%)}
-.cover .cv-glow{position:absolute;right:-80px;bottom:-100px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(139,123,255,.38),rgba(139,123,255,0) 70%)}
-.cover .cv-head{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
-.cover .cv-brand{font-size:12px;letter-spacing:.24em;font-weight:800;display:flex;align-items:center;gap:8px}
-.cover .cv-mark{font-size:12px;opacity:.9}
-.cover .cv-tag{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;opacity:.85;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:5px 12px}
-.cover .cv-mid{position:relative;z-index:1}
-.cover .cv-eyb{font-size:11px;letter-spacing:.3em;text-transform:uppercase;font-weight:700;opacity:.9}
-.cover .cv-title{font-size:46px;font-weight:800;letter-spacing:-.025em;line-height:1.04;margin:14px 0 0}
-.cover .cv-rule{width:72px;height:4px;border-radius:9px;background:rgba(255,255,255,.8);margin:22px 0}
-.cover .cv-period{font-size:14px;opacity:.94}
-.cover .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
-.cover .gcard{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:16px;padding:15px 17px;backdrop-filter:blur(2px)}
-.cover .gcard .l{font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:700}
-.cover .gcard .v{font-size:23px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
-.cover .gcard .s{font-size:9.5px;opacity:.88;margin-top:3px}
-.cover .cv-foot{display:flex;justify-content:space-between;font-size:10px;opacity:.9;border-top:1px solid rgba(255,255,255,.28);padding-top:14px;position:relative;z-index:1}
+.mut{color:var(--muted)}.r{text-align:right}
+/* ===== TRANG BÌA — trong lề in, 1 panel đặc brandDeep ===== */
+.cover{height:${mm(250)};display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;break-after:page}
+.cover .cv-head{display:flex;justify-content:space-between;align-items:center}
+.cover .cv-brand{font-size:${pt(TYPE.label)};letter-spacing:.3pt;font-weight:700;color:var(--brandInk)}
+.cover .cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);border:${mm(PAGE.border)} solid var(--brand);border-radius:${mm(PAGE.radius)};padding:${mm(1)} ${mm(SPACE.s2)}}
+.cover .cv-panel{background:var(--brandDeep);color:#fff;border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s6)} ${mm(SPACE.s5)}}
+.cover .cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700}
+.cover .cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.12;margin:${mm(SPACE.s3)} 0 0}
+.cover .cv-rule{width:${mm(SPACE.s6)};height:${mm(0.6)};background:#fff;margin:${mm(SPACE.s4)} 0}
+.cover .cv-period{font-size:${pt(TYPE.h2)}}
+.cover .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)};margin-top:${mm(SPACE.s3)}}
+.cover .gcard{border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s3)} ${mm(SPACE.s2)};background:#fff}
+.cover .gcard .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cover .gcard .v{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--ink);margin-top:${mm(SPACE.s1)};white-space:nowrap}
+.cover .gcard .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
+.cover .cv-foot{display:flex;justify-content:space-between;font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid var(--line);padding-top:${mm(SPACE.s2)}}
 /* ===== MỤC LỤC (trang 2) ===== */
-.toc{margin:0 14mm;page-break-after:always}
-.toc-eyb{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#6D5DFB;margin-bottom:6px}
-.toc-h{font-size:30px;font-weight:800;letter-spacing:-.02em;color:#1E293B;margin-bottom:6px}
-.toc-sub{font-size:11px;color:#94A3B8;margin-bottom:22px}
-.toc-list{list-style:none;counter-reset:toc}
-.toc-item{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid #EEF1F6;page-break-inside:avoid}
+.toc{page-break-after:always;break-after:page}
+.toc-eyb{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(1)}}
+.toc-h{font-size:${pt(TYPE.h1)};font-weight:700;color:var(--ink);margin-bottom:${mm(1)}}
+.toc-sub{font-size:${pt(TYPE.table)};color:var(--muted);margin-bottom:${mm(SPACE.s5)}}
+.toc-list{list-style:none}
+.toc-item{display:flex;align-items:flex-start;gap:${mm(SPACE.s3)};padding:${mm(SPACE.s2)} 0;border-bottom:${mm(PAGE.hair)} solid var(--line);page-break-inside:avoid}
 .toc-item:last-child{border-bottom:none}
-.toc-n{flex:none;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#4338CA,#6D5DFB);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:-.01em}
+.toc-n{flex:none;width:${mm(9)};height:${mm(9)};border-radius:${mm(PAGE.radius)};background:var(--brandSoft);color:var(--brandInk);font-size:${pt(TYPE.h2)};font-weight:700;display:flex;align-items:center;justify-content:center}
 .toc-tx{flex:1}
-.toc-t{font-size:13px;font-weight:800;color:#1E293B;letter-spacing:-.01em}
-.toc-d{font-size:10px;color:#94A3B8;margin-top:2px}
-/* ===== SECTION — nội dung CHẢY LIỀN lấp đầy trang (không ép mỗi mục 1 trang) ===== */
-.sect{padding:0;margin:0 14mm 22px;page-break-inside:auto}
-.sect:first-of-type{margin-top:2mm}
-.sect h2{font-size:14px;font-weight:800;color:#1E293B;letter-spacing:-.01em;margin-bottom:12px;padding-left:11px;border-left:4px solid #6D5DFB;page-break-after:avoid;break-after:avoid}
-/* Đơn vị nhỏ giữ nguyên khối, không tách qua trang. */
+.toc-t{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--ink)}
+.toc-d{font-size:${pt(TYPE.table)};color:var(--muted);margin-top:${mm(0.5)}}
+/* ===== SECTION — nội dung chảy liền ===== */
+.sect{padding:0;margin:0 0 ${mm(SPACE.s3)};page-break-inside:auto}
+.sect h2{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--ink);margin-bottom:${mm(SPACE.s2)};padding-bottom:${mm(SPACE.s1)};border-bottom:${mm(PAGE.hair)} solid var(--line);page-break-after:avoid;break-after:avoid}
 .k,.rank,.tbl thead,.tbl tr,.grid4,.grid3,.grid2{page-break-inside:avoid;break-inside:avoid}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.chip{font-size:9px;font-weight:700;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:999px;padding:3px 9px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
-.k{border:1px solid #ECEFF6;border-radius:11px;padding:9px 11px;background:linear-gradient(180deg,#FEFEFF,#F7F8FE)}
-.k-l{font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:#94A3B8;font-weight:700}
-.k-v{font-size:15px;font-weight:800;color:#1E293B;margin-top:4px}
-.k-s{font-size:8.5px;color:#94A3B8;margin-top:2px}
-.tbl{width:100%;border-collapse:collapse;margin-top:11px;font-size:10px}
-.tbl th{text-align:left;color:#94A3B8;font-weight:700;text-transform:uppercase;font-size:8.5px;padding:7px 9px;border-bottom:1.5px solid #E7EBF2}
-.tbl td{padding:7px 9px;border-bottom:1px solid #F1F5F9;color:#334155;vertical-align:top}
-.tbl.sm td{padding:5px 7px}
-.rank-t{font-size:10px;font-weight:800;color:#475569;margin-bottom:3px}
-/* ===== Ô Maika — nhiều đoạn <p> block, ngắt trang an toàn ===== */
-.maika{margin-top:12px;border-left:4px solid #6D5DFB;border-radius:0 12px 12px 0;padding:12px 16px;background:linear-gradient(180deg,#F8F6FF,#F3F0FF);page-break-inside:auto}
-.maika-h{font-size:9.5px;font-weight:800;color:#6D5DFB;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:7px;margin-bottom:7px;page-break-after:avoid}
-.maika-dot{width:7px;height:7px;border-radius:50%;background:#6D5DFB;display:inline-block}
-.maika-body p{font-size:10.5px;color:#42526E;line-height:1.62;margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:${mm(SPACE.s1)};margin:${mm(SPACE.s2)} 0}
+.chip{font-size:${pt(TYPE.label)};font-weight:700;color:var(--ink2);background:${COLORS.surface2};border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(0.6)} ${mm(2)}}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:${mm(SPACE.s2)}}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)}}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:${mm(SPACE.s3)}}
+.k{border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)};background:#fff}
+.k-l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
+.k-v{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--ink);margin-top:${mm(1)}}
+.k-s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(0.5)}}
+.tbl{width:100%;border-collapse:collapse;margin-top:${mm(SPACE.s2)};font-size:${pt(TYPE.table)}}
+.tbl th{text-align:left;background:var(--brandSoft);color:var(--brandInk);font-weight:700;text-transform:uppercase;letter-spacing:.3pt;font-size:${pt(TYPE.label)};padding:${mm(2)} ${mm(2.5)};border-bottom:${mm(PAGE.strong)} solid var(--brand)}
+.tbl td{padding:${mm(1.5)} ${mm(2.5)};border-bottom:${mm(PAGE.hair)} solid var(--line);color:var(--ink);vertical-align:top}
+.tbl th.r{text-align:right}
+.tbl.sm td{padding:${mm(1)} ${mm(2)}}
+.rank-t{font-size:${pt(TYPE.table)};font-weight:700;color:var(--ink2);margin-bottom:${mm(1)}}
+/* ===== Ô Maika ===== */
+.maika{margin-top:${mm(SPACE.s3)};border-left:${mm(1)} solid var(--brand);padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};background:var(--brandSoft);border-radius:0 ${mm(PAGE.radius)} ${mm(PAGE.radius)} 0;page-break-inside:auto}
+.maika-h{font-size:${pt(TYPE.label)};font-weight:700;color:var(--brandInk);text-transform:uppercase;letter-spacing:.3pt;display:flex;align-items:center;gap:${mm(SPACE.s1)};margin-bottom:${mm(SPACE.s1)};page-break-after:avoid}
+.maika-dot{width:${mm(1.6)};height:${mm(1.6)};border-radius:50%;background:var(--brand);display:inline-block}
+.maika-body p{font-size:${pt(TYPE.body)};color:var(--ink);line-height:1.6;margin-bottom:${mm(SPACE.s1)}}
 .maika-body p:last-child{margin-bottom:0}
-/* ===== TRANG KẾT — Kết luận & Khuyến nghị ưu tiên ===== */
-.concl{margin:0 14mm;page-break-before:always;break-before:page}
-.concl-eyb{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#6D5DFB;margin-bottom:6px}
-.concl-h{font-size:26px;font-weight:800;letter-spacing:-.02em;color:#1E293B;margin-bottom:14px}
-.concl-intro{border-left:4px solid #6D5DFB;background:linear-gradient(180deg,#F8F6FF,#F3F0FF);border-radius:0 12px 12px 0;padding:13px 16px;margin-bottom:18px;page-break-inside:auto}
-.concl-intro p{font-size:11px;color:#42526E;line-height:1.62;margin-bottom:7px}
+/* ===== TRANG KẾT ===== */
+.concl{page-break-before:always;break-before:page}
+.concl-eyb{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(1)}}
+.concl-h{font-size:${pt(TYPE.h1)};font-weight:700;color:var(--ink);margin-bottom:${mm(SPACE.s3)}}
+.concl-intro{border-left:${mm(1)} solid var(--brand);background:var(--brandSoft);border-radius:0 ${mm(PAGE.radius)} ${mm(PAGE.radius)} 0;padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s4)};page-break-inside:auto}
+.concl-intro p{font-size:${pt(TYPE.body)};color:var(--ink);line-height:1.6;margin-bottom:${mm(SPACE.s1)}}
 .concl-intro p:last-child{margin-bottom:0}
-.concl-recs-t{font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-.rec{display:flex;align-items:flex-start;gap:13px;padding:12px 0;border-bottom:1px solid #EEF1F6;page-break-inside:avoid}
+.concl-recs-t{font-size:${pt(TYPE.label)};font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.3pt;margin-bottom:${mm(SPACE.s2)}}
+.rec{display:flex;align-items:flex-start;gap:${mm(SPACE.s3)};padding:${mm(SPACE.s2)} 0;border-bottom:${mm(PAGE.hair)} solid var(--line);page-break-inside:avoid}
 .rec:last-child{border-bottom:none}
-.rec-p{flex:none;width:38px;height:26px;border-radius:8px;background:linear-gradient(135deg,#4338CA,#6D5DFB);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
-.rec-tx{flex:1;font-size:10.5px;color:#334155;line-height:1.55;padding-top:2px}
+.rec-p{flex:none;width:${mm(9)};height:${mm(6)};border-radius:${mm(PAGE.radius)};background:var(--brandDeep);color:#fff;font-size:${pt(TYPE.label)};font-weight:700;display:flex;align-items:center;justify-content:center}
+.rec-tx{flex:1;font-size:${pt(TYPE.body)};color:var(--ink);line-height:1.55}
 </style></head><body>
 ${cover}
 ${toc}

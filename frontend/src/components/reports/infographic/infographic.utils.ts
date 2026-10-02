@@ -17,6 +17,124 @@ export function fmtDate(date: string | Date): string {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+/* ── Palette Infographic (brand CLB, tự tối cho chữ trắng AA) ──
+   Poster 1080x1920: bố cục FROZEN, chỉ đổi MÀU → 1 màu nhấn = màu CLB (branding), chữ ≥ 4.5:1 trên mọi nền.
+   Hàm thuần (không DOM) để node --test kiểm chứng. */
+export const INFOGRAPHIC_MIN_FONT_PX = 14
+export const DEFAULT_INFOGRAPHIC_BRAND = '#6D5DFB'
+
+const HEX6 = /^#[0-9a-fA-F]{6}$/
+const toRgb = (h: string): [number, number, number] =>
+  [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number]
+const toHex = (c: number[]): string =>
+  '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('').toUpperCase()
+const lum = (h: string): number => {
+  const c = toRgb(h).map((v) => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+/** Tương phản WCAG 2.x giữa hai màu hex #RRGGBB. */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+const mixHex = (a: string, b: string, t: number): string => {
+  const x = toRgb(a)
+  const y = toRgb(b)
+  return toHex([0, 1, 2].map((i) => x[i] + (y[i] - x[i]) * t))
+}
+const darkenUntil = (fg: string, bgs: string[], min = 4.5): string => {
+  let c = fg
+  for (let i = 0; i < 40 && bgs.some((bg) => contrastRatio(c, bg) < min); i++) c = mixHex(c, '#000000', 0.06)
+  return c
+}
+
+export interface InfographicPalette {
+  brand: string
+  /** Nền đặc có chữ trắng (header): brand tối dần tới khi trắng/nền ≥ 4.5. */
+  deep: string
+  /** Chữ màu brand trên trắng / soft (≥ 4.5). */
+  ink: string
+  soft: string
+  /** 3 bậc nền tối (từ deep) cho vùng tổng kết / chân / thanh đáy. */
+  dark: string
+  darker: string
+  darkest: string
+  /** Pill trên header (đặc, chữ trắng AA). */
+  pill: string
+  onDark: string
+  onDarkMuted: string
+  text: string
+  text2: string
+  muted: string
+  line: string
+  surface2: string
+  pos: string
+  neg: string
+  warn: string
+  posFill: string
+  negFill: string
+  warnFill: string
+  posTint: string
+  negTint: string
+  warnTint: string
+  posOnDark: string
+  negOnDark: string
+  warnOnDark: string
+}
+
+export function makeInfographicPalette(primary?: string | null): InfographicPalette {
+  const brand = typeof primary === 'string' && HEX6.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_INFOGRAPHIC_BRAND
+  const isDefault = brand === DEFAULT_INFOGRAPHIC_BRAND
+  const soft = isDefault ? '#EEF2FF' : mixHex(brand, '#FFFFFF', 0.92)
+  const deep = darkenUntil(brand, ['#FFFFFF'])
+  const ink = isDefault ? '#4F46E5' : darkenUntil(mixHex(brand, '#000000', 0.2), ['#FFFFFF', soft])
+  const dark = mixHex(deep, '#000000', 0.65)
+  const darker = mixHex(deep, '#000000', 0.78)
+  const darkest = mixHex(deep, '#000000', 0.88)
+  let onDarkMuted = '#CBD5E1'
+  for (let i = 0; i < 20 && contrastRatio(onDarkMuted, dark) < 4.5; i++) onDarkMuted = mixHex(onDarkMuted, '#FFFFFF', 0.15)
+  return {
+    brand,
+    deep,
+    ink,
+    soft,
+    dark,
+    darker,
+    darkest,
+    pill: mixHex(deep, '#000000', 0.25),
+    onDark: '#FFFFFF',
+    onDarkMuted,
+    text: '#1E293B',
+    text2: '#475569',
+    muted: '#5A6678',
+    line: '#E2E8F0',
+    surface2: '#F8FAFC',
+    pos: '#15803D',
+    neg: '#B91C1C',
+    warn: '#B45309',
+    posFill: '#16A34A',
+    negFill: '#EF4444',
+    warnFill: '#D97706',
+    posTint: '#F0FDF4',
+    negTint: '#FEF2F2',
+    warnTint: '#FFFBEB',
+    posOnDark: '#34D399',
+    negOnDark: '#FCA5A5',
+    warnOnDark: '#FB923C',
+  }
+}
+
+/** Monogram từ tên CLB: tối đa 2 chữ cái đầu của từ có nghĩa (bỏ "CLB"/"Câu lạc bộ"), thiếu → "C". */
+export function monogramOf(name: string): string {
+  const words = String(name || '').trim().split(/\s+/).filter(Boolean)
+  const sig = words.filter((w) => !/^(clb|câu|lạc|bộ|club)$/i.test(w))
+  const use = (sig.length ? sig : words).slice(0, 2)
+  return use.map((w) => Array.from(w)[0]?.toUpperCase() ?? '').join('') || 'C'
+}
+
 /* ── Mapper from Reports.tsx data to InfographicReportData ── */
 export interface ReportSource {
   clubName: string

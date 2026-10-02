@@ -18,7 +18,7 @@ import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Me
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
-import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { exportGenericExcel, exportGenericTablePDF, exportTemplateExcel } from '../../lib/export'
 import { parseMoney } from '../../lib/finance-ledger'
 import { useExportRunner } from '../../hooks/useExportRunner'
 import { BulkImportModal } from '../../components/admin/BulkImportModal'
@@ -181,19 +181,29 @@ export function FundPeriods() {
 
   const commonPeriods = periods.filter(p => (p.type ?? 'chung') === 'chung')
 
-  // xlsx tải ĐỘNG khi bấm (không đưa ~700KB vào bundle khởi động).
+  // File mẫu dùng kit Excel chung (exportTemplateExcel); sheet dữ liệu ĐỨNG ĐẦU vì importer đọc sheet đầu tiên.
   const downloadTemplate = async () => {
     try {
-      const XLSX = await import('xlsx')
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Ghi chú'],
-        ['Nguyễn Văn A', 300000, new Date().toISOString().slice(0, 10), ''],
-        ['Trần Thị B', 300000, new Date().toISOString().slice(0, 10), 'Đóng sớm'],
+      const day = new Date().toISOString().slice(0, 10)
+      await exportTemplateExcel('mau_nhap_dong_quy.xlsx', [
+        {
+          name: 'Đóng quỹ',
+          headers: ['Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Ghi chú'],
+          rows: [['Nguyễn Văn A', 300000, day, ''], ['Trần Thị B', 300000, day, 'Đóng sớm']],
+          widths: [25, 18, 22, 20],
+        },
+        {
+          name: 'Hướng dẫn',
+          lines: [
+            'HƯỚNG DẪN NHẬP DANH SÁCH ĐÓNG QUỸ',
+            '',
+            'Điền dữ liệu vào sheet "Đóng quỹ", giữ nguyên tên cột (dòng 1), xóa 2 dòng ví dụ trước khi nhập thật.',
+            'Họ và tên: phải khớp CHÍNH XÁC tên thành viên đã có trong CLB.',
+            'Số tiền: chỉ nhập số, không ký hiệu đ/VNĐ. Ngày đóng: định dạng YYYY-MM-DD (vd. 2024-01-15).',
+            'Sau khi điền xong, quay lại app > Kỳ Quỹ > nút "Nhập Excel" > chọn kỳ quỹ > tải file này lên.',
+          ],
+        },
       ])
-      ws['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 22 }, { wch: 20 }]
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Đóng quỹ')
-      XLSX.writeFile(wb, 'mau_nhap_dong_quy.xlsx')
     } catch {
       toast.error('Không thể tạo file mẫu. Vui lòng thử lại.')
     }

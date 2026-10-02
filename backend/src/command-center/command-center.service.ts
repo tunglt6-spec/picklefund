@@ -14,6 +14,8 @@ import { MetricsService } from '../metrics/metrics.service';
 import { MaikaService } from '../maika/maika.service';
 import { buildCommandCenterHtml } from './command-center-html';
 import { renderHtmlToPdf } from '../executive-report/render-pdf';
+import { loadFontsBase64 } from '../executive-report/export-fonts';
+import { PDF_MARGIN, buildFooterTemplate, dateTimeVN, docCode, footerLeftText } from '../executive-report/export-tokens';
 
 const money = (v: unknown) => `${Number(v ?? 0).toLocaleString('vi-VN')}đ`;
 type ReviewSections = Record<'overview' | 'business' | 'operations' | 'finance' | 'ai' | 'infra' | 'alerts' | 'leaderboards' | 'syslog' | 'conclusion', string>;
@@ -442,16 +444,17 @@ export class CommandCenterService {
   /** Xuất PDF Command Center (bìa + 9 mục + đánh giá Maika) qua headless Chrome. null nếu không render được. */
   async pdf(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<Buffer | null> {
     const review = await this.aiReview(opts);
-    const exportedAt = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const now = new Date();
+    const exportedAt = dateTimeVN(now);
     const html = buildCommandCenterHtml(review.data, review.sections, exportedAt);
-    const footerTemplate =
-      `<div style="width:100%;font-size:7.5px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 14mm;display:flex;justify-content:space-between;align-items:center;">` +
-      `<span>Trung tâm điều hành · PickleFund</span><span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
-    const headerTemplate = `<div style="width:100%;font-size:7.5px;color:#B4BECD;font-family:Arial,sans-serif;padding:0 14mm;display:flex;justify-content:space-between;align-items:center;">` +
-      `<span style="letter-spacing:.14em;text-transform:uppercase;font-weight:700;">PickleFund</span><span>Báo cáo điều hành toàn hệ thống</span></div>`;
+    // Footer CHUNG bản executive (token + font nhúng): "PickleFund · Tên TL · Mã TL" | "Trang x / y".
+    const footerTemplate = buildFooterTemplate(
+      footerLeftText('PickleFund', 'Báo cáo điều hành toàn hệ thống', docCode(now, 'CMD')),
+      loadFontsBase64()?.regular ?? null,
+    );
     return renderHtmlToPdf(html, {
-      margin: { top: '16mm', bottom: '16mm', left: '0mm', right: '0mm' },
-      headerTemplate,
+      margin: PDF_MARGIN,
+      headerTemplate: '<span></span>',
       footerTemplate,
     });
   }

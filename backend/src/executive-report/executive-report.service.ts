@@ -7,6 +7,14 @@ import { EmailService } from '../email/email.service';
 import { buildExecutiveReportPdf } from './executive-report-pdf';
 import { buildReportHtml } from './executive-report-html';
 import { renderHtmlToPdf } from './render-pdf';
+import { loadFontsBase64 } from './export-fonts';
+import {
+  DOC_TITLE,
+  PDF_MARGIN,
+  buildFooterTemplate,
+  docCode,
+  footerLeftText,
+} from './export-tokens';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve, sep } from 'path';
 
@@ -1357,6 +1365,16 @@ ${facts}`;
     }
   }
 
+  /** Màu chủ đạo CLB (settings.branding.primaryColor) — sai/thiếu → null (mặc định ở export-tokens). */
+  private async clubBrandColor(clubId: string): Promise<string | null> {
+    const club = await this.prisma.club.findUnique({
+      where: { id: clubId },
+      select: { settings: true },
+    });
+    const b = ((club?.settings as Record<string, unknown> | null)?.branding ?? {}) as Record<string, unknown>;
+    return typeof b.primaryColor === 'string' ? b.primaryColor : null;
+  }
+
   /** Tên file PDF an toàn (bỏ ký tự đặc biệt, giữ chữ có dấu/chữ số). */
   private pdfFileName(report: {
     meta: { periodName: string };
@@ -1384,31 +1402,24 @@ ${facts}`;
       precomputedAiText ??
       (await this.aiSummary(clubId, fundPeriodId, report)).text;
     const logo = await this.clubLogoDataUri(clubId).catch(() => null);
-    const html = buildReportHtml(report, aiText, logo);
-    // Footer chạy trang (ASCII-only để không lệ thuộc font trong container Chromium):
-    // tên CLB bỏ dấu + escape; không có tên → PickleFund.
-    const footerBrand =
-      String(report.meta.clubName || '')
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/đ/g, 'd')
-        .replace(/Đ/g, 'D')
-        .replace(/[^\x20-\x7E]/g, '')
-        .replace(/[&<>"']/g, '')
-        .trim() || 'PickleFund';
-    const footerTemplate = `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">
-      <span>${footerBrand} &middot; AIDO Executive Report</span>
-      <span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
-    </div>`;
+    const brandColor = await this.clubBrandColor(clubId).catch(() => null);
+    // MỘT thời điểm xuất cho mã TL + giờ xuất + footer (cùng chuỗi bản FE: "CLB · Tên TL · Mã TL" | "Trang x / y").
+    const now = new Date();
+    const html = buildReportHtml(report, aiText, logo, { brandColor, now });
+    const fonts = loadFontsBase64();
+    const footerTemplate = buildFooterTemplate(
+      footerLeftText(report.meta.clubName, DOC_TITLE, docCode(now)),
+      fonts?.regular ?? null,
+    );
     const viaChrome = await renderHtmlToPdf(html, {
-      margin: { top: '11mm', bottom: '16mm', left: '11mm', right: '11mm' },
+      margin: PDF_MARGIN,
       headerTemplate: '<span></span>',
       footerTemplate,
     }).catch(() => null);
     if (viaChrome) return viaChrome;
     // Fallback: jsPDF (nhẹ, không cần Chromium) — vẫn đầy đủ nội dung.
     try {
-      return buildExecutiveReportPdf(report, aiText);
+      return buildExecutiveReportPdf(report, aiText, { logoDataUri: logo, brandColor, now });
     } catch {
       return null;
     }

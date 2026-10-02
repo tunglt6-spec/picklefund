@@ -3,7 +3,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import {
-  escHtml, buildReceiptHtml, buildMiniExpenseReceiptHtml, sanitizeSheetNames, safeFileName, methodLabel,
+  escHtml, sanitizeSheetNames, safeFileName, methodLabel, exportReceiptPDF, exportBillingReceiptPDF,
+  exportMiniExpenseReceiptPDF, exportMiniIncomeReceiptPDF,
   formatNumberVN, toExcelDateSerial, reportTypeOf, setExportBranding, buildExcelBytes, exportExcel,
   exportGenericExcel, exportLedgerExcel, exportContribExcel, exportReportsExcel, exportMembersExcel,
 } from './export.ts'
@@ -43,45 +44,25 @@ test('escHtml escape đủ & < > " \'', () => {
   assert.equal(escHtml(null), '')
 })
 
-test('buildReceiptHtml: payload HTML ở MỌI trường chữ bị vô hiệu', () => {
-  const html = buildReceiptHtml({
-    receiptNo: 5, memberName: PAYLOAD, loginName: PAYLOAD, periodName: PAYLOAD, periodStartDate: PAYLOAD, periodEndDate: PAYLOAD,
-    clubName: PAYLOAD, clubLocation: PAYLOAD, paymentDate: PAYLOAD, amountPaid: 1, attendedSessions: 1, totalSessions: 1,
-    courtCost: 1, livingCost: 1, totalCost: 2, balance: -1, isConfirmed: false,
-  })
-  assert.ok(!html.includes('<img'), 'không được còn thẻ <img> thật')
-  assert.ok(!/onerror=alert\(1\)>/.test(html.replace(/&lt;img src=x onerror=alert\(1\)&gt;/g, '')))
-  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'))
-})
-
-test('buildMiniExpenseReceiptHtml: escape description/receiverName/expenseType/notes/clubName/clubLocation', () => {
-  const html = buildMiniExpenseReceiptHtml({
-    receiverName: PAYLOAD, expenseType: '<script>1</script>', amount: 1, expenseDate: PAYLOAD, description: '<b>x</b>',
-    notes: PAYLOAD, clubName: PAYLOAD, clubLocation: '"><svg onload=1>',
-  })
-  assert.ok(!html.includes('<img'))
-  assert.ok(!html.includes('<script>1'))
-  assert.ok(!html.includes('<b>x</b>'))
-  assert.ok(!html.includes('<svg'))
-})
-
-/* ── H6: nhãn/giá trị phiếu thu ── */
-test('phiếu thu: nhãn sinh hoạt đúng công thức, bỏ TB/buổi, bỏ "Hà Nội"/"No."/"/ 8 người" cứng', () => {
-  const html = buildReceiptHtml({
-    memberName: 'A', periodName: 'K', clubName: 'CLB X', clubLocation: '', amountPaid: 0, attendedSessions: 3, totalSessions: 12,
-    courtCost: 100000, livingCost: 50000, totalCost: 150000, balance: -150000, isConfirmed: false,
-  })
-  assert.ok(html.includes('Sinh hoạt (chia đều + theo buổi tham dự)'))
-  assert.ok(!html.includes('Trung bình / buổi'))
-  assert.ok(!html.includes('Hà Nội'))
-  assert.ok(!html.includes('No. '))
-  assert.ok(!/\/ 8 người/.test(html))
-  assert.ok(!html.includes('Tổng tiền sân toàn quỹ'), 'thiếu dữ liệu → ẩn, không suy ngược sai')
-  const withN = buildReceiptHtml({
-    receiptNo: 7, memberName: 'A', periodName: 'K', clubName: 'CLB X', clubLocation: 'Đà Nẵng', amountPaid: 0, attendedSessions: 0, totalSessions: 0,
-    memberCountForSplit: 5, totalCourtFee: 500000, courtCost: 100000, livingCost: 0, totalCost: 100000, balance: 0, isConfirmed: true,
-  })
-  assert.ok(withN.includes('/ 5 người') && withN.includes('No. 0007') && withN.includes('Đà Nẵng,') && withN.includes('500.000 đ'))
+/* ── Phiếu / biên nhận đã chuyển PDF VECTOR (không còn HTML + html2canvas): XSS không còn đường vào.
+   Nội dung từng phiếu được kiểm trong pdf-report-core.test.ts; ở đây kiểm hợp đồng của lớp export. ── */
+test('phiếu / biên nhận PDF: hàm công khai trả Promise và LỖI được throw ra caller (không nuốt, không html2canvas)', async () => {
+  const prevDoc = g.document
+  const prevFetch = g.fetch
+  g.document = undefined
+  g.fetch = async () => { throw new Error('offline') } // tải font thất bại → phải reject
+  try {
+    const base = { clubName: 'C', clubLocation: '' }
+    for (const p of [
+      exportReceiptPDF({ ...base, memberName: PAYLOAD, periodName: 'K', amountPaid: 1, attendedSessions: 1, totalSessions: 1, courtCost: 1, livingCost: 1, totalCost: 2, balance: -1, isConfirmed: false }),
+      exportBillingReceiptPDF({ clubName: PAYLOAD, invoiceNumber: 'INV-1', orderCode: 'O', planLabel: 'Gói Pro', cycleLabel: '12 tháng', amount: 1, paidAt: '2026-03-15T10:00:00Z', gateway: 'VNPay' }),
+      exportMiniExpenseReceiptPDF({ ...base, receiverName: PAYLOAD, expenseType: 'x', amount: 1, expenseDate: '1/1', description: '<b>x</b>' }),
+      exportMiniIncomeReceiptPDF({ ...base, payerName: PAYLOAD, incomeType: 'x', amount: 1, paymentDate: '1/1' }),
+    ]) {
+      assert.ok(p instanceof Promise)
+      await assert.rejects(p)
+    }
+  } finally { g.document = prevDoc; g.fetch = prevFetch }
 })
 
 /* ── helpers ── */
@@ -115,7 +96,7 @@ test('toExcelDateSerial: dd/MM/yyyy + ISO; ngày sai → null', () => {
 })
 
 /* ── Excel ── */
-test('buildExcelBytes: số/ngày/công thức theo TỪNG ô, freeze 3 hàng, footer ngoài auto-filter', async () => {
+test('buildExcelBytes: số/ngày/công thức theo TỪNG ô, freeze 6 hàng (khối tiêu đề + header), footer ngoài auto-filter', async () => {
   const bytes = await buildExcelBytes([{
     name: 'T',
     headers: ['A', 'B', 'C'],
@@ -123,19 +104,20 @@ test('buildExcelBytes: số/ngày/công thức theo TỪNG ô, freeze 3 hàng, f
     footerRows: [['Tổng', 99, '']],
   }])
   const { ws, rows } = readSheet(bytes)
-  assert.equal(ws['A4'].z, '#,##0') // cột A hỗn hợp: ô số vẫn có format nghìn
-  assert.equal(ws['A5'].t, 's')
-  assert.equal(ws['B5'].z, '#,##0')
-  assert.equal(ws['B6'].z, '#,##0.##')
-  assert.equal(ws['C4'].t, 'n') // ngày → serial
-  assert.equal(ws['C4'].z, 'dd/mm/yyyy')
-  assert.equal(ws['C5'].t, 's') // chuỗi bắt đầu "=" KHÔNG thành công thức
-  assert.equal(ws['C5'].f, undefined)
+  // Bố cục: hàng 1-4 khối tiêu đề · 5 đệm · 6 header · thân từ hàng 7
+  assert.equal(ws['A7'].z, '#,##0;-#,##0;"–"') // cột A hỗn hợp: ô số vẫn có format nghìn
+  assert.equal(ws['A8'].t, 's')
+  assert.equal(ws['B8'].z, '#,##0;-#,##0;"–"')
+  assert.equal(ws['B9'].z, '#,##0.##;-#,##0.##;"–"')
+  assert.equal(ws['C7'].t, 'n') // ngày → serial
+  assert.equal(ws['C7'].z, 'dd/mm/yyyy')
+  assert.equal(ws['C8'].t, 's') // chuỗi bắt đầu "=" KHÔNG thành công thức
+  assert.equal(ws['C8'].f, undefined)
   assert.equal(rows[rows.length - 1][0], 'Tổng')
-  assert.equal(ws['!autofilter'].ref, 'A3:C6') // không gồm dòng tổng (hàng 7)
+  assert.equal(ws['!autofilter'], undefined) // bảng nhỏ (< 8 hàng) không cần auto-filter
   const files = unzipSync(bytes)
   const xml = strFromU8(files['xl/worksheets/sheet1.xml'])
-  assert.match(xml, /<pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"\/>/)
+  assert.match(xml, /<pane ySplit="6" topLeftCell="A7" activePane="bottomLeft" state="frozen"\/>/)
 })
 
 test('exportExcel: tên sheet cấm/trùng không còn làm throw; trả Promise; tên file zero-pad dd-MM-yyyy, không có "/"', async () => {
@@ -170,9 +152,9 @@ test('exportLedgerExcel: dòng đầu "Số dư chuyển kỳ" + tổng; không 
     { date: '02/07/2026', type: 'Chi', desc: 'B', amount: -30000, balance: 570000 },
   ]
   const withOpen = readSheet((await captureDownload(() => exportLedgerExcel('K', rows, 500000, 570000))).bytes).rows
-  assert.deepEqual(withOpen[3].slice(2, 3), ['Số dư chuyển kỳ'])
-  assert.equal(withOpen[3][4], 500000)
-  assert.equal(withOpen[4][4], 600000) // số dư dòng do caller tính — lib không cộng thêm
+  assert.deepEqual(withOpen[6].slice(2, 3), ['Số dư chuyển kỳ'])
+  assert.equal(withOpen[6][4], 500000)
+  assert.equal(withOpen[7][4], 600000) // số dư dòng do caller tính — lib không cộng thêm
   const labels = withOpen.map(r => r[2])
   assert.ok(labels.includes('Tổng thu') && labels.includes('Tổng chi') && labels.includes('Số dư cuối kỳ'))
   assert.equal(withOpen.find(r => r[2] === 'Tổng chi')?.[3], 30000)
@@ -187,12 +169,12 @@ test('exportContribExcel: cột Quỹ/Kỳ/Xác nhận, tổng chỉ tính đã 
     { member: '', date: '03/07/2026', amount: 20, method: 'momo', fund: 'MINI', periodName: 'Quỹ Phụ' },
     { member: 'Cường', date: '04/07/2026', amount: 7, method: 'cash' },
   ]))).bytes)
-  assert.deepEqual(rows[2], ['Thành viên / Nội dung', 'Quỹ', 'Kỳ quỹ', 'Ngày đóng', 'Số tiền (VNĐ)', 'Hình thức', 'Xác nhận'])
-  assert.equal(rows[4][1], 'Quỹ Chính')
-  assert.equal(rows[4][6], 'Chờ xác nhận')
-  assert.equal(rows[5][0], 'Quỹ Phụ') // tên rỗng ở Quỹ Phụ → fallback
-  assert.equal(rows[5][5], 'momo') // hình thức tự do giữ nguyên
-  assert.equal(rows[6][6], 'Đã xác nhận') // thiếu confirmed → đã xác nhận
+  assert.deepEqual(rows[5], ['Thành viên / Nội dung', 'Quỹ', 'Kỳ quỹ', 'Ngày đóng', 'Số tiền (VNĐ)', 'Hình thức', 'Xác nhận'])
+  assert.equal(rows[7][1], 'Quỹ Chính')
+  assert.equal(rows[7][6], 'Chờ xác nhận')
+  assert.equal(rows[8][0], 'Quỹ Phụ') // tên rỗng ở Quỹ Phụ → fallback
+  assert.equal(rows[8][5], 'momo') // hình thức tự do giữ nguyên
+  assert.equal(rows[9][6], 'Đã xác nhận') // thiếu confirmed → đã xác nhận
   const tot = (label: string) => rows.find(r => String(r[2]).startsWith(label))?.[4]
   assert.equal(tot('Tổng Quỹ Chính'), 107)
   assert.equal(tot('Tổng Quỹ Phụ'), 20)
@@ -212,7 +194,7 @@ test('exportReportsExcel: thêm cột chi tiết + dòng tổng; Quỹ Chính/T�
     { name: 'A', attended: 2, paid: 'Đã đóng', cost: 30, balance: 5, amountPaid: 35, courtCost: 20, livingCost: 10 },
     { name: 'B', attended: 1, paid: 'Chưa', cost: 10, balance: -10, amountPaid: 0, courtCost: 6, livingCost: 4 },
   ]))).bytes, 1).rows
-  assert.deepEqual(members[2], ['Thành viên', 'Buổi tham gia', 'Đã đóng', 'Đã nộp (VNĐ)', 'Chi phí sân (VNĐ)', 'Sinh hoạt (VNĐ)', 'Chi phí (VNĐ)', 'Số dư (VNĐ)'])
+  assert.deepEqual(members[5], ['Thành viên', 'Buổi tham gia', 'Đã đóng', 'Đã nộp (VNĐ)', 'Chi phí sân (VNĐ)', 'Sinh hoạt (VNĐ)', 'Chi phí (VNĐ)', 'Số dư (VNĐ)'])
   assert.deepEqual(members[members.length - 1], ['TỔNG', 3, '', 35, 26, 14, 40, -5])
 })
 
@@ -221,10 +203,13 @@ test('setExportBranding merge: field không truyền giữ nguyên', async () =>
   setExportBranding({ displayName: 'CLB Một', primaryColor: '#112233', pdfFooter: 'Foot' })
   setExportBranding({ displayName: 'CLB Hai' }) // chỉ đổi tên
   const { ws } = readSheet((await captureDownload(() => exportGenericExcel('F', 'S', ['A'], [['x']]))).bytes)
-  assert.equal(ws['A1'].v, 'CLB Hai · S')
-  assert.equal(ws['A1'].s.fgColor.rgb, '112233') // màu giữ nguyên
+  assert.equal(ws['A1'].v, 'CLB HAI') // hàng 1 = tên CLB, hàng 2 = tên tài liệu
+  assert.equal(ws['A2'].v, 'S')
+  const tab = async (run: () => Promise<void>) =>
+    /<tabColor rgb="FF([0-9A-F]{6})"/.exec(strFromU8(unzipSync((await captureDownload(run)).bytes)['xl/worksheets/sheet1.xml']))?.[1]
+  assert.equal(await tab(() => exportGenericExcel('F', 'S', ['A'], [['x']])), '112233') // màu giữ nguyên
   setExportBranding({ displayName: null, primaryColor: null }) // null → mặc định
   const b = readSheet((await captureDownload(() => exportGenericExcel('F', 'S', ['A'], [['x']]))).bytes).ws
-  assert.equal(b['A1'].v, 'PickleFund · S')
-  assert.equal(b['A1'].s.fgColor.rgb, '6D5DFB')
+  assert.equal(b['A1'].v, 'PICKLEFUND')
+  assert.equal(await tab(() => exportGenericExcel('F', 'S', ['A'], [['x']])), '6D5DFB')
 })

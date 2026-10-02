@@ -3,7 +3,8 @@ import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from 'lucide
 import { InfographicOverlayA } from './InfographicOverlayA'
 import { InfographicOverlayB } from './InfographicOverlayB'
 import type { InfographicReportData } from './infographic.types'
-import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName } from './infographic.utils'
+import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canShare, buildFileName, makeInfographicPalette } from './infographic.utils'
+import { useBrandingStore } from '../../../store/brandingStore'
 import toast from 'react-hot-toast'
 import { Portal } from '../../ui/Portal'
 
@@ -22,6 +23,9 @@ interface InfographicPreviewModalProps {
 }
 
 export function InfographicPreviewModal({ data, onClose }: InfographicPreviewModalProps) {
+  // Màu CLB (branding) → poster dùng 1 màu nhấn = màu CLB (tự tối cho chữ trắng AA).
+  const brand = useBrandingStore((s) => s.branding.primaryColor)
+  const P = makeInfographicPalette(brand)
   const [tab, setTab] = useState<'A' | 'B'>('A')
   const [exporting, setExporting] = useState<'png' | 'pdf' | 'share' | null>(null)
 
@@ -95,14 +99,16 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1">
             <button
               onClick={() => setTab('A')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'A' ? 'bg-emerald-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'A' ? 'text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              style={tab === 'A' ? { background: P.deep } : undefined}
             >
               <BarChart3 size={13} />
               Tổng quan
             </button>
             <button
               onClick={() => setTab('B')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'B' ? 'bg-blue-600 text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-[700] transition-all ${tab === 'B' ? 'text-white' : '[color:var(--pf-color-muted)] hover:text-white'}`}
+              style={tab === 'B' ? { background: P.deep } : undefined}
             >
               <Users size={13} />
               Bill thành viên
@@ -123,8 +129,8 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
             nếu không nội dung bị chụp ở kích thước đã scale → thu nhỏ + khoảng trắng (root cause). */}
         <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: '-100000px', width: 1080, height: 1920, overflow: 'hidden', pointerEvents: 'none' }}>
           {tab === 'A'
-            ? <InfographicOverlayA data={data} id={ID_A} />
-            : <InfographicOverlayB data={data} id={ID_B} />}
+            ? <InfographicOverlayA data={data} id={ID_A} brand={brand} />
+            : <InfographicOverlayB data={data} id={ID_B} brand={brand} />}
         </div>
 
         {/* ── PREVIEW hiển thị: bản scale RIÊNG (id khác), nội dung y hệt bản export ──
@@ -133,8 +139,8 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
           <div style={{ width: PREVIEW_W, height: previewH }} className="mx-auto">
             <div ref={previewInnerRef} style={{ width: 1080, transform: `scale(${PREVIEW_SCALE})`, transformOrigin: 'top left' }}>
               {tab === 'A'
-                ? <InfographicOverlayA data={data} id={`${ID_A}-preview`} />
-                : <InfographicOverlayB data={data} id={`${ID_B}-preview`} />}
+                ? <InfographicOverlayA data={data} id={`${ID_A}-preview`} brand={brand} />
+                : <InfographicOverlayB data={data} id={`${ID_B}-preview`} brand={brand} />}
             </div>
           </div>
         </div>
@@ -146,7 +152,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               onClick={handleExportPng}
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
+              style={{ background: P.deep }}
             >
               {exporting === 'png' ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
               Tải PNG
@@ -156,7 +162,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
               onClick={handleExportPdf}
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #6D5DFB, #7C3AED)' }}
+              style={{ background: P.deep }}
             >
               {exporting === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
               Xuất PDF
@@ -167,7 +173,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
                 onClick={handleShare}
                 disabled={isLoading}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-[700] text-white disabled:opacity-50 transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #0891B2, #5B4BE8)' }}
+                style={{ background: P.deep }}
               >
                 {exporting === 'share' ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
                 Chia sẻ
