@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { getBrandClubName } from '../../store/brandingStore'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
@@ -778,8 +779,8 @@ export function Expenses() {
     }))
     const common = filtered.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
     const mini = filtered.filter(e => e.fundSource === 'MINI')
-    await exportExpensesPDF({
-      clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
+    return exportExpensesPDF({
+      clubName: (clubData.settings?.name as string | undefined) ?? getBrandClubName(),
       periodName: exportPeriodName,
       // totalAll/Common/Mini = chỉ approved|paid (khớp báo cáo quỹ); đề xuất chờ duyệt ở totalPending.
       totalAll: effectiveOf(filtered),

@@ -18,7 +18,7 @@ export interface ExportRunOptions {
 export function useExportRunner() {
   const [busy, setBusy] = useState(false)
   const lock = useRef(false)
-  const run = useCallback(async (fn: () => void | Promise<void>, opts: ExportRunOptions = {}) => {
+  const run = useCallback(async (fn: () => unknown, opts: ExportRunOptions = {}) => {
     if (lock.current) return
     if (opts.empty) {
       toast.error(opts.emptyMsg ?? 'Chưa có dữ liệu để xuất')
@@ -27,8 +27,9 @@ export function useExportRunner() {
     lock.current = true
     setBusy(true)
     try {
-      await fn()
-      if (opts.success) toast.success(opts.success)
+      const res = await fn()
+      // fn trả `false` = người dùng HỦY hộp thoại lưu → im lặng (không toast thành công).
+      if (res !== false && opts.success) toast.success(opts.success)
     } catch (err) {
       console.error('[export]', err)
       toast.error('Xuất file thất bại, vui lòng thử lại')

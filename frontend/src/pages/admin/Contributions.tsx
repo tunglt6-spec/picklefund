@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { getBrandClubName } from '../../store/brandingStore'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet, Clock } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -8,6 +9,7 @@ import { Modal } from '../../components/ui/Modal'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
+import { canExportOrgWideData } from '../../lib/exportAccess'
 import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
@@ -247,8 +249,8 @@ export function Contributions() {
       amount: c.amount,
       paymentDate: formatDate(c.paymentDate),
       notes: c.notes || undefined,
-      clubName: (data.settings?.name as string | undefined) ?? 'CLB Pickleball',
-    }).then(() => toast.success('Đã xuất Phiếu Thu Quỹ Phụ!'))
+      clubName: (data.settings?.name as string | undefined) ?? getBrandClubName(),
+    }).then((saved) => { if (saved !== false) toast.success('Đã xuất Phiếu Thu Quỹ Phụ!') })
       .catch(() => toast.error('Không thể xuất phiếu thu. Vui lòng thử lại.'))
   }
 
@@ -395,7 +397,7 @@ export function Contributions() {
             <p className="text-xs [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {contributions.length > 0 && (
+            {contributions.length > 0 && canExportOrgWideData(user?.role) && (
               <>
                 <button
                   onClick={exportContribXlsx} disabled={exporting}
@@ -646,7 +648,7 @@ export function Contributions() {
   )
   const editDeleteActions = (c: FundContribution, withReceipt?: boolean) => (
     <div className="flex items-center justify-center gap-1">
-      {withReceipt && (
+      {withReceipt && canExportOrgWideData(user?.role) && (
         <button onClick={() => exportMiniReceipt(c)} title="Xuất phiếu thu"
           className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-violet-50 hover:text-violet-600 transition-colors"><FileText size={13} /></button>
       )}
@@ -689,8 +691,10 @@ export function Contributions() {
         subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportContribXlsx} disabled={exporting}><FileSpreadsheet size={14} />Xuất Excel</Button>
-            <Button variant="outline" onClick={exportContribPdf} disabled={exporting}><FileText size={14} />Xuất PDF</Button>
+            {canExportOrgWideData(user?.role) && (<>
+              <Button variant="outline" onClick={exportContribXlsx} disabled={exporting}><FileSpreadsheet size={14} />Xuất Excel</Button>
+              <Button variant="outline" onClick={exportContribPdf} disabled={exporting}><FileText size={14} />Xuất PDF</Button>
+            </>)}
             {!isMember && (
               <Button onClick={openCreate}>
                 <Plus size={15} />Ghi nhận thu

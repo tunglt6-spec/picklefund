@@ -16,7 +16,7 @@ export const THEME = {
   color: {
     ink: [30, 41, 59], // #1E293B
     ink2: [71, 85, 105], // #475569
-    muted: [100, 116, 139], // #64748B (gray — chữ nhỏ AA)
+    muted: [90, 102, 120], // #5A6678 (gray — chữ nhỏ AA ≥4.5 cả trên zebra; khớp backend export-tokens)
     line: [226, 232, 240], // #E2E8F0 (border)
     lineStrong: [203, 213, 225], // #CBD5E1 (đường ký, viền nhấn)
     lineSoft: [241, 245, 249], // #F1F5F9

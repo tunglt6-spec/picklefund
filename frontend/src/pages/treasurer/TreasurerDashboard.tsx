@@ -9,7 +9,7 @@ import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceDat
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
 import { exportGenericExcel } from '../../lib/export'
-import { buildLedgerRows } from '../../lib/finance-ledger'
+import { buildLedgerRows, isEffectiveExpense } from '../../lib/finance-ledger'
 import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
 
@@ -30,10 +30,14 @@ export function TreasurerDashboard() {
   const { data: contributions } = useClubContributions(user?.clubId ?? '')
   const { data: expenses, setData: setExpenses } = useClubExpenses(user?.clubId ?? '')
 
-  const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON')
+  const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
+  // Quỹ Chính tính theo KỲ đang mở (khớp backend); Quỹ Phụ không gắn kỳ.
+  const inPeriod = (fundPeriodId?: string) => !activePeriod || !fundPeriodId || fundPeriodId === activePeriod.id
+  const commonContribs = contributions.filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && inPeriod(c.fundPeriodId))
   const miniContribs   = contributions.filter(c => c.fundSource === 'MINI')
-  const commonExpenses = expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
-  const miniExpenses   = expenses.filter(e => e.fundSource === 'MINI')
+  // Chỉ khoản chi ĐÃ DUYỆT/ĐÃ CHI mới trừ quỹ (pending/rejected KHÔNG tính) — khớp financial-calculator.
+  const commonExpenses = expenses.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON' && inPeriod(e.fundPeriodId) && isEffectiveExpense(e.status))
+  const miniExpenses   = expenses.filter(e => e.fundSource === 'MINI' && isEffectiveExpense(e.status))
 
   const commonIncome   = commonContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const commonExpTotal = commonExpenses.reduce((a, e) => a + e.amount, 0)
@@ -47,7 +51,6 @@ export function TreasurerDashboard() {
   const noReceipt = expenses.filter(e => !e.receiptUrl)
   const pendingCount = unpaid.length
 
-  const activePeriod = getActiveChungPeriod(clubData.fundPeriods)
   const subtitle = activePeriod ? `Kỳ ${activePeriod.name}` : 'Chưa có kỳ quỹ nào đang mở'
 
   // Finance summary từ backend — source of truth cho Tổng tài sản CLB

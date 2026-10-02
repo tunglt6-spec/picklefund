@@ -2,7 +2,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  takenPlayerKeys, unpairedSavedGuests, collectPicks, buildManualPayload, buildAutoPayload, describeAutoResult, nextPairName,
+  takenPlayerKeys, unpairedSavedGuests, collectPicks, buildManualPayload, buildAutoPayload, describeAutoResult, nextPairName, resolveGuestName,
 } from './pairBuilder.logic.ts'
 
 const members = [{ id: 'm1', fullName: 'Mr HảiPM' }, { id: 'm2', fullName: 'B' }]
@@ -51,4 +51,18 @@ test('thông điệp kết quả + tên đội kế tiếp', () => {
   assert.match(describeAutoResult({ pairedCount: 1, unpaired: [{ name: 'X' }] }), /còn 1 người chưa ghép \(X\)/)
   assert.equal(nextPairName(['Đôi 1', 'Đôi 4']), 'Đôi 5')
   assert.equal(nextPairName([]), 'Đôi 1')
+})
+
+test('khách mới trùng tên khách đã lưu → dùng khách đã lưu (không tạo bản mới)', () => {
+  const picks = collectPicks(members, [], saved, [], [' khách 1 '])
+  assert.deepEqual(picks, [{ kind: 'saved', id: 'g1', name: 'Khách 1' }])
+  // đã chọn sẵn khách đó → không nhân đôi
+  assert.equal(collectPicks(members, [], saved, ['g1'], ['khách 1']).length, 1)
+})
+
+test('resolveGuestName: mới / chọn khách có sẵn / khách đã thuộc cặp / rỗng', () => {
+  assert.deepEqual(resolveGuestName('  ', saved, []), { action: 'empty' })
+  assert.deepEqual(resolveGuestName('Mới', saved, []), { action: 'new', name: 'Mới' })
+  assert.deepEqual(resolveGuestName('khách 2', saved, []), { action: 'select-saved', id: 'g2', name: 'Khách 2' })
+  assert.deepEqual(resolveGuestName('Khách 1', saved, [{ player1GuestId: 'g1' }]), { action: 'taken', name: 'Khách 1' })
 })

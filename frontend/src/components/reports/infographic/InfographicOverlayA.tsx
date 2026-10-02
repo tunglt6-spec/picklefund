@@ -34,7 +34,9 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
   const P: InfographicPalette = makeInfographicPalette(brand)
   const G = makeInfographicGlass(P)
   const balPos = data.fundBalance >= 0
-  const expRatio = Math.min(100, Math.round(data.expenseIncomeRatio * 100))
+  // Nhãn hiển thị số THẬT (vd 104%); chỉ THANH bị cap 100% để không tràn khung.
+  const expRatioLabel = Math.round(data.expenseIncomeRatio * 100)
+  const expRatio = Math.min(100, expRatioLabel)
   const paidPct = data.totalMembers > 0 ? Math.round(data.paidMembers / data.totalMembers * 100) : 0
   const balColor = balPos ? P.pos : P.neg
   const balVivid = balPos ? P.posVivid : P.negVivid
@@ -204,7 +206,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
         {VND(data.totalExpense)}
       </T>
       <T top={470} left={582} width={440} height={24} style={sub}>
-        Tỷ lệ chi / thu: {expRatio}%
+        Tỷ lệ chi / thu: {expRatioLabel}%
       </T>
 
       {/* Card 3 — Số dư */}
@@ -238,7 +240,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
       <T top={740} left={700} width={340} height={32}
         style={{ fontSize: 22, fontWeight: 950, color: balVivid, textAlign: 'right' }}>
-        {expRatio}%
+        {expRatioLabel}%
       </T>
 
       <div style={{ position: 'absolute', top: 784, left: 40, width: 1000, height: 28,
@@ -361,28 +363,28 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
 
       {/* Highlighted balance row */}
-      <div style={{ position: 'absolute', top: 1706, left: 60, width: 960, height: 52,
+      <div style={{ position: 'absolute', top: 1698, left: 60, width: 960, height: 50,
         background: rgbaOf(balPos ? P.posFill : P.negFill, 0.16),
         borderRadius: 14, border: `1px solid ${rgbaOf(balPos ? P.posFill : P.negFill, 0.4)}`, boxSizing: 'border-box' }}/>
-      <T top={1720} left={80} width={500} height={26}
+      <T top={1710} left={80} width={500} height={26}
         style={{ fontSize: 18, fontWeight: 800, color: balPos ? P.posOnDark : P.negOnDark }}>
         {balPos ? 'Số dư dương — Quỹ ổn định' : 'Số dư âm — Cần bổ sung'}
       </T>
-      <T top={1718} left={540} width={480} height={30}
+      <T top={1708} left={540} width={480} height={30}
         style={{ fontSize: 22, fontWeight: 950, color: balPos ? P.posOnDark : P.negOnDark, textAlign: 'right' }}>
         {balPos ? '+' : '-'}{VND(data.fundBalance)}
       </T>
 
       {/* ═══════════ SECTION 6: FOOTER (top 1760 → 1864) ═══════════ */}
 
-      <svg width="80" height="110" viewBox="0 0 72 110" style={{ position: 'absolute', bottom: 56, left: 30, opacity: 0.16 }}>
+      <svg width="80" height="110" viewBox="0 0 72 110" style={{ position: 'absolute', bottom: 48, left: 30, opacity: 0.16 }}>
         <ellipse cx="36" cy="14" rx="12" ry="12" fill="white"/>
         <rect x="24" y="28" width="24" height="44" rx="8" fill="white"/>
         <rect x="8" y="32" width="18" height="10" rx="5" fill="white" transform="rotate(-15 8 32)"/>
         <rect x="26" y="72" width="10" height="34" rx="5" fill="white" transform="rotate(-4 26 72)"/>
         <rect x="38" y="72" width="10" height="34" rx="5" fill="white" transform="rotate(4 38 72)"/>
       </svg>
-      <svg width="80" height="110" viewBox="0 0 72 110" style={{ position: 'absolute', bottom: 56, right: 30, opacity: 0.16, transform: 'scaleX(-1)' }}>
+      <svg width="80" height="110" viewBox="0 0 72 110" style={{ position: 'absolute', bottom: 48, right: 30, opacity: 0.16, transform: 'scaleX(-1)' }}>
         <ellipse cx="36" cy="14" rx="12" ry="12" fill="white"/>
         <rect x="24" y="28" width="24" height="44" rx="8" fill="white"/>
         <rect x="8" y="32" width="18" height="10" rx="5" fill="white" transform="rotate(-15 8 32)"/>

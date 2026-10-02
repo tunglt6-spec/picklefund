@@ -20,8 +20,8 @@ test('fmtVND chặn NaN/undefined/null', () => {
 })
 
 test('buildFileName dùng tên CLB, fallback PickleFund', () => {
-  assert.equal(buildFileName('CLB Sao Mai', 'Tháng 7/2026_TổngQuan', 'png'), 'CLB_Sao_Mai_Tháng_7_2026_TổngQuan_Infographic.png')
-  assert.equal(buildFileName('', 'Q1', 'pdf'), 'PickleFund_Q1_Infographic.pdf')
+  assert.equal(buildFileName('CLB Sao Mai', 'Tháng 7/2026_TổngQuan', 'png', new Date(2026, 9, 2)), 'CLB_Sao_Mai_Tháng_7_2026_TổngQuan_Infographic_02-10-2026.png')
+  assert.equal(buildFileName('', 'Q1', 'pdf', new Date(2026, 0, 5)), 'PickleFund_Q1_Infographic_05-01-2026.pdf')
   assert.ok(!buildFileName('Sao Mai', 'Q1', 'pdf').startsWith('PickleFund_'))
 })
 
@@ -49,7 +49,7 @@ test('mapToInfographicData chặn NaN', () => {
   assert.equal(d.fundBalance, 0)
   assert.equal(d.expenseIncomeRatio, 0)
   assert.equal(d.unpaidMembers, 2)
-  assert.equal(d.clubName, 'CLB Pickleball')
+  assert.equal(d.clubName, 'CLB')
 })
 
 /* ── Palette Infographic (brand CLB, AA) ── */

@@ -128,7 +128,7 @@ export function Billing() {
     if (receiptBusyId) return
     setReceiptBusyId(o.orderCode)
     try {
-      await exportBillingReceiptPDF({
+      const saved = await exportBillingReceiptPDF({
         clubName,
         invoiceNumber: `INV-${o.orderCode}`,
         orderCode: o.orderCode,
@@ -140,7 +140,7 @@ export function Billing() {
         gateway: o.gateway,
         billingInfo: o.billingInfo ?? null,
       })
-      toast.success('Đã tải biên nhận')
+      if (saved !== false) toast.success('Đã tải biên nhận')
     } catch {
       toast.error('Không tạo được biên nhận.')
     } finally {

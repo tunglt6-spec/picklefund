@@ -16,7 +16,7 @@ import {
   vndCompact,
   washColors,
 } from './export-tokens';
-import { buildExecModel, deltaText, healthTone, toneOfValue, type NumTone } from './executive-report-model';
+import { buildExecModel, deltaText, healthTone, parseAiBlocks, toneOfValue, type NumTone } from './executive-report-model';
 
 /**
  * Fallback jsPDF của Báo cáo điều hành (khi không có Chromium). CÙNG ngôn ngữ LIQUID GLASS với bản Chrome:
@@ -484,9 +484,19 @@ export function buildExecutiveReportPdf(
 
   // AI summary: nền brandSoft + viền brandBorder + vạch brand trái
   {
-    font(TYPE.body, false, COLORS.ink);
-    const lines: string[] = doc.splitTextToSize(m.aiText, CONTENT_W - SPACE.s3 * 2 - 2);
-    const h = SPACE.s2 + 6 + lines.length * 3.7 + SPACE.s2;
+    // Parse markdown thô → tiêu đề (đậm) / bullet (chấm tròn, thụt lề) / đoạn thường.
+    const AI_LH = 3.7;
+    const AI_INDENT = 3.6;
+    const AI_W = CONTENT_W - SPACE.s3 * 2 - 2;
+    const aiItems = parseAiBlocks(m.aiText).map((b, idx) => {
+      font(TYPE.body, b.kind === 'heading', COLORS.ink);
+      const lines: string[] = doc.splitTextToSize(b.text, b.kind === 'bullet' ? AI_W - AI_INDENT : AI_W);
+      const gapBefore = b.kind === 'heading' && idx > 0 ? 1.2 : 0;
+      const gapAfter = b.kind === 'heading' ? 0.3 : b.kind === 'bullet' ? 0.5 : 0.8;
+      return { b, lines, gapBefore, gapAfter, h: gapBefore + lines.length * AI_LH + gapAfter };
+    });
+    const aiBodyH = aiItems.reduce((a, it) => a + it.h, 0);
+    const h = SPACE.s2 + 6 + aiBodyH + SPACE.s2;
     ensure(h + SPACE.s3);
     glassCard(L, y, CONTENT_W, h, accentOpts());
     doc.saveGraphicsState();
@@ -498,8 +508,22 @@ export function buildExecutiveReportPdf(
     doc.restoreGraphicsState();
     font(TYPE.h2, true, B.brandInk);
     doc.text(up('Tóm tắt điều hành (AI)'), L + SPACE.s3 + 1, y + SPACE.s2 + 3.2);
-    font(TYPE.body, false, COLORS.ink);
-    doc.text(lines, L + SPACE.s3 + 1, y + SPACE.s2 + 9.2);
+    {
+      let ty = y + SPACE.s2 + 9.2;
+      const tx = L + SPACE.s3 + 1;
+      for (const it of aiItems) {
+        ty += it.gapBefore;
+        font(TYPE.body, it.b.kind === 'heading', COLORS.ink);
+        if (it.b.kind === 'bullet') {
+          fill(B.brand);
+          doc.circle(tx + 1.1, ty - 0.9, 0.55, 'F');
+          doc.text(it.lines, tx + AI_INDENT, ty);
+        } else {
+          doc.text(it.lines, tx, ty);
+        }
+        ty += it.lines.length * AI_LH + it.gapAfter;
+      }
+    }
     y += h + SPACE.s3;
   }
 

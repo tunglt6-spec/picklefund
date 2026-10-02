@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import {
   escHtml, sanitizeSheetNames, safeFileName, methodLabel, exportReceiptPDF, exportBillingReceiptPDF,
-  exportMiniExpenseReceiptPDF, exportMiniIncomeReceiptPDF,
+  exportMiniIncomeReceiptPDF,
   formatNumberVN, toExcelDateSerial, reportTypeOf, setExportBranding, buildExcelBytes, exportExcel,
   exportGenericExcel, exportLedgerExcel, exportContribExcel, exportReportsExcel, exportMembersExcel,
 } from './export.ts'
@@ -56,7 +56,6 @@ test('phiếu / biên nhận PDF: hàm công khai trả Promise và LỖI đư�
     for (const p of [
       exportReceiptPDF({ ...base, memberName: PAYLOAD, periodName: 'K', amountPaid: 1, attendedSessions: 1, totalSessions: 1, courtCost: 1, livingCost: 1, totalCost: 2, balance: -1, isConfirmed: false }),
       exportBillingReceiptPDF({ clubName: PAYLOAD, invoiceNumber: 'INV-1', orderCode: 'O', planLabel: 'Gói Pro', cycleLabel: '12 tháng', amount: 1, paidAt: '2026-03-15T10:00:00Z', gateway: 'VNPay' }),
-      exportMiniExpenseReceiptPDF({ ...base, receiverName: PAYLOAD, expenseType: 'x', amount: 1, expenseDate: '1/1', description: '<b>x</b>' }),
       exportMiniIncomeReceiptPDF({ ...base, payerName: PAYLOAD, incomeType: 'x', amount: 1, paymentDate: '1/1' }),
     ]) {
       assert.ok(p instanceof Promise)

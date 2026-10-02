@@ -5,6 +5,7 @@
  * KHÔNG tự tính (thống nhất Reports/PDF). Kỳ đang mở từ clubDataStore. Clean Modern SaaS.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { getBrandClubName } from '../../store/brandingStore'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
@@ -52,7 +53,7 @@ export function FinanceDashboard() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
   const accessToken = useAuthStore((s) => s.accessToken)
   const { fundPeriods, settings } = useClubDataStore((s) => s.getClubData(clubId))
-  const clubName = (settings?.name as string | undefined)?.trim() || 'CLB Pickleball'
+  const clubName = (settings?.name as string | undefined)?.trim() || getBrandClubName()
   const activePeriod = useMemo(
     () => getActiveChungPeriod(fundPeriods) ?? null,
     [fundPeriods],
@@ -149,7 +150,7 @@ export function FinanceDashboard() {
     // ẢNH theo ĐÚNG FORM PDF (brand header + bảng đóng khung + summary + footer), luôn sáng —
     // thay cách chụp DOM dashboard sống (thưa, dính theme dark, không chuẩn báo cáo).
     try {
-      await exportFinanceOverviewImage({
+      const saved = await exportFinanceOverviewImage({
         clubName,
         periodName: activePeriod.name,
         totalIncome: summary.totalIncome,
@@ -162,7 +163,7 @@ export function FinanceDashboard() {
         sessionCount: summary.sessionCount,
         confirmedCount: summary.confirmedCount,
       })
-      toast.success('Đã tải ảnh tổng quan tài chính')
+      if (saved !== false) toast.success('Đã tải ảnh tổng quan tài chính')
     } catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -171,7 +172,7 @@ export function FinanceDashboard() {
     // nhẹ (KB thay vì raster ~7MB), header/branding thống nhất. Thay cách chụp DOM cũ (ảnh mờ,
     // méo tỉ lệ, dính theme dark). Tổng quan không kèm bảng kê thành viên (rows []).
     try {
-      await exportReportsPDF({
+      const saved = await exportReportsPDF({
         periodName: activePeriod.name,
         clubName,
         totalIncome: summary.totalIncome,
@@ -185,7 +186,7 @@ export function FinanceDashboard() {
         carryForward: summary.carryForward,
         clubAssets: summary.clubAssets,
       }, [])
-      toast.success('Đã tải PDF tổng quan tài chính')
+      if (saved !== false) toast.success('Đã tải PDF tổng quan tài chính')
     } catch { toast.error('Xuất PDF thất bại') }
   }
 

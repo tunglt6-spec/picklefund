@@ -30,3 +30,8 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     }
   },
 }))
+
+/** Tên CLB cho fallback xuất file: ưu tiên tên thương hiệu đã nạp, không có thì 'CLB' (không hard-code "CLB Pickleball"). */
+export function getBrandClubName(): string {
+  return useBrandingStore.getState().branding.displayName?.trim() || 'CLB'
+}

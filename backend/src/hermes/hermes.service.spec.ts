@@ -284,6 +284,24 @@ describe('HermesService', () => {
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('Telegram gửi LỖI (fetch reject / ok:false) → nhả khoá dedupe, dispatch lại cùng nội dung sẽ gửi lại', async () => {
+      const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
+      mockPrisma.user.findMany.mockResolvedValue([baseUser]);
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([pref]);
+      mockPrisma.notification.create.mockResolvedValue(baseNotif);
+      mockPrisma.notification.count.mockResolvedValue(0);
+      linkClubChat('tg-123');
+      const f = (global as any).fetch as jest.Mock;
+      f.mockRejectedValueOnce(new Error('network'));
+      await service.dispatch(HIGH_EVENT);
+      f.mockResolvedValueOnce({ ok: false, status: 500 });
+      await service.dispatch(HIGH_EVENT);
+      expect(f).toHaveBeenCalledTimes(2); // lần 2 không bị chặn dù cùng nội dung
+      await service.dispatch(HIGH_EVENT); // lần 3 OK (mặc định ok:true) → gửi
+      await service.dispatch(HIGH_EVENT); // lần 4 trùng sau khi đã gửi thành công → chặn
+      expect(f).toHaveBeenCalledTimes(3);
+    });
+
     it('nội dung KHÁC nhau → vẫn gửi Telegram riêng từng tin', async () => {
       const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
       mockPrisma.user.findMany.mockResolvedValue([baseUser]);

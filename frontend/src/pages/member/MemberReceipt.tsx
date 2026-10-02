@@ -126,7 +126,7 @@ export function MemberReceipt() {
     const t = finance?.totals
     setExporting(true)
     try {
-      await exportReceiptPDF({
+      const saved = await exportReceiptPDF({
         // Không truyền receiptNo: chưa có số phiếu thật (lib ẩn khi thiếu) — tránh mọi phiếu "No. 0001".
         memberName,
         loginName: user?.username ?? '',
@@ -149,7 +149,7 @@ export function MemberReceipt() {
         balance: n(m.balance),
         isConfirmed: finance?.contribution?.isConfirmed ?? false,
       })
-      toast.success('Đã xuất Phiếu Thu PDF!')
+      if (saved !== false) toast.success('Đã xuất Phiếu Thu PDF!')
     } catch (err) {
       console.error('[export]', err)
       toast.error('Xuất Phiếu Thu thất bại. Vui lòng thử lại.')

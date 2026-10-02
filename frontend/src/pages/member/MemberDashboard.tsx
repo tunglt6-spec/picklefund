@@ -52,7 +52,7 @@ export function MemberDashboard() {
     if (exporting) return
     setExporting(true)
     try {
-      await exportReceiptPDF({
+      const saved = await exportReceiptPDF({
         memberName,
         loginName: user?.username ?? '',
         periodName: activePeriod?.name ?? '',
@@ -73,7 +73,7 @@ export function MemberDashboard() {
         balance,
         isConfirmed: myContribution?.isConfirmed ?? false,
       })
-      toast.success('Đã xuất Phiếu Thu PDF!')
+      if (saved !== false) toast.success('Đã xuất Phiếu Thu PDF!')
     } catch (err) {
       console.error('[export]', err)
       toast.error('Xuất Phiếu Thu thất bại. Vui lòng thử lại.')

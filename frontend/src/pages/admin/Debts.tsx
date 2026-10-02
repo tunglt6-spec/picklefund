@@ -15,6 +15,7 @@ import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'
+import { canExportOrgWideData } from '../../lib/exportAccess'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
@@ -44,6 +45,7 @@ const STATUS_META: Record<DebtStatus, { label: string; tone: StatusTone }> = {
 
 export function Debts() {
   const clubId = useAuthStore((s) => s.user?.clubId) ?? ''
+  const role = useAuthStore((s) => s.user?.role)
   const accessToken = useAuthStore((s) => s.accessToken)
   const data = useClubDataStore((s) => s.getClubData(clubId))
   const { members, fundPeriods } = data
@@ -158,7 +160,7 @@ export function Debts() {
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
-        actions={hasData ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
+        actions={hasData && canExportOrgWideData(role) ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 
       {!hasData ? (

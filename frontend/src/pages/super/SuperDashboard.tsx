@@ -14,6 +14,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
+import { exportFileName } from '../../lib/export'
 import { formatVND, formatNumber } from '../../lib/utils'
 import { PageShell, ChartCard, EmptyState, ErrorState, StatusBadge } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
@@ -146,8 +147,8 @@ export function SuperDashboard() {
       const res = await api.get('/command-center/pdf', { params: params(), responseType: 'blob', timeout: 60000 })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
-      a.href = url; a.download = 'trung-tam-dieu-hanh.pdf'; a.click()
-      URL.revokeObjectURL(url)
+      a.href = url; a.download = exportFileName('Trung_tam_dieu_hanh', 'pdf'); a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
       toast.success('Đã tạo PDF', { id: t })
     } catch {
       toast.error('Không tạo được PDF', { id: t })

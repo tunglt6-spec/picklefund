@@ -685,13 +685,13 @@ export function FixedDoublesDashboardPage() {
 
   // ── Xuất Ảnh/PDF bảng xếp hạng (đôi cố định) — PDF vector chuẩn SaaS, PNG chụp panel ──
   const doExportPng = async () => {
-    try { await captureElementAsReportPng(FD_EXPORT_ID, `BXH_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Bảng xếp hạng', subtitle: mg.name }); toast.success('Đã tải ảnh bảng xếp hạng') }
+    try { const saved = await captureElementAsReportPng(FD_EXPORT_ID, `BXH_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Bảng xếp hạng', subtitle: mg.name }); if (saved !== false) toast.success('Đã tải ảnh bảng xếp hạng') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
     if (standings.length === 0) { toast.error('Chưa có dữ liệu bảng xếp hạng'); return }
     try {
-      await exportStandingsPDF({
+      const saved = await exportStandingsPDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
         tournamentName: mg.name,
         sportLabel: FD_SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
@@ -721,7 +721,7 @@ export function FixedDoublesDashboardPage() {
           pts: s.rankingPoints,
         })),
       })
-      toast.success('Đã tải PDF bảng xếp hạng')
+      if (saved !== false) toast.success('Đã tải PDF bảng xếp hạng')
     } catch { toast.error('Xuất PDF thất bại') }
   }
   const rounds      = Array.from(new Set(schedule.map(m => m.round))).sort((a, b) => a - b)
@@ -758,7 +758,7 @@ export function FixedDoublesDashboardPage() {
 
   // ── Xuất Ảnh/PDF Lịch Thi Đấu — PNG chụp panel lịch, PDF vector bảng đầy đủ mọi trận ──
   const doExportSchedulePng = async () => {
-    try { await captureElementAsReportPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Lịch thi đấu', subtitle: mg.name }); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { const saved = await captureElementAsReportPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Lịch thi đấu', subtitle: mg.name }); if (saved !== false) toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportSchedulePdf = async () => {
@@ -766,7 +766,7 @@ export function FixedDoublesDashboardPage() {
     try {
       // Sắp xếp lượt → vòng để bảng PDF liệt kê đủ mọi trận (không phụ thuộc trạng thái đóng/mở panel).
       const scheduleSorted = [...schedule].sort((a, b) => (a.leg ?? 1) - (b.leg ?? 1) || a.round - b.round)
-      await exportSchedulePDF({
+      const saved = await exportSchedulePDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
         tournamentName: mg.name,
         sportLabel: FD_SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
@@ -795,7 +795,7 @@ export function FixedDoublesDashboardPage() {
           }
         }),
       })
-      toast.success('Đã tải PDF lịch thi đấu')
+      if (saved !== false) toast.success('Đã tải PDF lịch thi đấu')
     } catch { toast.error('Xuất PDF thất bại') }
   }
 

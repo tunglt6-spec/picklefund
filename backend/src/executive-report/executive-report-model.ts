@@ -243,3 +243,37 @@ export function buildExecModel(
 
 /** Nhãn delta "+12%" / "-5%" (không glyph ngoài font). */
 export const deltaText = (v: number) => `${v >= 0 ? '+' : '-'}${Math.abs(v)}%`;
+
+/* ── Văn bản Tóm tắt AI: tách markdown thô ("* ", "- ", "**…**", "Tiêu đề:") thành khối trình bày ── */
+export interface AiBlock {
+  kind: 'heading' | 'bullet' | 'para';
+  text: string;
+}
+
+/**
+ * Tách văn bản AI thành khối: bullet (dòng bắt đầu "* " / "- " / "• "), tiêu đề đoạn (dòng ngắn kết thúc ":"),
+ * đoạn thường. Bỏ ký tự markdown đậm (**, __) — KHÔNG escape ở đây (renderer tự escape).
+ */
+export function parseAiBlocks(raw: string): AiBlock[] {
+  const out: AiBlock[] = [];
+  const clean = (t: string) =>
+    t
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/\*\*/g, '')
+      .trim();
+  for (const line of String(raw || '').split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t) continue;
+    const b = /^[*\-•–]\s+(.*)$/.exec(t);
+    if (b) {
+      const text = clean(b[1]);
+      if (text) out.push({ kind: 'bullet', text });
+      continue;
+    }
+    const text = clean(t.replace(/^#{1,6}\s+/, ''));
+    if (!text) continue;
+    out.push({ kind: text.length <= 60 && /:$/.test(text) ? 'heading' : 'para', text });
+  }
+  return out;
+}

@@ -191,7 +191,7 @@ async function savePngBlob(blob: Blob, name: string): Promise<boolean> {
 /** Lưu 1 tài liệu jsPDF: hộp thoại "Lưu file" nếu có, fallback tải về Downloads.
  *  Ghi log "báo cáo đã xuất" SAU khi lưu thành công (Hủy hộp thoại thì không ghi). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function savePdfDoc(pdf: any, filename: string, opts: { log?: boolean } = {}) {
+async function savePdfDoc(pdf: any, filename: string, opts: { log?: boolean } = {}): Promise<boolean> {
   const suggestedName = `${safeFileName(filename)}_${dateStamp()}.pdf`
   const done = () => { if (opts.log !== false) logReportExport(reportTypeOf(filename), 'pdf') }
 
@@ -208,17 +208,18 @@ async function savePdfDoc(pdf: any, filename: string, opts: { log?: boolean } = 
       await writable.write(blob)
       await writable.close()
       done()
-      return
+      return true
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      // Người dùng bấm Cancel → không làm gì
-      if (e?.name === 'AbortError') return
+      // Người dùng bấm Cancel → trả false để call site KHÔNG toast "thành công"
+      if (e?.name === 'AbortError') return false
     }
   }
 
   // Fallback: download thông thường (trình duyệt tự lưu vào thư mục Downloads)
   pdf.save(suggestedName)
   done()
+  return true
 }
 
 /* ── Xuất ẢNH (PNG) theo CÙNG token với PDF vector (THEME): masthead BĂNG MÀU ĐẶC brandDark,
@@ -354,6 +355,7 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
   )
   const saved = await savePngBlob(blob, `${safeFileName(fileBase)}_${dateStamp()}.png`)
   if (saved) logReportExport(reportTypeOf(fileBase), 'image')
+  return saved
 }
 
 /** Dựng wrap off-screen (masthead + clone element + footer) và chụp canvas. */
@@ -409,6 +411,7 @@ export async function captureElementAsReportPng(
   )
   const saved = await savePngBlob(blob, `${safeFileName(fileBase)}_${dateStamp()}.png`)
   if (saved) logReportExport(reportTypeOf(fileBase), 'image')
+  return saved
 }
 
 export interface FinanceOverviewInput {
@@ -1004,16 +1007,26 @@ const OPENING_LABEL = 'Số dư chuyển kỳ'
  *                        dòng (`rows[].balance`) do caller tính từ số này; lib KHÔNG cộng thêm.
  * @param closingBalance  số dư cuối kỳ (tùy chọn) → in dòng "Số dư cuối kỳ" cuối bảng.
  */
-export function exportLedgerExcel(periodName: string, rows: LedgerRow[], openingBalance?: number, closingBalance?: number) {
+export interface LedgerScopeOpts {
+  /** true = `rows` chỉ là TẬP ĐÃ LỌC; tổng thu/chi + số dư cuối kỳ là TOÀN SỔ và được ghi nhãn "(toàn sổ)". */
+  filtered?: boolean
+  /** Tổng thu/chi TOÀN SỔ (dương) — dùng khi filtered để footer khớp số dư cuối kỳ. */
+  totalIncome?: number
+  totalExpense?: number
+}
+
+export function exportLedgerExcel(periodName: string, rows: LedgerRow[], openingBalance?: number, closingBalance?: number, scope?: LedgerScopeOpts) {
   const body: (string | number)[][] = rows.map(r => [r.date, r.type, r.desc, r.amount, r.balance])
   if (openingBalance !== undefined) body.unshift(['', '', OPENING_LABEL, '', openingBalance])
-  const income = rows.reduce((s, r) => (r.amount > 0 ? s + r.amount : s), 0)
-  const expense = rows.reduce((s, r) => (r.amount < 0 ? s - r.amount : s), 0)
+  const wholeBook = !!scope?.filtered && scope.totalIncome !== undefined && scope.totalExpense !== undefined
+  const income = wholeBook ? scope!.totalIncome! : rows.reduce((s, r) => (r.amount > 0 ? s + r.amount : s), 0)
+  const expense = wholeBook ? scope!.totalExpense! : rows.reduce((s, r) => (r.amount < 0 ? s - r.amount : s), 0)
+  const tag = scope?.filtered ? ' (toàn sổ)' : ''
   const footerRows: (string | number)[][] = [
-    ['', '', 'Tổng thu', income, ''],
-    ['', '', 'Tổng chi', expense, ''],
+    ['', '', 'Tổng thu' + (wholeBook ? tag : ''), income, ''],
+    ['', '', 'Tổng chi' + (wholeBook ? tag : ''), expense, ''],
   ]
-  if (closingBalance !== undefined) footerRows.push(['', '', 'Số dư cuối kỳ', '', closingBalance])
+  if (closingBalance !== undefined) footerRows.push(['', '', 'Số dư cuối kỳ' + tag, '', closingBalance])
   return exportExcel(`So_Quy_${periodName.replace(/\s/g, '_')}`, [{
     name: 'Sổ Quỹ',
     subtitle: `Kỳ quỹ: ${periodName} · ${rows.length} giao dịch`,
@@ -1030,7 +1043,10 @@ export function exportLedgerPDF(
   totalExpense: number,
   balance: number,
   openingBalance?: number,
+  scope?: Pick<LedgerScopeOpts, 'filtered'>,
 ) {
+  // Khi đang lọc: totalIncome/totalExpense/balance PHẢI là TOÀN SỔ (caller truyền) → nhãn "(toàn sổ)".
+  const tag = scope?.filtered ? ' (toàn sổ)' : ''
   const tableRows: Record<string, string | number>[] = rows.map(r => ({
     date: r.date,
     type: r.type,
@@ -1048,7 +1064,7 @@ export function exportLedgerPDF(
     clubName: brandName(), // footer/masthead dùng tên CLB (KHÔNG dùng tên kỳ)
     headerLeft: `Kỳ quỹ: ${periodName} · ${rows.length} giao dịch`,
     docType: 'SQ',
-    footerRow: { desc: 'TỔNG KỲ · SỐ DƯ CUỐI KỲ', amount: (net > 0 ? '+' : '') + formatVND(net), balance: formatVND(balance) },
+    footerRow: { desc: 'TỔNG KỲ · SỐ DƯ CUỐI KỲ' + tag, amount: (net > 0 ? '+' : '') + formatVND(net), balance: formatVND(balance) },
     columns: [
       { key: 'date', label: 'NGÀY', w: 26, align: 'left' },
       { key: 'type', label: 'LOẠI', w: 18, align: 'center' },
@@ -1058,9 +1074,9 @@ export function exportLedgerPDF(
     ],
     rows: tableRows,
     stats: [
-      { label: 'Tổng thu', value: formatVND(totalIncome), tone: 'pos' },
-      { label: 'Tổng chi', value: formatVND(totalExpense), tone: 'neg' },
-      { label: 'Số dư cuối kỳ', value: formatVND(balance) },
+      { label: 'Tổng thu' + tag, value: formatVND(totalIncome), tone: 'pos' },
+      { label: 'Tổng chi' + tag, value: formatVND(totalExpense), tone: 'neg' },
+      { label: 'Số dư cuối kỳ' + tag, value: formatVND(balance) },
     ],
   })
 }
@@ -1608,37 +1624,6 @@ export async function exportMiniIncomeReceiptPDF(data: MiniIncomeReceiptData) {
     },
   })
   return savePdfDoc(doc, `Phieu_Thu_QuyPhu_${data.payerName.replace(/\s/g, '_')}`, { log: false })
-}
-
-/* ════════════════════════════════════════
-   EXPORT: Phiếu Chi Quỹ Phụ
-════════════════════════════════════════ */
-export interface MiniExpenseReceiptData {
-  receiptNo?: number
-  receiverName: string
-  expenseType: string
-  amount: number
-  expenseDate: string
-  description: string
-  notes?: string
-  clubName: string
-  clubLocation?: string
-}
-
-export async function exportMiniExpenseReceiptPDF(data: MiniExpenseReceiptData) {
-  const [{ default: jsPDF }, fonts, { buildMiniExpensePDF }, logo] = await Promise.all([
-    import('jspdf'),
-    loadVnFonts(),
-    import('./pdf-report-core.js'),
-    loadBrandLogo(),
-  ])
-  const doc = buildMiniExpensePDF({
-    jsPDF,
-    fonts,
-    branding: pdfBranding(logo),
-    receipt: { ...data, printedDateText: today(), printedAtText: todayFull() },
-  })
-  return savePdfDoc(doc, `Phieu_Chi_Mini_${data.receiverName.replace(/\s/g, '_')}`, { log: false })
 }
 
 export type ReportMemberDetail = {

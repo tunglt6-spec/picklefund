@@ -16,7 +16,7 @@ import {
   softShadow,
   vndCompact,
 } from './export-tokens';
-import { buildExecModel, deltaText, healthTone, toneOfValue, type NumTone } from './executive-report-model';
+import { buildExecModel, deltaText, healthTone, parseAiBlocks, toneOfValue, type NumTone } from './executive-report-model';
 
 /**
  * HTML in-ấn A4 cho Báo cáo điều hành — chuẩn "Luxury SaaS" + LIQUID GLASS (nền wash + orb, tấm kính trắng bán trong có viền sáng/highlight/bóng mềm,
@@ -33,6 +33,24 @@ export interface ReportHtmlOpts {
   brandColor?: string | null;
   /** Thời điểm xuất (để mã TL + giờ xuất khớp footer). */
   now?: Date;
+}
+
+/** Tóm tắt AI → HTML: tiêu đề đậm, bullet chấm tròn thụt lề, đoạn thường. MỌI text qua esc(). */
+export function aiBlocksHtml(raw: string): string {
+  const blocks = parseAiBlocks(raw);
+  let html = '';
+  let inList = false;
+  for (const b of blocks) {
+    if (b.kind === 'bullet') {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += `<li>${esc(b.text)}</li>`;
+      continue;
+    }
+    if (inList) { html += '</ul>'; inList = false; }
+    html += b.kind === 'heading' ? `<div class="ah">${esc(b.text)}</div>` : `<p>${esc(b.text)}</p>`;
+  }
+  if (inList) html += '</ul>';
+  return html;
 }
 
 /** Vòng gauge: nét màu theo mức điểm (xanh/cyan/cam/đỏ) trên track hairline (không gradient). */
@@ -247,7 +265,12 @@ tr{break-inside:avoid;page-break-inside:avoid}
 /* AI summary: TẤM NHẤN kính (brand α + viền brand α) + vạch brand trái */
 .aibox{background-color:var(--acc-t);border:var(--g-rim);box-shadow:inset ${mm(1.4)} 0 0 var(--brand),${accSh};border-radius:var(--g-r);padding:${mm(SPACE.s2)} ${mm(SPACE.s3)} ${mm(SPACE.s2)} ${mm(SPACE.s3 + 1)}}
 .aibox .h{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s1)};text-transform:uppercase;letter-spacing:.2pt}
-.aibox .b{font-size:${pt(TYPE.body)};line-height:1.5;white-space:pre-line;color:var(--ink)}
+.aibox .b{font-size:${pt(TYPE.body)};line-height:1.5;color:var(--ink)}
+.aibox .b p{margin:0 0 ${mm(0.8)} 0;white-space:pre-line}
+.aibox .b .ah{font-weight:700;color:var(--ink);margin:${mm(1)} 0 ${mm(0.4)} 0}
+.aibox .b ul{margin:0 0 ${mm(0.8)} 0;padding:0;list-style:none}
+.aibox .b li{position:relative;padding-left:${mm(4)};margin:0 0 ${mm(0.5)} 0}
+.aibox .b li::before{content:'';position:absolute;left:${mm(1.2)};top:.62em;width:${mm(1.1)};height:${mm(1.1)};border-radius:50%;background:var(--brand)}
 /* Finance: dải KPI 3×2 + biểu đồ trong tấm kính toàn bề rộng */
 .fstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s3)}}
 .fval{display:flex;align-items:baseline;gap:${mm(2)};margin-top:${mm(1)};white-space:nowrap}
@@ -406,7 +429,7 @@ ${css}
 
 <div class="sect aibox">
   <div class="h">Tóm tắt điều hành (AI)</div>
-  <div class="b">${esc(m.aiText)}</div>
+  <div class="b">${aiBlocksHtml(m.aiText)}</div>
 </div>
 
 <div class="sect">

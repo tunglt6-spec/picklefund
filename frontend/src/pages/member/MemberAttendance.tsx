@@ -67,18 +67,17 @@ export function MemberAttendance() {
     s.status === 'cancelled' ? 'Đã hủy'
       : s.status === 'scheduled' ? 'Sắp diễn ra'
       : attended.has(s.id) ? 'Có mặt' : 'Vắng mặt'
-  const sessionCost = (s: (typeof filtered)[number]) =>
-    s.status === 'completed' && attended.has(s.id) ? courtShare(s.courtFee, s._count?.attendanceRecords) : 0
+  // Không xuất cột tiền: chi phí sân thật = tổng chi sân Quỹ Chính ÷ sĩ số chốt (xem Phiếu thu / Tài chính cá nhân).
   const exportMeName = myMember?.fullName ?? 'Thành viên'
   const exportSlug = exportMeName.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
   const exportSessions = [...filtered].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
   const doExportExcel = () => {
     if (exportSessions.length === 0) return
     return runExport(() => exportGenericExcel(`Diem_danh_${exportSlug}`, 'Điểm danh',
-      ['Ngày', 'Sân', 'Thời gian', 'Tình trạng', 'Chi phí sân (VNĐ)'],
+      ['Ngày', 'Sân', 'Thời gian', 'Tình trạng'],
       exportSessions.map((s) => [
         formatDate(s.sessionDate), s.courtName ?? '', s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '',
-        sessionStatusLabel(s), sessionCost(s),
+        sessionStatusLabel(s),
       ]),
     ), 'Đã xuất Excel lịch tham gia')
   }
@@ -91,14 +90,14 @@ export function MemberAttendance() {
       metaLeft: `${activePeriod ? `Kỳ ${activePeriod.name} · ` : ''}${exportSessions.length} buổi · Tham gia ${attendedCount}/${completedSessions.length} (${rate}%)`,
       columns: [
         { header: 'Ngày', align: 'center' }, { header: 'Sân' }, { header: 'Thời gian', align: 'center' },
-        { header: 'Tình trạng', align: 'center' }, { header: 'Chi phí sân', align: 'right' },
+        { header: 'Tình trạng', align: 'center' },
       ],
       rows: exportSessions.map((s) => [
         formatDate(s.sessionDate), s.courtName ?? '—', s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '—',
-        sessionStatusLabel(s), sessionCost(s) > 0 ? formatVND(sessionCost(s)) : '—',
+        sessionStatusLabel(s),
       ]),
-      summaryLabel: 'Chi phí sân cá nhân',
-      summaryValue: formatVND(myCourtCost),
+      summaryLabel: 'Số buổi có mặt',
+      summaryValue: `${attendedCount}/${completedSessions.length}`,
     }), 'Đã xuất PDF lịch tham gia')
   }
   const exportButtons = exportSessions.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined

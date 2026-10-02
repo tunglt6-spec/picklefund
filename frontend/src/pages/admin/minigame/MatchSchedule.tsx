@@ -47,7 +47,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
 
   // ── Xuất Ảnh/PDF lịch (đôi ngẫu nhiên) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
   const doExportPng = async () => {
-    try { await captureElementAsReportPng(MS_DOUBLES_ID, slugName(minigameName), { title: 'Lịch thi đấu', subtitle: minigameName, meta: 'Đôi ngẫu nhiên' }); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { const saved = await captureElementAsReportPng(MS_DOUBLES_ID, slugName(minigameName), { title: 'Lịch thi đấu', subtitle: minigameName, meta: 'Đôi ngẫu nhiên' }); if (saved !== false) toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -59,7 +59,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         return ra !== rb ? ra - rb : a.matchNumber - b.matchNumber
       })
       const done = myMatches.filter(m => m.status === 'COMPLETED').length
-      await exportSchedulePDF({
+      const saved = await exportSchedulePDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
         tournamentName: minigameName,
         sportLabel: MS_SPORT_LABEL[mg?.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
@@ -87,7 +87,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           st: msStatusLabel(m.status),
         })),
       })
-      toast.success('Đã tải PDF lịch thi đấu')
+      if (saved !== false) toast.success('Đã tải PDF lịch thi đấu')
     } catch { toast.error('Xuất PDF thất bại') }
   }
 
@@ -443,7 +443,7 @@ export function MatchSchedule() {
 
   // ── Xuất Ảnh/PDF lịch (vòng bảng) — PNG chụp bảng/thẻ, PDF vector đủ mọi trận ──
   const doExportPng = async () => {
-    try { await captureElementAsReportPng(MS_GROUP_ID, slugName(mg?.name ?? 'lich'), { title: 'Lịch thi đấu', subtitle: mg?.name ?? '' }); toast.success('Đã tải ảnh lịch thi đấu') }
+    try { const saved = await captureElementAsReportPng(MS_GROUP_ID, slugName(mg?.name ?? 'lich'), { title: 'Lịch thi đấu', subtitle: mg?.name ?? '' }); if (saved !== false) toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -455,7 +455,7 @@ export function MatchSchedule() {
         return ga !== gb ? ga - gb : (a.round ?? 1) - (b.round ?? 1)
       })
       const done = myMatches.filter(m => m.status === 'COMPLETED').length
-      await exportSchedulePDF({
+      const saved = await exportSchedulePDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
         tournamentName: mg?.name ?? 'Giải đấu',
         sportLabel: MS_SPORT_LABEL[mg?.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
@@ -485,7 +485,7 @@ export function MatchSchedule() {
           st: msStatusLabel(m.status),
         })),
       })
-      toast.success('Đã tải PDF lịch thi đấu')
+      if (saved !== false) toast.success('Đã tải PDF lịch thi đấu')
     } catch { toast.error('Xuất PDF thất bại') }
   }
 

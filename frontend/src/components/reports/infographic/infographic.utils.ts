@@ -266,7 +266,7 @@ export function mapToInfographicData(src: ReportSource): InfographicReportData {
   }))
 
   return {
-    clubName: src.clubName || 'CLB Pickleball',
+    clubName: src.clubName || 'CLB',
     reportTitle: 'BÁO CÁO TÀI CHÍNH',
     periodLabel: src.periodLabel,
     exportDate: fmtDate(today),
@@ -402,8 +402,10 @@ export async function shareInfographic(elementId: string, title: string): Promis
 const slugPart = (s: string) => s.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
 
 /** Tên file theo CLB (không hard-code "PickleFund_" khi có tên CLB); thiếu tên → "PickleFund". */
-export function buildFileName(clubName: string, periodLabel: string, ext: 'png' | 'pdf'): string {
+export function buildFileName(clubName: string, periodLabel: string, ext: 'png' | 'pdf', now: Date = new Date()): string {
   const club = slugPart(clubName || '') || 'PickleFund'
   const period = slugPart(periodLabel || '')
-  return `${club}${period ? `_${period}` : ''}_Infographic.${ext}`
+  // Ngày xuất (dd-mm-yyyy) — thống nhất với exportFileName của lib/export.
+  const stamp = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
+  return `${club}${period ? `_${period}` : ''}_Infographic_${stamp}.${ext}`
 }

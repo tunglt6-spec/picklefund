@@ -16,7 +16,7 @@ test('token chữ bản AA (ink, ink2, muted, posText, negText, neg, warn, info)
 
 test('palette SINH ĐỘNG khớp spec; màu sinh động ≥ 3:1 (chỉ cho chữ ĐẬM ≥ 8.5pt); không còn #94A3B8', () => {
   const hex: Record<string, string> = {
-    ink: '#1E293B', muted: '#64748B', line: '#E2E8F0', surface2: '#F8FAFC', lineSoft: '#F1F5F9',
+    ink: '#1E293B', muted: '#5A6678', line: '#E2E8F0', surface2: '#F8FAFC', lineSoft: '#F1F5F9',
     pos: '#16A34A', neg: '#DC2626', negFill: '#EF4444', orange: '#EA580C', cyan: '#0891B2', amber: '#D97706',
     posText: '#15803D', negText: '#B91C1C', posTint: '#F0FDF4', posEdge: '#BBF7D0', negTint: '#FEF2F2', negEdge: '#FECACA',
   }
@@ -128,6 +128,6 @@ test('makeBrand: wash 3 nút nhạt (mặc định #F7F9FF → trắng → #FAF9
     assert.ok(contrast(m.brandDark, glassWorstBg(m, THEME.glass.tile)) >= 4.4, hex)
     assert.ok(contrast(C.white, m.washB) === 1)
   }
-  // muted (#64748B) trên nền xấu nhất sau kính ≥ 4.5 với các màu thương hiệu thực tế
+  // muted (#5A6678) trên nền xấu nhất sau kính ≥ 4.5 với các màu thương hiệu thực tế
   for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) assert.ok(contrast(C.muted, glassWorstBg(makeBrand(hex))) >= 4.5, hex)
 })

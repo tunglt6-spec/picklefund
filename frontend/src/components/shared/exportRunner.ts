@@ -10,7 +10,9 @@ export async function runExport(
   errorMsg = 'Xuất file thất bại. Vui lòng thử lại.',
 ): Promise<boolean> {
   try {
-    await task()
+    const res = await task()
+    // task trả `false` = người dùng HỦY hộp thoại lưu → im lặng, không toast thành công.
+    if (res === false) return false
     toast.success(successMsg)
     return true
   } catch (err) {

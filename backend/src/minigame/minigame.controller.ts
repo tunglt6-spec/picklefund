@@ -20,6 +20,7 @@ import {
   IsBoolean,
   IsDateString,
   Min,
+  MinLength,
   MaxLength,
   ArrayMaxSize,
   ValidateNested,
@@ -74,7 +75,7 @@ class SwapPlayersDto {
 }
 
 class CreateTeamDto {
-  @IsString() @MaxLength(60) name!: string;
+  @IsString() @MinLength(1) @MaxLength(60) name!: string;
   // Cần player1Id (thành viên/guestId) HOẶC player1Guest (tên khách) — kiểm ở service.
   @IsOptional() @IsString() player1Id?: string;
   @IsOptional() @IsString() player2Id?: string;
@@ -123,6 +124,7 @@ class AutoPairDto {
   @IsArray()
   @ArrayMaxSize(200)
   @IsString({ each: true })
+  @MaxLength(80, { each: true })
   guestIds?: string[];
   @IsOptional()
   @IsIn(['RANDOM_PAIRING', 'BALANCED_SKILL_PAIRING'])
@@ -553,6 +555,16 @@ export class MinigameController {
       await this.svc.removeRosterMember(rosterMemberId, user.clubId),
       'Đã xóa thành viên',
     );
+  }
+
+  // Xoá HẾT cặp/đội của giải (1 transaction) — dùng cho "Xóa hết cặp".
+  @Delete(':id/teams')
+  @Roles('CLUB_ADMIN', 'MEMBER_VIEW')
+  async deleteAllTeams(
+    @Param('id') id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return ok(await this.svc.deleteAllTeams(id, user.clubId), 'Đã xóa hết cặp');
   }
 
   @Delete(':id/teams/:teamId')

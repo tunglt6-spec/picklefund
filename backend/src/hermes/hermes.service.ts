@@ -28,14 +28,15 @@ export class HermesService {
   private static readonly TELEGRAM_DEDUP_MS = 2 * 60 * 1000;
   private readonly recentClubTelegram = new Map<string, number>();
 
-  private shouldSendClubTelegram(event: HermesEvent, now = Date.now()): boolean {
+  /** Giữ chỗ khoá dedupe (chống gửi trùng khi nhiều dispatch cùng lúc). Trả key nếu được gửi, null nếu trùng. */
+  private reserveClubTelegram(event: HermesEvent, now = Date.now()): string | null {
     for (const [k, at] of this.recentClubTelegram) {
       if (now - at > HermesService.TELEGRAM_DEDUP_MS) this.recentClubTelegram.delete(k);
     }
     const key = [event.clubId, event.eventType, event.title, event.body].join('|');
-    if (this.recentClubTelegram.has(key)) return false;
+    if (this.recentClubTelegram.has(key)) return null;
     this.recentClubTelegram.set(key, now);
-    return true;
+    return key;
   }
 
   constructor(
@@ -128,15 +129,19 @@ export class HermesService {
     // Gửi 1 LẦN tới chat LIÊN KẾT của chính CLB (getClubTelegramChat), KHÔNG theo pref user →
     // mỗi CLB nhận đúng thông báo của mình (cách ly tuyệt đối theo clubId). CLB chưa liên kết
     // chat riêng → không gửi (không dùng chung chat CLB khác). Best-effort, không chặn.
-    if (dispatched > 0 && this.shouldSendClubTelegram(event)) {
+    const tgKey = dispatched > 0 ? this.reserveClubTelegram(event) : null;
+    if (tgKey) {
+      // Khoá dedupe chỉ GIỮ khi gửi THÀNH CÔNG; gửi lỗi / CLB chưa link chat → nhả khoá để lần sau thử lại.
+      let sent = false;
       try {
         const clubChat = await this.getClubTelegramChat(event.clubId);
         if (clubChat) {
           // Ưu tiên bot RIÊNG của CLB (nếu đã đăng ký), fallback bot chung của hệ thống.
           const clubToken = await this.getClubBotToken(event.clubId);
-          await this.sendTelegram(
+          sent = await this.sendTelegram(
             clubChat,
-            `*${event.title}*\n${event.body}`,
+            `*${event.title}*
+${event.body}`,
             clubToken,
           );
         }
@@ -145,6 +150,7 @@ export class HermesService {
           `[Hermes] Telegram CLB ${event.clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
         );
       }
+      if (!sent) this.recentClubTelegram.delete(tgKey);
     }
 
     this.logger.log(
@@ -216,9 +222,9 @@ export class HermesService {
     chatId: string,
     text: string,
     clubToken?: string | null,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const token = clubToken || this.config.get<string>('TELEGRAM_BOT_TOKEN');
-    if (!token) return; // bot chưa cấu hình → bỏ qua (không lỗi)
+    if (!token) return false; // bot chưa cấu hình → bỏ qua (không lỗi, không tính là đã gửi)
     const res = await fetch(
       `https://api.telegram.org/bot${token}/sendMessage`,
       {
@@ -234,6 +240,7 @@ export class HermesService {
     if (!res.ok) {
       throw new Error(`Telegram API ${res.status}`);
     }
+    return true;
   }
 
   // ─── Recipient resolution ────────────────────────────────────────────────────

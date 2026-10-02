@@ -52,13 +52,39 @@ export function collectPicks(
     if (g) out.push({ kind: 'saved', id, name: g.name })
   }
   const seen = new Set<string>()
+  const usedSaved = new Set(out.filter(p => p.kind === 'saved').map(p => (p as { id: string }).id))
   for (const n of newGuests) {
     const k = n.trim().toLowerCase()
     if (!k || seen.has(k)) continue
     seen.add(k)
+    // Tên trùng khách ĐÃ LƯU → dùng lại khách đó (không tạo bản mới/gộp im lặng ở backend).
+    const hit = saved.find(g => g.name.trim().toLowerCase() === k)
+    if (hit) {
+      if (!usedSaved.has(hit.id)) { usedSaved.add(hit.id); out.push({ kind: 'saved', id: hit.id, name: hit.name }) }
+      continue
+    }
     out.push({ kind: 'new', name: n.trim() })
   }
   return out
+}
+
+export type GuestNameResolution =
+  | { action: 'empty' }
+  | { action: 'new'; name: string }
+  | { action: 'select-saved'; id: string; name: string }
+  | { action: 'taken'; name: string }
+
+/**
+ * Khách mới gõ tên: trùng khách ĐÃ LƯU chưa ghép → chọn khách đó; trùng khách đã thuộc cặp → từ chối;
+ * còn lại → khách mới.
+ */
+export function resolveGuestName(rawName: string, saved: SavedGuest[], teams: TeamLike[]): GuestNameResolution {
+  const name = rawName.trim()
+  if (!name) return { action: 'empty' }
+  const hit = saved.find(g => g.name.trim().toLowerCase() === name.toLowerCase())
+  if (!hit) return { action: 'new', name }
+  if (takenPlayerKeys(teams).has(hit.id)) return { action: 'taken', name: hit.name }
+  return { action: 'select-saved', id: hit.id, name: hit.name }
 }
 
 const slot = (n: 1 | 2, p: PickedPlayer) =>

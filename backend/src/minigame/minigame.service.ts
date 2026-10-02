@@ -9,6 +9,8 @@ import { MinigameFormat, Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { deriveParticipantModel } from './sport-presets';
 
+type DbClient = Prisma.TransactionClient | PrismaService;
+
 @Injectable()
 export class MinigameService {
   constructor(
@@ -211,7 +213,8 @@ export class MinigameService {
     //   - [items]   → replace bằng danh sách mới (không nhân đôi khi lưu lại).
     const shouldUpdateGuests = Array.isArray(guests);
     if (shouldUpdateGuests) {
-      const mg = await this.prisma.minigame.findUnique({
+     await this.withMinigameLock(id, async (db) => {
+      const mg = await db.minigame.findUnique({
         where: { id },
         select: { settings: true },
       });
@@ -236,10 +239,17 @@ export class MinigameService {
           isGuest: true as const,
         };
       });
-      await this.prisma.minigame.update({
+      // Khách ĐANG thuộc một đội mà payload lỡ thiếu (client dữ liệu cũ) → GIỮ LẠI, không để đội
+      // tham chiếu khách đã biến mất (chống lost-update). Xoá khách khỏi đội phải xoá đội trước.
+      const { taken } = await this.getTakenPlayers(id, db);
+      for (const o of oldGuests)
+        if (!usedOld.has(o.id) && taken.has(o.id))
+          guestRecords.push({ id: o.id, name: o.name, phone: o.phone ?? null, isGuest: true as const });
+      await db.minigame.update({
         where: { id },
         data: { settings: { ...settings, guests: guestRecords } },
       });
+     });
     }
 
     return this.findOne(id, clubId);
@@ -339,12 +349,24 @@ export class MinigameService {
   }
 
   /** Thêm thành viên CLB (validate thuộc CLB) vào minigame_participants (bỏ qua trùng). */
-  private async addMemberParticipants(id: string, clubId: string, memberIds: string[]) {
+  private async addMemberParticipants(id: string, clubId: string, memberIds: string[], db: DbClient = this.prisma) {
     if (memberIds.length === 0) return;
-    await this.assertMembersInClub(clubId, memberIds);
-    await this.prisma.minigameParticipant.createMany({
+    await this.assertMembersInClub(clubId, memberIds, db);
+    await db.minigameParticipant.createMany({
       data: memberIds.map((memberId) => ({ minigameId: id, memberId })),
       skipDuplicates: true,
+    });
+  }
+
+  /**
+   * Chạy `fn` trong 1 transaction giữ advisory lock theo minigameId → các thao tác ghép cặp/ghi khách
+   * của CÙNG giải được tuần tự hoá (chống race check-then-insert giữa 2 request đồng thời).
+   * Lock tự nhả khi transaction kết thúc.
+   */
+  private async withMinigameLock<T>(id: string, fn: (db: DbClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${id}))`;
+      return fn(tx);
     });
   }
 
@@ -362,9 +384,9 @@ export class MinigameService {
   }
 
   /** Tập id (member + guest) đã thuộc 1 cặp/đội của giải + tên các đội hiện có. */
-  private async getTakenPlayers(id: string) {
+  private async getTakenPlayers(id: string, db: DbClient = this.prisma) {
     const teams =
-      (await this.prisma.minigameTeam.findMany({
+      (await db.minigameTeam.findMany({
         where: { minigameId: id },
         select: {
           name: true,
@@ -403,13 +425,6 @@ export class MinigameService {
     },
   ) {
     await this.assertOwnership(id, clubId);
-    const mgRow = await this.prisma.minigame.findUnique({
-      where: { id },
-      select: { settings: true },
-    });
-    const settings = this.asSettings(mgRow?.settings);
-    const guests = [...this.readGuests(settings)];
-
     const rawSlots = [
       { pid: dto.player1Id?.trim(), gname: dto.player1Guest?.trim() },
       { pid: dto.player2Id?.trim(), gname: dto.player2Guest?.trim() },
@@ -417,82 +432,99 @@ export class MinigameService {
     if (!rawSlots[0].pid && !rawSlots[0].gname)
       throw new BadRequestException('Thiếu người chơi thứ nhất của cặp');
 
-    // 1) Phân loại slot: khách (id đã lưu | tên) hay thành viên.
-    type Slot = { memberId?: string; guestId?: string; name: string };
-    let guestsChanged = false;
-    const slots: Array<Slot | undefined> = rawSlots.map((r) => {
-      if (r.pid) {
-        const g = guests.find((x) => x.id === r.pid);
-        if (g) return { guestId: g.id, name: g.name };
-        return { memberId: r.pid, name: '' };
-      }
-      if (r.gname) {
-        const g = this.findOrAddGuest(guests, r.gname);
-        if (g.added) guestsChanged = true;
-        return { guestId: g.id, name: g.name };
-      }
-      return undefined;
-    });
+    // Toàn bộ kiểm tra-trùng + ghi nằm trong 1 transaction có advisory lock (chống race) — lỗi → rollback,
+    // không để khách mồ côi / participant dở dang.
+    return this.withMinigameLock(id, async (db) => {
+      const mgRow = await db.minigame.findUnique({
+        where: { id },
+        select: { settings: true },
+      });
+      const settings = this.asSettings(mgRow?.settings);
+      const guests = [...this.readGuests(settings)];
 
-    // 2) Validate thành viên thuộc CLB + lấy tên.
-    const memberIds = [
-      ...new Set(slots.filter((s): s is Slot => !!s?.memberId).map((s) => s.memberId!)),
-    ];
-    if (memberIds.length > 0) {
-      const valid =
-        (await this.prisma.member.findMany({
-          where: { id: { in: memberIds }, clubId, isDeleted: false },
-          select: { id: true, fullName: true },
-        })) ?? [];
-      const nameOf = new Map(valid.map((m) => [m.id, m.fullName]));
-      for (const s of slots) {
-        if (s?.memberId) {
-          if (!nameOf.has(s.memberId))
-            throw new BadRequestException(
-              'Người chơi phải là thành viên CLB hoặc khách mời của giải đấu này',
-            );
-          s.name = nameOf.get(s.memberId) ?? '';
+      // 1) Phân loại slot: khách (id đã lưu | tên) hay thành viên.
+      type Slot = { memberId?: string; guestId?: string; name: string; byName?: boolean };
+      let guestsChanged = false;
+      const slots: Array<Slot | undefined> = rawSlots.map((r) => {
+        if (r.pid) {
+          const g = guests.find((x) => x.id === r.pid);
+          if (g) return { guestId: g.id, name: g.name };
+          return { memberId: r.pid, name: '' };
+        }
+        if (r.gname) {
+          const g = this.findOrAddGuest(guests, r.gname);
+          if (g.added) guestsChanged = true;
+          return { guestId: g.id, name: g.name, byName: !g.added };
+        }
+        return undefined;
+      });
+
+      // 2) Validate thành viên thuộc CLB + lấy tên.
+      const memberIds = [
+        ...new Set(slots.filter((s): s is Slot => !!s?.memberId).map((s) => s.memberId!)),
+      ];
+      if (memberIds.length > 0) {
+        const valid =
+          (await db.member.findMany({
+            where: { id: { in: memberIds }, clubId, isDeleted: false },
+            select: { id: true, fullName: true },
+          })) ?? [];
+        const nameOf = new Map(valid.map((m) => [m.id, m.fullName]));
+        for (const s of slots) {
+          if (s?.memberId) {
+            if (!nameOf.has(s.memberId))
+              throw new BadRequestException(
+                'Người chơi phải là thành viên CLB hoặc khách mời của giải đấu này',
+              );
+            s.name = nameOf.get(s.memberId) ?? '';
+          }
         }
       }
-    }
-    const slot1 = slots[0] as Slot;
-    const slot2 = slots[1];
+      const slot1 = slots[0] as Slot;
+      const slot2 = slots[1];
 
-    // 3) Cùng người ở 2 slot.
-    const key = (s?: Slot) => (s ? (s.memberId ?? s.guestId) : undefined);
-    if (slot2 && key(slot1) === key(slot2))
-      throw new BadRequestException('Một người không thể ghép cặp với chính mình');
+      // 3) Cùng người ở 2 slot.
+      const key = (s?: Slot) => (s ? (s.memberId ?? s.guestId) : undefined);
+      if (slot2 && key(slot1) === key(slot2))
+        throw new BadRequestException('Một người không thể ghép cặp với chính mình');
 
-    // 4) Đã thuộc cặp khác trong giải + chống trùng tên đội.
-    const { teams: existingTeams, taken, maxNum } = await this.getTakenPlayers(id);
-    for (const s of [slot1, slot2]) {
-      if (s && taken.has(key(s) as string))
-        throw new BadRequestException(`${s.name || 'Người chơi'} đã thuộc một cặp khác`);
-    }
-    let teamName = dto.name;
-    if (existingTeams.some((t) => t.name === teamName)) teamName = `Đôi ${maxNum + 1}`;
+      // 4) Đã thuộc cặp khác trong giải + chống trùng tên đội.
+      const { teams: existingTeams, taken, maxNum } = await this.getTakenPlayers(id, db);
+      for (const s of [slot1, slot2]) {
+        if (s && taken.has(key(s) as string)) {
+          if (s.byName) throw new BadRequestException(this.guestNameTakenMessage(s.name));
+          throw new BadRequestException(`${s.name || 'Người chơi'} đã thuộc một cặp khác`);
+        }
+      }
+      let teamName = dto.name;
+      if (existingTeams.some((t) => t.name === teamName)) teamName = `Đôi ${maxNum + 1}`;
 
-    // 5) Ghi: thành viên → participants; khách mới → settings.guests (giữ nguyên id khách khác).
-    await this.addMemberParticipants(id, clubId, memberIds);
-    if (guestsChanged) {
-      await this.prisma.minigame.update({
-        where: { id },
-        data: { settings: { ...settings, guests } as Prisma.InputJsonValue },
+      // 5) Ghi (cùng transaction): thành viên → participants; khách mới → settings.guests; rồi tạo đội.
+      await this.addMemberParticipants(id, clubId, memberIds, db);
+      if (guestsChanged) {
+        await db.minigame.update({
+          where: { id },
+          data: { settings: { ...settings, guests } as Prisma.InputJsonValue },
+        });
+      }
+
+      return db.minigameTeam.create({
+        data: {
+          minigameId: id,
+          name: teamName,
+          ...this.slotCols('player1', slot1),
+          ...this.slotCols('player2', slot2 ?? undefined),
+        },
+        include: {
+          player1: { select: { id: true, fullName: true } },
+          player2: { select: { id: true, fullName: true } },
+        },
       });
-    }
-
-    return this.prisma.minigameTeam.create({
-      data: {
-        minigameId: id,
-        name: teamName,
-        ...this.slotCols('player1', slot1),
-        ...this.slotCols('player2', slot2 ?? undefined),
-      },
-      include: {
-        player1: { select: { id: true, fullName: true } },
-        player2: { select: { id: true, fullName: true } },
-      },
     });
+  }
+
+  private guestNameTakenMessage(name: string) {
+    return `Khách "${name}" đã thuộc một cặp. Hãy đặt tên khác (ví dụ thêm số/hậu tố).`;
   }
 
   /**
@@ -516,76 +548,119 @@ export class MinigameService {
       dto.pairingMode === 'BALANCED_SKILL_PAIRING'
         ? 'BALANCED_SKILL_PAIRING'
         : 'RANDOM_PAIRING';
-    const existingMatches = await this.prisma.minigameMatch.count({
-      where: { minigameId: id },
-    });
-    if (existingMatches > 0)
-      throw new BadRequestException(
-        'Đã có lịch thi đấu — hãy xoá lịch trước khi ghép thêm cặp.',
-      );
 
-    // 1) Nạp người được chọn vào pool.
-    const memberIds = [...new Set(dto.memberIds ?? [])];
-    await this.addMemberParticipants(id, clubId, memberIds);
-    const row = await this.prisma.minigame.findUnique({
-      where: { id },
-      select: { settings: true },
-    });
-    const settings = this.asSettings(row?.settings);
-    const guests = [...this.readGuests(settings)];
-    const selectedGuestIds = new Set<string>();
-    for (const gid of dto.guestIds ?? []) {
-      if (!guests.some((g) => g.id === gid))
-        throw new BadRequestException('Khách đã chọn không tồn tại trong giải');
-      selectedGuestIds.add(gid);
-    }
-    let guestsChanged = false;
-    for (const name of this.cleanGuestNames(dto.guests)) {
-      const g = this.findOrAddGuest(guests, name);
-      if (g.added) guestsChanged = true;
-      selectedGuestIds.add(g.id);
-    }
-    const hasSelection = memberIds.length > 0 || selectedGuestIds.size > 0;
-    await this.prisma.minigame.update({
-      where: { id },
-      data: {
-        participantType: 'PAIR',
-        settings: {
-          ...settings,
-          ...(guestsChanged ? { guests } : {}),
-          pairingMode,
-        } as Prisma.InputJsonValue,
-      },
-    });
-
-    // 2) Chỉ ghép nhóm được chọn và CHƯA thuộc cặp nào.
-    const { taken, maxNum } = await this.getTakenPlayers(id);
-    const memberSel = new Set(memberIds);
-    const pool = (await this.getPlayerPool(id)).filter((p) => {
-      const key = (p.memberId ?? p.guestId) as string;
-      if (taken.has(key)) return false;
-      if (!hasSelection) return true;
-      return p.memberId ? memberSel.has(p.memberId) : selectedGuestIds.has(p.guestId as string);
-    });
-    if (pool.length < 2)
-      throw new BadRequestException('Cần chọn ít nhất 2 người chưa ghép cặp');
-
-    const ordered = this.orderPoolForPairing(pool, pairingMode);
-    const pairs: Prisma.MinigameTeamCreateManyInput[] = [];
-    for (let i = 0; i + 1 < ordered.length; i += 2)
-      pairs.push({
-        minigameId: id,
-        name: `Đôi ${maxNum + Math.floor(i / 2) + 1}`,
-        ...this.slotCols('player1', ordered[i]),
-        ...this.slotCols('player2', ordered[i + 1]),
+    // Tuần tự hoá theo giải (advisory lock) + VALIDATE HẾT trước khi ghi bất kỳ thứ gì.
+    const result = await this.withMinigameLock(id, async (db) => {
+      const existingMatches = await db.minigameMatch.count({
+        where: { minigameId: id },
       });
-    await this.prisma.minigameTeam.createMany({ data: pairs });
-    const unpaired = ordered.length % 2 === 1 ? [ordered[ordered.length - 1]] : [];
+      if (existingMatches > 0)
+        throw new BadRequestException(
+          'Đã có lịch thi đấu — hãy xoá lịch trước khi ghép thêm cặp.',
+        );
+
+      // 1) Dựng pool trong BỘ NHỚ (chưa ghi DB).
+      const memberIds = [...new Set(dto.memberIds ?? [])];
+      await this.assertMembersInClub(clubId, memberIds, db);
+      const row = await db.minigame.findUnique({
+        where: { id },
+        select: { settings: true },
+      });
+      const settings = this.asSettings(row?.settings);
+      const guests = [...this.readGuests(settings)];
+      const { taken, maxNum } = await this.getTakenPlayers(id, db);
+
+      const selectedGuestIds = new Set<string>();
+      for (const gid of dto.guestIds ?? []) {
+        if (!guests.some((g) => g.id === gid))
+          throw new BadRequestException('Khách đã chọn không tồn tại trong giải');
+        selectedGuestIds.add(gid);
+      }
+      let guestsChanged = false;
+      for (const name of this.cleanGuestNames(dto.guests)) {
+        const g = this.findOrAddGuest(guests, name);
+        if (g.added) guestsChanged = true;
+        else if (taken.has(g.id) && !selectedGuestIds.has(g.id))
+          throw new BadRequestException(this.guestNameTakenMessage(g.name));
+        selectedGuestIds.add(g.id);
+      }
+      const hasSelection = memberIds.length > 0 || selectedGuestIds.size > 0;
+
+      const parts =
+        (await db.minigameParticipant.findMany({
+          where: { minigameId: id },
+          include: { member: { select: { fullName: true, skillLevel: true } } },
+        })) ?? [];
+      type PoolItem = { memberId?: string; guestId?: string; name: string; skill: number };
+      const all: PoolItem[] = parts.map((p) => ({
+        memberId: p.memberId,
+        name: p.member?.fullName ?? '',
+        skill: p.member?.skillLevel ?? 3,
+      }));
+      // Thành viên được chọn nhưng CHƯA là participant → lấy tên/skill từ bảng member.
+      const missing = memberIds.filter((m) => !all.some((x) => x.memberId === m));
+      if (missing.length > 0) {
+        const rows =
+          (await db.member.findMany({
+            where: { id: { in: missing }, clubId, isDeleted: false },
+            select: { id: true, fullName: true, skillLevel: true },
+          })) ?? [];
+        for (const m of rows)
+          all.push({ memberId: m.id, name: m.fullName, skill: m.skillLevel ?? 3 });
+      }
+      for (const g of guests) all.push({ guestId: g.id, name: g.name, skill: 3 });
+
+      const memberSel = new Set(memberIds);
+      const keyOf = (p: PoolItem) => (p.memberId ?? p.guestId) as string;
+      const pool = all.filter((p) => {
+        if (taken.has(keyOf(p))) return false;
+        if (!hasSelection) return true;
+        return p.memberId ? memberSel.has(p.memberId) : selectedGuestIds.has(p.guestId as string);
+      });
+      if (pool.length < 2) {
+        const alreadyPaired = all
+          .filter((p) => taken.has(keyOf(p)))
+          .filter((p) => (p.memberId ? memberSel.has(p.memberId) : selectedGuestIds.has(p.guestId as string)))
+          .map((p) => p.name);
+        throw new BadRequestException(
+          `Cần chọn ít nhất 2 người chưa ghép cặp.${
+            alreadyPaired.length > 0 ? ` Đã thuộc một cặp: ${alreadyPaired.join(', ')}.` : ''
+          }`,
+        );
+      }
+
+      // 2) Hợp lệ → mới GHI (cùng transaction).
+      const ordered = this.orderPoolForPairing(pool, pairingMode);
+      const pairs: Prisma.MinigameTeamCreateManyInput[] = [];
+      for (let i = 0; i + 1 < ordered.length; i += 2)
+        pairs.push({
+          minigameId: id,
+          name: `Đôi ${maxNum + Math.floor(i / 2) + 1}`,
+          ...this.slotCols('player1', ordered[i]),
+          ...this.slotCols('player2', ordered[i + 1]),
+        });
+      await this.addMemberParticipants(id, clubId, memberIds, db);
+      await db.minigame.update({
+        where: { id },
+        data: {
+          participantType: 'PAIR',
+          settings: {
+            ...settings,
+            ...(guestsChanged ? { guests } : {}),
+            pairingMode,
+          } as Prisma.InputJsonValue,
+        },
+      });
+      await db.minigameTeam.createMany({ data: pairs });
+      const unpaired = ordered.length % 2 === 1 ? [ordered[ordered.length - 1]] : [];
+      return { pairedCount: pairs.length, unpaired };
+    });
+
     const mg = await this.findOne(id, clubId);
     return {
       ...mg,
-      pairedCount: pairs.length,
-      unpaired: unpaired.map((p) => ({
+      pairedCount: result.pairedCount,
+      unpaired: result.unpaired.map((p) => ({
         id: p.memberId ?? p.guestId,
         name: p.name,
         isGuest: !!p.guestId,
@@ -601,9 +676,9 @@ export class MinigameService {
       .slice(0, 50);
   }
 
-  private async assertMembersInClub(clubId: string, ids: string[]) {
+  private async assertMembersInClub(clubId: string, ids: string[], db: DbClient = this.prisma) {
     if (ids.length === 0) return;
-    const valid = await this.prisma.member.findMany({
+    const valid = await db.member.findMany({
       where: { clubId, id: { in: ids }, isDeleted: false },
       select: { id: true },
     });
@@ -687,6 +762,24 @@ export class MinigameService {
       where: { minigameId: id, OR: [{ teamAId: teamId }, { teamBId: teamId }] },
     });
     return this.prisma.minigameTeam.delete({ where: { id: teamId } });
+  }
+
+  /** XOÁ HẾT đội/cặp của giải (kèm mọi trận liên quan) trong 1 transaction — giống deleteTeam nhưng hàng loạt. */
+  async deleteAllTeams(id: string, clubId: string) {
+    await this.assertOwnership(id, clubId);
+    return this.withMinigameLock(id, async (db) => {
+      const teams = await db.minigameTeam.findMany({
+        where: { minigameId: id },
+        select: { id: true },
+      });
+      if (teams.length === 0) return { deleted: 0 };
+      const ids = teams.map((t) => t.id);
+      await db.minigameMatch.deleteMany({
+        where: { minigameId: id, OR: [{ teamAId: { in: ids } }, { teamBId: { in: ids } }] },
+      });
+      const { count } = await db.minigameTeam.deleteMany({ where: { minigameId: id } });
+      return { deleted: count };
+    });
   }
 
   async clearSchedule(id: string, clubId: string) {

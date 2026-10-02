@@ -9,6 +9,7 @@
  * hiện có; thiếu dữ liệu → EmptyState / "Chưa có dữ liệu" (không bịa số).
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { getBrandClubName } from '../../store/brandingStore'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus, Users, UserCheck, UserMinus, Sparkles, X, Edit2, Trash2, Power,
@@ -367,7 +368,7 @@ export function Members() {
   const members = clubData.members
   // Option 3: self-fetch cục bộ (không đọc global store) — cột "đóng góp" + lịch sử theo TV.
   const { data: contributions } = useClubContributions(clubId)
-  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
+  const clubName = (clubData.settings?.name as string | undefined) ?? getBrandClubName()
   const isMobile = useIsMobile()
 
   const setMembers = (fn: (prev: Member[]) => Member[]) =>

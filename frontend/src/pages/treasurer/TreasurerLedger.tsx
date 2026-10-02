@@ -48,6 +48,9 @@ export function TreasurerLedger() {
   )
   const rowsWithBalance = ledger.rows
   const { totalIncome, totalExpense, closingBalance: currentBalance } = ledger
+  // Đang tải / lỗi số dư chuyển kỳ → KHÔNG hiện số dư tính với opening=0 (sai). Hiện "—" + ghi chú.
+  const blocked = !!activePeriod && opening === null
+  const fmtBal = (n: number) => (blocked ? '—' : formatVND(n))
 
   const filtered = rowsWithBalance.filter(r => {
     if (typeFilter !== 'all' && r.type !== typeFilter) return false
@@ -63,15 +66,14 @@ export function TreasurerLedger() {
   // Export ĐÚNG tập đang hiển thị (filtered), số dư chạy tuyệt đối từ số dư mở đầu của kỳ.
   const exportRows = filtered.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance }))
   const exportName = `${activePeriod?.name ?? 'So_Quy'}${filterNote}`
-  const fTotalIncome = filtered.filter(r => r.type === 'Thu').reduce((s, r) => s + r.amount, 0)
-  const fTotalExpense = filtered.filter(r => r.type === 'Chi').reduce((s, r) => s - r.amount, 0)
-  const blocked = !!activePeriod && opening === null
+  // Khi lọc: tổng thu/chi + số dư cuối kỳ trong file đều là TOÀN SỔ (nhãn "(toàn sổ)") để khớp nhau.
+  // `ledger.totalExpense` đã là số dương (xem finance-ledger.ts).
   const onExcel = () => run(
-    () => exportLedgerExcel(exportName, exportRows, ledger.openingBalance, currentBalance),
+    () => exportLedgerExcel(exportName, exportRows, ledger.openingBalance, currentBalance, { filtered: isFiltered, totalIncome, totalExpense }),
     { success: 'Đã xuất Excel sổ quỹ!', empty: exportRows.length === 0 || blocked, emptyMsg: blocked ? 'Chưa tải được số dư chuyển kỳ, thử lại sau' : 'Chưa có giao dịch để xuất' },
   )
   const onPdf = () => run(
-    () => exportLedgerPDF(exportName, exportRows, fTotalIncome, fTotalExpense, currentBalance, ledger.openingBalance),
+    () => exportLedgerPDF(exportName, exportRows, totalIncome, totalExpense, currentBalance, ledger.openingBalance, { filtered: isFiltered }),
     { success: 'Đã xuất PDF sổ quỹ!', empty: exportRows.length === 0 || blocked, emptyMsg: blocked ? 'Chưa tải được số dư chuyển kỳ, thử lại sau' : 'Chưa có giao dịch để xuất' },
   )
 
@@ -98,7 +100,7 @@ export function TreasurerLedger() {
             {[
               { label: 'Tổng thu', value: formatVND(totalIncome), color: 'text-emerald-600' },
               { label: 'Tổng chi', value: formatVND(totalExpense), color: 'text-red-500' },
-              { label: 'Số dư', value: formatVND(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500' },
+              { label: 'Số dư', value: fmtBal(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
                 <div className={`text-sm font-[800] ${k.color} truncate`}>{k.value}</div>
@@ -144,7 +146,7 @@ export function TreasurerLedger() {
                         {row.amount > 0 ? '+' : ''}{formatVND(row.amount)}
                       </div>
                       <div className={`text-xs font-[600] mt-0.5 ${row.balance >= 0 ? '[color:var(--pf-color-muted)]' : 'text-red-500'}`}>
-                        Dư: {formatVND(row.balance)}
+                        Dư: {fmtBal(row.balance)}
                       </div>
                     </div>
                   </div>
@@ -162,8 +164,8 @@ export function TreasurerLedger() {
       <PageHeader
         title="Sổ Quỹ Chi Tiết"
         subtitle={activePeriod
-          ? `${activePeriod.name} · Quỹ Chính · Chuyển kỳ: ${formatVND(ledger.openingBalance)} · Số dư: ${formatVND(currentBalance)}`
-          : `Số dư hiện tại: ${formatVND(currentBalance)}`}
+          ? `${activePeriod.name} · Quỹ Chính · Chuyển kỳ: ${fmtBal(ledger.openingBalance)} · Số dư: ${fmtBal(currentBalance)}`
+          : `Số dư hiện tại: ${fmtBal(currentBalance)}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={onExcel} disabled={busy}>
@@ -207,9 +209,9 @@ export function TreasurerLedger() {
               <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Số dư</p>
             </div>
             <p className={`text-xl font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
-              {formatVND(currentBalance)}
+              {fmtBal(currentBalance)}
             </p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.length} giao dịch</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{blocked ? 'Đang tải số dư chuyển kỳ…' : `${rowsWithBalance.length} giao dịch`}</p>
           </div>
         </div>
 
@@ -271,7 +273,7 @@ export function TreasurerLedger() {
                       {row.amount > 0 ? '+' : ''}{formatVND(row.amount)}
                     </td>
                     <td className={`text-right font-medium ${row.balance >= 0 ? '[color:var(--pf-text)]' : 'text-red-500'}`}>
-                      {formatVND(row.balance)}
+                      {fmtBal(row.balance)}
                     </td>
                   </tr>
                 ))}
@@ -279,8 +281,8 @@ export function TreasurerLedger() {
               <tfoot>
                 <tr className="border-t-2 border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]">
                   <td colSpan={3} className="px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Số dư cuối kỳ</td>
-                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{currentBalance >= 0 ? '+' : ''}{formatVND(currentBalance)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-600'}`}>{formatVND(currentBalance)}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{!blocked && currentBalance >= 0 ? '+' : ''}{fmtBal(currentBalance)}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-600'}`}>{fmtBal(currentBalance)}</td>
                 </tr>
               </tfoot>
             </table>

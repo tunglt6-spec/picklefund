@@ -26,7 +26,8 @@ import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel, type ReportExpenseRow } from '../../lib/export'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { useBrandingStore } from '../../store/brandingStore'
+import { canExportOrgWideData } from '../../lib/exportAccess'
+import { useBrandingStore, getBrandClubName } from '../../store/brandingStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
@@ -164,7 +165,7 @@ export function Reports() {
 
   const hasPeriods = clubData.fundPeriods.length > 0
   const periodName = activePeriod?.name ?? ''
-  const clubName = (clubData.settings?.name as string | undefined) || brandDisplayName || 'CLB Pickleball'
+  const clubName = (clubData.settings?.name as string | undefined) || brandDisplayName || getBrandClubName()
 
   /* ── KPI tài chính CHÍNH THỨC — chỉ từ backend fundSummary (không recompute) ── */
   const fs = fundSummary
@@ -338,9 +339,9 @@ export function Reports() {
     try {
       // exportReportsPDF trả Promise → await để bắt lỗi; chỉ báo success sau khi file xong.
       const { rows: expenseRows, failed } = await buildExpenseRows()
-      await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport(), expenseRows)
+      const saved = await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport(), expenseRows)
       if (failed) toast.error(`Đã xuất PDF (${scopeNote()}).${missingExpenseNote}`, { duration: 7000 })
-      else toast.success(`Đã xuất PDF · ${scopeNote()}`)
+      else if (saved !== false) toast.success(`Đã xuất PDF · ${scopeNote()}`)
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportPDF failed:', e)
       toast.error(EXPORT_FAILED)
@@ -407,7 +408,9 @@ export function Reports() {
     </div>
   )
 
-  const headerActions = (
+  // MEMBER_VIEW chỉ XEM: không xuất bảng kê/infographic chứa tiền từng thành viên khác.
+  const canExport = canExportOrgWideData(user?.role)
+  const headerActions = !canExport ? undefined : (
     <>
       <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting} />
       <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
@@ -601,7 +604,7 @@ export function Reports() {
           )}
 
           {/* ── Export panel ── */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          {canExport && (<div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Xuất báo cáo</h3>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
@@ -623,10 +626,10 @@ export function Reports() {
               <ActionButton variant="secondary" icon={<FileSpreadsheet size={15} />} onClick={doExportExcel} disabled={!officialReady || exporting} title={officialReady ? 'Xuất Excel' : EXPORT_HINT}>Excel</ActionButton>
               <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
             </div>
-          </div>
+          </div>)}
 
           {/* ── Mobile sticky quick action: Infographic ── */}
-          {isMobile && (
+          {isMobile && canExport && (
             <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
               <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo Infographic" icon={<Sparkles size={20} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT} />
             </div>
@@ -674,7 +677,7 @@ export function Reports() {
       )}
 
       {/* ── Infographic modal — chỉ mở khi đủ official field (không fallback 0/fake) ── */}
-      {showInfographic && infographicReady && (
+      {showInfographic && infographicReady && canExport && (
         <InfographicPreviewModal
           data={mapToInfographicData({
             clubName,

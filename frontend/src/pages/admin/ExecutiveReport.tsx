@@ -166,12 +166,12 @@ export function ExecutiveReport() {
     setExporting(true)
     try {
       prepBranding()
-      await captureElementAsReportPng(CAPTURE_ID, `BaoCao_DieuHanh_${data.meta.periodName}`, {
+      const saved = await captureElementAsReportPng(CAPTURE_ID, `BaoCao_DieuHanh_${data.meta.periodName}`, {
         title: 'Báo cáo điều hành',
         subtitle: `${data.meta.clubName} · ${data.meta.periodName}`,
         meta: `Điểm sức khỏe CLB: ${data.summary.clubHealthScore}/100`,
       })
-      toast.success('Đã xuất ảnh báo cáo')
+      if (saved !== false) toast.success('Đã xuất ảnh báo cáo')
     } catch {
       toast.error('Không xuất được ảnh')
     } finally {

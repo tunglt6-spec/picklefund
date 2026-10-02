@@ -54,6 +54,11 @@ const mockPrisma = {
     upsert: jest.fn(),
   },
   member: { findMany: jest.fn() },
+  $executeRaw: jest.fn().mockResolvedValue(0),
+  // Interactive transaction: chạy callback với chính mock (không mô phỏng rollback → test kiểm "không ghi trước validate").
+  $transaction: jest.fn((arg: unknown) =>
+    typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mockPrisma) : Promise.all(arg as Promise<unknown>[]),
+  ),
 };
 
 const mockEvents = { publish: jest.fn() };
@@ -648,7 +653,7 @@ describe('MinigameService', () => {
       ).rejects.toThrow('Mr m-1 đã thuộc một cặp khác');
       await expect(
         service.createTeam('mg-1', 'club-1', { name: 'Đôi 2', player1Id: 'm-2', player2Guest: 'khách a' }),
-      ).rejects.toThrow('Khách A đã thuộc một cặp khác');
+      ).rejects.toThrow('Khách "Khách A" đã thuộc một cặp. Hãy đặt tên khác');
       expect(teams).toHaveLength(1);
     });
 
@@ -688,6 +693,83 @@ describe('MinigameService', () => {
       expect(res.unpaired).toHaveLength(0);
       expect(teams[0].player1Id ?? teams[0].player2Id).toBe('m-1');
       expect(teams[0].player1GuestId ?? teams[0].player2GuestId).toMatch(/^guest-/);
+    });
+
+    it('createTeam: khách gõ trùng TÊN khách đã lưu → dùng khách đó; nếu khách đó đã thuộc cặp → lỗi rõ, không ghi', async () => {
+      settings = { guests: [{ id: 'g-1', name: 'Khách A' }] };
+      await service.createTeam('mg-1', 'club-1', { name: 'Đôi 1', player1Id: 'm-1', player2Guest: 'khách a' });
+      expect(teams[0].player2GuestId).toBe('g-1');
+      expect((settings.guests as any[]).length).toBe(1); // không tạo bản mới
+      mockPrisma.minigameTeam.create.mockClear();
+      await expect(
+        service.createTeam('mg-1', 'club-1', { name: 'Đôi 2', player1Id: 'm-2', player2Guest: 'KHÁCH A' }),
+      ).rejects.toThrow('đã thuộc một cặp. Hãy đặt tên khác');
+      expect(mockPrisma.minigameTeam.create).not.toHaveBeenCalled();
+    });
+
+    it('createTeam: dùng transaction + advisory lock; lỗi validate không ghi guests/participants/team', async () => {
+      settings = {};
+      mockPrisma.minigame.update.mockClear();
+      mockPrisma.minigameParticipant.createMany.mockClear();
+      await expect(
+        service.createTeam('mg-1', 'club-1', { name: 'x', player1Id: 'm-1', player2Id: 'ghost' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.minigame.update).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameParticipant.createMany).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameTeam.create).not.toHaveBeenCalled();
+    });
+
+    it('autoPair: tên khách mới trùng khách đã thuộc cặp → lỗi rõ, KHÔNG ghi gì', async () => {
+      settings = { guests: [{ id: 'g-1', name: 'Khách A' }] };
+      teams = [{ name: 'Đôi 1', player1Id: 'm-1', player2Id: null, player1GuestId: null, player2GuestId: 'g-1' }];
+      mockPrisma.minigame.update.mockClear();
+      await expect(
+        service.autoPairEntrants('mg-1', 'club-1', { memberIds: ['m-2', 'm-3'], guests: [{ name: 'khách a' }] }),
+      ).rejects.toThrow('đã thuộc một cặp. Hãy đặt tên khác');
+      expect(mockPrisma.minigame.update).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameParticipant.createMany).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameTeam.createMany).not.toHaveBeenCalled();
+    });
+
+    it('autoPair: <2 người chưa ghép → lỗi nêu tên người đã thuộc cặp và KHÔNG ghi (update/createMany)', async () => {
+      teams = [{ name: 'Đôi 1', player1Id: 'm-1', player2Id: 'm-2', player1GuestId: null, player2GuestId: null }];
+      mockPrisma.minigameParticipant.findMany.mockResolvedValue([
+        { memberId: 'm-1', member: { fullName: 'Mr m-1', skillLevel: 3 } },
+        { memberId: 'm-2', member: { fullName: 'Mr m-2', skillLevel: 3 } },
+      ]);
+      mockPrisma.minigame.update.mockClear();
+      mockPrisma.minigameParticipant.createMany.mockClear();
+      await expect(
+        service.autoPairEntrants('mg-1', 'club-1', { memberIds: ['m-1', 'm-2', 'm-3'] }),
+      ).rejects.toThrow(/Đã thuộc một cặp: Mr m-1, Mr m-2/);
+      expect(mockPrisma.minigame.update).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameParticipant.createMany).not.toHaveBeenCalled();
+      expect(mockPrisma.minigameTeam.createMany).not.toHaveBeenCalled();
+    });
+
+    it('addParticipants: giữ lại khách đang thuộc đội dù payload thiếu (chống lost-update)', async () => {
+      settings = { guests: [{ id: 'g-1', name: 'A' }, { id: 'g-2', name: 'B' }] };
+      teams = [{ name: 'Đôi 1', player1Id: null, player2Id: null, player1GuestId: 'g-1', player2GuestId: null }];
+      await service.addParticipants('mg-1', 'club-1', [], [{ id: 'g-2', name: 'B' }, { name: 'C' }]);
+      const ids = (settings.guests as any[]).map((g) => g.id);
+      expect(ids).toContain('g-1');
+      expect(ids).toContain('g-2');
+      expect(ids).toHaveLength(3);
+    });
+
+    it('deleteAllTeams: xoá trận liên quan + toàn bộ đội trong 1 transaction', async () => {
+      mockPrisma.minigameTeam.findMany.mockResolvedValue([{ id: 't-1' }, { id: 't-2' }]);
+      mockPrisma.minigameMatch.deleteMany.mockResolvedValue({ count: 3 });
+      mockPrisma.minigameTeam.deleteMany.mockResolvedValue({ count: 2 });
+      const r = await service.deleteAllTeams('mg-1', 'club-1');
+      expect(r).toEqual({ deleted: 2 });
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(mockPrisma.minigameMatch.deleteMany).toHaveBeenCalledWith({
+        where: { minigameId: 'mg-1', OR: [{ teamAId: { in: ['t-1', 't-2'] } }, { teamBId: { in: ['t-1', 't-2'] } }] },
+      });
+      expect(mockPrisma.minigameTeam.deleteMany).toHaveBeenCalledWith({ where: { minigameId: 'mg-1' } });
     });
 
     it('autoPair: dùng guestIds khách đã lưu; <2 người chưa ghép → lỗi; đã có lịch → lỗi', async () => {

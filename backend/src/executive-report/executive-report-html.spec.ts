@@ -1,4 +1,5 @@
-import { buildReportHtml, esc } from './executive-report-html';
+import { aiBlocksHtml, buildReportHtml, esc } from './executive-report-html';
+import { parseAiBlocks } from './executive-report-model';
 
 // Báo cáo tối thiểu đủ trường để buildReportHtml chạy (số liệu không quan trọng ở đây).
 function report(clubName: string): any {
@@ -95,6 +96,31 @@ describe('executive-report-html', () => {
       expect(html).not.toContain('<script>1');
       expect(html).not.toContain('<script>alert(1)');
       expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;&quot;&#39;');
+    });
+  });
+
+  describe('Tóm tắt AI (markdown thô)', () => {
+    const raw = 'Điểm nổi bật:\n* Quỹ ổn định <b>x</b>\n- Tham gia **tăng** 5%\nRủi ro cần lưu ý:\n* Công nợ 3 TV\nĐoạn kết thúc.';
+
+    it('parse bullet / tiêu đề / đoạn, bỏ ký tự "* " và ** thô', () => {
+      const b = parseAiBlocks(raw);
+      expect(b.map((x) => x.kind)).toEqual(['heading', 'bullet', 'bullet', 'heading', 'bullet', 'para']);
+      expect(b[2].text).toBe('Tham gia tăng 5%');
+      expect(b.every((x) => !/^[*-]\s/.test(x.text) && !x.text.includes('**'))).toBe(true);
+    });
+
+    it('HTML: <li> chấm tròn + tiêu đề đậm, escape đầy đủ, không còn "* " thô', () => {
+      const html = aiBlocksHtml(raw);
+      expect(html).toContain('<div class="ah">Điểm nổi bật:</div>');
+      expect(html).toContain('<li>Quỹ ổn định &lt;b&gt;x&lt;/b&gt;</li>');
+      expect(html).not.toContain('<b>x</b>');
+      expect(html).not.toMatch(/>\s*\*\s/);
+      expect((html.match(/<ul>/g) ?? []).length).toBe(2);
+    });
+
+    it('buildReportHtml nhúng khối AI đã parse (không còn "* " thô)', () => {
+      const html = buildReportHtml(report('CLB X'), '* Một\n* Hai');
+      expect(html).toContain('<li>Một</li><li>Hai</li>');
     });
   });
 });

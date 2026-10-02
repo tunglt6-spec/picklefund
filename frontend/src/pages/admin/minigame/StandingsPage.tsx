@@ -68,7 +68,7 @@ export function StandingsPage() {
 
   const fileBase = `BXH_${mg.name.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')}`
   const doExportPng = async () => {
-    try { await captureElementAsReportPng(EXPORT_ID, fileBase, { title: 'Bảng xếp hạng', subtitle: mg.name }); toast.success('Đã tải ảnh bảng xếp hạng') }
+    try { const saved = await captureElementAsReportPng(EXPORT_ID, fileBase, { title: 'Bảng xếp hạng', subtitle: mg.name }); if (saved !== false) toast.success('Đã tải ảnh bảng xếp hạng') }
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
@@ -78,7 +78,7 @@ export function StandingsPage() {
       const rowsData = [...standings].sort((a, b) =>
         b.rankingPoints - a.rankingPoints || b.pointDifference - a.pointDifference || b.pointsFor - a.pointsFor,
       )
-      await exportStandingsPDF({
+      const saved = await exportStandingsPDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
         tournamentName: mg.name,
         sportLabel: SPORT_LABEL[mg.sport ?? 'PICKLEBALL'] ?? 'Giải đấu',
@@ -108,7 +108,7 @@ export function StandingsPage() {
           pts: s.rankingPoints,
         })),
       })
-      toast.success('Đã tải PDF bảng xếp hạng')
+      if (saved !== false) toast.success('Đã tải PDF bảng xếp hạng')
     } catch { toast.error('Xuất PDF thất bại') }
   }
   const doShare = async () => {
