@@ -5,7 +5,6 @@ import {
   AIR,
   COLORS,
   CONTENT_W,
-  CONTENT_H,
   GLASS,
   PAGE,
   SPACE,
@@ -31,8 +30,6 @@ export interface ExecPdfOpts {
   logoDataUri?: string | null;
   brandColor?: string | null;
   now?: Date;
-  /** Ra: độ lấp (%) vùng nội dung của từng trang (đáy nội dung thực dùng / vùng khả dụng) — phục vụ kiểm thử. */
-  metrics?: { pages: number[] };
 }
 
 const L = PAGE.left;
@@ -221,7 +218,13 @@ export function buildExecutiveReportPdf(
   };
   const tcol = (t: NumTone, v = '') => TN[toneOfValue(v, t)];
 
-  let y: number = PAGE.top;
+  let y = PAGE.top;
+  const ensure = (h: number) => {
+    if (y + h > LIMIT_Y) {
+      doc.addPage();
+      y = PAGE.top;
+    }
+  };
 
   // ── logo / monogram (tròn trắng, nổi trên băng brand) ─────────────────
   const drawLogo = (x: number, yy: number, size: number) => {
@@ -251,190 +254,116 @@ export function buildExecutiveReportPdf(
     doc.text(m.mono, x + size / 2, yy + size / 2 + (size >= 14 ? 2.2 : 1.4), { align: 'center' });
   };
 
-  // ── helper khối ────────────────────────────────────────────────────
-  /** Bước dòng (mm) của chữ cỡ `size` pt theo line-height token. */
-  const LH = (size: number) => (size * AIR.lineHeight * 25.4) / 72;
-  /** Mỗi trang: đáy nội dung thực dùng (mm) — phục vụ đo độ lấp + test. */
-  const pageEnds: number[] = [PAGE.top];
-  let pageNo = 1;
-  const mark = () => {
-    pageEnds[pageNo - 1] = Math.max(pageEnds[pageNo - 1] ?? PAGE.top, y);
-  };
-  const newPage = () => {
-    doc.addPage();
-    pageNo += 1;
-    y = PAGE.top;
-    pageEnds[pageNo - 1] = PAGE.top;
-  };
-  /** Chừa chỗ h mm cho một khối KHÔNG được ngắt; không đủ → sang trang mới (nội dung chảy liên tục, không ép trang). */
-  const ensure = (h: number) => {
-    if (y + h > LIMIT_Y + 0.01) newPage();
-  };
-  /** Kết thúc khối: ghi đáy nội dung, cộng khoảng cách mục. */
-  const endBlock = (gap: number = AIR.section) => {
-    mark();
-    y += gap;
-  };
-  /** Tiêu đề khối: vạch brand trái + nhãn xám + tiêu đề HOA đậm brandInk (maxW>0: cột hẹp, co chữ để không xuống dòng). */
-  const headBlock = (x: number, yy: number, num: string, eyebrow: string, title: string, maxW = 0) => {
-    fill(B.brand);
-    doc.rect(x, yy, 1.2, 9, 'F');
-    font(TYPE.label, true, COLORS.muted);
-    doc.text(up(`${num} · ${eyebrow}`), x + 3.5, yy + 2.6);
-    let sz: number = maxW ? 9.5 : TYPE.h2;
-    font(sz, true, B.brandInk);
-    while (maxW && sz > 8 && doc.getTextWidth(up(title)) > maxW - 4) {
-      sz -= 0.25;
-      doc.setFontSize(sz);
-    }
-    doc.text(up(title), x + 3.5, yy + 7.6);
-  };
-  const HEAD_H = 10.5 + AIR.head;
-  /** Tiêu đề mục (toàn bề rộng, hoặc cột hẹp khi w < CONTENT_W). */
-  const sectionHead = (num: string, eyebrow: string, title: string, note = '', x: number = L, w: number = CONTENT_W) => {
-    headBlock(x, y, num, eyebrow, title, w < CONTENT_W ? w : 0);
-    if (note) {
-      font(TYPE.caption, false, COLORS.muted);
-      doc.text(note, x + w, y + 7.6, { align: 'right' });
-    }
-    hline(x, x + w, y + 10.5, B.brandBorder, PAGE.border);
-    y += HEAD_H;
-  };
-  /** Thanh chiều sức khỏe trong thẻ kính (padding ngang 4.5mm); h giãn được để cân hai cột. */
-  const BAR_BASE = 12.6;
-  const DIM_H = 14.4;
-  const bar = (x: number, yy: number, w: number, score: number | null, label: string, h = DIM_H) => {
-    const t = score == null ? null : healthTone(score);
-    const o = (h - BAR_BASE) / 2;
-    glassCard(x, yy, w, h, { r: 2.4 });
-    font(TYPE.table, true, COLORS.ink2);
-    doc.text(label, x + AIR.pad, yy + 5.2 + o);
-    font(TYPE.body, true, t ? t.vivid : COLORS.muted);
-    doc.text(score == null ? '—' : String(score), x + w - AIR.pad, yy + 5.2 + o, { align: 'right' });
-    fill(B.brand);
-    alpha(GLASS.track, () => rrect(x + AIR.pad, yy + 8.2 + o, w - AIR.pad * 2, 2.2, 'F', 1.1));
-    if (t && score! > 0) {
-      fill(t.fill);
-      const bw = Math.max(2.2, ((w - AIR.pad * 2) * Math.min(100, score!)) / 100);
-      rrect(x + AIR.pad, yy + 8.2 + o, bw, 2.2, 'F', 1.1);
-      fill(WHITE);
-      alpha(0.35, () => rrect(x + AIR.pad + 0.2, yy + 8.35 + o, Math.max(1.8, bw - 0.4), 0.8, 'F', 0.4));
-    }
-  };
-  const KPI_H = 24.3;
-  const kpiCard = (x: number, yy: number, w: number, k: { l: string; v: string; s?: string; accent?: boolean; tone: NumTone }) => {
-    const tc = tcol(k.tone, k.v);
-    if (k.accent) glassCard(x, yy, w, KPI_H, accentOpts());
-    else glassCard(x, yy, w, KPI_H, toneOpts(tc));
-    font(TYPE.label, true, COLORS.muted);
-    doc.text(up(k.l), x + AIR.pad, yy + 8.3);
-    let size: number = TYPE.kpi;
-    font(size, true, tc.v);
-    while (size > 10 && doc.getTextWidth(k.v) > w - AIR.pad * 2) {
-      size -= 0.5;
-      doc.setFontSize(size);
-    }
-    doc.text(k.v, x + AIR.pad, yy + 15.3);
-    if (k.s) {
-      font(TYPE.caption, false, COLORS.muted);
-      doc.text(k.s, x + AIR.pad, yy + 19.8);
-    }
-  };
-  /** Thẻ số liệu gọn: nhãn trên, số dưới; horizontal → nhãn trái, số phải (cột hẹp). Chiều cao tùy ý (giãn để cân hai cột). */
-  const TILE_H = 18.6;
-  const tileCard = (x: number, yy: number, w: number, t: { l: string; v: string; tone: NumTone }, h = TILE_H, horizontal = false) => {
-    const tc = tcol(t.tone, t.v);
-    glassCard(x, yy, w, h, toneOpts(tc));
-    font(TYPE.label, true, COLORS.muted);
-    if (horizontal) {
-      doc.text(up(t.l), x + AIR.pad, yy + h / 2 + 1);
-      let size: number = TYPE.h2;
-      font(size, true, tc.v);
-      while (size > TYPE.label && doc.getTextWidth(t.v) > w - AIR.pad * 2 - 20) {
-        size -= 0.25;
-        doc.setFontSize(size);
-      }
-      doc.text(t.v, x + w - AIR.pad, yy + h / 2 + 1.4, { align: 'right' });
-      return;
-    }
-    const o = (h - TILE_H) / 2;
-    doc.text(up(t.l), x + AIR.pad, yy + 7 + o);
-    let size: number = TYPE.h2;
-    font(size, true, tc.v);
-    while (size > TYPE.label && doc.getTextWidth(t.v) > w - AIR.pad * 2) {
-      size -= 0.25;
-      doc.setFontSize(size);
-    }
-    doc.text(t.v, x + AIR.pad, yy + 13.4 + o);
-  };
-  /** Lưới thẻ n cột (gutter/hàng theo token), vẽ tại (x0,y0) rộng w0; trả chiều cao tổng. */
-  const cardGrid = <T,>(items: T[], cols: number, h: number, draw: (it: T, x: number, yy: number, w: number) => void, x0: number = L, w0: number = CONTENT_W, y0: number = y) => {
-    const w = (w0 - AIR.gutter * (cols - 1)) / cols;
-    items.forEach((it, i) => draw(it, x0 + (i % cols) * (w + AIR.gutter), y0 + Math.floor(i / cols) * (h + AIR.row), w));
-    const rows = Math.max(1, Math.ceil(items.length / cols));
-    return rows * h + (rows - 1) * AIR.row;
-  };
-  const para = (text: string, size: number, color: string, w: number, bold = false) => {
-    font(size, bold, color);
-    return doc.splitTextToSize(text, w) as string[];
-  };
-  const COLW = (CONTENT_W - AIR.section) / 2; // cột hẹp (86.5mm)
-  const COLX2 = L + COLW + AIR.section;
-
-  // ── 1. BÌA (nén): panel kính thấp ~40% + thẻ chỉ số + thông tin tài liệu; mục 01–02 chảy tiếp ngay dưới ──
-  const heroH = 64;
-  const y0 = y;
+  // ── 1. BÌA: panel ĐẶC brandDeep (chữ trắng) / thẻ chỉ số / thông tin tài liệu ──
+  const heroH = 150;
   mastBand(L, y, CONTENT_W, heroH, 4);
+  // vòng kính trang trí góc dưới-phải (cùng hero bản Chrome)
   doc.saveGraphicsState();
   rrect(L, y, CONTENT_W, heroH, null as any, 4);
   (doc as any).clip();
   (doc as any).discardPath();
   fill(WHITE);
-  alpha(0.06, () => doc.circle(R - 10, y + heroH + 12, 42, 'F'));
+  alpha(0.06, () => doc.circle(R - 10, y + heroH + 8, 46, 'F'));
   stroke(WHITE);
   doc.setLineWidth(0.3);
-  alpha(0.22, () => doc.circle(R - 10, y + heroH + 12, 42, 'S'));
+  alpha(0.22, () => doc.circle(R - 10, y + heroH + 8, 46, 'S'));
   doc.restoreGraphicsState();
-  drawLogo(L + SPACE.s5, y + 8, 15);
+  drawLogo(L + SPACE.s5, y + SPACE.s5, 18);
   font(TYPE.h2, true, WHITE);
-  doc.text(m.brandLabel, L + SPACE.s5 + 15 + SPACE.s3, y + 8 + 9);
+  doc.text(m.brandLabel, L + SPACE.s5 + 18 + SPACE.s3, y + SPACE.s5 + 10.4);
   {
     const tag = 'EXECUTIVE REPORT';
     font(TYPE.label, true, WHITE);
     const tw = doc.getTextWidth(tag) + 8;
-    bandChip(R - SPACE.s5 - tw, y + 8 + 4.7, tw, 5.6);
-    doc.text(tag, R - SPACE.s5 - tw / 2, y + 8 + 8.5, { align: 'center' });
+    bandChip(R - SPACE.s5 - tw, y + SPACE.s5 + 5.2, tw, 5.6);
+    doc.text(tag, R - SPACE.s5 - tw / 2, y + SPACE.s5 + 9, { align: 'center' });
   }
-  const ruleY = y + heroH - 9 - 1;
+  const ruleY = y + heroH - SPACE.s6 - 1;
   fill(B.badge);
   doc.rect(L + SPACE.s5, ruleY, SPACE.s6, 1, 'F');
-  const periodY = ruleY - 3.4;
+  const periodY = ruleY - 8;
   font(TYPE.h2, false, WHITE);
   doc.text(`Kỳ báo cáo: ${m.periodName}`, L + SPACE.s5, periodY);
   font(TYPE.cover, true, WHITE);
-  const titleLines: string[] = doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - SPACE.s5 * 2 - 62);
-  const titleY = periodY - 10 - (titleLines.length - 1) * 11;
+  const titleLines: string[] = doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - SPACE.s5 * 2);
+  const titleY = periodY - 12 - (titleLines.length - 1) * 11;
   doc.setLineHeightFactor(1.15);
   doc.text(titleLines, L + SPACE.s5, titleY);
   doc.setLineHeightFactor(AIR.lineHeight);
   font(TYPE.label, true, WHITE);
-  doc.text(up('Báo cáo điều hành · Executive Report'), L + SPACE.s5, titleY - 11.6 - (titleLines.length - 1) * 11);
-  // gauge sức khỏe (ô trắng + vòng điểm) góc dưới-phải panel
+  doc.text(up('Báo cáo điều hành · Executive Report'), L + SPACE.s5, titleY - 16);
+  // thẻ chỉ số nhấn
+  {
+    const sy = y + heroH + 26;
+    const sw = (CONTENT_W - SPACE.s3 * 2) / 3;
+    m.coverStats.forEach((c, i) => {
+      const tc = tcol(c.tone, c.v);
+      const cx = L + i * (sw + SPACE.s3);
+      glassCard(cx, sy, sw, 32, toneOpts(tc));
+      font(TYPE.label, true, COLORS.muted);
+      doc.text(up(c.l), cx + SPACE.s3, sy + 9);
+      let vs: number = TYPE.display;
+      font(vs, true, tc.v);
+      while (vs > TYPE.h2 && doc.getTextWidth(c.v) > sw - SPACE.s3 * 2) {
+        vs -= 0.5;
+        doc.setFontSize(vs);
+      }
+      doc.text(c.v, cx + SPACE.s3, sy + 19);
+      font(TYPE.caption, false, COLORS.muted);
+      doc.text(c.s, cx + SPACE.s3, sy + 26);
+    });
+  }
+  // thông tin tài liệu (khối có chủ đích, không lặp footer)
+  const docY = PAGE.top + 259 - 26;
+  glassCard(L, docY - 2, CONTENT_W, 25);
+  font(TYPE.label, true, B.brandInk);
+  doc.text(up('Thông tin tài liệu'), L + SPACE.s3, docY + 3.5);
+  const dcx = [L + SPACE.s3, L + CONTENT_W * 0.37, L + CONTENT_W * 0.62];
+  [
+    ['Mã tài liệu', m.code],
+    ['Ngày xuất', m.exportedAt],
+    ['Phân loại', 'Tài liệu nội bộ · Ban quản trị CLB'],
+  ].forEach(([l, v], i) => {
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up(l), dcx[i], docY + 10);
+    font(TYPE.table, false, COLORS.ink);
+    doc.text(v, dcx[i], docY + 15);
+  });
+
+  // ── 2. MASTHEAD trang 2: băng ĐẶC brandDeep + gauge trong ô trắng ─────
+  doc.addPage();
+  y = PAGE.top;
+  const mastH = 26;
+  mastBand(L, y, CONTENT_W, mastH, GLASS.radius);
+  drawLogo(L + SPACE.s3, y + 7, 12);
+  const mtx = L + SPACE.s3 + 12 + SPACE.s3;
+  font(TYPE.label, true, WHITE);
+  doc.text(m.brandLabel, mtx, y + 8.6);
+  font(TYPE.h1, true, WHITE);
+  doc.text('Báo cáo điều hành', mtx, y + 14.6);
+  font(TYPE.body, false, WHITE);
+  {
+    const subTxt = `Kỳ: ${m.periodName} · Xuất lúc ${m.exportedAt}`;
+    const sw = doc.getTextWidth(subTxt) + 5;
+    bandChip(mtx, y + 16.2, sw, 5.2);
+    doc.text(subTxt, mtx + 2.5, y + 19.8);
+  }
+  // gauge: ô trắng + track hairline + cung màu theo mức điểm
   {
     const tone = m.tone;
-    const chipW = 50;
-    const chipH = 22;
-    const chipX = R - SPACE.s5 + 2 - chipW;
-    const chipY = y + heroH - 9 - chipH + 1;
+    const chipW = 54;
+    const chipH = 21;
+    const chipX = R - SPACE.s3 + 1 - chipW;
+    const chipY = y + (mastH - chipH) / 2;
     softShadowBox(chipX, chipY, chipW, chipH, GLASS.radius, 1, 2);
     fill(WHITE);
     alpha(0.92, () => rrect(chipX, chipY, chipW, chipH, 'F', GLASS.radius));
     stroke(WHITE);
     doc.setLineWidth(GLASS.rimW);
     alpha(GLASS.rimOuter, () => rrect(chipX, chipY, chipW, chipH, 'S', GLASS.radius));
-    const gcx = chipX + 12;
+    const gcx = chipX + 13;
     const gcy = chipY + chipH / 2;
-    const gr = 7.2;
+    const gr = 7.6;
     stroke(COLORS.hairline);
     doc.setLineWidth(2);
     doc.circle(gcx, gcy, gr, 'S');
@@ -457,73 +386,114 @@ export function buildExecutiveReportPdf(
     font(TYPE.caption, false, COLORS.muted);
     doc.text('/ 100', gcx, gcy + 4.4, { align: 'center' });
     font(TYPE.table, true, tone.text);
-    doc.text(up(m.grade), gcx + gr + 4.5, gcy + 1.1, { align: 'left' });
+    doc.text(up(m.grade), gcx + gr + 5, gcy + 1.1, { align: 'left' });
   }
-  y = y0 + heroH + AIR.row;
-  // thẻ chỉ số
-  {
-    const sh = 22.8;
-    const sw = (CONTENT_W - AIR.gutter * 2) / 3;
-    m.coverStats.forEach((c, i) => {
-      const tc = tcol(c.tone, c.v);
-      const cx = L + i * (sw + AIR.gutter);
-      glassCard(cx, y, sw, sh, toneOpts(tc));
-      font(TYPE.label, true, COLORS.muted);
-      doc.text(up(c.l), cx + SPACE.s3, y + 6.9);
-      let vs: number = TYPE.display;
-      font(vs, true, tc.v);
-      while (vs > TYPE.h2 && doc.getTextWidth(c.v) > sw - SPACE.s3 * 2) {
-        vs -= 0.5;
-        doc.setFontSize(vs);
-      }
-      doc.text(c.v, cx + SPACE.s3, y + 15);
+  y += mastH + AIR.section;
+
+  // ── helper khối ────────────────────────────────────────────────────
+  /** Bước dòng (mm) của chữ cỡ `size` pt theo line-height token (≥ 1.5). */
+  const LH = (size: number) => (size * AIR.lineHeight * 25.4) / 72;
+  const newPage = () => {
+    doc.addPage();
+    y = PAGE.top;
+  };
+  /** Tiêu đề khối: vạch brand trái + nhãn xám + tiêu đề HOA đậm brandInk. */
+  const headBlock = (x: number, yy: number, num: string, eyebrow: string, title: string) => {
+    fill(B.brand);
+    doc.rect(x, yy, 1.2, 9, 'F');
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up(`${num} · ${eyebrow}`), x + 3.5, yy + 2.6);
+    font(TYPE.h2, true, B.brandInk);
+    doc.text(up(title), x + 3.5, yy + 7.6);
+  };
+  const HEAD_H = 10.5 + AIR.head;
+  const sectionHead = (num: string, eyebrow: string, title: string, note = '') => {
+    headBlock(L, y, num, eyebrow, title);
+    if (note) {
       font(TYPE.caption, false, COLORS.muted);
-      doc.text(c.s, cx + SPACE.s3, y + 19.8);
-    });
-    y += sh + AIR.row;
-  }
-  // thông tin tài liệu
-  {
-    const dh = 17.4;
-    glassCard(L, y, CONTENT_W, dh);
-    font(TYPE.label, true, B.brandInk);
-    doc.text(up('Thông tin tài liệu'), L + SPACE.s3, y + 5.6);
-    const dcx = [L + SPACE.s3, L + CONTENT_W * 0.37, L + CONTENT_W * 0.62];
-    [
-      ['Mã tài liệu', m.code],
-      ['Ngày xuất', m.exportedAt],
-      ['Phân loại', 'Tài liệu nội bộ · Ban quản trị CLB'],
-    ].forEach(([l, v], i) => {
-      font(TYPE.label, true, COLORS.muted);
-      doc.text(up(l), dcx[i], y + 9.8);
-      font(TYPE.table, false, COLORS.ink);
-      doc.text(v, dcx[i], y + 14);
-    });
-    y += dh;
-    endBlock();
-  }
+      doc.text(note, R, y + 7.6, { align: 'right' });
+    }
+    y += 10.5;
+    hline(L, R, y, B.brandBorder, PAGE.border);
+    y += AIR.head;
+  };
+  /** Thanh chiều sức khỏe trong thẻ nhạt (padding ngang 5mm). */
+  const DIM_H = 13;
+  const DIM_STEP = DIM_H + AIR.row;
+  const bar = (x: number, yy: number, w: number, score: number | null, label: string) => {
+    const t = score == null ? null : healthTone(score);
+    glassCard(x, yy, w, DIM_H, { r: 2.4 });
+    font(TYPE.table, true, COLORS.ink2);
+    doc.text(label, x + AIR.pad, yy + 5.6);
+    font(TYPE.body, true, t ? t.vivid : COLORS.muted);
+    doc.text(score == null ? '—' : String(score), x + w - AIR.pad, yy + 5.6, { align: 'right' });
+    fill(B.brand);
+    alpha(GLASS.track, () => rrect(x + AIR.pad, yy + 8.8, w - AIR.pad * 2, 2.2, 'F', 1.1));
+    if (t && score! > 0) {
+      fill(t.fill);
+      const bw = Math.max(2.2, ((w - AIR.pad * 2) * Math.min(100, score!)) / 100);
+      rrect(x + AIR.pad, yy + 8.8, bw, 2.2, 'F', 1.1);
+      fill(WHITE);
+      alpha(0.35, () => rrect(x + AIR.pad + 0.2, yy + 8.95, Math.max(1.8, bw - 0.4), 0.8, 'F', 0.4));
+    }
+  };
+  const KPI_H = 25.5;
+  const kpiCard = (x: number, yy: number, w: number, k: { l: string; v: string; s?: string; accent?: boolean; tone: NumTone }) => {
+    const tc = tcol(k.tone, k.v);
+    if (k.accent) glassCard(x, yy, w, KPI_H, accentOpts());
+    else glassCard(x, yy, w, KPI_H, toneOpts(tc));
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up(k.l), x + AIR.pad, yy + 8);
+    let size: number = TYPE.kpi;
+    font(size, true, tc.v);
+    while (size > 10 && doc.getTextWidth(k.v) > w - AIR.pad * 2) {
+      size -= 0.5;
+      doc.setFontSize(size);
+    }
+    doc.text(k.v, x + AIR.pad, yy + 15.8);
+    if (k.s) {
+      font(TYPE.caption, false, COLORS.muted);
+      doc.text(k.s, x + AIR.pad, yy + 20.6);
+    }
+  };
+  const TILE_H = 21;
+  const tileCard = (x: number, yy: number, w: number, t: { l: string; v: string; tone: NumTone }) => {
+    const tc = tcol(t.tone, t.v);
+    glassCard(x, yy, w, TILE_H, toneOpts(tc));
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up(t.l), x + AIR.pad, yy + 8);
+    let size: number = TYPE.h2;
+    font(size, true, tc.v);
+    while (size > TYPE.label && doc.getTextWidth(t.v) > w - AIR.pad * 2) {
+      size -= 0.25;
+      doc.setFontSize(size);
+    }
+    doc.text(t.v, x + AIR.pad, yy + 15.2);
+  };
+  /** Hàng thẻ n cột (gutter 6mm, hàng cách 6mm); trả chiều cao tổng. */
+  const cardGrid = <T,>(items: T[], cols: number, h: number, draw: (it: T, x: number, yy: number, w: number) => void) => {
+    const w = (CONTENT_W - AIR.gutter * (cols - 1)) / cols;
+    items.forEach((it, i) => draw(it, L + (i % cols) * (w + AIR.gutter), y + Math.floor(i / cols) * (h + AIR.row), w));
+    const rows = Math.max(1, Math.ceil(items.length / cols));
+    return rows * h + (rows - 1) * AIR.row;
+  };
+  const para = (text: string, size: number, color: string, w: number, bold = false) => {
+    font(size, bold, color);
+    return doc.splitTextToSize(text, w) as string[];
+  };
 
-  // ── 01 sức khỏe + 02 chỉ số ───────────────────────────────────────
-  {
-    ensure(HEAD_H + 2 * DIM_H + AIR.row);
-    sectionHead('01', 'Sức khỏe tổng hợp', 'Điểm sức khỏe CLB', 'Tổng hợp 6 chiều từ số liệu thật của kỳ');
-    y += cardGrid(m.dims, 3, DIM_H, (d, x, yy, w) => bar(x, yy, w, d.score, d.label));
-    endBlock();
-  }
-  {
-    const rows = Math.ceil(m.kpis.length / 4);
-    ensure(HEAD_H + rows * KPI_H + (rows - 1) * AIR.row);
-    sectionHead('02', 'Tổng quan điều hành', 'Các chỉ số chính');
-    y += cardGrid(m.kpis, 4, KPI_H, (k, x, yy, w) => kpiCard(x, yy, w, k));
-    endBlock();
-  }
+  // ── TRANG 2: 01 sức khỏe + 02 chỉ số ───────────────────────────────
+  sectionHead('01', 'Sức khỏe tổng hợp', 'Điểm sức khỏe CLB', 'Tổng hợp 6 chiều từ số liệu thật của kỳ');
+  y += cardGrid(m.dims, 3, DIM_H, (d, x, yy, w) => bar(x, yy, w, d.score, d.label)) + AIR.section;
+  sectionHead('02', 'Tổng quan điều hành', 'Các chỉ số chính');
+  y += cardGrid(m.kpis, 4, KPI_H, (k, x, yy, w) => kpiCard(x, yy, w, k)) + AIR.section;
 
-  // ── Tóm tắt AI ─────────────────────────────────────────────────────
+  // ── TRANG 3: tóm tắt AI + 03 tài chính ─────────────────────────────
   {
-    const lines = para(m.aiText, TYPE.body, COLORS.ink, CONTENT_W - SPACE.s3 * 2 - 2.5);
+    const lines = para(m.aiText, TYPE.body, COLORS.ink, CONTENT_W - AIR.section * 2 - 1);
     const step = LH(TYPE.body);
-    const h = 5 + 4.2 + AIR.head + Math.max(1, lines.length) * step + 3.2;
-    ensure(h);
+    const h = 16 + Math.max(0, lines.length - 1) * step + 6.5;
+    newPage();
     glassCard(L, y, CONTENT_W, h, accentOpts());
     doc.saveGraphicsState();
     rrect(L, y, CONTENT_W, h, null as any);
@@ -533,28 +503,27 @@ export function buildExecutiveReportPdf(
     doc.rect(L, y, 1.4, h, 'F');
     doc.restoreGraphicsState();
     font(TYPE.h2, true, B.brandInk);
-    doc.text(up('Tóm tắt điều hành (AI)'), L + SPACE.s3 + 1.5, y + 5 + 3.6);
+    doc.text(up('Tóm tắt điều hành (AI)'), L + AIR.section + 1, y + 9.2);
     font(TYPE.body, false, COLORS.ink);
-    doc.text(lines, L + SPACE.s3 + 1.5, y + 5 + 4.2 + AIR.head + 1.2);
-    y += h;
-    endBlock();
+    doc.text(lines, L + AIR.section + 1, y + 16);
+    y += h + AIR.section;
   }
 
-  // ── 03 tài chính: dải KPI 3x2 + biểu đồ (một khối, không ngắt) ─────
+  // 03 tài chính: dải KPI 3x2 (thẻ tông màu) + biểu đồ toàn bề rộng (lưới mảnh + nhãn trục)
   {
-    const cellH = 20.5;
+    const cellH = 22;
     const plotH = 38;
-    const chartH = m.trends.length ? 5 + 5 + AIR.head + plotH + 12 : 24;
+    const chartH = m.trends.length ? 16 + plotH + 12 : 24;
     const need = HEAD_H + (2 * cellH + AIR.row) + AIR.row + 2 + chartH;
-    ensure(need);
+    if (y + need > LIMIT_Y) newPage();
     sectionHead('03', 'Tài chính', 'Thu · Chi · Dòng quỹ', 'Số liệu chuẩn theo kỳ quỹ (carry-forward)');
     const stripH = cardGrid(m.finRows, 3, cellH, (r, cx, cy, cw3) => {
       const tc = tcol(r.tone, r.value);
       glassCard(cx, cy, cw3, cellH, toneOpts(tc));
       font(TYPE.label, true, COLORS.muted);
-      doc.text(up(r.label), cx + AIR.pad, cy + 7.4);
+      doc.text(up(r.label), cx + AIR.pad, cy + 8);
       font(TYPE.kpi, true, tc.v);
-      const vy = cy + 14.6;
+      const vy = cy + 16;
       doc.text(r.value, cx + AIR.pad, vy);
       if (r.delta !== undefined) {
         const vw = doc.getTextWidth(r.value);
@@ -589,7 +558,7 @@ export function buildExecutiveReportPdf(
     } else {
       const px = L + AIR.pad + 1 + 18;
       const pw = CONTENT_W - (AIR.pad + 1) * 2 - 18;
-      const baseY = y + 10 + AIR.head + plotH;
+      const baseY = y + 16 + plotH;
       const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
       const maxBarH = plotH * 0.85;
       [[1, max], [0.5, max / 2]].forEach(([f, val]) => {
@@ -627,42 +596,38 @@ export function buildExecutiveReportPdf(
         doc.text(t.label, cx, baseY + 4.6, { align: 'center' });
       });
     }
-    y += chartH;
-    endBlock();
+    y += chartH + AIR.section;
   }
 
-  // ── 04 thành viên (bảng được ngắt hàng, không mồ côi < 3 hàng) ─────
+  // ── 04 thành viên (trang riêng) ────────────────────────────────────
   {
-    const avgH = 24;
-    const ROW_H = 10.7;
-    const TBL_HEAD = 10;
-    const minRows = Math.min(3, Math.max(1, m.members.length));
-    ensure(HEAD_H + avgH + AIR.row + TBL_HEAD + minRows * ROW_H);
+    newPage();
     sectionHead('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm');
     const at = healthTone(m.avgHealth);
+    const avgH = 25;
     glassCard(L, y, CONTENT_W, avgH, accentOpts());
     font(TYPE.label, true, COLORS.muted);
-    doc.text(up('Điểm sức khỏe TB'), L + SPACE.s4, y + 7.6);
+    doc.text(up('Điểm sức khỏe TB'), L + SPACE.s4, y + 8.4);
     font(TYPE.display, true, at.vivid);
-    doc.text(String(m.avgHealth), L + SPACE.s4, y + 16.6);
+    doc.text(String(m.avgHealth), L + SPACE.s4, y + 18.4);
     const bw = doc.getTextWidth(String(m.avgHealth));
     font(TYPE.body, false, COLORS.muted);
-    doc.text('/ 100', L + SPACE.s4 + bw + 1.5, y + 16.6);
+    doc.text('/ 100', L + SPACE.s4 + bw + 1.5, y + 18.4);
     const dx0 = L + 58;
     const dw = (R - SPACE.s4 - dx0 - SPACE.s5) / 2;
     m.dist.forEach((d, i) => {
       const dx = dx0 + (i % 2) * (dw + SPACE.s5);
-      const dy = y + 3.8 + Math.floor(i / 2) * 8.8;
+      const dy = y + 4.6 + Math.floor(i / 2) * 9.4;
       dot(dx + 1, dy + 1.8, 1, d.fill);
       font(TYPE.table, false, COLORS.ink2);
       doc.text(d.label, dx + 3.4, dy + 2.8);
       font(TYPE.table, true, COLORS.ink);
       doc.text(String(d.value), dx + dw, dy + 2.8, { align: 'right' });
-      hline(dx, dx + dw, dy + 5.2);
+      hline(dx, dx + dw, dy + 5.4);
     });
     y += avgH + AIR.row;
 
-    const colW = [10, 54, 22, 25, 28, 22, 21];
+    const colW = [10, 52, 21, 24, 27, 22, 22];
     const body = m.members.length
       ? m.members.map((r) => [String(r.rank), r.name, r.rate, '', '', r.conduct, ''])
       : [[{ content: 'Chưa có thành viên trong kỳ này.', colSpan: 7, styles: { halign: 'center', textColor: hexToRgb(COLORS.muted), cellPadding: 6 } }]];
@@ -674,7 +639,7 @@ export function buildExecutiveReportPdf(
       showHead: 'everyPage',
       head: [['#', 'Thành viên', 'Tham gia', 'Đóng quỹ', 'Đánh giá', 'Hạnh kiểm', 'Sức khỏe'].map(up)],
       body: body as any,
-      styles: { font: 'BVP', fontStyle: 'normal', fontSize: TYPE.table, cellPadding: { top: 3.3, bottom: 3.3, left: 3, right: 3 }, textColor: hexToRgb(COLORS.ink), lineWidth: 0, valign: 'middle' },
+      styles: { font: 'BVP', fontStyle: 'normal', fontSize: TYPE.table, cellPadding: { top: 2.9, bottom: 2.9, left: 3, right: 3 }, textColor: hexToRgb(COLORS.ink), lineWidth: 0, valign: 'middle' },
       headStyles: { font: 'BVP', fontStyle: 'bold', fontSize: TYPE.label, fillColor: false as any, textColor: hexToRgb(WHITE), cellPadding: { top: 3.4, bottom: 3.4, left: 3, right: 3 } },
       columnStyles: {
         0: { halign: 'center', cellWidth: colW[0], textColor: hexToRgb(COLORS.muted) },
@@ -780,117 +745,87 @@ export function buildExecutiveReportPdf(
         }
       },
     });
-    const pgBefore = pageNo;
-    {
-      const pgNow = (doc as any).internal.getNumberOfPages() as number;
-      for (let k = pgBefore; k < pgNow; k++) pageEnds[k - 1] = LIMIT_Y;
-      pageNo = pgNow;
-      pageEnds[pageNo - 1] = Math.max(pageEnds[pageNo - 1] ?? PAGE.top, (doc as any).lastAutoTable.finalY);
-      y = (doc as any).lastAutoTable.finalY;
-      endBlock();
-    }
+    y = (doc as any).lastAutoTable.finalY + AIR.section;
   }
 
-  // ── 05 dự báo | 06 Club DNA (2 cột 86.5mm, cao bằng nhau) ──────────
+  // ── 05 dự báo + 06 Club DNA (xếp chồng, toàn bề rộng) ──────────────
+  newPage();
+  sectionHead('05', 'Dự báo', 'Xu hướng 30–90 ngày');
+  y += cardGrid(m.forecast.tiles, 3, TILE_H, (t, x, yy, w) => tileCard(x, yy, w, t)) + AIR.head;
   {
-    const traits = m.dna.traits;
-    const callLines = para(`${m.forecast.callout} ${m.forecast.note}`, TYPE.table, COLORS.ink2, COLW);
-    const cH = callLines.length * LH(TYPE.table);
-    const leftNat = 3 * 16 + 2 * AIR.row + AIR.row + cH;
-    const rightNat = Math.max(1, traits.length) * DIM_H + Math.max(0, traits.length - 1) * AIR.row;
-    const body = Math.max(leftNat, rightNat);
-    ensure(HEAD_H + body);
-    const yy = y;
-    sectionHead('05', 'Dự báo', 'Xu hướng 30–90 ngày', '', L, COLW);
-    y = yy;
-    sectionHead('06', 'Club DNA', m.dna.archetype, '', COLX2, COLW);
-    const top = yy + HEAD_H;
-    const area = body - cH - AIR.row;
-    const th = (area - 2 * AIR.row) / 3;
-    m.forecast.tiles.forEach((t, i) => tileCard(L, top + i * (th + AIR.row), COLW, t, th, true));
-    font(TYPE.table, false, COLORS.ink2);
-    doc.text(callLines, L, top + area + AIR.row + 3);
-    const n = Math.max(1, traits.length);
-    const bh = (body - (n - 1) * AIR.row) / n;
-    traits.forEach((t, i) => bar(COLX2, top + i * (bh + AIR.row), COLW, t.score, t.label, bh));
-    y = top + body;
-    endBlock();
+    const lines = para(`${m.forecast.callout} ${m.forecast.note}`, TYPE.table, COLORS.ink2, CONTENT_W);
+    doc.text(lines, L, y + 3);
+    y += lines.length * LH(TYPE.table) + AIR.section;
   }
+  sectionHead('06', 'Club DNA', m.dna.archetype);
+  y += cardGrid(m.dna.traits, 3, DIM_H, (t, x, yy, w) => bar(x, yy, w, t.score, t.label)) + AIR.section;
 
-  // ── 07 hoạt động | 08 thi đấu (2 cột) ──────────────────────────────
+  // ── 07 hoạt động + 08 thi đấu ──────────────────────────────────────
+  newPage();
+  sectionHead('07', 'Hoạt động', 'Vận hành buổi chơi');
+  y += cardGrid(m.activity.kpis, 4, TILE_H, (k, x, yy, w) => tileCard(x, yy, w, k)) + AIR.head;
   {
     const txt = [m.activity.busiest ? `Đông nhất: ${m.activity.busiest}` : '', m.activity.emptiest ? `Ít nhất: ${m.activity.emptiest}` : '', 'Tỷ lệ lấp đầy tính theo sĩ số hoạt động (chưa có sức chứa/buổi).'].filter(Boolean);
-    const callLines = para(txt.join('\n'), TYPE.table, COLORS.ink2, COLW);
-    const cH = callLines.length * LH(TYPE.table);
-    const PL_H = 8.6;
-    const top3 = m.tournament.top;
-    const leftNat = 2 * TILE_H + AIR.row + AIR.row + cH;
-    const rightNat = TILE_H + AIR.row + (top3.length ? top3.length * PL_H + 6 : 6);
-    const body = Math.max(leftNat, rightNat);
-    ensure(HEAD_H + body);
-    const yy = y;
-    sectionHead('07', 'Hoạt động', 'Vận hành buổi chơi', '', L, COLW);
-    y = yy;
-    sectionHead('08', 'Thi đấu', 'Giải & Minigame', '', COLX2, COLW);
-    const top = yy + HEAD_H;
-    const area = body - cH - AIR.row;
-    const th = (area - AIR.row) / 2;
-    cardGrid(m.activity.kpis, 2, th, (k, x, y2, w) => tileCard(x, y2, w, k, th), L, COLW, top);
-    font(TYPE.table, false, COLORS.ink2);
-    doc.text(callLines, L, top + area + AIR.row + 3);
-    // thi đấu: 3 thẻ + top 3
-    const tileH = TILE_H + Math.max(0, body - rightNat);
-    cardGrid(m.tournament.tiles, 3, tileH, (t, x, y2, w) => tileCard(x, y2, w, t, tileH), COLX2, COLW, top);
-    let py = top + tileH + AIR.row;
-    if (!top3.length) {
-      font(TYPE.table, false, COLORS.muted);
-      doc.text('Chưa có giải/minigame trong kỳ.', COLX2, py + 3);
-    } else {
-      top3.forEach((p) => {
-        glassChip(COLX2, py + 1.8, 5, 5, B.brand);
-        font(TYPE.table, true, B.brandInk);
-        doc.text(String(p.rank), COLX2 + 2.5, py + 5.3, { align: 'center' });
-        font(TYPE.table, true, COLORS.ink);
-        doc.text(p.name, COLX2 + 8, py + 5.3);
-        font(TYPE.caption, true, COLORS.ink2);
-        doc.text(p.stat, COLX2 + COLW, py + 5.3, { align: 'right' });
-        hline(COLX2, COLX2 + COLW, py + PL_H - 0.4);
-        py += PL_H;
-      });
-      font(TYPE.caption, false, COLORS.muted);
-      doc.text('Người dẫn đầu BXH (chưa có giải MVP chính thức).', COLX2, py + 3.4);
-    }
-    y = top + body;
-    endBlock();
+    const lines = para(txt.join('\n'), TYPE.table, COLORS.ink2, CONTENT_W);
+    doc.text(lines, L, y + 3);
+    y += lines.length * LH(TYPE.table) + AIR.section;
   }
-
-  // ── 09 AIDO: 5 thẻ cùng rộng trên MỘT hàng ──────────────────────────
   {
-    const n = Math.max(1, m.agents.length);
-    const w = (CONTENT_W - AIR.gutter * (n - 1)) / n;
-    font(TYPE.caption, false, COLORS.muted);
-    const dl = m.agents.map((a) => doc.splitTextToSize(a.detail, w - AIR.pad * 2) as string[]);
-    const maxLines = Math.max(1, ...dl.map((l) => l.length));
-    const AG_H = 27.4 + maxLines * LH(TYPE.caption);
-    ensure(HEAD_H + AG_H);
-    sectionHead('09', 'Văn phòng AI (AIDO)', 'Hiệu suất tự động hóa', m.agentsHeading);
-    m.agents.forEach((a, i) => {
-      const ax = L + i * (w + AIR.gutter);
-      glassCard(ax, y, w, AG_H);
+    const need = HEAD_H + TILE_H + AIR.head + (m.tournament.top.length ? m.tournament.top.length * 9.4 + 8 : 8);
+    if (y + need > LIMIT_Y) newPage();
+  }
+  sectionHead('08', 'Thi đấu', 'Giải & Minigame');
+  y += cardGrid(m.tournament.tiles, 3, TILE_H, (t, x, yy, w) => tileCard(x, yy, w, t)) + AIR.head;
+  if (!m.tournament.top.length) {
+    font(TYPE.table, false, COLORS.muted);
+    doc.text('Chưa có giải/minigame trong kỳ.', L, y + 3);
+    y += 8 + AIR.section;
+  } else {
+    m.tournament.top.forEach((p) => {
+      glassChip(L, y + 1.8, 5, 5, B.brand);
+      font(TYPE.table, true, B.brandInk);
+      doc.text(String(p.rank), L + 2.5, y + 5.3, { align: 'center' });
       font(TYPE.table, true, COLORS.ink);
-      doc.text(a.name, ax + AIR.pad, y + 9);
-      font(TYPE.kpi, true, a.accent === B.brand ? B.brandInk : a.accent);
-      doc.text(a.value, ax + AIR.pad, y + 15.8);
-      font(TYPE.caption, false, COLORS.muted);
-      doc.text(a.unit, ax + AIR.pad, y + 19.6);
-      hline(ax + AIR.pad, ax + w - AIR.pad, y + 22.2);
-      doc.text(dl[i], ax + AIR.pad, y + 26.6);
+      doc.text(p.name, L + 8, y + 5.3);
+      font(TYPE.caption, true, COLORS.ink2);
+      doc.text(p.stat, R, y + 5.3, { align: 'right' });
+      hline(L, R, y + 9);
+      y += 9.4;
     });
-    y += AG_H;
-    endBlock();
+    font(TYPE.table, false, COLORS.muted);
+    doc.text('Người dẫn đầu BXH (chưa có giải MVP chính thức).', L, y + 6);
+    y += 8 + AIR.section;
   }
 
-  // ── 10 dòng thời gian (chảy, ngắt theo mục) ─────────────────────────
+  // ── 09 AIDO (3 + 2 thẻ rộng) + 10 dòng thời gian ───────────────────
+  newPage();
+  sectionHead('09', 'Văn phòng AI (AIDO)', 'Hiệu suất tự động hóa', m.agentsHeading);
+  {
+    const AG_H = 31;
+    const n = m.agents.length;
+    const first = Math.min(3, n);
+    const rest = n - first;
+    m.agents.forEach((a, i) => {
+      const inFirst = i < first;
+      const cols = inFirst ? first : rest;
+      const idx = inFirst ? i : i - first;
+      const w = (CONTENT_W - AIR.gutter * (cols - 1)) / cols;
+      const ax = L + idx * (w + AIR.gutter);
+      const ay = y + (inFirst ? 0 : AG_H + AIR.row);
+      glassCard(ax, ay, w, AG_H);
+      font(TYPE.table, true, COLORS.ink);
+      doc.text(a.name, ax + AIR.pad, ay + 8);
+      font(TYPE.kpi, true, a.accent === B.brand ? B.brandInk : a.accent);
+      doc.text(a.value, ax + AIR.pad, ay + 15.6);
+      const vw = doc.getTextWidth(a.value);
+      font(TYPE.caption, false, COLORS.muted);
+      doc.text(a.unit, ax + AIR.pad + vw + 1.2, ay + 15.6);
+      hline(ax + AIR.pad, ax + w - AIR.pad, ay + 19.2);
+      font(TYPE.caption, false, COLORS.muted);
+      doc.text(doc.splitTextToSize(a.detail, w - AIR.pad * 2) as string[], ax + AIR.pad, ay + 24.4);
+    });
+    y += (rest > 0 ? 2 * AG_H + AIR.row : AG_H) + AIR.section;
+  }
   // Ngắt dòng không tách số tiền: nếu không vừa cuối dòng thì cả "280.000 đ" xuống dòng mới.
   const tlLines = (text: string, amount: string | null, maxW: number): string[] => {
     font(TYPE.table, false, COLORS.ink);
@@ -903,112 +838,86 @@ export function buildExecutiveReportPdf(
   };
   {
     const TL_X = L + 9.5;
-    const TL_GAP = AIR.row + 4.2;
     const items = m.timeline.map((t) => {
       font(TYPE.table, true, COLORS.ink);
       const dw = doc.getTextWidth(t.date + '  ');
       const lines = tlLines(t.text, t.amount, CONTENT_W - 9.5 - dw);
-      return { t, dw, lines, h: Math.max(1, lines.length) * LH(TYPE.table) };
+      return { t, dw, lines, h: Math.max(1, lines.length) * LH(TYPE.table) + 4.5 };
     });
-    const total = items.reduce((s2, it) => s2 + it.h, 0) + Math.max(0, items.length - 1) * TL_GAP;
-    ensure(HEAD_H + (items.length ? Math.min(total, 3 * (LH(TYPE.table) + TL_GAP)) : 6));
+    const total = items.reduce((s, it) => s + it.h, 0);
+    if (y + HEAD_H + total > LIMIT_Y) newPage();
     sectionHead('10', 'Dòng thời gian', 'Sự kiện nổi bật');
     if (!items.length) {
       font(TYPE.table, false, COLORS.muted);
       doc.text('Chưa có sự kiện nổi bật.', L, y + 3);
-      y += 6;
+      y += 8;
     } else {
-      let y0t = y;
-      const flushLine = (yEnd: number) => {
-        stroke(B.brandBorder);
-        doc.setLineWidth(PAGE.border);
-        doc.line(L + 1.5, y0t + 2, L + 1.5, yEnd - 1);
-      };
+      const y0 = y;
+      stroke(B.brandBorder);
+      doc.setLineWidth(PAGE.border);
+      doc.line(L + 1.5, y0 + 3.6, L + 1.5, y0 + total - 3.5);
       items.forEach((it) => {
-        if (y + it.h > LIMIT_Y) {
-          flushLine(y - TL_GAP);
-          mark();
-          newPage();
-          y0t = y;
-        }
         dot(L + 1.5, y + 2.4, 1.2, it.t.fill);
         font(TYPE.table, true, COLORS.ink);
         doc.text(it.t.date, TL_X, y + 3.2);
         font(TYPE.table, false, COLORS.ink);
         doc.text(it.lines, TL_X + it.dw, y + 3.2);
-        y += it.h + TL_GAP;
+        y += it.h;
       });
-      y -= TL_GAP;
-      flushLine(y);
     }
-    endBlock();
+    y += AIR.section;
   }
 
-  // ── 11 cảnh báo ────────────────────────────────────────────────────
-  {
-    const lines = m.alerts.map((a) => para(a, TYPE.table, COLORS.ink, CONTENT_W - AIR.pad * 2));
-    const hs = lines.map((l) => Math.max(1, l.length) * LH(TYPE.table) + 6.4);
-    const allH = hs.reduce((a, b) => a + b, 0) + Math.max(0, hs.length - 1) * AIR.row;
-    ensure(HEAD_H + (allH <= CONTENT_H / 2 ? allH : (hs[0] ?? 6)));
-    sectionHead('11', 'Cảnh báo', 'Rủi ro cần lưu ý');
-    if (!m.alerts.length) {
-      font(TYPE.table, true, COLORS.pos);
-      doc.text('Không có cảnh báo — CLB ổn định.', L, y + 3);
-      y += 6;
-    } else {
-      lines.forEach((ls, i) => {
-        ensure(hs[i]);
-        glassCard(L, y, CONTENT_W, hs[i], { tint: COLORS.warnFill, tintA: GLASS.chipFill, ring: COLORS.warnFill, ringA: GLASS.chipBorder, r: GLASS.radius });
-        font(TYPE.table, false, COLORS.ink);
-        doc.text(ls, L + AIR.pad, y + 3.2 + 3);
-        y += hs[i] + AIR.row;
-      });
-      y -= AIR.row;
-    }
-    endBlock();
+  // ── 11 cảnh báo + 12 khuyến nghị + ghi chú ─────────────────────────
+  newPage();
+  sectionHead('11', 'Cảnh báo', 'Rủi ro cần lưu ý');
+  if (!m.alerts.length) {
+    font(TYPE.table, true, COLORS.pos);
+    doc.text('Không có cảnh báo — CLB ổn định.', L, y + 3);
+    y += 8;
+  } else {
+    m.alerts.forEach((a) => {
+      const lines = para(a, TYPE.table, COLORS.ink, CONTENT_W - AIR.pad * 2);
+      const ah = Math.max(1, lines.length) * LH(TYPE.table) + 8;
+      if (y + ah > LIMIT_Y) newPage();
+      glassCard(L, y, CONTENT_W, ah, { tint: COLORS.warnFill, tintA: GLASS.chipFill, ring: COLORS.warnFill, ringA: GLASS.chipBorder, flat: true, r: GLASS.radius });
+      font(TYPE.table, false, COLORS.ink);
+      doc.text(lines, L + AIR.pad, y + 4 + 3.1);
+      y += ah + AIR.row;
+    });
+    y -= AIR.row;
   }
-
-  // ── 12 khuyến nghị ─────────────────────────────────────────────────
+  y += AIR.section;
   {
     const recItems = m.recs.map((r) => {
       font(TYPE.label, true, B.brandInk);
       const tw = doc.getTextWidth(r.agent) + 5;
-      const lines = para(r.text, TYPE.table, COLORS.ink, CONTENT_W - AIR.pad * 2 - tw - 2.5);
-      return { r, tw, lines, h: Math.max(LH(TYPE.table) * lines.length, 4.6) + 6 };
+      const lines = para(r.text, TYPE.table, COLORS.ink, CONTENT_W - tw - 2.5);
+      return { r, tw, lines, h: Math.max(1, lines.length) * LH(TYPE.table) + 5 };
     });
-    const allH = recItems.reduce((a, b) => a + b.h, 0) + Math.max(0, recItems.length - 1) * AIR.row;
-    ensure(HEAD_H + (allH <= CONTENT_H / 2 ? allH : (recItems[0]?.h ?? 6)));
+    const total = recItems.reduce((s, it) => s + it.h, 0);
+    if (y + HEAD_H + total > LIMIT_Y) newPage();
     sectionHead('12', 'Khuyến nghị', 'Gợi ý hành động');
     if (!recItems.length) {
       font(TYPE.table, false, COLORS.muted);
       doc.text('Không có đề xuất.', L, y + 3);
-      y += 6;
+      y += 8;
     } else {
       recItems.forEach((it) => {
-        ensure(it.h);
-        glassCard(L, y, CONTENT_W, it.h);
-        const cy = y + it.h / 2;
-        glassChip(L + AIR.pad, cy - 2.3, it.tw, 4.6, B.brand);
+        glassChip(L, y, it.tw, 4.6, B.brand);
         font(TYPE.label, true, B.brandInk);
-        doc.text(it.r.agent, L + AIR.pad + it.tw / 2, cy + 1, { align: 'center' });
+        doc.text(it.r.agent, L + it.tw / 2, y + 3.3, { align: 'center' });
         font(TYPE.table, false, COLORS.ink);
-        doc.text(it.lines, L + AIR.pad + it.tw + 2.5, cy + 1 - ((it.lines.length - 1) * LH(TYPE.table)) / 2);
-        y += it.h + AIR.row;
+        doc.text(it.lines, L + it.tw + 2.5, y + 3.3);
+        y += it.h;
       });
-      y -= AIR.row;
     }
-    endBlock(AIR.row);
+    y += AIR.section;
   }
   font(TYPE.caption, false, COLORS.muted);
-  ensure(8);
+  if (y + 8 > LIMIT_Y) newPage();
   hline(L, R, y + 0.5);
   doc.text('Ghi chú: AIDO Executive Report · mọi con số được lấy từ dữ liệu thật của CLB.', L, y + 5);
-  y += 6;
-  mark();
-
-  if (opts.metrics) {
-    opts.metrics.pages = pageEnds.map((e) => Math.round(((e - PAGE.top) / (LIMIT_Y - PAGE.top)) * 1000) / 10);
-  }
 
   // ── Footer mọi trang: cùng chuỗi bản Chrome ─────────────────────────
   const pageCount = (doc as any).internal.getNumberOfPages();

@@ -106,11 +106,11 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   doc.text('Tỷ lệ chi / thu', M, y + 3)
   kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : B.brandDark)
   doc.text(`${chiThuPct}%`, W - M, y + 3, { align: 'right' })
-  kit.glassMeter(M, y + 5.4, CW, 2.6, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
+  kit.glassMeter(M, y + 7, CW, 2.8, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
   kit.font('normal', T.type.caption, C.muted)
-  doc.text(`Thu: ${vnd(summary.totalIncome)}`, M, y + 12.4)
-  doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, W - M, y + 12.4, { align: 'right' })
-  y += 12.4 + T.air.section
+  doc.text(`Thu: ${vnd(summary.totalIncome)}`, M, y + 15.6)
+  doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, W - M, y + 15.6, { align: 'right' })
+  y += 15.6 + T.air.section
 
   /* Chỉ số nhanh (thẻ compact) */
   const nfmt = (n) => fmt.num(Math.round(Number(n || 0)))
@@ -130,6 +130,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   y = kit.kpiGrid(statItems.map((s) => ({ ...s, compact: true, accent: false })), y, { perRow: 4, compact: true, after: T.air.section })
 
   /* ── Bảng thành viên ── */
+  if (y + T.air.titleGap + 14 + Math.min(rows.length, 6) * T.row.h + 8 > kit.bottom) y = cont('Chi tiết thành viên')
+  y = kit.sectionTitle('Chi tiết từng thành viên', y)
   const memberCols = normalizeCols(kit, [
     { key: 'idx', label: '#', w: 9, align: 'left' },
     { key: 'name', label: 'Thành viên', w: 43, align: 'left', bold: true },
@@ -145,7 +147,6 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   const tbl = drawTable(kit, {
     columns: memberCols,
     y,
-    title: 'Chi tiết từng thành viên',
     onNewPage: () => cont('Chi tiết thành viên'),
     emptyText: 'Chưa có thành viên trong kỳ quỹ này',
     rows: rows.map((r, i) => ({
@@ -180,6 +181,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       { key: 'amount', label: 'Số tiền', w: 27, align: 'right' },
       { key: 'status', label: 'Trạng thái', w: 30, align: 'center' },
     ])
+    let ey = cont('Khoản chi')
+    ey = kit.sectionTitle('Danh sách khoản chi (Quỹ Chính & Quỹ Phụ)', ey)
     let approvedCommon = 0
     let approvedMini = 0
     const dotOf = (k) => (k === 'approved' || k === 'paid' ? C.posFill : k === 'rejected' ? C.negFill : C.warnFill)
@@ -203,23 +206,24 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     /* Tổng theo NGUỒN — Quỹ Chính khớp "Tổng chi kỳ"; Quỹ Phụ độc lập. Chỉ tính đã duyệt/đã chi. */
     if (expenseRows.some((e) => e.fundKey !== 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ CHÍNH (đã duyệt / đã chi)', __span: 5, amount: { t: vnd(approvedCommon), tone: 'neg' } })
     if (expenseRows.some((e) => e.fundKey === 'MINI')) foots.push({ __label: 'TỔNG CHI QUỸ PHỤ (đã duyệt / đã chi)', __span: 5, amount: { t: vnd(approvedMini), tone: 'neg' } })
-    y = drawTable(kit, { columns: ecols, y: y + T.air.section, title: 'Danh sách khoản chi (Quỹ Chính & Quỹ Phụ)', rows: erows, footerRows: foots, onNewPage: () => cont('Khoản chi'), emptyText: 'Chưa có khoản chi trong kỳ này' }).y
+    drawTable(kit, { columns: ecols, y: ey, rows: erows, footerRows: foots, onNewPage: () => cont('Khoản chi'), emptyText: 'Chưa có khoản chi trong kỳ này' })
   }
 
-  /* ── Bill thành viên: thẻ 2 cột chảy LIÊN TỤC sau bảng (không ép trang riêng), cao 74mm, gutter 5mm ── */
+  /* ── Bill thành viên: 4 thẻ/trang (2 cột × 2 hàng), gutter 8mm, khoảng dọc 8mm, toạ độ CỐ ĐỊNH ── */
   const CARD_GAP = T.air.billGutter
   const CARD_W = (CW - CARD_GAP) / 2
-  const CARD_H = 74
+  const CARD_H = 102
   const ROW_GAP = T.air.billRowGap
+  const PER_PAGE = 4
 
   const drawCard = (m, x, yy) => {
     const pos = Math.round(Number(m.balance) || 0) >= 0
     const rate = pct(m.attendedSessions, m.totalSessions)
-    const px = 5.5
+    const px = 6.5
     kit.glassPanel(x, yy, CARD_W, CARD_H, { r: T.radius.card + 1.5, k: 1 })
 
     /* header thẻ: dải kính gradient (chữ trắng) — tên + số buổi + viên trạng thái */
-    const HH = 15
+    const HH = 19
     kit.clipRR(x, yy, CARD_W, CARD_H, T.radius.card + 1.5, () => {
       kit.gradient(x, yy, CARD_W, HH, 0, B.glassStart, B.glassEnd)
       kit.gloss(x, yy, CARD_W, HH)
@@ -228,19 +232,19 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     kit.font('bold', T.type.caption, C.white)
     const bw = doc.getTextWidth(badgeTxt) + 6
     kit.font('bold', T.type.h2, C.white)
-    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - bw - 3, T.type.h2, 8.5), x + px, yy + 6.4)
+    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - bw - 3, T.type.h2, 8.5), x + px, yy + 8.2)
     kit.font('normal', T.type.caption, C.white)
-    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 11.4)
-    kit.fillRR(x + CARD_W - px - bw, yy + 4.7, bw, 5.8, 2.9, C.white, G.mast.ring)
-    kit.strokeRR(x + CARD_W - px - bw, yy + 4.7, bw, 5.8, 2.9, C.white, 1, 0.2)
+    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 14.4)
+    kit.fillRR(x + CARD_W - px - bw, yy + 6.2, bw, 6, 3, C.white, G.mast.ring)
+    kit.strokeRR(x + CARD_W - px - bw, yy + 6.2, bw, 6, 3, C.white, 1, 0.2)
     kit.font('bold', T.type.caption, m.contributionPaid ? C.posDeep : C.negDeep)
-    doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 8.8, { align: 'center' })
+    doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 10.3, { align: 'center' })
 
     /* tỷ lệ tham gia */
-    kit.tracked('Tỷ lệ tham gia', x + px, yy + 21.6, { color: C.muted })
+    kit.tracked('Tỷ lệ tham gia', x + px, yy + 28, { color: C.muted })
     kit.font('bold', 9, B.brandDark)
-    doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 21.6, { align: 'right' })
-    kit.glassMeter(x + px, yy + 24.2, CARD_W - px * 2, 2.4, Math.min(rate, 100) / 100, B.brand)
+    doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 28, { align: 'right' })
+    kit.glassMeter(x + px, yy + 31.4, CARD_W - px * 2, 2.6, Math.min(rate, 100) / 100, B.brand)
 
     /* 4 dòng chi phí — label trái / số phải (màu theo nghĩa); nhãn đúng công thức backend */
     const lines = [
@@ -249,12 +253,12 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost), color: C.cyan },
       { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), color: C.orange, total: true },
     ]
-    const LROW = 7
-    let cy = yy + 28.8
+    const LROW = 9
+    let cy = yy + 41
     lines.forEach((ln) => {
-      const mid = cy + 4.6
+      const mid = cy + 5.6
       if (ln.total) {
-        kit.lineA(x + px, cy + 0.1, x + CARD_W - px, cy + 0.1, B.brand, G.sepHair + 0.1, G.hairW)
+        kit.lineA(x + px, cy + 0.2, x + CARD_W - px, cy + 0.2, B.brand, G.sepHair + 0.1, G.hairW)
         kit.font('bold', T.type.body, C.ink)
       } else {
         kit.font('normal', T.type.body, C.ink2)
@@ -271,40 +275,26 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     })
 
     /* ô số dư — nền xanh/đỏ nhạt viền; âm: hiện SỐ TIỀN CẦN NỘP (dương), nhãn "Cần nộp thêm" đã nói rõ chiều */
-    const boxY = cy + 2
-    const BOXH = 12.4
+    const boxY = cy + 3
+    const BOXH = 15
     const tone = pos ? C.pos : C.neg
     const toneAA = pos ? C.posDeep : C.negDeep
     kit.glassPanel(x + px, boxY, CARD_W - px * 2, BOXH, { tint: { color: tone, a: G.box, edge: G.chip.edge }, r: T.radius.card, shadow: false })
     kit.font('bold', T.type.cell, toneAA)
-    doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 3.5, boxY + 5.4)
+    doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 4, boxY + 6.2)
     kit.font('normal', T.type.caption, toneAA)
-    doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 3.5, boxY + 9.6)
+    doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 4, boxY + 11.2)
     kit.font('bold', T.type.h2, tone)
-    doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 3.5, boxY + 8.2, { align: 'right' })
+    doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 4, boxY + 9.6, { align: 'right' })
   }
 
   if (rows.length > 0) {
-    const BILL_TITLE = 'Bill chi tiết thành viên'
-    const totalRows = Math.ceil(rows.length / 2)
-    let next = 0 // chỉ số hàng thẻ kế tiếp
-    // Tiêu đề + ít nhất 1 hàng thẻ phải nằm trọn một trang; không vừa chỗ còn lại → sang trang mới (không đè footer).
-    y += T.air.section
-    if (y + T.air.titleGap + CARD_H > kit.bottom) y = cont(BILL_TITLE, `${rows.length} bill thành viên`)
-    y = kit.sectionTitle(BILL_TITLE, y)
-    while (next < totalRows) {
-      const avail = kit.bottom - 2 - y
-      const fit = Math.max(1, Math.floor((avail + ROW_GAP) / (CARD_H + ROW_GAP)))
-      const nHere = Math.min(fit, totalRows - next)
-      // trang chưa phải trang cuối: dãn nhẹ khoảng cách dọc (tối đa 7mm) để lấp đầy trang
-      const stretch = nHere < totalRows - next && nHere > 1 ? Math.min(7, (avail - nHere * CARD_H) / (nHere - 1)) : ROW_GAP
-      const gapY = Math.max(ROW_GAP, stretch)
-      for (let k = 0; k < nHere; k++) {
-        rows.slice((next + k) * 2, (next + k) * 2 + 2).forEach((m, i) => drawCard(m, M + i * (CARD_W + CARD_GAP), y + k * (CARD_H + gapY)))
-      }
-      y += nHere * CARD_H + (nHere - 1) * gapY
-      next += nHere
-      if (next < totalRows) y = cont(BILL_TITLE, `${rows.length} bill thành viên`)
+    const totalBillPages = Math.ceil(rows.length / PER_PAGE)
+    for (let pg = 0; pg < totalBillPages; pg++) {
+      const top = cont('Bill chi tiết thành viên', `Bill ${pg + 1} / ${totalBillPages}`)
+      rows.slice(pg * PER_PAGE, pg * PER_PAGE + PER_PAGE).forEach((m, i) => {
+        drawCard(m, M + (i % 2) * (CARD_W + CARD_GAP), top + Math.floor(i / 2) * (CARD_H + ROW_GAP))
+      })
     }
   }
 
@@ -546,77 +536,55 @@ function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
     number: spec.number,
     right: spec.right || [],
   })
+  y = kit.hero({ y, label: spec.amountLabel, value: vnd(spec.amount), caption: spec.amountCaption, tone: spec.amountTone, status: spec.status })
+
   const cont = contFactory(kit, { club, title: spec.title, docCode })
-  const secs = spec.sections.filter((sec) => sec.rows.length)
-  const noteLines = kit.wrap(spec.note || '', kit.CW * 0.6, 2)
-  const noteH = 4.6 + noteLines.length * 4.4 + 2.4
-  const hasSig = !!(spec.signatures && spec.signatures.length)
-  // số dòng tên thật dưới ô ký (quyết định chiều cao khối ký)
-  let nameLines = 1
-  if (hasSig) {
-    kit.font('normal', T.type.body)
-    const colW = kit.CW / spec.signatures.length
-    nameLines = Math.max(1, ...spec.signatures.map((s) => kit.wrap(s.name || '', colW - 14, 2).length))
-  }
-
-  /* Phiếu PHẢI vừa 1 trang: thử các mức nén (hero / khoảng cách mục / chiều cao dòng / ô ký 22→20mm) từ thoáng tới chật,
-     chọn mức thoáng nhất mà tổng chiều cao vẫn nằm trên footer. Nếu chật nhất vẫn tràn mới sang trang (hiếm). */
-  const base = spec.rowH ?? 8.6
-  const presets = [
-    { hero: 26, after: 8, gap: spec.gap ?? 9, rowH: base, box: 22, mast: 7 },
-    { hero: 26, after: 7, gap: 7, rowH: Math.min(base, 8.2), box: 22, mast: 7 },
-    { hero: 24, after: 6, gap: 6, rowH: Math.min(base, 7.6), box: 21, mast: 6 },
-    { hero: 22, after: 5, gap: 5, rowH: Math.min(base, 7.2), box: 20, mast: 5 },
-    { hero: 22, after: 4.5, gap: 4.5, rowH: Math.min(base, 6.8), box: 20, mast: 5 },
-  ]
-  const sigOf = (p) => 3.5 + p.box + 6 + 4.6 * nameLines + 4
-  const needOf = (p) => {
-    let t = y - (T.air.afterMast - p.mast) + p.hero + p.after
-    for (const sec of secs) t += T.air.titleGap + kit.kvHeight(sec.rows, { rowH: p.rowH }) + (sec.footnote ? 5 : 0) + p.gap
-    return t + (hasSig ? 4 + sigOf(p) + 4 + noteH : 4 + noteH)
-  }
-  const P = presets.find((p) => needOf(p) <= kit.bottom) ?? presets[presets.length - 1]
-  y -= T.air.afterMast - P.mast
-  y = kit.hero({ y, label: spec.amountLabel, value: vnd(spec.amount), caption: spec.amountCaption, tone: spec.amountTone, status: spec.status, h: P.hero, after: P.after })
-
-  const GAP = P.gap
-  const rowOpt = { rowH: P.rowH }
-  for (const sec of secs) {
+  const GAP = spec.gap ?? 10
+  const rowOpt = { rowH: spec.rowH ?? 8.6 }
+  for (const sec of spec.sections) {
+    if (!sec.rows.length) continue
     // Không cắt giữa khối: tiêu đề + cả tấm kvList (+ ghi chú) phải nằm trọn một trang.
-    const need = T.air.titleGap + kit.kvHeight(sec.rows, rowOpt) + (sec.footnote ? 5 : 0)
+    const need = T.air.titleGap + kit.kvHeight(sec.rows, rowOpt) + (sec.footnote ? 6 : 0)
     if (y + need > kit.bottom) y = cont(sec.title)
     y = kit.sectionTitle(sec.title, y)
     y = kit.kvList(sec.rows, y, rowOpt)
     if (sec.footnote) {
       kit.font('normal', T.type.caption, C.muted)
-      doc.text(kit.clip(sec.footnote, kit.CW), M, y + 4)
-      y += 5
+      doc.text(kit.clip(sec.footnote, kit.CW), M, y + 5)
+      y += 6
     }
     y += GAP
   }
 
   /* chữ ký (neo xuống phần dưới trang cho bố cục cân đối) + ghi chú chân phiếu.
-     Dành chỗ theo SỐ DÒNG ghi chú thật; không đủ chỗ → sang trang mới (không đè footer). */
-  if (hasSig) {
-    const boxH = P.box
-    const sigH = sigOf(P)
-    if (y + 4 + sigH + 4 + noteH > kit.bottom + 0.01) y = cont(spec.title)
-    // Neo xuống dưới nhưng không để khoảng trống quá 22mm giữa nội dung và ô ký.
-    const sigTop = Math.max(y + 2, Math.min(kit.bottom - noteH - sigH - 4, y + 22))
+     Dành chỗ theo SỐ DÒNG ghi chú thật; không đủ chỗ → sang trang mới (không nén ô ký, không đè footer). */
+  const noteLines = kit.wrap(spec.note || '', kit.CW * 0.6, 2)
+  const noteH = 6 + noteLines.length * 4.4 + 3
+  if (spec.signatures && spec.signatures.length) {
+    let boxH = 24
+    let sigH = 3.5 + boxH + 6 + 4.6 * 2 + 6
+    if (y + 4 + sigH + 8 + noteH > kit.bottom) {
+      // thử co ô ký (tối thiểu 16mm) trước khi sang trang
+      const avail = kit.bottom - noteH - 8 - y - 4 - (sigH - boxH)
+      if (avail >= 16) { boxH = Math.min(24, avail); sigH = 3.5 + boxH + 6 + 4.6 * 2 + 6 }
+      else { y = cont(spec.title); }
+    }
+    // Neo xuống dưới nhưng không để khoảng trống quá 40mm giữa nội dung và ô ký.
+    const sigTop = Math.max(y + 4, Math.min(kit.bottom - noteH - sigH - 4, y + 40))
     y = kit.signatures(spec.signatures, sigTop, boxH)
   } else {
     // ghi chú đặt ngay dưới khối cuối (bỏ khoảng GAP thừa); chỉ sang trang khi thật sự hết chỗ
     y -= GAP - 6
     const noteNeed = 9.5 + (noteLines.length - 1) * 4.4
     if (y + noteNeed > kit.bottom) y = cont(spec.title)
-    y = Math.max(y, Math.min(kit.bottom - noteNeed, y + 22))
+    y = Math.max(y, kit.bottom - noteNeed)
   }
-  kit.lineA(M, y + 1, W - M, y + 1, B.brand, G.hair + 0.1, T.line.border)
+  kit.lineA(M, y + 2, W - M, y + 2, B.brand, G.hair + 0.1, T.line.border)
   kit.font('normal', T.type.caption, C.muted)
-  noteLines.forEach((ln, i) => doc.text(ln, M, y + 6 + i * 4.4))
+  noteLines.forEach((ln, i) => doc.text(ln, M, y + 7.6 + i * 4.4))
   const loc = String(spec.location || '').trim()
   kit.font('normal', T.type.caption, C.ink2)
-  doc.text(kit.clip(`${loc ? loc + ', ' : ''}ngày ${spec.printedDateText}`, kit.CW * 0.38), W - M, y + 6, { align: 'right' })
+  doc.text(kit.clip(`${loc ? loc + ', ' : ''}ngày ${spec.printedDateText}`, kit.CW * 0.38), W - M, y + 7.6, { align: 'right' })
 
   drawFooterAll(kit, { club, title: spec.title, docCode })
   return doc

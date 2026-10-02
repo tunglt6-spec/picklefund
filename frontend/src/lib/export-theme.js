@@ -61,21 +61,20 @@ export const THEME = {
   page: {
     portrait: { w: 210, h: 297 },
     landscape: { w: 297, h: 210 },
-    margin: 14,
+    margin: 16,
     /** vùng footer: vạch ở H - footerLine, chữ ở H - footerText; nội dung dừng ở H - bottomPad */
     footerLine: 15,
     footerText: 10.8,
-    bottomPad: 19,
+    bottomPad: 21,
   },
   line: { hair: 0.2, border: 0.3, strong: 0.5, brandRule: 0.6 },
   radius: { card: 2, bar: 1 },
-  row: { h: 8.8, lineH: 4.2, padX: 3.5 },
+  row: { h: 9.8, lineH: 4.4, padX: 3.5 },
   /**
-   * KHOẢNG THỞ CÂN BẰNG (mm) — lề 14 · gutter thẻ 4.5 · giữa hàng thẻ 4.5 · giữa section 9 · tiêu đề→nội dung 6 ·
-   * padding trong thẻ 4.5. Trang phải ĐẦY ĐẶN (không để khoảng trắng lớn giữa thẻ / giữa trang).
-   * mastH/contH = chiều cao băng masthead trang 1 / trang tiếp.
+   * KHOẢNG THỞ (mm) — luật Luxury: lề 16 · gutter thẻ 6 · giữa hàng thẻ 6 · giữa section 12 · tiêu đề→nội dung 5+ ·
+   * padding trong thẻ ≥ 5 (trên/dưới ≥ 4.5) · dòng chữ trong thẻ ≥ 1.4 line-height.
    */
-  air: { gutter: 4.5, rowGap: 4.5, section: 9, titleGap: 6, cardPad: 4.5, afterMast: 7, billGutter: 5, billRowGap: 5, mastH: 30, contH: 16, kpi: { full: 22, plain: 18, compact: 15 } },
+  air: { gutter: 6, rowGap: 6, section: 12, titleGap: 10, cardPad: 5.5, afterMast: 10, billGutter: 8, billRowGap: 8 },
   /**
    * LIQUID GLASS — token hiệu ứng kính (alpha 0..1, mm). Mọi màu kính DẪN XUẤT từ palette app
    * (brand/brandDark/brandSoft/trắng + semantic) ở độ trong suốt khác nhau — không có màu mới.
@@ -110,7 +109,7 @@ export const THEME = {
 
 /** Sàn cỡ chữ tuyệt đối (pt) cho mọi tài liệu in. */
 export const MIN_PT = 7
-export const CONTENT_W_PORTRAIT = THEME.page.portrait.w - THEME.page.margin * 2 // 182
+export const CONTENT_W_PORTRAIT = THEME.page.portrait.w - THEME.page.margin * 2 // 178
 export const CONTENT_W_LANDSCAPE = THEME.page.landscape.w - THEME.page.margin * 2 // 265
 
 /* ── Tương phản WCAG 2.x ── */

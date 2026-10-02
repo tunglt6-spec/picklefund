@@ -119,7 +119,7 @@ describe('export-tokens', () => {
     expect(DEFAULT_BRAND_SOFT).toBe('#EEF2FF');
     expect(TYPE).toMatchObject({ display: 22, h1: 16, kpi: 14, h2: 11, body: 8.5, table: 8, label: 7, caption: 7 });
     expect(PAGE.bottom).toBeGreaterThanOrEqual(18);
-    expect(CONTENT_W).toBe(182);
+    expect(CONTENT_W).toBe(178);
   });
 
   it('mọi cỡ chữ ≥ 7pt', () => {
@@ -257,7 +257,7 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
   it('LIQUID GLASS: băng bìa/masthead gradient + chip kính, header bảng kính chữ trắng, hộp AI tấm nhấn, thẻ tông xanh/đỏ', () => {
     const b = makeBrand('#F59E0B');
     expect(css).toMatch(/\.cv-hero\{[^}]*background:var\(--mast-bg\);color:#fff/);
-    expect(css).toMatch(/\.cv-hero\{[^}]*background:var\(--mast-bg\);color:#fff/);
+    expect(css).toMatch(/\.mast\{[^}]*background:var\(--mast-bg\);color:#fff/);
     expect(css).toMatch(/thead th\{background:linear-gradient\([^}]*var\(--mast-mid\);color:#fff/);
     expect(css).toMatch(/\.aibox\{background-color:var\(--acc-t\)/);
     expect(css).toContain('<div class="wash"></div>');
@@ -376,30 +376,29 @@ describe('fallback jsPDF', () => {
   });
 });
 
-describe('khoảng thở CÂN BẰNG (không sát, không thưa)', () => {
-  it('token AIR đúng mốc cân bằng: gutter/hàng 4.5, mục 9, tiêu đề 5, padding 4.5, line-height 1.45', () => {
-    expect(AIR.gutter).toBe(4.5);
-    expect(AIR.row).toBe(4.5);
-    expect(AIR.section).toBe(9);
-    expect(AIR.head).toBe(5);
-    expect(AIR.pad).toBe(4.5);
-    expect(AIR.lineHeight).toBe(1.45);
-    expect(PAGE).toMatchObject({ top: 14, right: 14, bottom: 18, left: 14 });
+describe('khoảng thở Luxury SaaS', () => {
+  it('token AIR đạt sàn đo được (gutter/hàng ≥ 6, mục ≥ 12, tiêu đề ≥ 5, padding ≥ 5, line-height ≥ 1.5)', () => {
+    expect(AIR.gutter).toBeGreaterThanOrEqual(6);
+    expect(AIR.row).toBeGreaterThanOrEqual(6);
+    expect(AIR.section).toBeGreaterThanOrEqual(12);
+    expect(AIR.head).toBeGreaterThanOrEqual(5);
+    expect(AIR.pad).toBeGreaterThanOrEqual(5);
+    expect(AIR.lineHeight).toBeGreaterThanOrEqual(1.5);
   });
 
-  it('HTML Chrome chảy liên tục: KHÔNG ép ngắt trang giữa các mục, dùng token khoảng thở', () => {
+  it('HTML Chrome ngắt trang theo cụm (break-before) và dùng token khoảng thở', () => {
     const h = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { now: new Date('2026-10-02T03:15:00Z') });
-    expect(h).not.toMatch(/break-before:page|page-break-before:always|break-after:page|page-break-after:always/);
-    expect(h).not.toMatch(/class="[^"]*\bpb\b/);
+    expect((h.match(/class="sect[^"]* pb"/g) ?? []).length).toBeGreaterThanOrEqual(5);
+    expect(h).toContain('.pb{break-before:page');
     expect(h).toContain(`gap:${AIR.row}mm ${AIR.gutter}mm`);
     expect(h).not.toMatch(/\.half\{|\.three\{/);
   });
 
-  it('fallback jsPDF: ≤ 6 trang và không có chữ < 7pt', () => {
+  it('fallback jsPDF tách trang theo cụm (≥ 7 trang) và không có chữ < 7pt', () => {
     const buf = buildExecutiveReportPdf(report('CLB Thăng Long', 8), 'Tóm tắt AI', { now: new Date('2026-10-02T03:15:00Z') });
     expect(buf).not.toBeNull();
     const pages = (buf!.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
-    expect(pages).toBeLessThanOrEqual(6);
+    expect(pages).toBeGreaterThanOrEqual(7);
     const sizes = [...buf!.toString('latin1').matchAll(/\/F\d+\s+([\d.]+)\s+Tf/g)].map((m) => Number(m[1]));
     expect(sizes.length).toBeGreaterThan(0);
     for (const sz of sizes) expect(sz).toBeGreaterThanOrEqual(MIN_FONT_PT);

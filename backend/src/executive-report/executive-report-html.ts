@@ -29,9 +29,6 @@ import { buildExecModel, deltaText, healthTone, toneOfValue, type NumTone } from
 
 export const esc = escHtml;
 
-/** Chiều cao panel bìa (mm): ~40% vùng nội dung — đủ sang, không để khoảng rỗng. */
-export const COVER_H = 64;
-
 export interface ReportHtmlOpts {
   /** Màu chủ đạo CLB (#RRGGBB); sai/rỗng → mặc định. */
   brandColor?: string | null;
@@ -49,7 +46,7 @@ function ring(score: number, stroke: string, numColor: string, size = 22): strin
     <circle cx="45" cy="45" r="${r}" fill="none" stroke="${stroke}" stroke-width="9"
       stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 45 45)"/>
     <text x="45" y="50" text-anchor="middle" font-size="27" font-weight="700" fill="${numColor}">${score}</text>
-    <text x="45" y="64" text-anchor="middle" font-size="12" fill="${COLORS.muted}">/ 100</text>
+    <text x="45" y="64" text-anchor="middle" font-size="11" fill="${COLORS.muted}">/ 100</text>
   </svg>`;
 }
 
@@ -170,7 +167,7 @@ export function buildReportHtml(
     ? `<ul class="alist">${m.alerts.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>`
     : '<p class="okt sm">Không có cảnh báo — CLB ổn định.</p>';
   const recs = m.recs.length
-    ? `<ul class="rlist">${m.recs.map((r) => `<li><span class="tag">${esc(r.agent)}</span><span class="rt">${esc(r.text)}</span></li>`).join('')}</ul>`
+    ? `<ul class="rlist">${m.recs.map((r) => `<li><span class="tag">${esc(r.agent)}</span>${esc(r.text)}</li>`).join('')}</ul>`
     : '<p class="mut sm">Không có đề xuất.</p>';
 
   const dnaTraits = m.dna.traits.map((t) => dimBar(t.label, t.score)).join('');
@@ -202,33 +199,27 @@ b{font-weight:700}
 .mut{color:var(--muted)}.sm{font-size:${pt(TYPE.table)}}.okt{color:${COLORS.pos};font-weight:700}
 /* Khối: không khung bao */
 .sect{margin-bottom:${mm(AIR.section)};break-inside:avoid;page-break-inside:avoid}
+.pb{break-before:page;page-break-before:always}
 .sect--flow{break-inside:auto;page-break-inside:auto}
 .sect--flow table{break-inside:auto}
 .sect--flow thead{display:table-header-group}
 tr{break-inside:avoid;page-break-inside:avoid}
-.avgcard,.fstrip,.cwrap{break-inside:avoid}
+.avgcard{break-inside:avoid}
 .mhead{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
-.shead{break-after:avoid;page-break-after:avoid}
-/* 2 cột: mỗi cột rộng (182-9)/2 = 86.5mm; hai cột cao bằng nhau (phần thân giãn đều) */
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:${mm(AIR.section)};margin-bottom:${mm(AIR.section)};break-inside:avoid;page-break-inside:avoid}
-.col{display:flex;flex-direction:column;min-width:0}
-.row2>.sect{margin-bottom:0}
-.col .shead{margin-bottom:${mm(AIR.head)}}
-.col .stitle{font-size:${pt(9.5)};letter-spacing:0;white-space:nowrap}
-.col .snote{max-width:55%}
-.fillg{flex:1;display:grid;gap:${mm(AIR.row)} ${mm(AIR.gutter)};grid-auto-rows:1fr;align-content:stretch}
-.fillg.c1{grid-template-columns:1fr}
-.fillg.c2{grid-template-columns:1fr 1fr}
-.fillg.c3{grid-template-columns:repeat(3,1fr)}
-.fillg.c1 .tile{display:flex;justify-content:space-between;align-items:center}
-.fillg.c1 .tile .v{margin-top:0}
-.fillg .dim{display:flex;flex-direction:column;justify-content:center}
 /* Tiêu đề mục: chữ HOA đậm màu brand + vạch brand bên trái + đường kẻ brandBorder */
 .shead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:${mm(AIR.head)};padding-bottom:${mm(2.5)};border-bottom:${mm(PAGE.border)} solid var(--brandBorder)}
 .hb{border-left:${mm(1.2)} solid var(--brand);padding-left:${mm(2.5)}}
 .eyebrow{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .stitle{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-top:${mm(0.3)};line-height:1.25;text-transform:uppercase;letter-spacing:.2pt}
 .snote{font-size:${pt(TYPE.caption)};color:var(--muted);text-align:right;max-width:48%}
+/* Masthead trang 2+: BĂNG KÍNH chuyển sắc chéo + bóng loáng nửa trên, chip kính chứa kỳ/giờ xuất, gauge trong kính trắng */
+.mast{display:flex;align-items:center;justify-content:space-between;padding:${mm(6)} ${mm(SPACE.s3)};margin-bottom:${mm(AIR.section)};background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:var(--g-r)}
+.mast-l{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
+.mast .lab{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
+.mast h1{font-size:${pt(TYPE.h1)};font-weight:700;line-height:1.2;margin:${mm(0.5)} 0;color:#fff}
+.mast .sub{display:inline-block;white-space:nowrap;font-size:${pt(TYPE.body)};color:#fff;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.4)} ${mm(2.5)}}
+.gauge{display:flex;align-items:center;gap:${mm(SPACE.s2)};background:${g(0.92)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.1)},0 ${mm(1.2)} 0 ${rgba(COLORS.ink, 0.05)};border-radius:var(--g-r);padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
+.gauge .cls{white-space:nowrap;font-size:${pt(TYPE.table)};font-weight:700;text-transform:uppercase;letter-spacing:.3pt}
 /* Logo: vòng kính trắng (nổi trên băng brand) */
 .logo{background:${g(0.94)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:0 0 0 ${mm(0.5)} ${g(0.3)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.12)};border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .logo img{width:86%;height:86%;object-fit:contain}
@@ -241,8 +232,8 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .kpi.acc{background-color:var(--acc-t);box-shadow:inset 0 0 0 ${mm(0.2)} var(--acc-b),${sh}}
 /* Health dims */
 .dims{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(AIR.row)} ${mm(AIR.gutter)}}
-.dim{padding:${mm(2.8)} ${mm(AIR.pad)}}
-.dim-h{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};margin-bottom:${mm(1.4)};font-weight:700;color:var(--ink2)}
+.dim{padding:${mm(AIR.padBar)} ${mm(AIR.pad)}}
+.dim-h{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};margin-bottom:${mm(1.8)};font-weight:700;color:var(--ink2)}
 .dim-h b{font-size:${pt(TYPE.body)}}
 .bar{height:${mm(2.2)};background:${rgba(B.brand, GLASS.track)};box-shadow:inset 0 ${mm(0.2)} ${mm(0.4)} ${rgba(B.brandDeep, 0.12)};border-radius:${mm(1.1)};overflow:hidden}
 .bar i{display:block;height:100%;border-radius:${mm(1.1)};box-shadow:inset 0 ${mm(0.45)} 0 ${g(0.35)}}
@@ -250,10 +241,10 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:${mm(AIR.row)} ${mm(AIR.gutter)}}
 .kpi,.tile,.fcell{padding:${mm(AIR.pad)}}
 .kl,.tile .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
-.kv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--v);margin-top:${mm(1.3)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.ks{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(0.6)}}
+.kv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--v);margin-top:${mm(1.8)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ks{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
 /* AI summary: TẤM NHẤN kính (brand α + viền brand α) + vạch brand trái */
-.aibox{background-color:var(--acc-t);border:var(--g-rim);box-shadow:inset ${mm(1.4)} 0 0 var(--brand),${accSh};border-radius:var(--g-r);padding:${mm(5)} ${mm(SPACE.s3)} ${mm(5)} ${mm(SPACE.s3 + 1.5)}}
+.aibox{background-color:var(--acc-t);border:var(--g-rim);box-shadow:inset ${mm(1.4)} 0 0 var(--brand),${accSh};border-radius:var(--g-r);padding:${mm(6)} ${mm(SPACE.s4)} ${mm(6)} ${mm(SPACE.s4 + 1)}}
 .aibox .h{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s2)};text-transform:uppercase;letter-spacing:.2pt}
 .aibox .b{font-size:${pt(TYPE.body)};line-height:${AIR.lineHeight};white-space:pre-line;color:var(--ink)}
 /* Finance: dải KPI 3×2 + biểu đồ trong tấm kính toàn bề rộng */
@@ -309,57 +300,56 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .dist .d b{color:var(--ink)}
 .dist .d i{width:${mm(2)};height:${mm(2)};border-radius:50%;display:inline-block;margin-right:${mm(1.5)};vertical-align:middle}
 /* Hàng 2-3 cột */
-.callout{font-size:${pt(TYPE.table)};color:var(--ink2);line-height:${AIR.lineHeight};margin-top:${mm(AIR.row)}}
+.callout{font-size:${pt(TYPE.table)};color:var(--ink2);line-height:1.65;margin-top:${mm(AIR.head)}}
 .callout b{color:var(--ink)}
-.pl{display:flex;align-items:center;gap:${mm(SPACE.s2)};font-size:${pt(TYPE.table)};padding:${mm(2)} 0;border-bottom:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)}}
+.pl{display:flex;align-items:center;gap:${mm(SPACE.s2)};font-size:${pt(TYPE.table)};padding:${mm(2.4)} 0;border-bottom:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)}}
 .pl:last-child{border-bottom:none}
 .plr{font-weight:700;color:var(--brandInk);${chip(B.brand)};border-radius:50%;width:${mm(5)};height:${mm(5)};line-height:${mm(4.6)};text-align:center}
 .pln{flex:1;font-weight:700}.plw{color:var(--ink2);font-size:${pt(TYPE.caption)};font-weight:700}
 /* AI agents */
-/* 5 trợ lý: 1 hàng 5 thẻ cùng rộng; đơn vị xuống dòng dưới số để thẻ gọn */
-.aigrid{display:grid;grid-template-columns:repeat(5,1fr);gap:${mm(AIR.row)} ${mm(AIR.gutter)}}
-.agent{padding:${mm(AIR.pad + 1)} ${mm(AIR.pad)}}
+/* 5 trợ lý: hàng 1 = 3 thẻ, hàng 2 = 2 thẻ rộng (lưới 6 cột) → không chật, cân đối */
+.aigrid{display:grid;grid-template-columns:repeat(6,1fr);gap:${mm(AIR.row)} ${mm(AIR.gutter)}}
+.agent{grid-column:span 2;padding:${mm(AIR.pad)}}
+.agent:nth-child(n+4){grid-column:span 3}
 .an{font-size:${pt(TYPE.table)};font-weight:700;color:var(--ink)}
-.av{font-size:${pt(TYPE.kpi)};font-weight:700;margin:${mm(1.4)} 0 ${mm(1.2)};line-height:1.15;font-variant-numeric:tabular-nums}
-.au{display:block;font-size:${pt(TYPE.caption)};color:var(--muted);font-weight:400;margin-top:${mm(0.3)}}
-.ad{font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)};margin-top:${mm(2)};padding-top:${mm(2)};line-height:1.4}
+.av{font-size:${pt(TYPE.kpi)};font-weight:700;margin:${mm(1.8)} 0;line-height:1.1;font-variant-numeric:tabular-nums}
+.au{font-size:${pt(TYPE.caption)};color:var(--muted);font-weight:400;margin-left:${mm(1)}}
+.ad{font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)};margin-top:${mm(2.5)};padding-top:${mm(2.5)};line-height:1.5}
 /* Timeline / alerts / recs */
 .tl{list-style:none;border-left:${mm(PAGE.border)} solid var(--brandBorder);padding-left:${mm(SPACE.s3)};margin-left:${mm(1.5)}}
-.tl li{position:relative;margin-bottom:${mm(AIR.row + 3.5)};font-size:${pt(TYPE.table)};break-inside:avoid}
+.tl li{position:relative;margin-bottom:${mm(4.5)};font-size:${pt(TYPE.table)};break-inside:avoid}
 .tl li:last-child{margin-bottom:0}
 .tl li:before{content:'';position:absolute;left:${mm(-9.4)};top:${mm(0.8)};width:${mm(2.4)};height:${mm(2.4)};border-radius:50%;background:var(--dot);box-shadow:0 0 0 ${mm(0.5)} ${g(0.8)}}
 .tld{font-weight:700;color:var(--ink);margin-right:${mm(1.5)}}
 .alist,.rlist{list-style:none}
-.alist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(3.2)} ${mm(AIR.pad)};margin-bottom:${mm(AIR.row)};background-color:${glassTint(COLORS.warnFill, GLASS.chipFill)};border:var(--g-rim);box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(COLORS.warnFill, GLASS.chipBorder)};border-radius:var(--g-r);line-height:${AIR.lineHeight};break-inside:avoid}
+.alist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(4)} ${mm(AIR.pad)};margin-bottom:${mm(AIR.row)};background-color:${glassTint(COLORS.warnFill, GLASS.chipFill)};border:var(--g-rim);box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(COLORS.warnFill, GLASS.chipBorder)};border-radius:var(--g-r);line-height:${AIR.lineHeight};break-inside:avoid}
 .alist li:last-child,.rlist li:last-child{margin-bottom:0}
-.rlist li{display:flex;align-items:center;font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(3)} ${mm(AIR.pad)};margin-bottom:${mm(AIR.row)};line-height:${AIR.lineHeight};break-inside:avoid;background:var(--g-bg);border:var(--g-rim);box-shadow:var(--g-sh);border-radius:var(--g-r)}
+.rlist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(1)} 0;margin-bottom:${mm(SPACE.s2)};line-height:1.7;break-inside:avoid}
 .tag{display:inline-block;color:var(--brandInk);${chip(B.brand)};font-size:${pt(TYPE.label)};font-weight:700;padding:${mm(0.4)} ${mm(2.4)};border-radius:${mm(3)};margin-right:${mm(2.5)}}
-.closing{color:var(--muted);font-size:${pt(TYPE.caption)};border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.16)};padding-top:${mm(SPACE.s2)};margin-top:${mm(AIR.row)}}
-.cover{margin-bottom:${mm(AIR.section)}}
-.cv-hero{position:relative;overflow:hidden;background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:${mm(4)};padding:${mm(9)} ${mm(SPACE.s5)} ${mm(9)};height:${mm(COVER_H)};display:flex;flex-direction:column;justify-content:space-between}
-.cv-hero:after{content:'';position:absolute;right:${mm(-18)};bottom:${mm(-34)};width:${mm(84)};height:${mm(84)};border-radius:50%;background:radial-gradient(circle at 35% 30%,${g(0.14)},${g(0.02)} 70%);border:${mm(0.3)} solid ${g(0.22)}}
+.closing{color:var(--muted);font-size:${pt(TYPE.caption)};border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.16)};padding-top:${mm(SPACE.s2)};margin-top:${mm(AIR.section)}}
+/* BÌA — băng kính lớn (gradient chéo + bóng loáng + viền trắng) / thẻ chỉ số kính / tấm thông tin tài liệu */
+.cover{height:${mm(259)};display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;break-after:page}
+.cv-hero{position:relative;overflow:hidden;background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:${mm(4)};padding:${mm(SPACE.s5)} ${mm(SPACE.s5)} ${mm(SPACE.s6)};height:${mm(150)};display:flex;flex-direction:column;justify-content:space-between}
+.cv-hero:after{content:'';position:absolute;right:${mm(-18)};bottom:${mm(-26)};width:${mm(92)};height:${mm(92)};border-radius:50%;background:radial-gradient(circle at 35% 30%,${g(0.14)},${g(0.02)} 70%);border:${mm(0.3)} solid ${g(0.22)}}
 .cv-hero>*{position:relative;z-index:1}
-.cv-bot{display:flex;align-items:flex-end;justify-content:space-between;gap:${mm(SPACE.s4)}}
-.gauge{display:flex;align-items:center;gap:${mm(SPACE.s2)};background:${g(0.92)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.1)},0 ${mm(1.2)} 0 ${rgba(COLORS.ink, 0.05)};border-radius:var(--g-r);padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
-.gauge .cls{white-space:nowrap;font-size:${pt(TYPE.table)};font-weight:700;text-transform:uppercase;letter-spacing:.3pt}
 .cv-top{display:flex;align-items:center;justify-content:space-between}
 .cv-id{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
 .cv-brand{font-size:${pt(TYPE.h2)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
 .cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.8)} ${mm(3)}}
 .cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.5pt;text-transform:uppercase;font-weight:700;color:#fff}
-.cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:#fff;margin:${mm(2)} 0 ${mm(1.5)}}
+.cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:#fff;margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
 .cv-period{font-size:${pt(TYPE.h2)};color:#fff}
-.cv-rule{width:${mm(SPACE.s6)};height:${mm(1)};border-radius:${mm(0.5)};background:var(--badge);margin-top:${mm(SPACE.s2)}}
-.cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(AIR.gutter)};margin-top:${mm(AIR.row)}}
-.cv-st{padding:${mm(3.6)} ${mm(SPACE.s3)}}
+.cv-rule{width:${mm(SPACE.s6)};height:${mm(1)};border-radius:${mm(0.5)};background:var(--badge);margin-top:${mm(SPACE.s4)}}
+.cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s3)}}
+.cv-st{padding:${mm(SPACE.s4)} ${mm(SPACE.s3)}}
 .cv-st .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
-.cv-st .v{font-size:${pt(TYPE.display)};font-weight:700;color:var(--v);margin-top:${mm(1.5)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.cv-st .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1.2)}}
-.cv-doc{padding:${mm(3.6)} ${mm(SPACE.s3)};margin-top:${mm(AIR.row)}}
-.cv-dh{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(2)}}
+.cv-st .v{font-size:${pt(TYPE.display)};font-weight:700;color:var(--v);margin-top:${mm(SPACE.s2)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cv-st .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1.6)}}
+.cv-doc{padding:${mm(AIR.pad + 1)} ${mm(SPACE.s4)} ${mm(AIR.pad + 2)}}
+.cv-dh{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(AIR.head)}}
 .cv-dg{display:grid;grid-template-columns:1.1fr 1fr 1.6fr;gap:${mm(SPACE.s4)}}
 .cv-dg .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
-.cv-dg .v{font-size:${pt(TYPE.table)};color:var(--ink);margin-top:${mm(1)}}`;
+.cv-dg .v{font-size:${pt(TYPE.table)};color:var(--ink);margin-top:${mm(1.4)}}`;
 
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><style>
 ${css}
@@ -372,14 +362,11 @@ ${css}
       <div class="cv-id">${logo('md')}<div class="cv-brand">${esc(m.brandLabel)}</div></div>
       <div class="cv-tag">Executive Report</div>
     </div>
-    <div class="cv-bot">
-      <div>
-        <div class="cv-eyb">Báo cáo điều hành · Executive Report</div>
-        <h1 class="cv-title">${esc(m.clubName || m.brandLabel)}</h1>
-        <div class="cv-period">Kỳ báo cáo: ${esc(m.periodName)}</div>
-        <div class="cv-rule"></div>
-      </div>
-      <div class="gauge">${ring(m.health, m.tone.fill, m.tone.text, 19)}<div class="cls" style="color:${m.tone.text}">${esc(m.grade)}</div></div>
+    <div>
+      <div class="cv-eyb">Báo cáo điều hành · Executive Report</div>
+      <h1 class="cv-title">${esc(m.clubName || m.brandLabel)}</h1>
+      <div class="cv-period">Kỳ báo cáo: ${esc(m.periodName)}</div>
+      <div class="cv-rule"></div>
     </div>
   </div>
   <div class="cv-stats">
@@ -395,6 +382,18 @@ ${css}
   </div>
 </section>
 
+<div class="mast">
+  <div class="mast-l">
+    ${logo('sm')}
+    <div>
+      <div class="lab">${esc(m.brandLabel)}</div>
+      <h1>Báo cáo điều hành</h1>
+      <div class="sub">Kỳ: ${esc(m.periodName)} · Xuất lúc ${esc(m.exportedAt)}</div>
+    </div>
+  </div>
+  <div class="gauge">${ring(m.health, m.tone.fill, m.tone.text)}<div class="cls" style="color:${m.tone.text}">${esc(m.grade)}</div></div>
+</div>
+
 <div class="sect">
   ${head('01', 'Sức khỏe tổng hợp', 'Điểm sức khỏe CLB', 'Tổng hợp 6 chiều từ số liệu thật của kỳ')}
   <div class="dims">${m.dims.map((d) => dimBar(d.label, d.score)).join('')}</div>
@@ -405,7 +404,7 @@ ${css}
   <div class="kpis">${m.kpis.map((k) => kpi(k.l, k.v, k.s, k.accent, k.tone)).join('')}</div>
 </div>
 
-<div class="sect aibox">
+<div class="sect aibox pb">
   <div class="h">Tóm tắt điều hành (AI)</div>
   <div class="b">${esc(m.aiText)}</div>
 </div>
@@ -421,7 +420,7 @@ ${css}
   ${chart}
 </div>
 
-<div class="sect sect--flow">
+<div class="sect sect--flow pb">
   <div class="mhead">
     ${head('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm')}
     <div class="avgcard">
@@ -435,36 +434,34 @@ ${css}
   </table>
 </div>
 
-<div class="row2">
-  <div class="sect col">
-    ${head('05', 'Dự báo', 'Xu hướng 30–90 ngày')}
-    <div class="fillg c1">${m.forecast.tiles.map((t) => tile(t.l, t.v, t.tone)).join('')}</div>
-    <p class="callout">${esc(m.forecast.callout)} <i class="mut">${esc(m.forecast.note)}</i></p>
-  </div>
-  <div class="sect col">
-    ${head('06', 'Club DNA', m.dna.archetype)}
-    <div class="fillg c1">${dnaTraits}</div>
-  </div>
+<div class="sect pb">
+  ${head('05', 'Dự báo', 'Xu hướng 30–90 ngày')}
+  <div class="tiles">${m.forecast.tiles.map((t) => tile(t.l, t.v, t.tone)).join('')}</div>
+  <p class="callout">${esc(m.forecast.callout)} <i class="mut">${esc(m.forecast.note)}</i></p>
 </div>
 
-<div class="row2">
-  <div class="sect col">
-    ${head('07', 'Hoạt động', 'Vận hành buổi chơi')}
-    <div class="fillg c2">${m.activity.kpis.map((k) => tile(k.l, k.v, k.tone)).join('')}</div>
-    <div class="callout">
-      ${m.activity.busiest ? `<b>Đông nhất:</b> ${esc(m.activity.busiest)}<br>` : ''}
-      ${m.activity.emptiest ? `<b>Ít nhất:</b> ${esc(m.activity.emptiest)}<br>` : ''}
-      <i class="mut">Tỷ lệ lấp đầy tính theo sĩ số hoạt động (chưa có sức chứa/buổi).</i>
-    </div>
-  </div>
-  <div class="sect col">
-    ${head('08', 'Thi đấu', 'Giải & Minigame')}
-    <div class="fillg c3">${m.tournament.tiles.map((t) => tile(t.l, t.v, t.tone)).join('')}</div>
-    ${topPlayers ? `<div style="margin-top:${mm(AIR.row)}">${topPlayers}<p class="callout" style="margin-top:${mm(1.5)}"><i class="mut">Người dẫn đầu BXH (chưa có giải MVP chính thức).</i></p></div>` : '<p class="callout mut">Chưa có giải/minigame trong kỳ.</p>'}
+<div class="sect">
+  ${head('06', 'Club DNA', m.dna.archetype)}
+  <div class="dims">${dnaTraits}</div>
+</div>
+
+<div class="sect pb">
+  ${head('07', 'Hoạt động', 'Vận hành buổi chơi')}
+  <div class="kpis">${m.activity.kpis.map((k) => kpi(k.l, k.v, '', false, k.tone)).join('')}</div>
+  <div class="callout">
+    ${m.activity.busiest ? `<b>Đông nhất:</b> ${esc(m.activity.busiest)}<br>` : ''}
+    ${m.activity.emptiest ? `<b>Ít nhất:</b> ${esc(m.activity.emptiest)}<br>` : ''}
+    <i class="mut">Tỷ lệ lấp đầy tính theo sĩ số hoạt động (chưa có sức chứa/buổi).</i>
   </div>
 </div>
 
 <div class="sect">
+  ${head('08', 'Thi đấu', 'Giải & Minigame')}
+  <div class="tiles">${m.tournament.tiles.map((t) => tile(t.l, t.v, t.tone)).join('')}</div>
+  ${topPlayers ? `<div style="margin-top:${mm(AIR.head)}">${topPlayers}<p class="callout"><i class="mut">Người dẫn đầu BXH (chưa có giải MVP chính thức).</i></p></div>` : '<p class="callout mut">Chưa có giải/minigame trong kỳ.</p>'}
+</div>
+
+<div class="sect pb">
   ${head('09', 'Văn phòng AI (AIDO)', 'Hiệu suất tự động hóa', m.agentsHeading)}
   ${agentsHtml}
 </div>
@@ -474,7 +471,7 @@ ${css}
   ${timelineHtml}
 </div>
 
-<div class="sect">
+<div class="sect pb">
   ${head('11', 'Cảnh báo', 'Rủi ro cần lưu ý')}
   ${alerts}
 </div>

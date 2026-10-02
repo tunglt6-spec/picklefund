@@ -133,26 +133,25 @@ export const MIN_FONT_PT = 7;
 // ── Khoảng cách / lề (mm) ──────────────────────────────────────────────
 export const SPACE = { s1: 2, s2: 4, s3: 8, s4: 12, s5: 16, s6: 24 } as const;
 /**
- * KHOẢNG THỞ CÂN BẰNG (mm) — chốt sau khi bản 6/6/12 (quá thưa, trang trống) và bản dày cũ (quá sát) đều bị chê:
- * gutter giữa thẻ cùng hàng 4.5, giữa các hàng thẻ 4.5, giữa các mục 9, tiêu đề mục → nội dung 5, padding trong thẻ 4.5
- * (thanh chiều thu gọn: dọc 3.4), line-height thân 1.45. Nội dung CHẢY LIÊN TỤC (không ép mỗi mục một trang).
+ * KHOẢNG THỞ "Luxury SaaS" (mm) — sàn đo được: gutter giữa thẻ cùng hàng ≥ 6, giữa các hàng thẻ ≥ 6, giữa các mục ≥ 12,
+ * tiêu đề mục → nội dung ≥ 5, padding trong thẻ ≥ 5 (thanh chiều thu gọn: dọc ≥ 3), line-height thân ≥ 1.5.
  */
-export const AIR = { gutter: 4.5, row: 4.5, section: 9, head: 5, pad: 4.5, padBar: 3.4, lineHeight: 1.45 } as const;
-/** A4 dọc: lề trên 14 / phải 14 / dưới 18 (chừa footer) / trái 14 → vùng nội dung 182 x 265mm. */
+export const AIR = { gutter: 6, row: 6, section: 12, head: 6, pad: 5, padBar: 3.4, lineHeight: 1.55 } as const;
+/** A4 dọc: lề trên 14 / phải 16 / dưới 20 (≥18: chừa chỗ footer) / trái 16. */
 export const PAGE = {
   w: 210,
   h: 297,
   top: 14,
-  right: 14,
-  bottom: 18,
-  left: 14,
+  right: 16,
+  bottom: 20,
+  left: 16,
   radius: 2, // bo góc tối đa 2mm
   hair: 0.2,
   border: 0.3,
   strong: 0.5,
 } as const;
-export const CONTENT_W = PAGE.w - PAGE.left - PAGE.right; // 182
-export const CONTENT_H = PAGE.h - PAGE.top - PAGE.bottom; // 265
+export const CONTENT_W = PAGE.w - PAGE.left - PAGE.right; // 178
+export const CONTENT_H = PAGE.h - PAGE.top - PAGE.bottom; // 263
 
 export const pt = (n: number) => `${n}pt`;
 export const mm = (n: number) => `${n}mm`;

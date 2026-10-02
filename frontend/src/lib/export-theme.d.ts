@@ -28,7 +28,7 @@ export const THEME: {
   line: { hair: number; border: number; strong: number; brandRule: number }
   radius: { card: number; bar: number }
   row: { h: number; lineH: number; padX: number }
-  air: { gutter: number; rowGap: number; section: number; titleGap: number; cardPad: number; afterMast: number; billGutter: number; billRowGap: number; mastH: number; contH: number; kpi: { full: number; plain: number; compact: number } }
+  air: { gutter: number; rowGap: number; section: number; titleGap: number; cardPad: number; afterMast: number; billGutter: number; billRowGap: number }
   glass: {
     tile: number; row: number; accent: number; accentEdge: number
     edgeWhite: number; edgeWhiteW: number; hair: number; hairW: number; highlight: number; highlightW: number

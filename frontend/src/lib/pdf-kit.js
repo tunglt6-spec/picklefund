@@ -128,8 +128,6 @@ export function createKit(doc, branding = {}) {
   const M = T.page.margin
   const CW = W - M * 2
   const kit = { doc, T, C, G, B, W, H, M, CW, branding, bottom: H - T.page.bottomPad }
-  /** y bắt đầu nội dung ở trang tiếp (sau masthead gọn). */
-  kit.contTop = M + T.air.contH + T.air.afterMast
 
   /* Màu SINH ĐỘNG chỉ cho chữ ĐẬM ≥ 8.5pt; còn lại dùng bản AA tương ứng. */
   const AA = new Map([[C.pos, C.posText], [C.neg, C.negText], [C.cyan, C.info], [C.orange, C.warn], [C.amber, C.warn]])
@@ -364,64 +362,64 @@ export function createKit(doc, branding = {}) {
     const white = C.white
     const R = G.radius.band
     if (o.first !== false) {
-      const h = T.air.mastH
+      const h = 34
       kit.softShadow(M, M, CW, h, R, { k: 1.2 })
       kit.glassBar(M, M, CW, h, R)
-      const logoS = 14
+      const logoS = 16
       kit.logo(M + 6, M + (h - logoS) / 2, logoS)
-      const textX = M + 6 + logoS + 4.5
+      const textX = M + 6 + logoS + 5
       const rightW = 56
       const rightX = W - M - 9
       const lines = [o.docCode ? `Mã TL: ${o.docCode}` : '', o.exportedText ? `Xuất ${o.exportedText}` : '', ...(o.right || [])].filter(Boolean)
       const nLines = Math.min(lines.length, o.number ? 3 : 4)
       // chip kính chứa số / mã TL / ngày xuất (nền tối nhẹ để chữ trắng giữ ≥ 4.5:1)
-      const chipH = 4.8 + (nLines > 0 ? (nLines - 1) * 4.4 : 0) + 3 + (o.number ? 5 : 0)
+      const chipH = 5.2 + (nLines > 0 ? (nLines - 1) * 5 : 0) + 3.4 + (o.number ? 5.4 : 0)
       const chipW = rightW + 7
       const chipX = W - M - 5 - chipW
-      const chipY = M + Math.max(3, (h - chipH) / 2)
+      const chipY = M + Math.max(4, (h - chipH) / 2)
       if (o.number || nLines > 0) {
         kit.fillRR(chipX, chipY, chipW, chipH, G.radius.chip + 0.5, B.glassStart, G.mast.chip)
         kit.strokeRR(chipX, chipY, chipW, chipH, G.radius.chip + 0.5, white, G.mast.chipEdge, 0.25)
         kit.lineA(chipX + 3, chipY + 0.5, chipX + chipW - 3, chipY + 0.5, white, 0.6, G.highlightW)
       }
-      let ry0 = chipY + 5
+      let ry0 = chipY + 5.4
       if (o.number) {
         kit.font('bold', T.type.body, white)
         doc.text(kit.clip(o.number, rightW), rightX, ry0, { align: 'right' })
-        ry0 += 5
+        ry0 += 5.4
       }
       kit.font('normal', T.type.caption, white)
-      lines.slice(0, nLines).forEach((ln, i) => doc.text(kit.clip(ln, rightW), rightX, ry0 + i * 4.4, { align: 'right' }))
+      lines.slice(0, nLines).forEach((ln, i) => doc.text(kit.clip(ln, rightW), rightX, ry0 + i * 5, { align: 'right' }))
       const textMaxW = chipX - 5 - textX
-      kit.tracked(club, textX, M + 8.4, { color: white, maxW: textMaxW })
+      kit.tracked(club, textX, M + 9.8, { color: white, maxW: textMaxW })
       const tagW = o.tag ? kit.trackedWidth(o.tag) + 5 + 3 : 0
       kit.font('bold', T.type.h1, white)
       const titleTxt = kit.fit(o.title, textMaxW - tagW, T.type.h1, T.type.h2)
-      doc.text(titleTxt, textX, M + 16.2)
+      doc.text(titleTxt, textX, M + 18.6)
       if (o.tag) {
         const tw = doc.getTextWidth(titleTxt)
-        kit.tag(o.tag, textX + tw + 3, M + 16.2 - 4)
+        kit.tag(o.tag, textX + tw + 3, M + 18.6 - 4)
       }
       if (o.subtitle) {
         kit.font('normal', T.type.body, white)
-        doc.text(kit.clip(o.subtitle, textMaxW), textX, M + 23)
+        doc.text(kit.clip(o.subtitle, textMaxW), textX, M + 26.2)
       }
       return M + h + T.air.afterMast
     }
     // trang tiếp: băng thấp hơn, đủ chỗ để nội dung KHÔNG dính chữ header
-    const h = T.air.contH
+    const h = 18
     kit.softShadow(M, M, CW, h, R, { k: 1.1 })
     kit.glassBar(M, M, CW, h, R)
-    kit.logo(M + 6, M + 3.5, 9)
+    kit.logo(M + 6, M + 4.5, 9)
     const textX = M + 6 + 9 + 5
     const right = (o.right || [])[0]
-    kit.tracked(club, textX, M + 5.8, { color: white, maxW: 90 })
+    kit.tracked(club, textX, M + 6.4, { color: white, maxW: 90 })
     kit.font('bold', T.type.h2, white)
     const txt = `${o.title}${o.section ? ' · ' + o.section : ''} (tiếp)`
-    doc.text(kit.clip(txt, W - M - 8 - textX - (right ? 40 : 0)), textX, M + 11.6)
+    doc.text(kit.clip(txt, W - M - 8 - textX - (right ? 40 : 0)), textX, M + 12.8)
     if (right) {
       kit.font('normal', T.type.caption, white)
-      doc.text(kit.clip(right, 38), W - M - 8, M + 9.6, { align: 'right' })
+      doc.text(kit.clip(right, 38), W - M - 8, M + 9.2, { align: 'right' })
     }
     return M + h + T.air.afterMast
   }
@@ -432,20 +430,19 @@ export function createKit(doc, branding = {}) {
    * tone: 'pos' xanh sinh động · 'neg' đỏ sinh động (số lớn đậm — dùng màu sinh động).
    */
   kit.kpiCard = ({ x, y, w, label, value, caption, tone, accent, compact }) => {
-    const K = T.air.kpi
-    const h = compact ? K.compact : caption != null && caption !== '' ? K.full : K.plain
+    const h = compact ? 17 : caption != null && caption !== '' ? 25 : 20
     kit.glassPanel(x, y, w, h, { accent, r: compact ? 3 : G.radius.panel })
     const px = T.air.cardPad
-    kit.tracked(label, x + px, y + (compact ? 5.4 : 6), { color: accent ? B.brandDark : C.muted, maxW: w - px * 2 })
+    kit.tracked(label, x + px, y + 6.6, { color: accent ? B.brandDark : C.muted, maxW: w - px * 2 })
     const text = String(value ?? '')
     const posC = accent ? C.posText : C.pos
     const vColor = tone === 'neg' || /^-\s*\d/.test(text) ? C.neg : tone === 'pos' ? posC : tone === 'warn' ? (accent ? C.warn : C.amber) : accent || tone === 'brand' ? B.brandDark : C.ink
     kit.font('bold', compact ? T.type.h2 : T.type.kpi, vColor)
     const shown = kit.fit(text, w - px * 2, compact ? T.type.h2 : T.type.kpi, compact ? 8.5 : 10)
-    doc.text(shown, x + px, y + (compact ? 11.4 : 12.9))
+    doc.text(shown, x + px, y + (compact ? 13.2 : 15.2))
     if (caption != null && caption !== '' && !compact) {
       kit.font('normal', T.type.caption, accent ? C.ink2 : C.muted)
-      doc.text(kit.clip(caption, w - px - 3), x + px, y + 18.4)
+      doc.text(kit.clip(caption, w - px - 3), x + px, y + 20.8)
     }
     return h
   }
@@ -485,7 +482,7 @@ export function createKit(doc, branding = {}) {
   /** Tiêu đề mục: CHỮ HOA đậm brandDark (h2 11) — trả y sau tiêu đề. */
   kit.sectionTitle = (text, y, o = {}) => {
     kit.font('bold', T.type.h2, o.color ?? B.brandDark)
-    doc.text(kit.clip(String(text ?? '').toUpperCase(), CW), M, y + 3.2)
+    doc.text(kit.clip(String(text ?? '').toUpperCase(), CW), M, y + 3.5)
     return y + T.air.titleGap
   }
 
@@ -506,7 +503,7 @@ export function createKit(doc, branding = {}) {
     const padOut = 7
     const x1 = M + padOut
     const x2 = W - M - padOut
-    const padTop = 2.5
+    const padTop = 3
     const items = rows.map((r) => {
       kit.font('normal', T.type.body, C.muted)
       const kw = Math.min(doc.getTextWidth(r.k) + 6, CW * 0.45)
@@ -518,8 +515,8 @@ export function createKit(doc, branding = {}) {
           : r.tone === 'brand' || r.total ? B.brandDark : C.ink
       kit.font(style, vSize, color)
       const lines = kit.wrap(String(r.v ?? ''), vMax, r.lines ?? 3)
-      const baseH = o.rowH ?? 8.4
-      const rowH = lines.length > 1 ? lines.length * 4.8 + 4 : baseH
+      const baseH = o.rowH ?? 8.8
+      const rowH = lines.length > 1 ? lines.length * 5.2 + 5 : baseH
       return { r, style, vSize, color, lines, rowH }
     })
     const total = items.reduce((s, it) => s + it.rowH, 0) + padTop * 2
@@ -538,9 +535,9 @@ export function createKit(doc, branding = {}) {
         kit.glassPanel(x1 - 2, yy + 1, x2 - x1 + 4, rowH - 2, { accent: true, r: G.radius.chip + 0.5, shadow: false })
       }
       kit.font(r.total ? 'bold' : 'normal', T.type.body, r.total ? B.brandDark : C.muted)
-      doc.text(r.k, x1 + pad, yy + rowH / 2 + (lines.length > 1 ? -((lines.length - 1) * 4.8) / 2 : 0) + 1.5)
+      doc.text(r.k, x1 + pad, yy + rowH / 2 + (lines.length > 1 ? -((lines.length - 1) * 5.2) / 2 : 0) + 1.5)
       kit.font(style, vSize, color)
-      lines.forEach((ln, li) => doc.text(ln, x2 - pad, yy + rowH / 2 + 1.5 - ((lines.length - 1) * 4.8) / 2 + li * 4.8, { align: 'right' }))
+      lines.forEach((ln, li) => doc.text(ln, x2 - pad, yy + rowH / 2 + 1.5 - ((lines.length - 1) * 5.2) / 2 + li * 5.2, { align: 'right' }))
       yy += rowH
       const next = items[idx + 1]
       if (!o.noRule && !r.total && next && !next.r.total) {
@@ -551,18 +548,18 @@ export function createKit(doc, branding = {}) {
   }
 
   /** Khối số tiền HERO: tấm kính nhấn (nhãn brandDark / số display 22 đậm xanh|đỏ|brandDark / chú thích) + viên kính trạng thái. Trả y sau. */
-  kit.hero = ({ y, label, value, caption, tone, status, h = 26, after }) => {
-    const dy = (h - 26) / 2
+  kit.hero = ({ y, label, value, caption, tone, status }) => {
+    const h = 28
     const px = T.air.cardPad + 1
     kit.glassPanel(M, y, CW, h, { accent: true, r: G.radius.panel + 1, k: 1.1 })
-    kit.tracked(label, M + px, y + 6.4 + dy, { color: B.brandDark })
+    kit.tracked(label, M + px, y + 7, { color: B.brandDark })
     const color = tone === 'neg' ? C.neg : tone === 'ink' ? C.ink : tone === 'brand' ? B.brandDark : C.posText
     kit.font('bold', T.type.display, color)
     const shown = kit.fit(value, CW * 0.6, T.type.display, T.type.h1)
-    doc.text(shown, M + px, y + 15.8 + dy)
+    doc.text(shown, M + px, y + 17.4)
     if (caption) {
       kit.font('normal', T.type.caption, C.ink2)
-      doc.text(kit.clip(caption, CW * 0.6), M + px, y + 21.6 + dy)
+      doc.text(kit.clip(caption, CW * 0.6), M + px, y + 23.4)
     }
     if (status) {
       kit.font('bold', T.type.body, C.ink)
@@ -572,13 +569,13 @@ export function createKit(doc, branding = {}) {
       const base = isNeg ? C.neg : isWarn ? C.amber : C.pos
       const bw = sw + 10
       const rx = W - M - px
-      kit.glassChip(rx - bw, y + 9 + dy, bw, 8, base)
+      kit.glassChip(rx - bw, y + 9.6, bw, 8, base)
       kit.fill(status.dot)
-      doc.circle(rx - bw + 4, y + 13 + dy, 1, 'F')
+      doc.circle(rx - bw + 4, y + 13.6, 1, 'F')
       kit.font('bold', T.type.body, isNeg ? C.negDeep : isWarn ? C.warnDeep : C.posDeep)
-      doc.text(status.text, rx - 3, y + 14.2 + dy, { align: 'right' })
+      doc.text(status.text, rx - 3, y + 14.8, { align: 'right' })
     }
-    return y + h + (after ?? T.air.section - 1)
+    return y + h + 10
   }
 
   /**
@@ -606,7 +603,7 @@ export function createKit(doc, branding = {}) {
         doc.text(kit.clip(it.sub, colW - 10), cx, ly + 6 + nl.length * 4.6 + 0.8, { align: 'center' })
       }
     })
-    return y + 3.5 + boxH + 6 + maxLines * 4.6 + 4
+    return y + 3.5 + boxH + 6 + maxLines * 4.6 + 6
   }
 
   return kit
@@ -693,12 +690,12 @@ export function drawTable(kit, o) {
   const drawHead = (yy) => {
     const lines = columns.map(headLines)
     const n = Math.max(...lines.map((l) => l.length))
-    const h = n > 1 ? 12 : ROW_H + 2.4
+    const h = n > 1 ? 14 : ROW_H + 2.4
     frameTop = yy
     kit.glassBar(M, yy, CW, h, FR, { rim: false })
     columns.forEach((c, i) => {
       lines[i].forEach((ln, li) => {
-        const by = yy + (n > 1 ? 5.2 + li * 3.6 : h / 2 + 1.2)
+        const by = yy + (n > 1 ? 5.8 + li * 3.8 : h / 2 + 1.2)
         kit.tracked(ln, cellX(i), by, { color: C.white, align: c.align, maxW: c.w - 1 })
       })
     })
@@ -820,127 +817,30 @@ export function drawTable(kit, o) {
     kit.lineA(M, yy, W - M, yy, B.brand, G.sepHair, G.hairW)
   }
 
-  /* ── LẬP KẾ HOẠCH TRANG (đo trước khi vẽ) ──
-     Luật: không bao giờ để trang chỉ có vài hàng mồ côi — mỗi trang bảng ≥ MIN_ROWS hàng (+ hàng TỔNG cùng trang với hàng cuối);
-     không để tiêu đề nhóm cuối trang; nếu cả khối nhỏ nhất (tiêu đề + header + MIN_ROWS hàng) không vừa chỗ còn lại thì sang trang mới. */
-  const MIN_ROWS = 3
-  const foots = o.footerRows || []
-  const FOOT_GAP = 4.5
-  const FOOT_SEP = 3
-  const headH = Math.max(...columns.map((c) => headLines(c).length)) > 1 ? 12 : ROW_H + 2.4
-  const rowItems = []
-  {
-    let dn = 0
-    for (const r of o.rows) {
-      const isSection = r && r.__section !== undefined && r.__section !== null
-      if (isSection) {
-        const rightTxt = r.__sectionRight != null ? String(r.__sectionRight) : ''
-        kit.font('normal', T.type.caption)
-        const rightW = rightTxt ? Math.min(doc.getTextWidth(rightTxt), CW * 0.55) : 0
-        kit.font('bold', T.type.cell)
-        const leftMax = CW - 8 - (rightW ? rightW + 4 : 0)
-        const leftLines = kit.wrap(String(r.__section), leftMax, 2)
-        kit.font('normal', T.type.caption)
-        const rightLines = rightTxt ? kit.wrap(rightTxt, rightW + 0.5, 2) : []
-        const n = Math.max(leftLines.length, rightLines.length, 1)
-        rowItems.push({ section: true, r, leftLines, rightLines, h: n > 1 ? Math.max(ROW_H, n * LH + 5.6) : ROW_H })
-      } else {
-        const idx = dn++
-        const { cells, rowH } = layout((c) => (c.key === 'rank' && r[c.key] === undefined ? String(idx + 1) : r[c.key]), idx, false)
-        rowItems.push({ section: false, r, idx, cells, h: rowH })
-      }
-    }
-  }
-  const footItems = foots.map((fr) => {
-    const span = fr.__label ? Math.max(1, fr.__span ?? 1) : 0
-    const { cells, rowH } = layout((c, i) => {
-      if (span && i < span) return i === 0 ? fr.__label : ''
-      return c.key === 'rank' || c.key === 'idx' ? '' : fr[c.key] ?? ''
-    }, null, true)
-    let h = rowH + 1.6
-    if (span) {
-      kit.font('bold', T.type.cell, B.brandDark)
-      const spanW = columns.slice(0, span).reduce((s, c) => s + c.w, 0) - 2 * padX
-      const ll = kit.wrap(String(fr.__label), spanW, 2)
-      cells[0].lines = ll
-      cells[0].c = { ...cells[0].c, w: spanW + 2 * padX, align: 'left' }
-      cells[0].sty = { ...cells[0].sty, size: T.type.cell, color: B.brandDark, style: 'bold' }
-      const n = Math.max(ll.length, ...cells.slice(span).map((x) => x.lines.length))
-      h = Math.max(ROW_H, n * LH + 5.6) + (n > 1 ? 0 : 1.6)
-    } else {
-      const li0 = cells.findIndex((x) => x.lines.some((l) => String(l).trim() !== ''))
-      if (li0 >= 0 && cells[li0].c.align !== 'right') cells[li0].sty = { ...cells[li0].sty, color: B.brandDark, style: 'bold' }
-      h += 1
-    }
-    return { cells, h }
-  })
-  const footTotal = footItems.length ? FOOT_GAP + footItems.reduce((s, f) => s + f.h, 0) + (footItems.length - 1) * FOOT_SEP + 1.5 : 0
-  const nData = rowItems.length
-  const SHADOW = 1.8 // bóng dưới khung bảng
-  const sumH = (arr) => arr.reduce((s, i) => s + rowItems[i].h, 0)
-
-  /* tiêu đề mục (tuỳ chọn) nằm TRONG drawTable để quyết định sang trang cùng với bảng */
-  const titleH = o.title ? T.air.titleGap : 0
-  const minRows = rowItems.slice(0, MIN_ROWS).reduce((s, it) => s + it.h, 0)
-  const minBlock = titleH + headH + (nData === 0 ? 20 : minRows + (nData <= MIN_ROWS ? footTotal : 0)) + SHADOW
-  if (y + minBlock > bottom && o.onNewPage && y > (o.freshY ?? kit.contTop) + 1) y = o.onNewPage()
-  if (o.title) y = kit.sectionTitle(o.title, y)
-  const y1 = y
-  const avail1 = bottom - (y1 + headH) - SHADOW
-  const availN = bottom - (kit.contTop + headH) - SHADOW
-
-  const pages = [[]]
-  {
-    let used = 0
-    let cap = avail1
-    for (let i = 0; i < nData; i++) {
-      const h = rowItems[i].h
-      if (used + h > cap && pages[pages.length - 1].length > 0) { pages.push([]); used = 0; cap = availN }
-      pages[pages.length - 1].push(i)
-      used += h
-    }
-    const capOf = (pi) => (pi === 0 ? avail1 : availN)
-    const lastCap = () => capOf(pages.length - 1) - footTotal
-    for (let guard = 0; guard < 200; guard++) {
-      const last = pages[pages.length - 1]
-      // (1) tiêu đề nhóm không được đứng cuối trang
-      let moved = false
-      for (let pi = 0; pi < pages.length; pi++) {
-        const pg = pages[pi]
-        while (pg.length > 1 && rowItems[pg[pg.length - 1]].section) {
-          const it = pg.pop()
-          if (pi + 1 >= pages.length) pages.push([])
-          pages[pi + 1].unshift(it)
-          moved = true
-        }
-      }
-      if (moved) continue
-      // (2) hàng TỔNG phải nằm cùng trang với hàng cuối: không vừa → đẩy MIN_ROWS hàng cuối sang trang mới
-      if (footTotal > 0 && sumH(last) > lastCap() && last.length > MIN_ROWS) {
-        pages.push(last.splice(last.length - MIN_ROWS, MIN_ROWS))
-        continue
-      }
-      // (3) trang cuối không mồ côi: ≥ MIN_ROWS hàng (kéo từ trang trước, trang trước còn ≥ MIN_ROWS)
-      if (pages.length > 1 && last.length < Math.min(MIN_ROWS, nData)) {
-        const prev = pages[pages.length - 2]
-        if (prev.length > MIN_ROWS) {
-          const it = prev.pop()
-          last.unshift(it)
-          if (sumH(last) > lastCap() && footTotal > 0) { prev.push(last.shift()); break }
-          continue
-        }
-      }
-      break
-    }
-  }
-
   y = drawHead(y)
-  rowItems.forEach((it, i) => {
-    const pi = pages.findIndex((pg) => pg.includes(i))
-    if (pi > 0 && pages[pi][0] === i) { closeFrame(y); y = drawHead(o.onNewPage()) }
-    const r = it.r
-    if (it.section) {
-      const { h, leftLines, rightLines } = it
+  const newPage = () => { closeFrame(y); y = drawHead(o.onNewPage()) }
+
+  let dataNo = 0
+  const dataCount = o.rows.filter((r) => !(r && r.__section !== undefined && r.__section !== null)).length
+  const zebra = o.zebra ?? false
+  const TOP_TINT = [C.goldTint, C.silverTint, C.bronzeTint]
+
+  o.rows.forEach((r) => {
+    if (y + ROW_H > bottom) newPage()
+    const isSection = r && r.__section !== undefined && r.__section !== null
+    if (isSection) {
+      // Nhóm: nền kính brand α + vạch trái 1mm brand; nhãn dài/ghi chú phải tự xuống dòng (không cắt "…").
+      const rightTxt = r.__sectionRight != null ? String(r.__sectionRight) : ''
+      kit.font('normal', T.type.caption)
+      const rightW = rightTxt ? Math.min(doc.getTextWidth(rightTxt), CW * 0.55) : 0
+      kit.font('bold', T.type.cell)
+      const leftMax = CW - 8 - (rightW ? rightW + 4 : 0)
+      const leftLines = kit.wrap(String(r.__section), leftMax, 2)
+      kit.font('normal', T.type.caption)
+      const rightLines = rightTxt ? kit.wrap(rightTxt, rightW + 0.5, 2) : []
+      const n = Math.max(leftLines.length, rightLines.length, 1)
+      const h = n > 1 ? Math.max(ROW_H, n * LH + 5.6) : ROW_H
+      if (y + h > bottom) newPage()
       kit.fillR(M, y, CW, h, C.white, G.row)
       kit.fillR(M, y, CW, h, B.brand, 0.12)
       kit.fillR(M, y, 1.2, h, B.brand, 1)
@@ -953,32 +853,59 @@ export function drawTable(kit, o) {
       y += h
       return
     }
-    const { idx, cells, h: rowH } = it
+    const idx = dataNo
+    dataNo++
+    const { cells, rowH } = layout((c) => (c.key === 'rank' && r[c.key] === undefined ? String(idx + 1) : r[c.key]), idx, false)
+    if (y + rowH > bottom) newPage()
     kit.fillR(M, y, CW, rowH, C.white, G.row)
-    if (o.top3 && idx < 3) kit.fillR(M, y, CW, rowH, [C.goldTint, C.silverTint, C.bronzeTint][idx], 0.7)
-    else if ((o.zebra ?? false) && idx % 2 === 1) kit.fillR(M, y, CW, rowH, B.brand, G.zebra)
+    if (o.top3 && idx < 3) kit.fillR(M, y, CW, rowH, TOP_TINT[idx], 0.7)
+    else if (zebra && idx % 2 === 1) kit.fillR(M, y, CW, rowH, B.brand, G.zebra)
     rowRule(y + rowH)
     drawCells(cells, y, rowH)
     y += rowH
   })
-  const dataNo = rowItems.filter((i) => !i.section).length
 
   if (dataNo === 0) {
+    if (y + 20 > bottom) newPage()
     kit.fillR(M, y, CW, 20, C.white, G.row)
     y = kit.emptyState(y, o.emptyText)
   }
   closeFrame(y)
 
-  /* ── hàng tổng (một hoặc nhiều): tấm nhấn kính, cùng trang với hàng cuối ── */
-  if (footItems.length) y += FOOT_GAP
-  footItems.forEach(({ cells, h }, fi) => {
-    if (y + h > bottom && o.onNewPage) y = o.onNewPage()
+  /* ── hàng tổng (một hoặc nhiều): tấm nhấn kính ── */
+  const foots = o.footerRows || []
+  if (foots.length) y += 6
+  foots.forEach((fr) => {
+    const span = fr.__label ? Math.max(1, fr.__span ?? 1) : 0
+    const { cells, rowH } = layout((c, i) => {
+      if (span && i < span) return i === 0 ? fr.__label : ''
+      return c.key === 'rank' || c.key === 'idx' ? '' : fr[c.key] ?? ''
+    }, null, true)
+    // Nhãn gộp nhiều cột: dựng lại các dòng theo bề rộng gộp
+    let h = rowH + 2
+    let li0 = 0 // cột chứa nhãn tổng (brandDark đậm)
+    if (span) {
+      kit.font('bold', T.type.cell, B.brandDark)
+      const spanW = columns.slice(0, span).reduce((s, c) => s + c.w, 0) - 2 * padX
+      const ll = kit.wrap(String(fr.__label), spanW, 2)
+      cells[0].lines = ll
+      cells[0].c = { ...cells[0].c, w: spanW + 2 * padX, align: 'left' }
+      cells[0].sty = { ...cells[0].sty, size: T.type.cell, color: B.brandDark, style: 'bold' }
+      const n = Math.max(ll.length, ...cells.slice(span).map((x) => x.lines.length))
+      h = Math.max(ROW_H, n * LH + 5.6) + (n > 1 ? 0 : 2.4)
+    } else {
+      // không có __label: ô đầu tiên có chữ là nhãn
+      li0 = cells.findIndex((x) => x.lines.some((l) => String(l).trim() !== ''))
+      if (li0 >= 0 && cells[li0].c.align !== 'right') cells[li0].sty = { ...cells[li0].sty, color: B.brandDark, style: 'bold' }
+      h += 1
+    }
+    if (y + h > bottom) { y = o.onNewPage() }
     kit.glassPanel(M, y, CW, h, { accent: true, r: T.radius.card + 1.2 })
     drawCells(cells, y, h)
-    y += h + (fi < footItems.length - 1 ? FOOT_SEP : 0)
+    y += h + 4
   })
 
-  return { y, dataNo, pages: pages.length }
+  return { y: foots.length ? y - 4 : y, dataNo }
 }
 
 /** Đoạn ghi chú caption (7pt muted), xuống dòng + sang trang khi hết chỗ (không bỏ mất). */
