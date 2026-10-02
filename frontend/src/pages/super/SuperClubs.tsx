@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
-import { PageShell, PageHeader, StatusBadge } from '../../components/shared'
+import { PageShell, PageHeader, StatusBadge, ExportActions, runExport } from '../../components/shared'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -393,14 +394,40 @@ export function SuperClubs() {
     </Modal>
   )
 
+  // ── Xuất danh sách CLB — đúng tập `filtered` đang hiển thị (SUPER_ADMIN) ──
+  const clubStatusText = (st?: string) => (st === 'suspended' ? 'Đã khóa' : 'Hoạt động')
+  const clubPlanText = (c: Club) => `Gói ${PLAN_LABEL[(c.plan ?? 'STARTER') as ServicePlan] ?? c.plan ?? 'Starter'}`
+  const doExportExcel = () => {
+    if (filtered.length === 0) return
+    return runExport(() => exportGenericExcel('Danh_sach_CLB', 'CLB',
+      ['Tên CLB', 'Mã', 'Địa chỉ', 'Email liên hệ', 'SĐT liên hệ', 'Gói', 'Hết hạn gói', 'Thành viên', 'Kỳ quỹ', 'Trạng thái'],
+      filtered.map(c => [c.name, c.code, c.address || '', c.contactEmail || '', c.contactPhone || '', clubPlanText(c), c.planExpiresAt ? String(c.planExpiresAt).slice(0, 10).split('-').reverse().join('/') : '', c._count?.members ?? 0, c._count?.fundPeriods ?? 0, clubStatusText(c.status)]),
+    ), 'Đã xuất Excel danh sách CLB')
+  }
+  const doExportPdf = () => {
+    if (filtered.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: 'Danh_sach_CLB',
+      title: 'Danh Sách Câu Lạc Bộ',
+      metaLeft: `${filtered.length}${search ? `/${clubs.length}` : ''} câu lạc bộ`,
+      columns: [
+        { header: 'Tên CLB' }, { header: 'Mã', align: 'center' }, { header: 'Gói', align: 'center' },
+        { header: 'Thành viên', align: 'center' }, { header: 'Kỳ quỹ', align: 'center' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: filtered.map(c => [c.name, c.code, clubPlanText(c), c._count?.members ?? 0, c._count?.fundPeriods ?? 0, clubStatusText(c.status)]),
+    }), 'Đã xuất PDF danh sách CLB')
+  }
+  const exportButtons = filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined
+
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div>
             <div className="font-bold [color:var(--pf-text)] text-base">Quản lý CLB</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{clubs.length} câu lạc bộ</div>
           </div>
+          {exportButtons}
           <button
             onClick={() => setShowCreate(true)}
             className="w-9 h-9 rounded-full flex items-center justify-center text-white"
@@ -484,6 +511,7 @@ export function SuperClubs() {
         subtitle={`${clubs.length} câu lạc bộ trong hệ thống`}
         actions={
           <div className="flex items-center gap-2">
+            {exportButtons}
             <Button variant="outline" onClick={() => navigate('/onboarding')}>Onboarding</Button>
             <Button onClick={() => setShowCreate(true)}><Plus size={16} />Tạo CLB mới</Button>
           </div>

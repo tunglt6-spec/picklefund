@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
-import * as XLSX from 'xlsx'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
@@ -9,7 +8,7 @@ import {
   Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { PageShell, PageHeader, DataTable, type Column } from '../../components/shared'
+import { PageShell, PageHeader, DataTable, ExportActions, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -20,6 +19,8 @@ import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { parseMoney } from '../../lib/finance-ledger'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { BulkImportModal } from '../../components/admin/BulkImportModal'
 import toast from 'react-hot-toast'
 
@@ -63,6 +64,15 @@ interface PreviousPeriodInfo {
 }
 
 type Tab = 'list' | 'history' | 'highlights'
+
+/** Ô ngày từ Excel (cellDates -> Date, hoặc chuỗi) -> YYYY-MM-DD theo giờ địa phương, không lệch múi giờ. */
+function toIsoDate(v: unknown): string {
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    const p = (n: number) => String(n).padStart(2, '0')
+    return `${v.getFullYear()}-${p(v.getMonth() + 1)}-${p(v.getDate())}`
+  }
+  return String(v ?? '').trim().slice(0, 10)
+}
 
 export function FundPeriods() {
   const { user } = useAuthStore()
@@ -171,16 +181,22 @@ export function FundPeriods() {
 
   const commonPeriods = periods.filter(p => (p.type ?? 'chung') === 'chung')
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Ghi chú'],
-      ['Nguyễn Văn A', 300000, new Date().toISOString().slice(0, 10), ''],
-      ['Trần Thị B', 300000, new Date().toISOString().slice(0, 10), 'Đóng sớm'],
-    ])
-    ws['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 22 }, { wch: 20 }]
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Đóng quỹ')
-    XLSX.writeFile(wb, 'mau_nhap_dong_quy.xlsx')
+  // xlsx tải ĐỘNG khi bấm (không đưa ~700KB vào bundle khởi động).
+  const downloadTemplate = async () => {
+    try {
+      const XLSX = await import('xlsx')
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Họ và tên', 'Số tiền (VNĐ)', 'Ngày đóng (YYYY-MM-DD)', 'Ghi chú'],
+        ['Nguyễn Văn A', 300000, new Date().toISOString().slice(0, 10), ''],
+        ['Trần Thị B', 300000, new Date().toISOString().slice(0, 10), 'Đóng sớm'],
+      ])
+      ws['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 22 }, { wch: 20 }]
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Đóng quỹ')
+      XLSX.writeFile(wb, 'mau_nhap_dong_quy.xlsx')
+    } catch {
+      toast.error('Không thể tạo file mẫu. Vui lòng thử lại.')
+    }
   }
 
   const handleImportFile = (file: File) => {
@@ -188,15 +204,17 @@ export function FundPeriods() {
     setImportRows([])
     setImportResult(null)
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import('xlsx')
         const wb = XLSX.read(e.target?.result, { type: 'array', cellDates: true })
         const ws = wb.Sheets[wb.SheetNames[0]]
         const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
         const parsed: ImportRow[] = raw.map((row) => ({
           memberName: String(row['Họ và tên'] ?? row['ho_va_ten'] ?? row['memberName'] ?? '').trim(),
-          amount: Number(row['Số tiền (VNĐ)'] ?? row['so_tien'] ?? row['amount'] ?? 0),
-          paymentDate: String(row['Ngày đóng (YYYY-MM-DD)'] ?? row['ngay_dong'] ?? row['paymentDate'] ?? '').slice(0, 10),
+          // Bỏ dấu '.'/',' phân cách nghìn (300.000 -> 300000), cùng quy tắc num() của BulkImport.
+          amount: parseMoney(row['Số tiền (VNĐ)'] ?? row['so_tien'] ?? row['amount'] ?? 0),
+          paymentDate: toIsoDate(row['Ngày đóng (YYYY-MM-DD)'] ?? row['ngay_dong'] ?? row['paymentDate'] ?? ''),
           notes: String(row['Ghi chú'] ?? row['ghi_chu'] ?? row['notes'] ?? '').trim(),
         })).filter(r => r.memberName)
         if (parsed.length === 0) { setImportFileError('File không có dữ liệu hợp lệ. Kiểm tra lại tên cột.'); return }
@@ -394,27 +412,32 @@ export function FundPeriods() {
 
   // ── Xuất Excel/PDF danh sách kỳ quỹ (theo bộ lọc hiện tại) ──
   const periodTypeLabel = (p: FundPeriod) => ((p.type ?? 'chung') === 'chung' ? 'Quỹ Chính' : 'Quỹ Phụ')
-  const doExportExcel = () => {
-    exportGenericExcel('Ky_Quy', 'Kỳ quỹ',
-      ['Tên kỳ', 'Loại', 'Trạng thái', 'Từ ngày', 'Đến ngày', 'Mức đóng (VNĐ)'],
-      filtered.map((p) => [p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '', p.contributionAmount]),
-    )
-    toast.success('Đã xuất Excel kỳ quỹ')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Ky_Quy',
-      title: 'Danh Sách Kỳ Quỹ',
-      metaLeft: `${filtered.length} kỳ`,
-      columns: [
-        { header: '#', align: 'center' }, { header: 'Tên kỳ' }, { header: 'Loại', align: 'center' },
-        { header: 'Trạng thái', align: 'center' }, { header: 'Từ ngày', align: 'center' },
-        { header: 'Đến ngày', align: 'center' }, { header: 'Mức đóng', align: 'right' },
-      ],
-      rows: filtered.map((p, i) => [i + 1, p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '—', formatVND(p.contributionAmount)]),
-    })
-    toast.success('Đã xuất PDF kỳ quỹ')
-  }
+  const { busy: exporting, run: runExport } = useExportRunner()
+  // Phạm vi = ĐÚNG bộ lọc đang xem (loại / trạng thái / tìm kiếm) — ghi trong tên file + tiêu đề.
+  const scopeParts = [
+    filterType ? (filterType === 'chung' ? 'Quỹ Chính' : 'Quỹ Phụ') : '',
+    filterStatus ? (statusLabel[filterStatus] ?? filterStatus) : '',
+    search.trim() ? `tìm "${search.trim()}"` : '',
+  ].filter(Boolean)
+  const scopeText = scopeParts.length ? scopeParts.join(' · ') : 'tất cả kỳ'
+  const scopeSlug = scopeParts.length ? `_${scopeParts.join('_').replace(/[^\p{L}\p{N}]+/gu, '_')}` : ''
+  const doExportExcel = () => runExport(() => exportGenericExcel(
+    'Ky_Quy' + scopeSlug, 'Kỳ quỹ',
+    ['Tên kỳ', 'Loại', 'Trạng thái', 'Từ ngày', 'Đến ngày', 'Mức đóng (VNĐ)'],
+    filtered.map((p) => [p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '', p.contributionAmount]),
+    [`${filtered.length} kỳ · ${scopeText}`, '', '', '', '', ''],
+  ), { success: 'Đã xuất Excel kỳ quỹ', empty: filtered.length === 0, emptyMsg: 'Không có kỳ quỹ nào để xuất' })
+  const doExportPdf = () => runExport(() => exportGenericTablePDF({
+    fileBase: 'Ky_Quy' + scopeSlug,
+    title: 'Danh Sách Kỳ Quỹ',
+    metaLeft: `${filtered.length} kỳ · ${scopeText}`,
+    columns: [
+      { header: '#', align: 'center' }, { header: 'Tên kỳ' }, { header: 'Loại', align: 'center' },
+      { header: 'Trạng thái', align: 'center' }, { header: 'Từ ngày', align: 'center' },
+      { header: 'Đến ngày', align: 'center' }, { header: 'Mức đóng', align: 'right' },
+    ],
+    rows: filtered.map((p, i) => [i + 1, p.name, periodTypeLabel(p), statusLabel[p.status] ?? p.status, formatDate(p.startDate), p.endDate ? formatDate(p.endDate) : '—', formatVND(p.contributionAmount)]),
+  }), { success: 'Đã xuất PDF kỳ quỹ', empty: filtered.length === 0, emptyMsg: 'Không có kỳ quỹ nào để xuất' })
 
   const handleSave = (
     type: FundPeriodType,
@@ -588,6 +611,7 @@ export function FundPeriods() {
         </div>
 
         <div className="px-4 pt-4 pb-6 space-y-4">
+          {filtered.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={exporting} />}
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
@@ -943,8 +967,8 @@ export function FundPeriods() {
           <div className="flex flex-wrap gap-2">
             {filtered.length > 0 && (
               <>
-                <Button variant="outline" onClick={doExportExcel}><FileSpreadsheet size={14} />Xuất Excel</Button>
-                <Button variant="outline" onClick={doExportPdf}><FileText size={14} />Xuất PDF</Button>
+                <Button variant="outline" onClick={doExportExcel} disabled={exporting}><FileSpreadsheet size={14} />Xuất Excel</Button>
+                <Button variant="outline" onClick={doExportPdf} disabled={exporting}><FileText size={14} />Xuất PDF</Button>
               </>
             )}
             {!isMember && (

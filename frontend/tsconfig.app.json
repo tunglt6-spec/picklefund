@@ -21,5 +21,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Test thuần chạy bằng `node --test` (type-stripping), không thuộc bundle/tsc app.
+  "exclude": ["src/**/*.test.ts"]
 }

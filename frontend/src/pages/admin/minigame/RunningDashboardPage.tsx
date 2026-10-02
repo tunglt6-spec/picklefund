@@ -14,6 +14,9 @@ import { useAuthStore } from '../../../store/authStore'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'
 import { LoadingState } from '../../../components/shared/LoadingState'
+import { ExportActions } from '../../../components/shared/ExportActions'
+import { runExport } from '../../../components/shared/exportRunner'
+import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import api from '../../../lib/api'
 import { cn } from '../../../lib/utils'
 
@@ -86,11 +89,39 @@ export function RunningDashboardPage() {
   }
 
   if (!mg) return <div className="flex-1 flex items-center justify-center"><p className="[color:var(--pf-color-muted)]">Không tìm thấy giải</p></div>
+
+  // ── Xuất BXH chạy bộ — đúng tập `leaderboard` đang hiển thị (VĐV đã có thời gian, tổng nhỏ nhất đứng đầu) ──
+  const fileSlug = `BXH_ChayBo_${mg.name}`.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  const timeOf = (r: Runner, round: number) => { const t = r.scores.find(x => x.round === round)?.strokes; return t && t > 0 ? fmt(t) : '–' }
+  const roundList = Array.from({ length: rounds }, (_, i) => i + 1)
+  const doExportExcel = () => {
+    if (leaderboard.length === 0) return
+    return runExport(() => exportGenericExcel(fileSlug, 'BXH chạy bộ',
+      ['Hạng', 'Vận động viên', ...roundList.map(n => `Lần ${n} (mm:ss)`), 'Tổng (mm:ss)', 'Tổng (giây)'],
+      leaderboard.map((r, i) => [i + 1, runnerName(r), ...roundList.map(n => timeOf(r, n)), fmt(totalOf(r)), totalOf(r)]),
+    ), 'Đã xuất Excel bảng xếp hạng')
+  }
+  const doExportPdf = () => {
+    if (leaderboard.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: fileSlug,
+      title: 'Bảng Xếp Hạng Chạy Bộ',
+      subtitle: mg.name,
+      metaLeft: `${leaderboard.length} vận động viên · tổng thời gian nhỏ nhất đứng đầu`,
+      columns: [
+        { header: '#', align: 'center' }, { header: 'Vận động viên' },
+        ...roundList.map(n => ({ header: `Lần ${n}`, align: 'center' as const })),
+        { header: 'Tổng', align: 'right' as const },
+      ],
+      rows: leaderboard.map((r, i) => [i + 1, runnerName(r), ...roundList.map(n => timeOf(r, n)), fmt(totalOf(r))]),
+    }), 'Đã xuất PDF bảng xếp hạng')
+  }
   const activeMembers = members.filter(m => m.status === 'active')
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu" />
+      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu"
+        actions={leaderboard.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined} />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
         <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 

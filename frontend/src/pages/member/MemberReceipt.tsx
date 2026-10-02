@@ -9,6 +9,7 @@ import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { exportReceiptPDF } from '../../lib/export'
+import { useBrandingStore } from '../../store/brandingStore'
 
 /** 1 dòng breakdown cho card "kỳ hiện tại (tạm tính)". */
 function LiveRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
@@ -115,35 +116,46 @@ export function MemberReceipt() {
 
   // ĐỒNG BỘ 1 PHIẾU THU: dùng CHUNG exportReceiptPDF với màn Tổng Quan (Dashboard) — cùng
   // bố cục, cùng tên file. KHÔNG tự sinh phiếu thu riêng (chụp màn) nữa. Dữ liệu từ /member/me/finance.
-  const handleExport = () => {
+  const brandName = useBrandingStore((s) => s.branding.displayName)
+  const [exporting, setExporting] = useState(false)
+  const handleExport = async () => {
+    if (exporting) return
     const m = finance?.member
     const p = finance?.period
     if (!m || !p) { toast.error('Chưa có dữ liệu kỳ quỹ để xuất phiếu thu'); return }
     const t = finance?.totals
-    exportReceiptPDF({
-      receiptNo: 1,
-      memberName,
-      loginName: user?.username ?? '',
-      periodName: p.name,
-      periodStartDate: p.startDate,
-      periodEndDate: p.endDate,
-      contributionAmount: p.contributionAmount,
-      clubName: 'CLB Pickleball',
-      clubLocation: '',
-      amountPaid: n(m.paidAmount),
-      paymentDate: finance?.contribution?.paymentDate ?? '',
-      attendedSessions: m.attendedSessions,
-      totalSessions: m.totalSessions,
-      totalCourtFee: t?.court ?? 0,
-      memberCountForSplit: t?.memberCount ?? 0,
-      courtCost: n(m.courtFee),
-      totalOtherFee: t?.living ?? 0,
-      livingCost: n(m.livingFee),
-      totalCost: n(m.totalCost),
-      balance: n(m.balance),
-      isConfirmed: finance?.contribution?.isConfirmed ?? false,
-    })
-    toast.success('Đã xuất Phiếu Thu PDF!')
+    setExporting(true)
+    try {
+      await exportReceiptPDF({
+        // Không truyền receiptNo: chưa có số phiếu thật (lib ẩn khi thiếu) — tránh mọi phiếu "No. 0001".
+        memberName,
+        loginName: user?.username ?? '',
+        periodName: p.name,
+        periodStartDate: p.startDate,
+        periodEndDate: p.endDate,
+        contributionAmount: p.contributionAmount,
+        clubName: brandName || 'PickleFund',
+        amountPaid: n(m.paidAmount),
+        paymentDate: finance?.contribution?.paymentDate ?? '',
+        attendedSessions: m.attendedSessions,
+        totalSessions: m.totalSessions,
+        totalCourtFee: t?.court ?? 0,
+        // Sĩ số CHỐT (backend summary.memberCount); thiếu/0 → ẩn mẫu số, không in "/ 0 người".
+        memberCountForSplit: t?.memberCount && t.memberCount > 0 ? t.memberCount : undefined,
+        courtCost: n(m.courtFee),
+        totalOtherFee: t?.living ?? 0,
+        livingCost: n(m.livingFee),
+        totalCost: n(m.totalCost),
+        balance: n(m.balance),
+        isConfirmed: finance?.contribution?.isConfirmed ?? false,
+      })
+      toast.success('Đã xuất Phiếu Thu PDF!')
+    } catch (err) {
+      console.error('[export]', err)
+      toast.error('Xuất Phiếu Thu thất bại. Vui lòng thử lại.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   // Tải ảnh QR (fetch blob → download; fallback mở tab mới nếu CORS chặn).
@@ -187,7 +199,7 @@ export function MemberReceipt() {
             <div className="text-lg font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{memberName}</div>
           </div>
-          <button onClick={handleExport} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70">
+          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50">
             <Download size={13} />Xuất PDF
           </button>
         </div>
@@ -330,7 +342,7 @@ export function MemberReceipt() {
         title="Phiếu Thu Cá Nhân"
         subtitle={memberName}
         actions={
-          <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExport}>
+          <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExport} disabled={exporting}>
             Xuất PDF
           </ActionButton>
         }

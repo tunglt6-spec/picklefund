@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download, FileText } from 'lucide-react'
-import * as XLSX from 'xlsx'
-import { exportGenericTablePDF } from '../../lib/export'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import { PageShell, PageHeader } from '../../components/shared'
@@ -72,7 +72,8 @@ export function TreasurerIncome() {
   const miniContribs   = contributions.filter(c => c.fundSource === 'MINI')
   const totalConfirmed = commonContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
   const unconfirmedCount = contributions.filter(c => !c.isConfirmed).length
-  const miniTotal = miniContribs.reduce((a, c) => a + c.amount, 0)
+  // Quỹ Phụ: chỉ tính khoản ĐÃ xác nhận (khớp financial-calculator/Dashboard).
+  const miniTotal = miniContribs.filter(c => c.isConfirmed).reduce((a, c) => a + c.amount, 0)
 
   const isMini = form.fundSource === 'MINI'
 
@@ -134,54 +135,44 @@ export function TreasurerIncome() {
     }
   }
 
-  const exportExcel = () => {
-    const rows = contributions.map(c => {
-      const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
-      const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
-      return {
-        'Nguồn quỹ': isMiniRow ? 'Quỹ Phụ' : 'Quỹ Chính',
-        'Thành viên / Người nộp': isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
-        'Kỳ quỹ / Loại': isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
-        'Ngày đóng': c.paymentDate ?? '',
-        'Số tiền (VNĐ)': c.amount,
-        'Hình thức': c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
-        'Trạng thái': c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
-        'Ghi chú': c.notes ?? '',
-      }
-    })
-    const ws = XLSX.utils.json_to_sheet(rows)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Khoản thu')
-    XLSX.writeFile(wb, `Khoan_thu_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  const { busy, run } = useExportRunner()
+  const incomeRow = (c: FundContribution) => {
+    const period = data.fundPeriods.find((p) => p.id === c.fundPeriodId)
+    const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
+    return {
+      fund: isMiniRow ? 'Quỹ Phụ' : 'Quỹ Chính',
+      who: isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
+      kind: isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
+      date: formatDate(c.paymentDate),
+      method: c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
+      status: c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+      notes: c.notes ?? '',
+    }
   }
+  const emptyMsg = 'Chưa có khoản thu để xuất'
+  const miniConfirmed = miniTotal
 
-  const exportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Khoan_thu',
-      title: 'Danh Sách Khoản Thu',
-      metaLeft: `${contributions.length} khoản · Đã xác nhận ${formatVND(totalConfirmed)}`,
-      columns: [
-        { header: 'Nguồn quỹ', align: 'center' }, { header: 'Thành viên / Người nộp' }, { header: 'Kỳ quỹ / Loại' },
-        { header: 'Ngày đóng', align: 'center' }, { header: 'Số tiền', align: 'right' },
-        { header: 'Hình thức', align: 'center' }, { header: 'Trạng thái', align: 'center' },
-      ],
-      rows: contributions.map((c) => {
-        const period = data.fundPeriods.find((p) => p.id === c.fundPeriodId)
-        const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
-        return [
-          isMiniRow ? 'Quỹ Phụ' : 'Quỹ Chính',
-          isMiniRow ? (c.payerName ?? '') : (c.member?.fullName ?? c.memberId ?? ''),
-          isMiniRow ? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : '') : (period?.name ?? ''),
-          formatDate(c.paymentDate), formatVND(c.amount),
-          c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt',
-          c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
-        ]
-      }),
-      summaryLabel: 'Tổng đã xác nhận (Quỹ Chính)',
-      summaryValue: formatVND(totalConfirmed),
-    })
-    toast.success('Đã xuất PDF khoản thu')
-  }
+  // Excel + PDF dùng CÙNG tập (toàn bộ khoản thu đang hiển thị) và CÙNG cột; tổng chỉ tính khoản ĐÃ xác nhận.
+  const exportExcel = () => run(() => exportGenericExcel(
+    'Khoan_thu', 'Khoản thu',
+    ['Nguồn quỹ', 'Thành viên / Người nộp', 'Kỳ quỹ / Loại', 'Ngày đóng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái', 'Ghi chú'],
+    contributions.map((c) => { const r = incomeRow(c); return [r.fund, r.who, r.kind, r.date, c.amount, r.method, r.status, r.notes] }),
+    ['TỔNG ĐÃ XÁC NHẬN (Quỹ Chính)', '', '', '', totalConfirmed, '', '', ''],
+  ), { success: 'Đã xuất Excel khoản thu', empty: contributions.length === 0, emptyMsg })
+
+  const exportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Khoan_thu',
+    title: 'Danh Sách Khoản Thu',
+    metaLeft: `${contributions.length} khoản · Quỹ Chính đã xác nhận ${formatVND(totalConfirmed)} · Quỹ Phụ đã xác nhận ${formatVND(miniConfirmed)}`,
+    columns: [
+      { header: 'Nguồn quỹ', align: 'center' }, { header: 'Thành viên / Người nộp' }, { header: 'Kỳ quỹ / Loại' },
+      { header: 'Ngày đóng', align: 'center' }, { header: 'Số tiền', align: 'right' },
+      { header: 'Hình thức', align: 'center' }, { header: 'Trạng thái', align: 'center' }, { header: 'Ghi chú' },
+    ],
+    rows: contributions.map((c) => { const r = incomeRow(c); return [r.fund, r.who, r.kind, r.date, formatVND(c.amount), r.method, r.status, r.notes] }),
+    summaryLabel: 'Tổng đã xác nhận (Quỹ Chính)',
+    summaryValue: formatVND(totalConfirmed),
+  }), { success: 'Đã xuất PDF khoản thu', empty: contributions.length === 0, emptyMsg })
 
   const toggleConfirm = async (id: string) => {
     try {
@@ -282,11 +273,11 @@ export function TreasurerIncome() {
             )}
             {contributions.length > 0 && (
               <>
-                <button onClick={exportExcel} aria-label="Xuất Excel"
+                <button onClick={exportExcel} disabled={busy} aria-label="Xuất Excel"
                   className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <Download size={14} />Excel
                 </button>
-                <button onClick={exportPdf} aria-label="Xuất PDF"
+                <button onClick={exportPdf} disabled={busy} aria-label="Xuất PDF"
                   className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileText size={14} />PDF
                 </button>
@@ -475,10 +466,10 @@ export function TreasurerIncome() {
           <div className="flex items-center gap-2">
             {contributions.length > 0 && (
               <>
-                <Button variant="ghost" size="sm" onClick={exportExcel}>
+                <Button variant="ghost" size="sm" onClick={exportExcel} disabled={busy}>
                   <Download size={14} />Xuất Excel
                 </Button>
-                <Button variant="ghost" size="sm" onClick={exportPdf}>
+                <Button variant="ghost" size="sm" onClick={exportPdf} disabled={busy}>
                   <FileText size={14} />Xuất PDF
                 </Button>
               </>

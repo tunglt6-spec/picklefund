@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
+import { useBrandingStore } from '../../store/brandingStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import api from '../../lib/api'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
@@ -82,6 +83,7 @@ export function ExecutiveReport() {
   const [aiSumLoading, setAiSumLoading] = useState(false)
   const [emailCfg, setEmailCfg] = useState<any>(null)
   const [emailBusy, setEmailBusy] = useState(false)
+  const [exporting, setExporting] = useState(false) // chống bấm đúp PDF/Excel/Ảnh
 
   const loadEmailCfg = useCallback(async () => {
     try {
@@ -148,25 +150,37 @@ export function ExecutiveReport() {
   }, [periodId, load, loadAi])
 
   // ── Export ────────────────────────────────────────────────────────────
+  // KHÔNG xoá branding toàn app: truyền kèm branding CLB hiện tại, chỉ đổi displayName theo báo cáo.
   const prepBranding = () => {
-    setExportBranding({ displayName: data?.meta?.clubName || 'PickleFund' })
+    const cur = useBrandingStore.getState().branding
+    setExportBranding({
+      displayName: data?.meta?.clubName || cur.displayName,
+      pdfFooter: cur.pdfFooter,
+      logoUrl: cur.logoUrl,
+      primaryColor: cur.primaryColor,
+    })
   }
   const exportImage = async () => {
-    if (!data) return
-    prepBranding()
+    if (!data || exporting) return
+    setExporting(true)
     try {
+      prepBranding()
       await captureElementAsReportPng(CAPTURE_ID, `BaoCao_DieuHanh_${data.meta.periodName}`, {
         title: 'Báo cáo điều hành',
         subtitle: `${data.meta.clubName} · ${data.meta.periodName}`,
         meta: `Điểm sức khỏe CLB: ${data.summary.clubHealthScore}/100`,
       })
+      toast.success('Đã xuất ảnh báo cáo')
     } catch {
       toast.error('Không xuất được ảnh')
+    } finally {
+      setExporting(false)
     }
   }
   // PDF: tải bản render SERVER (headless Chrome) — GIỐNG HỆT bản đính kèm email, chia trang A4 sạch.
   const exportPdf = async () => {
-    if (!data) return
+    if (!data || exporting) return
+    setExporting(true)
     const t = toast.loading('Đang tạo PDF…')
     try {
       const res = await api.get(`/aido/executive-report/pdf?fundPeriodId=${periodId}`, {
@@ -179,9 +193,12 @@ export function ExecutiveReport() {
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1500)
       toast.dismiss(t)
+      toast.success('Đã tạo PDF báo cáo')
     } catch {
       toast.dismiss(t)
       toast.error('Không tạo được PDF')
+    } finally {
+      setExporting(false)
     }
   }
   // In: chỉ in vùng báo cáo (thêm class body → CSS @media print ẩn app chrome). Xem index.css.
@@ -196,26 +213,27 @@ export function ExecutiveReport() {
     setTimeout(() => window.print(), 50)
   }
 
-  const exportXlsx = () => {
-    if (!data) return
-    prepBranding()
+  const exportXlsx = async () => {
+    if (!data || exporting) return
+    setExporting(true)
     try {
+      prepBranding()
       const f = data.finance
-      exportExcel(`BaoCao_DieuHanh_${data.meta.periodName}`, [
+      // Cột "Giá trị" CHỈ chứa số thật (tiền → #,##0); đơn vị/ghi chú tách sang cột riêng.
+      await exportExcel(`BaoCao_DieuHanh_${data.meta.periodName}`, [
         {
           name: 'Tổng quan',
-          headers: ['Chỉ số', 'Giá trị'],
+          headers: ['Chỉ số', 'Giá trị', `Đơn vị · Kỳ ${data.meta.periodName}`],
           rows: [
-            ['Kỳ', data.meta.periodName],
-            ['Điểm sức khỏe CLB', `${data.summary.clubHealthScore}/100`],
-            ['Thành viên hoạt động', `${data.summary.activeMembers}/${data.summary.totalMembers}`],
-            ['Tỷ lệ tham gia', `${data.summary.participationRate}%`],
-            ['Tổng thu', f.totalIncome],
-            ['Tổng chi', f.totalExpense],
-            ['Cân đối', f.balance],
-            ['Quỹ đầu kỳ', f.carryForward],
-            ['Tổng tài sản (cuối kỳ)', f.clubAssets],
-            ['Công nợ (số TV)', data.summary.outstandingCount],
+            ['Điểm sức khỏe CLB', Number(data.summary.clubHealthScore) || 0, '/100'],
+            ['Thành viên hoạt động', Number(data.summary.activeMembers) || 0, `/${data.summary.totalMembers} thành viên`],
+            ['Tỷ lệ tham gia', Number(data.summary.participationRate) || 0, '%'],
+            ['Tổng thu', Number(f.totalIncome) || 0, 'VNĐ'],
+            ['Tổng chi', Number(f.totalExpense) || 0, 'VNĐ'],
+            ['Cân đối', Number(f.balance) || 0, 'VNĐ'],
+            ['Quỹ đầu kỳ', Number(f.carryForward) || 0, 'VNĐ'],
+            ['Tổng tài sản (cuối kỳ)', Number(f.clubAssets) || 0, 'VNĐ'],
+            ['Công nợ (số TV)', Number(data.summary.outstandingCount) || 0, 'thành viên'],
           ],
         },
         {
@@ -228,8 +246,11 @@ export function ExecutiveReport() {
           ]),
         },
       ])
+      toast.success('Đã xuất Excel báo cáo')
     } catch {
       toast.error('Không xuất được Excel')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -262,9 +283,9 @@ export function ExecutiveReport() {
       </ActionButton>
       {data && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={() => void exportPdf()}>PDF</ActionButton>
-          <ActionButton variant="ghost" icon={<Sheet size={15} />} onClick={exportXlsx}>Excel</ActionButton>
-          <ActionButton variant="ghost" icon={<ImageIcon size={15} />} onClick={() => void exportImage()}>Ảnh</ActionButton>
+          <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={() => void exportPdf()} disabled={exporting}>PDF</ActionButton>
+          <ActionButton variant="ghost" icon={<Sheet size={15} />} onClick={() => void exportXlsx()} disabled={exporting}>Excel</ActionButton>
+          <ActionButton variant="ghost" icon={<ImageIcon size={15} />} onClick={() => void exportImage()} disabled={exporting}>Ảnh</ActionButton>
           <ActionButton variant="ghost" icon={<Printer size={15} />} onClick={printReport}>In</ActionButton>
         </div>
       )}

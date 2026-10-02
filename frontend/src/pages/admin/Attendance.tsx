@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2, CalendarDays, UserCheck, TrendingUp } from 'lucide-react'
 import api from '../../lib/api'
-import { PageShell, PageHeader, MetricCard, EmptyState, StatusBadge, ActionButton } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, EmptyState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { AttendanceSession } from '../../types'
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 
 function MemberAvatar({ name, id }: { name: string; id: string }) {
   const colors = ['[background:var(--pf-primary)]', 'bg-emerald-500', 'bg-orange-500', '[background:var(--pf-primary)]', '[background:var(--pf-color-info)]', 'bg-rose-500']
@@ -201,12 +202,44 @@ export function Attendance() {
   const toggleAllAttendance = () =>
     setAttendance(allPresent ? {} : Object.fromEntries(activeMemberList.map(m => [m.id, true])))
 
+  // ── Xuất lịch sử điểm danh theo buổi — đúng tập `sessions` đang hiển thị (đã lọc theo kỳ) ──
+  const exportPeriodName = allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? ''
+  const exportSessions = [...sessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+  const exportSlug = (exportPeriodName || 'tat_ca').replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  const sessionTimeText = (s: AttendanceSession) => (s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '')
+  const doExportExcel = () => {
+    if (exportSessions.length === 0) return
+    return runExport(() => exportGenericExcel(`Diem_danh_${exportSlug}`, 'Điểm danh',
+      ['Ngày', 'Giờ', 'Sân', 'Trạng thái', 'Số người tham gia', 'Phí sân (VNĐ)'],
+      exportSessions.map(s => [formatDate(s.sessionDate), sessionTimeText(s), s.courtName ?? '', statusText(s.status), s._count?.attendanceRecords ?? 0, Number(s.courtFee) || 0]),
+    ), 'Đã xuất Excel lịch sử điểm danh')
+  }
+  const doExportPdf = () => {
+    if (exportSessions.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: `Diem_danh_${exportSlug}`,
+      title: 'Lịch Sử Điểm Danh',
+      subtitle: exportPeriodName ? `Kỳ ${exportPeriodName}` : undefined,
+      metaLeft: `${exportSessions.length} buổi · ${completedSessions} hoàn thành · ${totalAttendance} lượt tham gia`,
+      columns: [
+        { header: 'Ngày', align: 'center' }, { header: 'Giờ', align: 'center' }, { header: 'Sân' },
+        { header: 'Trạng thái', align: 'center' }, { header: 'Tham gia', align: 'center' }, { header: 'Phí sân', align: 'right' },
+      ],
+      rows: exportSessions.map(s => [formatDate(s.sessionDate), sessionTimeText(s) || '—', s.courtName ?? '—', statusText(s.status), s._count?.attendanceRecords ?? 0, formatVND(Number(s.courtFee) || 0)]),
+    }), 'Đã xuất PDF lịch sử điểm danh')
+  }
+
   return (
     <PageShell>
       <PageHeader
         title="Điểm Danh"
         subtitle={activePeriod ? activePeriod.name : 'Quản lý điểm danh từng buổi chơi'}
-        actions={<ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>}
+        actions={
+          <>
+            {exportSessions.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+            <ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>
+          </>
+        }
       />
 
       <div className="flex flex-col gap-5">

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from 'lucide-react'
-import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, ActionButton, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, runExport, ActionButton, type Column } from '../../components/shared'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
@@ -130,14 +129,19 @@ export function MemberContributions() {
   )
 
   const memberSlug = memberName.replace(/\s/g, '_')
-  const doExportExcel = () => {
+  // Chống bấm đúp (mobile dùng nút riêng, desktop dùng ExportActions tự khoá theo Promise).
+  const [exporting, setExporting] = useState(false)
+  const guarded = async (task: () => Promise<unknown> | unknown, ok: string) => {
+    if (exporting || filtered.length === 0) return
+    setExporting(true)
+    try { await runExport(task, ok) } finally { setExporting(false) }
+  }
+  const doExportExcel = () => guarded(() =>
     exportGenericExcel('Dong_quy_' + memberSlug, 'Đóng quỹ',
       ['Kỳ quỹ', 'Ngày đóng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái'],
       filtered.map((c) => [c.periodName ?? 'Kỳ quỹ', formatDate(c.paymentDate), c.amount, c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt', c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận']),
-    )
-    toast.success('Đã xuất Excel lịch sử đóng quỹ')
-  }
-  const doExportPdf = () => {
+    ), 'Đã xuất Excel lịch sử đóng quỹ')
+  const doExportPdf = () => guarded(() =>
     exportGenericTablePDF({
       fileBase: 'Dong_quy_' + memberSlug,
       title: 'Lịch Sử Đóng Quỹ',
@@ -150,9 +154,7 @@ export function MemberContributions() {
       rows: filtered.map((c) => [c.periodName ?? 'Kỳ quỹ', formatDate(c.paymentDate), formatVND(c.amount), c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt', c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận']),
       summaryLabel: 'Tổng đã đóng (đã xác nhận)',
       summaryValue: formatVND(totalPaid),
-    })
-    toast.success('Đã xuất PDF lịch sử đóng quỹ')
-  }
+    }), 'Đã xuất PDF lịch sử đóng quỹ')
 
   if (isMobile) {
     return (
@@ -164,11 +166,11 @@ export function MemberContributions() {
           </div>
           {filtered.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
-              <button onClick={doExportExcel} aria-label="Xuất Excel"
+              <button onClick={doExportExcel} disabled={exporting} aria-label="Xuất Excel"
                 className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileSpreadsheet size={14} />Excel
               </button>
-              <button onClick={doExportPdf} aria-label="Xuất PDF"
+              <button onClick={doExportPdf} disabled={exporting} aria-label="Xuất PDF"
                 className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
                 <FileText size={14} />PDF
               </button>

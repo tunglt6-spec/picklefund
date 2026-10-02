@@ -9,6 +9,8 @@ import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceDat
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import api from '../../lib/api'
 import { exportGenericExcel } from '../../lib/export'
+import { buildLedgerRows } from '../../lib/finance-ledger'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
 
 type LedgerRow = {
@@ -112,53 +114,48 @@ export function TreasurerDashboard() {
     }
   }, [])
 
-  const ledger = useMemo<LedgerRow[]>(() => {
-    const rows: Omit<LedgerRow, 'balance'>[] = [
-      ...contributions
-        .filter(c => c.isConfirmed)
-        .map(c => ({
-          id: c.id,
-          date: c.paymentDate,
-          type: 'income' as const,
-          description: c.fundSource === 'MINI'
-            ? `Thu Quỹ Phụ — ${c.payerName ?? c.member?.fullName ?? ''}`
-            : `Thu Quỹ Chính — ${c.member?.fullName ?? c.memberId ?? ''}`,
-          amount: c.amount,
-        })),
-      ...expenses.map(e => ({
-        id: e.id,
-        date: e.expenseDate,
-        type: 'expense' as const,
-        description: e.description,
-        amount: e.amount,
-      })),
-    ]
-    rows.sort((a, b) => a.date.localeCompare(b.date))
+  // Sổ Quỹ CHÍNH của kỳ đang mở: Thu đã xác nhận + Chi approved|paid, số dư bắt đầu từ số dư chuyển kỳ.
+  // Quỹ Phụ KHÔNG gộp (đã có thẻ riêng ở trên). Dùng chung buildLedgerRows với màn Sổ Quỹ.
+  const ledgerResult = useMemo(
+    () => buildLedgerRows(contributions, expenses, activePeriod?.id, financeSummary?.carryForwardBalance ?? 0, activePeriod?.name),
+    [contributions, expenses, activePeriod, financeSummary?.carryForwardBalance],
+  )
+  const ledger = useMemo<LedgerRow[]>(
+    () => ledgerResult.rows.map(r => ({
+      id: r.id,
+      date: r.date,
+      type: r.type === 'Thu' ? 'income' as const : 'expense' as const,
+      description: r.desc,
+      amount: Math.abs(r.amount),
+      balance: r.balance,
+    })),
+    [ledgerResult],
+  )
 
-    let runningBalance = 0
-    return rows.map(r => {
-      runningBalance += r.type === 'income' ? r.amount : -r.amount
-      return { ...r, balance: runningBalance }
+  const { busy: exporting, run: runExport } = useExportRunner()
+  const exportLedger = () => {
+    const carryMissing = !!activePeriod?.id && financeSummary === null
+    runExport(() => {
+      const name = activePeriod ? `SoQuy_QuyChinh_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy_QuyChinh'
+      // Excel chuẩn SaaS dùng chung (đóng khung + header brand màu CLB).
+      return exportGenericExcel(
+        name, 'Sổ Quỹ',
+        ['Ngày', 'Loại', 'Mô tả', 'Số tiền (VNĐ)', 'Số dư (VNĐ)'],
+        ledger.map(r => [
+          formatDate(r.date),
+          r.type === 'income' ? 'Thu' : 'Chi',
+          r.description,
+          r.type === 'income' ? r.amount : -r.amount,
+          r.balance,
+        ]),
+        ['', '', `SỐ DƯ CUỐI KỲ (Quỹ Chính, gồm chuyển kỳ ${formatVND(ledgerResult.openingBalance)})`, ledgerResult.totalIncome - ledgerResult.totalExpense, ledgerResult.closingBalance],
+      )
+    }, {
+      success: 'Đã xuất sổ quỹ Excel!',
+      empty: ledger.length === 0 || carryMissing,
+      emptyMsg: carryMissing ? 'Chưa tải được số dư chuyển kỳ, thử lại sau' : 'Chưa có giao dịch để xuất',
     })
-  }, [contributions, expenses])
-
-  const exportLedger = useCallback(() => {
-    if (ledger.length === 0) { toast.error('Chưa có giao dịch để xuất'); return }
-    const name = activePeriod ? `SoQuy_${activePeriod.name.replace(/\s/g, '_')}` : 'SoQuy'
-    // Excel chuẩn SaaS dùng chung (đóng khung + header brand màu CLB).
-    exportGenericExcel(
-      name, 'Sổ Quỹ',
-      ['Ngày', 'Loại', 'Mô tả', 'Số tiền (VNĐ)', 'Số dư (VNĐ)'],
-      ledger.map(r => [
-        formatDate(r.date),
-        r.type === 'income' ? 'Thu' : 'Chi',
-        r.description,
-        r.type === 'income' ? r.amount : -r.amount,
-        r.balance,
-      ]),
-    )
-    toast.success('Đã xuất sổ quỹ Excel!')
-  }, [ledger, activePeriod])
+  }
 
   const recent = ledger.slice(-20).reverse()
 
@@ -252,8 +249,8 @@ export function TreasurerDashboard() {
         {/* Sổ quỹ gần đây */}
         <div className="rounded-2xl border [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="flex items-center justify-between border-b px-5 py-4 [border-color:var(--pf-border)]">
-            <h3 className="font-semibold [color:var(--pf-text)]">Sổ Quỹ Gần Đây</h3>
-            <ActionButton variant="secondary" onClick={exportLedger}>Xuất Sổ</ActionButton>
+            <h3 className="font-semibold [color:var(--pf-text)]">Sổ Quỹ Gần Đây <span className="text-xs font-normal [color:var(--pf-color-muted)]">· Quỹ Chính{activePeriod ? ` · ${activePeriod.name}` : ''}</span></h3>
+            <ActionButton variant="secondary" onClick={exportLedger} disabled={exporting}>Xuất Sổ</ActionButton>
           </div>
           <div className="p-2 sm:p-3">
             {recent.length === 0 ? (

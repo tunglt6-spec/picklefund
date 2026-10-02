@@ -180,6 +180,10 @@ export function FinanceDashboard() {
         memberCount: summary.memberCount,
         sessionCount: summary.sessionCount,
         confirmedCount: summary.confirmedCount,
+        // Cùng bộ thẻ bổ sung như tab Báo cáo / ảnh cùng màn → 2 PDF cùng kỳ ra cùng nhãn & số.
+        miniBalance: summary.miniBalance,
+        carryForward: summary.carryForward,
+        clubAssets: summary.clubAssets,
       }, [])
       toast.success('Đã tải PDF tổng quan tài chính')
     } catch { toast.error('Xuất PDF thất bại') }

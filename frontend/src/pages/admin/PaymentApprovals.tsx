@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle2, Clock, RotateCcw, Wallet, ExternalLink, User } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageShell, PageHeader, MetricCard, EmptyState, LoadingState, ErrorState, StatusBadge, ActionButton } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, EmptyState, LoadingState, ErrorState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
 import api from '../../lib/api'
 import { formatVND, formatDate } from '../../lib/utils'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 
 interface PaymentRow {
   id: string
@@ -87,9 +88,38 @@ export function PaymentApprovals() {
     }
   }
 
+  // ── Xuất danh sách khoản báo nộp CHỜ XÁC NHẬN (đúng tập `rows` đang hiển thị; màn dành cho staff) ──
+  const totalPending = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  const doExportExcel = () => {
+    if (rows.length === 0) return
+    return runExport(() => exportGenericExcel('Cho_xac_nhan_nop_quy', 'Chờ xác nhận',
+      ['Thành viên', 'Điện thoại', 'Ngày báo', 'Nội dung', 'Ghi chú', 'Nguồn báo', 'Số tiền (VNĐ)'],
+      rows.map((p) => [p.member?.fullName ?? 'Thành viên', p.member?.phone ?? '', formatDate(p.createdAt), p.description ?? '', p.memberNote ?? '', p.reportedByMember ? 'Thành viên báo' : 'Thủ quỹ', Number(p.amount) || 0]),
+    ), 'Đã xuất Excel khoản chờ xác nhận')
+  }
+  const doExportPdf = () => {
+    if (rows.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: 'Cho_xac_nhan_nop_quy',
+      title: 'Khoản Nộp Quỹ Chờ Xác Nhận',
+      metaLeft: `${rows.length} khoản chờ xác nhận`,
+      columns: [
+        { header: 'Thành viên' }, { header: 'Ngày báo', align: 'center' }, { header: 'Nội dung' },
+        { header: 'Nguồn báo', align: 'center' }, { header: 'Số tiền', align: 'right' },
+      ],
+      rows: rows.map((p) => [p.member?.fullName ?? 'Thành viên', formatDate(p.createdAt), p.description ?? '', p.reportedByMember ? 'Thành viên báo' : 'Thủ quỹ', formatVND(Number(p.amount) || 0)]),
+      summaryLabel: 'Tổng chờ xác nhận',
+      summaryValue: formatVND(totalPending),
+    }), 'Đã xuất PDF khoản chờ xác nhận')
+  }
+
   return (
     <PageShell maxWidth={1100}>
-      <PageHeader title="Xác Nhận Nộp Quỹ" subtitle="Duyệt các khoản thành viên báo đã chuyển khoản" />
+      <PageHeader
+        title="Xác Nhận Nộp Quỹ"
+        subtitle="Duyệt các khoản thành viên báo đã chuyển khoản"
+        actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} />

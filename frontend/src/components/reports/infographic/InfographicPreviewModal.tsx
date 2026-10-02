@@ -65,7 +65,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
   const handleShare = async () => {
     setExporting('share')
     try {
-      const title = `PickleFund_${data.clubName}_${data.periodLabel}_${tabLabel}`
+      const title = buildFileName(data.clubName, `${data.periodLabel}_${tabLabel}`, 'png').replace(/\.png$/, '')
       await shareInfographic(activeId, title)
     } catch {
       toast.error('Chưa thể chia sẻ. Vui lòng thử lại.')

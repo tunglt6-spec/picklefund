@@ -26,6 +26,7 @@ import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel, type ReportExpenseRow } from '../../lib/export'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
+import { useBrandingStore } from '../../store/brandingStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
@@ -116,6 +117,8 @@ export function Reports() {
   const [fundSummary, setFundSummary] = useState<any>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [exporting, setExporting] = useState(false) // chống bấm đúp Excel/PDF (cả 2 cụm nút)
+  const brandDisplayName = useBrandingStore((s) => s.branding.displayName)
 
   useEffect(() => {
     if (selectedPeriodId || !defaultPeriod?.id) return
@@ -161,7 +164,7 @@ export function Reports() {
 
   const hasPeriods = clubData.fundPeriods.length > 0
   const periodName = activePeriod?.name ?? ''
-  const clubName = (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball'
+  const clubName = (clubData.settings?.name as string | undefined) || brandDisplayName || 'CLB Pickleball'
 
   /* ── KPI tài chính CHÍNH THỨC — chỉ từ backend fundSummary (không recompute) ── */
   const fs = fundSummary
@@ -290,8 +293,9 @@ export function Reports() {
   const EXPENSE_STATUS_LABEL: Record<string, string> = {
     approved: 'Đã duyệt', paid: 'Đã chi', pending: 'Chờ duyệt', rejected: 'Từ chối',
   }
-  const buildExpenseRows = async (): Promise<ReportExpenseRow[]> => {
-    if (!activePeriod?.id) return []
+  // Trả { rows, failed }: lỗi tải KHÔNG còn bị nuốt im lặng → caller báo "thiếu trang Khoản chi".
+  const buildExpenseRows = async (): Promise<{ rows: ReportExpenseRow[]; failed: boolean }> => {
+    if (!activePeriod?.id) return { rows: [], failed: false }
     try {
       const res = await api.get(`/expenses?clubId=${user?.clubId ?? ''}`)
       const raw: any[] = res.data?.data ?? []
@@ -316,39 +320,56 @@ export function Reports() {
       // Quỹ Chính lọc theo kỳ; Quỹ Phụ độc lập kỳ (pool riêng) → liệt kê tất cả. Quỹ Chính trước.
       const common = raw.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON' && e.fundPeriodId === activePeriod.id).sort(byDate)
       const mini = raw.filter(e => e.fundSource === 'MINI').sort(byDate)
-      return [...common, ...mini].map(toRow)
-    } catch { return [] }
+      return { rows: [...common, ...mini].map(toRow), failed: false }
+    } catch (e) {
+      if (import.meta.env?.DEV) console.error('[Reports] load expenses failed:', e)
+      return { rows: [], failed: true }
+    }
   }
   const EXPORT_FAILED = 'Không thể xuất báo cáo. Vui lòng thử lại.'
+  // PHẠM VI export: đúng KỲ đang chọn, KPI chính thức từ backend (Quỹ Chính + Quỹ Phụ) — KHÔNG phụ thuộc
+  // bộ lọc quỹ/tab trên màn (chúng chỉ lọc biểu đồ); `reportType` quyết định có kèm bảng kê thành viên.
+  const scopeNote = () => `Kỳ ${periodName} · ${reportType === 'financial' ? 'tổng quan tài chính' : 'đầy đủ kèm bảng kê'}`
+  const missingExpenseNote = ' Lưu ý: không tải được danh sách khoản chi nên file THIẾU trang "Khoản chi".'
   const doExportPDF = async () => {
+    if (exporting) return
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
+    setExporting(true)
     try {
-      // exportReportsPDF trả Promise (downloadPDF là async) → phải await để bắt lỗi
-      // render/tải file; không báo success trước khi hoàn tất.
-      // reportType 'financial' = tổng quan tài chính (không kèm bảng kê thành viên).
-      const expenseRows = await buildExpenseRows()
+      // exportReportsPDF trả Promise → await để bắt lỗi; chỉ báo success sau khi file xong.
+      const { rows: expenseRows, failed } = await buildExpenseRows()
       await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport(), expenseRows)
-      toast.success(reportType === 'financial' ? 'Đã xuất PDF tổng quan tài chính!' : 'Đã xuất PDF báo cáo đầy đủ!')
+      if (failed) toast.error(`Đã xuất PDF (${scopeNote()}).${missingExpenseNote}`, { duration: 7000 })
+      else toast.success(`Đã xuất PDF · ${scopeNote()}`)
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportPDF failed:', e)
       toast.error(EXPORT_FAILED)
+    } finally {
+      setExporting(false)
     }
   }
   const doExportExcel = async () => {
+    if (exporting) return
     if (!officialReady) { toast.error(EXPORT_NOT_READY); return }
+    setExporting(true)
     try {
-      const expenseRows = await buildExpenseRows()
-      exportReportsExcel(buildExportSummary(), reportType === 'financial' ? [] : memberBillRows.map(r => ({
+      const { rows: expenseRows, failed } = await buildExpenseRows()
+      await exportReportsExcel(buildExportSummary(), reportType === 'financial' ? [] : memberBillRows.map(r => ({
         name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
       })), expenseRows)
-      toast.success(reportType === 'financial' ? 'Đã xuất Excel tổng quan tài chính!' : 'Đã xuất Excel báo cáo đầy đủ!')
+      if (failed) toast.error(`Đã xuất Excel (${scopeNote()}).${missingExpenseNote}`, { duration: 7000 })
+      else toast.success(`Đã xuất Excel · ${scopeNote()}`)
     } catch (e) {
       if (import.meta.env?.DEV) console.error('[Reports] exportExcel failed:', e)
       toast.error(EXPORT_FAILED)
+    } finally {
+      setExporting(false)
     }
   }
+  // Infographic cần thêm số dư Quỹ Chính (kMainFund) — thiếu thì KHÔNG mở (tránh "NaN đ"/0 giả).
+  const infographicReady = officialReady && kMainFund !== undefined && Number.isFinite(kMainFund)
   const openInfographic = () => {
-    if (!officialReady) { toast.error(INFO_NOT_READY); return }
+    if (!infographicReady) { toast.error(INFO_NOT_READY); return }
     setShowInfographic(true)
   }
 
@@ -388,8 +409,8 @@ export function Reports() {
 
   const headerActions = (
     <>
-      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady} />
-      <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!officialReady} title={officialReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
+      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting} />
+      <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
     </>
   )
 
@@ -598,16 +619,16 @@ export function Reports() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <ActionButton variant="secondary" icon={<FileText size={15} />} onClick={doExportPDF} disabled={!officialReady} title={officialReady ? 'Xuất PDF' : EXPORT_HINT}>PDF</ActionButton>
-              <ActionButton variant="secondary" icon={<FileSpreadsheet size={15} />} onClick={doExportExcel} disabled={!officialReady} title={officialReady ? 'Xuất Excel' : EXPORT_HINT}>Excel</ActionButton>
-              <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!officialReady} title={officialReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
+              <ActionButton variant="secondary" icon={<FileText size={15} />} onClick={doExportPDF} disabled={!officialReady || exporting} title={officialReady ? 'Xuất PDF' : EXPORT_HINT}>PDF</ActionButton>
+              <ActionButton variant="secondary" icon={<FileSpreadsheet size={15} />} onClick={doExportExcel} disabled={!officialReady || exporting} title={officialReady ? 'Xuất Excel' : EXPORT_HINT}>Excel</ActionButton>
+              <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
             </div>
           </div>
 
           {/* ── Mobile sticky quick action: Infographic ── */}
           {isMobile && (
             <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
-              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo Infographic" icon={<Sparkles size={20} />} onClick={openInfographic} disabled={!officialReady} title={officialReady ? 'Tạo Infographic' : EXPORT_HINT} />
+              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo Infographic" icon={<Sparkles size={20} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT} />
             </div>
           )}
         </>
@@ -653,14 +674,14 @@ export function Reports() {
       )}
 
       {/* ── Infographic modal — chỉ mở khi đủ official field (không fallback 0/fake) ── */}
-      {showInfographic && officialReady && (
+      {showInfographic && infographicReady && (
         <InfographicPreviewModal
           data={mapToInfographicData({
             clubName,
             periodLabel: periodName,
             totalIncome: kIncome as number,
             totalExpenses: kExpense as number,
-            displayBalance: kMainFund as number,
+            displayBalance: kMainFund as number, // đã chắc chắn finite nhờ infographicReady
             memberCount: (kMemberCount ?? activeMemberCount) as number,
             sessionCount: kSessions as number,
             confirmedCount: memberBillRows.filter(r => r.contributionPaid).length,

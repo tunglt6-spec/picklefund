@@ -89,6 +89,7 @@ export function Billing() {
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [checkout, setCheckout] = useState<CheckoutPlan | null>(null)
+  const [receiptBusyId, setReceiptBusyId] = useState<string | null>(null) // chống bấm đúp tải biên nhận
 
   const fetchAll = useCallback(async () => {
     if (!user) return
@@ -124,6 +125,8 @@ export function Billing() {
   }
 
   const doReceipt = async (o: OrderRow) => {
+    if (receiptBusyId) return
+    setReceiptBusyId(o.orderCode)
     try {
       await exportBillingReceiptPDF({
         clubName,
@@ -137,8 +140,11 @@ export function Billing() {
         gateway: o.gateway,
         billingInfo: o.billingInfo ?? null,
       })
+      toast.success('Đã tải biên nhận')
     } catch {
       toast.error('Không tạo được biên nhận.')
+    } finally {
+      setReceiptBusyId(null)
     }
   }
 
@@ -353,8 +359,8 @@ export function Billing() {
                           <span className={`text-xs font-medium ${paid ? 'text-emerald-600' : o.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>{stLabel}</span>
                         </div>
                         {paid && (
-                          <button onClick={() => doReceipt(o)} title="Tải biên nhận"
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors">
+                          <button onClick={() => doReceipt(o)} disabled={receiptBusyId !== null} title="Tải biên nhận"
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] transition-colors disabled:opacity-50">
                             Biên nhận
                           </button>
                         )}

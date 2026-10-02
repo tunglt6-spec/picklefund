@@ -15,7 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import {
   PageShell, PageHeader, MetricCard, DataTable, MobileCardList,
-  StatusBadge, EmptyState, LoadingState, ErrorState, ActionButton, ExportActions, ResponsiveTabs,
+  StatusBadge, EmptyState, LoadingState, ErrorState, ActionButton, ExportActions, runExport, ResponsiveTabs,
   type Column, type TabItem, type StatusTone,
 } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
@@ -207,15 +207,18 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
     return { total: rows.length, excellent, good, review }
   }, [rows])
 
+  // H5: MEMBER_VIEW chỉ xem điểm toàn CLB trên màn, không tải file.
+  const canExport = !isMember
   const doExportExcel = () => {
-    exportGenericExcel(`Cham_Diem_${month}`, 'Bảng điểm',
+    if (!canExport || rows.length === 0) return
+    return runExport(() => exportGenericExcel(`Cham_Diem_${month}`, 'Bảng điểm',
       ['Thành viên', 'Điểm', 'Xếp loại'],
       rows.map((r) => [r.memberName, r.total, r.classification]),
-    )
-    toast.success('Đã xuất Excel bảng điểm')
+    ), 'Đã xuất Excel bảng điểm')
   }
   const doExportPdf = () => {
-    exportGenericTablePDF({
+    if (!canExport || rows.length === 0) return
+    return runExport(() => exportGenericTablePDF({
       fileBase: `Cham_Diem_${month}`,
       title: 'Bảng Điểm Thành Viên',
       subtitle: monthLabel(month),
@@ -225,8 +228,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         { header: 'Điểm', align: 'center' }, { header: 'Xếp loại', align: 'center' },
       ],
       rows: rows.map((r, i) => [i + 1, r.memberName, r.total, r.classification]),
-    })
-    toast.success('Đã xuất PDF bảng điểm')
+    }), 'Đã xuất PDF bảng điểm')
   }
 
   const handleFinalize = async () => {
@@ -288,7 +290,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         </label>
 
         <div className="flex flex-wrap items-center gap-2">
-          {rows.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+          {canExport && rows.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
           {isAdmin && !isMember && (
             <ActionButton
               icon={<Lock size={16} />}

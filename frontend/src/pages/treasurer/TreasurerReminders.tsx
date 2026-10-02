@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Bell, Send, CheckCircle, Clock, FileSpreadsheet, FileText } from 'lucide-react'
+import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
+import { ExportActions } from '../../components/shared/ExportActions'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { Badge } from '../../components/ui/Badge'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
@@ -29,14 +31,17 @@ export function TreasurerReminders() {
   // CANONICAL: tập thành viên CHƯA đóng đủ (money-based) từ fund-periods summary — gồm cả
   // short-payer (đã nộp base nhưng còn thiếu phí sinh hoạt). Fallback record-based khi chưa có summary.
   const [unpaidSet, setUnpaidSet] = useState<Set<string> | null>(null)
+  // Số nợ THỰC từng TV = max(0, -balance) từ summary (như màn Công nợ) — KHÔNG dùng mức chuẩn cho mọi người.
+  const [owedMap, setOwedMap] = useState<Record<string, number> | null>(null)
   useEffect(() => {
-    if (!activePeriod?.id || isLocalToken(accessToken)) { setUnpaidSet(null); return }
+    if (!activePeriod?.id || isLocalToken(accessToken)) { setUnpaidSet(null); setOwedMap(null); return }
     let cancelled = false
     api.get(`/fund-periods/${activePeriod.id}/summary`).then((res) => {
       if (cancelled) return
-      const list = (res.data?.data?.members ?? []) as { memberId: string; contributionPaid?: boolean }[]
+      const list = (res.data?.data?.members ?? []) as { memberId: string; contributionPaid?: boolean; balance?: number }[]
       setUnpaidSet(new Set(list.filter((m) => !m.contributionPaid).map((m) => m.memberId)))
-    }).catch(() => { if (!cancelled) setUnpaidSet(null) })
+      setOwedMap(Object.fromEntries(list.map((m) => [m.memberId, Math.max(0, -Number(m.balance ?? 0))])))
+    }).catch(() => { if (!cancelled) { setUnpaidSet(null); setOwedMap(null) } })
     return () => { cancelled = true }
   }, [activePeriod?.id, accessToken])
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
@@ -70,7 +75,7 @@ export function TreasurerReminders() {
   const dispatchReminder = async (member: typeof unpaidMembers[0]) => {
     if (!member.userId) return false
     const periodName = activePeriod?.name ?? 'kỳ quỹ hiện tại'
-    const amount = activePeriod?.contributionAmount ?? 0
+    const amount = amountOf(member) ?? 0
     await api.post('/hermes/dispatch', {
       eventType: 'payment_reminder',
       clubId,
@@ -120,31 +125,33 @@ export function TreasurerReminders() {
     }
   }
 
-  const amount = activePeriod?.contributionAmount ?? 1000000
+  // Mức chuẩn của kỳ (chỉ để hiển thị "/người"); số cần đóng thật của từng TV lấy từ summary.
+  const baseAmount = activePeriod?.contributionAmount ?? 0
+  const amountOf = (m: { id: string }): number | null => owedMap?.[m.id] ?? (baseAmount > 0 ? baseAmount : null)
+  const fmtOwed = (m: { id: string }) => { const v = amountOf(m); return v === null ? '—' : formatVND(v) }
+  const totalOwed = unpaidMembers.reduce((s, m) => s + (amountOf(m) ?? 0), 0)
+  const perPersonLabel = baseAmount > 0 ? ` · ${formatVND(baseAmount)}/người` : ''
 
-  const doExportExcel = () => {
-    exportGenericExcel('Nhac_dong_quy', 'Chưa đóng',
-      ['Thành viên', 'Liên hệ', 'Số tiền cần đóng (VNĐ)', 'Trạng thái'],
-      unpaidMembers.map((m) => [m.fullName, m.phone ?? m.email ?? '', amount, sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
-    )
-    toast.success('Đã xuất Excel danh sách chưa đóng')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Nhac_dong_quy',
-      title: 'Danh Sách Chưa Đóng Quỹ',
-      subtitle: activePeriod?.name,
-      metaLeft: `${unpaidMembers.length} chưa đóng · ${pendingMembers.length} chờ xác nhận`,
-      columns: [
-        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Liên hệ' },
-        { header: 'Số tiền cần đóng', align: 'right' }, { header: 'Trạng thái', align: 'center' },
-      ],
-      rows: unpaidMembers.map((m, i) => [i + 1, m.fullName, m.phone ?? m.email ?? '—', formatVND(amount), sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
-      summaryLabel: 'Tổng cần thu',
-      summaryValue: formatVND(unpaidMembers.length * amount),
-    })
-    toast.success('Đã xuất PDF danh sách chưa đóng')
-  }
+  const { busy, run } = useExportRunner()
+  const doExportExcel = () => run(() => exportGenericExcel(
+    `Nhac_dong_quy${activePeriod ? `_${activePeriod.name}` : ''}`, 'Chưa đóng',
+    ['Thành viên', 'Liên hệ', 'Số tiền cần đóng (VNĐ)', 'Trạng thái'],
+    unpaidMembers.map((m) => [m.fullName, m.phone ?? m.email ?? '', amountOf(m) ?? '', sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
+    ['TỔNG CẦN THU', '', totalOwed, ''],
+  ), { success: 'Đã xuất Excel danh sách chưa đóng', empty: unpaidMembers.length === 0, emptyMsg: 'Không có thành viên nào chưa đóng để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: `Nhac_dong_quy${activePeriod ? `_${activePeriod.name}` : ''}`,
+    title: 'Danh Sách Chưa Đóng Quỹ',
+    subtitle: activePeriod?.name,
+    metaLeft: `${unpaidMembers.length} chưa đóng · ${pendingMembers.length} chờ xác nhận`,
+    columns: [
+      { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Liên hệ' },
+      { header: 'Số tiền cần đóng', align: 'right' }, { header: 'Trạng thái', align: 'center' },
+    ],
+    rows: unpaidMembers.map((m, i) => [i + 1, m.fullName, m.phone ?? m.email ?? '—', fmtOwed(m), sentIds.has(m.id) ? 'Đã nhắc' : 'Chưa đóng']),
+    summaryLabel: 'Tổng cần thu',
+    summaryValue: formatVND(totalOwed),
+  }), { success: 'Đã xuất PDF danh sách chưa đóng', empty: unpaidMembers.length === 0, emptyMsg: 'Không có thành viên nào chưa đóng để xuất' })
 
   if (isMobile) {
     const doneCnt = data.members.filter(m => m.status === 'active').length - unpaidMembers.length
@@ -153,7 +160,7 @@ export function TreasurerReminders() {
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-lg font-[800] [color:var(--pf-text)]">Nhắc Nhở Đóng Quỹ</div>
-            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {formatVND(amount)}/người</div>}
+            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name}{perPersonLabel}</div>}
           </div>
           {unpaidMembers.length > 0 && (
             <button
@@ -166,6 +173,7 @@ export function TreasurerReminders() {
           )}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
+          {unpaidMembers.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />}
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -197,7 +205,7 @@ export function TreasurerReminders() {
                         <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
                         <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{m.phone ?? m.email ?? '—'}</div>
                       </div>
-                      <div className="text-sm font-[700] text-red-500 shrink-0">{formatVND(amount)}</div>
+                      <div className="text-sm font-[700] text-red-500 shrink-0">{fmtOwed(m)}</div>
                     </div>
                     {!sent ? (
                       <div className="flex gap-2 mt-3">
@@ -242,7 +250,7 @@ export function TreasurerReminders() {
                       <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
                       {contrib?.notes && <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{contrib.notes}</div>}
                     </div>
-                    <div className="text-sm font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? amount)}</div>
+                    <div className="text-sm font-[700] text-amber-600 shrink-0">{formatVND(contrib?.amount ?? 0)}</div>
                   </div>
                 )
               })}
@@ -264,18 +272,11 @@ export function TreasurerReminders() {
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
         title="Nhắc Nhở Đóng Quỹ"
-        subtitle={activePeriod ? `${activePeriod.name} · ${formatVND(amount)}/người` : 'Chưa có kỳ quỹ mở'}
+        subtitle={activePeriod ? `${activePeriod.name}${perPersonLabel}` : 'Chưa có kỳ quỹ mở'}
         actions={
           unpaidMembers.length > 0
             ? <div className="flex items-center gap-2">
-                <button onClick={doExportExcel} aria-label="Xuất Excel"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] text-sm font-semibold hover:bg-slate-200 transition-colors">
-                  <FileSpreadsheet size={14} />Xuất Excel
-                </button>
-                <button onClick={doExportPdf} aria-label="Xuất PDF"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] text-sm font-semibold hover:bg-slate-200 transition-colors">
-                  <FileText size={14} />Xuất PDF
-                </button>
+                <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />
                 <button
                   onClick={sendAll}
                   disabled={sendingAll}
@@ -298,7 +299,7 @@ export function TreasurerReminders() {
               <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Chưa đóng</p>
             </div>
             <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} người</p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(unpaidMembers.length * amount)}</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(totalOwed)}</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -349,7 +350,7 @@ export function TreasurerReminders() {
                     <tr key={m.id}>
                       <td className="font-medium [color:var(--pf-text)]">{m.fullName}</td>
                       <td className="[color:var(--pf-color-muted)] text-xs">{m.phone ?? m.email ?? '—'}</td>
-                      <td className="text-right font-semibold text-red-500">{formatVND(amount)}</td>
+                      <td className="text-right font-semibold text-red-500">{fmtOwed(m)}</td>
                       <td className="text-center">
                         {sent
                           ? <Badge variant="green" dot>Đã nhắc</Badge>
@@ -398,7 +399,7 @@ export function TreasurerReminders() {
                   return (
                     <tr key={m.id}>
                       <td className="font-medium [color:var(--pf-text)]">{m.fullName}</td>
-                      <td className="text-right font-semibold text-amber-600">{formatVND(contrib?.amount ?? amount)}</td>
+                      <td className="text-right font-semibold text-amber-600">{formatVND(contrib?.amount ?? 0)}</td>
                       <td className="text-center [color:var(--pf-color-muted)] text-xs">{contrib?.notes || '—'}</td>
                     </tr>
                   )

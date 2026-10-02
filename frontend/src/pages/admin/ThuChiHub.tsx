@@ -16,7 +16,6 @@ import {
   Plus, Wallet, Gamepad2, TrendingUp, TrendingDown, AlertCircle,
   Receipt, FileBarChart, X, Eye, RefreshCw, ArrowUpRight, ArrowDownRight, Layers,
 } from 'lucide-react'
-import toast from 'react-hot-toast'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
@@ -26,6 +25,7 @@ import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceDat
 import { useAuthStore } from '../../store/authStore'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
@@ -93,6 +93,8 @@ interface Tx {
   createdAt: string
   status: StatusTone
   statusLabel: string
+  /** Khoản được TÍNH vào quỹ (Thu đã xác nhận / Chi approved|paid) — dùng cho tổng khi export. */
+  counted: boolean
   periodId?: string
   notes?: string
 }
@@ -243,6 +245,7 @@ export function ThuChiHub() {
     createdAt: c.createdAt ?? c.paymentDate,
     status: c.isConfirmed ? 'success' : 'warning',
     statusLabel: c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận',
+    counted: !!c.isConfirmed,
     periodId: c.fundPeriodId,
     notes: c.notes,
   }))
@@ -260,6 +263,7 @@ export function ThuChiHub() {
       createdAt: e.createdAt ?? e.expenseDate,
       status: EXP_STATUS_TONE[st],
       statusLabel: EXP_STATUS_LABEL[st],
+      counted: st === 'approved' || st === 'paid',
       periodId: e.fundPeriodId,
       notes: undefined,
     }
@@ -376,30 +380,46 @@ export function ThuChiHub() {
     },
   ]
 
-  const doExportExcel = () => {
-    exportGenericExcel('Giao_dich_tai_chinh', 'Giao dịch',
-      ['Ngày', 'Loại', 'Nguồn quỹ', 'Nội dung', 'Đối tượng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái'],
-      filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, t.amount, t.method, t.statusLabel]),
-    )
-    toast.success('Đã xuất Excel giao dịch')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Giao_dich_tai_chinh',
-      title: 'Giao Dịch Tài Chính',
-      metaLeft: `${filteredTx.length} giao dịch · Thu ${formatVND(filteredIncomeTotal)} · Chi ${formatVND(filteredExpenseTotal)}`,
-      columns: [
-        { header: 'Ngày', align: 'center' }, { header: 'Loại', align: 'center' }, { header: 'Nguồn quỹ', align: 'center' },
-        { header: 'Nội dung' }, { header: 'Đối tượng' }, { header: 'Số tiền', align: 'right' }, { header: 'Trạng thái', align: 'center' },
-      ],
-      rows: filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, formatVND(t.amount), t.statusLabel]),
-    })
-    toast.success('Đã xuất PDF giao dịch')
-  }
+  const { busy: exporting, run: runExport } = useExportRunner()
+  // Export ĐÚNG tập đang xem (tab quỹ / loại / kỳ / tìm kiếm); phạm vi ghi trong tên file + tiêu đề.
+  const periodNameOf = (id: string) => fundPeriods.find(p => p.id === id)?.name ?? id
+  const scopeParts = [
+    fundTab !== 'all' ? FUND_LABEL[fundTab] : '',
+    typeFilter !== 'all' ? (typeFilter === 'income' ? 'Thu' : 'Chi') : '',
+    periodFilter !== 'all' ? periodNameOf(periodFilter) : '',
+    q ? `tìm "${search.trim()}"` : '',
+  ].filter(Boolean)
+  const scopeText = scopeParts.length ? scopeParts.join(' · ') : 'Tất cả giao dịch'
+  const scopeSlug = scopeParts.length ? `_${scopeParts.join('_').replace(/[^\p{L}\p{N}]+/gu, '_')}` : ''
+  const methodLabel = (m: string) => (m === 'bank_transfer' ? 'Chuyển khoản' : m === 'cash' ? 'Tiền mặt' : m)
+  // Tổng CANONICAL theo tập đang xem: Thu = đã xác nhận, Chi = đã duyệt/đã chi (chờ/từ chối chỉ liệt kê).
+  const countedIncome = filteredTx.filter(t => t.kind === 'income' && t.counted).reduce((s, t) => s + t.amount, 0)
+  const countedExpense = filteredTx.filter(t => t.kind === 'expense' && t.counted).reduce((s, t) => s + t.amount, 0)
+  const totalsText = `Thu đã xác nhận ${formatVND(countedIncome)} · Chi đã duyệt/đã chi ${formatVND(countedExpense)}`
+
+  const doExportExcel = () => runExport(() => exportGenericExcel(
+    'Giao_dich_tai_chinh' + scopeSlug, 'Giao dịch',
+    ['Ngày', 'Loại', 'Nguồn quỹ', 'Nội dung', 'Đối tượng', 'Số tiền (VNĐ)', 'Hình thức', 'Trạng thái'],
+    filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, t.amount, methodLabel(t.method), t.statusLabel]),
+    [`TỔNG (${scopeText})`, '', '', totalsText, '', '', '', ''],
+  ), { success: 'Đã xuất Excel giao dịch', empty: filteredTx.length === 0, emptyMsg: 'Không có giao dịch nào để xuất' })
+  const doExportPdf = () => runExport(() => exportGenericTablePDF({
+    fileBase: 'Giao_dich_tai_chinh' + scopeSlug,
+    title: 'Giao Dịch Tài Chính',
+    metaLeft: `${scopeText} · ${filteredTx.length} giao dịch`,
+    columns: [
+      { header: 'Ngày', align: 'center' }, { header: 'Loại', align: 'center' }, { header: 'Nguồn quỹ', align: 'center' },
+      { header: 'Nội dung' }, { header: 'Đối tượng' }, { header: 'Số tiền', align: 'right' },
+      { header: 'Hình thức', align: 'center' }, { header: 'Trạng thái', align: 'center' },
+    ],
+    rows: filteredTx.map((t) => [safeDate(t.date), t.kind === 'income' ? 'Thu' : 'Chi', t.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính', t.title, t.party, formatVND(t.amount), methodLabel(t.method), t.statusLabel]),
+    summaryLabel: 'Tổng',
+    summaryValue: totalsText,
+  }), { success: 'Đã xuất PDF giao dịch', empty: filteredTx.length === 0, emptyMsg: 'Không có giao dịch nào để xuất' })
 
   const headerActions = (
     <>
-      {filteredTx.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+      {filteredTx.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={exporting} />}
       <ActionButton variant="secondary" icon={<FileBarChart size={16} />} onClick={() => navigate('/reports')}>Báo cáo</ActionButton>
       <ActionButton variant="secondary" icon={<TrendingDown size={15} />} onClick={() => navigate('/expenses')}>Thêm chi phí</ActionButton>
       <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/contributions')}>Thu quỹ</ActionButton>

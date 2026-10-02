@@ -73,6 +73,7 @@ export function StandingsPage() {
   }
   const doExportPdf = async () => {
     // PDF VECTOR chuẩn SaaS (mẫu báo cáo tài chính) — không dùng html2canvas (từng ra 15 trang).
+    if (standings.length === 0) { toast.error('Chưa có dữ liệu bảng xếp hạng'); return }
     try {
       const rowsData = [...standings].sort((a, b) =>
         b.rankingPoints - a.rankingPoints || b.pointDifference - a.pointDifference || b.pointsFor - a.pointsFor,

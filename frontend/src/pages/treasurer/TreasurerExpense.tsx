@@ -12,6 +12,9 @@ import { useAuthStore } from '../../store/authStore'
 import type { AllocationRule, CostType, LivingExpense } from '../../types'
 import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { EXPENSE_STATUS_LABEL, isCommonFund, isEffectiveExpense } from '../../lib/finance-ledger'
+import { useExportRunner } from '../../hooks/useExportRunner'
+import { mapExpense } from '../../hooks/useFinanceData'
 import toast from 'react-hot-toast'
 
 const RULES: { value: AllocationRule; label: string; desc: string }[] = [
@@ -54,20 +57,15 @@ export function TreasurerExpense() {
     if (!clubId) return
     api.get(`/expenses?clubId=${clubId}`).then(res => {
       const raw = res.data?.data ?? []
-      setExpenses(clubId, raw.map((e: any) => ({
-        id: e.id, clubId: e.clubId, fundPeriodId: e.fundPeriodId ?? undefined,
-        description: e.description ?? '', amount: Number(e.amount),
-        allocationRule: e.allocationRule ?? 'EQUAL',
-        costType: e.costType ?? 'LIVING',
-        expenseDate: e.expenseDate?.slice(0, 10) ?? '',
-        receiptUrl: e.receiptUrl ?? undefined, notes: e.notes ?? undefined,
-        createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
-      })))
+      setExpenses(clubId, raw.map((e: any) => mapExpense(e)))
     }).catch(() => {/* keep existing store data */})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId])
 
-  const totalExpenses = expenses.reduce((a, e) => a + e.amount, 0)
+  // Tổng đã chi CANONICAL: Quỹ Chính + approved|paid (khớp backend) — dùng cho cả màn hình lẫn export.
+  const totalExpenses = expenses
+    .filter(e => isEffectiveExpense(e.status) && isCommonFund(e.fundSource))
+    .reduce((a, e) => a + e.amount, 0)
 
   const openCreate = () => {
     setEditTarget(null)
@@ -129,34 +127,29 @@ export function TreasurerExpense() {
 
   const ruleLabel = (r: AllocationRule) => RULES.find(x => x.value === r)?.label ?? r
 
-  const doExportExcel = () => {
-    exportGenericExcel('Khoan_chi', 'Khoản chi',
-      ['Mô tả', 'Kỳ quỹ', 'Ngày chi', 'Số tiền (VNĐ)', 'Phân bổ', 'Hóa đơn'],
-      expenses.map((e) => {
-        const period = data.fundPeriods.find((p) => p.id === e.fundPeriodId)
-        return [e.description, period?.name ?? '', e.expenseDate, e.amount, ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']
-      }),
-    )
-    toast.success('Đã xuất Excel khoản chi')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Khoan_chi',
-      title: 'Danh Sách Khoản Chi',
-      metaLeft: `${expenses.length} khoản · Thiếu hóa đơn ${expenses.filter((e) => !e.receiptUrl).length}`,
-      columns: [
-        { header: 'Mô tả' }, { header: 'Kỳ quỹ' }, { header: 'Ngày chi', align: 'center' },
-        { header: 'Số tiền', align: 'right' }, { header: 'Phân bổ', align: 'center' }, { header: 'Hóa đơn', align: 'center' },
-      ],
-      rows: expenses.map((e) => {
-        const period = data.fundPeriods.find((p) => p.id === e.fundPeriodId)
-        return [e.description, period?.name ?? '—', formatDate(e.expenseDate), formatVND(e.amount), ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']
-      }),
-      summaryLabel: 'Tổng đã chi',
-      summaryValue: formatVND(totalExpenses),
-    })
-    toast.success('Đã xuất PDF khoản chi')
-  }
+  const { busy, run } = useExportRunner()
+  const fundLabel = (e: LivingExpense) => ((e.fundSource ?? 'COMMON') === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính')
+  const statusLabel = (e: LivingExpense) => EXPENSE_STATUS_LABEL[e.status ?? 'pending'] ?? (e.status ?? 'Chờ duyệt')
+  const effectiveTotal = totalExpenses
+  const periodOf = (e: LivingExpense) => data.fundPeriods.find((p) => p.id === e.fundPeriodId)
+
+  const doExportExcel = () => run(() => exportGenericExcel('Khoan_chi', 'Khoản chi',
+    ['Mô tả', 'Quỹ', 'Kỳ quỹ', 'Ngày chi', 'Số tiền (VNĐ)', 'Trạng thái', 'Phân bổ', 'Hóa đơn'],
+    expenses.map((e) => [e.description, fundLabel(e), periodOf(e)?.name ?? '', formatDate(e.expenseDate), e.amount, statusLabel(e), ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']),
+    ['TỔNG ĐÃ CHI (Quỹ Chính, đã duyệt/đã chi)', '', '', '', effectiveTotal, '', '', ''],
+  ), { success: 'Đã xuất Excel khoản chi', empty: expenses.length === 0, emptyMsg: 'Chưa có khoản chi để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Khoan_chi',
+    title: 'Danh Sách Khoản Chi',
+    metaLeft: `${expenses.length} khoản · Thiếu hóa đơn ${expenses.filter((e) => !e.receiptUrl).length}`,
+    columns: [
+      { header: 'Mô tả' }, { header: 'Quỹ', align: 'center' }, { header: 'Kỳ quỹ' }, { header: 'Ngày chi', align: 'center' },
+      { header: 'Số tiền', align: 'right' }, { header: 'Trạng thái', align: 'center' }, { header: 'Phân bổ', align: 'center' }, { header: 'Hóa đơn', align: 'center' },
+    ],
+    rows: expenses.map((e) => [e.description, fundLabel(e), periodOf(e)?.name ?? '—', formatDate(e.expenseDate), formatVND(e.amount), statusLabel(e), ruleLabel(e.allocationRule), e.receiptUrl ? 'Có' : 'Chưa có']),
+    summaryLabel: 'Tổng đã chi (Quỹ Chính, đã duyệt/đã chi)',
+    summaryValue: formatVND(effectiveTotal),
+  }), { success: 'Đã xuất PDF khoản chi', empty: expenses.length === 0, emptyMsg: 'Chưa có khoản chi để xuất' })
 
   if (isMobile) {
     return (
@@ -166,11 +159,11 @@ export function TreasurerExpense() {
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {expenses.length > 0 && (
               <>
-                <button onClick={doExportExcel} aria-label="Xuất Excel"
+                <button onClick={doExportExcel} disabled={busy} aria-label="Xuất Excel"
                   className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileSpreadsheet size={14} />Excel
                 </button>
-                <button onClick={doExportPdf} aria-label="Xuất PDF"
+                <button onClick={doExportPdf} disabled={busy} aria-label="Xuất PDF"
                   className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
                   <FileText size={14} />PDF
                 </button>
@@ -310,8 +303,8 @@ export function TreasurerExpense() {
           <div className="flex items-center gap-2">
             {expenses.length > 0 && (
               <>
-                <Button variant="ghost" size="sm" onClick={doExportExcel}><FileSpreadsheet size={14} />Xuất Excel</Button>
-                <Button variant="ghost" size="sm" onClick={doExportPdf}><FileText size={14} />Xuất PDF</Button>
+                <Button variant="ghost" size="sm" onClick={doExportExcel} disabled={busy}><FileSpreadsheet size={14} />Xuất Excel</Button>
+                <Button variant="ghost" size="sm" onClick={doExportPdf} disabled={busy}><FileText size={14} />Xuất PDF</Button>
               </>
             )}
             <Button onClick={openCreate} disabled={activePeriods.length === 0}>

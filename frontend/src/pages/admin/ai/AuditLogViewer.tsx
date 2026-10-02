@@ -5,9 +5,9 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
-import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
+import { useExportRunner } from '../../../hooks/useExportRunner'
 import {
   PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ExportActions,
   type StatusTone,
@@ -34,6 +34,9 @@ function fmt(iso: string): string {
   return isNaN(d.getTime()) ? iso : d.toLocaleString('vi-VN', { hour12: false })
 }
 
+/** Số bản ghi tối đa tải về (cũng là giới hạn của file export). */
+const LOG_LIMIT = 500
+
 export function AuditLogViewer() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [search, setSearch] = useState('')
@@ -56,7 +59,7 @@ export function AuditLogViewer() {
       if (search.trim()) params.set('search', search.trim())
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      params.set('limit', '500')
+      params.set('limit', String(LOG_LIMIT))
       const res = await api.get(`/audit-logs/club?${params.toString()}`)
       setLogs((res.data?.data ?? res.data ?? []) as AuditLog[])
     } catch {
@@ -72,32 +75,40 @@ export function AuditLogViewer() {
   const pageSafe = Math.min(page, totalPages)
   const paged = logs.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE)
 
-  const doExportExcel = () => {
-    exportGenericExcel('Audit_Log_CLB', 'Audit Log',
-      ['Thời gian', 'Người dùng', 'Hành động', 'Tài nguyên', 'Chi tiết'],
-      logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '', l.action, l.resource, l.detail ?? '']),
-    )
-    toast.success('Đã xuất Excel nhật ký')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Audit_Log_CLB',
-      title: 'Nhật Ký Kiểm Toán',
-      metaLeft: `${logs.length} bản ghi`,
-      columns: [
-        { header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' },
-      ],
-      rows: logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource]),
-    })
-    toast.success('Đã xuất PDF nhật ký')
-  }
+  const { busy, run } = useExportRunner()
+  // Export = ĐÚNG tập đang xem (đã lọc phía server theo hành động/tìm kiếm/ngày), tối đa LOG_LIMIT dòng gần nhất.
+  const scopeParts = [
+    action !== 'Tất cả' ? `hành động ${action}` : '',
+    search.trim() ? `tìm "${search.trim()}"` : '',
+    from ? `từ ${from}` : '',
+    to ? `đến ${to}` : '',
+  ].filter(Boolean)
+  const scopeText = scopeParts.length ? scopeParts.join(' · ') : 'tất cả hành động'
+  const limitNote = `Giới hạn ${LOG_LIMIT} dòng gần nhất${logs.length >= LOG_LIMIT ? ' (đã chạm giới hạn — còn bản ghi cũ hơn chưa xuất)' : ''}`
+  const doExportExcel = () => run(() => exportGenericExcel(
+    'Audit_Log_CLB', 'Audit Log',
+    ['Thời gian', 'Người dùng', 'Hành động', 'Tài nguyên', 'Chi tiết'],
+    logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '', l.action, l.resource, l.detail ?? '']),
+    [`${logs.length} bản ghi · ${scopeText} · ${limitNote}`, '', '', '', ''],
+  ), { success: 'Đã xuất Excel nhật ký', empty: logs.length === 0, emptyMsg: 'Không có bản ghi nào để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Audit_Log_CLB',
+    title: 'Nhật Ký Kiểm Toán',
+    metaLeft: `${logs.length} bản ghi · ${scopeText}`,
+    columns: [
+      { header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Tài nguyên' }, { header: 'Chi tiết' },
+    ],
+    rows: logs.map((l) => [fmt(l.createdAt), l.user?.username ?? '—', l.action, l.resource, l.detail ?? '—']),
+    summaryLabel: 'Phạm vi',
+    summaryValue: limitNote,
+  }), { success: 'Đã xuất PDF nhật ký', empty: logs.length === 0, emptyMsg: 'Không có bản ghi nào để xuất' })
 
   return (
     <PageShell>
       <PageHeader
         title="Audit Logs"
         subtitle="Nhật ký kiểm toán — các thao tác trong CLB của bạn"
-        actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 
       <div className="flex flex-col gap-4">

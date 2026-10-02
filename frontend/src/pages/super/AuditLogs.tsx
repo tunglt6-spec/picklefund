@@ -4,13 +4,13 @@
  */
 import { useState, useEffect } from 'react'
 import { ScrollText } from 'lucide-react'
-import toast from 'react-hot-toast'
 import {
   PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState,
   ExportActions, ChartCard, type Column, type StatusTone,
 } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 
 interface AuditLog {
@@ -28,6 +28,9 @@ const ACTION_TONE: Record<string, StatusTone> = {
 }
 const ACTION_OPTIONS = ['Tất cả', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT', 'LOCK']
 
+/** Số bản ghi tối đa tải về (cũng là giới hạn của file export). */
+const LOG_LIMIT = 200
+
 export function AuditLogs() {
   const { accessToken } = useAuthStore()
   const [search, setSearch] = useState('')
@@ -42,7 +45,7 @@ export function AuditLogs() {
     const params = new URLSearchParams()
     if (action !== 'Tất cả') params.set('action', action)
     if (search) params.set('search', search)
-    params.set('limit', '200')
+    params.set('limit', String(LOG_LIMIT))
     setLoading(true)
     api.get(`/audit-logs?${params.toString()}`)
       .then((res) => setLogs(res.data?.data ?? []))
@@ -57,23 +60,26 @@ export function AuditLogs() {
     return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
   }
 
-  const doExportExcel = () => {
-    exportGenericExcel('Audit_Log_He_Thong', 'Audit Log',
-      ['Thời gian', 'Người dùng', 'Hành động', 'Chi tiết', 'CLB'],
-      rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
-    )
-    toast.success('Đã xuất Excel nhật ký')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Audit_Log_He_Thong',
-      title: 'Nhật Ký Kiểm Toán Hệ Thống',
-      metaLeft: `${rows.length} thao tác`,
-      columns: [{ header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' }, { header: 'CLB' }],
-      rows: rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
-    })
-    toast.success('Đã xuất PDF nhật ký')
-  }
+  const { busy, run } = useExportRunner()
+  // Export = ĐÚNG tập đang xem (lọc phía server theo hành động/tìm kiếm), tối đa LOG_LIMIT dòng gần nhất.
+  const scopeParts = [action !== 'Tất cả' ? `hành động ${action}` : '', search ? `tìm "${search}"` : ''].filter(Boolean)
+  const scopeText = scopeParts.length ? scopeParts.join(' · ') : 'tất cả hành động'
+  const limitNote = `Giới hạn ${LOG_LIMIT} dòng gần nhất${rows.length >= LOG_LIMIT ? ' (đã chạm giới hạn — còn bản ghi cũ hơn chưa xuất)' : ''}`
+  const doExportExcel = () => run(() => exportGenericExcel(
+    'Audit_Log_He_Thong', 'Audit Log',
+    ['Thời gian', 'Người dùng', 'Hành động', 'Chi tiết', 'CLB'],
+    rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+    [`${rows.length} bản ghi · ${scopeText} · ${limitNote}`, '', '', '', ''],
+  ), { success: 'Đã xuất Excel nhật ký', empty: rows.length === 0, emptyMsg: 'Không có bản ghi nào để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Audit_Log_He_Thong',
+    title: 'Nhật Ký Kiểm Toán Hệ Thống',
+    metaLeft: `${rows.length} thao tác · ${scopeText}`,
+    columns: [{ header: 'Thời gian' }, { header: 'Người dùng' }, { header: 'Hành động', align: 'center' }, { header: 'Chi tiết' }, { header: 'CLB' }],
+    rows: rows.map((l) => [formatTime(l.createdAt), l.user?.username ?? '—', l.action, l.detail ?? l.resource, l.club?.name ?? 'System']),
+    summaryLabel: 'Phạm vi',
+    summaryValue: limitNote,
+  }), { success: 'Đã xuất PDF nhật ký', empty: rows.length === 0, emptyMsg: 'Không có bản ghi nào để xuất' })
 
   const columns: Column<AuditLog>[] = [
     { key: 'time', header: 'Thời gian', className: 'whitespace-nowrap text-xs [color:var(--pf-color-muted)]', render: (l) => formatTime(l.createdAt) },
@@ -88,7 +94,7 @@ export function AuditLogs() {
       <PageHeader
         title="Nhật ký kiểm toán"
         subtitle={`${rows.length} thao tác · lịch sử hoạt động toàn hệ thống`}
-        actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 
       <div className="mb-4 flex flex-col gap-3">

@@ -30,11 +30,13 @@ function loadFontsBase64(): { regular: string; bold: string } | null {
   return null;
 }
 
-const esc = (x: unknown) =>
+export const esc = (x: unknown) =>
   String(x ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 const money = (n: number) =>
   new Intl.NumberFormat('vi-VN').format(Math.round(n || 0)) + 'đ';
 const compact = (n: number) => {
@@ -148,6 +150,8 @@ export function buildReportHtml(
 
   // Logo CLB (data URI) hoặc monogram chữ cái đầu (khi CLB chưa có logo).
   const mono = esc((report.meta.clubName || 'C').trim().charAt(0).toUpperCase());
+  // Nhãn thương hiệu: tên CLB nếu có, không có mới dùng PICKLEFUND.
+  const brandLabel = esc(String(report.meta.clubName || '').trim().toUpperCase() || 'PICKLEFUND');
   // Chỉ nhúng khi là data:image URI hợp lệ (chống inject vào src); nếu không → monogram.
   const safeLogo =
     typeof logoDataUri === 'string' && /^data:image\/[a-z+]+;base64,/i.test(logoDataUri)
@@ -393,7 +397,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 </style></head><body>
 
 <section class="cover">
-  <div class="cv-top">${logoLg}<div class="cv-brand">◆ PICKLEFUND</div></div>
+  <div class="cv-top">${logoLg}<div class="cv-brand">◆ ${brandLabel}</div></div>
   <div>
     <div class="cv-eyb">Báo cáo điều hành · Executive Report</div>
     <h1 class="cv-title">${esc(report.meta.clubName)}</h1>
@@ -409,7 +413,7 @@ td.r{text-align:right}td.c{text-align:center}td.nm{font-weight:600;color:#0F172A
 </section>
 
 <div class="hero">
-  <div class="brand">◆ PICKLEFUND</div>
+  <div class="brand">◆ ${brandLabel}</div>
   <div class="hero-l">
     ${logoSm}
     <div>

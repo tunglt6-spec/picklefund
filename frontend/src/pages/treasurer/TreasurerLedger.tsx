@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, FileText, FileSpreadsheet } from 'lucide-react'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
@@ -8,16 +8,10 @@ import { useClubContributions, useClubExpenses } from '../../hooks/useFinanceDat
 import { useAuthStore } from '../../store/authStore'
 import { formatDate, formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportLedgerExcel, exportLedgerPDF } from '../../lib/export'
-import toast from 'react-hot-toast'
+import api from '../../lib/api'
+import { buildLedgerRows } from '../../lib/finance-ledger'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { useIsMobile } from '../../hooks/useIsMobile'
-
-type LedgerRow = {
-  id: string
-  date: string
-  type: 'Thu' | 'Chi'
-  desc: string
-  amount: number
-}
 
 export function TreasurerLedger() {
   const isMobile = useIsMobile()
@@ -33,53 +27,53 @@ export function TreasurerLedger() {
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'Thu' | 'Chi'>('all')
+  const { busy, run } = useExportRunner()
 
-  // Build chronological ledger from real store data
-  const rows: LedgerRow[] = useMemo(() => {
-    const periodId = activePeriod?.id
-    const incomes: LedgerRow[] = contributions
-      .filter(c => !periodId || c.fundPeriodId === periodId || c.fundSource === 'MINI')
-      .map(c => ({
-        id: c.id,
-        date: c.paymentDate,
-        type: 'Thu' as const,
-        desc: c.fundSource === 'MINI'
-          ? `[Quỹ Phụ] ${c.payerName ?? c.member?.fullName ?? 'Thành viên'}`
-          : `${c.member?.fullName ?? 'Thành viên'} đóng quỹ${activePeriod ? ` ${activePeriod.name}` : ''}`,
-        amount: c.amount,
-      }))
-    const expenseRows: LedgerRow[] = expenses
-      .filter(e => !periodId || e.fundPeriodId === periodId || e.fundSource === 'MINI')
-      .map(e => ({
-        id: e.id,
-        date: e.expenseDate,
-        type: 'Chi' as const,
-        desc: e.fundSource === 'MINI'
-          ? `[Quỹ Phụ] ${e.description}`
-          : e.description,
-        amount: -e.amount,
-      }))
-    return [...incomes, ...expenseRows].sort((a, b) => a.date.localeCompare(b.date))
-  }, [contributions, expenses, activePeriod])
+  // Số dư mở đầu = số dư chuyển kỳ (canonical từ /fund-periods/:id/summary). null = chưa tải được.
+  const [opening, setOpening] = useState<number | null>(null)
+  useEffect(() => {
+    if (!activePeriod?.id) { setOpening(0); return }
+    let cancelled = false
+    setOpening(null)
+    api.get(`/fund-periods/${activePeriod.id}/summary`)
+      .then(res => { if (!cancelled) setOpening(Number(res.data?.data?.carryForward?.balance ?? 0)) })
+      .catch(() => { if (!cancelled) setOpening(null) })
+    return () => { cancelled = true }
+  }, [activePeriod?.id])
 
-  // Running balance
-  const rowsWithBalance = useMemo(() => {
-    let balance = 0
-    return rows.map(r => {
-      balance += r.amount
-      return { ...r, balance }
-    })
-  }, [rows])
-
-  const totalIncome = rows.filter(r => r.type === 'Thu').reduce((s, r) => s + r.amount, 0)
-  const totalExpense = rows.filter(r => r.type === 'Chi').reduce((s, r) => s + Math.abs(r.amount), 0)
-  const currentBalance = totalIncome - totalExpense
+  // Sổ Quỹ CHÍNH của kỳ đang chọn: Thu đã xác nhận + Chi approved|paid, Quỹ Phụ KHÔNG gộp.
+  const ledger = useMemo(
+    () => buildLedgerRows(contributions, expenses, activePeriod?.id, opening ?? 0, activePeriod?.name),
+    [contributions, expenses, activePeriod, opening],
+  )
+  const rowsWithBalance = ledger.rows
+  const { totalIncome, totalExpense, closingBalance: currentBalance } = ledger
 
   const filtered = rowsWithBalance.filter(r => {
     if (typeFilter !== 'all' && r.type !== typeFilter) return false
     if (search && !r.desc.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
+  const isFiltered = typeFilter !== 'all' || search.trim() !== ''
+  const safe = (t: string) => t.replace(/[^\p{L}\p{N} ]/gu, '').trim()
+  const filterNote = isFiltered
+    ? ` – lọc ${[typeFilter !== 'all' ? typeFilter : '', safe(search)].filter(Boolean).join(' ')}`
+    : ''
+
+  // Export ĐÚNG tập đang hiển thị (filtered), số dư chạy tuyệt đối từ số dư mở đầu của kỳ.
+  const exportRows = filtered.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance }))
+  const exportName = `${activePeriod?.name ?? 'So_Quy'}${filterNote}`
+  const fTotalIncome = filtered.filter(r => r.type === 'Thu').reduce((s, r) => s + r.amount, 0)
+  const fTotalExpense = filtered.filter(r => r.type === 'Chi').reduce((s, r) => s - r.amount, 0)
+  const blocked = !!activePeriod && opening === null
+  const onExcel = () => run(
+    () => exportLedgerExcel(exportName, exportRows, ledger.openingBalance, currentBalance),
+    { success: 'Đã xuất Excel sổ quỹ!', empty: exportRows.length === 0 || blocked, emptyMsg: blocked ? 'Chưa tải được số dư chuyển kỳ, thử lại sau' : 'Chưa có giao dịch để xuất' },
+  )
+  const onPdf = () => run(
+    () => exportLedgerPDF(exportName, exportRows, fTotalIncome, fTotalExpense, currentBalance, ledger.openingBalance),
+    { success: 'Đã xuất PDF sổ quỹ!', empty: exportRows.length === 0 || blocked, emptyMsg: blocked ? 'Chưa tải được số dư chuyển kỳ, thử lại sau' : 'Chưa có giao dịch để xuất' },
+  )
 
   if (isMobile) {
     return (
@@ -87,21 +81,13 @@ export function TreasurerLedger() {
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-lg font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
-            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name}</div>}
+            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · Quỹ Chính</div>}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => {
-              const pName = activePeriod?.name ?? 'So_Quy'
-              exportLedgerExcel(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })))
-              toast.success('Đã xuất Excel!')
-            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
+            <button onClick={onExcel} disabled={busy} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] disabled:opacity-50 [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
               <FileSpreadsheet size={13} />Excel
             </button>
-            <button onClick={() => {
-              const pName = activePeriod?.name ?? 'Sổ Quỹ'
-              exportLedgerPDF(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })), totalIncome, totalExpense, currentBalance)
-              toast.success('Đã xuất PDF!')
-            }} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
+            <button onClick={onPdf} disabled={busy} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] disabled:opacity-50 [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
               <FileText size={13} />PDF
             </button>
           </div>
@@ -176,22 +162,14 @@ export function TreasurerLedger() {
       <PageHeader
         title="Sổ Quỹ Chi Tiết"
         subtitle={activePeriod
-          ? `${activePeriod.name} · Số dư: ${formatVND(currentBalance)}`
+          ? `${activePeriod.name} · Quỹ Chính · Chuyển kỳ: ${formatVND(ledger.openingBalance)} · Số dư: ${formatVND(currentBalance)}`
           : `Số dư hiện tại: ${formatVND(currentBalance)}`}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => {
-              const pName = activePeriod?.name ?? 'So_Quy'
-              exportLedgerExcel(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })))
-              toast.success('Đã xuất Excel sổ quỹ!')
-            }}>
+            <Button variant="outline" onClick={onExcel} disabled={busy}>
               <FileSpreadsheet size={14} />Xuất Excel
             </Button>
-            <Button onClick={() => {
-              const pName = activePeriod?.name ?? 'Sổ Quỹ'
-              exportLedgerPDF(pName, rowsWithBalance.map(r => ({ date: formatDate(r.date), type: r.type, desc: r.desc, amount: r.amount, balance: r.balance })), totalIncome, totalExpense, currentBalance)
-              toast.success('Đã xuất PDF sổ quỹ!')
-            }}>
+            <Button onClick={onPdf} disabled={busy}>
               <FileText size={14} />Xuất PDF
             </Button>
           </div>
@@ -209,7 +187,7 @@ export function TreasurerLedger() {
               <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Tổng thu</p>
             </div>
             <p className="text-xl font-bold text-emerald-600">{formatVND(totalIncome)}</p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rows.filter(r => r.type === 'Thu').length} khoản</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.filter(r => r.type === 'Thu').length} khoản</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -219,7 +197,7 @@ export function TreasurerLedger() {
               <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Tổng chi</p>
             </div>
             <p className="text-xl font-bold text-red-500">{formatVND(totalExpense)}</p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rows.filter(r => r.type === 'Chi').length} khoản</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.filter(r => r.type === 'Chi').length} khoản</p>
           </div>
           <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -231,7 +209,7 @@ export function TreasurerLedger() {
             <p className={`text-xl font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
               {formatVND(currentBalance)}
             </p>
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rows.length} giao dịch</p>
+            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.length} giao dịch</p>
           </div>
         </div>
 

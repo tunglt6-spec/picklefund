@@ -10,7 +10,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Users, AlertCircle, Wallet } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
@@ -128,36 +128,37 @@ export function Debts() {
   const hasData = members.some((m) => m.status === 'active')
 
   const periodSlug = (activePeriod?.name ?? 'ky').replace(/\s/g, '_')
-  const doExportExcel = () => {
-    exportGenericExcel('Cong_No_' + periodSlug, 'Công nợ',
-      ['Thành viên', 'Điện thoại', 'Trạng thái', 'Còn nợ (VNĐ)'],
-      rows.map((r) => [r.name, r.phone ?? '', STATUS_META[r.status].label, r.amount]),
-    )
-    toast.success('Đã xuất Excel công nợ')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Cong_No_' + periodSlug,
-      title: 'Công Nợ Cá Nhân',
-      subtitle: activePeriod ? `Kỳ ${activePeriod.name}` : undefined,
-      metaLeft: `${rows.length} thành viên · Tỷ lệ đã thu ${stats.collectRate}%`,
-      columns: [
-        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Điện thoại' },
-        { header: 'Trạng thái', align: 'center' }, { header: 'Còn nợ', align: 'right' },
-      ],
-      rows: rows.map((r, i) => [i + 1, r.name, r.phone ?? '—', STATUS_META[r.status].label, r.amount > 0 ? formatVND(r.amount) : '—']),
-      summaryLabel: 'Tổng công nợ',
-      summaryValue: formatVND(stats.totalDebt),
-    })
-    toast.success('Đã xuất PDF công nợ')
-  }
+  const { busy, run } = useExportRunner()
+  // Export ĐÚNG tập đang xem (tab Tất cả / Chưa đóng / Đã đóng); phạm vi ghi trong tên file + tiêu đề.
+  const scopeLabel = tab === 'all' ? 'Tất cả' : STATUS_META[tab].label
+  const scopeSlug = tab === 'all' ? '' : `_${tab === 'unpaid' ? 'Chua_dong' : 'Da_dong'}`
+  const filteredDebt = filtered.reduce((s, r) => s + r.amount, 0)
+  const doExportExcel = () => run(() => exportGenericExcel(
+    'Cong_No_' + periodSlug + scopeSlug, 'Công nợ',
+    ['Thành viên', 'Điện thoại', 'Trạng thái', 'Còn nợ (VNĐ)'],
+    filtered.map((r) => [r.name, r.phone ?? '', STATUS_META[r.status].label, r.amount]),
+    [`TỔNG CÔNG NỢ (${scopeLabel})`, '', '', filteredDebt],
+  ), { success: 'Đã xuất Excel công nợ', empty: filtered.length === 0, emptyMsg: 'Không có thành viên nào để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Cong_No_' + periodSlug + scopeSlug,
+    title: 'Công Nợ Cá Nhân',
+    subtitle: activePeriod ? `Kỳ ${activePeriod.name}` : undefined,
+    metaLeft: `${scopeLabel} · ${filtered.length}/${rows.length} thành viên · Tỷ lệ đã thu ${stats.collectRate}%`,
+    columns: [
+      { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Điện thoại' },
+      { header: 'Trạng thái', align: 'center' }, { header: 'Còn nợ', align: 'right' },
+    ],
+    rows: filtered.map((r, i) => [i + 1, r.name, r.phone ?? '—', STATUS_META[r.status].label, r.amount > 0 ? formatVND(r.amount) : '—']),
+    summaryLabel: `Tổng công nợ (${scopeLabel})`,
+    summaryValue: formatVND(filteredDebt),
+  }), { success: 'Đã xuất PDF công nợ', empty: filtered.length === 0, emptyMsg: 'Không có thành viên nào để xuất' })
 
   return (
     <PageShell>
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
-        actions={hasData ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        actions={hasData ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 
       {!hasData ? (

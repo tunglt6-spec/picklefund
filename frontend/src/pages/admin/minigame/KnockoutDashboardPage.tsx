@@ -9,6 +9,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Swords, Crown, ChevronRight, Save } from 'lucide-react'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
+import { ExportActions } from '../../../components/shared/ExportActions'
+import { runExport } from '../../../components/shared/exportRunner'
+import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import { Button } from '../../../components/ui/Button'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { PairBuilder } from '../../../components/minigame/PairBuilder'
@@ -102,6 +105,42 @@ export function KnockoutDashboardPage() {
       })
     : rounds.map(r => ({ key: String(r), label: roundLabel(byRound(r).length), ms: byRound(r) }))
 
+  // ── Xuất bảng kết quả nhánh đấu (generic) — đúng tập trận đang hiển thị theo thứ tự cột ──
+  const koTitle = de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')
+  const koRows = columns.flatMap(col => col.ms.map(m => {
+    const done = m.status === 'COMPLETED'
+    const bye = !m.teamBId
+    return [
+      col.label,
+      m.teamAId ? nameOf(m.teamAId) : 'Chờ...',
+      bye ? 'BYE' : (m.teamBId ? nameOf(m.teamBId) : 'Chờ...'),
+      done && !bye ? `${m.scoreA ?? 0} - ${m.scoreB ?? 0}` : '–',
+      done && m.winnerId ? nameOf(m.winnerId) : '–',
+      bye ? 'BYE' : done ? 'Đã xong' : 'Chờ',
+    ] as (string | number)[]
+  }))
+  const koFileSlug = `NhanhDau_${mg.name}`.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  const doExportExcel = () => {
+    if (koRows.length === 0) return
+    return runExport(() => exportGenericExcel(koFileSlug, 'Nhánh đấu',
+      ['Vòng / nhánh', 'Đội/VĐV 1', 'Đội/VĐV 2', 'Tỷ số', 'Thắng', 'Trạng thái'], koRows,
+    ), 'Đã xuất Excel nhánh đấu')
+  }
+  const doExportPdf = () => {
+    if (koRows.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: koFileSlug,
+      title: `Nhánh Đấu ${koTitle}`,
+      subtitle: mg.name,
+      metaLeft: `${koRows.length} trận${champion ? ` · Vô địch: ${champion}` : ''}`,
+      columns: [
+        { header: 'Vòng / nhánh' }, { header: 'Đội/VĐV 1' }, { header: 'Đội/VĐV 2' },
+        { header: 'Tỷ số', align: 'center' }, { header: 'Thắng' }, { header: 'Trạng thái', align: 'center' },
+      ],
+      rows: koRows,
+    }), 'Đã xuất PDF nhánh đấu')
+  }
+
   const renderCard = (m: KoMatch) => {
     const done = m.status === 'COMPLETED'
     const bye = !m.teamBId
@@ -134,6 +173,7 @@ export function KnockoutDashboardPage() {
       <PageHeader variant="bar" title={`${de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Match Play · loại trực tiếp — nhập số HỐ THẮNG mỗi trận' : 'Single-elimination · nhánh đấu tìm nhà vô địch')}
         actions={
           <div className="flex items-center gap-2">
+            {koRows.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
             {matches.length === 0
               ? <Button size="sm" onClick={generate} disabled={busy}><Swords size={14} /> Tạo nhánh đấu</Button>
               : canAdvance && <Button size="sm" onClick={advance} disabled={busy}><ChevronRight size={14} /> Vòng kế tiếp</Button>}

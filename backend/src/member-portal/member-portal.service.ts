@@ -196,7 +196,9 @@ export class MemberPortalService {
       totals: {
         court: summary.commonFund.totalCourt,
         living: summary.commonFund.totalLiving,
-        memberCount: summary.members.length,
+        // Sĩ số tính phí đã CHỐT của kỳ (billedMemberCount ?? live) — đúng mẫu số chia tiền sân,
+        // KHÔNG dùng members.length (số live, lệch sau khi thêm/xóa thành viên).
+        memberCount: summary.memberCount,
       },
     };
   }

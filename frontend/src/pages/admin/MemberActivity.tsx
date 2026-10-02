@@ -5,11 +5,11 @@
  */
 import { useMemo, useState } from 'react'
 import { Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
-import toast from 'react-hot-toast'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
-import { formatVND, cn } from '../../lib/utils'
+import { formatVND, cn, getActiveChungPeriod } from '../../lib/utils'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { PageShell, PageHeader, MetricCard, EmptyState, ExportActions } from '../../components/shared'
 
@@ -26,38 +26,49 @@ export function MemberActivity() {
   const [q, setQ] = useState('')
   const [selId, setSelId] = useState<string | null>(members[0]?.id ?? null)
 
+  // Phạm vi đóng quỹ: khoản ĐÃ xác nhận, Quỹ Chính, kỳ chung đang mở (khớp canonical Thu của backend).
+  const activePeriod = getActiveChungPeriod(data.fundPeriods)
+  const periodTag = activePeriod ? ` (${activePeriod.name})` : ''
+
   const rows = useMemo(() =>
     members.map((m) => {
       const att = attSummary.find((a) => a.memberId === m.id)
-      const contribs = contributions.filter((c) => c.memberId === m.id && c.paymentDate)
+      const contribs = contributions.filter((c) =>
+        c.memberId === m.id && c.paymentDate && c.isConfirmed
+        && (c.fundSource ?? 'COMMON') === 'COMMON'
+        && (!activePeriod || c.fundPeriodId === activePeriod.id))
       const totalPaid = contribs.reduce((s, c) => s + (c.amount || 0), 0)
       const rate = att && att.totalSessions > 0 ? Math.round((att.attendedSessions / att.totalSessions) * 100) : null
       return { m, att, contribs, totalPaid, rate }
-    }), [members, attSummary, contributions])
+    }), [members, attSummary, contributions, activePeriod])
 
   const filtered = rows.filter((r) => !q || r.m.fullName.toLowerCase().includes(q.toLowerCase()))
   const sel = rows.find((r) => r.m.id === selId) ?? filtered[0]
 
-  const doExportExcel = () => {
-    exportGenericExcel('Hoat_dong_thanh_vien', 'Hoạt động',
-      ['Thành viên', 'Buổi tham gia', 'Chuyên cần (%)', 'Số lần đóng', 'Tổng đóng quỹ (VNĐ)'],
-      rows.map((r) => [r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '', r.rate != null ? r.rate : '', r.contribs.length, r.totalPaid]),
-    )
-    toast.success('Đã xuất Excel hoạt động thành viên')
-  }
-  const doExportPdf = () => {
-    exportGenericTablePDF({
-      fileBase: 'Hoat_dong_thanh_vien',
-      title: 'Hoạt Động Thành Viên',
-      metaLeft: `${rows.length} thành viên`,
-      columns: [
-        { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Buổi tham gia', align: 'center' },
-        { header: 'Chuyên cần', align: 'center' }, { header: 'Số lần đóng', align: 'center' }, { header: 'Tổng đóng quỹ', align: 'right' },
-      ],
-      rows: rows.map((r, i) => [i + 1, r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '—', r.rate != null ? `${r.rate}%` : '—', r.contribs.length, formatVND(r.totalPaid)]),
-    })
-    toast.success('Đã xuất PDF hoạt động thành viên')
-  }
+  const { busy, run } = useExportRunner()
+  // Export ĐÚNG tập đang xem (ô tìm kiếm); phạm vi ghi trong tên file + tiêu đề.
+  const qTrim = q.trim()
+  const scopeSlug = qTrim ? `_loc_${qTrim.replace(/[^\p{L}\p{N}]+/gu, '_')}` : ''
+  const scopeMeta = qTrim ? ` · lọc "${qTrim}"` : ''
+  const doExportExcel = () => run(() => exportGenericExcel(
+    'Hoat_dong_thanh_vien' + scopeSlug, 'Hoạt động',
+    ['Thành viên', 'Buổi tham gia', 'Chuyên cần (%)', 'Số lần đóng', `Tổng đóng quỹ${periodTag} (VNĐ)`],
+    filtered.map((r) => [r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '', r.rate != null ? r.rate : '', r.contribs.length, r.totalPaid]),
+    ['TỔNG', '', '', filtered.reduce((s, r) => s + r.contribs.length, 0), filtered.reduce((s, r) => s + r.totalPaid, 0)],
+  ), { success: 'Đã xuất Excel hoạt động thành viên', empty: filtered.length === 0, emptyMsg: 'Không có thành viên nào để xuất' })
+  const doExportPdf = () => run(() => exportGenericTablePDF({
+    fileBase: 'Hoat_dong_thanh_vien' + scopeSlug,
+    title: 'Hoạt Động Thành Viên',
+    subtitle: activePeriod?.name,
+    metaLeft: `${filtered.length}/${rows.length} thành viên · Quỹ Chính đã xác nhận${scopeMeta}`,
+    columns: [
+      { header: '#', align: 'center' }, { header: 'Thành viên' }, { header: 'Buổi tham gia', align: 'center' },
+      { header: 'Chuyên cần', align: 'center' }, { header: 'Số lần đóng', align: 'center' }, { header: 'Tổng đóng quỹ', align: 'right' },
+    ],
+    rows: filtered.map((r, i) => [i + 1, r.m.fullName, r.att ? `${r.att.attendedSessions}/${r.att.totalSessions}` : '—', r.rate != null ? `${r.rate}%` : '—', r.contribs.length, formatVND(r.totalPaid)]),
+    summaryLabel: 'Tổng đóng quỹ (đã xác nhận)',
+    summaryValue: formatVND(filtered.reduce((s, r) => s + r.totalPaid, 0)),
+  }), { success: 'Đã xuất PDF hoạt động thành viên', empty: filtered.length === 0, emptyMsg: 'Không có thành viên nào để xuất' })
 
   if (members.length === 0) {
     return (
@@ -72,7 +83,7 @@ export function MemberActivity() {
   return (
     <PageShell>
       <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ từng thành viên · điểm danh · đóng quỹ · chuyên cần"
-        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />}
       />
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -113,7 +124,7 @@ export function MemberActivity() {
               <div className="mt-3 grid grid-cols-3 gap-3">
                 <MetricCard icon={<CalendarCheck size={18} />} accent="blue" label="Buổi tham gia" value={sel.att ? `${sel.att.attendedSessions}/${sel.att.totalSessions}` : '—'} />
                 <MetricCard icon={<TrendingUp size={18} />} accent="teal" label="Chuyên cần" value={sel.rate != null ? `${sel.rate}%` : '—'} />
-                <MetricCard icon={<DollarSign size={18} />} accent="violet" label="Tổng đóng quỹ" value={formatVND(sel.totalPaid)} />
+                <MetricCard icon={<DollarSign size={18} />} accent="violet" label={`Tổng đóng quỹ${periodTag}`} value={formatVND(sel.totalPaid)} />
               </div>
             </div>
 

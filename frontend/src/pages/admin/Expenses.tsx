@@ -18,6 +18,8 @@ import type { AllocationRule, CostType, LivingExpense, ExpenseStatus, FundSource
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import { formatVND, formatDate } from '../../lib/utils'
 import { exportExpensesPDF, exportGenericExcel } from '../../lib/export'
+import { EXPENSE_STATUS_LABEL, isEffectiveExpense } from '../../lib/finance-ledger'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
@@ -60,10 +62,11 @@ interface RichExpense extends LivingExpense {
   notes: string
 }
 
-function toRich(e: LivingExpense, index: number): RichExpense {
+function toRich(e: LivingExpense): RichExpense {
   return {
     ...e,
-    code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${String(index + 1).padStart(3, '0')}`,
+    // Mã chi ỔN ĐỊNH: ngày chi + 4 ký tự cuối id (không phụ thuộc vị trí trong mảng store).
+    code: `EXP-${e.expenseDate.replace(/-/g, '').slice(2)}-${e.id.replace(/-/g, '').slice(-4).toUpperCase()}`,
     status: e.status ?? 'pending',
     notes: e.notes ?? '',
   }
@@ -535,7 +538,7 @@ export function Expenses() {
 
   // Derive display view from store — no local copy
   const richExpenses = useMemo<RichExpense[]>(
-    () => clubData.expenses.map((e, i) => toRich(e, i)),
+    () => clubData.expenses.map(toRich),
     [clubData.expenses]
   )
 
@@ -733,66 +736,67 @@ export function Expenses() {
     }
   }
 
-  const exportExcel = () => {
-    // Excel chuẩn SaaS dùng chung (đóng khung + header brand màu CLB) qua exportGenericExcel.
-    exportGenericExcel(
-      'Chi_phi', 'Chi phí',
-      ['Mã chi', 'Nội dung', 'Nguồn quỹ', 'Ngày chi', 'Số tiền (VNĐ)', 'Phân bổ', 'Trạng thái'],
+  const ruleShort: Record<AllocationRule, string> = {
+    EQUAL: 'Chia đều', ATTENDANCE: 'Theo buổi', PRESENT_ONLY: 'Người có mặt', FUND_ONLY: 'Không phân bổ',
+  }
+  const kindLabelOf = (e: RichExpense) => e.fundSource === 'MINI'
+    ? (e.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[e.miniExpenseType] : 'Quỹ Phụ')
+    : `${e.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleShort[e.allocationRule]}`
+  const { busy: exporting, run: runExport } = useExportRunner()
+  // Tổng CANONICAL (khớp backend): chỉ khoản approved|paid; khoản chờ duyệt/từ chối chỉ liệt kê, KHÔNG cộng vào tổng chi.
+  const effectiveOf = (list: RichExpense[]) => list.filter(e => isEffectiveExpense(e.status)).reduce((s, e) => s + e.amount, 0)
+  const exportPeriodName = allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Tất cả kỳ'
+
+  // Export dùng ĐÚNG tập đang hiển thị (`filtered` — cả desktop lẫn mobile).
+  const exportExcel = () => runExport(() => {
+    const pendingSum = filtered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+    return exportGenericExcel(
+      `Chi_phi_${exportPeriodName}`, 'Chi phí',
+      ['Mã chi', 'Nội dung', 'Nguồn quỹ', 'Kỳ quỹ', 'Loại / Phân bổ', 'Ngày chi', 'Số tiền (VNĐ)', 'Trạng thái'],
       filtered.map(e => [
         e.code,
         e.description,
         e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính',
-        e.expenseDate ?? '',
+        e.fundSource === 'MINI' ? '' : (allPeriods.find(p => p.id === e.fundPeriodId)?.name ?? ''),
+        kindLabelOf(e),
+        e.expenseDate ? formatDate(e.expenseDate) : '',
         e.amount,
-        e.allocationRule ?? '',
-        e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối',
+        EXPENSE_STATUS_LABEL[e.status] ?? e.status,
       ]),
+      ['', `TỔNG ĐÃ DUYỆT/ĐÃ CHI (chờ duyệt ${formatVND(pendingSum)} chưa tính)`, '', '', '', '', effectiveOf(filtered), ''],
     )
-  }
+  }, { success: 'Đã xuất Excel chi phí!', empty: filtered.length === 0, emptyMsg: 'Không có khoản chi nào để xuất' })
 
-  const ruleShort: Record<AllocationRule, string> = {
-    EQUAL: 'Chia đều', ATTENDANCE: 'Theo buổi', PRESENT_ONLY: 'Người có mặt', FUND_ONLY: 'Không phân bổ',
-  }
-  const exportPDF = async () => {
-    if (filtered.length === 0) { toast.error('Không có khoản chi nào để xuất'); return }
+  const exportPDF = () => runExport(async () => {
     const rows = filtered.map(e => ({
       code: e.code,
       description: e.description,
-      kindLabel: e.fundSource === 'MINI'
-        ? (e.miniExpenseType ? MINI_EXPENSE_TYPE_LABELS[e.miniExpenseType] : 'Quỹ Phụ')
-        : `${e.costType === 'COURT' ? 'Sân' : 'Sinh hoạt'} · ${ruleShort[e.allocationRule]}`,
+      kindLabel: kindLabelOf(e),
       dateText: e.expenseDate ? formatDate(e.expenseDate) : '',
       amount: e.amount,
       statusKey: e.status,
     }))
-    try {
-      await exportExpensesPDF({
-        clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
-        periodName: allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Tất cả kỳ',
-        totalAll: filtered.reduce((s, e) => s + e.amount, 0),
-        totalCommon: filtered.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON').reduce((s, e) => s + e.amount, 0),
-        totalMini: filtered.filter(e => e.fundSource === 'MINI').reduce((s, e) => s + e.amount, 0),
-        totalApproved: filtered.filter(e => e.status === 'approved' || e.status === 'paid').reduce((s, e) => s + e.amount, 0),
-        totalPending: filtered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0),
-        count: filtered.length,
-      }, rows)
-      toast.success('Đã xuất PDF Chi phí!')
-    } catch {
-      toast.error('Không thể xuất PDF. Vui lòng thử lại.')
-    }
-  }
+    const common = filtered.filter(e => (e.fundSource ?? 'COMMON') === 'COMMON')
+    const mini = filtered.filter(e => e.fundSource === 'MINI')
+    await exportExpensesPDF({
+      clubName: (clubData.settings?.name as string | undefined) ?? 'CLB Pickleball',
+      periodName: exportPeriodName,
+      // totalAll/Common/Mini = chỉ approved|paid (khớp báo cáo quỹ); đề xuất chờ duyệt ở totalPending.
+      totalAll: effectiveOf(filtered),
+      totalCommon: effectiveOf(common),
+      totalMini: effectiveOf(mini),
+      totalApproved: effectiveOf(filtered),
+      totalPending: filtered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0),
+      count: filtered.length,
+    }, rows)
+  }, { success: 'Đã xuất PDF Chi phí!', empty: filtered.length === 0, emptyMsg: 'Không có khoản chi nào để xuất' })
 
   const isMobile = useIsMobile()
 
   /* ── Mobile layout ── */
   if (isMobile) {
-    const mobileFiltered = richExpenses.filter(e => {
-      const matchPeriod = !selectedPeriodId || (e.fundSource ?? 'COMMON') === 'MINI' || e.fundPeriodId === selectedPeriodId
-      const matchTab = tab === 'all' || e.status === tab
-      const q = search.toLowerCase()
-      const matchQ = !q || e.description.toLowerCase().includes(q) || e.code.toLowerCase().includes(q)
-      return matchPeriod && matchTab && matchQ
-    })
+    // Danh sách mobile = CÙNG tập `filtered` với desktop/export (gồm cả bộ lọc FilterPanel).
+    const mobileFiltered = filtered
     const pendingCount = periodFiltered.filter(e => e.status === 'pending').length
 
     const statusTabs: { key: 'all' | ExpenseStatus; label: string }[] = [
@@ -812,11 +816,11 @@ export function Expenses() {
               {(selectedPeriodId || activePeriod) && <p className="text-xs [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-1.5">
-              <button onClick={exportExcel} aria-label="Xuất Excel"
+              <button onClick={exportExcel} disabled={exporting} aria-label="Xuất Excel"
                 className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
                 <Download size={16} />Excel
               </button>
-              <button onClick={exportPDF} aria-label="Xuất PDF"
+              <button onClick={exportPDF} disabled={exporting} aria-label="Xuất PDF"
                 className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200">
                 <FileDown size={16} />PDF
               </button>
@@ -892,11 +896,11 @@ export function Expenses() {
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
                   <span className={`text-xs font-[600] px-1.5 py-0.5 rounded-full ${
-                    e.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
+                    e.status === 'approved' || e.status === 'paid' ? 'bg-emerald-50 text-emerald-600' :
                     e.status === 'pending' ? 'bg-amber-50 text-amber-600' :
                     'bg-red-50 text-red-500'
                   }`}>
-                    {e.status === 'approved' ? 'Đã duyệt' : e.status === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                    {EXPENSE_STATUS_LABEL[e.status] ?? e.status}
                   </span>
                 </div>
               </div>
@@ -1062,8 +1066,8 @@ export function Expenses() {
             </div>
             {!isMember && <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>}
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
-            <Button variant="outline" size="sm" onClick={exportExcel}><Download size={13} />Xuất Excel</Button>
-            <Button variant="outline" size="sm" onClick={exportPDF}><FileDown size={13} />Xuất PDF</Button>
+            <Button variant="outline" size="sm" onClick={exportExcel} disabled={exporting}><Download size={13} />Xuất Excel</Button>
+            <Button variant="outline" size="sm" onClick={exportPDF} disabled={exporting}><FileDown size={13} />Xuất PDF</Button>
             {!isMember && <Button onClick={() => setShowAdd(true)}><Plus size={14} />Thêm khoản chi</Button>}
           </div>
         </div>

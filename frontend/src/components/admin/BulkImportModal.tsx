@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import * as XLSX from 'xlsx'
+import type * as XLSXNS from 'xlsx'
 import { Upload, FileSpreadsheet, Download, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
@@ -88,7 +88,10 @@ function num(row: Record<string, unknown>, ...keys: string[]): number {
   return Number(v.replace(/[.,]/g, '')) || 0
 }
 
-function downloadTemplate() {
+// xlsx tải ĐỘNG (chỉ khi bấm tải mẫu / chọn file) — không nằm trong bundle khởi động.
+type XLSXMod = typeof XLSXNS
+
+function buildTemplate(XLSX: XLSXMod) {
   const wb = XLSX.utils.book_new()
 
   const guide = XLSX.utils.aoa_to_sheet([
@@ -164,7 +167,7 @@ function downloadTemplate() {
   XLSX.writeFile(wb, 'mau_nhap_du_lieu_clb.xlsx')
 }
 
-function parseWorkbook(wb: XLSX.WorkBook): ParsedData {
+function parseWorkbook(XLSX: XLSXMod, wb: XLSXNS.WorkBook): ParsedData {
   const sheet = (name: string) => {
     const ws = wb.Sheets[name]
     if (!ws) return []
@@ -254,13 +257,22 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
 
   const totalRows = Object.values(parsed).reduce((sum, rows) => sum + rows.length, 0)
 
+  const handleDownloadTemplate = async () => {
+    try {
+      buildTemplate(await import('xlsx'))
+    } catch {
+      toast.error('Không thể tạo file mẫu. Vui lòng thử lại.')
+    }
+  }
+
   const handleFile = (file: File) => {
     setFileError(''); setResult(null); setFileName(file.name)
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import('xlsx')
         const wb = XLSX.read(e.target?.result, { type: 'array', cellDates: true })
-        const data = parseWorkbook(wb)
+        const data = parseWorkbook(XLSX, wb)
         const total = Object.values(data).reduce((sum, rows) => sum + rows.length, 0)
         if (total === 0) { setFileError('File không có dữ liệu hợp lệ ở sheet nào. Kiểm tra lại tên sheet/tên cột theo file mẫu.'); return }
         setParsed(data)
@@ -321,7 +333,7 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
         {!result && (
           <>
             <button
-              onClick={downloadTemplate}
+              onClick={handleDownloadTemplate}
               className="w-full flex items-center justify-center gap-2 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] py-2.5 text-sm font-semibold hover:opacity-90"
             >
               <Download size={15} />Tải file mẫu (7 sheet + hướng dẫn)

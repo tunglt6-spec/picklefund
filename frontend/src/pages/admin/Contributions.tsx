@@ -12,6 +12,7 @@ import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportContribExcel, exportContribPDF, exportMiniIncomeReceiptPDF } from '../../lib/export'
+import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
@@ -162,15 +163,18 @@ export function Contributions() {
   const commonTotal = confirmed.reduce((s, c) => s + c.amount, 0)
   const miniTotal = miniContribs.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
 
-  /** Dữ liệu xuất PDF Thu Quỹ: TÁCH theo từng Kỳ quỹ ĐANG MỞ (kỳ đã đóng/đã quyết toán không
-   *  đưa vào) + nhóm Quỹ Phụ. Không phụ thuộc bộ lọc "kỳ đang xem" trên màn hình. */
+  /** Dữ liệu xuất Thu Quỹ (Excel VÀ PDF dùng CHUNG 1 tập): TÁCH theo từng Kỳ quỹ ĐANG MỞ (kỳ đã
+   *  đóng/đã quyết toán không đưa vào) + nhóm Quỹ Phụ. Mỗi dòng mang fund/periodName/confirmed để
+   *  file tách được Quỹ Chính/Quỹ Phụ và khoản chờ xác nhận. Không phụ thuộc bộ lọc "kỳ đang xem". */
   const buildContribExport = () => {
-    const toRow = (c: FundContribution) => ({
-      member: c.member?.fullName ?? c.payerName ?? '',
+    const toRow = (c: FundContribution, fund: 'COMMON' | 'MINI', periodName: string) => ({
+      member: c.member?.fullName ?? c.payerName ?? (fund === 'MINI' && c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : (fund === 'MINI' ? 'Quỹ Phụ' : '')),
       date: formatDate(c.paymentDate),
       amount: c.amount,
       method: c.paymentMethod,
       confirmed: c.isConfirmed,
+      fund,
+      periodName,
     })
     const openPeriods = chungPeriods
       .filter(p => p.status !== 'closed' && p.status !== 'finalized')
@@ -180,18 +184,28 @@ export function Contributions() {
       periodName: p.name,
       rows: contributions
         .filter(c => (c.fundSource ?? 'COMMON') === 'COMMON' && c.fundPeriodId === p.id)
-        .map(toRow),
+        .map(c => toRow(c, 'COMMON', p.name)),
     }))
     const miniRows = contributions
       .filter(c => c.fundSource === 'MINI')
-      .map(c => ({
-        member: c.member?.fullName ?? c.payerName ?? (c.miniIncomeType ? MINI_INCOME_TYPE_LABELS[c.miniIncomeType] : 'Quỹ Phụ'),
-        date: formatDate(c.paymentDate),
-        amount: c.amount,
-        method: c.paymentMethod,
-        confirmed: c.isConfirmed,
-      }))
-    return { groups, miniRows }
+      .map(c => toRow(c, 'MINI', 'Quỹ Phụ'))
+    const flatRows = [...groups.flatMap(g => g.rows), ...miniRows]
+    const openNames = groups.filter(g => g.rows.length > 0).map(g => g.periodName)
+    // Tên file khớp phạm vi: 1 kỳ mở → tên kỳ; nhiều kỳ → "Các kỳ đang mở".
+    const scopeName = openNames.length === 1 ? openNames[0] : 'Các kỳ đang mở'
+    return { groups, miniRows, flatRows, scopeName }
+  }
+
+  const { busy: exporting, run: runExport } = useExportRunner()
+  const exportContribXlsx = () => {
+    const { flatRows, scopeName } = buildContribExport()
+    return runExport(() => exportContribExcel(scopeName, flatRows),
+      { success: 'Đã xuất Excel thu quỹ (các kỳ đang mở)!', empty: flatRows.length === 0, emptyMsg: 'Không có khoản thu ở kỳ đang mở để xuất.' })
+  }
+  const exportContribPdf = () => {
+    const { groups, miniRows, flatRows } = buildContribExport()
+    return runExport(() => exportContribPDF(groups, miniRows),
+      { success: 'Đã xuất PDF thu quỹ (các kỳ đang mở)!', empty: flatRows.length === 0, emptyMsg: 'Không có khoản thu ở kỳ đang mở để xuất.' })
   }
 
   const openCreate = () => {
@@ -384,14 +398,14 @@ export function Contributions() {
             {contributions.length > 0 && (
               <>
                 <button
-                  onClick={() => exportContribExcel(activePeriod?.name ?? 'ThuQuy', contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))}
+                  onClick={exportContribXlsx} disabled={exporting}
                   aria-label="Xuất Excel"
                   className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
                   <FileSpreadsheet size={16} />Excel
                 </button>
                 <button
-                  onClick={() => { const { groups, miniRows } = buildContribExport(); exportContribPDF(groups, miniRows); toast.success('Đã xuất PDF thu quỹ (các kỳ đang mở)!') }}
+                  onClick={exportContribPdf} disabled={exporting}
                   aria-label="Xuất PDF"
                   className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
                 >
@@ -675,20 +689,8 @@ export function Contributions() {
         subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => {
-              const pName = activePeriod?.name ?? 'Thu_Quy'
-              exportContribExcel(pName, contributions.map(c => ({ member: c.member?.fullName ?? c.payerName ?? '', date: formatDate(c.paymentDate), amount: c.amount, method: c.paymentMethod, confirmed: c.isConfirmed })))
-              toast.success('Đã xuất Excel danh sách thu quỹ!')
-            }}><FileSpreadsheet size={14} />Xuất Excel</Button>
-            <Button variant="outline" onClick={() => {
-              const { groups, miniRows } = buildContribExport()
-              if (groups.every(g => g.rows.length === 0) && miniRows.length === 0) {
-                toast.error('Không có khoản thu ở kỳ đang mở để xuất.')
-                return
-              }
-              exportContribPDF(groups, miniRows)
-              toast.success('Đã xuất PDF thu quỹ (các kỳ đang mở)!')
-            }}><FileText size={14} />Xuất PDF</Button>
+            <Button variant="outline" onClick={exportContribXlsx} disabled={exporting}><FileSpreadsheet size={14} />Xuất Excel</Button>
+            <Button variant="outline" onClick={exportContribPdf} disabled={exporting}><FileText size={14} />Xuất PDF</Button>
             {!isMember && (
               <Button onClick={openCreate}>
                 <Plus size={15} />Ghi nhận thu

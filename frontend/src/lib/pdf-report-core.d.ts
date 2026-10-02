@@ -55,7 +55,7 @@ export interface PdfLogo {
 export interface QuyReportBranding {
   name: string
   footer: string
-  /** Logo CLB (tùy chọn) — vẽ chip trắng ở header */
+  /** Logo CLB (tùy chọn) — vẽ thẳng trên band màu ở header (không chip nền) */
   logo?: PdfLogo | null
 }
 
@@ -101,6 +101,10 @@ export interface ExpenseReportSummary {
   totalApproved: number
   totalPending: number
   count: number
+  /** Nhãn thẻ tổng đầu trang (mặc định 'TỔNG CHI') — đổi khi totalAll không phải tổng đã duyệt. */
+  totalLabel?: string
+  /** Nhãn dòng tổng cuối bảng (mặc định 'TỔNG CỘNG'). */
+  totalRowLabel?: string
   exportedDateText: string
   exportedAtText: string
 }
@@ -134,6 +138,8 @@ export interface StandingsReportMeta {
   title?: string
   /** Tô nhẹ 3 dòng đầu (mặc định true). Đặt false cho bảng không xếp hạng (vd Lịch). */
   highlightTop3?: boolean
+  /** Thông điệp khi bảng không có dòng nào (mặc định 'Không có dữ liệu'). */
+  emptyText?: string
   exportedDateText: string
   exportedAtText: string
 }
@@ -145,6 +151,8 @@ export interface StandingsReportColumn {
   align: 'left' | 'center' | 'right'
   tone?: 'win' | 'loss' | 'points' | 'muted' | 'sign'
   bold?: boolean
+  /** Xuống dòng (tăng chiều cao hàng) thay vì cắt "…". Mặc định: true cho cột căn trái (trừ 'rank'). */
+  wrap?: boolean
 }
 
 export function buildStandingsReportPDF(opts: {
@@ -155,6 +163,8 @@ export function buildStandingsReportPDF(opts: {
   columns: StandingsReportColumn[]
   rows: Record<string, string | number>[]
   stats?: { label: string; value: string | number }[]
+  /** Dòng tổng cuối bảng (key theo columns). Không truyền → không vẽ. */
+  footerRow?: Record<string, string | number>
   branding: QuyReportBranding
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any
@@ -180,6 +190,7 @@ export function buildKnockoutReportPDF(opts: {
     tournamentName: string
     sportLabel: string
     championName?: string
+    emptyText?: string
     exportedDateText: string
     exportedAtText: string
   }

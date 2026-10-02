@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, runExport, type Column } from '../../components/shared'
 import { formatDate, formatVND } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
 import api from '../../lib/api'
+import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 
 export function MemberAttendance() {
   const isMobile = useIsMobile()
@@ -61,12 +62,56 @@ export function MemberAttendance() {
     0,
   )
 
+  // ── Xuất lịch sử điểm danh CÁ NHÂN (self-scope /member/me/attendance), đúng tập đang lọc ──
+  const sessionStatusLabel = (s: (typeof filtered)[number]) =>
+    s.status === 'cancelled' ? 'Đã hủy'
+      : s.status === 'scheduled' ? 'Sắp diễn ra'
+      : attended.has(s.id) ? 'Có mặt' : 'Vắng mặt'
+  const sessionCost = (s: (typeof filtered)[number]) =>
+    s.status === 'completed' && attended.has(s.id) ? courtShare(s.courtFee, s._count?.attendanceRecords) : 0
+  const exportMeName = myMember?.fullName ?? 'Thành viên'
+  const exportSlug = exportMeName.replace(/\s+/g, '_').replace(/[/\?%*:|"<>]/g, '')
+  const exportSessions = [...filtered].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+  const doExportExcel = () => {
+    if (exportSessions.length === 0) return
+    return runExport(() => exportGenericExcel(`Diem_danh_${exportSlug}`, 'Điểm danh',
+      ['Ngày', 'Sân', 'Thời gian', 'Tình trạng', 'Chi phí sân (VNĐ)'],
+      exportSessions.map((s) => [
+        formatDate(s.sessionDate), s.courtName ?? '', s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '',
+        sessionStatusLabel(s), sessionCost(s),
+      ]),
+    ), 'Đã xuất Excel lịch tham gia')
+  }
+  const doExportPdf = () => {
+    if (exportSessions.length === 0) return
+    return runExport(() => exportGenericTablePDF({
+      fileBase: `Diem_danh_${exportSlug}`,
+      title: 'Lịch Tham Gia Cá Nhân',
+      subtitle: exportMeName,
+      metaLeft: `${activePeriod ? `Kỳ ${activePeriod.name} · ` : ''}${exportSessions.length} buổi · Tham gia ${attendedCount}/${completedSessions.length} (${rate}%)`,
+      columns: [
+        { header: 'Ngày', align: 'center' }, { header: 'Sân' }, { header: 'Thời gian', align: 'center' },
+        { header: 'Tình trạng', align: 'center' }, { header: 'Chi phí sân', align: 'right' },
+      ],
+      rows: exportSessions.map((s) => [
+        formatDate(s.sessionDate), s.courtName ?? '—', s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : '—',
+        sessionStatusLabel(s), sessionCost(s) > 0 ? formatVND(sessionCost(s)) : '—',
+      ]),
+      summaryLabel: 'Chi phí sân cá nhân',
+      summaryValue: formatVND(myCourtCost),
+    }), 'Đã xuất PDF lịch tham gia')
+  }
+  const exportButtons = exportSessions.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined
+
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-          <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
-          {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
+        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
+            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)] truncate">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
+          </div>
+          {exportButtons}
         </div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
@@ -217,6 +262,7 @@ export function MemberAttendance() {
       <PageHeader
         title="Lịch Tham Gia"
         subtitle={activePeriod ? `${activePeriod.name} · ${myMember?.fullName ?? 'Thành viên'}` : 'Chưa có kỳ quỹ'}
+        actions={exportButtons}
       />
 
       {/* Bố cục giống Tổng Quan: trái 2/3 (KPI 2×2 + danh sách buổi) · phải 1/3 (tiến độ tham gia) */}

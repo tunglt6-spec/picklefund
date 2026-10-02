@@ -175,6 +175,7 @@ describe('MemberPortalService', () => {
       });
       calculator.calculate.mockResolvedValue({
         totalSessions: 5,
+        memberCount: 8, // sĩ số CHỐT (khác members.length = 2 sau khi xóa/thêm thành viên)
         commonFund: { totalCourt: 300, totalLiving: 200 },
         members: [
           { memberId: 'mem-A', totalCost: 100 },
@@ -186,7 +187,7 @@ describe('MemberPortalService', () => {
       expect(r.member?.totalCost).toBe(100); // KHÔNG lộ mem-B
       expect(r.contribution?.amount).toBe(500);
       expect(r.totals?.court).toBe(300);
-      expect(r.totals?.memberCount).toBe(2);
+      expect(r.totals?.memberCount).toBe(8); // summary.memberCount (số chốt), không phải members.length
       // khoản đóng góp phải scope theo memberId của CHÍNH mình
       expect(prisma.fundContribution.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({

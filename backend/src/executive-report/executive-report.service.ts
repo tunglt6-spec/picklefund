@@ -1385,9 +1385,19 @@ ${facts}`;
       (await this.aiSummary(clubId, fundPeriodId, report)).text;
     const logo = await this.clubLogoDataUri(clubId).catch(() => null);
     const html = buildReportHtml(report, aiText, logo);
-    // Footer chạy trang (ASCII-only để không lệ thuộc font trong container Chromium).
+    // Footer chạy trang (ASCII-only để không lệ thuộc font trong container Chromium):
+    // tên CLB bỏ dấu + escape; không có tên → PickleFund.
+    const footerBrand =
+      String(report.meta.clubName || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .replace(/[^\x20-\x7E]/g, '')
+        .replace(/[&<>"']/g, '')
+        .trim() || 'PickleFund';
     const footerTemplate = `<div style="width:100%;font-size:7px;color:#94A3B8;font-family:Arial,sans-serif;padding:0 11mm;display:flex;justify-content:space-between;align-items:center;">
-      <span>PickleFund &middot; AIDO Executive Report</span>
+      <span>${footerBrand} &middot; AIDO Executive Report</span>
       <span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
     </div>`;
     const viaChrome = await renderHtmlToPdf(html, {
@@ -1504,7 +1514,7 @@ ${facts}`;
     <div style="text-align:center;margin-top:18px;">
       <a href="https://app.picklefund.uk/aido" style="display:inline-block;background:#6D5DFB;color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;">Xem báo cáo đầy đủ</a>
     </div>
-    <p style="font-size:11px;color:#aaa;margin-top:16px;text-align:center;">PickleFund · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB</p>
+    <p style="font-size:11px;color:#aaa;margin-top:16px;text-align:center;">${esc(r.meta.clubName || 'PickleFund')} · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB</p>
   </div>
 </div>`;
   }

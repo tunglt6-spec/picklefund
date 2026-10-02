@@ -689,6 +689,7 @@ export function FixedDoublesDashboardPage() {
     catch { toast.error('Xuất ảnh thất bại') }
   }
   const doExportPdf = async () => {
+    if (standings.length === 0) { toast.error('Chưa có dữ liệu bảng xếp hạng'); return }
     try {
       await exportStandingsPDF({
         clubName: getClubData(user?.clubId ?? '').settings?.name ?? 'CLB',
@@ -703,8 +704,8 @@ export function FixedDoublesDashboardPage() {
         ],
         columns: [
           { key: 'rank', label: '#', w: 8, align: 'left' },
-          { key: 'name', label: 'ĐỘI', w: 18, align: 'left', bold: true },
-          { key: 'pair', label: 'CẶP ĐÔI', w: 46, align: 'left', tone: 'muted' },
+          { key: 'name', label: 'ĐỘI', w: 30, align: 'left', bold: true },
+          { key: 'pair', label: 'CẶP ĐÔI', w: 64, align: 'left', tone: 'muted' },
           { key: 'P', label: 'T', w: 12, align: 'center' },
           { key: 'W', label: 'TH', w: 12, align: 'center', tone: 'win' },
           { key: 'D', label: 'H', w: 12, align: 'center', tone: 'muted' },

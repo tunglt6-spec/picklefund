@@ -252,7 +252,7 @@ export function buildExecutiveReportPdf(
     doc.setFontSize(7.5);
     doc.setTextColor(...MUTED);
     doc.text(
-      'PickleFund · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB',
+      `${String(report.meta.clubName || '').trim() || 'PickleFund'} · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB`,
       M,
       291,
     );

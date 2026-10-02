@@ -7,7 +7,11 @@ export function formatNumber(n: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('vi-VN')
+  if (!dateStr) return ''
+  // "YYYY-MM-DD" (chỉ ngày) parse theo giờ LOCAL — new Date('YYYY-MM-DD') là UTC → lệch ngày ở múi giờ âm.
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr)
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(dateStr)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN')
 }
 
 export function cn(...classes: (string | undefined | false | null)[]): string {

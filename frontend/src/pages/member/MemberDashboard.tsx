@@ -9,6 +9,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { exportReceiptPDF } from '../../lib/export'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import toast from 'react-hot-toast'
+import { useBrandingStore } from '../../store/brandingStore'
 
 export function MemberDashboard() {
   const { user } = useAuthStore()
@@ -16,6 +17,8 @@ export function MemberDashboard() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const [reportOpen, setReportOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const brandName = useBrandingStore((s) => s.branding.displayName)
 
   const activePeriod = finance?.period ?? null
   const fin = finance?.member ?? null
@@ -32,7 +35,8 @@ export function MemberDashboard() {
   const amountPaid = fin?.paidAmount ?? 0
   const courtExpTotal = finance?.totals?.court ?? 0
   const livingExpTotal = finance?.totals?.living ?? 0
-  const memberCount = finance?.totals?.memberCount || 1
+  // Sĩ số CHỐT từ backend (summary.memberCount); không có → không in mẫu số giả.
+  const memberCount = finance?.totals?.memberCount ?? 0
   const roughCourtCost = fin?.courtFee ?? 0
   const roughLivingCost = fin?.livingFee ?? 0
   const myCost = fin?.totalCost ?? (roughCourtCost + roughLivingCost)
@@ -42,33 +46,40 @@ export function MemberDashboard() {
   const initials = memberName.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase()
   const hasData = !!activePeriod
   const isPaid = !!myContribution?.isConfirmed
-  const clubName = 'CLB Pickleball'
+  const clubName = brandName || 'PickleFund'
 
-  function handleExportPDF() {
-    exportReceiptPDF({
-      receiptNo: 1,
-      memberName,
-      loginName: user?.username ?? '',
-      periodName: activePeriod?.name ?? '',
-      periodStartDate: activePeriod?.startDate ?? '',
-      periodEndDate: activePeriod?.endDate ?? '',
-      contributionAmount: activePeriod?.contributionAmount ?? 0,
-      clubName,
-      clubLocation: '',
-      amountPaid,
-      paymentDate: myContribution?.paymentDate ?? '',
-      attendedSessions: myAttendance,
-      totalSessions,
-      totalCourtFee: courtExpTotal,
-      memberCountForSplit: memberCount,
-      courtCost: roughCourtCost,
-      totalOtherFee: livingExpTotal,
-      livingCost: roughLivingCost,
-      totalCost: myCost,
-      balance,
-      isConfirmed: myContribution?.isConfirmed ?? false,
-    })
-    toast.success('Đã xuất Phiếu Thu PDF!')
+  async function handleExportPDF() {
+    if (exporting) return
+    setExporting(true)
+    try {
+      await exportReceiptPDF({
+        memberName,
+        loginName: user?.username ?? '',
+        periodName: activePeriod?.name ?? '',
+        periodStartDate: activePeriod?.startDate ?? '',
+        periodEndDate: activePeriod?.endDate ?? '',
+        contributionAmount: activePeriod?.contributionAmount ?? 0,
+        clubName,
+        amountPaid,
+        paymentDate: myContribution?.paymentDate ?? '',
+        attendedSessions: myAttendance,
+        totalSessions,
+        totalCourtFee: courtExpTotal,
+        memberCountForSplit: memberCount > 0 ? memberCount : undefined,
+        courtCost: roughCourtCost,
+        totalOtherFee: livingExpTotal,
+        livingCost: roughLivingCost,
+        totalCost: myCost,
+        balance,
+        isConfirmed: myContribution?.isConfirmed ?? false,
+      })
+      toast.success('Đã xuất Phiếu Thu PDF!')
+    } catch (err) {
+      console.error('[export]', err)
+      toast.error('Xuất Phiếu Thu thất bại. Vui lòng thử lại.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   /* ── Mobile layout ── */
@@ -177,7 +188,8 @@ export function MemberDashboard() {
                 <p className="text-base font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
                 <button
                   onClick={handleExportPDF}
-                  className="flex items-center gap-1.5 [color:var(--pf-primary)] text-xs font-[600]"
+                  disabled={exporting}
+                  className="flex items-center gap-1.5 [color:var(--pf-primary)] text-xs font-[600] disabled:opacity-50"
                 >
                   <Download size={14} />
                   PDF
@@ -332,7 +344,7 @@ export function MemberDashboard() {
             subtitle={activePeriod?.name ?? undefined}
             actions={
               <div className="flex gap-2">
-                <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExportPDF}>PDF</ActionButton>
+                <ActionButton variant="secondary" icon={<Download size={15} />} onClick={handleExportPDF} disabled={exporting}>PDF</ActionButton>
                 {canShare && (
                   <ActionButton
                     variant="secondary"

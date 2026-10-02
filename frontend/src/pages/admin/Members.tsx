@@ -21,13 +21,14 @@ import { useAuthStore } from '../../store/authStore'
 import type { Member } from '../../types'
 import { formatDate, formatVND, getActiveChungPeriod, isChungPeriod } from '../../lib/utils'
 import { exportMembersExcel, exportMembersPDF } from '../../lib/export'
+import { canExportOrgWideData } from '../../lib/exportAccess'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Portal } from '../../components/ui/Portal'
 import {
   PageShell, PageHeader, MetricCard, FilterBar, DataTable, type Column,
-  StatusBadge, type StatusTone, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
+  StatusBadge, type StatusTone, ActionButton, ExportActions, runExport, EmptyState, LoadingState, MobileCardList,
   BulkActionBar, RowCheckbox,
 } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
@@ -585,10 +586,22 @@ export function Members() {
 
   const exportRows = () => filtered.map(m => ({
     name: m.fullName, phone: m.phone ?? '', email: m.email ?? '',
-    joinDate: formatDate(m.joinDate), status: EXPORT_STATUS_LABEL[m.status] ?? m.status,
+    joinDate: m.joinDate ? formatDate(m.joinDate) : '', status: EXPORT_STATUS_LABEL[m.status] ?? m.status,
   }))
-  const doExportExcel = () => { exportMembersExcel('CLB', exportRows()); toast.success('Đã xuất Excel danh sách thành viên!') }
-  const doExportPDF = () => { exportMembersPDF(clubName, exportRows()); toast.success('Đã xuất PDF danh sách thành viên!') }
+  // MEMBER_VIEW chỉ xem: không tải file danh bạ SĐT/email toàn CLB (H5).
+  const canExport = canExportOrgWideData(user?.role)
+  const doExportExcel = () => {
+    if (!canExport) return
+    const rows = exportRows()
+    if (rows.length === 0) { toast.error('Không có thành viên để xuất'); return }
+    return runExport(() => exportMembersExcel(clubName, rows), 'Đã xuất Excel danh sách thành viên!')
+  }
+  const doExportPDF = () => {
+    if (!canExport) return
+    const rows = exportRows()
+    if (rows.length === 0) { toast.error('Không có thành viên để xuất'); return }
+    return runExport(() => exportMembersPDF(clubName, rows), 'Đã xuất PDF danh sách thành viên!')
+  }
 
   const resetFilters = () => { setStatusFilter('all'); setJoinFrom(''); setJoinTo(''); setSearch('') }
   const hasActiveFilter = !!search || statusFilter !== 'all' || !!joinFrom || !!joinTo
@@ -678,7 +691,7 @@ export function Members() {
   /* ── Header actions (chỉ hiển thị action có backend hỗ trợ) ── */
   const headerActions = (
     <>
-      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} />
+      {canExport && <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} />}
       <ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton>
       <ActionButton icon={<Plus size={16} />} onClick={openCreate}>Thêm thành viên</ActionButton>
     </>
