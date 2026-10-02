@@ -80,7 +80,7 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       accent: true,
       tone: summary.balance < 0 ? 'neg' : undefined,
     },
-  ], y, { perRow: 3, after: T.air.rowGap })
+  ], y, { perRow: 3, after: T.space.s })
 
   /* Hàng thẻ thứ 2 — SỐ DƯ CÁC QUỸ (chỉ khi có dữ liệu dashboard) */
   if (hasExtra) {
@@ -96,9 +96,9 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       { label: 'Quỹ Phụ', value: vnd(mini), caption: 'Độc lập Quỹ Chính', tone: neg(mini) },
       { label: 'Số dư chuyển kỳ', value: vnd(carry), caption: 'Từ kỳ trước', tone: neg(carry) },
       { label: 'Tổng tài sản', value: vnd(totalAssets), caption: 'Quỹ Chính + Quỹ Phụ', tone: neg(totalAssets) },
-    ], y, { perRow: 4, after: T.air.section })
+    ], y, { perRow: 4, after: T.space.m })
   } else {
-    y += T.air.section - T.air.rowGap
+    y += T.space.s
   }
 
   /* Thanh tiến độ Chi / Thu (cao 2mm, track line, fill brand → warn ≥ 90% → neg ≥ 100%) */
@@ -106,11 +106,11 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   doc.text('Tỷ lệ chi / thu', M, y + 3)
   kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : B.brandDark)
   doc.text(`${chiThuPct}%`, W - M, y + 3, { align: 'right' })
-  kit.glassMeter(M, y + 7, CW, 2.8, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
+  kit.glassMeter(M, y + 5.2, CW, 2.6, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
   kit.font('normal', T.type.caption, C.muted)
-  doc.text(`Thu: ${vnd(summary.totalIncome)}`, M, y + 15.6)
-  doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, W - M, y + 15.6, { align: 'right' })
-  y += 15.6 + T.air.section
+  doc.text(`Thu: ${vnd(summary.totalIncome)}`, M, y + 11.4)
+  doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, W - M, y + 11.4, { align: 'right' })
+  y += 11.4 + T.space.m
 
   /* Chỉ số nhanh (thẻ compact) */
   const nfmt = (n) => fmt.num(Math.round(Number(n || 0)))
@@ -127,10 +127,10 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       { label: 'Đã đóng quỹ', value: `${summary.confirmedCount} / ${summary.memberCount}`, tone: 'pos' },
       { label: 'Chưa đóng quỹ', value: `${unpaidCount} người`, tone: unpaidCount > 0 ? 'neg' : 'pos' },
     ]
-  y = kit.kpiGrid(statItems.map((s) => ({ ...s, compact: true, accent: false })), y, { perRow: 4, compact: true, after: T.air.section })
+  y = kit.kpiGrid(statItems.map((s) => ({ ...s, compact: true, accent: false })), y, { perRow: 4, compact: true, after: T.space.m })
 
   /* ── Bảng thành viên ── */
-  if (y + T.air.titleGap + 14 + Math.min(rows.length, 6) * T.row.h + 8 > kit.bottom) y = cont('Chi tiết thành viên')
+  if (y + 30 > kit.bottom) y = cont('Chi tiết thành viên')
   y = kit.sectionTitle('Chi tiết từng thành viên', y)
   const memberCols = normalizeCols(kit, [
     { key: 'idx', label: '#', w: 9, align: 'left' },
@@ -173,11 +173,11 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   /* ── Trang khoản chi ── */
   if (expenseRows.length > 0) {
     const ecols = normalizeCols(kit, [
-      { key: 'idx', label: '#', w: 7, align: 'left' },
-      { key: 'date', label: 'Ngày', w: 23, align: 'left' },
-      { key: 'desc', label: 'Nội dung', w: 47, align: 'left', bold: true },
-      { key: 'fund', label: 'Nguồn', w: 26, align: 'center' },
-      { key: 'kind', label: 'Loại', w: 24, align: 'left' },
+      { key: 'idx', label: '#', w: 8, align: 'left' },
+      { key: 'date', label: 'Ngày', w: 22, align: 'left' },
+      { key: 'desc', label: 'Nội dung', w: 52, align: 'left', bold: true },
+      { key: 'fund', label: 'Nguồn', w: 22, align: 'center' },
+      { key: 'kind', label: 'Loại', w: 25, align: 'left' },
       { key: 'amount', label: 'Số tiền', w: 27, align: 'right' },
       { key: 'status', label: 'Trạng thái', w: 30, align: 'center' },
     ])
@@ -209,42 +209,41 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     drawTable(kit, { columns: ecols, y: ey, rows: erows, footerRows: foots, onNewPage: () => cont('Khoản chi'), emptyText: 'Chưa có khoản chi trong kỳ này' })
   }
 
-  /* ── Bill thành viên: 4 thẻ/trang (2 cột × 2 hàng), gutter 8mm, khoảng dọc 8mm, toạ độ CỐ ĐỊNH ── */
-  const CARD_GAP = T.air.billGutter
+  /* ── Bill thành viên: 6 thẻ/trang (2 cột × 3 hàng), toạ độ CỐ ĐỊNH ── */
+  const CARD_GAP = 6
   const CARD_W = (CW - CARD_GAP) / 2
-  const CARD_H = 102
-  const ROW_GAP = T.air.billRowGap
-  const PER_PAGE = 4
+  const CARD_H = 76
+  const ROW_GAP = 5
 
   const drawCard = (m, x, yy) => {
     const pos = Math.round(Number(m.balance) || 0) >= 0
     const rate = pct(m.attendedSessions, m.totalSessions)
-    const px = 6.5
-    kit.glassPanel(x, yy, CARD_W, CARD_H, { r: T.radius.card + 1.5, k: 1 })
+    const px = 5
+    kit.glassPanel(x, yy, CARD_W, CARD_H, { r: T.radius.card + 1.5, k: 1.2 })
 
     /* header thẻ: dải kính gradient (chữ trắng) — tên + số buổi + viên trạng thái */
-    const HH = 19
     kit.clipRR(x, yy, CARD_W, CARD_H, T.radius.card + 1.5, () => {
-      kit.gradient(x, yy, CARD_W, HH, 0, B.glassStart, B.glassEnd)
-      kit.gloss(x, yy, CARD_W, HH)
+      kit.gradient(x, yy, CARD_W, 15, 0, B.glassStart, B.glassEnd)
+      kit.gloss(x, yy, CARD_W, 15)
     })
+    kit.lineA(x + 3, yy + 15, x + CARD_W - 3, yy + 15, C.white, 0.5, G.hairW)
     const badgeTxt = m.contributionPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'
     kit.font('bold', T.type.caption, C.white)
-    const bw = doc.getTextWidth(badgeTxt) + 6
+    const bw = doc.getTextWidth(badgeTxt) + 5
     kit.font('bold', T.type.h2, C.white)
-    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - bw - 3, T.type.h2, 8.5), x + px, yy + 8.2)
+    doc.text(kit.fit(m.memberName, CARD_W - px * 2 - 2, T.type.h2, 8.5), x + px, yy + 6.8)
     kit.font('normal', T.type.caption, C.white)
-    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 14.4)
-    kit.fillRR(x + CARD_W - px - bw, yy + 6.2, bw, 6, 3, C.white, G.mast.ring)
-    kit.strokeRR(x + CARD_W - px - bw, yy + 6.2, bw, 6, 3, C.white, 1, 0.2)
+    doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 11.6)
+    kit.fillRR(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, C.white, G.mast.ring)
+    kit.strokeRR(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, C.white, 1, 0.2)
     kit.font('bold', T.type.caption, m.contributionPaid ? C.posDeep : C.negDeep)
-    doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 10.3, { align: 'center' })
+    doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 11.6, { align: 'center' })
 
     /* tỷ lệ tham gia */
-    kit.tracked('Tỷ lệ tham gia', x + px, yy + 28, { color: C.muted })
+    kit.tracked('Tỷ lệ tham gia', x + px, yy + 21, { color: C.muted })
     kit.font('bold', 9, B.brandDark)
-    doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 28, { align: 'right' })
-    kit.glassMeter(x + px, yy + 31.4, CARD_W - px * 2, 2.6, Math.min(rate, 100) / 100, B.brand)
+    doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 21, { align: 'right' })
+    kit.glassMeter(x + px, yy + 23.2, CARD_W - px * 2, 2.4, Math.min(rate, 100) / 100, B.brand)
 
     /* 4 dòng chi phí — label trái / số phải (màu theo nghĩa); nhãn đúng công thức backend */
     const lines = [
@@ -253,12 +252,12 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost), color: C.cyan },
       { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), color: C.orange, total: true },
     ]
-    const LROW = 9
-    let cy = yy + 41
+    let cy = yy + 29
     lines.forEach((ln) => {
-      const mid = cy + 5.6
+      const mid = cy + 4.4
       if (ln.total) {
-        kit.lineA(x + px, cy + 0.2, x + CARD_W - px, cy + 0.2, B.brand, G.sepHair + 0.1, G.hairW)
+        kit.lineA(x + px, cy + 0.3, x + CARD_W - px, cy + 0.3, B.brand, G.sepHair + 0.1, G.hairW)
+        kit.lineA(x + px, cy + 0.55, x + CARD_W - px, cy + 0.55, C.white, G.sep, G.hairW)
         kit.font('bold', T.type.body, C.ink)
       } else {
         kit.font('normal', T.type.body, C.ink2)
@@ -271,28 +270,27 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
       }
       kit.font('bold', T.type.body, ln.color)
       doc.text(ln.val, x + CARD_W - px, mid, { align: 'right' })
-      cy += LROW
+      cy += 6.4
     })
 
     /* ô số dư — nền xanh/đỏ nhạt viền; âm: hiện SỐ TIỀN CẦN NỘP (dương), nhãn "Cần nộp thêm" đã nói rõ chiều */
-    const boxY = cy + 3
-    const BOXH = 15
+    const boxY = cy + 1.4
     const tone = pos ? C.pos : C.neg
     const toneAA = pos ? C.posDeep : C.negDeep
-    kit.glassPanel(x + px, boxY, CARD_W - px * 2, BOXH, { tint: { color: tone, a: G.box, edge: G.chip.edge }, r: T.radius.card, shadow: false })
+    kit.glassPanel(x + px, boxY, CARD_W - px * 2, 11.4, { tint: { color: tone, a: G.box, edge: G.chip.edge }, r: T.radius.card, shadow: false })
     kit.font('bold', T.type.cell, toneAA)
-    doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 4, boxY + 6.2)
+    doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 3, boxY + 4.8)
     kit.font('normal', T.type.caption, toneAA)
-    doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 4, boxY + 11.2)
+    doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 3, boxY + 8.8)
     kit.font('bold', T.type.h2, tone)
-    doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 4, boxY + 9.6, { align: 'right' })
+    doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 3, boxY + 7.6, { align: 'right' })
   }
 
   if (rows.length > 0) {
-    const totalBillPages = Math.ceil(rows.length / PER_PAGE)
+    const totalBillPages = Math.ceil(rows.length / 6)
     for (let pg = 0; pg < totalBillPages; pg++) {
       const top = cont('Bill chi tiết thành viên', `Bill ${pg + 1} / ${totalBillPages}`)
-      rows.slice(pg * PER_PAGE, pg * PER_PAGE + PER_PAGE).forEach((m, i) => {
+      rows.slice(pg * 6, pg * 6 + 6).forEach((m, i) => {
         drawCard(m, M + (i % 2) * (CARD_W + CARD_GAP), top + Math.floor(i / 2) * (CARD_H + ROW_GAP))
       })
     }
@@ -337,7 +335,7 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns: rawColumn
   const st = (stats || []).map((s) => ({ label: s.label, value: String(s.value), tone: s.tone, compact: false, accent: false }))
   if (st.length > 0) {
     st[0].accent = true
-    y = kit.kpiGrid(st, y, { max: 4 })
+    y = kit.kpiGrid(st, y, { max: 4, after: T.space.m })
   }
 
   const tbl = drawTable(kit, {
@@ -361,9 +359,9 @@ export function buildStandingsReportPDF({ jsPDF, fonts, meta, columns: rawColumn
    rounds = [{ label, matches: [{ teamA, teamB, scoreA, scoreB, winner: 'A'|'B'|null, walkover?, pen? }] }]
      round[0] = vòng đầu; mỗi vòng sau số trận = nửa vòng trước (chuẩn single-elimination).
      Trận hoà tỉ số nhưng có `winner` → ghi "đi tiếp" (kèm `pen` nếu có: "pen 4-3").
-   Vòng đầu > 8 trận → tự CHIA TRANG: mỗi trang 8 trận (cây con tới 1 trận; hộp cách nhau ≥ 4mm), rồi trang nhánh cuối.
+   Vòng đầu > 16 trận → tự CHIA TRANG: mỗi trang 16 trận (cây con tới 1 trận), rồi trang nhánh cuối.
 ═══════════════════════════════════════════════════════════════════ */
-const KO_MAX_PER_PAGE = 8
+const KO_MAX_PER_PAGE = 16
 
 export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding }) {
   const doc = newDoc(jsPDF, fonts, 'landscape')
@@ -378,7 +376,7 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
   const pagesPlan = []
   {
     let from = 0
-    const depth = Math.round(Math.log2(KO_MAX_PER_PAGE)) + 1 // 8 → 4 → 2 → 1 = 4 vòng
+    const depth = Math.round(Math.log2(KO_MAX_PER_PAGE)) + 1 // 16 → 8 → 4 → 2 → 1 = 5 vòng
     while (from < rounds.length) {
       const n = rounds[from].matches.length
       if (n <= KO_MAX_PER_PAGE) { pagesPlan.push(rounds.slice(from)); break }
@@ -408,15 +406,15 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
     }
     if (meta.championName) {
       const cw0 = kit.trackedWidth('Vô địch') + 6
-      kit.glassChip(M, top - 1.2, cw0, 6.4, C.amber)
-      kit.tracked('Vô địch', M + 3, top + 3.1, { color: C.warnDeep })
+      kit.glassChip(M, top - 1.2, cw0, 5.6, C.amber)
+      kit.tracked('Vô địch', M + 3, top + 2.7, { color: C.warnDeep })
       kit.font('bold', T.type.h2, C.ink)
-      doc.text(kit.clip(String(meta.championName), CW / 2), M + cw0 + 4, top + 3.5)
-      top += 12
+      doc.text(kit.clip(String(meta.championName), CW / 2), M + cw0 + 3, top + 3.1)
+      top += 8
     }
 
     /* Vùng vẽ nhánh */
-    const bracketTop = top + 8
+    const bracketTop = top + 5
     const bottom = kit.bottom
     const areaH = bottom - bracketTop
     const rs = pageRounds.filter((rd) => rd && rd.matches)
@@ -427,12 +425,12 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
     }
     const R = Math.max(1, rs.length)
     const colW = CW / R
-    const boxW = Math.min(colW - 16, 62)
+    const boxW = Math.min(colW - 8, 62)
     const n0 = rs[0].matches.length || 1
     // Khoảng cách dòng (pitch) có GIỚI HẠN để bracket ít đội không bị giãn thưa; khối được CĂN GIỮA dọc.
-    const MAX_PITCH = 40
+    const MAX_PITCH = 46
     const pitch = Math.min(areaH / n0, MAX_PITCH)
-    const boxH = Math.max(9, Math.min(14, pitch - 4.5))
+    const boxH = Math.max(8, Math.min(13, pitch - 1.2))
     const startY = bracketTop + Math.max(0, (areaH - pitch * n0) / 2)
 
     /* Tâm theo chiều dọc của từng trận mỗi vòng */
@@ -475,8 +473,8 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
         kit.fillR(x + 0.2, y + 0.2, w - 0.4, boxH / 2 - 0.2, B.brand, G.accent + 0.04)
         kit.fillR(x + 0.2, y + 0.2, 1, boxH / 2 - 0.2, B.brand, 1)
       }
-      const my = y + boxH / 4 + 1.2
-      let rightEdge = x + w - 3.5
+      const my = y + boxH / 4 + 1.3
+      let rightEdge = x + w - 2.5
       if (score != null && score !== '') {
         kit.font('bold', T.type.cell, isWinner ? B.brandDark : C.ink2)
         doc.text(String(score), rightEdge, my, { align: 'right' })
@@ -488,14 +486,14 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
         rightEdge -= doc.getTextWidth(tieNote) + 2
       }
       kit.font(isWinner ? 'bold' : 'normal', T.type.cell, isBye ? C.muted : isWinner ? B.brandDark : C.ink)
-      doc.text(kit.fit(name, rightEdge - (x + 4), T.type.cell, T.type.label), x + 4, my)
+      doc.text(kit.fit(name, rightEdge - (x + 3), T.type.cell, T.type.label), x + 3, my)
     }
     rs.forEach((rd, r) => {
       const x = M + r * colW
       // Nhãn vòng đặt ngay trên hộp đầu tiên của cột (gắn với nội dung, không lơ lửng).
       if (rd.matches.length > 0) {
-        kit.glassBar(x, centers[r][0] - boxH / 2 - 8.4, boxW, 5.4, 2.7, { rim: false })
-        kit.tracked(rd.label, x + boxW / 2, centers[r][0] - boxH / 2 - 4.7, { color: C.white, align: 'center', maxW: boxW - 4 })
+        kit.glassBar(x, centers[r][0] - boxH / 2 - 7.2, boxW, 4.8, 2.4, { rim: false })
+        kit.tracked(rd.label, x + boxW / 2, centers[r][0] - boxH / 2 - 3.8, { color: C.white, align: 'center', maxW: boxW - 4 })
       }
       rd.matches.forEach((m, i) => {
         const cy = centers[r][i]
@@ -538,53 +536,39 @@ function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
   })
   y = kit.hero({ y, label: spec.amountLabel, value: vnd(spec.amount), caption: spec.amountCaption, tone: spec.amountTone, status: spec.status })
 
-  const cont = contFactory(kit, { club, title: spec.title, docCode })
-  const GAP = spec.gap ?? 10
-  const rowOpt = { rowH: spec.rowH ?? 8.6 }
   for (const sec of spec.sections) {
     if (!sec.rows.length) continue
-    // Không cắt giữa khối: tiêu đề + cả tấm kvList (+ ghi chú) phải nằm trọn một trang.
-    const need = T.air.titleGap + kit.kvHeight(sec.rows, rowOpt) + (sec.footnote ? 6 : 0)
-    if (y + need > kit.bottom) y = cont(sec.title)
     y = kit.sectionTitle(sec.title, y)
-    y = kit.kvList(sec.rows, y, rowOpt)
+    y = kit.kvList(sec.rows, y, { rowH: spec.rowH ?? 7.6 })
     if (sec.footnote) {
       kit.font('normal', T.type.caption, C.muted)
-      doc.text(kit.clip(sec.footnote, kit.CW), M, y + 5)
-      y += 6
+      doc.text(kit.clip(sec.footnote, kit.CW), M, y + 3.8)
+      y += 4.6
     }
-    y += GAP
+    y += spec.gap ?? T.space.m - 1
   }
 
   /* chữ ký (neo xuống phần dưới trang cho bố cục cân đối) + ghi chú chân phiếu.
-     Dành chỗ theo SỐ DÒNG ghi chú thật; không đủ chỗ → sang trang mới (không nén ô ký, không đè footer). */
+     Dành chỗ theo SỐ DÒNG ghi chú thật và co ô ký khi trang chật để ghi chú không đè footer. */
   const noteLines = kit.wrap(spec.note || '', kit.CW * 0.6, 2)
-  const noteH = 6 + noteLines.length * 4.4 + 3
+  const noteH = 4.4 + noteLines.length * 3.6 + 3
   if (spec.signatures && spec.signatures.length) {
-    let boxH = 24
-    let sigH = 3.5 + boxH + 6 + 4.6 * 2 + 6
-    if (y + 4 + sigH + 8 + noteH > kit.bottom) {
-      // thử co ô ký (tối thiểu 16mm) trước khi sang trang
-      const avail = kit.bottom - noteH - 8 - y - 4 - (sigH - boxH)
-      if (avail >= 16) { boxH = Math.min(24, avail); sigH = 3.5 + boxH + 6 + 4.6 * 2 + 6 }
-      else { y = cont(spec.title); }
-    }
+    const avail = kit.bottom - noteH - y - 8
+    const boxH = Math.max(10, Math.min(24, avail - 22))
+    const sigH = 3 + boxH + 5 + 8 + 6
     // Neo xuống dưới nhưng không để khoảng trống quá 40mm giữa nội dung và ô ký.
-    const sigTop = Math.max(y + 4, Math.min(kit.bottom - noteH - sigH - 4, y + 40))
+    const sigTop = Math.max(y + 8, Math.min(kit.bottom - noteH - sigH, y + 40))
     y = kit.signatures(spec.signatures, sigTop, boxH)
   } else {
-    // ghi chú đặt ngay dưới khối cuối (bỏ khoảng GAP thừa); chỉ sang trang khi thật sự hết chỗ
-    y -= GAP - 6
-    const noteNeed = 9.5 + (noteLines.length - 1) * 4.4
-    if (y + noteNeed > kit.bottom) y = cont(spec.title)
-    y = Math.max(y, kit.bottom - noteNeed)
+    y = Math.max(y, kit.bottom - noteH)
   }
-  kit.lineA(M, y + 2, W - M, y + 2, B.brand, G.hair + 0.1, T.line.border)
+  kit.lineA(M, y, W - M, y, B.brand, G.hair + 0.1, T.line.border)
+  kit.lineA(M, y + 0.3, W - M, y + 0.3, C.white, G.sep, T.line.hair)
   kit.font('normal', T.type.caption, C.muted)
-  noteLines.forEach((ln, i) => doc.text(ln, M, y + 7.6 + i * 4.4))
+  noteLines.forEach((ln, i) => doc.text(ln, M, y + 4.4 + i * 3.6))
   const loc = String(spec.location || '').trim()
   kit.font('normal', T.type.caption, C.ink2)
-  doc.text(kit.clip(`${loc ? loc + ', ' : ''}ngày ${spec.printedDateText}`, kit.CW * 0.38), W - M, y + 7.6, { align: 'right' })
+  doc.text(kit.clip(`${loc ? loc + ', ' : ''}ngày ${spec.printedDateText}`, kit.CW * 0.38), W - M, y + 4.4, { align: 'right' })
 
   drawFooterAll(kit, { club, title: spec.title, docCode })
   return doc
@@ -697,8 +681,7 @@ export function buildPersonalReceiptPDF({ jsPDF, fonts, receipt: d, branding }) 
       amount: d.amountPaid,
       amountCaption: d.paymentDate ? `Ngày đóng: ${d.paymentDate}` : '',
       status: { text: d.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận', dot: d.isConfirmed ? THEME.color.posFill : THEME.color.warnFill },
-      gap: 9,
-      rowH: 9,
+      gap: 5,
       sections: [
         {
           title: 'Thông tin thành viên và quỹ',
@@ -760,7 +743,6 @@ export function buildBillingReceiptPDF({ jsPDF, fonts, receipt: d, branding }) {
       number: d.invoiceNumber ? `Số ${d.invoiceNumber}` : '',
       printedAtText: d.printedAtText,
       printedDateText: d.printedDateText,
-      rowH: 8.2,
       amountLabel: 'Đã thanh toán',
       amountTone: 'brand',
       amount: d.amount,
@@ -840,16 +822,16 @@ export function buildExpenseReportPDF({ jsPDF, fonts, summary, rows, branding })
     { label: 'Đã duyệt', value: vnd(summary.totalApproved), tone: 'pos' },
     { label: 'Chờ duyệt', value: vnd(summary.totalPending), tone: 'warn' },
   ]
-  y = kit.kpiGrid(items, y, { perRow: 3 })
+  y = kit.kpiGrid(items, y, { perRow: 5, after: T.space.m })
 
   const cols = normalizeCols(kit, [
-    { key: 'idx', label: '#', w: 7, align: 'left' },
-    { key: 'code', label: 'Mã chi', w: 22, align: 'left' },
-    { key: 'desc', label: 'Nội dung', w: 44, align: 'left', bold: true },
-    { key: 'kind', label: 'Phân bổ', w: 24, align: 'left' },
-    { key: 'date', label: 'Ngày', w: 23, align: 'left' },
-    { key: 'amount', label: 'Số tiền', w: 30, align: 'right', bold: true },
-    { key: 'status', label: 'Trạng thái', w: 28, align: 'center' },
+    { key: 'idx', label: '#', w: 8, align: 'left' },
+    { key: 'code', label: 'Mã chi', w: 24, align: 'left' },
+    { key: 'desc', label: 'Nội dung', w: 48, align: 'left', bold: true },
+    { key: 'kind', label: 'Phân bổ', w: 28, align: 'left' },
+    { key: 'date', label: 'Ngày', w: 22, align: 'left' },
+    { key: 'amount', label: 'Số tiền', w: 26, align: 'right', bold: true },
+    { key: 'status', label: 'Trạng thái', w: 30, align: 'center' },
   ])
   drawTable(kit, {
     columns: cols,

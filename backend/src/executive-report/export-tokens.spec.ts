@@ -27,7 +27,6 @@ import {
   washColors,
   vnd,
   vndCompact,
-  AIR,
 } from './export-tokens';
 import { buildExecModel, healthTone, monogram } from './executive-report-model';
 import { buildReportHtml } from './executive-report-html';
@@ -373,34 +372,5 @@ describe('fallback jsPDF', () => {
       expect(buf!.subarray(0, 5).toString()).toBe('%PDF-');
       expect(buf!.length).toBeGreaterThan(5000);
     }
-  });
-});
-
-describe('khoảng thở Luxury SaaS', () => {
-  it('token AIR đạt sàn đo được (gutter/hàng ≥ 6, mục ≥ 12, tiêu đề ≥ 5, padding ≥ 5, line-height ≥ 1.5)', () => {
-    expect(AIR.gutter).toBeGreaterThanOrEqual(6);
-    expect(AIR.row).toBeGreaterThanOrEqual(6);
-    expect(AIR.section).toBeGreaterThanOrEqual(12);
-    expect(AIR.head).toBeGreaterThanOrEqual(5);
-    expect(AIR.pad).toBeGreaterThanOrEqual(5);
-    expect(AIR.lineHeight).toBeGreaterThanOrEqual(1.5);
-  });
-
-  it('HTML Chrome ngắt trang theo cụm (break-before) và dùng token khoảng thở', () => {
-    const h = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { now: new Date('2026-10-02T03:15:00Z') });
-    expect((h.match(/class="sect[^"]* pb"/g) ?? []).length).toBeGreaterThanOrEqual(5);
-    expect(h).toContain('.pb{break-before:page');
-    expect(h).toContain(`gap:${AIR.row}mm ${AIR.gutter}mm`);
-    expect(h).not.toMatch(/\.half\{|\.three\{/);
-  });
-
-  it('fallback jsPDF tách trang theo cụm (≥ 7 trang) và không có chữ < 7pt', () => {
-    const buf = buildExecutiveReportPdf(report('CLB Thăng Long', 8), 'Tóm tắt AI', { now: new Date('2026-10-02T03:15:00Z') });
-    expect(buf).not.toBeNull();
-    const pages = (buf!.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
-    expect(pages).toBeGreaterThanOrEqual(7);
-    const sizes = [...buf!.toString('latin1').matchAll(/\/F\d+\s+([\d.]+)\s+Tf/g)].map((m) => Number(m[1]));
-    expect(sizes.length).toBeGreaterThan(0);
-    for (const sz of sizes) expect(sz).toBeGreaterThanOrEqual(MIN_FONT_PT);
   });
 });
