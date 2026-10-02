@@ -14,7 +14,7 @@ test('token chữ bản AA (ink, ink2, muted, posText, negText, neg, warn, info)
   }
 })
 
-test('palette SINH ĐỘNG khớp spec; màu sinh động ≥ 3:1 (chỉ cho chữ ĐẬM ≥ 8.5pt); không còn #94A3B8', () => {
+test('palette SINH ĐỘNG khớp spec; màu sinh động ≥ 3:1 (chỉ cho chữ ĐẬM ≥ 12pt); không còn #94A3B8', () => {
   const hex: Record<string, string> = {
     ink: '#1E293B', muted: '#5A6678', line: '#E2E8F0', surface2: '#F8FAFC', lineSoft: '#F1F5F9',
     pos: '#16A34A', neg: '#DC2626', negFill: '#EF4444', orange: '#EA580C', cyan: '#0891B2', amber: '#D97706',

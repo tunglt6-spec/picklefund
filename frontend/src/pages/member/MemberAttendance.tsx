@@ -11,7 +11,7 @@ import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 
 export function MemberAttendance() {
   const isMobile = useIsMobile()
-  const { attendance, reload } = useMemberPortal()
+  const { attendance, finance, reload } = useMemberPortal()
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const toggleRegister = async (sessionId: string, register: boolean) => {
@@ -30,11 +30,7 @@ export function MemberAttendance() {
   const activePeriod = attendance?.period ?? null
   // Session trong kỳ đã gồm cờ present + attendeeCount từ backend (self-scope, không lộ member khác).
   const periodSessions = (attendance?.sessions ?? [])
-    .map(s => ({
-      ...s,
-      present: s.present,
-      _count: { attendanceRecords: s.attendeeCount },
-    }))
+    .slice()
     .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate))
   const attended = new Set(periodSessions.filter(s => s.present).map(s => s.id))
 
@@ -49,18 +45,11 @@ export function MemberAttendance() {
   const attendedCount = completedSessions.filter(s => attended.has(s.id)).length
   const rate = completedSessions.length > 0 ? Math.round((attendedCount / completedSessions.length) * 100) : 0
 
-  // Chi phí sân MỖI BUỔI chia ĐỀU cho số người CÓ MẶT buổi đó (vd 310.000đ / 6 người = 51.667đ).
-  // Dùng số người có mặt thực tế của buổi (attendeeCount); fallback 6 nếu chưa có dữ liệu.
-  const courtShare = (fee: number | string, attendeeCount?: number) => {
-    const f = Number(fee) || 0
-    const div = Number(attendeeCount) || 6
-    return Math.round(f / div)
-  }
-  // Tổng chi phí sân của THÀNH VIÊN = cộng phần chia mỗi buổi CÓ MẶT.
-  const myCourtCost = completedSessions.reduce(
-    (s, sess) => s + (attended.has(sess.id) ? courtShare(sess.courtFee, sess._count?.attendanceRecords) : 0),
-    0,
-  )
+  // Chi phí sân cá nhân: LẤY NGUYÊN từ calculator backend (/member/me/finance) cho cùng kỳ đang mở —
+  // CHI PHÍ SÂN chia đều theo sĩ số đã chốt của kỳ; khớp Phiếu thu / Tài chính cá nhân.
+  // KHÔNG tự tính lại ở FE (không chia theo số người có mặt từng buổi).
+  const myCourtCost: number | null = finance?.member ? Number(finance.member.courtFee) || 0 : null
+  const courtCostText = myCourtCost === null ? '—' : formatVND(myCourtCost)
 
   // ── Xuất lịch sử điểm danh CÁ NHÂN (self-scope /member/me/attendance), đúng tập đang lọc ──
   const sessionStatusLabel = (s: (typeof filtered)[number]) =>
@@ -132,7 +121,7 @@ export function MemberAttendance() {
               <MapPin size={14} className="text-emerald-500" />
               <span className="text-sm [color:var(--pf-color-muted)]">Chi phí sân cá nhân</span>
             </div>
-            <span className="text-base font-[800] text-emerald-600">{formatVND(myCourtCost)}</span>
+            <span className="text-base font-[800] text-emerald-600">{courtCostText}</span>
           </div>
           {/* Search */}
           <div className="relative">
@@ -159,7 +148,6 @@ export function MemberAttendance() {
             <div className="space-y-2">
               {[...filtered].reverse().map((s) => {
                 const present = s.status === 'completed' ? attended.has(s.id) : null
-                const costShare = present ? courtShare(s.courtFee, s._count?.attendanceRecords) : 0
                 return (
                   <div key={s.id} className={`[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm ${!present && s.status === 'completed' ? 'opacity-60' : ''}`}>
                     <div className="flex items-center justify-between mb-1">
@@ -177,9 +165,6 @@ export function MemberAttendance() {
                       {s.startTime && s.endTime && <span><Clock size={11} className="inline mr-0.5" />{s.startTime}–{s.endTime}</span>}
                       {s.status === 'scheduled' && (s.registeredCount ?? 0) > 0 && <span>· {s.registeredCount} đăng ký</span>}
                     </div>
-                    {present && costShare > 0 && (
-                      <div className="mt-2 text-xs [color:var(--pf-primary)] font-[600]">Chi phí: {formatVND(costShare)}</div>
-                    )}
                     {s.status === 'scheduled' && (
                       <div className="mt-3">
                         {s.registered ? (
@@ -227,14 +212,6 @@ export function MemberAttendance() {
       },
     },
     {
-      key: 'cost', header: 'Chi phí sân', align: 'right', render: (s) => {
-        const present = s.status === 'completed' ? attended.has(s.id) : null
-        return s.status === 'completed' && present
-          ? <span className="font-medium [color:var(--pf-primary)]">{formatVND(courtShare(s.courtFee, s._count?.attendanceRecords))}</span>
-          : <span className="[color:var(--pf-color-muted)]">—</span>
-      },
-    },
-    {
       key: 'register', header: 'Đăng ký', align: 'center', render: (s) => {
         if (s.status !== 'scheduled') return <span className="[color:var(--pf-color-muted)]">—</span>
         return s.registered ? (
@@ -272,7 +249,7 @@ export function MemberAttendance() {
             <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
             <MetricCard label="Tỷ lệ tham gia" value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
             <MetricCard label="Sắp diễn ra" value={`${scheduledCount} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} />
-            <MetricCard label="Chi phí sân" value={formatVND(myCourtCost)} sub="Phần chia cá nhân" accent="green" icon={<MapPin size={18} />} />
+            <MetricCard label="Chi phí sân" value={courtCostText} sub="Cả kỳ · khớp Phiếu thu" accent="green" icon={<MapPin size={18} />} />
           </div>
 
           <ChartCard title="Danh sách buổi tập" subtitle={`${filtered.length} buổi`}>
@@ -309,7 +286,7 @@ export function MemberAttendance() {
               </div>
               <div className="mt-2 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
                 <span>Sắp diễn ra: {scheduledCount}</span>
-                <span>Chi phí: {formatVND(myCourtCost)}</span>
+                <span>Chi phí sân kỳ: {courtCostText}</span>
               </div>
             </div>
           </div>

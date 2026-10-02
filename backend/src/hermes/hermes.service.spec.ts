@@ -302,6 +302,55 @@ describe('HermesService', () => {
       expect(f).toHaveBeenCalledTimes(3);
     });
 
+    describe('dedupe phân tán qua Redis', () => {
+      const setupRedis = () => {
+        const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
+        mockPrisma.user.findMany.mockResolvedValue([baseUser]);
+        mockPrisma.notificationPreference.findMany.mockResolvedValue([pref]);
+        mockPrisma.notification.create.mockResolvedValue(baseNotif);
+        mockPrisma.notification.count.mockResolvedValue(0);
+        linkClubChat('tg-123');
+        const redis = { set: jest.fn(), del: jest.fn().mockResolvedValue(1), quit: jest.fn() };
+        (service as any).redis = redis;
+        return redis;
+      };
+
+      it('SET NX EX thành công → gửi; key dạng hermes:tg:<clubId>:<sha1>', async () => {
+        const redis = setupRedis();
+        redis.set.mockResolvedValue('OK');
+        await service.dispatch(HIGH_EVENT);
+        expect(redis.set).toHaveBeenCalledWith(
+          expect.stringMatching(new RegExp(`^hermes:tg:${HIGH_EVENT.clubId}:[0-9a-f]{40}$`)),
+          '1', 'EX', 120, 'NX',
+        );
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
+      });
+
+      it('SET NX thất bại (instance khác đã giữ khoá) → KHÔNG gửi Telegram', async () => {
+        const redis = setupRedis();
+        redis.set.mockResolvedValue(null);
+        await service.dispatch(HIGH_EVENT);
+        expect((global as any).fetch).not.toHaveBeenCalled();
+      });
+
+      it('Redis lỗi → fallback Map bộ nhớ: vẫn gửi 1 lần, lặp lại bị chặn', async () => {
+        const redis = setupRedis();
+        redis.set.mockRejectedValue(new Error('ECONNREFUSED'));
+        await service.dispatch(HIGH_EVENT);
+        await service.dispatch(HIGH_EVENT);
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
+      });
+
+      it('gửi lỗi → DEL nhả khoá Redis', async () => {
+        const redis = setupRedis();
+        redis.set.mockResolvedValue('OK');
+        (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+        await service.dispatch(HIGH_EVENT);
+        expect(redis.del).toHaveBeenCalledTimes(1);
+        expect(redis.del.mock.calls[0][0]).toBe(redis.set.mock.calls[0][0]);
+      });
+    });
+
     it('nội dung KHÁC nhau → vẫn gửi Telegram riêng từng tin', async () => {
       const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
       mockPrisma.user.findMany.mockResolvedValue([baseUser]);

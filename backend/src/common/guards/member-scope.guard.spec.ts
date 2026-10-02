@@ -119,4 +119,24 @@ describe('MemberScopeGuard', () => {
       ).toThrow(ForbiddenException);
     });
   });
+
+  describe('MEMBER_VIEW — endpoint xuất/báo cáo staff bị 403', () => {
+    const member = { role: 'MEMBER_VIEW' };
+    it.each([
+      ['POST', '/api/report-exports'],
+      ['GET', '/api/report-exports'],
+      ['GET', '/api/executive-report'],
+      ['GET', '/api/executive-report/pdf'],
+      ['GET', '/api/command-center'],
+      ['GET', '/api/member-users'],
+      ['GET', '/api/users'],
+      ['GET', '/api/audit-logs/club'],
+      ['POST', '/api/members'],
+      ['PUT', '/api/members/abc'],
+    ])('%s %s → 403', (method, path) => {
+      expect(() => guard.canActivate(ctxFor(member, path, method))).toThrow(
+        ForbiddenException,
+      );
+    });
+  });
 });

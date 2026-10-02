@@ -257,12 +257,12 @@ function buildAll(primaryColor: string | null, logo: unknown = null) {
 const EMOJI = /[\u{1F300}-\u{1FAFF}☀-➿⭐⏳✓✔▲▼◆]/u
 const col = (k: string) => THEME.color[k as keyof typeof THEME.color] as number[]
 /** Chữ thường nhỏ: bản AA (≥ 4.5:1 trên trắng). */
-const AA_KEYS = ['ink', 'ink2', 'muted', 'posText', 'negText', 'warn', 'info', 'neg', 'posDeep', 'negDeep', 'warnDeep']
-/** Màu SINH ĐỘNG: chỉ cho chữ ĐẬM ≥ 8.5pt (≥ 3:1 — chuẩn chữ lớn). */
-const VIVID_KEYS = ['pos', 'cyan', 'orange', 'amber']
+const AA_KEYS = ['ink', 'ink2', 'muted', 'posText', 'negText', 'warn', 'info', 'posDeep', 'negDeep', 'warnDeep']
+/** Màu SINH ĐỘNG: chỉ cho chữ ĐẬM ≥ 12pt (KPI lớn / hero; ≥ 3:1). Chữ < 12pt PHẢI ≥ 4.5:1 (bản AA). */
+const VIVID_KEYS = ['pos', 'neg', 'cyan', 'orange', 'amber']
 
 for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
-  test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 8.5pt (≥ 3:1); chữ trắng trên băng kính; không #94A3B8/emoji`, () => {
+  test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 12pt (≥ 3:1), chữ < 12pt ≥ 4.5:1; chữ trắng trên băng kính; không #94A3B8/emoji`, () => {
     const { rec } = buildAll(hex)
     assert.ok(rec.length > 200, 'phải ghi được nhiều chuỗi')
     const brand = makeBrand(hex)
@@ -285,11 +285,11 @@ for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
       }
       assert.ok(vivid.some(c => near(r.color, c)), `màu chữ ${JSON.stringify(r.color)} ngoài THEME ở "${r.text}"`)
       vividCount++
-      assert.ok(r.bold && r.size >= 8.5 - 1e-6, `chữ sinh động phải ĐẬM ≥ 8.5pt: "${r.text}" ${r.size}pt bold=${r.bold}`)
+      assert.ok(r.bold && r.size >= 12 - 1e-6, `chữ sinh động phải ĐẬM ≥ 12pt: "${r.text}" ${r.size}pt bold=${r.bold}`)
       assert.ok(contrast(r.color, THEME.color.white) >= 2.95, `sinh động < 3:1 ở "${r.text}"`)
     }
     assert.ok(whiteCount > 20, 'masthead/header bảng phải có chữ trắng trên nền đặc')
-    assert.ok(vividCount > 20, 'phải có chữ xanh/đỏ sinh động')
+    assert.ok(vividCount > 0, 'vẫn có chữ xanh/đỏ sinh động ở KPI lớn (≥ 12pt)')
   })
 }
 

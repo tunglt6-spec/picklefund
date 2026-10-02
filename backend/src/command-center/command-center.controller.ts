@@ -87,7 +87,9 @@ export class CommandCenterController {
     });
     const buf = await this.service.pdf({ range: (range as any) ?? '30d', clubId: clubId || null, from, to });
     if (!buf) {
-      res.status(503).json({ success: false, message: 'Không tạo được PDF (thiếu Chromium trên máy chủ).' });
+      // 503 + Retry-After: máy chủ đang quá tải/không có Chromium — client có thể thử lại hoặc dùng bản xuất phía trình duyệt.
+      res.setHeader('Retry-After', '30');
+      res.status(503).json({ success: false, message: 'Không tạo được PDF lúc này (máy chủ đang bận hoặc thiếu Chromium). Vui lòng thử lại sau ít phút.' });
       return;
     }
     res.setHeader('Content-Type', 'application/pdf');

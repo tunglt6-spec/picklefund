@@ -104,7 +104,7 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   /* Thanh tiến độ Chi / Thu (cao 2mm, track line, fill brand → warn ≥ 90% → neg ≥ 100%) */
   kit.font('bold', T.type.body, B.brandDark)
   doc.text('Tỷ lệ chi / thu', M, y + 3)
-  kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : B.brandDark)
+  kit.font('bold', T.type.body, chiThuPct >= 100 ? kit.semText(C.neg, true, T.type.body) : B.brandDark)
   doc.text(`${chiThuPct}%`, W - M, y + 3, { align: 'right' })
   kit.glassMeter(M, y + 5.2, CW, 2.6, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
   kit.font('normal', T.type.caption, C.muted)
@@ -247,10 +247,10 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
 
     /* 4 dòng chi phí — label trái / số phải (màu theo nghĩa); nhãn đúng công thức backend */
     const lines = [
-      { label: 'Đã nộp quỹ', note: '', val: vnd(m.amountPaid), color: C.pos },
+      { label: 'Đã nộp quỹ', note: '', val: vnd(m.amountPaid), color: kit.semText(C.pos, true, T.type.body) },
       { label: 'Chi phí sân', note: ' (chia đều)', val: vnd(m.courtCost), color: B.brandDark },
-      { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost), color: C.cyan },
-      { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), color: C.orange, total: true },
+      { label: 'Sinh hoạt', note: ' (chia đều + theo buổi)', val: vnd(m.livingCost), color: kit.semText(C.cyan, true, T.type.body) },
+      { label: 'Tổng chi phí', note: '', val: vnd(m.totalCost), color: kit.semText(C.orange, true, T.type.body), total: true },
     ]
     let cy = yy + 29
     lines.forEach((ln) => {
@@ -282,7 +282,7 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 3, boxY + 4.8)
     kit.font('normal', T.type.caption, toneAA)
     doc.text(pos ? 'Chuyển sang kỳ tiếp theo' : 'Vui lòng nộp bổ sung', x + px + 3, boxY + 8.8)
-    kit.font('bold', T.type.h2, tone)
+    kit.font('bold', T.type.h2, toneAA)
     doc.text(pos ? '+' + vnd(m.balance) : vnd(Math.abs(Number(m.balance) || 0)), x + CARD_W - px - 3, boxY + 7.6, { align: 'right' })
   }
 

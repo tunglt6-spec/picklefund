@@ -4,8 +4,8 @@
  * JS thuần (ESM) như pdf-report-core.js để chạy được cả trong app, cả harness/test Node.
  * Luật: mọi exporter ĐỌC token ở đây, không hard-code màu/cỡ chữ riêng.
  *  - Bản sắc = tím app (#6D5DFB / #4F46E5): băng masthead ĐẶC, header bảng ĐẶC, thẻ KPI nhấn tím nhạt.
- *  - Màu chữ SINH ĐỘNG (pos #16A34A, neg #DC2626, cyan, orange, amber, brandDark) chỉ cho chữ ĐẬM ≥ 8.5pt
- *    (≥ 3:1 — chuẩn chữ lớn WCAG). Chữ thường nhỏ dùng bản AA: ink / ink2 / muted / posText / negText / warn / info.
+ *  - Màu chữ SINH ĐỘNG (pos #16A34A, neg #DC2626, cyan, orange, amber) chỉ cho chữ ĐẬM ≥ 12pt
+ *    (KPI lớn / hero; ≥ 3:1 — chuẩn chữ lớn WCAG).  Chữ bảng/thẻ nhỏ 8-11pt LUÔN dùng bản AA ≥ 4.5:1. Chữ thường nhỏ dùng bản AA: ink / ink2 / muted / posText / negText / warn / info.
  *  - Tuyệt đối không dùng #94A3B8 làm màu chữ. Chữ trắng chỉ trên nền đặc đạt ≥ 4.5:1 (makeBrand tự tối).
  */
 
@@ -23,7 +23,7 @@ export const THEME = {
     connector: [100, 116, 139], // #64748B (đường nối sơ đồ — phi văn bản ≥ 3:1)
     surface2: [248, 250, 252], // #F8FAFC (zebra)
     white: [255, 255, 255],
-    // semantic SINH ĐỘNG (chữ ĐẬM ≥ 8.5pt / chấm / thanh)
+    // semantic SINH ĐỘNG (chữ ĐẬM ≥ 12pt — KPI lớn/hero / chấm / thanh)
     pos: [22, 163, 74], // #16A34A
     neg: [220, 38, 38], // #DC2626
     orange: [234, 88, 12], // #EA580C
@@ -53,6 +53,8 @@ export const THEME = {
     silverTint: [241, 245, 249], // #F1F5F9
     bronzeTint: [255, 237, 213], // #FFEDD5
   },
+  // Ngưỡng cỡ chữ (pt) để dùng màu chữ SINH ĐỘNG (đậm): dưới ngưỡng → bản AA ≥ 4.5:1.
+  vividMinPt: 12,
   /** Thang chữ 7 bậc (pt). Sàn tuyệt đối = MIN_PT. */
   type: { display: 22, h1: 16, kpi: 14, h2: 11, body: 8.5, cell: 8, label: 7, caption: 7 },
   /** Thang khoảng cách (mm). */

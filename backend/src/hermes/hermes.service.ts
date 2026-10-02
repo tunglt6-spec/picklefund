@@ -1,4 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleDestroy } from '@nestjs/common';
+import { createHash } from 'crypto';
+import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -17,7 +19,7 @@ import {
 } from './push-policy';
 
 @Injectable()
-export class HermesService {
+export class HermesService implements OnModuleDestroy {
   private readonly logger = new Logger(HermesService.name);
 
   /**
@@ -28,15 +30,83 @@ export class HermesService {
   private static readonly TELEGRAM_DEDUP_MS = 2 * 60 * 1000;
   private readonly recentClubTelegram = new Map<string, number>();
 
-  /** Giữ chỗ khoá dedupe (chống gửi trùng khi nhiều dispatch cùng lúc). Trả key nếu được gửi, null nếu trùng. */
-  private reserveClubTelegram(event: HermesEvent, now = Date.now()): string | null {
+  /**
+   * Redis client dùng cho dedupe PHÂN TÁN (nhiều instance backend). undefined = chưa khởi tạo,
+   * null = không dùng Redis (môi trường test) → luôn fallback Map trong bộ nhớ.
+   */
+  private redis: Pick<Redis, 'set' | 'del' | 'quit'> | null | undefined;
+
+  private getRedis(): Pick<Redis, 'set' | 'del' | 'quit'> | null {
+    if (this.redis !== undefined) return this.redis;
+    if (process.env.NODE_ENV === 'test') return (this.redis = null);
+    try {
+      const client = new Redis({
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+        password: process.env.REDIS_PASSWORD || undefined,
+        lazyConnect: false,
+        enableOfflineQueue: false,
+        maxRetriesPerRequest: 1,
+        commandTimeout: 1500,
+      });
+      client.on('error', (e) => this.logger.warn(`[Hermes] Redis dedupe lỗi (fallback memory): ${e?.message ?? e}`));
+      this.redis = client;
+    } catch {
+      this.redis = null;
+    }
+    return this.redis;
+  }
+
+  async onModuleDestroy() {
+    try {
+      await this.redis?.quit();
+    } catch {
+      /* bỏ qua */
+    }
+  }
+
+  private static redisKey(event: HermesEvent): string {
+    const h = createHash('sha1').update([event.eventType, event.title, event.body].join('|')).digest('hex');
+    return `hermes:tg:${event.clubId}:${h}`;
+  }
+
+  /**
+   * Giữ chỗ khoá dedupe (chống gửi trùng khi nhiều dispatch cùng lúc / nhiều instance).
+   * Ưu tiên Redis `SET key 1 NX EX 120`; Redis lỗi/không có → fallback Map trong bộ nhớ.
+   * Trả handle nếu ĐƯỢC gửi, null nếu trùng.
+   */
+  private async reserveClubTelegram(
+    event: HermesEvent,
+    now = Date.now(),
+  ): Promise<{ memKey: string; redisKey: string | null } | null> {
+    const memKey = [event.clubId, event.eventType, event.title, event.body].join('|');
+    const redis = this.getRedis();
+    if (redis) {
+      const redisKey = HermesService.redisKey(event);
+      try {
+        const ok = await redis.set(redisKey, '1', 'EX', HermesService.TELEGRAM_DEDUP_MS / 1000, 'NX');
+        return ok === 'OK' ? { memKey, redisKey } : null;
+      } catch (err: any) {
+        this.logger.warn(`[Hermes] Redis dedupe lỗi, dùng bộ nhớ: ${err?.message ?? err}`);
+      }
+    }
     for (const [k, at] of this.recentClubTelegram) {
       if (now - at > HermesService.TELEGRAM_DEDUP_MS) this.recentClubTelegram.delete(k);
     }
-    const key = [event.clubId, event.eventType, event.title, event.body].join('|');
-    if (this.recentClubTelegram.has(key)) return null;
-    this.recentClubTelegram.set(key, now);
-    return key;
+    if (this.recentClubTelegram.has(memKey)) return null;
+    this.recentClubTelegram.set(memKey, now);
+    return { memKey, redisKey: null };
+  }
+
+  private async releaseClubTelegram(h: { memKey: string; redisKey: string | null }) {
+    this.recentClubTelegram.delete(h.memKey);
+    if (h.redisKey) {
+      try {
+        await this.redis?.del(h.redisKey);
+      } catch {
+        /* key tự hết hạn sau 120s */
+      }
+    }
   }
 
   constructor(
@@ -129,7 +199,7 @@ export class HermesService {
     // Gửi 1 LẦN tới chat LIÊN KẾT của chính CLB (getClubTelegramChat), KHÔNG theo pref user →
     // mỗi CLB nhận đúng thông báo của mình (cách ly tuyệt đối theo clubId). CLB chưa liên kết
     // chat riêng → không gửi (không dùng chung chat CLB khác). Best-effort, không chặn.
-    const tgKey = dispatched > 0 ? this.reserveClubTelegram(event) : null;
+    const tgKey = dispatched > 0 ? await this.reserveClubTelegram(event) : null;
     if (tgKey) {
       // Khoá dedupe chỉ GIỮ khi gửi THÀNH CÔNG; gửi lỗi / CLB chưa link chat → nhả khoá để lần sau thử lại.
       let sent = false;
@@ -150,7 +220,7 @@ ${event.body}`,
           `[Hermes] Telegram CLB ${event.clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
         );
       }
-      if (!sent) this.recentClubTelegram.delete(tgKey);
+      if (!sent) await this.releaseClubTelegram(tgKey);
     }
 
     this.logger.log(

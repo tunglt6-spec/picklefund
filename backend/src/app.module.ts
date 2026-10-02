@@ -1,7 +1,7 @@
 import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-ioredis-yet';
@@ -56,6 +56,7 @@ import { RetentionModule } from './retention/retention.module';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
+import { MemberPiiInterceptor } from './common/interceptors/member-pii.interceptor';
 import { MemberScopeGuard } from './common/guards/member-scope.guard';
 
 @Module({
@@ -132,6 +133,8 @@ import { MemberScopeGuard } from './common/guards/member-scope.guard';
     { provide: APP_GUARD, useClass: TenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: MemberScopeGuard },
+    // Che PII thành viên khác cho MEMBER_VIEW (tầng API).
+    { provide: APP_INTERCEPTOR, useClass: MemberPiiInterceptor },
   ],
 })
 export class AppModule implements NestModule {

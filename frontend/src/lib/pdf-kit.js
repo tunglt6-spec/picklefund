@@ -129,9 +129,9 @@ export function createKit(doc, branding = {}) {
   const CW = W - M * 2
   const kit = { doc, T, C, G, B, W, H, M, CW, branding, bottom: H - T.page.bottomPad }
 
-  /* Màu SINH ĐỘNG chỉ cho chữ ĐẬM ≥ 8.5pt; còn lại dùng bản AA tương ứng. */
+  /* Màu SINH ĐỘNG chỉ cho chữ ĐẬM ≥ 12pt (KPI lớn / hero); chữ bảng/thẻ nhỏ dùng bản AA (≥ 4.5:1). */
   const AA = new Map([[C.pos, C.posText], [C.neg, C.negText], [C.cyan, C.info], [C.orange, C.warn], [C.amber, C.warn]])
-  kit.vividOk = (bold, size) => bold && size >= T.type.body
+  kit.vividOk = (bold, size) => bold && size >= T.vividMinPt
   kit.semText = (vivid, bold, size) => (kit.vividOk(bold, size) ? vivid : AA.get(vivid) ?? vivid)
 
   kit.fill = (c) => doc.setFillColor(c[0], c[1], c[2])
@@ -435,10 +435,14 @@ export function createKit(doc, branding = {}) {
     kit.glassPanel(x, y, w, h, { accent, r: compact ? 3 : G.radius.panel })
     kit.tracked(label, x + 4, y + 5.2, { color: accent ? B.brandDark : C.muted, maxW: w - 8 })
     const text = String(value ?? '')
+    const vSz = compact ? T.type.h2 : T.type.kpi
     const posC = accent ? C.posText : C.pos
     const vColor = tone === 'neg' || /^-\s*\d/.test(text) ? C.neg : tone === 'pos' ? posC : tone === 'warn' ? (accent ? C.warn : C.amber) : accent || tone === 'brand' ? B.brandDark : C.ink
-    kit.font('bold', compact ? T.type.h2 : T.type.kpi, vColor)
+    kit.font('bold', vSz, vColor)
     const shown = kit.fit(text, w - 8, compact ? T.type.h2 : T.type.kpi, compact ? 8.5 : 10)
+    // Cỡ SAU khi co: < 12pt thì màu sinh động đổi sang bản AA (≥ 4.5:1)
+    const fitSz = doc.getFontSize()
+    kit.font('bold', fitSz, kit.semText(vColor, true, fitSz))
     doc.text(shown, x + 4, y + (compact ? 10.8 : 12.2))
     if (caption != null && caption !== '' && !compact) {
       kit.font('normal', T.type.caption, accent ? C.ink2 : C.muted)
@@ -647,7 +651,7 @@ export function normalizeCols(kit, rawColumns) {
  *  - row: { [key]: string|number | { t, tone?, bold?, dot? } }  · dòng nhóm: { __section, __sectionRight? }
  *    key 'rank' tự đánh số nếu row không có giá trị
  *  - footerRow: { [key]: ..., __label?: string, __span?: số cột đầu gộp cho nhãn }
- * Chữ màu SINH ĐỘNG luôn ĐẬM ≥ 8.5pt; nếu buộc phải co nhỏ hơn thì tự đổi sang bản AA.
+ * Chữ màu SINH ĐỘNG ĐẬM ≥ 12pt mới dùng màu sinh động; cỡ nhỏ hơn (chữ bảng 8-11pt) tự đổi sang bản AA.
  * Trả { y, dataNo }.
  */
 export function drawTable(kit, o) {
@@ -781,8 +785,10 @@ export function drawTable(kit, o) {
         }
       }
       if (lines.length > maxLines) maxLines = lines.length
-      // chữ sinh động bị co dưới 8.5pt → đổi sang bản AA
-      const color = sty.chip ? sty.color : kit.semText(sty.color, sty.style === 'bold', size)
+      // chữ sinh động dưới 12pt → đổi sang bản AA
+      let color = sty.chip ? sty.color : kit.semText(sty.color, sty.style === 'bold', size)
+      // hàng TỔNG có nền tint → dùng bản DEEP để giữ ≥ 4.5:1
+      if (isTotal) color = color === C.posText ? C.posDeep : color === C.negText ? C.negDeep : color
       return { c, lines, sty: { ...sty, color, size }, chipW }
     })
     return { cells, rowH: maxLines > 1 ? Math.max(ROW_H, maxLines * LH + 3.6) : ROW_H }

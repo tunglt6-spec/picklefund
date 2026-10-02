@@ -150,8 +150,9 @@ export function SuperDashboard() {
       a.href = url; a.download = exportFileName('Trung_tam_dieu_hanh', 'pdf'); a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
       toast.success('Đã tạo PDF', { id: t })
-    } catch {
-      toast.error('Không tạo được PDF', { id: t })
+    } catch (e) {
+      const busy = (e as { response?: { status?: number } })?.response?.status === 503
+      toast.error(busy ? 'Máy chủ đang bận tạo PDF — vui lòng thử lại sau ít phút' : 'Không tạo được PDF', { id: t })
     } finally { setPdfLoading(false) }
   }
 
