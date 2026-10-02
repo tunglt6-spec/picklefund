@@ -10,6 +10,7 @@ import { renderHtmlToPdf } from './render-pdf';
 import { loadFontsBase64 } from './export-fonts';
 import {
   DOC_TITLE,
+  EXPORT_USE_CLUB_COLOR,
   PDF_MARGIN,
   buildFooterTemplate,
   docCode,
@@ -1367,6 +1368,7 @@ ${facts}`;
 
   /** Màu chủ đạo CLB (settings.branding.primaryColor) — sai/thiếu → null (mặc định ở export-tokens). */
   private async clubBrandColor(clubId: string): Promise<string | null> {
+    if (!EXPORT_USE_CLUB_COLOR) return null; // đồng bộ giao diện: mọi CLB cùng bộ màu app (không cần đọc settings)
     const club = await this.prisma.club.findUnique({
       where: { id: clubId },
       select: { settings: true },

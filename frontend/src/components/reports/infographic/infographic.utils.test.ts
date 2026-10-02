@@ -61,7 +61,7 @@ test('makeInfographicPalette: mặc định khi rỗng/sai định dạng', () =
 
 test('makeInfographicPalette: mọi cặp chữ/nền dùng thật đạt ≥ 4.5:1 với nhiều màu CLB (kể cả sáng/trắng/đen)', () => {
   for (const c of [null, '#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#22D3EE', '#EEEEEE', '#DB2777']) {
-    const P = makeInfographicPalette(c)
+    const P = makeInfographicPalette(c, true)
     const ok = (fg: string, bg: string, name: string) =>
       assert.ok(contrastRatio(fg, bg) >= 4.5, `${c} ${name}: ${fg} on ${bg} = ${contrastRatio(fg, bg).toFixed(2)}`)
     ok(P.onDark, P.deep, 'trắng/deep (header)')
@@ -97,7 +97,7 @@ test('palette SINH ĐỘNG: token khớp spec app (tím #4F46E5 / xanh #16A34A /
 
 test('palette: SỐ ĐẬM cỡ lớn (vivid) ≥ 3:1 trên trắng/tint/soft; chữ phụ trắng/deep ≥ 4.5', () => {
   for (const c of [null, '#F59E0B', '#0F766E', '#DB2777', '#FFFFFF']) {
-    const P = makeInfographicPalette(c)
+    const P = makeInfographicPalette(c, true)
     const ok3 = (fg: string, bg: string, name: string) =>
       assert.ok(contrastRatio(fg, bg) >= 3, `${c} ${name}: ${fg} on ${bg} = ${contrastRatio(fg, bg).toFixed(2)}`)
     ok3(P.posVivid, '#FFFFFF', 'posVivid/white'); ok3(P.posVivid, P.posTint, 'posVivid/posTint')
@@ -118,7 +118,7 @@ test('palette: nền đậm vẫn mang sắc brand (không đen/xám) + không c
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
     assert.ok(b > g + 20 && b >= r, `${h} phải ngả brand`)
   }
-  const all = Object.values(makeInfographicPalette('#0F766E')).join(' ').toUpperCase()
+  const all = Object.values(makeInfographicPalette('#0F766E', true)).join(' ').toUpperCase()
   for (const old of ['#0B2A4A', '#FACC15', '#040E1C', '#020810', '#94A3B8']) assert.ok(!all.includes(old), old)
   assert.ok(INFOGRAPHIC_MIN_FONT_PX >= 14)
 })
@@ -148,7 +148,7 @@ const over = (fg: string, a: number, bg: string) => {
 
 test('glass: chữ trắng trên băng header (cả hai đầu gradient, + chip kính + bóng loáng) ≥ 4.5; chữ trên tối ≥ 4.5', () => {
   for (const c of [null, '#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#DB2777']) {
-    const P = makeInfographicPalette(c), G = makeInfographicGlass(P)
+    const P = makeInfographicPalette(c, true), G = makeInfographicGlass(P)
     for (const end of [G.mastFrom, G.mastTo]) {
       assert.ok(contrastRatio('#FFFFFF', over('#FFFFFF', GLASS_ALPHA.chip, end)) >= 4.5, `${c} chip trên ${end}`)
     }
@@ -158,7 +158,7 @@ test('glass: chữ trắng trên băng header (cả hai đầu gradient, + chip 
 
 test('glass: chữ trên tấm kính / wash xấu nhất đạt AA; số đậm cỡ lớn ≥ 3', () => {
   for (const c of [null, '#F59E0B', '#0F766E', '#DB2777']) {
-    const P = makeInfographicPalette(c)
+    const P = makeInfographicPalette(c, true)
     const washWorst = over(P.brand, GLASS_ALPHA.orb, P.soft)
     const card = over('#FFFFFF', GLASS_ALPHA.panelBottom, washWorst)
     for (const [n, fg] of [['text', P.text], ['text2', P.text2], ['muted', P.muted], ['ink', P.ink], ['pos', P.pos], ['neg', P.neg], ['warn', P.warn]] as const) {
@@ -172,4 +172,10 @@ test('glass: chữ trên tấm kính / wash xấu nhất đạt AA; số đậm 
     for (const [t, f] of [[P.pos, P.posFill], [P.neg, P.negFill]] as const) assert.ok(contrastRatio(t, over(f, 0.08, '#FFFFFF')) >= 4.5, `${c} chip`)
     assert.ok(rgbaOf('#6D5DFB', 0.5).startsWith('rgba(109,93,251'))
   }
+})
+
+test('ĐỒNG BỘ: makeInfographicPalette bỏ qua màu CLB mặc định (cùng bộ màu app)', () => {
+  const d = JSON.stringify(makeInfographicPalette(null))
+  for (const c of ['#0F766E', '#F59E0B', '#FFFFFF', '#000000']) assert.equal(JSON.stringify(makeInfographicPalette(c)), d, c)
+  assert.notEqual(JSON.stringify(makeInfographicPalette('#0F766E', true)), d)
 })

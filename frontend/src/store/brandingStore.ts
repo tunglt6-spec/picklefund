@@ -26,6 +26,15 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
       const data = (res.data?.data ?? res.data) as ClubBranding
       set({ branding: { ...BRANDING_FALLBACK, ...data }, forClubId: clubId })
     } catch {
+      // Mọi role đọc được /clubs/me → vẫn lấy ĐÚNG tên + logo CLB (không rơi về "PickleFund" khi /me/branding lỗi/chưa phân quyền).
+      try {
+        const me = await api.get('/clubs/me')
+        const c = (me.data?.data ?? me.data) as { name?: string | null; logoUrl?: string | null } | null
+        if (c?.name) {
+          set({ branding: { ...BRANDING_FALLBACK, displayName: c.name, logoUrl: c.logoUrl ?? null }, forClubId: clubId })
+          return
+        }
+      } catch { /* bỏ qua */ }
       set({ branding: BRANDING_FALLBACK, forClubId: clubId })
     }
   },

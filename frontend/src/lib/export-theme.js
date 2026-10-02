@@ -11,6 +11,14 @@
 
 export const DEFAULT_BRAND_HEX = '#6D5DFB'
 
+/**
+ * CÔNG TẮC TẬP TRUNG "màu thương hiệu riêng của CLB có tô PDF/Excel/PNG/infographic hay không".
+ * false (CHUẨN) = MỌI CLB, MỌI vai trò dùng DUY NHẤT bộ màu app (tím #6D5DFB / #4F46E5) → tài liệu đồng bộ;
+ * chỉ TÊN + LOGO (hoặc monogram) CLB khác nhau. Bật true để cho phép màu CLB quay lại (test lưới màu dùng
+ * tham số `allowCustom=true` của makeBrand thay vì đổi hằng này).
+ */
+export const EXPORT_USE_CLUB_COLOR = false
+
 export const THEME = {
   /** RGB cho jsPDF. */
   color: {
@@ -141,9 +149,10 @@ export function hexToRgb(hex) {
  *  - brandEdge  : viền thẻ nhấn (mặc định #C7D2FE) — alias brandBorder
  *  - badgeOnBrand: nền chip phụ trên băng đặc (mặc định #988CFC) — KHÔNG để chữ trắng lên (chỉ vật trang trí)
  *  brandInk = alias của brandDark (tương thích mã cũ). Hex không hợp lệ → màu mặc định.
+ *  allowCustom (mặc định EXPORT_USE_CLUB_COLOR = false): false → BỎ QUA `hex`, luôn bộ màu app mặc định.
  */
-export function makeBrand(hex) {
-  const rgb = hexToRgb(hex) || hexToRgb(DEFAULT_BRAND_HEX)
+export function makeBrand(hex, allowCustom = EXPORT_USE_CLUB_COLOR) {
+  const rgb = (allowCustom && hexToRgb(hex)) || hexToRgb(DEFAULT_BRAND_HEX)
   const isDefault = toHex(rgb) === DEFAULT_BRAND_HEX
   const brandSoft = isDefault ? [238, 242, 255] : mix(rgb, THEME.color.white, 0.92)
   let ink = isDefault ? [79, 70, 229] : mix(rgb, [0, 0, 0], 0.2)

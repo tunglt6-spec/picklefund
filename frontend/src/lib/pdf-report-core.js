@@ -6,7 +6,7 @@
  *
  * Token (màu / cỡ chữ / lề) ở export-theme.js; bộ vẽ dùng chung (masthead, footer, thẻ KPI, bảng,
  * chữ ký…) ở pdf-kit.js. File này chỉ GHÉP bố cục cho từng loại tài liệu.
- * Màu brand CLB đi vào qua `branding.primaryColor` (thiếu → tím mặc định).
+ * Màu: makeBrand BỎ QUA branding.primaryColor (EXPORT_USE_CLUB_COLOR=false) → mọi CLB cùng bộ màu app; chỉ tên + logo/monogram khác.
  *
  * File là JS thuần (ESM + JSDoc) để tái dùng được cả trong app (export.ts import)
  * lẫn harness Node kiểm chứng ngoài trình duyệt.

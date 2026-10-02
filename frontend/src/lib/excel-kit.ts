@@ -11,6 +11,8 @@
    Khi `export-theme.js` (PDF) có mặt, hợp nhất bằng cách import thay cho hằng cục bộ.
    ════════════════════════════════════════════════════════════════════════════════════ */
 
+import { EXPORT_USE_CLUB_COLOR } from './export-theme.js'
+
 /* ─── Token màu (hex không '#', dạng ARGB của xlsx) ─── */
 export const XL_COLOR = {
   ink: '1E293B',
@@ -89,8 +91,8 @@ export interface ExcelBrand {
 /** `brand` = màu CLB. `ink` = brand tối 20%, tối thêm cho tới khi chữ trên nền `soft` đạt >= 4.5:1 và
  *  chữ trắng trên `ink` đạt >= 4.5:1. `soft` = brand pha 8% với trắng. `head` = brand (tối dần nếu cần).
  *  Mặc định #6D5DFB dùng bộ chuẩn: brandDark #4F46E5, soft #EEF2FF, border #C7D2FE. */
-export function makeBrand(primaryHex?: string | null): ExcelBrand {
-  const raw = (primaryHex ?? '').replace('#', '').trim().toUpperCase()
+export function makeBrand(primaryHex?: string | null, allowCustom: boolean = EXPORT_USE_CLUB_COLOR): ExcelBrand {
+  const raw = (allowCustom ? (primaryHex ?? '') : '').replace('#', '').trim().toUpperCase()
   const brand = /^[0-9A-F]{6}$/.test(raw) ? raw : DEFAULT_BRAND_HEX
   const glassTints = (b: string) => ({
     wash: b === DEFAULT_BRAND_HEX ? 'F1F4FF' : mixWith(b, [255, 255, 255], 0.93),

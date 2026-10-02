@@ -31,6 +31,8 @@ export const esc = escHtml;
 export interface ReportHtmlOpts {
   /** Màu chủ đạo CLB (#RRGGBB); sai/rỗng → mặc định. */
   brandColor?: string | null;
+  /** Chỉ test/bật lại có chủ đích: true → dùng brandColor; mặc định theo EXPORT_USE_CLUB_COLOR (false) → bộ màu app chung. */
+  allowCustomColor?: boolean;
   /** Thời điểm xuất (để mã TL + giờ xuất khớp footer). */
   now?: Date;
 }
@@ -80,7 +82,7 @@ export function buildReportHtml(
     : '';
   const fam = fonts ? "'BVP','Be Vietnam Pro',Arial,sans-serif" : "'Be Vietnam Pro',Arial,sans-serif";
 
-  const B = makeBrand(opts.brandColor);
+  const B = makeBrand(opts.brandColor, opts.allowCustomColor);
   const m = buildExecModel(report, aiText, opts.now ?? new Date(), B.brand);
 
   // Chỉ nhúng khi là data:image URI hợp lệ (chống inject vào src); nếu không → monogram từ tên CLB.
@@ -233,15 +235,16 @@ tr{break-inside:avoid;page-break-inside:avoid}
 /* Masthead trang 2+: BĂNG KÍNH chuyển sắc chéo + bóng loáng nửa trên, chip kính chứa kỳ/giờ xuất, gauge trong kính trắng */
 .mast{display:flex;align-items:center;justify-content:space-between;padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s3)};background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:var(--g-r)}
 .mast-l{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
-.mast .lab{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
+.mast-l{min-width:0;flex:1}.mast-l>div{min-width:0}.mast .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
 .mast h1{font-size:${pt(TYPE.h1)};font-weight:700;line-height:1.2;margin:${mm(0.5)} 0;color:#fff}
 .mast .sub{display:inline-block;font-size:${pt(TYPE.body)};color:#fff;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.4)} ${mm(2.5)}}
-.gauge{display:flex;align-items:center;gap:${mm(SPACE.s2)};background:${g(0.92)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.1)},0 ${mm(1.2)} 0 ${rgba(COLORS.ink, 0.05)};border-radius:var(--g-r);padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
+.gauge{flex:none;display:flex;align-items:center;gap:${mm(SPACE.s2)};background:${g(0.92)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.1)},0 ${mm(1.2)} 0 ${rgba(COLORS.ink, 0.05)};border-radius:var(--g-r);padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
 .gauge .cls{font-size:${pt(TYPE.table)};font-weight:700;text-transform:uppercase;letter-spacing:.3pt}
 /* Logo: vòng kính trắng (nổi trên băng brand) */
 .logo{background:${g(0.94)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:0 0 0 ${mm(0.5)} ${g(0.3)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.12)};border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .logo img{width:86%;height:86%;object-fit:contain}
 .logo.mono{color:var(--brandDeep);font-weight:700;letter-spacing:.5pt}
+.logo{flex:none}
 .logo.sm{width:${mm(12)};height:${mm(12)}}.logo.sm.mono{font-size:${pt(TYPE.h2)}}
 .logo.md{width:${mm(18)};height:${mm(18)}}.logo.md.mono{font-size:${pt(TYPE.h1)}}
 /* Tấm kính dùng chung: nền trắng bán trong + viền ngoài trắng + viền trong brand + highlight cạnh trên + bóng mềm */
@@ -356,11 +359,11 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .cv-hero:after{content:'';position:absolute;right:${mm(-18)};bottom:${mm(-26)};width:${mm(92)};height:${mm(92)};border-radius:50%;background:radial-gradient(circle at 35% 30%,${g(0.14)},${g(0.02)} 70%);border:${mm(0.3)} solid ${g(0.22)}}
 .cv-hero>*{position:relative;z-index:1}
 .cv-top{display:flex;align-items:center;justify-content:space-between}
-.cv-id{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
-.cv-brand{font-size:${pt(TYPE.h2)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
-.cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.8)} ${mm(3)}}
+.cv-id{display:flex;align-items:center;gap:${mm(SPACE.s3)};min-width:0;flex:1}
+.cv-brand{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:${pt(TYPE.h2)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
+.cv-tag{flex:none;white-space:nowrap;margin-left:${mm(SPACE.s3)};font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.8)} ${mm(3)}}
 .cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.5pt;text-transform:uppercase;font-weight:700;color:#fff}
-.cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:#fff;margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
+.cv-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:#fff;margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
 .cv-period{font-size:${pt(TYPE.h2)};color:#fff}
 .cv-rule{width:${mm(SPACE.s6)};height:${mm(1)};border-radius:${mm(0.5)};background:var(--badge);margin-top:${mm(SPACE.s4)}}
 .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s3)}}

@@ -1,4 +1,5 @@
 import type { InfographicReportData, InfographicMemberData } from './infographic.types'
+import { EXPORT_USE_CLUB_COLOR } from '../../../lib/export-theme.js'
 
 /* ── Format helpers ── */
 /** Số tài chính ĐẦY ĐỦ theo vi-VN (không làm tròn "triệu" → không mất độ chính xác). NaN/undefined → "0 đ". */
@@ -100,8 +101,8 @@ export interface InfographicPalette {
   warnOnDark: string
 }
 
-export function makeInfographicPalette(primary?: string | null): InfographicPalette {
-  const brand = typeof primary === 'string' && HEX6.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_INFOGRAPHIC_BRAND
+export function makeInfographicPalette(primary?: string | null, allowCustom: boolean = EXPORT_USE_CLUB_COLOR): InfographicPalette {
+  const brand = allowCustom && typeof primary === 'string' && HEX6.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_INFOGRAPHIC_BRAND
   const isDefault = brand === DEFAULT_INFOGRAPHIC_BRAND
   const soft = isDefault ? '#EEF2FF' : mixHex(brand, '#FFFFFF', 0.92)
   const softBorder = isDefault ? '#C7D2FE' : mixHex(brand, '#FFFFFF', 0.75)

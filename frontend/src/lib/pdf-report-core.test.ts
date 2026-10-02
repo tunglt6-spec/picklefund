@@ -233,9 +233,9 @@ const near = (a: number[], b: number[], tol = 2) => a.every((v, i) => Math.abs(v
 const pdfRgb = (c: number[]) => c.map(v => String(Number((v / 255).toFixed(2)))).join(' ')
 
 /** Dựng đủ mọi loại tài liệu với 1 màu brand. */
-function buildAll(primaryColor: string | null, logo: unknown = null) {
+function buildAll(primaryColor: string | null, logo: unknown = null, allowCustomColor = true) {
   const s = makeStyleSpy()
-  const br = { name: 'CLB Test', footer: 'CLB Test', logo: logo as null, primaryColor }
+  const br = { name: 'CLB Test', footer: 'CLB Test', logo: logo as null, primaryColor, allowCustomColor }
   const members = Array.from({ length: 14 }, (_, i) => bill({ memberName: `Thành viên ${i}`, contributionPaid: i % 3 !== 0, balance: i % 2 ? 1000 * i : -1000 * i }))
   const expRows = [
     { date: '05/03/2026', description: 'Tiền sân', fundKey: 'COMMON' as const, fundLabel: 'Quỹ Chính', kindLabel: 'Sân', amount: 480000, statusKey: 'approved' as const, statusLabel: 'Đã duyệt' },
@@ -265,7 +265,7 @@ for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
   test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 12pt (≥ 3:1), chữ < 12pt ≥ 4.5:1; chữ trắng trên băng kính; không #94A3B8/emoji`, () => {
     const { rec } = buildAll(hex)
     assert.ok(rec.length > 200, 'phải ghi được nhiều chuỗi')
-    const brand = makeBrand(hex)
+    const brand = makeBrand(hex, true)
     const aa = [...AA_KEYS.map(col), brand.brandDark as number[]]
     const vivid = VIVID_KEYS.map(col)
     let whiteCount = 0
@@ -307,7 +307,7 @@ test('LIQUID GLASS: mọi PDF dùng độ trong suốt (ExtGState ca/CA) + gradi
 
 test('LIQUID GLASS: nền wash (washA → trắng → washC) + orb có mặt ở MỌI trang; trang tiếp (addPage) cũng có wash', () => {
   for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) {
-    const B = makeBrand(hex)
+    const B = makeBrand(hex, true)
     const orbRgb = pdfRgb(THEME.color.cyan) + ' rg'
     for (const d of buildAll(hex).docs) {
       const out = String(d.output()).replace(/(\d)\. /g, '$1 ') // jsPDF in "1." cho kênh 255
@@ -326,7 +326,7 @@ test('LIQUID GLASS: chữ TRẮNG trên băng/header gradient đạt ≥ 4.5:1 �
   const samples = ['#6D5DFB', '#0F766E', '#F59E0B', '#FACC15', '#22D3EE', '#E11D48', '#10B981', '#FFFFFF']
   for (let r = 0; r < 256; r += 85) for (let g = 0; g < 256; g += 85) for (let b = 0; b < 256; b += 85) samples.push('#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join(''))
   for (const hex of samples) {
-    const B = makeBrand(hex)
+    const B = makeBrand(hex, true)
     for (const [name, c] of [['glassStart', B.glassStart], ['glassEnd', B.glassEnd]] as const) {
       assert.ok(contrast(white, c) >= 4.5, `${hex} ${name}: ${contrast(white, c).toFixed(2)}`)
       assert.ok(contrast(white, mix(c, white, G.mast.gloss)) >= 4.5, `${hex} ${name}+gloss: ${contrast(white, mix(c, white, G.mast.gloss)).toFixed(2)}`)
@@ -340,7 +340,7 @@ test('LIQUID GLASS: chữ TRẮNG trên băng/header gradient đạt ≥ 4.5:1 �
 test('LIQUID GLASS: chữ trên tấm kính đạt ≥ 4.5:1 so với nền XẤU NHẤT (wash tối nhất + orb + kính α); ink/ink2/muted/brandDark/Deep', () => {
   const C = THEME.color
   for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', '#2563EB', '#E11D48']) {
-    const B = makeBrand(hex)
+    const B = makeBrand(hex, true)
     const bg = glassWorstBg(B)
     for (const [k, c] of Object.entries({ ink: C.ink, ink2: C.ink2, muted: C.muted, brandDark: B.brandDark, posText: C.posText, negText: C.negText, warn: C.warn, info: C.info, neg: C.neg })) {
       assert.ok(contrast(c as number[], bg) >= 4.5, `${hex} ${k} trên kính: ${contrast(c as number[], bg).toFixed(2)}`)
@@ -368,7 +368,7 @@ test('LIQUID GLASS: kích thước file — báo cáo nhiều trang < 1.5MB, tà
 })
 
 test('brand CLB tới MỌI PDF: màu brand xuất hiện trong luồng PDF của từng tài liệu; emerald không lẫn tím mặc định', () => {
-  const stroke = (hex: string | null) => pdfRgb(makeBrand(hex).brand) + ' rg'
+  const stroke = (hex: string | null) => pdfRgb(makeBrand(hex, true).brand) + ' rg'
   const emerald = buildAll('#0F766E').docs
   const def = buildAll(null).docs
   emerald.forEach((d, i) => {
@@ -383,7 +383,7 @@ test('mã tài liệu PF-{LOẠI}-yyMMdd-HHmm + footer "CLB · Tên TL · Mã TL
   const q = quy([bill({})])
   const foot = q.texts.find(x => /PF-BCQ-\d{6}-\d{4}$/.test(x) && x.includes(' · '))
   assert.ok(foot, 'thiếu footer có mã TL: ' + q.texts.filter(x => x.includes('PF-')).join('|'))
-  assert.match(foot!, /^CLB Test · BÁO CÁO TÀI CHÍNH · PF-BCQ-\d{6}-\d{4}$/)
+  assert.match(foot!, /^C · BÁO CÁO TÀI CHÍNH · PF-BCQ-\d{6}-\d{4}$/)
   assert.ok(q.texts.some(x => /^Trang 1 \/ \d+$/.test(x)))
   assert.ok(q.texts.some(x => /^Mã TL: PF-BCQ-\d{6}-\d{4}$/.test(x)))
   const k = standings({ rows: [{ name: 'A', pts: 1 }] }).texts
@@ -463,7 +463,7 @@ test('biên nhận billing: không lặp "Gói dịch vụ Gói Pro", ngày trư
   const s = makeSpy()
   const logo = { dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', w: 1, h: 1, onDark: true }
   const doc = buildBillingReceiptPDF({
-    jsPDF: s.SpyPDF, fonts, branding: { ...branding, logo, primaryColor: '#0F766E' },
+    jsPDF: s.SpyPDF, fonts, branding: { ...branding, logo, primaryColor: '#0F766E', allowCustomColor: true },
     receipt: { clubName: 'CLB X', invoiceNumber: 'INV-1', orderCode: 'O-1', planLabel: 'Gói Pro', cycleLabel: '12 tháng', amount: 2990000, discount: 300000, paidAtText: '15/03/2026 17:00:00', gateway: 'VNPay', printedDateText: '02/10/2026', printedAtText: '10:00:00 02/10/2026' },
   })
   const all = s.texts.join('\n')
@@ -506,7 +506,7 @@ test('lề/CONTENT_W một nơi: THEME.page → 186mm', () => {
 
 test('masthead = băng KÍNH gradient glassStart → glassEnd (dải rect + bóng loáng): stream có màu đầu gradient + brandDark (chữ) + brand (nhấn); mọi tài liệu', () => {
   for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) {
-    const m = makeBrand(hex)
+    const m = makeBrand(hex, true)
     assert.ok(contrast(m.brandMid, THEME.color.white) >= 4.5, `${hex}: chữ trắng trên brandMid`)
     for (const [i, d] of buildAll(hex).docs.entries()) {
       const out = String(d.output())
@@ -523,5 +523,19 @@ test('nguồn không hard-code: pdf-report-core/pdf-kit không còn mảng màu 
     assert.ok(!/\[\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\]/.test(src), `${f} còn mảng màu cứng`)
     assert.ok(!/#[0-9a-fA-F]{6}\b/.test(src), `${f} còn hex cứng`)
     for (const m of src.matchAll(/font\('(?:bold|normal)',\s*([0-9.]+)/g)) assert.ok(Number(m[1]) >= MIN_PT, `${f}: font cỡ ${m[1]} < ${MIN_PT}`)
+  }
+})
+
+test('ĐỒNG BỘ: 2 CLB khác màu brand → MỌI loại PDF dùng CÙNG tập màu fill/stroke/text (chỉ khác chữ/logo)', () => {
+  const colorSet = (d: unknown) => {
+    const out = String(d)
+    const set = new Set<string>()
+    for (const m of out.matchAll(/(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (rg|RG)\b/g)) set.add(`${m[1]} ${m[2]} ${m[3]} ${m[4]}`)
+    return [...set].sort()
+  }
+  const base = buildAll(null, null, false).docs
+  for (const hex of ['#0F766E', '#F59E0B', '#DB2777']) {
+    const other = buildAll(hex, null, false).docs
+    other.forEach((d, i) => assert.deepEqual(colorSet(d), colorSet(base[i]), `tài liệu #${i} màu ${hex} lệch tập màu so với mặc định`))
   }
 })

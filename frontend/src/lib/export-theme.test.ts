@@ -2,7 +2,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  THEME, MIN_PT, DEFAULT_BRAND_HEX, CONTENT_W_PORTRAIT, CONTENT_W_LANDSCAPE, contrast, makeBrand, fmt, hexToRgb, toHex, css, rgba, glassWorstBg,
+  THEME, MIN_PT, DEFAULT_BRAND_HEX, EXPORT_USE_CLUB_COLOR, CONTENT_W_PORTRAIT, CONTENT_W_LANDSCAPE, contrast, makeBrand, fmt, hexToRgb, toHex, css, rgba, glassWorstBg,
 } from './export-theme.js'
 
 const C = THEME.color as Record<string, number[]>
@@ -56,7 +56,7 @@ test('makeBrand: với MỌI màu CLB (kể cả rất nhạt) chữ TRẮNG tr�
   // + quét thô không gian màu để bắt trường hợp lạ
   for (let r = 0; r < 256; r += 51) for (let g = 0; g < 256; g += 51) for (let b = 0; b < 256; b += 51) samples.push(toHex([r, g, b]))
   for (const hex of samples) {
-    const m = makeBrand(hex)
+    const m = makeBrand(hex, true)
     assert.ok(contrast(C.white, m.brandInk) >= 4.5, `${hex}: trắng/brandInk = ${contrast(C.white, m.brandInk).toFixed(2)}`)
     assert.ok(contrast(C.white, m.brandMid) >= 4.5, `${hex}: trắng/brandMid = ${contrast(C.white, m.brandMid).toFixed(2)}`)
     assert.deepEqual(m.brandDark, m.brandInk)
@@ -68,7 +68,7 @@ test('makeBrand: với MỌI màu CLB (kể cả rất nhạt) chữ TRẮNG tr�
 })
 
 test('makeBrand: brandInk của màu sáng được TỐI dần (amber → tối hơn amber)', () => {
-  const m = makeBrand('#F59E0B')
+  const m = makeBrand('#F59E0B', true)
   assert.ok(contrast(m.brand, C.white) < 4.5, 'brand thô amber không đạt (đúng như dự kiến)')
   assert.ok(contrast(m.brandInk, C.white) >= 4.5)
 })
@@ -124,10 +124,19 @@ test('makeBrand: wash 3 nút nhạt (mặc định #F7F9FF → trắng → #FAF9
   assert.equal(toHex(d.glassStart), '#4F46E5') // = brandDark
   assert.ok(contrast(d.glassEnd, C.white) >= 4.5)
   for (const hex of ['#0F766E', '#F59E0B', '#FFFFFF', '#000000', '#FACC15']) {
-    const m = makeBrand(hex)
+    const m = makeBrand(hex, true)
     assert.ok(contrast(m.brandDark, glassWorstBg(m, THEME.glass.tile)) >= 4.4, hex)
     assert.ok(contrast(C.white, m.washB) === 1)
   }
   // muted (#5A6678) trên nền xấu nhất sau kính ≥ 4.5 với các màu thương hiệu thực tế
-  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) assert.ok(contrast(C.muted, glassWorstBg(makeBrand(hex))) >= 4.5, hex)
+  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) assert.ok(contrast(C.muted, glassWorstBg(makeBrand(hex, true))) >= 4.5, hex)
+})
+
+test('ĐỒNG BỘ: makeBrand(bất kỳ màu CLB) mặc định trả CÙNG bộ màu app; chỉ allowCustom=true mới đổi', () => {
+  const d = JSON.stringify(makeBrand(null))
+  for (const hex of ['#0F766E', '#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#6366F1', 'xyz', '', undefined]) {
+    assert.equal(JSON.stringify(makeBrand(hex as string)), d, `makeBrand(${hex}) phải = mặc định`)
+  }
+  assert.equal(EXPORT_USE_CLUB_COLOR, false)
+  assert.notEqual(JSON.stringify(makeBrand('#0F766E', true)), d, 'allowCustom=true vẫn cho màu CLB (giữ lưới test)')
 })

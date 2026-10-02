@@ -28,6 +28,8 @@ import { buildExecModel, deltaText, healthTone, parseAiBlocks, toneOfValue, type
 export interface ExecPdfOpts {
   logoDataUri?: string | null;
   brandColor?: string | null;
+  /** Chỉ test/bật lại có chủ đích (xem ReportHtmlOpts.allowCustomColor). */
+  allowCustomColor?: boolean;
   now?: Date;
 }
 
@@ -44,7 +46,7 @@ export function buildExecutiveReportPdf(
   const fonts = loadFontsBase64();
   if (!fonts) return null;
 
-  const B = makeBrand(opts.brandColor);
+  const B = makeBrand(opts.brandColor, opts.allowCustomColor);
   const m = buildExecModel(report, aiText, opts.now ?? new Date(), B.brand);
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -74,6 +76,13 @@ export function buildExecutiveReportPdf(
     doc.circle(cx, cy, r, 'F');
   };
   const up = (s: string) => s.toUpperCase();
+  /** Cắt chữ vừa bề rộng maxW (mm) bằng "…" — tên CLB dài co/cắt GIỐNG NHAU ở mọi CLB, không đè chip/gauge. */
+  const clipTo = (s: string, maxW: number): string => {
+    if (doc.getTextWidth(s) <= maxW) return s;
+    let t = s;
+    while (t.length > 1 && doc.getTextWidth(t + '…') > maxW) t = t.slice(0, -1);
+    return t.trimEnd() + '…';
+  };
 
   // ── LIQUID GLASS: độ trong suốt bằng GState (cùng alpha token với bản Chrome) ──
   const GS: any = (doc as any).GState;
@@ -266,12 +275,14 @@ export function buildExecutiveReportPdf(
   alpha(0.22, () => doc.circle(R - 10, y + heroH + 8, 46, 'S'));
   doc.restoreGraphicsState();
   drawLogo(L + SPACE.s5, y + SPACE.s5, 18);
+  const tag = 'EXECUTIVE REPORT';
+  font(TYPE.label, true, WHITE);
+  const tagW = doc.getTextWidth(tag) + 8;
   font(TYPE.h2, true, WHITE);
-  doc.text(m.brandLabel, L + SPACE.s5 + 18 + SPACE.s3, y + SPACE.s5 + 10.4);
+  doc.text(clipTo(m.brandLabel, R - SPACE.s5 - tagW - SPACE.s3 - (L + SPACE.s5 + 18 + SPACE.s3)), L + SPACE.s5 + 18 + SPACE.s3, y + SPACE.s5 + 10.4);
   {
-    const tag = 'EXECUTIVE REPORT';
     font(TYPE.label, true, WHITE);
-    const tw = doc.getTextWidth(tag) + 8;
+    const tw = tagW;
     bandChip(R - SPACE.s5 - tw, y + SPACE.s5 + 5.2, tw, 5.6);
     doc.text(tag, R - SPACE.s5 - tw / 2, y + SPACE.s5 + 9, { align: 'center' });
   }
@@ -282,7 +293,8 @@ export function buildExecutiveReportPdf(
   font(TYPE.h2, false, WHITE);
   doc.text(`Kỳ báo cáo: ${m.periodName}`, L + SPACE.s5, periodY);
   font(TYPE.cover, true, WHITE);
-  const titleLines: string[] = doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - SPACE.s5 * 2);
+  let titleLines: string[] = doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - SPACE.s5 * 2);
+  if (titleLines.length > 2) titleLines = [titleLines[0], clipTo(titleLines.slice(1).join(' '), CONTENT_W - SPACE.s5 * 2)]; // tối đa 2 dòng (như bản Chrome)
   const titleY = periodY - 12 - (titleLines.length - 1) * 11;
   doc.text(titleLines, L + SPACE.s5, titleY);
   font(TYPE.label, true, WHITE);
@@ -333,7 +345,7 @@ export function buildExecutiveReportPdf(
   drawLogo(L + SPACE.s3, y + 7, 12);
   const mtx = L + SPACE.s3 + 12 + SPACE.s3;
   font(TYPE.label, true, WHITE);
-  doc.text(m.brandLabel, mtx, y + 8.6);
+  doc.text(clipTo(m.brandLabel, R - SPACE.s3 + 1 - 54 - 4 - mtx), mtx, y + 8.6);
   font(TYPE.h1, true, WHITE);
   doc.text('Báo cáo điều hành', mtx, y + 14.6);
   font(TYPE.body, false, WHITE);
@@ -984,8 +996,9 @@ export function buildExecutiveReportPdf(
     const fy = PAGE.h - PAGE.bottom + SPACE.s1;
     hline(L, R, fy);
     font(TYPE.caption, false, COLORS.muted);
-    doc.text(m.footerLeft, L, fy + 4);
-    doc.text(`Trang ${p} / ${pageCount}`, R, fy + 4, { align: 'right' });
+    const pageTxt = `Trang ${p} / ${pageCount}`;
+    doc.text(clipTo(m.footerLeft, R - L - doc.getTextWidth(pageTxt) - 4), L, fy + 4); // tên CLB dài → cắt "…", không đè "Trang x / y"
+    doc.text(pageTxt, R, fy + 4, { align: 'right' });
   }
 
   return Buffer.from(doc.output('arraybuffer'));

@@ -21,6 +21,7 @@ import {
   footerLeftText,
   glassTint,
   makeBrand,
+  EXPORT_USE_CLUB_COLOR,
   makeGlassPalette,
   orbAlphaFor,
   over,
@@ -98,7 +99,7 @@ describe('export-tokens', () => {
     }
     expect(contrast(COLORS.gray, '#FFFFFF')).toBeGreaterThanOrEqual(AA);
     for (const c of ['#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#22D3EE']) {
-      const b = makeBrand(c);
+      const b = makeBrand(c, true);
       expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
       expect(contrast(b.brandInk, b.brandBorder)).toBeGreaterThanOrEqual(3);
     }
@@ -156,7 +157,7 @@ describe('export-tokens', () => {
 
     it('makeBrand: màu CLB sáng/tối đều cho chữ trắng trên brandDeep và brandInk trên brandSoft ≥ 4.5', () => {
       for (const c of ['#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#6D5DFB', '#EEEEEE', '#22D3EE']) {
-        const b = makeBrand(c);
+        const b = makeBrand(c, true);
         expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
         expect(contrast(b.brandInk, '#FFFFFF')).toBeGreaterThanOrEqual(AA);
         expect(contrast(b.brandInk, b.brandSoft)).toBeGreaterThanOrEqual(AA);
@@ -250,11 +251,11 @@ describe('executive-report-model', () => {
 });
 
 describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
-  const html = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { brandColor: '#F59E0B', now: new Date('2026-10-02T03:15:00Z') });
+  const html = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { brandColor: '#F59E0B', allowCustomColor: true, now: new Date('2026-10-02T03:15:00Z') });
   const css = html.replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,');
 
   it('LIQUID GLASS: băng bìa/masthead gradient + chip kính, header bảng kính chữ trắng, hộp AI tấm nhấn, thẻ tông xanh/đỏ', () => {
-    const b = makeBrand('#F59E0B');
+    const b = makeBrand('#F59E0B', true);
     expect(css).toMatch(/\.cv-hero\{[^}]*background:var\(--mast-bg\);color:#fff/);
     expect(css).toMatch(/\.mast\{[^}]*background:var\(--mast-bg\);color:#fff/);
     expect(css).toMatch(/thead th\{background:linear-gradient\([^}]*var\(--mast-mid\);color:#fff/);
@@ -285,7 +286,7 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
   });
 
   it('màu hex trong HTML chỉ thuộc token (COLORS) hoặc bộ màu thương hiệu', () => {
-    const b = makeBrand('#F59E0B');
+    const b = makeBrand('#F59E0B', true);
     const allowed = new Set<string>(
       [...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF', ...Object.values(washColors(b)), ...Object.values(makeGlassPalette(b)).filter((v) => v.startsWith('#'))].map((c) => c.toUpperCase()),
     );
@@ -301,14 +302,14 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
   });
 
   it('nền đặc bìa dùng brandDeep (tự tối từ màu CLB sáng) và chữ trắng đạt AA', () => {
-    const b = makeBrand('#F59E0B');
+    const b = makeBrand('#F59E0B', true);
     expect(css).toContain(`--brandDeep:${b.brandDeep}`);
     expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
   });
 
   it('LIQUID GLASS: chữ đạt AA trên nền xấu nhất sau lớp kính, chữ trắng trên băng + chip ≥ 4.5', () => {
     for (const c of [null, '#F59E0B', '#0F766E', '#6D5DFB', '#FACC15']) {
-      const b = makeBrand(c);
+      const b = makeBrand(c, true);
       const G = makeGlassPalette(b);
       const W = washColors(b);
       for (const end of [G.mastFrom, G.mastMid, G.mastTo]) {
@@ -367,10 +368,39 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
 describe('fallback jsPDF', () => {
   it('sinh PDF hợp lệ (có/không thành viên, màu CLB sáng)', () => {
     for (const [n, color] of [[0, null], [40, '#F59E0B'], [3, '#0F766E']] as const) {
-      const buf = buildExecutiveReportPdf(report('CLB Đống Đa', n), 'Tóm tắt AI', { brandColor: color, now: new Date('2026-10-02T03:15:00Z') });
+      const buf = buildExecutiveReportPdf(report('CLB Đống Đa', n), 'Tóm tắt AI', { brandColor: color, allowCustomColor: true, now: new Date('2026-10-02T03:15:00Z') });
       expect(buf).not.toBeNull();
       expect(buf!.subarray(0, 5).toString()).toBe('%PDF-');
       expect(buf!.length).toBeGreaterThan(5000);
     }
+  });
+});
+
+describe('ĐỒNG BỘ giao diện giữa các CLB (EXPORT_USE_CLUB_COLOR = false)', () => {
+  const NOW = new Date('2026-10-02T03:15:00Z');
+  const hexSet = (s: string) => [...new Set([...s.replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,').matchAll(/#[0-9a-fA-F]{6}\b/g)].map((x) => x[0].toUpperCase()))].sort();
+
+  it('cờ tập trung mặc định TẮT; makeBrand(bất kỳ màu) = bộ màu app; allowCustom=true mới đổi', () => {
+    expect(EXPORT_USE_CLUB_COLOR).toBe(false);
+    const d = makeBrand(null);
+    for (const c of ['#F59E0B', '#0F766E', '#FACC15', '#FFFFFF', '#000000', '#6366F1', 'red', '']) expect(makeBrand(c)).toEqual(d);
+    expect(makeBrand('#0F766E', true)).not.toEqual(d);
+  });
+
+  it('HTML báo cáo điều hành: 2 CLB khác màu (kể cả logo ảnh / tên dài có dấu) → CÙNG tập màu hex', () => {
+    const logo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    const a = buildReportHtml(report('CLB B32', 5), 'Tóm tắt', null, { brandColor: null, now: NOW });
+    const b = buildReportHtml(report('CLB Pickleball Thể Thao Sức Khoẻ Cộng Đồng Quận Bình Thạnh', 5), 'Tóm tắt', logo, { brandColor: '#0F766E', now: NOW });
+    const c = buildReportHtml(report('Đội Ánh Dương', 5), 'Tóm tắt', null, { brandColor: '#F59E0B', now: NOW });
+    expect(hexSet(b)).toEqual(hexSet(a));
+    expect(hexSet(c)).toEqual(hexSet(a));
+  });
+
+  it('PDF fallback jsPDF: 2 CLB khác màu → luồng màu (rg/RG) giống nhau', () => {
+    const colors = (buf: Buffer | null) => [...new Set([...buf!.toString('latin1').matchAll(/(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (rg|RG)\b/g)].map((m) => m[0]))].sort();
+    const a = buildExecutiveReportPdf(report('CLB B32', 5), 'Tóm tắt', { brandColor: null, now: NOW });
+    const b = buildExecutiveReportPdf(report('CLB B32', 5), 'Tóm tắt', { brandColor: '#0F766E', now: NOW });
+    expect(colors(b)).toEqual(colors(a));
+    expect(colors(a).length).toBeGreaterThan(5);
   });
 });

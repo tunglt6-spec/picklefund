@@ -45,6 +45,12 @@ export const COLORS = {
 } as const;
 
 export const DEFAULT_BRAND = '#6D5DFB';
+/**
+ * CÔNG TẮC TẬP TRUNG: màu thương hiệu riêng của CLB có tô PDF điều hành / Command Center hay không.
+ * false (CHUẨN) = mọi CLB dùng DUY NHẤT bộ màu app (tím #6D5DFB / #4F46E5); chỉ TÊN + LOGO (hoặc monogram) khác nhau.
+ * Cùng giá trị/ý nghĩa với EXPORT_USE_CLUB_COLOR bên FE (export-theme.js). Test lưới màu dùng `makeBrand(hex, true)`.
+ */
+export const EXPORT_USE_CLUB_COLOR = false;
 export const DEFAULT_BRAND_INK = '#4F46E5';
 export const DEFAULT_BRAND_SOFT = '#EEF2FF';
 /** Viền indigo nhạt quanh thẻ/khối nhấn brandSoft. */
@@ -208,8 +214,8 @@ export interface Brand {
 }
 
 /** Sinh bộ màu thương hiệu AN TOÀN tương phản từ màu CLB (rỗng/sai định dạng → mặc định). */
-export function makeBrand(primary?: string | null): Brand {
-  const p = typeof primary === 'string' && HEX_RE.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_BRAND;
+export function makeBrand(primary?: string | null, allowCustom: boolean = EXPORT_USE_CLUB_COLOR): Brand {
+  const p = allowCustom && typeof primary === 'string' && HEX_RE.test(primary.trim()) ? primary.trim().toUpperCase() : DEFAULT_BRAND;
   const isDefault = p === DEFAULT_BRAND;
   const brandSoft = isDefault ? DEFAULT_BRAND_SOFT : mix(p, '#FFFFFF', 0.92);
   const brandDeep = isDefault ? DEFAULT_BRAND_DARK : ensureContrast(p, '#FFFFFF', 4.5);
@@ -376,8 +382,8 @@ export function buildFooterTemplate(
   const fam = fontRegularBase64 ? "'BVPF','Be Vietnam Pro',Arial,sans-serif" : "'Be Vietnam Pro',Arial,sans-serif";
   return `${face}<div style="box-sizing:border-box;width:100%;padding:${mm(SPACE.s1)} ${mm(PAGE.right)} 0 ${mm(PAGE.left)};margin:0;-webkit-print-color-adjust:exact;">
     <div style="box-sizing:border-box;width:100%;border-top:${mm(PAGE.hair)} solid ${COLORS.hairline};padding-top:${mm(1.5)};display:flex;justify-content:space-between;align-items:center;font-family:${fam};font-size:${pt(TYPE.caption)};line-height:1.3;color:${COLORS.muted};">
-      <span>${escHtml(leftText)}</span>
-      <span>Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
+      <span style="min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(leftText)}</span>
+      <span style="flex:none;white-space:nowrap;margin-left:${mm(3)};">Trang <span class="pageNumber"></span> / <span class="totalPages"></span></span>
     </div>
   </div>`;
 }

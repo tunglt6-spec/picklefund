@@ -63,6 +63,8 @@ export interface QuyReportBranding {
   logo?: PdfLogo | null
   /** Màu chủ đạo CLB (#RRGGBB) — thiếu/sai → tím mặc định #6D5DFB. makeBrand tự tối dần để chữ đạt ≥ 4.5:1. */
   primaryColor?: string | null
+  /** Chỉ test/bật lại có chủ đích: true → dùng primaryColor; mặc định (undefined) theo EXPORT_USE_CLUB_COLOR=false → bộ màu app chung. */
+  allowCustomColor?: boolean
 }
 
 export function buildQuyReportPDF(opts: {

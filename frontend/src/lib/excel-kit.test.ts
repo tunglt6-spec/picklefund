@@ -69,13 +69,13 @@ test('print setup: A4, fitToWidth=1/fitToHeight=0, landscape theo độ rộng, 
   assert.match(x('xl/workbook.xml'), /<definedName name="_xlnm\.Print_Titles" localSheetId="0">'Sổ thử'!\$6:\$6<\/definedName>/)
 })
 
-test('gridlines ẩn, tabColor = brand, freeze đến hết header, autofilter chỉ ở header (>= 8 hàng, >= 3 cột)', async () => {
+test('gridlines ẩn, tabColor = brand app (màu CLB bị bỏ qua), freeze đến hết header, autofilter chỉ ở header (>= 8 hàng, >= 3 cột)', async () => {
   setExportBranding({ primaryColor: '#0F766E' })
   try {
     const x = unzipText(await fixture())
     const xml = x('xl/worksheets/sheet1.xml')
     assert.match(xml, /<sheetView showGridLines="0"[^>]*>/)
-    assert.match(xml, /<tabColor rgb="FF0F766E"\/>/)
+    assert.match(xml, /<tabColor rgb="FF6D5DFB"\/>/) // primaryColor CLB (#0F766E) KHÔNG tô Excel: EXPORT_USE_CLUB_COLOR=false
     assert.match(xml, /<pane ySplit="6" topLeftCell="A7" activePane="bottomLeft" state="frozen"\/>/)
     assert.match(xml, /<autoFilter ref="A6:D14"\/>/) // header hàng 6 + 8 hàng thân; KHÔNG gồm hàng tổng
   } finally { setExportBranding({ primaryColor: null }) }
@@ -174,15 +174,15 @@ test('makeBrand: mọi brand (cả vàng/amber sáng) → chữ ink trên soft >
   assert.deepEqual(makeBrand('#6D5DFB'), def)
   assert.deepEqual(makeBrand('xyz'), def)
   for (const hex of ['#F59E0B', '#0F766E', '#FACC15', '#112233', '#FFFFFF', '#10B981', '#6D5DFB']) {
-    const b = makeBrand(hex)
+    const b = makeBrand(hex, true)
     assert.ok(contrastRatio(b.ink, b.soft) >= 4.5, `${hex}: ink/soft ${contrastRatio(b.ink, b.soft)}`)
     assert.ok(contrastRatio('FFFFFF', b.ink) >= 4.5, `${hex}: trắng/băng ${contrastRatio('FFFFFF', b.ink)}`)
     assert.ok(contrastRatio('FFFFFF', b.head) >= 4.5, `${hex}: trắng/header ${contrastRatio('FFFFFF', b.head)}`)
     // Liquid Glass: wash/glass/soft đều rất nhạt, chữ ink >= 4.5 trên cả ba
     for (const bg of [b.wash, b.glass, b.soft]) assert.ok(contrastRatio(b.ink, bg) >= 4.5, `${hex}: ink/${bg}`)
   }
-  assert.equal(makeBrand('#F59E0B').brand, 'F59E0B') // brand giữ nguyên (tab/viền); chỉ header tự tối
-  assert.notEqual(makeBrand('#F59E0B').head, 'F59E0B')
+  assert.equal(makeBrand('#F59E0B', true).brand, 'F59E0B') // brand giữ nguyên (tab/viền); chỉ header tự tối
+  assert.notEqual(makeBrand('#F59E0B', true).head, 'F59E0B')
   assert.ok(contrastRatio(XL_COLOR.neg, 'FFFFFF') >= 4.5 && contrastRatio(XL_COLOR.pos, 'FFFFFF') >= 4.5 && contrastRatio(XL_COLOR.warn, 'FFFFFF') >= 4.5)
 })
 
@@ -430,7 +430,7 @@ test('tab color: thu = xanh, chi = đỏ, còn lại = brand; số tiền tô th
   assert.equal(tabColorFor('income', 'ABCDEF'), XL_VIVID.pos)
 })
 
-test('brand amber/vàng: header + băng tiêu đề đủ tương phản với chữ trắng', async () => {
+test('CLB đặt màu amber/vàng: Excel vẫn ra bộ màu app chung (header tím), chữ trắng đủ tương phản', async () => {
   setExportBranding({ primaryColor: '#F59E0B' })
   try {
     const bytes = await fixture()
@@ -438,7 +438,7 @@ test('brand amber/vàng: header + băng tiêu đề đủ tương phản với c
     assert.equal(head.font, 'FFFFFF')
     for (const c of [...head.gradient!, ...band.gradient!]) assert.ok(contrastRatio('FFFFFF', c) >= 4.5, c) // CẢ HAI đầu gradient
     assert.notEqual(head.gradient![0], 'F59E0B')
-    assert.match(unzipText(bytes)('xl/worksheets/sheet1.xml'), /<tabColor rgb="FFF59E0B"\/>/) // tab giữ đúng màu CLB
+    assert.match(unzipText(bytes)('xl/worksheets/sheet1.xml'), /<tabColor rgb="FF6D5DFB"\/>/) // tab = brand app, KHÔNG phải amber CLB
   } finally { setExportBranding({ primaryColor: null }) }
 })
 
@@ -449,4 +449,16 @@ test('moneyTone: dòng % thay đổi — Chi giảm xanh, Thu giảm đỏ', asy
   assert.equal(moneyTone({ ...row('Chi'), value: 5 }), 'neg')
   assert.equal(moneyTone({ ...row('Thu'), value: -16 }), 'neg')
   assert.equal(moneyTone({ ...row('Thu'), value: 8 }), 'pos')
+})
+
+test('ĐỒNG BỘ: makeBrand Excel bỏ qua màu CLB; styles.xml của 2 CLB khác màu GIỐNG HỆT', async () => {
+  assert.deepEqual(makeBrand('#0F766E'), makeBrand(null))
+  assert.deepEqual(makeBrand('#F59E0B'), makeBrand(null))
+  const styles = async (color: string | null) => {
+    setExportBranding({ primaryColor: color })
+    try { return unzipText(await fixture())('xl/styles.xml') } finally { setExportBranding({ primaryColor: null }) }
+  }
+  const a = await styles(null)
+  assert.equal(await styles('#0F766E'), a)
+  assert.equal(await styles('#F59E0B'), a)
 })

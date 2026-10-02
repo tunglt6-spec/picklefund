@@ -122,7 +122,7 @@ export function createKit(doc, branding = {}) {
   const T = THEME
   const C = T.color
   const G = T.glass
-  const B = makeBrand(branding.primaryColor)
+  const B = makeBrand(branding.primaryColor, branding.allowCustomColor) // allowCustomColor chỉ để test/bật lại có chủ đích; mặc định theo EXPORT_USE_CLUB_COLOR (false)
   const W = doc.internal.pageSize.getWidth()
   const H = doc.internal.pageSize.getHeight()
   const M = T.page.margin
@@ -612,11 +612,8 @@ export function drawFooterAll(kit, { club, title, docCode }) {
   const { doc, T, C, M, W, H, CW } = kit
   const total = doc.getNumberOfPages()
   const branding = kit.branding || {}
-  // Tiền tố: dòng footer CLB tự đặt (địa chỉ/SĐT) + tên CLB nếu footer chưa chứa tên đó. Không lặp "A · A".
-  let prefix = String(branding.footer || '').trim()
-  const nm = String(club || branding.name || '').trim()
-  if (!prefix) prefix = nm
-  else if (nm && !prefix.includes(nm)) prefix = `${nm} · ${prefix}`
+  // Footer CHUẨN đồng bộ mọi CLB: "Tên CLB · Tên TL · Mã TL" (KHÔNG dùng dòng footer tuỳ biến `branding.footer` — làm lệch bố cục).
+  const prefix = String(club || branding.name || '').trim() || 'PickleFund'
   const fixed = ` · ${title} · ${docCode}`
   for (let p = 1; p <= total; p++) {
     doc.setPage(p)

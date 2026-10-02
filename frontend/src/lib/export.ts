@@ -3,7 +3,7 @@
 //
 // QUY ƯỚC LỖI: hàm export trả Promise và THROW khi thất bại (không toast trong lib) → call site
 // await + try/catch (xem hooks/useExportRunner). Người dùng bấm Hủy hộp thoại lưu = không lỗi.
-import { THEME, CONTENT_W_PORTRAIT, fmt as themeFmt, makeBrand, css, rgba, mix } from './export-theme.js'
+import { THEME, CONTENT_W_PORTRAIT, fmt as themeFmt, makeBrand, css, rgba, mix, EXPORT_USE_CLUB_COLOR, DEFAULT_BRAND_HEX } from './export-theme.js'
 
 /* ─── EPIC10C: branding cho PDF/export ───
  * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
@@ -45,22 +45,19 @@ export function setExportBranding(b: {
   exportBranding = next
 }
 const brandName = () => exportBranding.displayName
-const brandFooter = () => exportBranding.pdfFooter
 /** Màu chủ đạo cho header export (theo CLB, mặc định tím PickleFund). */
 const brandColor = () => exportBranding.primaryColor
 
-/* Logo PickleFund MẶC ĐỊNH cho báo cáo: con-quay TRẮNG crop sát, nền TRONG SUỐT (KHÔNG nền
-   trắng) → đặt thẳng trên header màu brand, hợp cả ảnh lẫn PDF. CLB chưa đặt logo riêng thì
-   mọi export dùng logo chung này. */
-const DEFAULT_LOGO_URL = '/logo-pf-report-white.png'
+/* LOGO: CLB có logo → vòng tròn kính trắng; CHƯA có → monogram (chữ cái đầu) cùng vòng tròn.
+   (Không còn logo PickleFund mặc định: khung/vị trí/kích thước logo đồng bộ cho mọi CLB.) */
 
 /* ── Logo CLB cho PDF vector: tải 1 lần / URL → dataURL + kích thước gốc.
    Best-effort: lỗi mạng/CORS/ảnh hỏng → trả null, PDF vẫn xuất bình thường không logo. ── */
 type BrandLogo = { dataUrl: string; w: number; h: number; onDark?: boolean }
 let brandLogoCache: { url: string; logo: BrandLogo | null } | null = null
 async function loadBrandLogo(): Promise<BrandLogo | null> {
-  // Không có logo CLB → dùng logo PickleFund mặc định (áp cho tất cả CLB).
-  const url = exportBranding.logoUrl || DEFAULT_LOGO_URL
+  // Không có logo CLB → null → mọi builder vẽ MONOGRAM (chữ cái đầu) trong CÙNG khung vòng tròn trắng.
+  const url = exportBranding.logoUrl
   if (!url) return null
   if (brandLogoCache && brandLogoCache.url === url) return brandLogoCache.logo
   try {
@@ -80,16 +77,16 @@ async function loadBrandLogo(): Promise<BrandLogo | null> {
       img.onerror = reject
       img.src = dataUrl
     })
-    // Logo mặc định là con-quay TRẮNG (nền trong suốt) → onDark: vẽ thẳng trên băng brandDark của masthead.
-    brandLogoCache = { url, logo: { dataUrl, w: dims.w, h: dims.h, onDark: url === DEFAULT_LOGO_URL } }
+    brandLogoCache = { url, logo: { dataUrl, w: dims.w, h: dims.h, onDark: false } }
   } catch {
     brandLogoCache = { url, logo: null }
   }
   return brandLogoCache.logo
 }
 
-/** Branding truyền vào MỌI builder PDF vector: tên/footer/logo + màu brand CLB (mặc định tím PickleFund). */
-const pdfBranding = (logo: BrandLogo | null) => ({ name: brandName(), footer: brandFooter(), logo, primaryColor: brandColor() })
+/** Branding truyền vào MỌI builder PDF vector: tên/logo CLB (footer = tên CLB). Màu: makeBrand BỎ QUA primaryColor
+ *  (EXPORT_USE_CLUB_COLOR=false) → bộ màu app chung cho mọi CLB/vai trò. */
+const pdfBranding = (logo: BrandLogo | null) => ({ name: brandName(), footer: brandName(), logo, primaryColor: brandColor() })
 
 /* ─── helpers ─── */
 /** Tiền VND deterministic (không phụ thuộc ICU): 1234567 → "1.234.567 đ", âm → "-5.000 đ". Dùng chung THEME/fmt. */
@@ -331,7 +328,7 @@ function reportMastheadHtml(o: { title: string; subtitle?: string; meta?: string
     </div>`
 }
 function reportFooterHtml(title: string, docCode: string) {
-  return `<div class="foot"><span>${escHtml(brandFooter())} · ${escHtml(title)} · ${escHtml(docCode)}</span><span>Trang 1 / 1</span></div>`
+  return `<div class="foot"><span>${escHtml(brandName())} · ${escHtml(title)} · ${escHtml(docCode)}</span><span>Trang 1 / 1</span></div>`
 }
 
 async function renderReportPng(sectionsHtml: string, fileBase: string) {
@@ -390,7 +387,17 @@ async function captureReportCanvas(
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
     return await html2canvas(wrap, {
       scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
-      onclone: (doc) => { doc.documentElement.setAttribute('data-theme', 'light'); doc.documentElement.style.colorScheme = 'light' },
+      onclone: (doc) => {
+        doc.documentElement.setAttribute('data-theme', 'light')
+        doc.documentElement.style.colorScheme = 'light'
+        // Đồng bộ giao diện: phần DOM chụp KHÔNG mang màu thương hiệu riêng của CLB (useApplyBranding đặt --color-primary theo CLB).
+        if (!EXPORT_USE_CLUB_COLOR) {
+          const s = doc.documentElement.style
+          s.setProperty('--color-primary', DEFAULT_BRAND_HEX)
+          s.setProperty('--color-primary-hover', '#5B4BE8')
+          s.setProperty('--color-secondary', '#06B6D4')
+        }
+      },
     })
   } finally {
     document.body.removeChild(wrap) // luôn dọn node off-screen kể cả khi html2canvas lỗi
@@ -636,7 +643,8 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     const sheetTone = sheet.tone !== undefined ? sheet.tone : kit.inferSheetTone(sheet.name, opts.docType)
     const eg = (c: number) => kit.edgeOf(c, maxCol)
     const blockRows: [string, (e?: import('./excel-kit.ts').Edge) => unknown][] = [
-      [club.toUpperCase(), st.club],
+      // Tên CLB quá dài → cắt "…" theo bề ngang bảng (cùng quy tắc mọi CLB, không tràn ra ngoài khối tiêu đề)
+      [(() => { const t = club.toUpperCase(); const n = Math.max(24, Math.floor(totalW * 0.95)); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t })(), st.club],
       [opts.docTitle ? `${opts.docTitle} — ${sheet.name}` : sheet.name, st.title],
       [sheet.subtitle ?? `${nRows} dòng dữ liệu`, st.scope],
       [`Xuất lúc ${exportedAt} · Mã TL: ${docCode}`, st.meta],

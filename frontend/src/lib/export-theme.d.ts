@@ -71,7 +71,8 @@ export function contrast(a: RGB, b: RGB): number
 export function mix(c: RGB, target: RGB, k: number): number[]
 export function toHex(c: RGB): string
 export function hexToRgb(hex: string | null | undefined): number[] | null
-export function makeBrand(hex?: string | null): BrandPalette
+export const EXPORT_USE_CLUB_COLOR: boolean
+export function makeBrand(hex?: string | null, allowCustom?: boolean): BrandPalette
 export function css(c: RGB): string
 export function rgba(c: RGB, a: number): string
 export function glassWorstBg(brand: BrandPalette, alpha?: number): number[]

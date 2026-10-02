@@ -125,8 +125,12 @@ export class ClubsController {
   }
 
   // ── EPIC10A: Branding trắng nhãn (clubId LẤY TỪ JWT — tenant-scoped) ──
+  /**
+   * ĐỌC branding: MỌI role đã đăng nhập trong CLB (kể cả MEMBER_VIEW/TREASURER…) — chỉ tên/logo/footer, không nhạy cảm.
+   * Cần để PDF/Excel/PNG của mọi tài khoản mang ĐÚNG tên + logo CLB (trước đây chỉ SUPER_ADMIN/CLUB_ADMIN → role khác
+   * 403 → tài liệu rơi về "PickleFund" không logo). GHI (PUT) vẫn chỉ SUPER_ADMIN/CLUB_ADMIN.
+   */
   @Get('me/branding')
-  @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   async myBranding(@CurrentUser() user: JwtUser) {
     if (!user.clubId)
       throw new ForbiddenException('Tài khoản chưa gắn với CLB nào.');

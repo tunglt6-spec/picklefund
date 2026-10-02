@@ -208,7 +208,7 @@ test('setExportBranding merge: field không truyền giữ nguyên', async () =>
   assert.equal(ws['A2'].v, 'S')
   const tab = async (run: () => Promise<void>) =>
     /<tabColor rgb="FF([0-9A-F]{6})"/.exec(strFromU8(unzipSync((await captureDownload(run)).bytes)['xl/worksheets/sheet1.xml']))?.[1]
-  assert.equal(await tab(() => exportGenericExcel('F', 'S', ['A'], [['x']])), '112233') // màu giữ nguyên
+  assert.equal(await tab(() => exportGenericExcel('F', 'S', ['A'], [['x']])), '6D5DFB') // màu CLB (#112233) bị bỏ qua: bộ màu app chung
   setExportBranding({ displayName: null, primaryColor: null }) // null → mặc định
   const b = readSheet((await captureDownload(() => exportGenericExcel('F', 'S', ['A'], [['x']]))).bytes).ws
   assert.equal(b['A1'].v, 'PICKLEFUND')
