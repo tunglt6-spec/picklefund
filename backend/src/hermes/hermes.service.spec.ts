@@ -273,6 +273,29 @@ describe('HermesService', () => {
       expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
+    it('vòng lặp mỗi người 1 dispatch CÙNG nội dung (bài đăng cộng đồng) → Telegram CLB chỉ 1 tin', async () => {
+      const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
+      mockPrisma.user.findMany.mockResolvedValue([baseUser]);
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([pref]);
+      mockPrisma.notification.create.mockResolvedValue(baseNotif);
+      mockPrisma.notification.count.mockResolvedValue(0);
+      linkClubChat('tg-123');
+      for (let i = 0; i < 7; i++) await service.dispatch({ ...HIGH_EVENT, targetUserId: `user-${i}` });
+      expect((global as any).fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('nội dung KHÁC nhau → vẫn gửi Telegram riêng từng tin', async () => {
+      const pref = { userId: 'user-1', channels: ['IN_APP'], preferredChannel: 'IN_APP', telegramChatId: null, enabled: true, maxDailyEmail: 5, maxDailyTelegram: 5, ...NO_QUIET };
+      mockPrisma.user.findMany.mockResolvedValue([baseUser]);
+      mockPrisma.notificationPreference.findMany.mockResolvedValue([pref]);
+      mockPrisma.notification.create.mockResolvedValue(baseNotif);
+      mockPrisma.notification.count.mockResolvedValue(0);
+      linkClubChat('tg-123');
+      await service.dispatch({ ...HIGH_EVENT, body: 'A' });
+      await service.dispatch({ ...HIGH_EVENT, body: 'B' });
+      expect((global as any).fetch).toHaveBeenCalledTimes(2);
+    });
+
     it('EMAIL + TELEGRAM(bị bỏ) + CLB link chat → EMAIL record + email + telegram cấp CLB', async () => {
       setupPref(['EMAIL', 'TELEGRAM']);
       linkClubChat('tg-123');

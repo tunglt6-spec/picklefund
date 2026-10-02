@@ -20,6 +20,24 @@ import {
 export class HermesService {
   private readonly logger = new Logger(HermesService.name);
 
+  /**
+   * Chống GỬI TRÙNG Telegram cấp CLB: các vòng lặp "mỗi người nhận 1 dispatch" (bài đăng/bình luận cộng đồng…)
+   * cùng một nội dung → trước đây Telegram nhận N tin giống hệt. Khoá theo CLB + loại sự kiện + tiêu đề + nội dung,
+   * bỏ qua bản lặp trong cửa sổ ngắn (không ảnh hưởng thông báo IN_APP/Push của từng người).
+   */
+  private static readonly TELEGRAM_DEDUP_MS = 2 * 60 * 1000;
+  private readonly recentClubTelegram = new Map<string, number>();
+
+  private shouldSendClubTelegram(event: HermesEvent, now = Date.now()): boolean {
+    for (const [k, at] of this.recentClubTelegram) {
+      if (now - at > HermesService.TELEGRAM_DEDUP_MS) this.recentClubTelegram.delete(k);
+    }
+    const key = [event.clubId, event.eventType, event.title, event.body].join('|');
+    if (this.recentClubTelegram.has(key)) return false;
+    this.recentClubTelegram.set(key, now);
+    return true;
+  }
+
   constructor(
     private prisma: PrismaService,
     private email: EmailService,
@@ -110,7 +128,7 @@ export class HermesService {
     // Gửi 1 LẦN tới chat LIÊN KẾT của chính CLB (getClubTelegramChat), KHÔNG theo pref user →
     // mỗi CLB nhận đúng thông báo của mình (cách ly tuyệt đối theo clubId). CLB chưa liên kết
     // chat riêng → không gửi (không dùng chung chat CLB khác). Best-effort, không chặn.
-    if (dispatched > 0) {
+    if (dispatched > 0 && this.shouldSendClubTelegram(event)) {
       try {
         const clubChat = await this.getClubTelegramChat(event.clubId);
         if (clubChat) {
