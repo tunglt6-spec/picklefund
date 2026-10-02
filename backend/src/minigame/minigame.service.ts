@@ -183,7 +183,7 @@ export class MinigameService {
     id: string,
     clubId: string,
     memberIds: string[],
-    guests?: { name: string; phone?: string }[],
+    guests?: { id?: string; name: string; phone?: string }[],
   ) {
     await this.assertOwnership(id, clubId);
 
@@ -218,12 +218,24 @@ export class MinigameService {
       const cur = mg?.settings;
       const settings: Record<string, unknown> =
         cur && typeof cur === 'object' && !Array.isArray(cur) ? cur : {};
-      const guestRecords = (guests ?? []).map((g) => ({
-        id: `guest-${randomUUID()}`,
-        name: g.name,
-        phone: g.phone ?? null,
-        isGuest: true as const,
-      }));
+      // GIỮ id/phone khách cũ: khớp theo `id` client gửi, sau đó theo tên (không phân biệt hoa/thường);
+      // chỉ khách thật sự mới mới sinh id mới → tham chiếu id khách trong đội không bị hỏng.
+      const oldGuests = this.readGuests(settings);
+      const usedOld = new Set<string>();
+      const guestRecords = (guests ?? []).map((g) => {
+        const nm = (g.name ?? '').trim();
+        const lc = nm.toLowerCase();
+        const match =
+          (g.id ? oldGuests.find((o) => o.id === g.id && !usedOld.has(o.id)) : undefined) ??
+          oldGuests.find((o) => !usedOld.has(o.id) && (o.name ?? '').trim().toLowerCase() === lc);
+        if (match) usedOld.add(match.id);
+        return {
+          id: match?.id ?? `guest-${randomUUID()}`,
+          name: nm || g.name,
+          phone: g.phone ?? match?.phone ?? null,
+          isGuest: true as const,
+        };
+      });
       await this.prisma.minigame.update({
         where: { id },
         data: { settings: { ...settings, guests: guestRecords } },
@@ -319,56 +331,154 @@ export class MinigameService {
     return this.findOne(id, clubId);
   }
 
+  /** Khách mời trong settings (id/name/phone). */
+  private readGuests(settings: Record<string, unknown>) {
+    return Array.isArray(settings.guests)
+      ? (settings.guests as Array<{ id: string; name: string; phone?: string | null; isGuest?: true }>)
+      : [];
+  }
+
+  /** Thêm thành viên CLB (validate thuộc CLB) vào minigame_participants (bỏ qua trùng). */
+  private async addMemberParticipants(id: string, clubId: string, memberIds: string[]) {
+    if (memberIds.length === 0) return;
+    await this.assertMembersInClub(clubId, memberIds);
+    await this.prisma.minigameParticipant.createMany({
+      data: memberIds.map((memberId) => ({ minigameId: id, memberId })),
+      skipDuplicates: true,
+    });
+  }
+
+  /** Tìm khách theo tên (không phân biệt hoa/thường) hoặc THÊM khách mới (không đổi id khách khác). */
+  private findOrAddGuest(
+    guests: Array<{ id: string; name: string; phone?: string | null; isGuest?: true }>,
+    rawName: string,
+  ): { id: string; name: string; added: boolean } {
+    const name = rawName.trim();
+    const hit = guests.find((g) => (g.name ?? '').trim().toLowerCase() === name.toLowerCase());
+    if (hit) return { id: hit.id, name: hit.name, added: false };
+    const rec = { id: `guest-${randomUUID()}`, name, phone: null, isGuest: true as const };
+    guests.push(rec);
+    return { id: rec.id, name, added: true };
+  }
+
+  /** Tập id (member + guest) đã thuộc 1 cặp/đội của giải + tên các đội hiện có. */
+  private async getTakenPlayers(id: string) {
+    const teams =
+      (await this.prisma.minigameTeam.findMany({
+        where: { minigameId: id },
+        select: {
+          name: true,
+          player1Id: true,
+          player2Id: true,
+          player1GuestId: true,
+          player2GuestId: true,
+        },
+      })) ?? [];
+    const taken = new Set<string>();
+    for (const t of teams) {
+      for (const x of [t.player1Id, t.player2Id, t.player1GuestId, t.player2GuestId])
+        if (x) taken.add(x);
+    }
+    const maxNum = teams.reduce((m, t) => {
+      const n = parseInt(String(t.name).replace(/\D/g, ''), 10);
+      return Number.isFinite(n) && n > m ? n : m;
+    }, 0);
+    return { teams, taken, maxNum };
+  }
+
+  /**
+   * Tạo 1 cặp/đội-đơn THỦ CÔNG. Mỗi slot = thành viên CLB (player?Id) | khách đã lưu (player?Id = guestId)
+   * | khách theo TÊN (player?Guest; có sẵn thì dùng, chưa có thì thêm mới vào settings.guests).
+   * Thành viên tự được thêm vào participants. Chặn: trùng người 2 slot / đã thuộc cặp khác.
+   */
   async createTeam(
     id: string,
     clubId: string,
-    dto: { name: string; player1Id: string; player2Id?: string },
+    dto: {
+      name: string;
+      player1Id?: string;
+      player2Id?: string;
+      player1Guest?: string;
+      player2Guest?: string;
+    },
   ) {
     await this.assertOwnership(id, clubId);
-    // Player hợp lệ = THÀNH VIÊN tham gia (minigameParticipant) HOẶC KHÁCH MỜI (settings.guests).
-    // Khách lưu qua playerNGuestId + playerNName (giống đường ghép tự động — slotCols), KHÔNG phải
-    // member FK. Trước đây chỉ nhận member → ghép thủ công có khách bị chặn.
-    const parts = await this.prisma.minigameParticipant.findMany({
-      where: { minigameId: id },
-      select: { memberId: true },
-    });
-    const memberSet = new Set(parts.map((p) => p.memberId));
     const mgRow = await this.prisma.minigame.findUnique({
       where: { id },
       select: { settings: true },
     });
-    const guests =
-      (this.asSettings(mgRow?.settings).guests as
-        | Array<{ id: string; name: string }>
-        | undefined) ?? [];
-    const guestMap = new Map(guests.map((g) => [g.id, g.name]));
+    const settings = this.asSettings(mgRow?.settings);
+    const guests = [...this.readGuests(settings)];
 
-    const resolveSlot = (pid: string) => {
-      const gname = guestMap.get(pid);
-      if (gname !== undefined) return { guestId: pid, name: gname };
-      if (memberSet.has(pid)) return { memberId: pid, name: '' };
-      return null;
-    };
-    const slot1 = resolveSlot(dto.player1Id);
-    const slot2 = dto.player2Id ? resolveSlot(dto.player2Id) : undefined;
-    if (!slot1 || (dto.player2Id && !slot2))
-      throw new BadRequestException(
-        'Cầu thủ phải là thành viên hoặc khách mời của giải đấu này',
-      );
+    const rawSlots = [
+      { pid: dto.player1Id?.trim(), gname: dto.player1Guest?.trim() },
+      { pid: dto.player2Id?.trim(), gname: dto.player2Guest?.trim() },
+    ];
+    if (!rawSlots[0].pid && !rawSlots[0].gname)
+      throw new BadRequestException('Thiếu người chơi thứ nhất của cặp');
 
-    // Chống TRÙNG TÊN đội (vd FE đặt "Đôi N" theo count → xóa đội giữa chừng rồi thêm gây trùng):
-    // nếu tên đã tồn tại trong giải → tự đổi sang "Đôi <max+1>" (số lớn nhất hiện có +1).
-    const existingTeams = await this.prisma.minigameTeam.findMany({
-      where: { minigameId: id },
-      select: { name: true },
+    // 1) Phân loại slot: khách (id đã lưu | tên) hay thành viên.
+    type Slot = { memberId?: string; guestId?: string; name: string };
+    let guestsChanged = false;
+    const slots: Array<Slot | undefined> = rawSlots.map((r) => {
+      if (r.pid) {
+        const g = guests.find((x) => x.id === r.pid);
+        if (g) return { guestId: g.id, name: g.name };
+        return { memberId: r.pid, name: '' };
+      }
+      if (r.gname) {
+        const g = this.findOrAddGuest(guests, r.gname);
+        if (g.added) guestsChanged = true;
+        return { guestId: g.id, name: g.name };
+      }
+      return undefined;
     });
+
+    // 2) Validate thành viên thuộc CLB + lấy tên.
+    const memberIds = [
+      ...new Set(slots.filter((s): s is Slot => !!s?.memberId).map((s) => s.memberId!)),
+    ];
+    if (memberIds.length > 0) {
+      const valid =
+        (await this.prisma.member.findMany({
+          where: { id: { in: memberIds }, clubId, isDeleted: false },
+          select: { id: true, fullName: true },
+        })) ?? [];
+      const nameOf = new Map(valid.map((m) => [m.id, m.fullName]));
+      for (const s of slots) {
+        if (s?.memberId) {
+          if (!nameOf.has(s.memberId))
+            throw new BadRequestException(
+              'Người chơi phải là thành viên CLB hoặc khách mời của giải đấu này',
+            );
+          s.name = nameOf.get(s.memberId) ?? '';
+        }
+      }
+    }
+    const slot1 = slots[0] as Slot;
+    const slot2 = slots[1];
+
+    // 3) Cùng người ở 2 slot.
+    const key = (s?: Slot) => (s ? (s.memberId ?? s.guestId) : undefined);
+    if (slot2 && key(slot1) === key(slot2))
+      throw new BadRequestException('Một người không thể ghép cặp với chính mình');
+
+    // 4) Đã thuộc cặp khác trong giải + chống trùng tên đội.
+    const { teams: existingTeams, taken, maxNum } = await this.getTakenPlayers(id);
+    for (const s of [slot1, slot2]) {
+      if (s && taken.has(key(s) as string))
+        throw new BadRequestException(`${s.name || 'Người chơi'} đã thuộc một cặp khác`);
+    }
     let teamName = dto.name;
-    if (existingTeams.some((t) => t.name === teamName)) {
-      const maxNum = existingTeams.reduce((m, t) => {
-        const n = parseInt(String(t.name).replace(/\D/g, ''), 10);
-        return Number.isFinite(n) && n > m ? n : m;
-      }, 0);
-      teamName = `Đôi ${maxNum + 1}`;
+    if (existingTeams.some((t) => t.name === teamName)) teamName = `Đôi ${maxNum + 1}`;
+
+    // 5) Ghi: thành viên → participants; khách mới → settings.guests (giữ nguyên id khách khác).
+    await this.addMemberParticipants(id, clubId, memberIds);
+    if (guestsChanged) {
+      await this.prisma.minigame.update({
+        where: { id },
+        data: { settings: { ...settings, guests } as Prisma.InputJsonValue },
+      });
     }
 
     return this.prisma.minigameTeam.create({
@@ -386,10 +496,10 @@ export class MinigameService {
   }
 
   /**
-   * GHÉP CẶP TỰ ĐỘNG (chuẩn SaaS) — nội dung ĐÔI: nhận danh sách người chơi (thành viên CLB +
-   * khách) + chế độ ghép, tạo TOÀN BỘ cặp trong 1 thao tác (thay vì gõ tên đội từng cặp kiểu
-   * roster bóng đá). Ngẫu nhiên hoặc cân bằng trình độ (mạnh↔yếu). Dùng chung cho Vòng bảng &
-   * Loại trực tiếp (cặp = MinigameTeam player1+player2; chia bảng/nhánh đọc lại các cặp này).
+   * GHÉP CẶP TỰ ĐỘNG — chế độ BỔ SUNG (không xoá cặp hiện có). Nạp người được chọn (memberIds +
+   * guests theo tên + guestIds khách đã lưu) vào pool, rồi chỉ ghép nhóm "được chọn VÀ chưa thuộc cặp
+   * nào" (không chọn gì → mọi người chưa ghép trong pool). Lẻ → người cuối còn lại, trả `unpaired`.
+   * Ngẫu nhiên hoặc cân bằng trình độ. Cặp = MinigameTeam player1+player2.
    */
   async autoPairEntrants(
     id: string,
@@ -397,6 +507,7 @@ export class MinigameService {
     dto: {
       memberIds?: string[];
       guests?: { name: string; phone?: string }[];
+      guestIds?: string[];
       pairingMode?: string;
     },
   ) {
@@ -410,27 +521,76 @@ export class MinigameService {
     });
     if (existingMatches > 0)
       throw new BadRequestException(
-        'Đã có lịch thi đấu — hãy xoá lịch trước khi ghép lại cặp.',
+        'Đã có lịch thi đấu — hãy xoá lịch trước khi ghép thêm cặp.',
       );
-    // 1) Nạp người chơi (member CLB + khách) vào pool ghép (participants + settings.guests).
-    await this.addParticipants(id, clubId, dto.memberIds ?? [], dto.guests);
-    // 2) Lưu chế độ ghép + đánh dấu nội dung ĐÔI (để dispatch/engine xử lý đúng cặp).
+
+    // 1) Nạp người được chọn vào pool.
+    const memberIds = [...new Set(dto.memberIds ?? [])];
+    await this.addMemberParticipants(id, clubId, memberIds);
     const row = await this.prisma.minigame.findUnique({
       where: { id },
       select: { settings: true },
     });
     const settings = this.asSettings(row?.settings);
+    const guests = [...this.readGuests(settings)];
+    const selectedGuestIds = new Set<string>();
+    for (const gid of dto.guestIds ?? []) {
+      if (!guests.some((g) => g.id === gid))
+        throw new BadRequestException('Khách đã chọn không tồn tại trong giải');
+      selectedGuestIds.add(gid);
+    }
+    let guestsChanged = false;
+    for (const name of this.cleanGuestNames(dto.guests)) {
+      const g = this.findOrAddGuest(guests, name);
+      if (g.added) guestsChanged = true;
+      selectedGuestIds.add(g.id);
+    }
+    const hasSelection = memberIds.length > 0 || selectedGuestIds.size > 0;
     await this.prisma.minigame.update({
       where: { id },
       data: {
         participantType: 'PAIR',
-        settings: { ...settings, pairingMode } as Prisma.InputJsonValue,
+        settings: {
+          ...settings,
+          ...(guestsChanged ? { guests } : {}),
+          pairingMode,
+        } as Prisma.InputJsonValue,
       },
     });
-    // 3) Ghép lại cặp TỪ ĐẦU (xoá cặp cũ rồi tạo mới theo pool + chế độ). Cần ≥4 người (2 cặp).
-    await this.prisma.minigameTeam.deleteMany({ where: { minigameId: id } });
-    await this.ensureEntrantTeams(id, 'PAIR', pairingMode);
-    return this.findOne(id, clubId);
+
+    // 2) Chỉ ghép nhóm được chọn và CHƯA thuộc cặp nào.
+    const { taken, maxNum } = await this.getTakenPlayers(id);
+    const memberSel = new Set(memberIds);
+    const pool = (await this.getPlayerPool(id)).filter((p) => {
+      const key = (p.memberId ?? p.guestId) as string;
+      if (taken.has(key)) return false;
+      if (!hasSelection) return true;
+      return p.memberId ? memberSel.has(p.memberId) : selectedGuestIds.has(p.guestId as string);
+    });
+    if (pool.length < 2)
+      throw new BadRequestException('Cần chọn ít nhất 2 người chưa ghép cặp');
+
+    const ordered = this.orderPoolForPairing(pool, pairingMode);
+    const pairs: Prisma.MinigameTeamCreateManyInput[] = [];
+    for (let i = 0; i + 1 < ordered.length; i += 2)
+      pairs.push({
+        minigameId: id,
+        name: `Đôi ${maxNum + Math.floor(i / 2) + 1}`,
+        ...this.slotCols('player1', ordered[i]),
+        ...this.slotCols('player2', ordered[i + 1]),
+      });
+    await this.prisma.minigameTeam.createMany({ data: pairs });
+    const unpaired = ordered.length % 2 === 1 ? [ordered[ordered.length - 1]] : [];
+    const mg = await this.findOne(id, clubId);
+    return {
+      ...mg,
+      pairedCount: pairs.length,
+      unpaired: unpaired.map((p) => ({
+        id: p.memberId ?? p.guestId,
+        name: p.name,
+        isGuest: !!p.guestId,
+      })),
+    };
   }
 
   // ── Đội có ROSTER nhiều người (môn đồng đội, vd bóng đá) — Pha 1 ──

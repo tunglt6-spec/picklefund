@@ -3,8 +3,8 @@
  * (Vòng bảng · Loại trực tiếp · Đôi cố định vòng tròn) và mọi môn.
  *
  * 2 chế độ (mode):
- *  - 'pair'  (ĐÔI): chọn người → Ghép cặp tự động (ngẫu nhiên/cân bằng) hoặc thủ công (2 người) →
- *    danh sách cặp (Vòng bảng: xem trước theo bảng, fill-first).
+ *  - 'pair'  (ĐÔI): chọn người (thành viên + khách mới + khách đã lưu chưa ghép) → Ghép cặp tự động
+ *    (BỔ SUNG, không phá cặp cũ) hoặc thủ công (ĐÚNG 2 người bất kỳ) → danh sách cặp (Vòng bảng: xem trước theo bảng).
  *  - 'single'(ĐƠN): chọn người → Thêm vận động viên (participants) → danh sách VĐV.
  *
  * Self-contained: tự lấy thành viên CLB (clubData), tự fetch dữ liệu giải (GET /minigames/:id),
@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Users, Search, UserPlus, X, Plus, Trash2, UserCheck } from 'lucide-react'
+import { buildAutoPayload, buildManualPayload, collectPicks, describeAutoResult, nextPairName, takenPlayerKeys, unpairedSavedGuests } from './pairBuilder.logic'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { cn } from '../../lib/utils'
@@ -25,6 +26,10 @@ interface PairTeam {
   player2?: { id: string; fullName: string } | null
   player1Name?: string | null
   player2Name?: string | null
+  player1GuestId?: string | null
+  player2GuestId?: string | null
+  player1Id?: string | null
+  player2Id?: string | null
 }
 interface Entrant { key: string; name: string; isGuest: boolean }
 
@@ -51,6 +56,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
   const [loading, setLoading] = useState(true)
   const [pickIds, setPickIds] = useState<string[]>([])
   const [guests, setGuests] = useState<string[]>([])
+  const [savedPickIds, setSavedPickIds] = useState<string[]>([])
   const [guestName, setGuestName] = useState('')
   const [search, setSearch] = useState('')
   const [pairingMode, setPairingMode] = useState<'RANDOM_PAIRING' | 'BALANCED_SKILL_PAIRING'>('RANDOM_PAIRING')
@@ -75,33 +81,41 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
   // Người đã tham gia (đã ghép cặp / đã là VĐV) → LOẠI khỏi pool chọn.
   const usedIds = isSingle
     ? new Set(entrants.filter(e => !e.isGuest).map(e => e.key))
-    : new Set(pairs.flatMap(t => [t.player1?.id, t.player2?.id]).filter((x): x is string => !!x))
+    : takenPlayerKeys(pairs)
   const available = members.filter(m =>
     (!search.trim() || m.fullName.toLowerCase().includes(search.trim().toLowerCase())) && !usedIds.has(m.id),
   )
+  // Khách ĐÃ LƯU chưa thuộc cặp nào (chỉ ở chế độ đôi) → chọn lại được.
+  const savedGuests = entrants.filter(e => e.isGuest).map(e => ({ id: e.key, name: e.name }))
+  const pendingSaved = isSingle ? [] : unpairedSavedGuests(savedGuests, pairs)
   const togglePick = (mid: string) => setPickIds(ids => ids.includes(mid) ? ids.filter(x => x !== mid) : [...ids, mid])
-  const addGuest = () => { const n = guestName.trim(); if (!n) return; setGuests(g => [...g, n]); setGuestName('') }
-  const clearSel = () => { setPickIds([]); setGuests([]); setSearch('') }
-  const pairName = (t: PairTeam) => `${t.player1?.fullName ?? t.player1Name ?? '—'} & ${t.player2?.fullName ?? t.player2Name ?? '—'}`
-  const selectedCount = pickIds.length + guests.length
-  const existingGuestNames = entrants.filter(e => e.isGuest).map(e => e.name)
+  const toggleSaved = (gid: string) => setSavedPickIds(ids => ids.includes(gid) ? ids.filter(x => x !== gid) : [...ids, gid])
+  const addGuest = () => { const n = guestName.trim(); if (!n) return; setGuests(g => g.some(x => x.toLowerCase() === n.toLowerCase()) ? g : [...g, n]); setGuestName('') }
+  const clearSel = () => { setPickIds([]); setGuests([]); setSavedPickIds([]); setSearch('') }
+  const guestTag = <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]">Khách</span>
+  const slotName = (p: { fullName: string } | null | undefined, name: string | null | undefined, guestId: string | null | undefined) =>
+    <span className="inline-flex items-center gap-1">{p?.fullName ?? name ?? '—'}{guestId && guestTag}</span>
+  const picks = collectPicks(members, pickIds, savedGuests, savedPickIds.filter(id => pendingSaved.some(g => g.id === id)), guests)
+  const selectedCount = picks.length
+  const existingGuests = entrants.filter(e => e.isGuest).map(e => ({ id: e.key, name: e.name }))
 
   // ── ĐÔI ──
   const autoPair = async () => {
-    if (selectedCount < 4) { toast.error('Chọn tối thiểu 4 người (2 cặp)'); return }
+    if (selectedCount < 2) { toast.error('Chọn tối thiểu 2 người để ghép'); return }
     setSaving(true)
     try {
-      await api.post(`/minigames/${minigameId}/pairs/auto`, { memberIds: pickIds, guests: guests.map(g => ({ name: g })), pairingMode })
-      await refresh(); toast.success('Đã ghép cặp tự động!'); clearSel()
+      const res = await api.post(`/minigames/${minigameId}/pairs/auto`, buildAutoPayload(picks, pairingMode))
+      const body = res.data?.data ?? res.data
+      await refresh(); toast.success(describeAutoResult(body)); clearSel()
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Ghép cặp thất bại') }
     finally { setSaving(false) }
   }
   const manualPair = async () => {
-    if (pickIds.length !== 2) return
+    const payload = buildManualPayload(nextPairName(pairs.map(t => t.name)), picks)
+    if (!payload) { toast.error('Chọn đúng 2 người để tạo cặp thủ công'); return }
     setSaving(true)
     try {
-      await api.post(`/minigames/${minigameId}/participants`, { memberIds: pickIds, guests: guests.map(g => ({ name: g })) })
-      await api.post(`/minigames/${minigameId}/teams`, { name: `Đôi ${pairs.length + 1}`, player1Id: pickIds[0], player2Id: pickIds[1] })
+      await api.post(`/minigames/${minigameId}/teams`, payload)
       await refresh(); toast.success('Đã tạo cặp'); clearSel()
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Tạo cặp thất bại') }
     finally { setSaving(false) }
@@ -111,16 +125,26 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
     try { await api.delete(`/minigames/${minigameId}/teams/${teamId}`); await refresh(); toast.success('Đã xóa cặp') }
     catch (e: any) { toast.error(e?.response?.data?.message ?? 'Xóa cặp thất bại') }
   }
+  const deleteAllPairs = async () => {
+    if (pairs.length === 0) return
+    if (!window.confirm(`Xóa hết ${pairs.length} cặp để ghép lại từ đầu? (Không xóa thành viên/khách)`)) return
+    setSaving(true)
+    try {
+      for (const t of pairs) await api.delete(`/minigames/${minigameId}/teams/${t.id}`)
+      await refresh(); toast.success('Đã xóa hết cặp')
+    } catch (e: any) { await refresh(); toast.error(e?.response?.data?.message ?? 'Xóa cặp thất bại') }
+    finally { setSaving(false) }
+  }
 
   // ── ĐƠN ──
   const addEntrants = async () => {
     if (selectedCount === 0) { toast.error('Chọn ít nhất 1 vận động viên'); return }
     setSaving(true)
     try {
-      // Gộp khách cũ + mới (backend thay thế toàn bộ settings.guests khi có field guests).
+      // Gộp khách cũ (kèm id → giữ ổn định) + mới (backend thay thế toàn bộ settings.guests khi có field guests).
       await api.post(`/minigames/${minigameId}/participants`, {
         memberIds: pickIds,
-        guests: [...existingGuestNames, ...guests].map(name => ({ name })),
+        guests: [...existingGuests, ...guests.map(name => ({ name }))],
       })
       await refresh(); toast.success('Đã thêm vận động viên'); clearSel()
     } catch (e: any) { toast.error(e?.response?.data?.message ?? 'Thêm vận động viên thất bại') }
@@ -137,9 +161,21 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
     <div key={t.id} className="rounded-[14px] border p-3.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] flex items-center justify-between gap-2">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-primary)]">Đôi {idx + 1}</p>
-        <p className="mt-0.5 text-sm font-medium [color:var(--pf-text)] truncate">{pairName(t)}</p>
+        <p className="mt-0.5 text-sm font-medium [color:var(--pf-text)] flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          {slotName(t.player1, t.player1Name, t.player1GuestId)}<span className="[color:var(--pf-color-muted)]">&amp;</span>{slotName(t.player2, t.player2Name, t.player2GuestId)}
+        </p>
       </div>
       <button onClick={() => deletePair(t.id)} className="shrink-0 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors" title="Xóa cặp"><Trash2 size={16} /></button>
+    </div>
+  )
+
+  const deleteAllBar = (
+    <div className="flex items-center justify-between gap-2 flex-wrap">
+      <span className="text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{pairs.length} cặp</span>
+      <button onClick={deleteAllPairs} disabled={saving}
+        className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border [color:var(--pf-color-danger)] border-[color:var(--pf-color-danger)] [background:var(--pf-surface)] hover:opacity-80 disabled:opacity-50 transition">
+        <Trash2 size={14} /> Xóa hết cặp
+      </button>
     </div>
   )
 
@@ -191,12 +227,48 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
             <div className="mt-2 flex flex-wrap gap-2">
               {guests.map((g, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-full [background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)] px-3 py-1 text-xs">
-                  {g}<button onClick={() => setGuests(gs => gs.filter((_, j) => j !== i))}><X size={12} /></button>
+                  {g}<button onClick={() => setGuests(gs => gs.filter((_, j) => j !== i))} title="Bỏ khách"><X size={12} /></button>
                 </span>
               ))}
             </div>
           )}
+          {pendingSaved.length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs font-medium [color:var(--pf-color-muted)]">Khách đã thêm (chưa ghép cặp) — bấm để chọn</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pendingSaved.map(g => {
+                  const on = savedPickIds.includes(g.id)
+                  return (
+                    <button key={g.id} onClick={() => toggleSaved(g.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                        on ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface)] border-[color:var(--pf-border)]'
+                      }`}>
+                      {on && <X size={12} />} {g.name}
+                      <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-full', on ? 'bg-white/25 text-white' : '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]')}>Khách</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Tóm tắt lựa chọn thống nhất (thành viên + khách) */}
+        {selectedCount > 0 && (
+          <div className="mt-3 rounded-[14px] border border-[color:var(--pf-border)] [background:var(--pf-primary-soft)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold [color:var(--pf-primary)]">Đã chọn ({selectedCount}): {picks.map(x => x.name).join(' + ')}</span>
+              <button onClick={clearSel} className="shrink-0 text-xs font-semibold [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors">Bỏ chọn tất cả</button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {picks.map((x, i) => (
+                <span key={i} className="inline-flex items-center gap-1 rounded-full [background:var(--pf-surface)] border border-[color:var(--pf-border)] px-2.5 py-1 text-xs font-medium [color:var(--pf-text)]">
+                  {x.name}{x.kind !== 'member' && guestTag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isSingle ? (
           /* ── ĐƠN: thêm VĐV ── */
@@ -224,18 +296,26 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
               </div>
             </div>
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button onClick={autoPair} disabled={saving || selectedCount < 4}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
-                <Users size={16} /> {saving ? 'Đang ghép…' : `Ghép cặp tự động${selectedCount >= 4 ? ` · ${Math.floor(selectedCount / 2)} cặp` : ''}`}
+              <button onClick={autoPair} disabled={saving || selectedCount < 2}
+                title={selectedCount < 2 ? 'Chọn ít nhất 2 người' : undefined}
+                className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <Users size={16} /> {saving ? 'Đang ghép…' : `Ghép cặp tự động${selectedCount >= 2 ? ` · ${Math.floor(selectedCount / 2)} cặp` : ''}`}
               </button>
-              <button onClick={manualPair} disabled={saving || pickIds.length !== 2}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <Plus size={16} /> Tạo cặp thủ công (2 người)
+              <button onClick={manualPair} disabled={saving || selectedCount !== 2}
+                title={selectedCount !== 2 ? 'Chọn đúng 2 người' : undefined}
+                className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <Plus size={16} /> Tạo cặp thủ công · {selectedCount} người
               </button>
             </div>
+            {selectedCount !== 2 && selectedCount > 0 && (
+              <p className="mt-1.5 text-xs [color:var(--pf-color-muted)]">Tạo cặp thủ công cần chọn đúng 2 người{selectedCount === 1 ? ' (chọn thêm 1)' : ` (đang chọn ${selectedCount})`}.</p>
+            )}
+            {selectedCount >= 3 && selectedCount % 2 === 1 && (
+              <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Số người lẻ — ghép tự động sẽ để lại 1 người chưa ghép.</p>
+            )}
             <p className="mt-2.5 text-xs leading-relaxed [color:var(--pf-color-muted)]">
-              <b className="[color:var(--pf-text)]">Tự động:</b> chọn ≥4 người → hệ thống chia cặp ngẫu nhiên/cân bằng.
-              <b className="[color:var(--pf-text)] ml-1">Thủ công:</b> chọn đúng 2 người → tạo từng cặp. Cả 2 chạy song song; người đã ghép tự ẩn khỏi danh sách.
+              <b className="[color:var(--pf-text)]">Thủ công:</b> chọn đúng 2 người bất kỳ (thành viên, khách hoặc cả hai) → tạo 1 cặp.
+              <b className="[color:var(--pf-text)] ml-1">Tự động:</b> chọn nhiều người (từ 2) → chia cặp ngẫu nhiên/cân bằng; ghép bổ sung, KHÔNG ảnh hưởng cặp đã có. Người đã ghép tự ẩn khỏi danh sách; muốn làm lại hãy xóa cặp (hoặc "Xóa hết cặp").
             </p>
           </>
         )}
@@ -268,10 +348,11 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
       ) : pairs.length === 0 ? (
         <div className="rounded-[18px] border border-dashed border-[color:var(--pf-border)] p-8 text-center">
           <Users size={28} className="mx-auto [color:var(--pf-color-muted)]" />
-          <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có cặp nào. Chọn thành viên rồi bấm "Ghép cặp tự động".</p>
+          <p className="mt-2 text-sm [color:var(--pf-color-muted)]">Chưa có cặp nào. Chọn thành viên/khách rồi bấm "Ghép cặp tự động" hoặc "Tạo cặp thủ công".</p>
         </div>
       ) : isGroupStage ? (
         <div className="flex flex-col gap-4">
+          {deleteAllBar}
           {Array.from({ length: Math.ceil(pairs.length / pairGroupSize) }, (_, gi) => {
             const slice = pairs.slice(gi * pairGroupSize, gi * pairGroupSize + pairGroupSize)
             const full = slice.length >= pairGroupSize
@@ -292,8 +373,11 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
           <p className="text-xs [color:var(--pf-color-muted)]">Xem trước theo bảng ({pairGroupSize} cặp/bảng). Chia bảng chính thức áp dụng đúng thứ tự này khi tạo lịch.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {pairs.map((t, i) => renderPairCard(t, i))}
+        <div className="flex flex-col gap-3">
+          {deleteAllBar}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {pairs.map((t, i) => renderPairCard(t, i))}
+          </div>
         </div>
       )}
     </div>

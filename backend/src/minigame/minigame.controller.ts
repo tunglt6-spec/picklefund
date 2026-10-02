@@ -75,11 +75,16 @@ class SwapPlayersDto {
 
 class CreateTeamDto {
   @IsString() @MaxLength(60) name!: string;
-  @IsString() player1Id!: string;
+  // Cần player1Id (thành viên/guestId) HOẶC player1Guest (tên khách) — kiểm ở service.
+  @IsOptional() @IsString() player1Id?: string;
   @IsOptional() @IsString() player2Id?: string;
+  @IsOptional() @IsString() @MaxLength(120) player1Guest?: string;
+  @IsOptional() @IsString() @MaxLength(120) player2Guest?: string;
 }
 
 class GuestParticipantDto {
+  // id khách đã lưu (nếu client biết) → giữ ổn định id khi lưu lại danh sách khách.
+  @IsOptional() @IsString() @MaxLength(80) id?: string;
   @IsString() @MaxLength(120) name!: string;
   @IsOptional() @IsString() @MaxLength(30) phone?: string;
 }
@@ -113,6 +118,12 @@ class AutoPairDto {
   @ValidateNested({ each: true })
   @Type(() => GuestParticipantDto)
   guests?: GuestParticipantDto[];
+  // Khách ĐÃ LƯU (settings.guests) được chọn để ghép — theo id.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200)
+  @IsString({ each: true })
+  guestIds?: string[];
   @IsOptional()
   @IsIn(['RANDOM_PAIRING', 'BALANCED_SKILL_PAIRING'])
   pairingMode?: string;
