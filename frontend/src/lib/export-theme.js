@@ -82,16 +82,16 @@ export const THEME = {
     accentEdge: 0.35, // viền tấm nhấn (brand α)
     edgeWhite: 0.9, // viền ngoài trắng
     edgeWhiteW: 0.3,
-    hair: 0.18, // viền trong brand (hairline)
-    hairW: 0.15,
+    hair: 0.4, // viền trong brand: đậm hơn để thẻ nổi rõ trên nền
+    hairW: 0.25,
     highlight: 1, // vạch sáng cạnh trên
     highlightW: 0.2,
-    shadow: [0.085, 0.05, 0.025], // 3 lớp bóng mềm (brandDark α) giảm dần
+    shadow: [0.11, 0.065, 0.03], // 3 lớp bóng mềm (brandDark α) giảm dần
     shadowStep: 0.7,
     shadowDy: 0.9,
     radius: { panel: 3.5, band: 5, chip: 2.5, bar: 2.2 },
     mast: { gloss: 0.1, edge: 0.35, chip: 0.35, chipEdge: 0.4, ring: 0.9, ringGlass: 0.16 },
-    orb: { alpha: 0.13, rings: 18 },
+    orb: { alpha: 0.06, rings: 18 }, // nền nhạt: orb mờ để thẻ nổi
     zebra: 0.05, // zebra = brand α
     sep: 0.8, // đường kẻ trắng
     sepHair: 0.12, // hairline brand
@@ -168,12 +168,12 @@ export function makeBrand(hex) {
     const c = mix(rgb, glassStart, k / 10)
     if (okWhite(c)) { glassEnd = c; break }
   }
-  const washC = isDefault ? [245, 243, 255] : mix(rgb, THEME.color.white, 0.94)
+  const washC = isDefault ? [250, 249, 255] : mix(rgb, THEME.color.white, 0.97)
   return {
     brand: rgb,
     glassStart,
     glassEnd,
-    washA: brandSoft,
+    washA: mix(brandSoft, THEME.color.white, 0.55), // nền trang nhạt hơn brandSoft
     washB: THEME.color.white,
     washC,
     brandDark: ink,

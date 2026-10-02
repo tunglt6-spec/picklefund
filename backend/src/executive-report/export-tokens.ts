@@ -61,13 +61,13 @@ export const GLASS = {
   /** Viền ngoài trắng (mm) + alpha; viền trong brand alpha. */
   rimW: 0.3,
   rimOuter: 0.9,
-  rimInner: 0.18,
+  rimInner: 0.4,
   /** Nền tấm kính: trắng bán trong (phẳng, vector — gradient/blur làm PDF phình). */
   panel: 0.7,
   /** Highlight trắng dọc cạnh trên. */
   highlight: 0.95,
   /** Bóng mềm (brandDark) lệch xuống: 3 lớp bậc thang không blur (vector) cho cảm giác mềm. */
-  shadowA: 0.05,
+  shadowA: 0.075,
   shadowDy: 0.5,
   /** Tấm nhấn: nền brand + viền brand. */
   accentFill: 0.14,
@@ -83,7 +83,7 @@ export const GLASS = {
   chipFill: 0.08,
   chipBorder: 0.35,
   /** Nền trang: 2 orb mềm (brand / cyan) cắt ở mép trang. */
-  orb: 0.12,
+  orb: 0.06,
   /** Masthead/bìa: bóng loáng nửa trên, viền trắng, chip kính. */
   gloss: 0.14,
   mastRim: 0.35,
@@ -223,7 +223,7 @@ export function makeBrand(primary?: string | null): Brand {
 
 /** Tông nền wash trang (rất nhạt, chéo): brandSoft → brandSoft pha 45% trắng → brand pha 92% trắng. */
 export function washColors(B: Brand): { a: string; b: string; c: string } {
-  return { a: B.brandSoft, b: mix(B.brandSoft, '#FFFFFF', 0.45), c: mix(B.brand, '#FFFFFF', 0.92) };
+  return { a: mix(B.brandSoft, '#FFFFFF', 0.55), b: mix(B.brandSoft, '#FFFFFF', 0.8), c: mix(B.brand, '#FFFFFF', 0.97) };
 }
 
 /** Alpha orb: GLASS.orb, giảm dần cho thương hiệu sẫm để chữ muted trực tiếp trên wash vẫn ≥ 4.5:1. */
@@ -274,7 +274,7 @@ export function glassCss(B: Brand): string {
   return `:root{--wash-a:${WASH.a};--wash-b:${WASH.b};--wash-c:${WASH.c};
   --g-bg:${w(GLASS.panel)};
   --g-rim:${mm(GLASS.rimW)} solid ${w(GLASS.rimOuter)};
-  --g-sh:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},inset 0 ${mm(0.35)} 0 ${w(GLASS.highlight)},${shadow};
+  --g-sh:inset 0 0 0 ${mm(0.28)} ${rgba(B.brand, GLASS.rimInner)},inset 0 ${mm(0.35)} 0 ${w(GLASS.highlight)},${shadow};
   --g-r:${mm(GLASS.radius)};
   --acc-bg:${glassTint(B.brand, GLASS.accentFill)};
   --acc-ring:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.accentBorder)},inset 0 ${mm(0.35)} 0 ${w(GLASS.highlight)},${shadow};

@@ -116,11 +116,11 @@ test('LIQUID GLASS tokens: alpha ∈ (0,1], bóng 3 lớp giảm dần, nền k�
   assert.equal(rgba([1, 2, 3], 0.5), 'rgba(1,2,3,0.5)')
 })
 
-test('makeBrand: wash 3 nút (mặc định #EEF2FF → trắng → #F5F3FF) + hai đầu gradient glassStart/glassEnd với mọi màu CLB', () => {
+test('makeBrand: wash 3 nút nhạt (mặc định #F7F9FF → trắng → #FAF9FF) + hai đầu gradient glassStart/glassEnd với mọi màu CLB', () => {
   const d = makeBrand(DEFAULT_BRAND_HEX)
-  assert.equal(toHex(d.washA), '#EEF2FF')
+  assert.equal(toHex(d.washA), '#F7F9FF')
   assert.equal(toHex(d.washB), '#FFFFFF')
-  assert.equal(toHex(d.washC), '#F5F3FF')
+  assert.equal(toHex(d.washC), '#FAF9FF')
   assert.equal(toHex(d.glassStart), '#4F46E5') // = brandDark
   assert.ok(contrast(d.glassEnd, C.white) >= 4.5)
   for (const hex of ['#0F766E', '#F59E0B', '#FFFFFF', '#000000', '#FACC15']) {
