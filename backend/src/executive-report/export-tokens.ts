@@ -132,6 +132,11 @@ export const MIN_FONT_PT = 7;
 
 // ── Khoảng cách / lề (mm) ──────────────────────────────────────────────
 export const SPACE = { s1: 2, s2: 4, s3: 8, s4: 12, s5: 16, s6: 24 } as const;
+/**
+ * KHOẢNG THỞ "Luxury SaaS" (mm) — sàn đo được: gutter giữa thẻ cùng hàng ≥ 6, giữa các hàng thẻ ≥ 6, giữa các mục ≥ 12,
+ * tiêu đề mục → nội dung ≥ 5, padding trong thẻ ≥ 5 (thanh chiều thu gọn: dọc ≥ 3), line-height thân ≥ 1.5.
+ */
+export const AIR = { gutter: 6, row: 6, section: 12, head: 6, pad: 5, padBar: 3.4, lineHeight: 1.55 } as const;
 /** A4 dọc: lề trên 14 / phải 16 / dưới 20 (≥18: chừa chỗ footer) / trái 16. */
 export const PAGE = {
   w: 210,

@@ -85,8 +85,8 @@ test('số trang thật: footer "Trang p / N" khớp doc.getNumberOfPages()', ()
   assert.ok(n > 1)
   for (let p = 1; p <= n; p++) assert.ok(r.texts.includes(`Trang ${p} / ${n}`), `thiếu Trang ${p} / ${n}`)
 })
-test('bề rộng cột tự chuẩn hoá về 186mm (bảng không lệch lề phải)', () => {
-  // cột tổng 156mm → bị kéo giãn: ô căn phải cuối bảng nằm sát lề phải (210-12-3 = 195mm), không dừng ở 168mm
+test('bề rộng cột tự chuẩn hoá về 178mm (bảng không lệch lề phải)', () => {
+  // cột tổng 156mm → bị kéo giãn: ô căn phải cuối bảng nằm sát lề phải (16+178-3.5 = 190,5mm), không dừng ở 168mm
   const spyDraw: number[] = []
   const s = makeSpy()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,7 +99,7 @@ test('bề rộng cột tự chuẩn hoá về 186mm (bảng không lệch lề 
     columns: [{ key: 'name', label: 'A', w: 100, align: 'left' }, { key: 'pts', label: 'B', w: 56, align: 'right' }],
     rows: [{ name: 'x', pts: 'SAMPLE' }], stats: [],
   })
-  assert.ok(Math.abs(spyDraw[0] - 195) < 0.01, `x=${spyDraw[0]}`)
+  assert.ok(Math.abs(spyDraw[0] - (THEME.page.margin + 178 - THEME.row.padX)) < 0.01, `x=${spyDraw[0]}`)
 })
 
 /* ── M5: wrap thay vì cắt "…" ── */
@@ -146,7 +146,7 @@ test('phiếu thu Quỹ Phụ: tên/ghi chú/tên CLB dài đều xuống dòng 
     jsPDF: s.SpyPDF, fonts, branding,
     receipt: { payerName: long.repeat(3), incomeType: 'Khác', amount: 5000, paymentDate: '1/1/2026', notes: 'ghi chú dài '.repeat(60), clubName: 'CLB '.repeat(40), printedDateText: '02/10/2026', printedAtText: '10:00 02/10/2026' },
   })
-  assert.ok(Math.max(...s.widths) <= 186, `max width ${Math.max(...s.widths)}`)
+  assert.ok(Math.max(...s.widths) <= 178, `max width ${Math.max(...s.widths)}`)
 })
 test('phiếu thu Quỹ Phụ: không in "Hà Nội" cứng; thiếu số phiếu thì ẩn "Số …"; có thì tiếng Việt "Số 0003"', () => {
   const s = makeSpy()
@@ -411,7 +411,7 @@ test('ngày/nhóm KHÔNG bị cắt "…": ô ngày ở cột hẹp tự co, ti�
   const s = makeSpy()
   buildStandingsReportPDF({
     jsPDF: s.SpyPDF, fonts, branding, meta: { clubName: 'C', tournamentName: '', sportLabel: 'x', formatLabel: '', ...dates },
-    columns: [{ key: 'd', label: 'NGÀY', w: 18, align: 'left' as const }, { key: 'n', label: 'TÊN', w: 168, align: 'left' as const }],
+    columns: [{ key: 'd', label: 'NGÀY', w: 22, align: 'left' as const }, { key: 'n', label: 'TÊN', w: 164, align: 'left' as const }],
     rows: [{ __section: 'KỲ QUỸ: Kỳ rất dài 03/2026 · tháng Ba', __sectionRight: '24 khoản · 6.600.000 đ · chờ 4 (900.000 đ)' }, { d: '05/03/2026', n: 'a' }],
   })
   assert.ok(!s.texts.some(t => t.endsWith('…')), s.texts.filter(t => t.endsWith('…')).join('|'))
@@ -425,7 +425,7 @@ test('số âm: ô số bắt đầu "-" dùng đỏ neg (đậm sinh động) /
   for (const r of neg) assert.ok(near(r.color, THEME.color.neg as number[]) || near(r.color, THEME.color.negText as number[]) || near(r.color, THEME.color.ink as number[]), `${r.text} ${JSON.stringify(r.color)}`)
 })
 
-test('phiếu thu cá nhân: tiếng Việt, "Số 0012", không "No.", không emoji, payload HTML chỉ là chữ thuần; vector 1 trang', () => {
+test('phiếu thu cá nhân: tiếng Việt, "Số 0012", không "No.", không emoji, payload HTML chỉ là chữ thuần; vector ≤ 2 trang (chữ ký sang trang 2 nếu hết chỗ — khoảng thở)', () => {
   const s = makeSpy()
   const doc = buildPersonalReceiptPDF({
     jsPDF: s.SpyPDF, fonts, branding,
@@ -442,9 +442,9 @@ test('phiếu thu cá nhân: tiếng Việt, "Số 0012", không "No.", không e
   assert.ok(all.includes('chia đều theo sĩ số / 5 người'))
   assert.ok(s.texts.some(t => t.startsWith('Huế,')))
   assert.ok(!EMOJI.test(all))
-  assert.equal(doc.getNumberOfPages(), 1)
+  assert.ok(doc.getNumberOfPages() <= 2)
   assert.ok(!String(doc.output()).includes('/Subtype /Image'), 'phiếu vector không chứa ảnh raster')
-  assert.ok(Math.max(...s.widths) <= 186)
+  assert.ok(Math.max(...s.widths) <= 178)
 })
 
 test('phiếu thu cá nhân thiếu dữ liệu: ẩn "Tổng tiền sân toàn quỹ", "/ N người", số phiếu, "Hà Nội" cứng', () => {
@@ -483,7 +483,7 @@ test('phiếu chi Quỹ Phụ: vector, "Số 0003", thẻ Quỹ Phụ, không em
   })
   assert.ok(s.texts.includes('Số 0003') && s.texts.some(t => /quỹ phụ/i.test(t)))
   assert.ok(!EMOJI.test(s.texts.join('')))
-  assert.ok(Math.max(...s.widths) <= 186)
+  assert.ok(Math.max(...s.widths) <= 178)
 })
 
 test('knockout: trận hoà tỉ số có winner ghi "đi tiếp" / "pen x-y"; đường nối dùng màu connector đậm (≥ 3:1)', () => {
@@ -500,8 +500,8 @@ test('knockout: trận hoà tỉ số có winner ghi "đi tiếp" / "pen x-y"; �
   assert.ok(contrast(THEME.color.connector, THEME.color.white) >= 3)
 })
 
-test('lề/CONTENT_W một nơi: THEME.page → 186mm', () => {
-  assert.equal(THEME.page.portrait.w - THEME.page.margin * 2, 186)
+test('lề/CONTENT_W một nơi: THEME.page → 178mm', () => {
+  assert.equal(THEME.page.portrait.w - THEME.page.margin * 2, 178)
 })
 
 test('masthead = băng KÍNH gradient glassStart → glassEnd (dải rect + bóng loáng): stream có màu đầu gradient + brandDark (chữ) + brand (nhấn); mọi tài liệu', () => {

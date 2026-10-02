@@ -61,15 +61,20 @@ export const THEME = {
   page: {
     portrait: { w: 210, h: 297 },
     landscape: { w: 297, h: 210 },
-    margin: 12,
+    margin: 16,
     /** vùng footer: vạch ở H - footerLine, chữ ở H - footerText; nội dung dừng ở H - bottomPad */
     footerLine: 15,
     footerText: 10.8,
-    bottomPad: 19,
+    bottomPad: 21,
   },
   line: { hair: 0.2, border: 0.3, strong: 0.5, brandRule: 0.6 },
   radius: { card: 2, bar: 1 },
-  row: { h: 8, lineH: 3.8, padX: 3 },
+  row: { h: 9.8, lineH: 4.4, padX: 3.5 },
+  /**
+   * KHOẢNG THỞ (mm) — luật Luxury: lề 16 · gutter thẻ 6 · giữa hàng thẻ 6 · giữa section 12 · tiêu đề→nội dung 5+ ·
+   * padding trong thẻ ≥ 5 (trên/dưới ≥ 4.5) · dòng chữ trong thẻ ≥ 1.4 line-height.
+   */
+  air: { gutter: 6, rowGap: 6, section: 12, titleGap: 10, cardPad: 5.5, afterMast: 10, billGutter: 8, billRowGap: 8 },
   /**
    * LIQUID GLASS — token hiệu ứng kính (alpha 0..1, mm). Mọi màu kính DẪN XUẤT từ palette app
    * (brand/brandDark/brandSoft/trắng + semantic) ở độ trong suốt khác nhau — không có màu mới.
@@ -86,15 +91,15 @@ export const THEME = {
     hairW: 0.25,
     highlight: 1, // vạch sáng cạnh trên
     highlightW: 0.2,
-    shadow: [0.11, 0.065, 0.03], // 3 lớp bóng mềm (brandDark α) giảm dần
+    shadow: [0.07, 0.035], // 2 lớp bóng mềm (brandDark α) giảm dần — nhẹ, ít nhiễu
     shadowStep: 0.7,
     shadowDy: 0.9,
     radius: { panel: 3.5, band: 5, chip: 2.5, bar: 2.2 },
     mast: { gloss: 0.1, edge: 0.35, chip: 0.35, chipEdge: 0.4, ring: 0.9, ringGlass: 0.16 },
     orb: { alpha: 0.06, rings: 18 }, // nền nhạt: orb mờ để thẻ nổi
-    zebra: 0.05, // zebra = brand α
+    zebra: 0.03, // zebra = brand α (mặc định TẮT vì hàng đã cao + có đường kẻ)
     sep: 0.8, // đường kẻ trắng
-    sepHair: 0.12, // hairline brand
+    sepHair: 0.2, // hairline brand (MỘT đường kẻ duy nhất giữa các hàng)
     chip: { base: 0.9, tint: 0.12, edge: 0.35 }, // viên trạng thái (chữ Deep)
     box: 0.08, // ô callout màu (chữ số sinh động) — tint α
   },
@@ -104,8 +109,8 @@ export const THEME = {
 
 /** Sàn cỡ chữ tuyệt đối (pt) cho mọi tài liệu in. */
 export const MIN_PT = 7
-export const CONTENT_W_PORTRAIT = THEME.page.portrait.w - THEME.page.margin * 2 // 186
-export const CONTENT_W_LANDSCAPE = THEME.page.landscape.w - THEME.page.margin * 2 // 273
+export const CONTENT_W_PORTRAIT = THEME.page.portrait.w - THEME.page.margin * 2 // 178
+export const CONTENT_W_LANDSCAPE = THEME.page.landscape.w - THEME.page.margin * 2 // 265
 
 /* ── Tương phản WCAG 2.x ── */
 const channel = (v) => {
