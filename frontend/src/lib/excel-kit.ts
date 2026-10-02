@@ -71,9 +71,11 @@ export function makeDocCode(type: string, p: ExportParts): string {
 export function docTypeFromFile(fileBase: string): string {
   const f = String(fileBase ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd')
   const table: [RegExp, string][] = [
-    [/^so[_ ]quy/, 'SQ'], [/^thu[_ ]quy|^khoan[_ ]thu|^dong[_ ]quy/, 'TQ'], [/^danh[_ ]sach[_ ]thanh[_ ]vien/, 'DSTV'],
+    [/^bao_?cao_?dieu_?hanh/, 'EXEC'], [/^so[_ ]quy/, 'SQ'], [/^thu[_ ]quy|^khoan[_ ]thu|^dong[_ ]quy/, 'TQ'], [/^danh[_ ]sach[_ ]thanh[_ ]vien/, 'DSTV'],
     [/^bao[_ ]cao/, 'BCQ'], [/^chi[_ ]phi|^khoan[_ ]chi/, 'BCC'], [/^cong[_ ]no/, 'CN'], [/^ky[_ ]quy/, 'KQ'],
     [/^diem[_ ]danh/, 'DD'], [/^cham[_ ]diem/, 'CD'], [/^nhat[_ ]ky|^audit/, 'NK'],
+    [/^cho[_ ]xac[_ ]nhan/, 'CXN'], [/^nhac[_ ]dong[_ ]quy/, 'NDQ'], [/^hoat[_ ]dong/, 'HD'], [/^giao[_ ]dich/, 'GD'],
+    [/^danh[_ ]sach[_ ]clb/, 'DSCLB'], [/^bxh|^bang[_ ]xep[_ ]hang|^nhanh[_ ]dau|^lich[_ ]/, 'GIAI'],
   ]
   return table.find(([re]) => re.test(f))?.[1] ?? 'BK'
 }

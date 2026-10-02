@@ -124,15 +124,26 @@ function formatDateTime(v: string | Date | null | undefined): string {
   return themeFmt.dateTime(v)
 }
 
-/** Tên file an toàn: giữ tiếng Việt, khoảng trắng → "_", bỏ ký tự cấm / \ ? % * : | " < > và ký tự điều khiển. */
+/** Tên file an toàn: giữ tiếng Việt; "/" và "\" → "-" ("10/2026" → "10-2026"); " - " → "-" (không sinh "_-_");
+ *  khoảng trắng → "_"; bỏ ký tự cấm ? % * : | " < > và ký tự điều khiển; gộp "_"/"-" lặp. */
 export function safeFileName(s: string): string {
   const out = String(s ?? '')
+    .replace(/[/\\]/g, '-')
+    .replace(/\s*[-–—]\s*/g, '-')
     .replace(/\s+/g, '_')
-    .replace(/[/\\?%*:|"<>]/g, '')
+    .replace(/[?%*:|"<>]/g, '')
+    .replace(/_{2,}/g, '_')
+    .replace(/-{2,}/g, '-')
+    .replace(/[_-]*-[_-]*/g, '-')
     // eslint-disable-next-line no-control-regex
     .replace(/[\x00-\x1f\x7f]/g, '')
-    .replace(/^[._]+|[._]+$/g, '')
+    .replace(/^[._-]+|[._-]+$/g, '')
   return out.slice(0, 120) || 'export'
+}
+
+/** Tên file tải về: {safeFileName(base)}_{dd-MM-yyyy}.{ext} — dùng chung cho mọi export (kể cả PDF phía server). */
+export function exportFileName(base: string, ext: string): string {
+  return `${safeFileName(base)}_${dateStamp()}.${ext}`
 }
 
 /** Escape HTML cho MỌI biến chèn vào innerHTML (chặn HTML/script injection). */
@@ -473,6 +484,9 @@ export interface ExcelSheet {
   footerRows?: (string | number)[][]
   /** Dòng "phạm vi / kỳ" (hàng 3 khối tiêu đề). Thiếu → "{n} dòng dữ liệu". */
   subtitle?: string
+  /** Định dạng số riêng từng ô thân (cùng kích thước `rows`; undefined = mặc định theo số nguyên/thập phân),
+   *  vd '0"%"' cho phần trăm. */
+  cellFormats?: (string | undefined)[][]
 }
 
 /** Tên sheet hợp lệ của Excel: bỏ : \ / ? * [ ], cắt 31 ký tự, KHÔNG trùng (không phân biệt hoa/thường). */
@@ -523,7 +537,7 @@ type XlWorksheet = Record<string, unknown>
 
 /** Xuất workbook ra bytes .xlsx (không đụng DOM → test được bằng node).
  *  @param opts.docType  loại tài liệu cho mã PF-{LOẠI}-yyMMdd-HHmm (mặc định BK; exportExcel suy từ tên file). */
-export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: string } = {}): Promise<Uint8Array> {
+export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: string; docTitle?: string } = {}): Promise<Uint8Array> {
   const [mod, kit] = await Promise.all([import('xlsx-js-style'), import('./excel-kit.ts')])
   const XLSX = ((mod as unknown as { default?: typeof import('xlsx-js-style') }).default ?? mod)
   const set = (ws: XlWorksheet, r: number, c: number, patch: { v?: unknown; t?: string; z?: string; s?: unknown; f?: string }) => {
@@ -593,7 +607,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     // ── Khối tiêu đề 4 hàng (gộp ô theo bề ngang bảng) ──
     const blockRows: [string, unknown][] = [
       [club.toUpperCase(), st.club],
-      [sheet.name, st.title],
+      [opts.docTitle ? `${opts.docTitle} — ${sheet.name}` : sheet.name, st.title],
       [sheet.subtitle ?? `${nRows} dòng dữ liệu`, st.scope],
       [`Xuất lúc ${exportedAt} · Mã TL: ${docCode}`, st.meta],
     ]
@@ -623,7 +637,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
         const raw = row[c] ?? ''
         const zb = zebra && ri % 2 === 1
         if (typeof raw === 'number') {
-          set(ws, r, c, { t: 'n', v: raw, z: numFmt(raw), s: st.cell('right', { zebra: zb, color: numColor(raw) }) })
+          set(ws, r, c, { t: 'n', v: raw, z: sheet.cellFormats?.[ri]?.[c] ?? numFmt(raw), s: st.cell('right', { zebra: zb, color: numColor(raw) }) })
         } else if (raw === '') {
           set(ws, r, c, { t: 's', v: '', s: st.cell(kinds[c] === 'num' ? 'right' : kinds[c] === 'text' ? 'left' : 'center', { zebra: zb }) })
         } else {
@@ -696,7 +710,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
       freezeRows: XL_HEADER_ROWS,
       freezeCols: nCols > 6 ? 1 : 0,
       landscape: nCols > 7 || totalW > 120,
-      footerLeft: `${club} · ${sheet.name}`,
+      footerLeft: `${club} · ${opts.docTitle ?? sheet.name}`,
       docCode,
       headerRow: XL_HEAD + 1,
       tabRgb: b.brand,
@@ -704,7 +718,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
   })
   // Thuộc tính file (docProps): tiêu đề = tên tài liệu, tác giả/đơn vị = tên CLB, chủ đề = mã TL.
   ;(wb as unknown as { Props: Record<string, unknown> }).Props = {
-    Title: sheets[0]?.name ?? 'PickleFund',
+    Title: opts.docTitle ?? sheets[0]?.name ?? 'PickleFund',
     Subject: docCode,
     Author: club,
     LastAuthor: club,
@@ -715,13 +729,14 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
   return kit.patchWorkbookXml(new Uint8Array(out as ArrayBuffer), patches)
 }
 
-export async function exportExcel(filename: string, sheets: ExcelSheet[]) {
+/** @param opts.docTitle tên tài liệu (khối tiêu đề: "{docTitle} — {tên sheet}"; thiếu → chỉ tên sheet). */
+export async function exportExcel(filename: string, sheets: ExcelSheet[], opts: { docTitle?: string; docType?: string } = {}) {
   const kit = await import('./excel-kit.ts')
-  const bytes = await buildExcelBytes(sheets, { docType: kit.docTypeFromFile(filename) })
+  const bytes = await buildExcelBytes(sheets, { docType: opts.docType ?? kit.docTypeFromFile(filename), docTitle: opts.docTitle })
   const blob = new Blob([bytes as unknown as BlobPart], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   })
-  downloadBlob(blob, `${safeFileName(filename)}_${dateStamp()}.xlsx`)
+  downloadBlob(blob, exportFileName(filename, 'xlsx'))
   logReportExport(reportTypeOf(filename), 'excel')
 }
 

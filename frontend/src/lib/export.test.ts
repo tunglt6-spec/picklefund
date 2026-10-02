@@ -77,7 +77,9 @@ test('sanitizeSheetNames: ký tự cấm, >31, trùng (không phân biệt hoa/t
   assert.ok(dup[1].length <= 31 && dup[0] !== dup[1])
 })
 test('safeFileName / methodLabel / formatNumberVN / reportTypeOf', () => {
-  assert.equal(safeFileName('Cong No/Tháng 7\\2026: ?*"<>|%'), 'Cong_No' + 'Tháng_72026')
+  assert.equal(safeFileName('Cong No/Tháng 7\\2026: ?*"<>|%'), 'Cong_No-Tháng_7-2026')
+  assert.equal(safeFileName('BaoCao_DieuHanh_B32 - Tháng 10/2026'), 'BaoCao_DieuHanh_B32-Tháng_10-2026')
+  assert.equal(safeFileName('A  -  B_-_C'), 'A-B-C')
   assert.equal(methodLabel('cash'), 'Tiền mặt')
   assert.equal(methodLabel('bank_transfer'), 'Chuyển khoản')
   assert.equal(methodLabel('momo'), 'momo')
@@ -125,7 +127,7 @@ test('exportExcel: tên sheet cấm/trùng không còn làm throw; trả Promise
     { name: 'a:b', headers: ['A'], rows: [['x']] },
     { name: 'a:b', headers: ['A'], rows: [['y']] },
   ]))
-  assert.match(name, /^Cong_NoTháng_7_\d{2}-\d{2}-\d{4}\.xlsx$/)
+  assert.match(name, /^Cong_No-Tháng_7_\d{2}-\d{2}-\d{4}\.xlsx$/)
   assert.deepEqual(XLSX.read(bytes, { type: 'array' }).SheetNames, ['a b', 'a b (2)'])
 })
 

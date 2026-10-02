@@ -15,8 +15,9 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import api from '../../lib/api'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import {
-  exportExcel, captureElementAsReportPng, setExportBranding,
+  exportExcel, captureElementAsReportPng, setExportBranding, exportFileName,
 } from '../../lib/export'
+import { buildExecutiveSheets, EXEC_DOC_TITLE } from '../../lib/executive-report-sheets'
 import toast from 'react-hot-toast'
 
 const CHART_INCOME = '#059669'
@@ -189,7 +190,7 @@ export function ExecutiveReport() {
       const url = URL.createObjectURL(res.data as Blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `BaoCao_DieuHanh_${data.meta.periodName}.pdf`
+      a.download = exportFileName(`BaoCao_DieuHanh_${data.meta.periodName}`, 'pdf')
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1500)
       toast.dismiss(t)
@@ -218,34 +219,11 @@ export function ExecutiveReport() {
     setExporting(true)
     try {
       prepBranding()
-      const f = data.finance
-      // Cột "Giá trị" CHỈ chứa số thật (tiền → #,##0); đơn vị/ghi chú tách sang cột riêng.
-      await exportExcel(`BaoCao_DieuHanh_${data.meta.periodName}`, [
-        {
-          name: 'Tổng quan',
-          headers: ['Chỉ số', 'Giá trị', `Đơn vị · Kỳ ${data.meta.periodName}`],
-          rows: [
-            ['Điểm sức khỏe CLB', Number(data.summary.clubHealthScore) || 0, '/100'],
-            ['Thành viên hoạt động', Number(data.summary.activeMembers) || 0, `/${data.summary.totalMembers} thành viên`],
-            ['Tỷ lệ tham gia', Number(data.summary.participationRate) || 0, '%'],
-            ['Tổng thu', Number(f.totalIncome) || 0, 'VNĐ'],
-            ['Tổng chi', Number(f.totalExpense) || 0, 'VNĐ'],
-            ['Cân đối', Number(f.balance) || 0, 'VNĐ'],
-            ['Quỹ đầu kỳ', Number(f.carryForward) || 0, 'VNĐ'],
-            ['Tổng tài sản (cuối kỳ)', Number(f.clubAssets) || 0, 'VNĐ'],
-            ['Công nợ (số TV)', Number(data.summary.outstandingCount) || 0, 'thành viên'],
-          ],
-        },
-        {
-          name: 'Thành viên',
-          headers: ['#', 'Thành viên', 'Tham gia (%)', 'Đóng quỹ', 'Hạnh kiểm', 'Sức khỏe'],
-          rows: (data.members?.all ?? []).map((m: any, i: number) => [
-            i + 1, m.name, m.participationRate,
-            m.paymentStatus === 'paid' ? 'Đã đóng' : m.paymentStatus === 'debt' ? 'Nợ' : '—',
-            m.conductScore ?? '', m.healthScore,
-          ]),
-        },
-      ])
+      await exportExcel(
+        `BaoCao_DieuHanh_${data.meta.periodName}`,
+        buildExecutiveSheets(data, aiSum),
+        { docTitle: EXEC_DOC_TITLE, docType: 'EXEC' },
+      )
       toast.success('Đã xuất Excel báo cáo')
     } catch {
       toast.error('Không xuất được Excel')

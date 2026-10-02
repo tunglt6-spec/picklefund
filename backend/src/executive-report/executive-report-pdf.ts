@@ -9,6 +9,7 @@ import {
   TYPE,
   hexToRgb,
   makeBrand,
+  vndCompact,
 } from './export-tokens';
 import { buildExecModel, deltaText, healthTone } from './executive-report-model';
 
@@ -66,6 +67,8 @@ export function buildExecutiveReportPdf(
     doc.circle(cx, cy, r, 'F');
   };
   const up = (s: string) => s.toUpperCase();
+  /** Tiền âm ("-80.000 đ") luôn màu neg ở mọi nơi. */
+  const vcol = (v: string, base: string = COLORS.ink) => (v.trim().startsWith('-') ? COLORS.neg : base);
   let y = PAGE.top;
   const ensure = (h: number) => {
     if (y + h > LIMIT_Y) {
@@ -100,56 +103,73 @@ export function buildExecutiveReportPdf(
     stroke(B.brand);
     doc.setLineWidth(PAGE.border);
     doc.circle(x + size / 2, yy + size / 2, size / 2 - 0.2, 'FD');
-    font(size >= 20 ? TYPE.h1 : TYPE.h2, true, B.brandInk);
-    doc.text(m.mono, x + size / 2, yy + size / 2 + (size >= 20 ? 2.2 : 1.4), { align: 'center' });
+    font(size >= 14 ? TYPE.h1 : TYPE.h2, true, B.brandInk);
+    doc.text(m.mono, x + size / 2, yy + size / 2 + (size >= 14 ? 2.2 : 1.4), { align: 'center' });
   };
 
-  // ── 1. BÌA (cùng bố cục bản Chrome: logo + nhãn, panel brandDeep, 3 thẻ, chân bìa) ──
-  drawLogo(L, y, 22);
+  // ── 1. BÌA (cùng bố cục bản Chrome: vạch brand, logo + tên, panel brandSoft nhạt, thông tin tài liệu) ──
+  fill(B.brand);
+  doc.rect(L, y, CONTENT_W, 1.6, 'F');
+  drawLogo(L, y + SPACE.s5, 16);
+  font(TYPE.h2, true, COLORS.ink);
+  doc.text(m.brandLabel, L + 16 + SPACE.s3, y + SPACE.s5 + 9.4);
+  const panelY = y + 74;
+  const panelH = 108;
+  const px0 = L + 16;
+  fill(B.brandSoft);
+  doc.rect(L, panelY, CONTENT_W, panelH, 'F');
+  fill(B.brand);
+  doc.rect(L, panelY, 1.6, panelH, 'F');
+  let py = panelY + 24;
   font(TYPE.label, true, B.brandInk);
-  doc.text(m.brandLabel, L + 22 + SPACE.s3, y + 11.8);
-  const panelY = y + 22 + SPACE.s6 + 36;
-  const titleLines: string[] = (() => {
-    font(TYPE.cover, true, '#FFFFFF');
-    return doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - SPACE.s5 * 2);
-  })();
-  const titleH = titleLines.length * (TYPE.cover * 0.3528 * 1.12);
-  const panelH = SPACE.s6 + 4 + SPACE.s3 + titleH + SPACE.s2 + 5 + SPACE.s5 + 0.6 + SPACE.s6;
-  fill(B.brandDeep);
-  rrect(L, panelY, CONTENT_W, panelH, 'F');
-  let py = panelY + SPACE.s6;
-  font(TYPE.label, true, '#FFFFFF');
-  doc.text(up('Báo cáo điều hành · Executive Report'), L + SPACE.s5, py);
-  py += SPACE.s3 + 6;
-  font(TYPE.cover, true, '#FFFFFF');
-  doc.text(titleLines, L + SPACE.s5, py);
-  py += titleH + SPACE.s2 - 2;
-  font(TYPE.h2, false, '#FFFFFF');
-  doc.text(`Kỳ báo cáo: ${m.periodName}`, L + SPACE.s5, py + 3);
-  fill('#FFFFFF');
-  doc.rect(L + SPACE.s5, py + 3 + SPACE.s5, SPACE.s6, 0.6, 'F');
-  // 3 thẻ số liệu
-  const cardW = (CONTENT_W - SPACE.s2 * 2) / 3;
-  const cardY = panelY + panelH + SPACE.s3;
+  doc.text(up('Báo cáo điều hành · Executive Report'), px0, py);
+  py += 14;
+  font(TYPE.cover, true, COLORS.ink);
+  const titleLines: string[] = doc.splitTextToSize(m.clubName || m.brandLabel, CONTENT_W - 16 * 2 - 2);
+  doc.text(titleLines, px0, py);
+  py += (titleLines.length - 1) * 11 + 10;
+  font(TYPE.h2, false, COLORS.ink2);
+  doc.text(`Kỳ báo cáo: ${m.periodName}`, px0, py);
+  fill(B.brand);
+  doc.rect(px0, py + 10, SPACE.s6, 0.8, 'F');
+  const sY = py + 24;
+  const sW = (CONTENT_W - 16 - SPACE.s5) / 3;
+  hline(px0, R - SPACE.s5, sY, COLORS.lineStrong, PAGE.border);
   m.coverStats.forEach((c, i) => {
-    const cx = L + i * (cardW + SPACE.s2);
-    fill(COLORS.surface);
-    stroke(COLORS.hairline);
-    doc.setLineWidth(PAGE.hair);
-    rrect(cx, cardY, cardW, 28, 'FD');
+    const cx = px0 + i * sW + (i ? SPACE.s3 : 0);
+    if (i) {
+      stroke(COLORS.lineStrong);
+      doc.setLineWidth(PAGE.hair);
+      doc.line(px0 + i * sW, sY + 4, px0 + i * sW, sY + 24);
+    }
     font(TYPE.label, true, COLORS.muted);
-    doc.text(up(c.l), cx + SPACE.s2, cardY + SPACE.s3);
-    font(TYPE.display, true, COLORS.ink);
-    doc.text(c.v, cx + SPACE.s2, cardY + SPACE.s3 + 9);
+    doc.text(up(c.l), cx, sY + 8);
+    let vs: number = TYPE.display;
+    font(vs, true, vcol(c.v));
+    while (vs > TYPE.h2 && doc.getTextWidth(c.v) > sW - SPACE.s3 - 2) {
+      vs -= 0.5;
+      doc.setFontSize(vs);
+    }
+    doc.text(c.v, cx, sY + 16);
     font(TYPE.caption, false, COLORS.muted);
-    doc.text(c.s, cx + SPACE.s2, cardY + SPACE.s3 + 14.5);
+    doc.text(c.s, cx, sY + 21);
   });
-  // chân bìa
-  const footY = PAGE.top + 250 - 6;
-  hline(L, R, footY);
-  font(TYPE.caption, false, COLORS.muted);
-  doc.text(`Xuất lúc ${m.exportedAt} · Mã TL ${m.code}`, L, footY + SPACE.s2 + 1);
-  doc.text('Tài liệu nội bộ · Ban quản trị CLB', R, footY + SPACE.s2 + 1, { align: 'right' });
+  // thông tin tài liệu (khối có chủ đích, không lặp footer)
+  const docY = PAGE.top + 259 - 26;
+  hline(L, R, docY, COLORS.ink, PAGE.strong);
+  font(TYPE.label, true, B.brandInk);
+  doc.text(up('Thông tin tài liệu'), L, docY + 5);
+  const dcx = [L, L + CONTENT_W * 0.37, L + CONTENT_W * 0.62];
+  [
+    ['Mã tài liệu', m.code],
+    ['Ngày xuất', m.exportedAt],
+    ['Phân loại', 'Tài liệu nội bộ · Ban quản trị CLB'],
+  ].forEach(([l, v], i) => {
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up(l), dcx[i], docY + 11);
+    font(TYPE.table, false, COLORS.ink);
+    doc.text(v, dcx[i], docY + 16);
+  });
 
   // ── 2. MASTHEAD trang 2 ────────────────────────────────────────────
   doc.addPage();
@@ -242,32 +262,36 @@ export function buildExecutiveReportPdf(
     rrect(x, yy, w, h, 'FD');
   };
   const kpiCard = (x: number, yy: number, w: number, k: { l: string; v: string; s?: string; accent?: boolean }, h = 18) => {
-    card(x, yy, w, h, k.accent);
+    if (k.accent) {
+      fill(B.brand);
+      doc.rect(x, yy, w, 0.8, 'F');
+    } else hline(x, x + w, yy, COLORS.hairline, PAGE.border);
     font(TYPE.label, true, COLORS.muted);
-    doc.text(up(k.l), x + SPACE.s2, yy + 5);
+    doc.text(up(k.l), x, yy + 5);
     let size: number = TYPE.kpi;
-    font(size, true, k.accent ? B.brandInk : COLORS.ink);
-    while (size > 10 && doc.getTextWidth(k.v) > w - SPACE.s2 * 2) {
+    font(size, true, vcol(k.v, k.accent ? B.brandInk : COLORS.ink));
+    while (size > 10 && doc.getTextWidth(k.v) > w - 1) {
       size -= 0.5;
       doc.setFontSize(size);
     }
-    doc.text(k.v, x + SPACE.s2, yy + 11);
+    doc.text(k.v, x, yy + 11);
     if (k.s) {
       font(TYPE.caption, false, COLORS.muted);
-      doc.text(k.s, x + SPACE.s2, yy + 15);
+      doc.text(k.s, x, yy + 15);
     }
+    void h;
   };
   const tileCard = (x: number, yy: number, w: number, t: { l: string; v: string }) => {
-    card(x, yy, w, 13);
+    hline(x, x + w, yy, COLORS.hairline, PAGE.border);
     font(TYPE.label, true, COLORS.muted);
-    doc.text(up(t.l), x + w / 2, yy + 4.6, { align: 'center' });
-    let size: number = TYPE.body;
-    font(size, true, COLORS.ink);
-    while (size > TYPE.label && doc.getTextWidth(t.v) > w - 3) {
+    doc.text(up(t.l), x, yy + 4.6);
+    let size: number = TYPE.h2;
+    font(size, true, vcol(t.v));
+    while (size > TYPE.label && doc.getTextWidth(t.v) > w - 1) {
       size -= 0.25;
       doc.setFontSize(size);
     }
-    doc.text(t.v, x + w / 2, yy + 9.6, { align: 'center' });
+    doc.text(t.v, x, yy + 10);
   };
 
   // 01 sức khỏe
@@ -283,9 +307,9 @@ export function buildExecutiveReportPdf(
   ensure(9 + SPACE.s2 + 18 * 2 + SPACE.s2 + SPACE.s3);
   sectionHead('02', 'Tổng quan điều hành', 'Các chỉ số chính');
   {
-    const w = (CONTENT_W - SPACE.s2 * 3) / 4;
+    const w = (CONTENT_W - SPACE.s4 * 3) / 4;
     m.kpis.forEach((k, i) =>
-      kpiCard(L + (i % 4) * (w + SPACE.s2), y + Math.floor(i / 4) * (18 + SPACE.s2), w, k),
+      kpiCard(L + (i % 4) * (w + SPACE.s4), y + Math.floor(i / 4) * (18 + SPACE.s2), w, k),
     );
     y += Math.ceil(m.kpis.length / 4) * (18 + SPACE.s2) + SPACE.s1;
   }
@@ -293,83 +317,101 @@ export function buildExecutiveReportPdf(
   // AI summary
   {
     font(TYPE.body, false, COLORS.ink);
-    const lines: string[] = doc.splitTextToSize(m.aiText, CONTENT_W - SPACE.s2 * 2);
-    const h = SPACE.s2 + 5 + lines.length * 4.4 + SPACE.s2;
+    const lines: string[] = doc.splitTextToSize(m.aiText, CONTENT_W - SPACE.s3 - SPACE.s2);
+    const h = SPACE.s2 + 6 + lines.length * 3.7 + SPACE.s2;
     ensure(h + SPACE.s3);
-    card(L, y, CONTENT_W, h, true);
+    fill(COLORS.surface2);
+    doc.rect(L, y, CONTENT_W, h, 'F');
+    fill(B.brand);
+    doc.rect(L, y, 1, h, 'F');
     font(TYPE.h2, true, B.brandInk);
-    doc.text('Tóm tắt điều hành (AI)', L + SPACE.s2, y + SPACE.s2 + 3);
+    doc.text('Tóm tắt điều hành (AI)', L + SPACE.s3, y + SPACE.s2 + 3);
     font(TYPE.body, false, COLORS.ink);
-    doc.text(lines, L + SPACE.s2, y + SPACE.s2 + 9);
+    doc.text(lines, L + SPACE.s3, y + SPACE.s2 + 9);
     y += h + SPACE.s3;
   }
 
-  // 03 tài chính
+  // 03 tài chính: dải KPI ngang 3x2 + biểu đồ toàn bề rộng (lưới mảnh + nhãn trục)
   {
-    const chartH = 36;
-    const rowsH = m.finRows.length * 7;
-    ensure(9 + SPACE.s2 + Math.max(chartH + 8, rowsH) + SPACE.s3);
+    const stripH = 2 * 13 + SPACE.s2;
+    const plotH = 36;
+    ensure(9 + SPACE.s2 + stripH + 6 + 6 + plotH + 12 + SPACE.s3);
     sectionHead('03', 'Tài chính', 'Thu · Chi · Dòng quỹ', 'Số liệu chuẩn theo kỳ quỹ (carry-forward)');
-    const leftW = 76;
-    const baseY = y + chartH;
-    const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
-    if (!m.trends.length) {
-      font(TYPE.table, false, COLORS.muted);
-      doc.text('Chưa có dữ liệu kỳ trước.', L, y + 6);
-    } else {
-      const colW = Math.min(26, leftW / m.trends.length);
-      const startX = L + (leftW - colW * m.trends.length) / 2;
-      m.trends.forEach((t, i) => {
-        const cx = startX + i * colW + colW / 2;
-        const barW = 8;
-        const hThu = Math.max(0.6, (t.thu / max) * (chartH - 8));
-        const hChi = Math.max(0.6, (t.chi / max) * (chartH - 8));
-        fill(COLORS.posFill);
-        doc.rect(cx - barW - 1, baseY - hThu, barW, hThu, 'F');
-        fill(COLORS.negFill);
-        doc.rect(cx + 1, baseY - hChi, barW, hChi, 'F');
-        font(TYPE.caption, true, COLORS.ink2);
-        doc.text(t.thuLabel, cx - barW / 2 - 1, baseY - hThu - 1, { align: 'center' });
-        doc.text(t.chiLabel, cx + barW / 2 + 1, baseY - hChi - 1, { align: 'center' });
-        font(TYPE.caption, true, COLORS.muted);
-        doc.text(t.name, cx, baseY + 3.6, { align: 'center' });
-      });
-      hline(L, L + leftW, baseY);
-      dot(L + leftW / 2 - 8, baseY + 7.2, 0.8, COLORS.posFill);
-      font(TYPE.caption, false, COLORS.ink2);
-      doc.text('Thu', L + leftW / 2 - 6.4, baseY + 8);
-      dot(L + leftW / 2 + 2, baseY + 7.2, 0.8, COLORS.negFill);
-      doc.text('Chi', L + leftW / 2 + 3.6, baseY + 8);
-    }
-    const rx = L + leftW + SPACE.s4;
-    let ry = y;
-    m.finRows.forEach((r) => {
-      font(TYPE.body, false, COLORS.ink2);
-      doc.text(r.label, rx, ry + 4.4);
-      font(TYPE.body, true, COLORS.ink);
-      let vx = R;
+    const cw3 = (CONTENT_W - SPACE.s4 * 2) / 3;
+    m.finRows.forEach((r, i) => {
+      const cx = L + (i % 3) * (cw3 + SPACE.s4);
+      const cy = y + Math.floor(i / 3) * (13 + SPACE.s2);
+      hline(cx, cx + cw3, cy, COLORS.hairline, PAGE.border);
+      font(TYPE.label, true, COLORS.muted);
+      doc.text(up(r.label), cx, cy + 4.6);
+      font(TYPE.kpi, true, vcol(r.value));
+      doc.text(r.value, cx, cy + 10.6);
       if (r.delta !== undefined) {
+        const vw = doc.getTextWidth(r.value);
         if (r.delta == null) {
           font(TYPE.caption, false, COLORS.muted);
-          doc.text('—', R, ry + 4.4, { align: 'right' });
-          vx = R - 5;
+          doc.text('—', cx + vw + 2.5, cy + 10.6);
         } else {
           const txt = deltaText(r.delta);
           font(TYPE.caption, true, r.delta >= 0 ? COLORS.pos : COLORS.neg);
           const tw = doc.getTextWidth(txt) + 3.2;
           fill(r.delta >= 0 ? COLORS.posTint : COLORS.negTint);
-          rrect(R - tw, ry + 1.2, tw, 4.4, 'F');
+          rrect(cx + vw + 2.5, cy + 7.2, tw, 4.4, 'F');
           ink(r.delta >= 0 ? COLORS.pos : COLORS.neg);
-          doc.text(txt, R - tw / 2, ry + 4.3, { align: 'center' });
-          vx = R - tw - 1.5;
+          doc.text(txt, cx + vw + 2.5 + tw / 2, cy + 10.3, { align: 'center' });
         }
-        font(TYPE.body, true, COLORS.ink);
       }
-      doc.text(r.value, vx, ry + 4.4, { align: 'right' });
-      ry += 7;
-      hline(rx, R, ry - 0.8);
     });
-    y += Math.max(chartH + 10, rowsH) + SPACE.s3;
+    y += stripH + SPACE.s3;
+    font(TYPE.label, true, COLORS.muted);
+    doc.text(up('Thu · Chi theo kỳ quỹ'), L, y + 2);
+    dot(R - 17, y + 1.4, 0.8, COLORS.posFill);
+    font(TYPE.caption, false, COLORS.ink2);
+    doc.text('Thu', R - 15.4, y + 2.2);
+    dot(R - 8, y + 1.4, 0.8, COLORS.negFill);
+    doc.text('Chi', R - 6.4, y + 2.2);
+    y += 8;
+    if (!m.trends.length) {
+      font(TYPE.table, false, COLORS.muted);
+      doc.text('Chưa có dữ liệu kỳ trước.', L, y + 6);
+      y += 10;
+    } else {
+      const px = L + 18;
+      const pw = CONTENT_W - 18;
+      const baseY = y + plotH;
+      const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
+      const maxBarH = plotH * 0.85;
+      [[1, max], [0.5, max / 2]].forEach(([f, val]) => {
+        hline(px, px + pw, baseY - maxBarH * f);
+        font(TYPE.caption, false, COLORS.muted);
+        doc.text(vndCompact(val, true), px - 2, baseY - maxBarH * f + 0.9, { align: 'right' });
+      });
+      hline(px, px + pw, baseY, COLORS.lineStrong, PAGE.strong);
+      font(TYPE.caption, false, COLORS.muted);
+      doc.text('0', px - 2, baseY + 0.9, { align: 'right' });
+      const colW = Math.min(34, pw / m.trends.length);
+      const startX = px + (pw - colW * m.trends.length) / 2;
+      const dense = m.trends.length > 7;
+      m.trends.forEach((t, i) => {
+        const cx = startX + i * colW + colW / 2;
+        const barW = Math.min(10, colW * 0.4);
+        const hThu = Math.max(0.6, (t.thu / max) * maxBarH);
+        const hChi = Math.max(0.6, (t.chi / max) * maxBarH);
+        fill(COLORS.posFill);
+        doc.rect(cx - barW - 0.75, baseY - hThu, barW, hThu, 'F');
+        fill(COLORS.negFill);
+        doc.rect(cx + 0.75, baseY - hChi, barW, hChi, 'F');
+        if (!dense) {
+          font(TYPE.caption, true, COLORS.ink2);
+          doc.text(t.thuLabel, cx - barW / 2 - 0.75, baseY - hThu - 1, { align: 'center' });
+          doc.text(t.chiLabel, cx + barW / 2 + 0.75, baseY - hChi - 1, { align: 'center' });
+        }
+        font(TYPE.caption, true, COLORS.muted);
+        doc.text(t.label, cx, baseY + 4.2, { align: 'center' });
+      });
+      y = baseY + 12;
+    }
+    y += SPACE.s1;
   }
 
   // 04 thành viên
@@ -377,7 +419,7 @@ export function buildExecutiveReportPdf(
     ensure(9 + SPACE.s2 + 24 + 8 + 14);
     sectionHead('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm');
     const at = healthTone(m.avgHealth);
-    card(L, y, CONTENT_W, 20);
+    hline(L, R, y + 20);
     font(TYPE.label, true, COLORS.muted);
     doc.text(up('Điểm sức khỏe TB'), L + SPACE.s2, y + 5);
     font(TYPE.display, true, at.text);
@@ -560,9 +602,8 @@ export function buildExecutiveReportPdf(
     const w = (CONTENT_W - SPACE.s2 * 4) / 5;
     m.agents.forEach((a, i) => {
       const ax = L + i * (w + SPACE.s2);
-      card(ax, y, w, 24);
       fill(B.brand);
-      doc.rect(ax + 0.3, y, w - 0.6, 0.6, 'F');
+      doc.rect(ax, y, w, 0.8, 'F');
       font(TYPE.table, true, B.brandInk);
       doc.text(a.name, ax + 2.8, y + 5.4);
       font(TYPE.kpi, true, COLORS.ink);
@@ -578,6 +619,16 @@ export function buildExecutiveReportPdf(
   }
 
   // 10 dòng thời gian | 11 cảnh báo | 12 khuyến nghị
+  // Ngắt dòng không tách số tiền: nếu không vừa cuối dòng thì cả "280.000 đ" xuống dòng mới.
+  const tlLines = (text: string, amount: string | null, maxW: number): string[] => {
+    font(TYPE.table, false, COLORS.ink);
+    const ls: string[] = doc.splitTextToSize(text, maxW);
+    if (!amount) return ls;
+    const last = ls[ls.length - 1] ?? '';
+    if (last && doc.getTextWidth(`${last} ${amount}`) <= maxW) ls[ls.length - 1] = `${last} ${amount}`;
+    else ls.push(amount);
+    return ls;
+  };
   {
     const unit = (CONTENT_W - SPACE.s3 * 2) / 3.1;
     const cw = [unit * 1.1, unit, unit];
@@ -595,14 +646,14 @@ export function buildExecutiveReportPdf(
         }
         m.timeline.forEach((t) => {
           font(TYPE.table, false, COLORS.ink);
-          const lines: string[] = doc.splitTextToSize(`${t.date}  ${t.text}${t.amount ? ' ' + t.amount : ''}`, w - 5);
+          const lines = tlLines(t.text, t.amount, w - 5 - doc.getTextWidth(t.date + '  '));
           if (!dry) {
             dot(x + 1, yy + h + 2.4, 1, t.fill);
             font(TYPE.table, true, COLORS.ink);
             doc.text(t.date, x + 4, yy + h + 3.2);
             const dw = doc.getTextWidth(t.date + '  ');
             font(TYPE.table, false, COLORS.ink);
-            const rest: string[] = doc.splitTextToSize(`${t.text}${t.amount ? ' ' + t.amount : ''}`, w - 5 - dw);
+            const rest = tlLines(t.text, t.amount, w - 5 - dw);
             doc.text(rest, x + 4 + dw, yy + h + 3.2);
             h += Math.max(1, rest.length) * 4 + 2;
           } else {
@@ -659,8 +710,9 @@ export function buildExecutiveReportPdf(
     y += h + SPACE.s3;
   }
   font(TYPE.caption, false, COLORS.muted);
-  ensure(5);
-  doc.text('AIDO Executive Report · mọi con số từ dữ liệu thật của CLB', PAGE.w / 2, y + 2, { align: 'center' });
+  ensure(7);
+  hline(L, R, y + 0.5);
+  doc.text('Ghi chú: AIDO Executive Report · mọi con số được lấy từ dữ liệu thật của CLB.', L, y + 4.2);
 
   // ── Footer mọi trang: cùng chuỗi bản Chrome ─────────────────────────
   const pageCount = (doc as any).internal.getNumberOfPages();

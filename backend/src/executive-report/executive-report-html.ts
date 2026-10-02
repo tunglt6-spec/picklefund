@@ -9,6 +9,7 @@ import {
   makeBrand,
   mm,
   pt,
+  vndCompact,
 } from './export-tokens';
 import { buildExecModel, deltaText, healthTone } from './executive-report-model';
 
@@ -62,15 +63,17 @@ export function buildReportHtml(
   // Chỉ nhúng khi là data:image URI hợp lệ (chống inject vào src); nếu không → monogram từ tên CLB.
   const safeLogo =
     typeof logoDataUri === 'string' && /^data:image\/[a-z+]+;base64,/i.test(logoDataUri) ? logoDataUri : null;
-  const logo = (cls: 'lg' | 'sm') =>
+  const logo = (cls: 'md' | 'sm') =>
     safeLogo
       ? `<div class="logo ${cls}"><img src="${safeLogo}" alt=""/></div>`
       : `<div class="logo ${cls} mono">${esc(m.mono)}</div>`;
 
+  // Tiền âm ("-80.000 đ") luôn hiển thị màu neg (AA) ở MỌI nơi.
+  const negCls = (v: string) => (v.trim().startsWith('-') ? ' neg' : '');
   const kpi = (l: string, v: string, s = '', accent = false) =>
-    `<div class="kpi${accent ? ' acc' : ''}"><div class="kl">${esc(l)}</div><div class="kv">${esc(v)}</div>${s ? `<div class="ks">${esc(s)}</div>` : ''}</div>`;
+    `<div class="kpi${accent ? ' acc' : ''}"><div class="kl">${esc(l)}</div><div class="kv${negCls(v)}">${esc(v)}</div>${s ? `<div class="ks">${esc(s)}</div>` : ''}</div>`;
   const tile = (l: string, v: string) =>
-    `<div class="tile"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`;
+    `<div class="tile"><div class="l">${esc(l)}</div><div class="v${negCls(v)}">${esc(v)}</div></div>`;
   const head = (num: string, eyebrow: string, title: string, note = '') =>
     `<div class="shead"><div><div class="eyebrow">${esc(num)} · ${esc(eyebrow)}</div><div class="stitle">${esc(title)}</div></div>${note ? `<div class="snote">${esc(note)}</div>` : ''}</div>`;
   const sub = (num: string, eyebrow: string, title: string) =>
@@ -88,21 +91,27 @@ export function buildReportHtml(
 
   const delta = (v: number | null | undefined) =>
     v == null
-      ? '<span class="mut" style="margin-left:1.5mm">—</span>'
+      ? '<span class="mut">—</span>'
       : `<span class="delta ${v >= 0 ? 'pos' : 'neg'}">${deltaText(v)}</span>`;
 
-  // Biểu đồ cột: cột cố định rộng, căn giữa (không loãng khi ít kỳ); nhãn tiền rút gọn vi-VN.
+  // Biểu đồ cột: toàn bề rộng, lưới ngang mảnh + nhãn trục; cột chiếm tối đa 85% chiều cao để chừa chỗ nhãn giá trị.
   const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
+  const dense = m.trends.length > 7;
   const chart = m.trends.length
-    ? `<div class="chart">${m.trends
+    ? `<div class="chead"><span>Thu · Chi theo kỳ quỹ</span><span class="legend"><span><i style="background:${COLORS.posFill}"></i>Thu</span><span><i style="background:${COLORS.negFill}"></i>Chi</span></span></div>
+    <div class="cplot${dense ? ' dense' : ''}">
+      <div class="gl" style="bottom:85%"><em>${esc(vndCompact(max, true))}</em></div>
+      <div class="gl" style="bottom:42.5%"><em>${esc(vndCompact(max / 2, true))}</em></div>
+      <div class="gl gl0"><em>0</em></div>
+      <div class="chart">${m.trends
         .map(
           (t) => `<div class="tcol"><div class="tbars">
-        <div class="tbwrap"><span class="tval">${esc(t.thuLabel)}</span><div class="tb thu" style="height:${(t.thu / max) * 100}%"></div></div>
-        <div class="tbwrap"><span class="tval">${esc(t.chiLabel)}</span><div class="tb chi" style="height:${(t.chi / max) * 100}%"></div></div>
-      </div><div class="tlbl">${esc(t.name)}</div></div>`,
+        <div class="tbwrap"><span class="tval">${esc(t.thuLabel)}</span><div class="tb thu" style="height:${(t.thu / max) * 85}%"></div></div>
+        <div class="tbwrap"><span class="tval">${esc(t.chiLabel)}</span><div class="tb chi" style="height:${(t.chi / max) * 85}%"></div></div>
+      </div><div class="tlbl">${esc(t.label)}</div></div>`,
         )
         .join('')}</div>
-    <div class="legend"><span><i style="background:${COLORS.posFill}"></i>Thu</span><span><i style="background:${COLORS.negFill}"></i>Chi</span></div>`
+    </div>`
     : '<p class="mut sm">Chưa có dữ liệu kỳ trước.</p>';
 
   const memberRows = m.members
@@ -145,7 +154,7 @@ export function buildReportHtml(
     ? `<ul class="tl">${m.timeline
         .map(
           (t) =>
-            `<li style="--dot:${t.fill}"><span class="tld">${esc(t.date)}</span><span class="tlx">${esc(t.text)}${t.amount ? ` <b>${esc(t.amount)}</b>` : ''}</span></li>`,
+            `<li style="--dot:${t.fill}"><span class="tld">${esc(t.date)}</span><span class="tlx">${esc(t.text)}${t.amount ? ` <b style="white-space:nowrap">${esc(t.amount)}</b>` : ''}</span></li>`,
         )
         .join('')}</ul>`
     : '<p class="mut sm">Chưa có sự kiện nổi bật.</p>';
@@ -161,7 +170,7 @@ export function buildReportHtml(
   const css = `${fontFace}
 *{box-sizing:border-box;margin:0;padding:0}
 ${PAGE_CSS}
-:root{--ink:${COLORS.ink};--ink2:${COLORS.ink2};--muted:${COLORS.muted};--line:${COLORS.hairline};--surface2:${COLORS.surface2};
+:root{--ink:${COLORS.ink};--ink2:${COLORS.ink2};--muted:${COLORS.muted};--line:${COLORS.hairline};--lineStrong:${COLORS.lineStrong};--surface2:${COLORS.surface2};
   --brand:${B.brand};--brandDeep:${B.brandDeep};--brandInk:${B.brandInk};--brandSoft:${B.brandSoft}}
 body{font-family:${fam};color:var(--ink);font-size:${pt(TYPE.body)};line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 b{font-weight:700}
@@ -192,46 +201,54 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .logo img{width:100%;height:100%;object-fit:contain}
 .logo.mono{color:var(--brandInk);background:var(--brandSoft);border-color:var(--brand);font-weight:700;letter-spacing:.5pt;border-radius:50%}
 .logo.sm{width:${mm(12)};height:${mm(12)}}.logo.sm.mono{font-size:${pt(TYPE.h2)}}
-.logo.lg{width:${mm(22)};height:${mm(22)}}.logo.lg.mono{font-size:${pt(TYPE.h1)}}
+.logo.md{width:${mm(16)};height:${mm(16)}}.logo.md.mono{font-size:${pt(TYPE.h1)}}
 /* Health dims */
 .dims{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)} ${mm(SPACE.s3)}}
 .dim-h{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};margin-bottom:${mm(1)};font-weight:700;color:var(--ink2)}
 .bar{height:${mm(1.8)};background:var(--line);border-radius:${mm(0.9)};overflow:hidden}.bar i{display:block;height:100%;border-radius:${mm(0.9)}}
-/* KPI */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:${mm(SPACE.s2)}}
-.kpi{background:#fff;border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)}}
-.kpi.acc{background:var(--brandSoft);border:${mm(PAGE.border)} solid var(--brand)}
+/* KPI: lưới hairline, không hộp viền */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:${mm(SPACE.s3)} ${mm(SPACE.s4)}}
+.kpi{border-top:${mm(PAGE.border)} solid var(--line);padding-top:${mm(SPACE.s2)}}
+.kpi.acc{border-top:${mm(0.8)} solid var(--brand)}
 .kl{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .kv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--ink);margin-top:${mm(1)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi.acc .kv{color:var(--brandInk)}
+.kv.neg,.fv.neg,.v.neg{color:${COLORS.neg}!important}
 .ks{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(0.5)}}
-.kpi2{display:grid;grid-template-columns:1fr 1fr;gap:${mm(SPACE.s2)}}
-/* AI summary */
-.aibox{background:var(--brandSoft);border:${mm(PAGE.border)} solid var(--brand);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)}}
+.kpi2{display:grid;grid-template-columns:1fr 1fr;gap:${mm(SPACE.s2)} ${mm(SPACE.s3)}}
+/* AI summary: nền rất nhạt + vạch brand trái */
+.aibox{background:var(--surface2);border-left:${mm(1)} solid var(--brand);padding:${mm(SPACE.s3)} ${mm(SPACE.s3)}}
 .aibox .h{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s1)}}
 .aibox .b{font-size:${pt(TYPE.body)};line-height:1.6;white-space:pre-line;color:var(--ink)}
-/* Finance */
-.two{display:grid;grid-template-columns:1fr 1.15fr;gap:${mm(SPACE.s4)};align-items:center}
-.chart{display:flex;justify-content:center;align-items:flex-end;gap:${mm(SPACE.s3)};height:${mm(42)};padding:0 ${mm(SPACE.s2)};border-bottom:${mm(PAGE.hair)} solid var(--line)}
-.tcol{flex:0 0 ${mm(26)};display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
-.tbars{display:flex;gap:${mm(2)};align-items:flex-end;height:100%}
-.tbwrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;width:${mm(12)}}
+/* Finance: dải KPI ngang + biểu đồ toàn bề rộng */
+.fstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s3)} ${mm(SPACE.s4)};margin-bottom:${mm(SPACE.s4)}}
+.fcell{border-top:${mm(PAGE.border)} solid var(--line);padding-top:${mm(SPACE.s1)}}
+.fval{display:flex;align-items:baseline;gap:${mm(2)};margin-top:${mm(1)};white-space:nowrap}
+.fv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chead{display:flex;justify-content:space-between;align-items:center;font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:${mm(SPACE.s2)}}
+.cplot{position:relative;margin:0 0 ${mm(12)} ${mm(18)};height:${mm(44)}}
+.gl{position:absolute;left:0;right:0;border-top:${mm(PAGE.hair)} solid var(--line)}
+.gl em{position:absolute;right:100%;margin-right:${mm(2)};transform:translateY(-50%);font-style:normal;font-size:${pt(TYPE.caption)};color:var(--muted);white-space:nowrap}
+.gl0{bottom:0;border-top:${mm(PAGE.strong)} solid ${COLORS.lineStrong}}
+.chart{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:stretch}
+.tcol{position:relative;flex:1 1 0;max-width:${mm(34)};height:100%;display:flex;justify-content:center}
+.tbars{display:flex;gap:${mm(1.5)};align-items:flex-end;height:100%;width:70%}
+.tbwrap{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
 .tval{font-size:${pt(TYPE.caption)};font-weight:700;color:var(--ink2);margin-bottom:${mm(0.5)};white-space:nowrap}
-.tb{width:${mm(8)};border-radius:${mm(0.8)} ${mm(0.8)} 0 0}
+.dense .tval{display:none}
+.tb{width:100%;border-radius:${mm(0.8)} ${mm(0.8)} 0 0}
 .tb.thu{background:${COLORS.posFill}}.tb.chi{background:${COLORS.negFill}}
-.tlbl{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)};text-align:center;font-weight:700}
-.legend{display:flex;gap:${mm(SPACE.s3)};font-size:${pt(TYPE.caption)};color:var(--ink2);margin-top:${mm(SPACE.s1)};justify-content:center}
+.tlbl{position:absolute;top:100%;left:0;right:0;margin-top:${mm(1.5)};font-size:${pt(TYPE.caption)};color:var(--muted);text-align:center;font-weight:700;white-space:nowrap}
+.legend{display:inline-flex;gap:${mm(SPACE.s3)};font-size:${pt(TYPE.caption)};color:var(--ink2);text-transform:none;letter-spacing:0}
 .legend i{display:inline-block;width:${mm(1.6)};height:${mm(1.6)};border-radius:50%;margin-right:${mm(1)};vertical-align:middle}
-.frow{display:flex;justify-content:space-between;align-items:center;font-size:${pt(TYPE.body)};padding:${mm(1.4)} 0;border-bottom:${mm(PAGE.hair)} solid var(--line)}
-.frow:last-child{border-bottom:none}
-.frow .fl{color:var(--ink2)}.frow .fv{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.delta{font-size:${pt(TYPE.caption)};font-weight:700;padding:${mm(0.2)} ${mm(1.6)};border-radius:${mm(PAGE.radius)};margin-left:${mm(1.5)}}
+.delta{font-size:${pt(TYPE.caption)};font-weight:700;padding:${mm(0.2)} ${mm(1.6)};border-radius:${mm(PAGE.radius)}}
 .delta.pos{color:${COLORS.pos};background:${COLORS.posTint}}.delta.neg{color:${COLORS.neg};background:${COLORS.negTint}}
-/* Tiles */
+/* Tiles: ô hairline, không hộp viền */
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)}}
-.tile{border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)} ${mm(2)};text-align:center;background:#fff}
+.tile{border-top:${mm(PAGE.border)} solid var(--line);padding-top:${mm(SPACE.s1)}}
 .tile .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
-.tile .v{font-size:${pt(TYPE.body)};font-weight:700;color:var(--ink);margin-top:${mm(1)};white-space:nowrap}
+.tile .v{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--ink);margin-top:${mm(1)};white-space:nowrap;font-variant-numeric:tabular-nums}
+.tile .v.neg{color:${COLORS.neg}}
 /* Bảng */
 table{width:100%;border-collapse:collapse}
 thead th{background:var(--brandSoft);color:var(--brandInk);font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;text-align:left;padding:${mm(2)} ${mm(2.5)};border-bottom:${mm(PAGE.strong)} solid var(--brand)}
@@ -244,7 +261,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .st i{display:inline-block;width:${mm(1.6)};height:${mm(1.6)};border-radius:50%;margin-right:${mm(1.2)}}
 .dots{display:inline-flex;gap:${mm(0.6)};vertical-align:middle}.dots i{display:inline-block;width:${mm(1.6)};height:${mm(1.6)};border-radius:50%;background:var(--line)}.dots i.on{background:var(--brand)}
 .dno{font-size:${pt(TYPE.caption)};color:var(--muted);margin-left:${mm(1.2)}}
-.avgcard{display:flex;align-items:center;gap:${mm(SPACE.s3)};border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)};margin-bottom:${mm(SPACE.s2)}}
+.avgcard{display:flex;align-items:center;gap:${mm(SPACE.s4)};padding:${mm(SPACE.s1)} 0 ${mm(SPACE.s2)};margin-bottom:${mm(SPACE.s2)}}
 .avgcard .big{font-size:${pt(TYPE.display)};font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}.avgcard .big small{font-size:${pt(TYPE.body)};color:var(--muted);font-weight:400}
 .avgcard .lbl{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .dist{display:grid;grid-template-columns:1fr 1fr;gap:${mm(SPACE.s1)} ${mm(SPACE.s2)};flex:1}
@@ -262,14 +279,14 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .pln{flex:1;font-weight:700}.plw{color:var(--ink2);font-size:${pt(TYPE.caption)}}
 /* AI agents */
 .aigrid{display:grid;grid-template-columns:repeat(5,1fr);gap:${mm(SPACE.s2)}}
-.agent{border:${mm(PAGE.hair)} solid var(--line);border-top:${mm(0.6)} solid var(--brand);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)} ${mm(3)};background:#fff}
+.agent{border-top:${mm(0.8)} solid var(--brand);padding:${mm(SPACE.s2)} 0 0}
 .an{font-size:${pt(TYPE.table)};font-weight:700;color:var(--brandInk)}
 .av{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--ink);margin:${mm(1)} 0;line-height:1.1;font-variant-numeric:tabular-nums}
 .au{font-size:${pt(TYPE.caption)};color:var(--muted);font-weight:400;margin-left:${mm(1)}}
 .ad{font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid var(--line);margin-top:${mm(1.5)};padding-top:${mm(1.5)};line-height:1.4}
 /* Timeline / alerts / recs */
 .tl{list-style:none;border-left:${mm(PAGE.border)} solid var(--line);padding-left:${mm(SPACE.s2)};margin-left:${mm(1)}}
-.tl li{position:relative;margin-bottom:${mm(SPACE.s2)};font-size:${pt(TYPE.table)}}
+.tl li{position:relative;margin-bottom:${mm(3)};font-size:${pt(TYPE.table)}}
 .tl li:before{content:'';position:absolute;left:${mm(-5.5)};top:${mm(1)};width:${mm(2)};height:${mm(2)};border-radius:50%;background:var(--dot)}
 .tld{font-weight:700;color:var(--ink);margin-right:${mm(1.5)}}
 .alist,.rlist{list-style:none}
@@ -277,41 +294,57 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .alist li:before{content:'';position:absolute;left:0;top:${mm(2.2)};width:${mm(1.8)};height:${mm(1.8)};border-radius:50%;background:${COLORS.warnFill}}
 .rlist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(1.2)} 0;line-height:1.55}
 .tag{display:inline-block;background:var(--brandSoft);color:var(--brandInk);font-size:${pt(TYPE.label)};font-weight:700;padding:${mm(0.2)} ${mm(2)};border-radius:${mm(PAGE.radius)};margin-right:${mm(1.5)}}
-.closing{text-align:center;color:var(--muted);font-size:${pt(TYPE.caption)};margin-top:${mm(SPACE.s1)}}
-/* BÌA — nằm trong lề in (footer vẫn hiển thị), 1 panel đặc brandDeep duy nhất */
-.cover{height:${mm(250)};display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;break-after:page}
-.cv-top{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
-.cv-brand{font-size:${pt(TYPE.label)};letter-spacing:.3pt;font-weight:700;color:var(--brandInk);text-transform:uppercase}
-.cv-panel{background:var(--brandDeep);color:#fff;border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s6)} ${mm(SPACE.s5)}}
-.cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700}
-.cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.12;margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
-.cv-period{font-size:${pt(TYPE.h2)}}
-.cv-rule{width:${mm(SPACE.s6)};height:${mm(0.6)};background:#fff;margin:${mm(SPACE.s5)} 0 0}
-.cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)}}
-.gcard{border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s3)} ${mm(SPACE.s2)};background:#fff}
-.gcard .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
-.gcard .v{font-size:${pt(TYPE.display)};font-weight:700;color:var(--ink);margin-top:${mm(SPACE.s1)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.gcard .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
-.cv-foot{display:flex;justify-content:space-between;font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid var(--line);padding-top:${mm(SPACE.s2)}}`;
+.closing{color:var(--muted);font-size:${pt(TYPE.caption)};border-top:${mm(PAGE.hair)} solid var(--line);padding-top:${mm(SPACE.s1)};margin-top:${mm(SPACE.s2)}}
+/* BÌA — cân đối trên / giữa / dưới; nền trắng, vạch brand, panel brandSoft nhạt; không lặp footer Chrome */
+.cover{height:${mm(259)};display:flex;flex-direction:column;justify-content:space-between;border-top:${mm(1.6)} solid var(--brand);padding-top:${mm(SPACE.s5)};page-break-after:always;break-after:page}
+.cv-top{display:flex;align-items:center;justify-content:space-between}
+.cv-id{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
+.cv-brand{font-size:${pt(TYPE.h2)};letter-spacing:.4pt;font-weight:700;color:var(--ink);text-transform:uppercase}
+.cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:var(--muted);text-transform:uppercase}
+.cv-mid{background:var(--brandSoft);border-left:${mm(1.6)} solid var(--brand);padding:${mm(SPACE.s6)} ${mm(SPACE.s5)} ${mm(SPACE.s5)}}
+.cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.5pt;text-transform:uppercase;font-weight:700;color:var(--brandInk)}
+.cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:var(--ink);margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
+.cv-period{font-size:${pt(TYPE.h2)};color:var(--ink2)}
+.cv-rule{width:${mm(SPACE.s6)};height:${mm(0.8)};background:var(--brand);margin:${mm(SPACE.s5)} 0 ${mm(SPACE.s4)}}
+.cv-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:${mm(PAGE.border)} solid var(--lineStrong)}
+.cv-st{padding:${mm(SPACE.s3)} ${mm(SPACE.s3)} 0 0}
+.cv-st+.cv-st{padding-left:${mm(SPACE.s3)};border-left:${mm(PAGE.hair)} solid var(--lineStrong)}
+.cv-st .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cv-st .v{font-size:${pt(TYPE.display)};font-weight:700;color:var(--ink);margin-top:${mm(SPACE.s1)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cv-st .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
+.cv-doc{border-top:${mm(PAGE.strong)} solid var(--ink);padding-top:${mm(SPACE.s2)}}
+.cv-dh{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s2)}}
+.cv-dg{display:grid;grid-template-columns:1.3fr 1.1fr 1.2fr;gap:${mm(SPACE.s3)}}
+.cv-dg .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cv-dg .v{font-size:${pt(TYPE.table)};color:var(--ink);margin-top:${mm(0.8)}}`;
 
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><style>
 ${css}
 </style></head><body>
 
 <section class="cover">
-  <div class="cv-top">${logo('lg')}<div class="cv-brand">${esc(m.brandLabel)}</div></div>
+  <div class="cv-top">
+    <div class="cv-id">${logo('md')}<div class="cv-brand">${esc(m.brandLabel)}</div></div>
+  </div>
   <div>
-    <div class="cv-panel">
+    <div class="cv-mid">
       <div class="cv-eyb">Báo cáo điều hành · Executive Report</div>
       <h1 class="cv-title">${esc(m.clubName || m.brandLabel)}</h1>
       <div class="cv-period">Kỳ báo cáo: ${esc(m.periodName)}</div>
       <div class="cv-rule"></div>
-    </div>
-    <div class="cv-stats" style="margin-top:${mm(SPACE.s3)}">
-      ${m.coverStats.map((c) => `<div class="gcard"><div class="l">${esc(c.l)}</div><div class="v">${esc(c.v)}</div><div class="s">${esc(c.s)}</div></div>`).join('')}
+      <div class="cv-stats">
+        ${m.coverStats.map((c) => `<div class="cv-st"><div class="l">${esc(c.l)}</div><div class="v${negCls(c.v)}">${esc(c.v)}</div><div class="s">${esc(c.s)}</div></div>`).join('')}
+      </div>
     </div>
   </div>
-  <div class="cv-foot"><span>Xuất lúc ${esc(m.exportedAt)} · Mã TL ${esc(m.code)}</span><span>Tài liệu nội bộ · Ban quản trị CLB</span></div>
+  <div class="cv-doc">
+    <div class="cv-dh">Thông tin tài liệu</div>
+    <div class="cv-dg">
+      <div><div class="l">Mã tài liệu</div><div class="v">${esc(m.code)}</div></div>
+      <div><div class="l">Ngày xuất</div><div class="v">${esc(m.exportedAt)}</div></div>
+      <div><div class="l">Phân loại</div><div class="v">Tài liệu nội bộ · Ban quản trị CLB</div></div>
+    </div>
+  </div>
 </section>
 
 <div class="mast">
@@ -343,12 +376,13 @@ ${css}
 
 <div class="sect">
   ${head('03', 'Tài chính', 'Thu · Chi · Dòng quỹ', 'Số liệu chuẩn theo kỳ quỹ (carry-forward)')}
-  <div class="two">
-    <div>${chart}</div>
-    <div>${m.finRows
-      .map((r) => `<div class="frow"><span class="fl">${esc(r.label)}</span><span><span class="fv">${esc(r.value)}</span>${r.delta !== undefined ? delta(r.delta) : ''}</span></div>`)
-      .join('')}</div>
-  </div>
+  <div class="fstrip">${m.finRows
+    .map(
+      (r) =>
+        `<div class="fcell"><div class="kl">${esc(r.label)}</div><div class="fval"><span class="fv${negCls(r.value)}">${esc(r.value)}</span>${r.delta !== undefined ? delta(r.delta) : ''}</div></div>`,
+    )
+    .join('')}</div>
+  ${chart}
 </div>
 
 <div class="sect sect--flow">
@@ -399,13 +433,13 @@ ${css}
   ${agentsHtml}
 </div>
 
-<div class="sect three">
+<div class="sect three" style="margin-bottom:0">
   <div>${sub('10', 'Dòng thời gian', 'Sự kiện nổi bật')}${timelineHtml}</div>
   <div>${sub('11', 'Cảnh báo', 'Rủi ro cần lưu ý')}${alerts}</div>
   <div>${sub('12', 'Khuyến nghị', 'Gợi ý hành động')}${recs}</div>
 </div>
 
-<div class="closing">AIDO Executive Report · mọi con số từ dữ liệu thật của CLB</div>
+<div class="closing">Ghi chú: AIDO Executive Report · mọi con số được lấy từ dữ liệu thật của CLB.</div>
 
 </body></html>`;
 }

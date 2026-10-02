@@ -60,7 +60,7 @@ export interface ExecModel {
   kpis: Array<{ l: string; v: string; s: string; accent?: boolean }>;
   aiText: string;
   finRows: Array<{ label: string; value: string; delta?: number | null }>;
-  trends: Array<{ name: string; thu: number; chi: number; thuLabel: string; chiLabel: string }>;
+  trends: Array<{ name: string; label: string; thu: number; chi: number; thuLabel: string; chiLabel: string }>;
   members: Array<{
     rank: number;
     name: string;
@@ -84,6 +84,12 @@ export interface ExecModel {
   timeline: Array<{ date: string; text: string; amount: string | null; fill: string }>;
   alerts: string[];
   recs: Array<{ agent: string; text: string }>;
+}
+
+/** Nhãn cột biểu đồ gọn: "B32 - Tháng 06/2026" → "06/2026" (không khớp → giữ nguyên). */
+export function shortPeriod(name: string): string {
+  const mt = /(\d{1,2})\s*\/\s*(\d{4})/.exec(name);
+  return mt ? `${mt[1].padStart(2, '0')}/${mt[2]}` : name;
 }
 
 const d2 = (d: any) => {
@@ -152,6 +158,7 @@ export function buildExecModel(
     ],
     trends: (fin.trends || []).map((t: any) => ({
       name: String(t.name),
+      label: shortPeriod(String(t.name)),
       thu: Number(t.thu) || 0,
       chi: Number(t.chi) || 0,
       thuLabel: vndCompact(t.thu, true),
