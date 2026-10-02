@@ -269,8 +269,8 @@ function pngCss(): string {
   .${PNG_ROOT}, .${PNG_ROOT} * { box-sizing: border-box; margin: 0; padding: 0; }
   .${PNG_ROOT} { font-family: ${THEME.fontFamily}; color: ${r(C.ink)}; background: ${r(C.white)}; }
   .${PNG_ROOT}.wash, .${PNG_ROOT} .wash { background: ${wash}; }
-  .${PNG_ROOT} .page { width: 794px; padding: 64px 64px 44px; background: ${wash}; }
-  .${PNG_ROOT} .m-head { position: relative; display: flex; align-items: center; gap: 24px; padding: 30px 34px 32px; ${barBg()} border-radius: 19px; border: 1px solid ${a(C.white, G.mast.edge)}; box-shadow: ${shadow3}; color: #fff; }
+  .${PNG_ROOT} .page { width: 794px; padding: 52px 52px 36px; background: ${wash}; }
+  .${PNG_ROOT} .m-head { position: relative; display: flex; align-items: center; gap: 20px; padding: 24px 28px 26px; ${barBg()} border-radius: 19px; border: 1px solid ${a(C.white, G.mast.edge)}; box-shadow: ${shadow3}; color: #fff; }
   .${PNG_ROOT} .m-logo { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: ${a(C.white, G.mast.ringGlass)}; border: 1px solid ${a(C.white, 0.6)}; }
   .${PNG_ROOT} .m-logo.dark { padding: 9px; }
   .${PNG_ROOT} .m-logo:not(.dark):not(.ini) { background: ${a(C.white, G.mast.ring)}; padding: 10px; }
@@ -281,33 +281,33 @@ function pngCss(): string {
   .${PNG_ROOT} .m-title { font-size: ${ptPx(T.h1 + 2)}; font-weight: 700; line-height: 1.25; margin-top: 8px; color: #fff; }
   .${PNG_ROOT} .m-sub { font-size: ${ptPx(T.body)}; color: #fff; margin-top: 8px; }
   .${PNG_ROOT} .m-right { text-align: right; font-size: ${ptPx(T.caption)}; line-height: 1.8; color: #fff; flex-shrink: 0; max-width: 230px; padding: 12px 16px; border-radius: 10px; background: ${a(b.glassStart, G.mast.chip)}; border: 1px solid ${a(C.white, G.mast.chipEdge)}; }
-  .${PNG_ROOT} .kpis { display: flex; gap: 24px; margin-top: 48px; }
-  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; ${glass(G.tile)} ${rim} border-radius: 13px; padding: 22px 24px; }
+  .${PNG_ROOT} .kpis { display: flex; gap: 17px; margin-top: 30px; }
+  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; ${glass(G.tile)} ${rim} border-radius: 13px; padding: 17px 19px; }
   .${PNG_ROOT} .kpi.accent { background: linear-gradient(180deg, ${a(b.brand, G.accent + 0.04)} 0%, ${a(b.brand, G.accent)} 100%), ${a(C.white, G.tile)}; border: 1px solid ${a(b.brand, G.accentEdge)}; border-top-color: ${a(C.white, G.highlight)}; box-shadow: ${shadow3}; }
   .${PNG_ROOT} .kpi .l { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: ${r(C.muted)}; }
   .${PNG_ROOT} .kpi.accent .l { color: ${r(b.brandDark)}; }
-  .${PNG_ROOT} .kpi .v { font-size: ${ptPx(T.kpi)}; font-weight: 700; margin-top: 12px; white-space: nowrap; color: ${r(C.ink)}; }
+  .${PNG_ROOT} .kpi .v { font-size: ${ptPx(T.kpi)}; font-weight: 700; margin-top: 9px; white-space: nowrap; color: ${r(C.ink)}; }
   .${PNG_ROOT} .kpi.accent .v { color: ${r(b.brandDark)}; }
   .${PNG_ROOT} .kpi .v.pos { color: ${r(C.pos)}; }
   .${PNG_ROOT} .kpi.accent .v.pos { color: ${r(C.posText)}; }
   .${PNG_ROOT} .kpi .v.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} .sheet { margin-top: 48px; border-radius: 12px; ${rim} background: ${a(C.white, G.row)}; overflow: hidden; }
+  .${PNG_ROOT} .sheet { margin-top: 30px; border-radius: 12px; ${rim} background: ${a(C.white, G.row)}; overflow: hidden; }
   .${PNG_ROOT} table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  .${PNG_ROOT} th { ${barBg()} color: #fff; padding: 15px 20px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; }
+  .${PNG_ROOT} th { ${barBg()} color: #fff; padding: 12px 16px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; }
   .${PNG_ROOT} th:not(:first-child):not(:last-child) { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), ${r(mix(b.glassStart, b.glassEnd, 0.5))}; }
   .${PNG_ROOT} th:first-child { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), linear-gradient(90deg, ${r(b.glassStart)} 0%, ${r(mix(b.glassStart, b.glassEnd, 0.5))} 100%); }
   .${PNG_ROOT} th:last-child { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), linear-gradient(90deg, ${r(mix(b.glassStart, b.glassEnd, 0.5))} 0%, ${r(b.glassEnd)} 100%); }
   .${PNG_ROOT} th.right, .${PNG_ROOT} td.right { text-align: right; }
-  .${PNG_ROOT} td { padding: 16px 20px; border-top: 0; border-bottom: 1px solid ${a(b.brand, G.sepHair)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
+  .${PNG_ROOT} td { padding: 12px 16px; border-top: 0; border-bottom: 1px solid ${a(b.brand, G.sepHair)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
   .${PNG_ROOT} td.right { font-weight: 700; white-space: nowrap; font-size: ${ptPx(T.body)}; }
   .${PNG_ROOT} td.pos { color: ${r(C.pos)}; }
   .${PNG_ROOT} td.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} tr.total td { background: ${a(b.brand, G.accent)}; border-top: 1px solid ${a(b.brand, G.accentEdge)}; border-bottom: 0; padding-top: 18px; padding-bottom: 18px; font-weight: 700; color: ${r(b.brandDark)}; }
+  .${PNG_ROOT} tr.total td { background: ${a(b.brand, G.accent)}; border-top: 1px solid ${a(b.brand, G.accentEdge)}; border-bottom: 0; padding-top: 14px; padding-bottom: 14px; font-weight: 700; color: ${r(b.brandDark)}; }
   .${PNG_ROOT} tr.total td.right { color: ${r(C.ink)}; }
   .${PNG_ROOT} tr.total td.pos { color: ${r(C.posText)}; }
   .${PNG_ROOT} tr.total td.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} .foot { margin-top: 52px; padding-top: 14px; border-top: 1px solid ${a(b.brand, G.hair)}; display: flex; justify-content: space-between; gap: 12px; font-size: ${ptPx(T.caption)}; color: ${r(C.muted)}; }
-  .${PNG_ROOT} .glass-body { margin: 0 40px; padding: 30px; border-radius: 16px; ${rim} background: ${a(C.white, G.tile)}; }
+  .${PNG_ROOT} .foot { margin-top: 34px; padding-top: 12px; border-top: 1px solid ${a(b.brand, G.hair)}; display: flex; justify-content: space-between; gap: 12px; font-size: ${ptPx(T.caption)}; color: ${r(C.muted)}; }
+  .${PNG_ROOT} .glass-body { margin: 0 32px; padding: 22px; border-radius: 16px; ${rim} background: ${a(C.white, G.tile)}; }
   `
 }
 
@@ -369,7 +369,7 @@ async function captureReportCanvas(
   const wrap = document.createElement('div')
   wrap.className = `${PNG_ROOT} wash`
   wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 140}px;`
-  wrap.innerHTML = `<style>${pngCss()}</style><div style="padding:40px 40px 0;">${reportMastheadHtml({ ...report, logo, docCode })}</div><div style="padding:36px 0;"><div data-pf-body class="glass-body"></div></div><div style="padding:0 40px 36px;">${reportFooterHtml(report.title, docCode)}</div>`
+  wrap.innerHTML = `<style>${pngCss()}</style><div style="padding:32px 32px 0;">${reportMastheadHtml({ ...report, logo, docCode })}</div><div style="padding:26px 0;"><div data-pf-body class="glass-body"></div></div><div style="padding:0 32px 28px;">${reportFooterHtml(report.title, docCode)}</div>`
   const body = wrap.querySelector('[data-pf-body]') as HTMLElement
   const clone = el.cloneNode(true) as HTMLElement
   clone.querySelectorAll('[data-html2canvas-ignore]').forEach(n => n.remove())

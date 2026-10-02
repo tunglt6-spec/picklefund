@@ -36,7 +36,7 @@ test('thang chữ 7 bậc, sàn 7pt, không bậc nào dưới sàn', () => {
 test('lề/khổ: CONTENT_W suy ra từ THEME.page ở MỘT nơi', () => {
   assert.equal(CONTENT_W_PORTRAIT, THEME.page.portrait.w - 2 * THEME.page.margin)
   assert.equal(CONTENT_W_LANDSCAPE, THEME.page.landscape.w - 2 * THEME.page.margin)
-  assert.equal(CONTENT_W_PORTRAIT, 178)
+  assert.equal(CONTENT_W_PORTRAIT, 182)
 })
 
 test('makeBrand: mặc định #6D5DFB → brandDark #4F46E5, brandSoft #EEF2FF, viền #C7D2FE, badge #988CFC; hex sai/rỗng → mặc định', () => {
