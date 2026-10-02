@@ -1,6 +1,6 @@
 import React from 'react'
 import type { InfographicReportData } from './infographic.types'
-import { makeInfographicPalette, monogramOf, type InfographicPalette } from './infographic.utils'
+import { makeInfographicPalette, makeInfographicGlass, rgbaOf, monogramOf, type InfographicPalette } from './infographic.utils'
 
 const VND = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.round(Math.abs(n))) + ' đ'
 const FONT = "'Inter', Arial, sans-serif"
@@ -27,10 +27,12 @@ interface Props {
   brand?: string | null
 }
 
-/* Poster 1080x1920 — bố cục FROZEN; chỉ đổi MÀU theo màu app (SINH ĐỘNG): nền đặc = màu CLB đậm (mặc định tím #4F46E5),
-   số lớn xanh/đỏ/tím đậm, chữ nhỏ bản AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji/gradient/bóng. */
+/* Poster 1080x1920 — bố cục FROZEN; chỉ đổi lớp trình bày thành LIQUID GLASS: nền wash + orb, thẻ kính (gradient + rgba + viền + bóng CSS,
+   vì html2canvas không có backdrop-filter), băng header gradient + bóng loáng; màu đúng palette app, số lớn xanh/đỏ/tím đậm,
+   chữ nhỏ bản AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji. */
 export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgroundUrl, brand }: Props) {
   const P: InfographicPalette = makeInfographicPalette(brand)
+  const G = makeInfographicGlass(P)
   const balPos = data.fundBalance >= 0
   const expRatio = Math.min(100, Math.round(data.expenseIncomeRatio * 100))
   const paidPct = data.totalMembers > 0 ? Math.round(data.paidMembers / data.totalMembers * 100) : 0
@@ -41,15 +43,18 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
   const statLabel: React.CSSProperties = { fontSize: 14, color: P.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }
   const rowLabel: React.CSSProperties = { fontSize: 18, color: P.onDarkMuted, fontWeight: 600 }
 
-  const kpiCard = (top: number, left: number, border: string, bar: string, bg: string = 'white') => (
+  const kpiCard = (top: number, left: number, _border: string, bar: string, _bg: string = 'white') => (
     <div style={{ position: 'absolute', top, left, width: 490, height: 156,
-      background: bg, borderRadius: 20, border: `1px solid ${border}`, overflow: 'hidden' }}>
+      ...G.card(bar === P.brand ? null : bar, bar === P.brand), borderRadius: 20, boxSizing: 'border-box', overflow: 'hidden' }}>
+      <div style={G.ring}/>
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 5, background: bar }}/>
     </div>
   )
-  const statBox = (top: number, left: number, w: number, bg: string = P.soft, border: string = P.softBorder) => (
+  const statBox = (top: number, left: number, w: number, tint: string | null = null) => (
     <div style={{ position: 'absolute', top, left, width: w, height: 136,
-      background: bg, borderRadius: 16, border: `1px solid ${border}`, overflow: 'hidden' }}/>
+      ...G.card(tint), borderRadius: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
+      <div style={G.ring}/>
+    </div>
   )
   const divider = (top: number, alpha: number) => (
     <div style={{ position: 'absolute', top, left: 60, width: 960, height: 1, background: `rgba(255,255,255,${alpha})` }}/>
@@ -62,7 +67,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       position: 'relative',
       overflow: 'hidden',
       fontFamily: FONT,
-      background: backgroundUrl ? `url(${backgroundUrl}) center/cover no-repeat` : 'transparent',
+      background: backgroundUrl ? `url(${backgroundUrl}) center/cover no-repeat` : G.wash,
     }}>
 
       {/* ── PLACEHOLDER BACKGROUND (hidden when backgroundUrl provided) ── */}
@@ -73,8 +78,24 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Header zone — màu CLB (đã tối cho chữ trắng AA) */}
-          <rect x="0" y="0" width="1080" height="340" fill={P.deep}/>
+          {/* Header zone — băng kính gradient màu CLB (đã tối cho chữ trắng AA) */}
+          <defs>
+            <linearGradient id="gl-mast" x1="0" y1="0" x2="1" y2="0.35">
+              <stop offset="0" stopColor={G.mastFrom}/>
+              <stop offset="1" stopColor={G.mastTo}/>
+            </linearGradient>
+            <radialGradient id="gl-gloss" cx="0.2" cy="0" r="0.85">
+              <stop offset="0" stopColor="white" stopOpacity="0.2"/>
+              <stop offset="1" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+            <linearGradient id="gl-dark" x1="0" y1="0" x2="1" y2="0.2">
+              <stop offset="0" stopColor={P.darker}/>
+              <stop offset="1" stopColor={P.dark}/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="1080" height="340" fill="url(#gl-mast)"/>
+          <rect x="0" y="0" width="1080" height="340" fill="url(#gl-gloss)"/>
+          <rect x="0" y="338" width="1080" height="2" fill="white" opacity="0.35"/>
           {/* Court line accents in header */}
           <rect x="40" y="20" width="1000" height="300" fill="none" stroke="white" strokeWidth="2" opacity="0.07"/>
           <line x1="540" y1="20" x2="540" y2="320" stroke="white" strokeWidth="1.5" opacity="0.05"/>
@@ -86,27 +107,9 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
           <line x1="938" y1="80" x2="1022" y2="80" stroke="white" strokeWidth="1.5" opacity="0.1"/>
           <line x1="980" y1="38" x2="980" y2="122" stroke="white" strokeWidth="1.5" opacity="0.1"/>
 
-          {/* KPI card zone */}
-          <rect x="0" y="340" width="1080" height="380" fill={P.surface2}/>
-          <rect x="32" y="368" width="490" height="156" rx="20" fill="white"/>
-          <rect x="558" y="368" width="490" height="156" rx="20" fill="white"/>
-          <rect x="32" y="548" width="490" height="156" rx="20" fill="white"/>
-          <rect x="558" y="548" width="490" height="156" rx="20" fill="white"/>
-
-          {/* Ratio zone */}
-          <rect x="0" y="720" width="1080" height="200" fill={P.soft}/>
-
-          {/* Stats zone */}
-          <rect x="0" y="920" width="1080" height="400" fill="white"/>
-          <rect x="32" y="948" width="310" height="136" rx="16" fill={P.surface2}/>
-          <rect x="386" y="948" width="310" height="136" rx="16" fill={P.surface2}/>
-          <rect x="740" y="948" width="308" height="136" rx="16" fill={P.surface2}/>
-          <rect x="32" y="1108" width="310" height="136" rx="16" fill={P.surface2}/>
-          <rect x="386" y="1108" width="310" height="136" rx="16" fill={P.surface2}/>
-          <rect x="740" y="1108" width="308" height="136" rx="16" fill={P.surface2}/>
-
           {/* Summary zone — tối từ màu CLB */}
-          <rect x="0" y="1320" width="1080" height="440" fill={P.dark}/>
+          <rect x="0" y="1320" width="1080" height="440" fill="url(#gl-dark)"/>
+          <rect x="0" y="1320" width="1080" height="2" fill="white" opacity="0.3"/>
           <line x1="0" y1="1420" x2="1080" y2="1420" stroke="white" strokeWidth="1" opacity="0.04"/>
           <line x1="0" y1="1520" x2="1080" y2="1520" stroke="white" strokeWidth="1" opacity="0.04"/>
           <line x1="0" y1="1620" x2="1080" y2="1620" stroke="white" strokeWidth="1" opacity="0.04"/>
@@ -156,8 +159,7 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       {/* Period pill */}
       <div style={{ position: 'absolute', top: 175, left: 190, width: 600, height: 36, overflow: 'hidden' }}>
         <span style={{
-          display: 'inline-block', background: P.pill,
-          border: '1px solid rgba(255,255,255,0.5)', borderRadius: 99,
+          display: 'inline-block', ...G.chip, borderRadius: 99,
           padding: '5px 18px', fontSize: 14, color: P.onDark, fontWeight: 700,
           whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
@@ -277,14 +279,14 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
       </T>
       <T top={1052} left={406} width={270} height={20} style={sub}>người tham gia kỳ</T>
 
-      {statBox(948, 740, 308, P.posTint, P.posBorder)}
+      {statBox(948, 740, 308, P.posFill)}
       <T top={966} left={760} width={268} height={18} style={statLabel}>Đã đóng quỹ</T>
       <T top={990} left={760} width={268} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.posVivid }}>
         {data.paidMembers}
       </T>
       <T top={1052} left={760} width={268} height={20} style={sub}>/ {data.totalMembers} thành viên</T>
 
-      {statBox(1108, 32, 310, P.negTint, P.negBorder)}
+      {statBox(1108, 32, 310, P.negFill)}
       <T top={1126} left={52} width={270} height={18} style={statLabel}>Chưa đóng</T>
       <T top={1150} left={52} width={270} height={56} style={{ fontSize: 44, fontWeight: 950, color: P.negVivid }}>
         {data.unpaidMembers}
@@ -360,8 +362,8 @@ export function InfographicOverlayA({ data, id = 'infographic-canvas-a', backgro
 
       {/* Highlighted balance row */}
       <div style={{ position: 'absolute', top: 1706, left: 60, width: 960, height: 52,
-        background: balPos ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-        borderRadius: 14, border: `1px solid ${balPos ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` }}/>
+        background: rgbaOf(balPos ? P.posFill : P.negFill, 0.16),
+        borderRadius: 14, border: `1px solid ${rgbaOf(balPos ? P.posFill : P.negFill, 0.4)}`, boxSizing: 'border-box' }}/>
       <T top={1720} left={80} width={500} height={26}
         style={{ fontSize: 18, fontWeight: 800, color: balPos ? P.posOnDark : P.negOnDark }}>
         {balPos ? 'Số dư dương — Quỹ ổn định' : 'Số dư âm — Cần bổ sung'}

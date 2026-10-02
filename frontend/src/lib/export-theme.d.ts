@@ -11,7 +11,7 @@ export const THEME: {
   color: Record<
     | 'ink' | 'ink2' | 'muted' | 'line' | 'lineStrong' | 'connector' | 'surface2' | 'white'
     | 'lineSoft' | 'pos' | 'neg' | 'orange' | 'cyan' | 'amber' | 'posText' | 'negText' | 'warn' | 'info'
-    | 'posFill' | 'negFill' | 'warnFill' | 'posTint' | 'posEdge' | 'negTint' | 'negEdge' | 'warnTint' | 'warnEdge'
+    | 'posFill' | 'negFill' | 'warnFill' | 'posDeep' | 'negDeep' | 'warnDeep' | 'posTint' | 'posEdge' | 'negTint' | 'negEdge' | 'warnTint' | 'warnEdge'
     | 'goldTint' | 'silverTint' | 'bronzeTint',
     RGB
   >
@@ -28,6 +28,17 @@ export const THEME: {
   line: { hair: number; border: number; strong: number; brandRule: number }
   radius: { card: number; bar: number }
   row: { h: number; lineH: number; padX: number }
+  glass: {
+    tile: number; row: number; accent: number; accentEdge: number
+    edgeWhite: number; edgeWhiteW: number; hair: number; hairW: number; highlight: number; highlightW: number
+    shadow: number[]; shadowStep: number; shadowDy: number
+    radius: { panel: number; band: number; chip: number; bar: number }
+    mast: { gloss: number; edge: number; chip: number; chipEdge: number; ring: number; ringGlass: number }
+    orb: { alpha: number; rings: number }
+    zebra: number; sep: number; sepHair: number
+    chip: { base: number; tint: number; edge: number }
+    box: number
+  }
   fontFamily: string
 }
 
@@ -40,6 +51,13 @@ export interface BrandPalette {
   /** Nền header bảng: nhạt nhất mà chữ trắng ≥ 4.5:1. */
   brandMid: RGB
   brandSoft: RGB
+  /** Liquid Glass: 2 đầu gradient băng + header bảng (chữ trắng ≥ 4.6:1 sau lớp bóng loáng). */
+  glassStart: RGB
+  glassEnd: RGB
+  /** Wash nền trang: 3 nút (chéo). */
+  washA: RGB
+  washB: RGB
+  washC: RGB
   brandEdge: RGB
   brandBorder: RGB
   badgeOnBrand: RGB
@@ -55,6 +73,8 @@ export function toHex(c: RGB): string
 export function hexToRgb(hex: string | null | undefined): number[] | null
 export function makeBrand(hex?: string | null): BrandPalette
 export function css(c: RGB): string
+export function rgba(c: RGB, a: number): string
+export function glassWorstBg(brand: BrandPalette, alpha?: number): number[]
 
 export const fmt: {
   vnd(n: number): string

@@ -1,6 +1,6 @@
 import React from 'react'
 import type { InfographicReportData } from './infographic.types'
-import { makeInfographicPalette, type InfographicPalette } from './infographic.utils'
+import { makeInfographicPalette, makeInfographicGlass, type InfographicPalette, type InfographicGlass } from './infographic.utils'
 
 const VND = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.round(Math.abs(n))) + ' đ'
 const FONT = "'Inter', Arial, sans-serif"
@@ -24,9 +24,9 @@ function T({ top, left, width, height, children, style }: {
   )
 }
 
-/* Bill thành viên — bố cục FROZEN; chỉ đổi MÀU theo màu app (SINH ĐỘNG): nền đặc = màu CLB đậm (mặc định tím #4F46E5),
-   vạch/chip trạng thái xanh (đã đóng) / đỏ (chưa đóng), số đậm theo tông, chữ nhỏ AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji/gradient/bóng. */
-function MemberCard({ member, index, P }: { member: InfographicReportData['members'][number]; index: number; P: InfographicPalette }) {
+/* Bill thành viên — bố cục FROZEN; chỉ đổi lớp trình bày thành LIQUID GLASS (nền wash + orb, thẻ kính gradient/rgba/viền/bóng CSS, băng gradient);
+   vạch/chip trạng thái xanh (đã đóng) / đỏ (chưa đóng), số đậm theo tông, chữ nhỏ AA (≥ 4.5:1), cỡ chữ ≥ 14px; không emoji. */
+function MemberCard({ member, index, P, G }: { member: InfographicReportData['members'][number]; index: number; P: InfographicPalette; G: InfographicGlass }) {
   const col = index % 2
   const row = Math.floor(index / 2)
   const cardLeft = col === 0 ? 32 : 548
@@ -42,11 +42,12 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       position: 'absolute',
       top: cardTop, left: cardLeft,
       width: 500, height: 260,
-      background: 'white',
+      ...G.card(member.isPaid ? P.posFill : P.negFill),
       borderRadius: 22,
-      border: `1px solid ${P.line}`,
+      boxSizing: 'border-box',
       overflow: 'hidden',
     }}>
+      <div style={G.ring}/>
       {/* Top accent strip */}
       <div style={{ position:'absolute', top:0, left:0, right:0, height:6, background: member.isPaid ? P.posFill : P.negFill }}/>
 
@@ -80,9 +81,8 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
         <span style={{
           display:'inline-block', fontSize:14, fontWeight:800,
           padding:'1px 10px', borderRadius:99,
-          background: member.isPaid ? P.posTint : P.negTint,
+          ...G.status(member.isPaid ? P.posFill : P.negFill),
           color: member.isPaid ? P.pos : P.neg,
-          border: `1px solid ${member.isPaid ? P.posFill : P.negFill}`,
           whiteSpace:'nowrap',
         }}>
           {member.isPaid ? 'Đã đóng' : 'Chưa đóng'}
@@ -90,7 +90,7 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       </div>
 
       {/* Index badge (top right) */}
-      <div style={{ position:'absolute', top:14, right:14, width:34, height:34, borderRadius:'50%', background:P.soft, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:P.ink }}>
+      <div style={{ position:'absolute', top:14, right:14, width:34, height:34, borderRadius:'50%', ...G.status(P.brand), display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, color:P.ink }}>
         #{index+1}
       </div>
 
@@ -108,7 +108,7 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       </div>
 
       {/* Finance box bg */}
-      <div style={{ position:'absolute', top:144, left:16, width:468, height:76, background:P.soft, borderRadius:14, border:`1px solid ${P.softBorder}` }}/>
+      <div style={{ position:'absolute', top:144, left:16, width:468, height:76, ...G.status(P.brand), borderRadius:14 }}/>
 
       {/* Phí sân */}
       <div style={{ ...cut, top:151, left:28, width:160, height:20, fontSize:14, color:P.muted }}>Phí sân</div>
@@ -123,7 +123,7 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
       <div style={{ ...cut, top:198, left:190, width:282, height:22, fontSize:15, fontWeight:950, color:P.ink, textAlign:'right' }}>{VND(member.totalCost)}</div>
 
       {/* Balance highlight */}
-      <div style={{ position:'absolute', top:224, left:16, width:468, height:28, background:mBalPos?P.posTint:P.negTint, borderRadius:10, border:`1px solid ${mBalPos?P.posFill:P.negFill}`, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', boxSizing:'border-box' }}>
+      <div style={{ position:'absolute', top:224, left:16, width:468, height:28, ...G.status(mBalPos?P.posFill:P.negFill), borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', boxSizing:'border-box' }}>
         <span style={{ fontSize:14, fontWeight:700, color:mBalPos?P.pos:P.neg, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:240 }}>
           {mBalPos?'Số dư còn lại':'Cần nộp thêm'}
         </span>
@@ -137,6 +137,7 @@ function MemberCard({ member, index, P }: { member: InfographicReportData['membe
 
 export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }: { data: InfographicReportData; id?: string; brand?: string | null }) {
   const P = makeInfographicPalette(brand)
+  const G = makeInfographicGlass(P)
   const rows = Math.ceil(data.members.length / 2)
   const memberSectionH = rows * 280
   const totalH = 360 + memberSectionH + 160 + 56
@@ -150,12 +151,12 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
       width: 1080,
       height: totalH,
       position: 'relative',
-      background: P.soft,
+      background: G.wash,
       fontFamily: FONT,
     }}>
 
       {/* ── SECTION 1: HEADER (màu CLB đã tối cho chữ trắng AA) ── */}
-      <div style={{ position:'absolute', top:0, left:0, width:1080, height:200, overflow:'hidden', background:P.deep }}>
+      <div style={{ position:'absolute', top:0, left:0, width:1080, height:200, overflow:'hidden', background:G.mast, borderBottom:'2px solid rgba(255,255,255,0.35)', boxSizing:'border-box' }}>
         <svg style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none'}} viewBox="0 0 1080 200" preserveAspectRatio="none">
           <rect x="40" y="15" width="1000" height="170" fill="none" stroke="white" strokeWidth="2" opacity="0.1"/>
           <line x1="540" y1="15" x2="540" y2="185" stroke="white" strokeWidth="1.5" opacity="0.08"/>
@@ -178,7 +179,7 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
       {/* Period pill */}
       <div style={{ position:'absolute', top:140, left:114, width:500, height:38, overflow:'hidden' }}>
         <span style={{
-          display:'inline-block', background:P.pill, border:'1px solid rgba(255,255,255,0.5)',
+          display:'inline-block', ...G.chip,
           borderRadius:99, padding:'5px 18px', fontSize:14, color:P.onDark, fontWeight:700,
           whiteSpace:'nowrap', maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis',
         }}>
@@ -194,13 +195,13 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
         {data.exportDate}
       </T>
       <div style={{ position:'absolute', top:116, left:770, width:278 }}>
-        <div style={{ display:'inline-block', float:'right', background:P.pill, borderRadius:8, padding:'4px 14px', fontSize:14, color:P.onDark, whiteSpace:'nowrap' }}>
+        <div style={{ display:'inline-block', float:'right', ...G.chip, borderRadius:8, padding:'4px 14px', fontSize:14, color:P.onDark, whiteSpace:'nowrap' }}>
           {data.totalSessions} buổi | {data.totalMembers} TV
         </div>
       </div>
 
       {/* ── SECTION 2: SUMMARY STRIP ── */}
-      <div style={{ position:'absolute', top:200, left:0, width:1080, height:80, background:P.dark }}/>
+      <div style={{ position:'absolute', top:200, left:0, width:1080, height:80, background:G.dark }}/>
       <div style={{ position:'absolute', top:200, left:360, width:1, height:80, background:'rgba(255,255,255,0.1)' }}/>
       <div style={{ position:'absolute', top:200, left:720, width:1, height:80, background:'rgba(255,255,255,0.1)' }}/>
 
@@ -220,31 +221,29 @@ export function InfographicOverlayB({ data, id = 'infographic-canvas-b', brand }
       </T>
 
       {/* ── SECTION 3: SECTION HEADING ── */}
-      <div style={{ position:'absolute', top:280, left:0, width:1080, height:80, background:P.soft }}/>
-
       <T top={296} left={40} width={400} height={40} style={{ fontSize:22, fontWeight:900, color:P.text }}>
         Chi tiết thành viên
       </T>
 
       <div style={{ position:'absolute', top:296, left:460, width:180, height:40, display:'flex', alignItems:'center' }}>
-        <div style={{ display:'inline-flex', alignItems:'center', background:P.posTint, border:`1px solid ${P.posFill}`, borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.pos }}>
+        <div style={{ display:'inline-flex', alignItems:'center', ...G.status(P.posFill), borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.pos }}>
           {data.paidMembers} đã đóng
         </div>
       </div>
 
       <div style={{ position:'absolute', top:296, left:656, width:180, height:40, display:'flex', alignItems:'center' }}>
-        <div style={{ display:'inline-flex', alignItems:'center', background:P.negTint, border:`1px solid ${P.negFill}`, borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.neg }}>
+        <div style={{ display:'inline-flex', alignItems:'center', ...G.status(P.negFill), borderRadius:99, padding:'6px 14px', fontSize:14, fontWeight:700, color:P.neg }}>
           {data.unpaidMembers} chưa đóng
         </div>
       </div>
 
       {/* ── SECTION 4: MEMBER CARDS ── */}
       {data.members.map((member, index) => (
-        <MemberCard key={member.name + index} member={member} index={index} P={P} />
+        <MemberCard key={member.name + index} member={member} index={index} P={P} G={G} />
       ))}
 
       {/* ── SECTION 5: FOOTER ── */}
-      <div style={{ position:'absolute', top:footerTop, left:0, width:1080, height:160, background:P.dark, overflow:'hidden' }}>
+      <div style={{ position:'absolute', top:footerTop, left:0, width:1080, height:160, background:G.dark, overflow:'hidden', borderTop:'2px solid rgba(255,255,255,0.3)', boxSizing:'border-box' }}>
         <svg width="72" height="110" viewBox="0 0 72 110" style={{position:'absolute', bottom:0, left:20, opacity:0.15}}>
           <ellipse cx="36" cy="14" rx="12" ry="12" fill="white"/>
           <rect x="24" y="28" width="24" height="44" rx="8" fill="white"/>

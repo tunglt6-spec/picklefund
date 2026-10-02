@@ -1,5 +1,5 @@
 /**
- * MẪU BÁO CÁO QUỸ CHUẨN (dùng chung mọi CLB) — PDF VECTOR thuần jsPDF, chuẩn "Luxury SaaS · sinh động" (băng masthead tím đặc, header bảng đặc, thẻ KPI nhấn, xanh/đỏ semantic).
+ * MẪU BÁO CÁO QUỸ CHUẨN (dùng chung mọi CLB) — PDF VECTOR thuần jsPDF, chuẩn "Luxury SaaS · Liquid Glass" (nền wash + orb, masthead băng kính gradient, header bảng kính, thẻ KPI/hàng bảng/ô số dư là tấm kính, xanh/đỏ semantic).
  *
  * KHÔNG dùng html2canvas (chụp DOM): cách đó phụ thuộc renderer từng máy. Ở đây mọi phần tử được
  * VẼ bằng toạ độ mm cố định → mọi máy, mọi lần xuất cho ra pixel GIỐNG HỆT.
@@ -29,7 +29,7 @@ function signedVnd(n) {
 }
 
 const newDoc = (jsPDF, fonts, orientation = 'portrait') =>
-  setupDoc(new jsPDF({ orientation, unit: 'mm', format: 'a4' }), fonts)
+  setupDoc(new jsPDF({ orientation, unit: 'mm', format: 'a4', compress: true }), fonts)
 
 /** Dựng hàm tạo trang-tiếp (masthead gọn) cho 1 tài liệu. */
 const contFactory = (kit, { club, title, docCode }) => (section, right) => {
@@ -43,7 +43,7 @@ const contFactory = (kit, { club, title, docCode }) => (section, right) => {
 export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [], branding }) {
   const doc = newDoc(jsPDF, fonts)
   const kit = createKit(doc, branding)
-  const { T, C, B, M, CW, W } = kit
+  const { T, C, G, B, M, CW, W } = kit
   const club = summary.clubName || branding.name
   const TITLE = 'BÁO CÁO TÀI CHÍNH'
   const docCode = summary.docCode || fmt.docCode('BCQ')
@@ -106,10 +106,7 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
   doc.text('Tỷ lệ chi / thu', M, y + 3)
   kit.font('bold', T.type.body, chiThuPct >= 100 ? C.neg : B.brandDark)
   doc.text(`${chiThuPct}%`, W - M, y + 3, { align: 'right' })
-  kit.fill(C.line)
-  kit.rrect(M, y + 5.4, CW, 2, T.radius.bar, 'F')
-  kit.fill(chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
-  kit.rrect(M, y + 5.4, Math.max(2, (CW * Math.min(chiThuPct, 100)) / 100), 2, T.radius.bar, 'F')
+  kit.glassMeter(M, y + 5.2, CW, 2.6, Math.min(chiThuPct, 100) / 100, chiThuPct >= 100 ? C.negFill : chiThuPct >= 90 ? C.warnFill : B.brand)
   kit.font('normal', T.type.caption, C.muted)
   doc.text(`Thu: ${vnd(summary.totalIncome)}`, M, y + 11.4)
   doc.text(`Chi: ${vnd(summary.totalExpense)} (${chiThuPct}%)`, W - M, y + 11.4, { align: 'right' })
@@ -222,15 +219,14 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     const pos = Math.round(Number(m.balance) || 0) >= 0
     const rate = pct(m.attendedSessions, m.totalSessions)
     const px = 5
-    kit.fill(C.white)
-    kit.stroke(C.line)
-    kit.lw(T.line.border)
-    kit.rrect(x, yy, CARD_W, CARD_H, T.radius.card + 0.5, 'FD')
+    kit.glassPanel(x, yy, CARD_W, CARD_H, { r: T.radius.card + 1.5, k: 1.2 })
 
-    /* header thẻ: nền brandMid ĐẶC (chữ trắng) — tên + số buổi + chip trạng thái */
-    kit.fill(B.brandMid)
-    kit.rrect(x, yy, CARD_W, 15, T.radius.card + 0.5, 'F')
-    doc.rect(x, yy + 8, CARD_W, 7, 'F')
+    /* header thẻ: dải kính gradient (chữ trắng) — tên + số buổi + viên trạng thái */
+    kit.clipRR(x, yy, CARD_W, CARD_H, T.radius.card + 1.5, () => {
+      kit.gradient(x, yy, CARD_W, 15, 0, B.glassStart, B.glassEnd)
+      kit.gloss(x, yy, CARD_W, 15)
+    })
+    kit.lineA(x + 3, yy + 15, x + CARD_W - 3, yy + 15, C.white, 0.5, G.hairW)
     const badgeTxt = m.contributionPaid ? 'Đã đóng quỹ' : 'Chưa đóng quỹ'
     kit.font('bold', T.type.caption, C.white)
     const bw = doc.getTextWidth(badgeTxt) + 5
@@ -238,19 +234,16 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     doc.text(kit.fit(m.memberName, CARD_W - px * 2 - 2, T.type.h2, 8.5), x + px, yy + 6.8)
     kit.font('normal', T.type.caption, C.white)
     doc.text(`${m.attendedSessions}/${m.totalSessions} buổi tham gia`, x + px, yy + 11.6)
-    kit.fill(C.white)
-    kit.rrect(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, 'F')
-    kit.font('bold', T.type.caption, m.contributionPaid ? C.posText : C.negText)
+    kit.fillRR(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, C.white, G.mast.ring)
+    kit.strokeRR(x + CARD_W - px - bw, yy + 8.1, bw, 5, 2.5, C.white, 1, 0.2)
+    kit.font('bold', T.type.caption, m.contributionPaid ? C.posDeep : C.negDeep)
     doc.text(badgeTxt, x + CARD_W - px - bw / 2, yy + 11.6, { align: 'center' })
 
     /* tỷ lệ tham gia */
     kit.tracked('Tỷ lệ tham gia', x + px, yy + 21, { color: C.muted })
     kit.font('bold', 9, B.brandDark)
     doc.text(`${m.attendedSessions} / ${m.totalSessions} buổi (${rate}%)`, x + CARD_W - px, yy + 21, { align: 'right' })
-    kit.fill(C.line)
-    kit.rrect(x + px, yy + 23.4, CARD_W - px * 2, 2, T.radius.bar, 'F')
-    kit.fill(B.brand)
-    kit.rrect(x + px, yy + 23.4, Math.max(2, ((CARD_W - px * 2) * Math.min(rate, 100)) / 100), 2, T.radius.bar, 'F')
+    kit.glassMeter(x + px, yy + 23.2, CARD_W - px * 2, 2.4, Math.min(rate, 100) / 100, B.brand)
 
     /* 4 dòng chi phí — label trái / số phải (màu theo nghĩa); nhãn đúng công thức backend */
     const lines = [
@@ -263,7 +256,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     lines.forEach((ln) => {
       const mid = cy + 4.4
       if (ln.total) {
-        kit.hline(x + px, x + CARD_W - px, cy + 0.4, C.lineStrong, T.line.border)
+        kit.lineA(x + px, cy + 0.3, x + CARD_W - px, cy + 0.3, B.brand, G.sepHair + 0.1, G.hairW)
+        kit.lineA(x + px, cy + 0.55, x + CARD_W - px, cy + 0.55, C.white, G.sep, G.hairW)
         kit.font('bold', T.type.body, C.ink)
       } else {
         kit.font('normal', T.type.body, C.ink2)
@@ -282,11 +276,8 @@ export function buildQuyReportPDF({ jsPDF, fonts, summary, rows, expenseRows = [
     /* ô số dư — nền xanh/đỏ nhạt viền; âm: hiện SỐ TIỀN CẦN NỘP (dương), nhãn "Cần nộp thêm" đã nói rõ chiều */
     const boxY = cy + 1.4
     const tone = pos ? C.pos : C.neg
-    const toneAA = pos ? C.posText : C.negText
-    kit.fill(pos ? C.posTint : C.negTint)
-    kit.stroke(pos ? C.posEdge : C.negEdge)
-    kit.lw(T.line.border)
-    kit.rrect(x + px, boxY, CARD_W - px * 2, 11.4, T.radius.card, 'FD')
+    const toneAA = pos ? C.posDeep : C.negDeep
+    kit.glassPanel(x + px, boxY, CARD_W - px * 2, 11.4, { tint: { color: tone, a: G.box, edge: G.chip.edge }, r: T.radius.card, shadow: false })
     kit.font('bold', T.type.cell, toneAA)
     doc.text(pos ? 'Số dư của bạn' : 'Cần nộp thêm', x + px + 3, boxY + 4.8)
     kit.font('normal', T.type.caption, toneAA)
@@ -375,7 +366,7 @@ const KO_MAX_PER_PAGE = 16
 export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding }) {
   const doc = newDoc(jsPDF, fonts, 'landscape')
   const kit = createKit(doc, branding)
-  const { T, C, B, M, CW, W } = kit
+  const { T, C, G, B, M, CW, W } = kit
   const club = meta.clubName || branding.name
   const TITLE = 'SƠ ĐỒ LOẠI TRỰC TIẾP'
   const docCode = meta.docCode || fmt.docCode('SDN')
@@ -415,11 +406,8 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
     }
     if (meta.championName) {
       const cw0 = kit.trackedWidth('Vô địch') + 6
-      kit.fill(C.goldTint)
-      kit.stroke(C.warnEdge)
-      kit.lw(T.line.border)
-      kit.rrect(M, top - 1.2, cw0, 5.6, 2.8, 'FD')
-      kit.tracked('Vô địch', M + 3, top + 2.7, { color: C.warn })
+      kit.glassChip(M, top - 1.2, cw0, 5.6, C.amber)
+      kit.tracked('Vô địch', M + 3, top + 2.7, { color: C.warnDeep })
       kit.font('bold', T.type.h2, C.ink)
       doc.text(kit.clip(String(meta.championName), CW / 2), M + cw0 + 3, top + 3.1)
       top += 8
@@ -482,10 +470,8 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
     /* Hộp trận */
     const drawSide = (x, y, w, name, score, isWinner, isBye, tieNote) => {
       if (isWinner) {
-        kit.fill(B.brandSoft)
-        doc.rect(x + 0.2, y, w - 0.4, boxH / 2, 'F')
-        kit.fill(B.brand)
-        doc.rect(x, y, 1, boxH / 2, 'F')
+        kit.fillR(x + 0.2, y + 0.2, w - 0.4, boxH / 2 - 0.2, B.brand, G.accent + 0.04)
+        kit.fillR(x + 0.2, y + 0.2, 1, boxH / 2 - 0.2, B.brand, 1)
       }
       const my = y + boxH / 4 + 1.3
       let rightEdge = x + w - 2.5
@@ -506,18 +492,14 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
       const x = M + r * colW
       // Nhãn vòng đặt ngay trên hộp đầu tiên của cột (gắn với nội dung, không lơ lửng).
       if (rd.matches.length > 0) {
-        kit.fill(B.brandMid)
-        kit.rrect(x, centers[r][0] - boxH / 2 - 7.2, boxW, 4.8, 2.4, 'F')
+        kit.glassBar(x, centers[r][0] - boxH / 2 - 7.2, boxW, 4.8, 2.4, { rim: false })
         kit.tracked(rd.label, x + boxW / 2, centers[r][0] - boxH / 2 - 3.8, { color: C.white, align: 'center', maxW: boxW - 4 })
       }
       rd.matches.forEach((m, i) => {
         const cy = centers[r][i]
         const y = cy - boxH / 2
-        kit.fill(C.white)
-        kit.stroke(B.brandEdge)
-        kit.lw(T.line.border)
-        kit.rrect(x, y, boxW, boxH, 1.5, 'FD')
-        kit.hline(x, x + boxW, y + boxH / 2, B.brandEdge, T.line.hair)
+        kit.glassPanel(x, y, boxW, boxH, { r: 1.8, k: 0.9 })
+        kit.lineA(x + 0.6, y + boxH / 2, x + boxW - 0.6, y + boxH / 2, B.brand, G.hair + 0.1, G.hairW)
         const tie = m.winner && m.scoreA != null && m.scoreB != null && m.scoreA !== '' && String(m.scoreA) === String(m.scoreB)
         const tieNote = tie ? (m.pen ? `pen ${m.pen}` : 'đi tiếp') : ''
         drawSide(x, y, boxW, m.teamA || 'Chờ...', m.scoreA, m.winner === 'A', false, m.winner === 'A' ? tieNote : '')
@@ -538,7 +520,7 @@ export function buildKnockoutReportPDF({ jsPDF, fonts, meta, rounds, branding })
 function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
   const doc = newDoc(jsPDF, fonts)
   const kit = createKit(doc, branding)
-  const { T, C, B, M, W } = kit
+  const { T, C, G, B, M, W } = kit
   const docCode = spec.docCode || fmt.docCode(spec.docType)
   const club = spec.club || branding.name
 
@@ -566,19 +548,23 @@ function buildReceiptDoc({ jsPDF, fonts, branding, spec }) {
     y += spec.gap ?? T.space.m - 1
   }
 
-  /* chữ ký (neo xuống phần dưới trang cho bố cục cân đối) + ghi chú chân phiếu */
-  const noteH = 12
-  if (spec.signatures && spec.signatures.length) {
-    const sigH = 3 + 24 + 5 + 4 + 6
-    // Neo xuống dưới nhưng không để khoảng trống quá 40mm giữa nội dung và ô ký.
-    const sigTop = Math.max(y + 12, Math.min(kit.bottom - noteH - sigH, y + 40))
-    y = kit.signatures(spec.signatures, sigTop)
-  } else {
-    y = Math.max(y, kit.bottom - noteH - 4)
-  }
-  kit.hline(M, W - M, y, B.brandEdge, T.line.border)
-  kit.font('normal', T.type.caption, C.muted)
+  /* chữ ký (neo xuống phần dưới trang cho bố cục cân đối) + ghi chú chân phiếu.
+     Dành chỗ theo SỐ DÒNG ghi chú thật và co ô ký khi trang chật để ghi chú không đè footer. */
   const noteLines = kit.wrap(spec.note || '', kit.CW * 0.6, 2)
+  const noteH = 4.4 + noteLines.length * 3.6 + 3
+  if (spec.signatures && spec.signatures.length) {
+    const avail = kit.bottom - noteH - y - 8
+    const boxH = Math.max(10, Math.min(24, avail - 22))
+    const sigH = 3 + boxH + 5 + 8 + 6
+    // Neo xuống dưới nhưng không để khoảng trống quá 40mm giữa nội dung và ô ký.
+    const sigTop = Math.max(y + 8, Math.min(kit.bottom - noteH - sigH, y + 40))
+    y = kit.signatures(spec.signatures, sigTop, boxH)
+  } else {
+    y = Math.max(y, kit.bottom - noteH)
+  }
+  kit.lineA(M, y, W - M, y, B.brand, G.hair + 0.1, T.line.border)
+  kit.lineA(M, y + 0.3, W - M, y + 0.3, C.white, G.sep, T.line.hair)
+  kit.font('normal', T.type.caption, C.muted)
   noteLines.forEach((ln, i) => doc.text(ln, M, y + 4.4 + i * 3.6))
   const loc = String(spec.location || '').trim()
   kit.font('normal', T.type.caption, C.ink2)

@@ -1,7 +1,7 @@
 /* Chạy: node --test src/components/reports/infographic/infographic.utils.test.ts  (Node ≥ 22.6, type-stripping) */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { fmtVND, buildFileName, safeCanvasScale, planPdfPages, mapToInfographicData, MAX_CANVAS_PX, makeInfographicPalette, monogramOf, contrastRatio, DEFAULT_INFOGRAPHIC_BRAND, INFOGRAPHIC_MIN_FONT_PX } from './infographic.utils.ts'
+import { fmtVND, buildFileName, safeCanvasScale, planPdfPages, mapToInfographicData, MAX_CANVAS_PX, makeInfographicPalette, monogramOf, contrastRatio, makeInfographicGlass, GLASS_ALPHA, rgbaOf, DEFAULT_INFOGRAPHIC_BRAND, INFOGRAPHIC_MIN_FONT_PX } from './infographic.utils.ts'
 
 const nbsp = (s: string) => s.replace(/\u00a0/g, ' ')
 
@@ -129,13 +129,47 @@ test('monogramOf: bỏ "CLB/Câu lạc bộ", tối đa 2 chữ', () => {
   assert.equal(monogramOf(''), 'C')
 })
 
-test('Overlay A/B: không gradient/đổ bóng/emoji, không hex cứng ngoài trắng (mọi màu đi qua palette)', async () => {
+test('Overlay A/B: LIQUID GLASS — không backdrop-filter (html2canvas), không emoji, không hex cứng (mọi màu đi qua palette)', async () => {
   const { readFileSync } = await import('node:fs')
   for (const f of ['InfographicOverlayA.tsx', 'InfographicOverlayB.tsx']) {
     const src = readFileSync(new URL(`./${f}`, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
-    assert.ok(!/gradient\(|box-?shadow|boxShadow|backdrop/i.test(src), `${f} gradient/shadow`)
+    assert.ok(!/backdrop/i.test(src), `${f} backdrop-filter`)
     assert.ok(!/[\u{1F300}-\u{1FAFF}☀-➿]/u.test(src), `${f} emoji`)
     const hex = [...src.matchAll(/#[0-9a-fA-F]{6}\b/g)].map((m) => m[0].toUpperCase())
     assert.deepEqual(hex, [], `${f} hex cứng: ${hex.join(',')}`)
+  }
+})
+
+/* ── LIQUID GLASS ── */
+const over = (fg: string, a: number, bg: string) => {
+  const f = [1, 3, 5].map((i) => parseInt(fg.slice(i, i + 2), 16)), b = [1, 3, 5].map((i) => parseInt(bg.slice(i, i + 2), 16))
+  return '#' + f.map((v, i) => Math.round(b[i] + (v - b[i]) * a).toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
+test('glass: chữ trắng trên băng header (cả hai đầu gradient, + chip kính + bóng loáng) ≥ 4.5; chữ trên tối ≥ 4.5', () => {
+  for (const c of [null, '#F59E0B', '#FACC15', '#FFFFFF', '#000000', '#0F766E', '#DB2777']) {
+    const P = makeInfographicPalette(c), G = makeInfographicGlass(P)
+    for (const end of [G.mastFrom, G.mastTo]) {
+      assert.ok(contrastRatio('#FFFFFF', over('#FFFFFF', GLASS_ALPHA.chip, end)) >= 4.5, `${c} chip trên ${end}`)
+    }
+    assert.ok(contrastRatio('#FFFFFF', over('#FFFFFF', GLASS_ALPHA.gloss, G.mastFrom)) >= 4.5, `${c} gloss`)
+  }
+})
+
+test('glass: chữ trên tấm kính / wash xấu nhất đạt AA; số đậm cỡ lớn ≥ 3', () => {
+  for (const c of [null, '#F59E0B', '#0F766E', '#DB2777']) {
+    const P = makeInfographicPalette(c)
+    const washWorst = over(P.brand, GLASS_ALPHA.orb, P.soft)
+    const card = over('#FFFFFF', GLASS_ALPHA.panelBottom, washWorst)
+    for (const [n, fg] of [['text', P.text], ['text2', P.text2], ['muted', P.muted], ['ink', P.ink], ['pos', P.pos], ['neg', P.neg], ['warn', P.warn]] as const) {
+      assert.ok(contrastRatio(fg, card) >= 4.5, `${c} ${n} trên kính ${contrastRatio(fg, card).toFixed(2)}`)
+    }
+    for (const [n, f] of [['pos', P.posVivid], ['neg', P.negVivid], ['orange', P.orange], ['cyan', P.cyan]] as const) {
+      const tinted = over(f, GLASS_ALPHA.tone, over('#FFFFFF', GLASS_ALPHA.panelBottom, P.soft))
+      assert.ok(contrastRatio(f, tinted) >= 3, `${c} ${n} vivid ${contrastRatio(f, tinted).toFixed(2)}`)
+    }
+    // chip trạng thái: chữ AA trên nền màu α.08 phủ kính
+    for (const [t, f] of [[P.pos, P.posFill], [P.neg, P.negFill]] as const) assert.ok(contrastRatio(t, over(f, 0.08, '#FFFFFF')) >= 4.5, `${c} chip`)
+    assert.ok(rgbaOf('#6D5DFB', 0.5).startsWith('rgba(109,93,251'))
   }
 })

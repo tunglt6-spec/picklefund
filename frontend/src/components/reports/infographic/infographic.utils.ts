@@ -153,6 +153,62 @@ export function makeInfographicPalette(primary?: string | null): InfographicPale
   }
 }
 
+/* ── LIQUID GLASS (html2canvas KHÔNG hỗ trợ backdrop-filter → giả kính bằng gradient + rgba + viền + bóng CSS).
+   Chỉ dùng đúng màu palette ở các độ trong suốt khác nhau; bố cục/toạ độ FROZEN không đổi. ── */
+export const rgbaOf = (hex: string, a: number): string => {
+  const [r, g, b] = toRgb(hex)
+  return `rgba(${r},${g},${b},${a})`
+}
+export const GLASS_ALPHA = { panelTop: 0.8, panelBottom: 0.64, rim: 0.9, ring: 0.18, tone: 0.05, accent: 0.14, accentRing: 0.35, shadow: 0.1, orb: 0.12, gloss: 0.16, chip: 0.14, chipRing: 0.4 } as const
+
+export interface InfographicGlass {
+  /** Nền trang: wash chéo + 2 orb mềm. */
+  wash: string
+  /** Đầu tối của băng header (deep pha ink) → deep; chữ trắng AA ở cả hai đầu kể cả sau lớp bóng loáng. */
+  mastFrom: string
+  /** Đầu sáng của băng = deep, tối thêm nếu cần để chữ trắng trên chip kính vẫn ≥ 4.5. */
+  mastTo: string
+  mast: string
+  /** Nền tối (tổng kết/chân) dạng gradient dark → darker. */
+  dark: string
+  darker: string
+  /** Tấm kính: tint = màu tông phủ rất nhẹ (tuỳ chọn); accent = tấm nhấn brand. */
+  card: (tint?: string | null, accent?: boolean) => Record<string, string | number>
+  /** Vòng viền trong brand + highlight cạnh trên (div con, vì html2canvas bỏ qua inset shadow). */
+  ring: Record<string, string | number>
+  chip: Record<string, string | number>
+  /** Viên trạng thái kính: nền màu α + viền màu α (chữ AA tự chọn). */
+  status: (hex: string) => Record<string, string | number>
+}
+
+export function makeInfographicGlass(P: InfographicPalette): InfographicGlass {
+  const A = GLASS_ALPHA
+  const w = (a: number) => `rgba(255,255,255,${a})`
+  let mastTo = P.deep
+  for (let i = 0; i < 30 && contrastRatio('#FFFFFF', mixHex(mastTo, '#FFFFFF', A.chip + 0.02)) < 4.5; i++) mastTo = mixHex(mastTo, '#000000', 0.05)
+  const mastFrom = mixHex(mastTo, P.text, 0.35)
+  const wash =
+    `radial-gradient(circle at 88% 6%, ${rgbaOf(P.brand, A.orb)} 0, ${rgbaOf(P.brand, 0)} 560px),` +
+    `radial-gradient(circle at 8% 64%, ${rgbaOf(P.cyan, A.orb)} 0, ${rgbaOf(P.cyan, 0)} 520px),` +
+    `linear-gradient(150deg, ${P.soft} 0%, ${mixHex(P.soft, '#FFFFFF', 0.45)} 52%, ${mixHex(P.brand, '#FFFFFF', 0.92)} 100%)`
+  return {
+    wash,
+    mastFrom,
+    mastTo,
+    mast: `radial-gradient(ellipse 85% 85% at 20% 0%, ${w(A.gloss)}, ${w(0)} 100%), linear-gradient(115deg, ${mastFrom} 0%, ${mastTo} 100%)`,
+    dark: `linear-gradient(115deg, ${mixHex(P.dark, P.text, 0.2)} 0%, ${P.dark} 100%)`,
+    darker: `linear-gradient(115deg, ${P.darker} 0%, ${P.dark} 100%)`,
+    card: (tint, accent) => ({
+      background: `${accent ? `linear-gradient(${rgbaOf(P.brand, A.accent)},${rgbaOf(P.brand, A.accent)}),` : tint ? `linear-gradient(${rgbaOf(tint, A.tone)},${rgbaOf(tint, A.tone)}),` : ''}linear-gradient(180deg, ${w(A.panelTop)}, ${w(A.panelBottom)})`,
+      border: `2px solid ${w(A.rim)}`,
+      boxShadow: `0 6px 18px ${rgbaOf(P.deep, A.shadow)}, 0 1px 0 ${w(0.6)}`,
+    }),
+    ring: { position: 'absolute', inset: 0, borderRadius: 'inherit', border: `1px solid ${rgbaOf(P.brand, A.ring)}`, borderTop: `2px solid ${w(0.95)}`, pointerEvents: 'none', boxSizing: 'border-box' },
+    chip: { background: w(A.chip), border: `1px solid ${w(A.chipRing)}` },
+    status: (hex) => ({ background: rgbaOf(hex, 0.08), border: `1px solid ${rgbaOf(hex, 0.4)}` }),
+  }
+}
+
 /** Monogram từ tên CLB: tối đa 2 chữ cái đầu của từ có nghĩa (bỏ "CLB"/"Câu lạc bộ"), thiếu → "C". */
 export function monogramOf(name: string): string {
   const words = String(name || '').trim().split(/\s+/).filter(Boolean)

@@ -1,5 +1,5 @@
 import { buildCommandCenterHtml } from './command-center-html';
-import { COLORS, MIN_FONT_PT, contrast, makeBrand } from '../executive-report/export-tokens';
+import { COLORS, MIN_FONT_PT, contrast, makeBrand, makeGlassPalette, washColors } from '../executive-report/export-tokens';
 
 const data: any = {
   range: { key: '30d' },
@@ -20,22 +20,24 @@ const sections: any = { overview: para, business: para, operations: para, financ
 describe('command-center-html (palette SINH ĐỘNG)', () => {
   const html = buildCommandCenterHtml(data, sections, '02/10/2026 12:59').replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,');
 
-  it('bìa panel ĐẶC brandDeep chữ trắng, header bảng brandDeep, KPI theo tông', () => {
-    expect(contrast('#FFFFFF', makeBrand(null).brandDeep)).toBeGreaterThanOrEqual(4.5);
-    expect(html).toMatch(/\.cover \.cv-panel\{background:var\(--brandDeep\);color:#fff/);
-    expect(html).toMatch(/\.tbl th\{[^}]*background:var\(--brandDeep\);color:#fff/);
+  it('LIQUID GLASS: bìa băng gradient chữ trắng, header bảng kính, wash nền, KPI theo tông', () => {
+    expect(contrast('#FFFFFF', makeGlassPalette(makeBrand(null)).mastWorst)).toBeGreaterThanOrEqual(4.5);
+    expect(html).toMatch(/\.cover \.cv-panel\{[^}]*background:var\(--mast-bg\);color:#fff/);
+    expect(html).toMatch(/\.tbl th\{[^}]*background:linear-gradient\([^}]*var\(--mast-mid\);color:#fff/);
+    expect(html).toContain('<div class="wash"></div>');
     expect(html).toContain('class="k tn-pos"><div class="k-l">MRR');
     expect(html).toContain('class="k tn-neg"><div class="k-l">CLB bị khóa');
     expect(html).toContain('class="sev crit"');
   });
 
-  it('chữ ≥ 7pt, không gradient/bóng/emoji, hex thuộc token', () => {
+  it('chữ ≥ 7pt, không backdrop-filter/emoji, hex thuộc token', () => {
     const sizes = [...html.matchAll(/font-size:\s*([\d.]+)pt/g)].map((x) => parseFloat(x[1]));
     for (const s of sizes) expect(s).toBeGreaterThanOrEqual(MIN_FONT_PT);
-    expect(html).not.toMatch(/gradient\(|box-shadow|backdrop-filter/);
+    expect(html).toMatch(/box-shadow/);
+    expect(html).not.toMatch(/backdrop-filter|drop-shadow/);
     expect(html).not.toMatch(/[◆▲▼★⚠✓✨🏓🎮]/u);
     const b = makeBrand(null);
-    const allowed = new Set<string>([...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF'].map((c) => c.toUpperCase()));
+    const allowed = new Set<string>([...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF', ...Object.values(washColors(b)), ...Object.values(makeGlassPalette(b)).filter((v) => v.startsWith('#'))].map((c) => c.toUpperCase()));
     for (const m of html.matchAll(/#[0-9a-fA-F]{6}\b/g)) expect(allowed.has(m[0].toUpperCase())).toBe(true);
   });
 });

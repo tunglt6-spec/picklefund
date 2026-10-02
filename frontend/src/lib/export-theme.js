@@ -38,6 +38,10 @@ export const THEME = {
     posFill: [22, 163, 74], // #16A34A
     negFill: [239, 68, 68], // #EF4444
     warnFill: [217, 119, 6], // #D97706
+    // semantic DEEP (chữ nhỏ trên viên/ô kính có nền màu α — cùng họ posText/negText/warn, đậm hơn một bậc)
+    posDeep: [22, 101, 52], // #166534
+    negDeep: [153, 27, 27], // #991B1B
+    warnDeep: [146, 64, 14], // #92400E
     posTint: [240, 253, 244], // #F0FDF4
     posEdge: [187, 247, 208], // #BBF7D0
     negTint: [254, 242, 242], // #FEF2F2
@@ -66,6 +70,34 @@ export const THEME = {
   line: { hair: 0.2, border: 0.3, strong: 0.5, brandRule: 0.6 },
   radius: { card: 2, bar: 1 },
   row: { h: 8, lineH: 3.8, padX: 3 },
+  /**
+   * LIQUID GLASS — token hiệu ứng kính (alpha 0..1, mm). Mọi màu kính DẪN XUẤT từ palette app
+   * (brand/brandDark/brandSoft/trắng + semantic) ở độ trong suốt khác nhau — không có màu mới.
+   * Nền tấm kính đặt ≥ 0.78 để chữ nhỏ (muted/ink2) vẫn ≥ 4.5:1 trên nền XẤU NHẤT (wash tối nhất + orb).
+   */
+  glass: {
+    tile: 0.82, // nền tấm kính (trắng α)
+    row: 0.82, // nền hàng bảng (trắng α)
+    accent: 0.14, // nền tấm nhấn (brand α)
+    accentEdge: 0.35, // viền tấm nhấn (brand α)
+    edgeWhite: 0.9, // viền ngoài trắng
+    edgeWhiteW: 0.3,
+    hair: 0.18, // viền trong brand (hairline)
+    hairW: 0.15,
+    highlight: 1, // vạch sáng cạnh trên
+    highlightW: 0.2,
+    shadow: [0.085, 0.05, 0.025], // 3 lớp bóng mềm (brandDark α) giảm dần
+    shadowStep: 0.7,
+    shadowDy: 0.9,
+    radius: { panel: 3.5, band: 5, chip: 2.5, bar: 2.2 },
+    mast: { gloss: 0.1, edge: 0.35, chip: 0.35, chipEdge: 0.4, ring: 0.9, ringGlass: 0.16 },
+    orb: { alpha: 0.13, rings: 18 },
+    zebra: 0.05, // zebra = brand α
+    sep: 0.8, // đường kẻ trắng
+    sepHair: 0.12, // hairline brand
+    chip: { base: 0.9, tint: 0.12, edge: 0.35 }, // viên trạng thái (chữ Deep)
+    box: 0.08, // ô callout màu (chữ số sinh động) — tint α
+  },
   /** Phông trong PNG/HTML (webfont nạp qua FontFace). */
   fontFamily: "'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif",
 }
@@ -113,8 +145,11 @@ export function makeBrand(hex) {
   const isDefault = toHex(rgb) === DEFAULT_BRAND_HEX
   const brandSoft = isDefault ? [238, 242, 255] : mix(rgb, THEME.color.white, 0.92)
   let ink = isDefault ? [79, 70, 229] : mix(rgb, [0, 0, 0], 0.2)
+  // Liquid Glass: chữ brandDark còn phải ≥ 4.5 trên TẤM NHẤN ở nền xấu nhất (wash tối nhất + orb + kính trắng α + brand α).
+  const G0 = THEME.glass
+  const accentBg = mix(mix(mix(brandSoft, rgb, G0.orb.alpha), THEME.color.white, G0.tile), rgb, G0.accent)
   for (let k = 0; k < 40; k++) {
-    if (contrast(ink, THEME.color.white) >= 4.5 && contrast(ink, brandSoft) >= 4.5) break
+    if (contrast(ink, THEME.color.white) >= 4.5 && contrast(ink, brandSoft) >= 4.5 && contrast(ink, accentBg) >= 4.5) break
     ink = mix(ink, [0, 0, 0], 0.08)
   }
   let mid = ink
@@ -123,8 +158,24 @@ export function makeBrand(hex) {
     if (contrast(c, THEME.color.white) >= 4.5) { mid = c; break }
   }
   const edge = isDefault ? [199, 210, 254] : mix(rgb, THEME.color.white, 0.7)
+  /* LIQUID GLASS: hai đầu gradient băng/header bảng (chữ TRẮNG vẫn ≥ 4.6:1 SAU lớp bóng loáng) + 3 nút nền wash. */
+  const gloss = THEME.glass.mast.gloss
+  const okWhite = (c) => contrast(THEME.color.white, mix(c, THEME.color.white, gloss)) >= 4.6
+  let glassStart = ink
+  for (let k = 0; k < 40 && !okWhite(glassStart); k++) glassStart = mix(glassStart, [0, 0, 0], 0.08)
+  let glassEnd = glassStart
+  for (let k = 0; k <= 10; k++) {
+    const c = mix(rgb, glassStart, k / 10)
+    if (okWhite(c)) { glassEnd = c; break }
+  }
+  const washC = isDefault ? [245, 243, 255] : mix(rgb, THEME.color.white, 0.94)
   return {
     brand: rgb,
+    glassStart,
+    glassEnd,
+    washA: brandSoft,
+    washB: THEME.color.white,
+    washC,
     brandDark: ink,
     brandInk: ink,
     brandMid: mid,
@@ -175,6 +226,15 @@ export const fmt = {
     return `PF-${String(type || 'TL').toUpperCase()}-${p.yyyy.slice(2)}${p.mm}${p.dd}-${p.hh}${p.mi}`
   },
 }
+
+/** Màu nền XẤU NHẤT sau 1 tấm kính: wash tối nhất (brandSoft) + orb brand ở đậm nhất, rồi phủ kính trắng α `alpha`. */
+export function glassWorstBg(brand, alpha = THEME.glass.tile) {
+  const wash = mix(brand.washA, brand.brand, THEME.glass.orb.alpha)
+  return mix(wash, THEME.color.white, alpha)
+}
+
+/** Chuỗi "rgba" CSS (PNG/HTML giả kính bằng gradient + rgba + box-shadow). */
+export const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`
 
 /** Chuỗi "rgb" CSS từ mảng màu — dùng cho PNG/HTML để cùng token với PDF. */
 export const css = (c) => `rgb(${c[0]},${c[1]},${c[2]})`

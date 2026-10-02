@@ -2,7 +2,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  THEME, MIN_PT, DEFAULT_BRAND_HEX, CONTENT_W_PORTRAIT, CONTENT_W_LANDSCAPE, contrast, makeBrand, fmt, hexToRgb, toHex, css,
+  THEME, MIN_PT, DEFAULT_BRAND_HEX, CONTENT_W_PORTRAIT, CONTENT_W_LANDSCAPE, contrast, makeBrand, fmt, hexToRgb, toHex, css, rgba, glassWorstBg,
 } from './export-theme.js'
 
 const C = THEME.color as Record<string, number[]>
@@ -101,4 +101,33 @@ test('hexToRgb / toHex / css', () => {
   assert.equal(hexToRgb('nope'), null)
   assert.equal(toHex([15, 118, 110]), '#0F766E')
   assert.equal(css([1, 2, 3]), 'rgb(1,2,3)')
+})
+
+test('LIQUID GLASS tokens: alpha ∈ (0,1], bóng 3 lớp giảm dần, nền kính ≥ 0.78 (giữ chữ nhỏ ≥ 4.5:1), rgba()', () => {
+  const G = THEME.glass
+  for (const k of ['tile', 'row', 'accent', 'accentEdge', 'edgeWhite', 'hair', 'highlight', 'zebra', 'sep', 'sepHair', 'box']) {
+    const v = (G as unknown as Record<string, number>)[k]
+    assert.ok(v > 0 && v <= 1, k)
+  }
+  assert.ok(G.tile >= 0.78 && G.row >= 0.78)
+  assert.equal(G.shadow.length, 3)
+  assert.ok(G.shadow[0] > G.shadow[1] && G.shadow[1] > G.shadow[2])
+  assert.ok(G.orb.alpha <= 0.15 && G.mast.gloss <= 0.14)
+  assert.equal(rgba([1, 2, 3], 0.5), 'rgba(1,2,3,0.5)')
+})
+
+test('makeBrand: wash 3 nút (mặc định #EEF2FF → trắng → #F5F3FF) + hai đầu gradient glassStart/glassEnd với mọi màu CLB', () => {
+  const d = makeBrand(DEFAULT_BRAND_HEX)
+  assert.equal(toHex(d.washA), '#EEF2FF')
+  assert.equal(toHex(d.washB), '#FFFFFF')
+  assert.equal(toHex(d.washC), '#F5F3FF')
+  assert.equal(toHex(d.glassStart), '#4F46E5') // = brandDark
+  assert.ok(contrast(d.glassEnd, C.white) >= 4.5)
+  for (const hex of ['#0F766E', '#F59E0B', '#FFFFFF', '#000000', '#FACC15']) {
+    const m = makeBrand(hex)
+    assert.ok(contrast(m.brandDark, glassWorstBg(m, THEME.glass.tile)) >= 4.4, hex)
+    assert.ok(contrast(C.white, m.washB) === 1)
+  }
+  // muted (#64748B) trên nền xấu nhất sau kính ≥ 4.5 với các màu thương hiệu thực tế
+  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) assert.ok(contrast(C.muted, glassWorstBg(makeBrand(hex))) >= 4.5, hex)
 })

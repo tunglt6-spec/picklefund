@@ -7,6 +7,7 @@ import {
   DEFAULT_BRAND_DARK,
   DEFAULT_BRAND_INK,
   DEFAULT_BRAND_SOFT,
+  GLASS,
   MIN_FONT_PT,
   PAGE,
   PAGE_CSS,
@@ -18,7 +19,12 @@ import {
   dateTimeVN,
   escHtml,
   footerLeftText,
+  glassTint,
   makeBrand,
+  makeGlassPalette,
+  orbAlphaFor,
+  over,
+  washColors,
   vnd,
   vndCompact,
 } from './export-tokens';
@@ -247,17 +253,18 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
   const html = buildReportHtml(report('CLB Thăng Long', 5), 'Tóm tắt', null, { brandColor: '#F59E0B', now: new Date('2026-10-02T03:15:00Z') });
   const css = html.replace(/base64,[A-Za-z0-9+/=]+/g, 'base64,');
 
-  it('SINH ĐỘNG: băng/bìa/header bảng nền ĐẶC brandDeep chữ trắng, KPI số xanh/đỏ, hộp AI brandSoft', () => {
+  it('LIQUID GLASS: băng bìa/masthead gradient + chip kính, header bảng kính chữ trắng, hộp AI tấm nhấn, thẻ tông xanh/đỏ', () => {
     const b = makeBrand('#F59E0B');
-    expect(css).toMatch(/\.cv-hero\{background:var\(--brandDeep\);color:#fff/);
-    expect(css).toMatch(/\.mast\{[^}]*background:var\(--brandDeep\);color:#fff/);
-    expect(css).toMatch(/thead th\{background:var\(--brandDeep\);color:#fff/);
-    expect(css).toMatch(/\.aibox\{background:var\(--brandSoft\);border:[^;]*solid var\(--brandBorder\)/);
+    expect(css).toMatch(/\.cv-hero\{[^}]*background:var\(--mast-bg\);color:#fff/);
+    expect(css).toMatch(/\.mast\{[^}]*background:var\(--mast-bg\);color:#fff/);
+    expect(css).toMatch(/thead th\{background:linear-gradient\([^}]*var\(--mast-mid\);color:#fff/);
+    expect(css).toMatch(/\.aibox\{background-color:var\(--acc-t\)/);
+    expect(css).toContain('<div class="wash"></div>');
+    expect(css).toMatch(/--mast-bg:radial-gradient\(/);
     expect(css).toContain(`--brandBorder:${b.brandBorder}`);
-    expect(css).toContain(`.tn-pos{--t:${COLORS.posTint};--b:${COLORS.posBorder};--f:${COLORS.posFill};--v:${COLORS.posVivid}}`);
-    expect(css).toContain(`.tn-neg{--t:${COLORS.negTint};--b:${COLORS.negBorder};--f:${COLORS.negFill};--v:${COLORS.negVivid}}`);
-    expect(css).toContain(`.tb.thu{background:${COLORS.posFill}}.tb.chi{background:${COLORS.negFill}}`);
-    // Tổng thu = tông pos, Tổng chi = tông neg, Tổng tài sản âm = neg
+    expect(css).toMatch(/\.tn-pos\{--f:#16A34A;--v:#16A34A;/i);
+    expect(css).toMatch(/\.tn-neg\{--f:#EF4444;--v:#DC2626;/i);
+    expect(css).toContain(`.tb.thu{background-color:${COLORS.posFill}}.tb.chi{background-color:${COLORS.negFill}}`);
     expect(html).toMatch(/class="kpi tn-pos"><div class="kl">Tổng thu</);
     expect(html).toMatch(/class="kpi tn-neg"><div class="kl">Tổng chi</);
     expect(html).toMatch(/class="kpi tn-brand acc"><div class="kl">Tổng tài sản</);
@@ -270,16 +277,17 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
     for (const s of sizes) expect(s).toBeGreaterThanOrEqual(MIN_FONT_PT);
   });
 
-  it('không gradient / đổ bóng / emoji / glyph ngoài font', () => {
-    expect(css).not.toMatch(/gradient\(|box-shadow|backdrop-filter/);
-    expect(css).not.toMatch(/linear-gradient|radial-gradient|drop-shadow/);
+  it('kính bằng gradient/rgba/box-shadow (KHÔNG backdrop-filter), không emoji / glyph ngoài font', () => {
+    expect(css).toMatch(/box-shadow/);
+    expect(css).toMatch(/rgba\(255,255,255,/);
+    expect(css).not.toMatch(/backdrop-filter|filter:\s*blur|drop-shadow/);
     expect(css).not.toMatch(/[◆▲▼★⚠✓✨🏓🎮]/u);
   });
 
   it('màu hex trong HTML chỉ thuộc token (COLORS) hoặc bộ màu thương hiệu', () => {
     const b = makeBrand('#F59E0B');
     const allowed = new Set<string>(
-      [...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF'].map((c) => c.toUpperCase()),
+      [...Object.values(COLORS), b.brand, b.brandDeep, b.brandInk, b.brandSoft, b.brandBorder, b.badge, '#FFFFFF', ...Object.values(washColors(b)), ...Object.values(makeGlassPalette(b)).filter((v) => v.startsWith('#'))].map((c) => c.toUpperCase()),
     );
     const found = [...css.matchAll(/#[0-9a-fA-F]{6}\b/g)].map((x) => x[0].toUpperCase());
     expect(found.length).toBeGreaterThan(10);
@@ -296,6 +304,42 @@ describe('HTML Chrome đạt chuẩn Luxury SaaS', () => {
     const b = makeBrand('#F59E0B');
     expect(css).toContain(`--brandDeep:${b.brandDeep}`);
     expect(contrast('#FFFFFF', b.brandDeep)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it('LIQUID GLASS: chữ đạt AA trên nền xấu nhất sau lớp kính, chữ trắng trên băng + chip ≥ 4.5', () => {
+    for (const c of [null, '#F59E0B', '#0F766E', '#6D5DFB', '#FACC15']) {
+      const b = makeBrand(c);
+      const G = makeGlassPalette(b);
+      const W = washColors(b);
+      for (const end of [G.mastFrom, G.mastMid, G.mastTo]) {
+        expect(contrast('#FFFFFF', end)).toBeGreaterThanOrEqual(AA);
+        expect(contrast('#FFFFFF', over('#FFFFFF', GLASS.mastChip, end))).toBeGreaterThanOrEqual(AA);
+      }
+      expect(contrast('#FFFFFF', G.mastWorst)).toBeGreaterThanOrEqual(AA);
+      // header bảng: trắng trên brandDeep + bóng loáng α
+      expect(contrast('#FFFFFF', over('#FFFFFF', GLASS.gloss, G.mastMid))).toBeGreaterThanOrEqual(AA);
+      // chữ trực tiếp trên wash (xấu nhất = wash đậm nhất + orb)
+      const washWorst = over(b.brand, orbAlphaFor(b), W.a);
+      for (const fg of [COLORS.ink, COLORS.ink2, COLORS.muted, b.brandInk, COLORS.neg]) {
+        expect({ c, fg, ok: contrast(fg, washWorst) >= AA }).toEqual({ c, fg, ok: true });
+      }
+      // chữ trên tấm kính (trắng α.70 phủ wash xấu nhất)
+      const card = over('#FFFFFF', GLASS.panel, washWorst);
+      for (const fg of [COLORS.ink, COLORS.ink2, COLORS.muted, b.brandInk, COLORS.pos, COLORS.neg, COLORS.warn, COLORS.info]) {
+        expect({ c, fg, ok: contrast(fg, card) >= AA }).toEqual({ c, fg, ok: true });
+      }
+      // số đậm cỡ lớn trên thẻ tông (kính + tint tông α)
+      const cardNoOrb = over('#FFFFFF', GLASS.panel, W.a);
+      for (const f of [COLORS.posVivid, COLORS.negVivid, COLORS.orange, COLORS.infoFill, b.brandInk]) {
+        expect({ c, f, ok: contrast(f, over(f, GLASS.toneFill, cardNoOrb)) >= AA_LARGE }).toEqual({ c, f, ok: true });
+      }
+      // chữ trên tấm nhấn brand α.14 và viên trạng thái α.08
+      expect(contrast(b.brandInk, over(b.brand, GLASS.accentFill, card))).toBeGreaterThanOrEqual(AA);
+      for (const [t, f] of [[COLORS.pos, COLORS.posFill], [COLORS.neg, COLORS.negFill], [COLORS.warn, COLORS.warnFill], [COLORS.info, COLORS.infoFill], [b.brandInk, b.brand]] as const) {
+        expect({ t, ok: contrast(t, over(f, GLASS.chipFill, '#FFFFFF')) >= AA }).toEqual({ t, ok: true });
+      }
+    }
+    expect(glassTint('#16A34A', GLASS.toneFill)).toMatch(/^rgba\(\d+,\d+,\d+,0\.\d+\)$/);
   });
 
   it('model: tông số liệu — thu pos, chi neg, số âm luôn neg, dự báo theo dấu', () => {

@@ -3,7 +3,7 @@
 //
 // QUY ƯỚC LỖI: hàm export trả Promise và THROW khi thất bại (không toast trong lib) → call site
 // await + try/catch (xem hooks/useExportRunner). Người dùng bấm Hủy hộp thoại lưu = không lỗi.
-import { THEME, CONTENT_W_PORTRAIT, fmt as themeFmt, makeBrand, css } from './export-theme.js'
+import { THEME, CONTENT_W_PORTRAIT, fmt as themeFmt, makeBrand, css, rgba, mix } from './export-theme.js'
 
 /* ─── EPIC10C: branding cho PDF/export ───
  * brandingStore đẩy giá trị qua setExportBranding (không đổi signature từng hàm).
@@ -247,56 +247,68 @@ function ensureReportFont(): Promise<void> {
 function pngCss(): string {
   const C = THEME.color
   const T = THEME.type
+  const G = THEME.glass
   const b = makeBrand(brandColor())
   const r = css
+  const a = rgba
   // html2canvas dựng lại DOM trong iframe: font nạp bằng FontFace ở document cha KHÔNG có trong iframe → chữ đo bằng
   // font dự phòng nhưng vẽ bằng Be Vietnam Pro (dính chữ, chồng "đ"). Khai báo @font-face ngay trong <style> để iframe tự nạp.
   const origin = typeof location !== 'undefined' && location.origin && location.origin !== 'null' ? location.origin : ''
   const fontFaces = [['400', 'Regular'], ['700', 'Bold']]
     .map(([w, n]) => `@font-face { font-family: 'Be Vietnam Pro'; font-weight: ${w}; font-style: normal; font-display: block; src: url('${origin}/fonts/BeVietnamPro-${n}.ttf') format('truetype'); }`)
     .join(' ')
+  // LIQUID GLASS (html2canvas KHÔNG hỗ trợ backdrop-filter → giả kính bằng gradient + rgba + box-shadow, cùng token với PDF).
+  const wash = `radial-gradient(circle 420px at 100% 0%, ${a(b.brand, G.orb.alpha)} 0%, ${a(b.brand, 0)} 100%), radial-gradient(circle 460px at 0% 100%, ${a(C.cyan, G.orb.alpha)} 0%, ${a(C.cyan, 0)} 100%), linear-gradient(135deg, ${r(b.washA)} 0%, ${r(b.washB)} 50%, ${r(b.washC)} 100%)`
+  const glass = (alpha: number) => `background: linear-gradient(180deg, ${a(C.white, Math.min(1, alpha + 0.1))} 0%, ${a(C.white, alpha - 0.04)} 100%);`
+  // html2canvas bỏ qua viền "spread" 0-blur → viền hairline brand là border thật; cạnh trên trắng = vạch sáng; bóng 3 lớp mềm.
+  const shadow3 = `0 1px 3px ${a(b.brandDark, G.shadow[0] + 0.03)}, 0 6px 14px ${a(b.brandDark, G.shadow[1] + 0.05)}, 0 14px 28px ${a(b.brandDark, G.shadow[2] + 0.035)}`
+  const rim = `border: 1px solid ${a(b.brand, G.hair + 0.04)}; border-top-color: ${a(C.white, G.highlight)}; box-shadow: ${shadow3};`
+  const barBg = (extra = '') => `background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), linear-gradient(90deg, ${r(b.glassStart)} 0%, ${r(b.glassEnd)} 100%); ${extra}`
   return `
   ${fontFaces}
   .${PNG_ROOT}, .${PNG_ROOT} * { box-sizing: border-box; margin: 0; padding: 0; }
-  .${PNG_ROOT} { font-family: ${THEME.fontFamily}; color: ${r(C.ink)}; background: #fff; }
-  .${PNG_ROOT} .page { width: 794px; padding: 45px 45px 30px; background: #fff; }
-  .${PNG_ROOT} .m-head { display: flex; align-items: center; gap: 18px; padding: 22px 26px 24px; background: ${r(b.brandDark)}; border-radius: 10px; border-bottom: 6px solid ${r(b.brand)}; color: #fff; }
-  .${PNG_ROOT} .m-logo { width: 58px; height: 58px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .${PNG_ROOT} .m-logo.dark { padding: 2px; }
-  .${PNG_ROOT} .m-logo:not(.dark):not(.ini) { background: #fff; padding: 7px; }
+  .${PNG_ROOT} { font-family: ${THEME.fontFamily}; color: ${r(C.ink)}; background: ${r(C.white)}; }
+  .${PNG_ROOT}.wash, .${PNG_ROOT} .wash { background: ${wash}; }
+  .${PNG_ROOT} .page { width: 794px; padding: 45px 45px 30px; background: ${wash}; }
+  .${PNG_ROOT} .m-head { position: relative; display: flex; align-items: center; gap: 18px; padding: 22px 26px 24px; ${barBg()} border-radius: 19px; border: 1px solid ${a(C.white, G.mast.edge)}; box-shadow: ${shadow3}; color: #fff; }
+  .${PNG_ROOT} .m-logo { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: ${a(C.white, G.mast.ringGlass)}; border: 1px solid ${a(C.white, 0.6)}; }
+  .${PNG_ROOT} .m-logo.dark { padding: 9px; }
+  .${PNG_ROOT} .m-logo:not(.dark):not(.ini) { background: ${a(C.white, G.mast.ring)}; padding: 10px; }
   .${PNG_ROOT} .m-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .${PNG_ROOT} .m-logo.ini { background: #fff; color: ${r(b.brandDark)}; border-radius: 50%; font-weight: 700; font-size: ${ptPx(T.h1 + 4)}; }
+  .${PNG_ROOT} .m-logo.ini { background: ${a(C.white, G.mast.ring)}; color: ${r(b.brandDark)}; font-weight: 700; font-size: ${ptPx(T.h1 + 4)}; }
   .${PNG_ROOT} .m-main { flex: 1; min-width: 0; }
   .${PNG_ROOT} .m-club { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: #fff; }
   .${PNG_ROOT} .m-title { font-size: ${ptPx(T.h1 + 2)}; font-weight: 700; line-height: 1.2; margin-top: 4px; color: #fff; }
   .${PNG_ROOT} .m-sub { font-size: ${ptPx(T.body)}; color: #fff; margin-top: 4px; }
-  .${PNG_ROOT} .m-right { text-align: right; font-size: ${ptPx(T.caption)}; line-height: 1.6; color: #fff; flex-shrink: 0; max-width: 230px; }
+  .${PNG_ROOT} .m-right { text-align: right; font-size: ${ptPx(T.caption)}; line-height: 1.6; color: #fff; flex-shrink: 0; max-width: 230px; padding: 8px 12px; border-radius: 10px; background: ${a(b.glassStart, G.mast.chip)}; border: 1px solid ${a(C.white, G.mast.chipEdge)}; }
   .${PNG_ROOT} .kpis { display: flex; gap: 12px; margin-top: 22px; }
-  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; background: #fff; border: 1px solid ${r(C.line)}; border-radius: 8px; padding: 13px 15px; }
-  .${PNG_ROOT} .kpi.accent { background: ${r(b.brandSoft)}; border: 1px solid ${r(b.brandEdge)}; }
+  .${PNG_ROOT} .kpi { flex: 1; min-width: 0; ${glass(G.tile)} ${rim} border-radius: 13px; padding: 13px 15px; }
+  .${PNG_ROOT} .kpi.accent { background: linear-gradient(180deg, ${a(b.brand, G.accent + 0.04)} 0%, ${a(b.brand, G.accent)} 100%), ${a(C.white, G.tile)}; border: 1px solid ${a(b.brand, G.accentEdge)}; border-top-color: ${a(C.white, G.highlight)}; box-shadow: ${shadow3}; }
   .${PNG_ROOT} .kpi .l { font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; color: ${r(C.muted)}; }
   .${PNG_ROOT} .kpi.accent .l { color: ${r(b.brandDark)}; }
   .${PNG_ROOT} .kpi .v { font-size: ${ptPx(T.kpi)}; font-weight: 700; margin-top: 6px; white-space: nowrap; color: ${r(C.ink)}; }
   .${PNG_ROOT} .kpi.accent .v { color: ${r(b.brandDark)}; }
   .${PNG_ROOT} .kpi .v.pos { color: ${r(C.pos)}; }
+  .${PNG_ROOT} .kpi.accent .v.pos { color: ${r(C.posText)}; }
   .${PNG_ROOT} .kpi .v.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 22px; }
-  .${PNG_ROOT} th { background: ${r(b.brandMid)}; color: #fff; padding: 10px 14px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; }
-  .${PNG_ROOT} th { box-shadow: 1px 0 0 0 ${r(b.brandMid)}; }
-  .${PNG_ROOT} th:first-child { border-radius: 6px 0 0 6px; }
-  .${PNG_ROOT} th:last-child { border-radius: 0 6px 6px 0; }
+  .${PNG_ROOT} .sheet { margin-top: 22px; border-radius: 12px; ${rim} background: ${a(C.white, G.row)}; overflow: hidden; }
+  .${PNG_ROOT} table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .${PNG_ROOT} th { ${barBg()} color: #fff; padding: 10px 14px; text-align: left; font-size: ${ptPx(T.label)}; font-weight: 700; letter-spacing: .3pt; text-transform: uppercase; }
+  .${PNG_ROOT} th:not(:first-child):not(:last-child) { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), ${r(mix(b.glassStart, b.glassEnd, 0.5))}; }
+  .${PNG_ROOT} th:first-child { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), linear-gradient(90deg, ${r(b.glassStart)} 0%, ${r(mix(b.glassStart, b.glassEnd, 0.5))} 100%); }
+  .${PNG_ROOT} th:last-child { background: linear-gradient(180deg, ${a(C.white, G.mast.gloss + 0.04)} 0%, ${a(C.white, 0)} 55%), linear-gradient(90deg, ${r(mix(b.glassStart, b.glassEnd, 0.5))} 0%, ${r(b.glassEnd)} 100%); }
   .${PNG_ROOT} th.right, .${PNG_ROOT} td.right { text-align: right; }
-  .${PNG_ROOT} td { padding: 9px 14px; border-bottom: 1px solid ${r(C.lineSoft)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
-  .${PNG_ROOT} tbody tr:nth-child(even) td { background: ${r(C.surface2)}; }
+  .${PNG_ROOT} td { padding: 9px 14px; border-top: 1px solid ${a(C.white, G.sep)}; border-bottom: 1px solid ${a(b.brand, G.sepHair)}; font-size: ${ptPx(T.cell)}; color: ${r(C.ink)}; }
+  .${PNG_ROOT} tbody tr:nth-child(even) td { background: ${a(b.brand, G.zebra)}; }
   .${PNG_ROOT} td.right { font-weight: 700; white-space: nowrap; font-size: ${ptPx(T.body)}; }
   .${PNG_ROOT} td.pos { color: ${r(C.pos)}; }
   .${PNG_ROOT} td.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} tr.total td { background: ${r(b.brandSoft)}; border-top: 1px solid ${r(b.brandEdge)}; border-bottom: 1px solid ${r(b.brandEdge)}; font-weight: 700; color: ${r(b.brandDark)}; }
-  .${PNG_ROOT} tr.total td:first-child { border-left: 1px solid ${r(b.brandEdge)}; border-radius: 8px 0 0 8px; }
-  .${PNG_ROOT} tr.total td:last-child { border-right: 1px solid ${r(b.brandEdge)}; border-radius: 0 8px 8px 0; color: ${r(C.ink)}; }
-  .${PNG_ROOT} tr.total td.pos { color: ${r(C.pos)}; }
+  .${PNG_ROOT} tr.total td { background: ${a(b.brand, G.accent)}; border-top: 1px solid ${a(b.brand, G.accentEdge)}; border-bottom: 0; font-weight: 700; color: ${r(b.brandDark)}; }
+  .${PNG_ROOT} tr.total td.right { color: ${r(C.ink)}; }
+  .${PNG_ROOT} tr.total td.pos { color: ${r(C.posText)}; }
   .${PNG_ROOT} tr.total td.neg { color: ${r(C.neg)}; }
-  .${PNG_ROOT} .foot { margin-top: 26px; padding-top: 9px; border-top: 1px solid ${r(C.line)}; display: flex; justify-content: space-between; gap: 12px; font-size: ${ptPx(T.caption)}; color: ${r(C.muted)}; }
+  .${PNG_ROOT} .foot { margin-top: 26px; padding-top: 9px; border-top: 1px solid ${a(b.brand, G.hair)}; display: flex; justify-content: space-between; gap: 12px; font-size: ${ptPx(T.caption)}; color: ${r(C.muted)}; }
+  .${PNG_ROOT} .glass-body { margin: 0 24px; padding: 18px; border-radius: 16px; ${rim} background: ${a(C.white, G.tile)}; }
   `
 }
 
@@ -356,9 +368,9 @@ async function captureReportCanvas(
   const docCode = themeFmt.docCode('ANH')
 
   const wrap = document.createElement('div')
-  wrap.className = PNG_ROOT
-  wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 48}px;background:#fff;`
-  wrap.innerHTML = `<style>${pngCss()}</style><div style="padding:24px 24px 0;">${reportMastheadHtml({ ...report, logo, docCode })}</div><div data-pf-body style="padding:18px 24px;background:#fff;"></div><div style="padding:0 24px 20px;">${reportFooterHtml(report.title, docCode)}</div>`
+  wrap.className = `${PNG_ROOT} wash`
+  wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 84}px;`
+  wrap.innerHTML = `<style>${pngCss()}</style><div style="padding:24px 24px 0;">${reportMastheadHtml({ ...report, logo, docCode })}</div><div style="padding:18px 0;"><div data-pf-body class="glass-body"></div></div><div style="padding:0 24px 20px;">${reportFooterHtml(report.title, docCode)}</div>`
   const body = wrap.querySelector('[data-pf-body]') as HTMLElement
   const clone = el.cloneNode(true) as HTMLElement
   clone.querySelectorAll('[data-html2canvas-ignore]').forEach(n => n.remove())
@@ -426,7 +438,7 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
   const sections = `
     ${reportMastheadHtml({ title: TITLE, subtitle: `${d.clubName} · ${d.periodName}`, meta: `${d.memberCount} thành viên · ${d.sessionCount} buổi · đã đóng ${d.confirmedCount}/${d.memberCount}`, logo, docCode })}
     <div class="kpis">${kpi('Tổng thu', d.totalIncome, false, 'pos')}${kpi('Tổng chi', d.totalExpense, false, 'neg')}${kpi('Tồn Quỹ Chính', d.balance, true)}</div>
-    <table>
+    <div class="sheet"><table>
       <thead><tr><th>Chỉ số</th><th class="right">Giá trị</th></tr></thead>
       <tbody>
         ${row('Tổng thu (Quỹ Chính)', d.totalIncome, 'pos')}
@@ -436,7 +448,7 @@ export async function exportFinanceOverviewImage(d: FinanceOverviewInput) {
         ${row('Số dư chuyển kỳ', d.carryForward)}
         <tr class="total"><td>Tổng tài sản CLB</td><td class="right${d.clubAssets < 0 ? ' neg' : ''}">${e(themeFmt.vnd(d.clubAssets))}</td></tr>
       </tbody>
-    </table>
+    </table></div>
     ${reportFooterHtml(TITLE, docCode)}
   `
   return renderReportPng(sections, `Tai_chinh_${d.periodName.replace(/\s/g, '_')}`)
@@ -619,19 +631,20 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
 
     // ── Khối tiêu đề 4 hàng (gộp ô theo bề ngang bảng) ──
     const sheetTone = sheet.tone !== undefined ? sheet.tone : kit.inferSheetTone(sheet.name, opts.docType)
-    const blockRows: [string, unknown][] = [
+    const eg = (c: number) => kit.edgeOf(c, maxCol)
+    const blockRows: [string, (e?: import('./excel-kit.ts').Edge) => unknown][] = [
       [club.toUpperCase(), st.club],
       [opts.docTitle ? `${opts.docTitle} — ${sheet.name}` : sheet.name, st.title],
       [sheet.subtitle ?? `${nRows} dòng dữ liệu`, st.scope],
       [`Xuất lúc ${exportedAt} · Mã TL: ${docCode}`, st.meta],
     ]
     blockRows.forEach(([text, style], r) => {
-      set(ws, r, 0, { t: 's', v: text, s: style })
-      for (let c = 1; c <= maxCol; c++) set(ws, r, c, { t: 's', v: '', s: r === 3 ? st.metaRule : style })
+      set(ws, r, 0, { t: 's', v: text, s: style(eg(0)) })
+      for (let c = 1; c <= maxCol; c++) set(ws, r, c, { t: 's', v: '', s: r === 3 ? st.metaRule(eg(c)) : style(eg(c)) })
     })
 
     // ── Header cột ──
-    for (let c = 0; c < nCols; c++) set(ws, XL_HEAD, c, { s: st.header(headAlign(kinds[c])) })
+    for (let c = 0; c < nCols; c++) set(ws, XL_HEAD, c, { s: st.header(headAlign(kinds[c]), eg(c)) })
 
     // ── Ô thân ──
     const rowHeights: Record<number, number> = {}
@@ -646,7 +659,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
       return t ? { color: kit.moneyColor(t), bold: true } : { color: undefined, bold: false }
     }
     if (nRows === 0) {
-      for (let c = 0; c <= maxCol; c++) set(ws, XL_HEAD + 1, c, { t: 's', v: c === 0 ? 'Chưa có dữ liệu để hiển thị' : '', s: st.empty })
+      for (let c = 0; c <= maxCol; c++) set(ws, XL_HEAD + 1, c, { t: 's', v: c === 0 ? 'Chưa có dữ liệu để hiển thị' : '', s: st.empty(eg(c)) })
       if (maxCol > 0) merges.push({ s: { r: XL_HEAD + 1, c: 0 }, e: { r: XL_HEAD + 1, c: maxCol } })
       rowHeights[XL_HEAD + 1] = 32
     }
@@ -658,24 +671,24 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
         const raw = row[c] ?? ''
         const zb = zebra && ri % 2 === 1
         if (typeof raw === 'number') {
-          set(ws, r, c, { t: 'n', v: raw, z: sheet.cellFormats?.[ri]?.[c] ?? numFmt(raw), s: st.cell(kit.isIndexHeader(sheet.headers[c] ?? '') ? 'center' : 'right', { zebra: zb, ...numStyle(raw, c, rowTexts) }) })
+          set(ws, r, c, { t: 'n', v: raw, z: sheet.cellFormats?.[ri]?.[c] ?? numFmt(raw), s: st.cell(kit.isIndexHeader(sheet.headers[c] ?? '') ? 'center' : 'right', { zebra: zb, edge: eg(c), ...numStyle(raw, c, rowTexts) }) })
         } else if (raw === '') {
-          set(ws, r, c, { t: 's', v: '', s: st.cell(kinds[c] === 'num' ? 'right' : kinds[c] === 'text' ? 'left' : 'center', { zebra: zb }) })
+          set(ws, r, c, { t: 's', v: '', s: st.cell(kinds[c] === 'num' ? 'right' : kinds[c] === 'text' ? 'left' : 'center', { zebra: zb, edge: eg(c) }) })
         } else {
           const serial = toExcelDateSerial(raw)
           if (serial != null) {
-            set(ws, r, c, { t: 'n', v: serial, z: kit.XL_DATE, s: st.cell('center', { zebra: zb }) })
+            set(ws, r, c, { t: 'n', v: serial, z: kit.XL_DATE, s: st.cell('center', { zebra: zb, edge: eg(c) }) })
           } else if (kinds[c] === 'status') {
             const tone = kit.statusTone(raw)
-            set(ws, r, c, { t: 's', v: raw, s: tone ? st.chip(tone) : st.cell('center', { zebra: zb }) })
+            set(ws, r, c, { t: 's', v: raw, s: tone ? st.chip(tone, { edge: eg(c) }) : st.cell('center', { zebra: zb, edge: eg(c) }) })
           } else {
             // Chữ: wrap + tự cao hàng. Mã/SĐT số có số 0 đầu giữ dạng văn bản (@) để không mất số 0 khi sửa.
             lines = Math.max(lines, kit.estimateLines(raw, widths[c]))
-            set(ws, r, c, { t: 's', v: raw, ...(/^0\d+$/.test(raw) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, zebra: zb }) })
+            set(ws, r, c, { t: 's', v: raw, ...(/^0\d+$/.test(raw) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, zebra: zb, edge: eg(c) }) })
           }
         }
       }
-      rowHeights[r] = lines === 1 ? 20 : 0 // 0 = để Excel tự cao theo nội dung wrap
+      rowHeights[r] = lines === 1 ? 22 : 0 // 0 = để Excel tự cao theo nội dung wrap
     })
 
     // ── Hàng tổng: nền brandSoft, đậm, viền trên brand; SUBTOTAL khi là TỔNG THUẦN của cột ──
@@ -701,13 +714,13 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
             const sum = col.reduce((s, x) => s + x, 0)
             if (col.length > 0 && Math.abs(sum - raw) < 0.5) cell = { ...cell, f: `SUBTOTAL(9,${colLetter(c)}${firstBody}:${colLetter(c)}${lastBody})` }
           }
-          set(ws, r, c, { ...cell, s: st.total('right', { first, color: (() => { const t = kit.moneyTone({ header: sheet.headers[c] ?? '', value: raw, rowTexts: footTexts, sheetTone, total: true }); return t ? kit.moneyColor(t) : undefined })() }) })
+          set(ws, r, c, { ...cell, s: st.total('right', { first, edge: eg(c), color: (() => { const t = kit.moneyTone({ header: sheet.headers[c] ?? '', value: raw, rowTexts: footTexts, sheetTone, total: true }); return t ? kit.moneyColor(t) : undefined })() }) })
         } else if (c === li) {
           if (nextFilled - li > 1) merges.push({ s: { r, c: li }, e: { r, c: nextFilled - 1 } })
           lines = Math.max(lines, kit.estimateLines(raw, Math.max(spanW, 10)))
-          set(ws, r, c, { t: 's', v: raw, s: st.total(li > 0 ? 'right' : 'left', { first, wrap: true }) }) // nhãn ở giữa bảng → căn phải sát số tổng
+          set(ws, r, c, { t: 's', v: raw, s: st.total(li > 0 ? 'right' : 'left', { first, wrap: true, edge: eg(c) }) }) // nhãn ở giữa bảng → căn phải sát số tổng
         } else {
-          set(ws, r, c, { t: 's', v: '', s: st.total('left', { first }) })
+          set(ws, r, c, { t: 's', v: '', s: st.total('left', { first, edge: eg(c) }) })
         }
       }
       rowHeights[r] = Math.max(22, lines * 14 + 8)
@@ -721,8 +734,8 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     ws['!cols'] = widths.map(wch => ({ wch }))
     const headerWraps = sheet.headers.some((h, c) => kit.estimateLines(h, widths[c] - 1) > 1)
     const rowsMeta: { hpt?: number }[] = []
-    ;[20, 34, 18, 18, 6].forEach((h, r) => { rowsMeta[r] = { hpt: h } })
-    rowsMeta[XL_HEAD] = headerWraps ? {} : { hpt: 26 }
+    ;[22, 38, 20, 18, 10].forEach((h, r) => { rowsMeta[r] = { hpt: h } })
+    rowsMeta[XL_HEAD] = headerWraps ? {} : { hpt: 30 }
     for (const [r, h] of Object.entries(rowHeights)) rowsMeta[+r] = h > 0 ? { hpt: h } : {}
     for (let r = 0; r <= lastRow; r++) rowsMeta[r] = rowsMeta[r] ?? {}
     ws['!rows'] = rowsMeta
@@ -748,7 +761,7 @@ export async function buildExcelBytes(sheets: ExcelSheet[], opts: { docType?: st
     CreatedDate: new Date(),
   }
   const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-  return kit.patchWorkbookXml(new Uint8Array(out as ArrayBuffer), patches)
+  return kit.patchWorkbookXml(new Uint8Array(out as ArrayBuffer), patches, kit.glassPatchFor(b))
 }
 
 /** @param opts.docTitle tên tài liệu (khối tiêu đề: "{docTitle} — {tên sheet}"; thiếu → chỉ tên sheet). */
@@ -789,7 +802,7 @@ export async function exportTemplateExcel(fileName: string, sheets: TemplateShee
       sh.lines.forEach((line, r) => {
         const isTitle = r === 0
         const isHead = !isTitle && /^[\p{Lu}\s]{5,}/u.test(line)
-        const style = isTitle ? st.title : isHead ? st.section : st.text
+        const style = isTitle ? st.title('lr') : isHead ? st.section : st.text
         ws[XLSX.utils.encode_cell({ r, c: 0 })] = {
           t: 's', v: line,
           s: { ...(style as object), alignment: { horizontal: 'left', vertical: 'center', wrapText: true, indent: isTitle || isHead ? 1 : 0 } },
@@ -805,12 +818,12 @@ export async function exportTemplateExcel(fileName: string, sheets: TemplateShee
     const rows = sh.rows ?? []
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]) as XlWorksheet
     headers.forEach((h, c) => {
-      ws[XLSX.utils.encode_cell({ r: 0, c })] = { t: 's', v: h, s: st.header('left') }
+      ws[XLSX.utils.encode_cell({ r: 0, c })] = { t: 's', v: h, s: st.header('left', kit.edgeOf(c, headers.length - 1)) }
     })
     rows.forEach((row, ri) => row.forEach((v, c) => {
       const ref = XLSX.utils.encode_cell({ r: ri + 1, c })
-      if (typeof v === 'number') ws[ref] = { t: 'n', v, z: Number.isInteger(v) ? kit.XL_NUM_INT : kit.XL_NUM_DEC, s: st.cell('right', { color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1 }) }
-      else ws[ref] = { t: 's', v: String(v ?? ''), ...(/^0\d+$/.test(String(v)) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1 }) }
+      if (typeof v === 'number') ws[ref] = { t: 'n', v, z: Number.isInteger(v) ? kit.XL_NUM_INT : kit.XL_NUM_DEC, s: st.cell('right', { color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1, edge: kit.edgeOf(c, headers.length - 1) }) }
+      else ws[ref] = { t: 's', v: String(v ?? ''), ...(/^0\d+$/.test(String(v)) ? { z: '@' } : {}), s: st.cell('left', { wrap: true, color: kit.XL_COLOR.ink2, zebra: ri % 2 === 1, edge: kit.edgeOf(c, headers.length - 1) }) }
     }))
     ws['!cols'] = headers.map((h, c) => ({ wch: sh.widths?.[c] ?? kit.columnWidth(h.length, 12) }))
     ws['!rows'] = [{ hpt: 28 }, ...rows.map(() => ({ hpt: 20 }))]
@@ -824,7 +837,7 @@ export async function exportTemplateExcel(fileName: string, sheets: TemplateShee
     Title: `Mẫu nhập liệu — ${sheets.find(s => s.headers)?.name ?? fileName}`, Subject: docCode, Author: club, LastAuthor: club, Company: club, CreatedDate: new Date(),
   }
   const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-  const bytes = await kit.patchWorkbookXml(new Uint8Array(out as ArrayBuffer), patches)
+  const bytes = await kit.patchWorkbookXml(new Uint8Array(out as ArrayBuffer), patches, kit.glassPatchFor(b))
   downloadBlob(new Blob([bytes as unknown as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName)
 }
 

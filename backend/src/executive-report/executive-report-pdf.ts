@@ -4,19 +4,25 @@ import { loadFontsBase64 } from './export-fonts';
 import {
   COLORS,
   CONTENT_W,
+  GLASS,
   PAGE,
   SPACE,
   TYPE,
   hexToRgb,
   makeBrand,
+  makeGlassPalette,
+  mix,
+  orbAlphaFor,
   vndCompact,
+  washColors,
 } from './export-tokens';
 import { buildExecModel, deltaText, healthTone, toneOfValue, type NumTone } from './executive-report-model';
 
 /**
- * Fallback jsPDF của Báo cáo điều hành (khi không có Chromium). CÙNG ngôn ngữ thiết kế SINH ĐỘNG với bản Chrome:
- * dùng chung token (export-tokens.ts) + view-model (executive-report-model.ts) → cùng bìa/masthead nền ĐẶC brandDeep,
- * thứ tự mục 01–12, số liệu xanh/đỏ/tím đậm, header bảng nền brand chữ trắng, chữ ≥ 7pt,
+ * Fallback jsPDF của Báo cáo điều hành (khi không có Chromium). CÙNG ngôn ngữ LIQUID GLASS với bản Chrome:
+ * dùng chung token (export-tokens.ts) + view-model (executive-report-model.ts) → nền wash + orb, tấm kính (GState opacity:
+ * nền trắng bán trong, viền ngoài trắng, viền trong brand, highlight cạnh trên, bóng bậc thang), băng bìa/masthead gradient dải mịn,
+ * thứ tự mục 01–12, số liệu xanh/đỏ/tím đậm, header bảng kính chữ trắng, chữ ≥ 7pt,
  * footer "CLB · Tên TL · Mã TL" | "Trang x / y". Font BeVietnamPro (tiếng Việt có dấu). Trả Buffer, hoặc null nếu không có font.
  */
 export interface ExecPdfOpts {
@@ -69,6 +75,135 @@ export function buildExecutiveReportPdf(
   };
   const up = (s: string) => s.toUpperCase();
 
+  // ── LIQUID GLASS: độ trong suốt bằng GState (cùng alpha token với bản Chrome) ──
+  const GS: any = (doc as any).GState;
+  const alpha = (a: number, fn: () => void) => {
+    doc.saveGraphicsState();
+    doc.setGState(new GS({ opacity: a, 'stroke-opacity': a }));
+    fn();
+    doc.restoreGraphicsState();
+  };
+  const GP = makeGlassPalette(B);
+  const WSH = washColors(B);
+  /** Nền wash: dải ngang mịn (a → b → c) + 2 orb (brand / cyan) bằng vòng tròn đồng tâm alpha thấp; lặp mỗi trang. */
+  const drawWash = () => {
+    const N = 64;
+    const stripH = PAGE.h / N;
+    for (let i = 0; i < N; i++) {
+      const t = i / (N - 1);
+      fill(t < 0.52 ? mix(WSH.a, WSH.b, t / 0.52) : mix(WSH.b, WSH.c, (t - 0.52) / 0.48));
+      doc.rect(0, i * stripH, PAGE.w, stripH + 0.3, 'F');
+    }
+    const orb = (cx: number, cy: number, r: number, hex: string) => {
+      const steps = 14;
+      for (let k = 0; k < steps; k++) {
+        const rr = r * (1 - k / steps);
+        fill(hex);
+        alpha((orbAlphaFor(B) * 1.6) / steps, () => doc.circle(cx, cy, rr, 'F'));
+      }
+    };
+    orb(PAGE.w * 0.86, PAGE.h * 0.1, 62, B.brand);
+    orb(PAGE.w * 0.12, PAGE.h * 0.9, 58, COLORS.infoFill);
+  };
+  /** Bóng mềm bậc thang (3 lớp offset, alpha thấp) dưới tấm kính. */
+  const softShadowBox = (x: number, yy: number, w: number, h: number, r: number, k = 1, aMul = 1) => {
+    fill(B.brandDeep);
+    [1, 2, 3].forEach((i) =>
+      alpha((GLASS.shadowA * aMul) / (i * 0.9), () => rrect(x, yy + GLASS.shadowDy * i * k, w, h, 'F', r)),
+    );
+  };
+  interface GOpts {
+    tint?: string;
+    tintA?: number;
+    ring?: string;
+    ringA?: number;
+    bar?: string;
+    barH?: number;
+    r?: number;
+    flat?: boolean;
+  }
+  /** Tấm kính: bóng → nền trắng α.70 (+tint) → viền ngoài trắng → viền trong → highlight cạnh trên → vạch tông. */
+  const glassCard = (x: number, yy: number, w: number, h: number, o: GOpts = {}) => {
+    const r = o.r ?? GLASS.radius;
+    if (!o.flat) softShadowBox(x, yy, w, h, r);
+    fill(WHITE);
+    alpha(GLASS.panel, () => rrect(x, yy, w, h, 'F', r));
+    if (o.tint) {
+      fill(o.tint);
+      alpha(o.tintA ?? GLASS.toneFill, () => rrect(x, yy, w, h, 'F', r));
+    }
+    if (o.bar) {
+      fill(o.bar);
+      const bh = o.barH ?? 0.9;
+      alpha(1, () => {
+        doc.saveGraphicsState();
+        rrect(x, yy, w, h, null as any, r);
+        (doc as any).clip();
+        (doc as any).discardPath();
+        doc.rect(x, yy, w, bh, 'F');
+        doc.restoreGraphicsState();
+      });
+    }
+    stroke(o.ring ?? B.brand);
+    doc.setLineWidth(0.2);
+    alpha(o.ring ? (o.ringA ?? GLASS.toneRing) : GLASS.rimInner, () => rrect(x + 0.2, yy + 0.2, w - 0.4, h - 0.4, 'S', Math.max(0, r - 0.2)));
+    stroke(WHITE);
+    doc.setLineWidth(GLASS.rimW);
+    alpha(GLASS.rimOuter, () => rrect(x, yy, w, h, 'S', r));
+    doc.setLineWidth(0.3);
+    alpha(GLASS.highlight, () => doc.line(x + r, yy + 0.45, x + w - r, yy + 0.45));
+  };
+  const toneOpts = (tc: { f: string }, barH = 0.9): GOpts => ({ tint: tc.f, tintA: GLASS.toneFill, ring: tc.f, ringA: GLASS.toneRing, bar: tc.f, barH });
+  const accentOpts = (bar?: string, barH = 0.9): GOpts => ({ tint: B.brand, tintA: GLASS.accentFill, ring: B.brand, ringA: GLASS.accentBorder, bar, barH });
+  /** Viên trạng thái kính (nền màu α.08 + viền màu α.35). */
+  const glassChip = (x: number, yy: number, w: number, h: number, hex: string) => {
+    fill(hex);
+    alpha(GLASS.chipFill, () => rrect(x, yy, w, h, 'F', h / 2));
+    stroke(hex);
+    doc.setLineWidth(0.2);
+    alpha(GLASS.chipBorder, () => rrect(x, yy, w, h, 'S', h / 2));
+  };
+  /** Băng kính chuyển sắc chéo (dải dọc mịn mastFrom → mastMid → mastTo) + bóng loáng elip + viền trắng + bóng. */
+  const mastBand = (x: number, yy: number, w: number, h: number, r: number) => {
+    softShadowBox(x, yy, w, h, r, 1.6, 4);
+    doc.saveGraphicsState();
+    rrect(x, yy, w, h, null as any, r);
+    (doc as any).clip();
+    (doc as any).discardPath();
+    const N = 56;
+    for (let i = 0; i < N; i++) {
+      const t = i / (N - 1);
+      fill(t < 0.52 ? mix(GP.mastFrom, GP.mastMid, t / 0.52) : mix(GP.mastMid, GP.mastTo, (t - 0.52) / 0.48));
+      doc.rect(x + (w * i) / N, yy, w / N + 0.3, h, 'F');
+    }
+    // bóng loáng: elip trắng chồng dần tại góc trên-trái
+    const gl = 32;
+    fill(WHITE);
+    for (let k = 0; k < gl; k++) {
+      const f = 1 - k / gl;
+      alpha((GLASS.gloss + 0.04) / gl, () => (doc as any).ellipse(x + w * 0.2, yy, w * 0.85 * f, h * 0.85 * f, 'F'));
+    }
+    doc.restoreGraphicsState();
+    stroke(WHITE);
+    doc.setLineWidth(GLASS.rimW);
+    alpha(GLASS.mastRim, () => rrect(x, yy, w, h, 'S', r));
+  };
+  /** Chip kính trên băng (trắng α.12 + viền trắng α.4). */
+  const bandChip = (x: number, yy: number, w: number, h: number) => {
+    fill(WHITE);
+    alpha(GLASS.mastChip, () => rrect(x, yy, w, h, 'F', h / 2));
+    stroke(WHITE);
+    doc.setLineWidth(0.25);
+    alpha(GLASS.mastChipBorder, () => rrect(x, yy, w, h, 'S', h / 2));
+  };
+  drawWash();
+  const origAddPage = doc.addPage.bind(doc);
+  (doc as any).addPage = (...a: any[]) => {
+    const res = (origAddPage as any)(...a);
+    drawWash();
+    return res;
+  };
+
   /** Tông số liệu → bộ màu (nền nhạt / viền / vạch / số đậm). Số âm luôn đỏ. */
   const TN: Record<NumTone, { t: string; b: string; f: string; v: string }> = {
     pos: { t: COLORS.posTint, b: COLORS.posBorder, f: COLORS.posFill, v: COLORS.posVivid },
@@ -88,22 +223,15 @@ export function buildExecutiveReportPdf(
     }
   };
 
-  /** Thẻ có vạch màu ở trên (bo góc nhẹ). `bg`/`bd` = nền + viền; `bar` = màu vạch trên. */
-  const topBarCard = (x: number, yy: number, w: number, h: number, bg: string, bd: string, bar: string, barH = 0.9) => {
-    fill(bg);
-    stroke(bd);
-    doc.setLineWidth(PAGE.border);
-    rrect(x, yy, w, h, 'FD');
-    fill(bar);
-    doc.rect(x + 0.7, yy, w - 1.4, barH, 'F');
-  };
-
   // ── logo / monogram (tròn trắng, nổi trên băng brand) ─────────────────
   const drawLogo = (x: number, yy: number, size: number) => {
+    fill(B.brandDeep);
+    alpha(0.12, () => doc.circle(x + size / 2, yy + size / 2 + 0.6, size / 2 + 0.1, 'F'));
     fill(WHITE);
-    stroke(B.brandBorder);
-    doc.setLineWidth(PAGE.hair);
-    doc.circle(x + size / 2, yy + size / 2, size / 2 - 0.1, 'FD');
+    alpha(0.94, () => doc.circle(x + size / 2, yy + size / 2, size / 2 - 0.1, 'F'));
+    stroke(WHITE);
+    doc.setLineWidth(GLASS.rimW);
+    alpha(GLASS.rimOuter, () => doc.circle(x + size / 2, yy + size / 2, size / 2 - 0.1, 'S'));
     const uri = opts.logoDataUri;
     const fmt = typeof uri === 'string' ? /^data:image\/(png|jpe?g);base64,/i.exec(uri) : null;
     if (uri && fmt) {
@@ -125,8 +253,18 @@ export function buildExecutiveReportPdf(
 
   // ── 1. BÌA: panel ĐẶC brandDeep (chữ trắng) / thẻ chỉ số / thông tin tài liệu ──
   const heroH = 150;
-  fill(B.brandDeep);
-  rrect(L, y, CONTENT_W, heroH, 'F');
+  mastBand(L, y, CONTENT_W, heroH, 4);
+  // vòng kính trang trí góc dưới-phải (cùng hero bản Chrome)
+  doc.saveGraphicsState();
+  rrect(L, y, CONTENT_W, heroH, null as any, 4);
+  (doc as any).clip();
+  (doc as any).discardPath();
+  fill(WHITE);
+  alpha(0.06, () => doc.circle(R - 10, y + heroH + 8, 46, 'F'));
+  stroke(WHITE);
+  doc.setLineWidth(0.3);
+  alpha(0.22, () => doc.circle(R - 10, y + heroH + 8, 46, 'S'));
+  doc.restoreGraphicsState();
   drawLogo(L + SPACE.s5, y + SPACE.s5, 18);
   font(TYPE.h2, true, WHITE);
   doc.text(m.brandLabel, L + SPACE.s5 + 18 + SPACE.s3, y + SPACE.s5 + 10.4);
@@ -134,9 +272,7 @@ export function buildExecutiveReportPdf(
     const tag = 'EXECUTIVE REPORT';
     font(TYPE.label, true, WHITE);
     const tw = doc.getTextWidth(tag) + 8;
-    stroke(B.badge);
-    doc.setLineWidth(PAGE.border);
-    rrect(R - SPACE.s5 - tw, y + SPACE.s5 + 5.2, tw, 5.6, 'S', 2.8);
+    bandChip(R - SPACE.s5 - tw, y + SPACE.s5 + 5.2, tw, 5.6);
     doc.text(tag, R - SPACE.s5 - tw / 2, y + SPACE.s5 + 9, { align: 'center' });
   }
   const ruleY = y + heroH - SPACE.s6 - 1;
@@ -158,7 +294,7 @@ export function buildExecutiveReportPdf(
     m.coverStats.forEach((c, i) => {
       const tc = tcol(c.tone, c.v);
       const cx = L + i * (sw + SPACE.s3);
-      topBarCard(cx, sy, sw, 32, tc.t, tc.b, tc.f, 1.2);
+      glassCard(cx, sy, sw, 32, toneOpts(tc, 1.2));
       font(TYPE.label, true, COLORS.muted);
       doc.text(up(c.l), cx + SPACE.s3, sy + 9);
       let vs: number = TYPE.display;
@@ -174,27 +310,26 @@ export function buildExecutiveReportPdf(
   }
   // thông tin tài liệu (khối có chủ đích, không lặp footer)
   const docY = PAGE.top + 259 - 26;
-  hline(L, R, docY, B.brandDeep, PAGE.strong);
+  glassCard(L, docY - 2, CONTENT_W, 25);
   font(TYPE.label, true, B.brandInk);
-  doc.text(up('Thông tin tài liệu'), L, docY + 5);
-  const dcx = [L, L + CONTENT_W * 0.37, L + CONTENT_W * 0.62];
+  doc.text(up('Thông tin tài liệu'), L + SPACE.s3, docY + 3.5);
+  const dcx = [L + SPACE.s3, L + CONTENT_W * 0.37, L + CONTENT_W * 0.62];
   [
     ['Mã tài liệu', m.code],
     ['Ngày xuất', m.exportedAt],
     ['Phân loại', 'Tài liệu nội bộ · Ban quản trị CLB'],
   ].forEach(([l, v], i) => {
     font(TYPE.label, true, COLORS.muted);
-    doc.text(up(l), dcx[i], docY + 11);
+    doc.text(up(l), dcx[i], docY + 10);
     font(TYPE.table, false, COLORS.ink);
-    doc.text(v, dcx[i], docY + 16);
+    doc.text(v, dcx[i], docY + 15);
   });
 
   // ── 2. MASTHEAD trang 2: băng ĐẶC brandDeep + gauge trong ô trắng ─────
   doc.addPage();
   y = PAGE.top;
   const mastH = 26;
-  fill(B.brandDeep);
-  rrect(L, y, CONTENT_W, mastH, 'F');
+  mastBand(L, y, CONTENT_W, mastH, GLASS.radius);
   drawLogo(L + SPACE.s3, y + 7, 12);
   const mtx = L + SPACE.s3 + 12 + SPACE.s3;
   font(TYPE.label, true, WHITE);
@@ -202,7 +337,12 @@ export function buildExecutiveReportPdf(
   font(TYPE.h1, true, WHITE);
   doc.text('Báo cáo điều hành', mtx, y + 14.6);
   font(TYPE.body, false, WHITE);
-  doc.text(`Kỳ: ${m.periodName} · Xuất lúc ${m.exportedAt}`, mtx, y + 19.8);
+  {
+    const subTxt = `Kỳ: ${m.periodName} · Xuất lúc ${m.exportedAt}`;
+    const sw = doc.getTextWidth(subTxt) + 5;
+    bandChip(mtx, y + 16.2, sw, 5.2);
+    doc.text(subTxt, mtx + 2.5, y + 19.8);
+  }
   // gauge: ô trắng + track hairline + cung màu theo mức điểm
   {
     const tone = m.tone;
@@ -210,8 +350,12 @@ export function buildExecutiveReportPdf(
     const chipH = 21;
     const chipX = R - SPACE.s3 + 1 - chipW;
     const chipY = y + (mastH - chipH) / 2;
+    softShadowBox(chipX, chipY, chipW, chipH, GLASS.radius, 1, 2);
     fill(WHITE);
-    rrect(chipX, chipY, chipW, chipH, 'F');
+    alpha(0.92, () => rrect(chipX, chipY, chipW, chipH, 'F', GLASS.radius));
+    stroke(WHITE);
+    doc.setLineWidth(GLASS.rimW);
+    alpha(GLASS.rimOuter, () => rrect(chipX, chipY, chipW, chipH, 'S', GLASS.radius));
     const gcx = chipX + 13;
     const gcy = chipY + chipH / 2;
     const gr = 7.6;
@@ -270,27 +414,27 @@ export function buildExecutiveReportPdf(
   const DIM_STEP = 9.8;
   const bar = (x: number, yy: number, w: number, score: number | null, label: string) => {
     const t = score == null ? null : healthTone(score);
-    fill(COLORS.surface2);
-    stroke(COLORS.hairline);
-    doc.setLineWidth(PAGE.hair);
-    rrect(x, yy, w, DIM_H, 'FD');
+    glassCard(x, yy, w, DIM_H, { r: 2.4 });
     font(TYPE.table, true, COLORS.ink2);
     doc.text(label, x + 2.5, yy + 3.8);
     font(TYPE.body, true, t ? t.vivid : COLORS.muted);
     doc.text(score == null ? '—' : String(score), x + w - 2.5, yy + 3.8, { align: 'right' });
-    fill(COLORS.hairline);
-    rrect(x + 2.5, yy + 5.3, w - 5, 2.2, 'F', 1.1);
+    fill(B.brand);
+    alpha(GLASS.track, () => rrect(x + 2.5, yy + 5.3, w - 5, 2.2, 'F', 1.1));
     if (t && score! > 0) {
       fill(t.fill);
-      rrect(x + 2.5, yy + 5.3, Math.max(2.2, ((w - 5) * Math.min(100, score!)) / 100), 2.2, 'F', 1.1);
+      const bw = Math.max(2.2, ((w - 5) * Math.min(100, score!)) / 100);
+      rrect(x + 2.5, yy + 5.3, bw, 2.2, 'F', 1.1);
+      fill(WHITE);
+      alpha(0.35, () => rrect(x + 2.7, yy + 5.45, Math.max(1.8, bw - 0.4), 0.8, 'F', 0.4));
     }
     return DIM_STEP;
   };
   const KPI_H = 19;
   const kpiCard = (x: number, yy: number, w: number, k: { l: string; v: string; s?: string; accent?: boolean; tone: NumTone }) => {
     const tc = tcol(k.tone, k.v);
-    if (k.accent) topBarCard(x, yy, w, KPI_H, B.brandSoft, B.brandBorder, tc.f);
-    else topBarCard(x, yy, w, KPI_H, WHITE, COLORS.hairline, tc.f);
+    if (k.accent) glassCard(x, yy, w, KPI_H, accentOpts(tc.f));
+    else glassCard(x, yy, w, KPI_H, toneOpts(tc));
     font(TYPE.label, true, COLORS.muted);
     doc.text(up(k.l), x + 2.8, yy + 6);
     let size: number = TYPE.kpi;
@@ -308,7 +452,7 @@ export function buildExecutiveReportPdf(
   const TILE_H = 14;
   const tileCard = (x: number, yy: number, w: number, t: { l: string; v: string; tone: NumTone }) => {
     const tc = tcol(t.tone, t.v);
-    topBarCard(x, yy, w, TILE_H, WHITE, COLORS.hairline, tc.f);
+    glassCard(x, yy, w, TILE_H, toneOpts(tc));
     font(TYPE.label, true, COLORS.muted);
     doc.text(up(t.l), x + 2.5, yy + 5.6);
     let size: number = TYPE.h2;
@@ -344,12 +488,14 @@ export function buildExecutiveReportPdf(
     const lines: string[] = doc.splitTextToSize(m.aiText, CONTENT_W - SPACE.s3 * 2 - 2);
     const h = SPACE.s2 + 6 + lines.length * 3.7 + SPACE.s2;
     ensure(h + SPACE.s3);
-    fill(B.brandSoft);
-    stroke(B.brandBorder);
-    doc.setLineWidth(PAGE.border);
-    rrect(L, y, CONTENT_W, h, 'FD');
+    glassCard(L, y, CONTENT_W, h, accentOpts());
+    doc.saveGraphicsState();
+    rrect(L, y, CONTENT_W, h, null as any);
+    (doc as any).clip();
+    (doc as any).discardPath();
     fill(B.brand);
     doc.rect(L, y, 1.4, h, 'F');
+    doc.restoreGraphicsState();
     font(TYPE.h2, true, B.brandInk);
     doc.text(up('Tóm tắt điều hành (AI)'), L + SPACE.s3 + 1, y + SPACE.s2 + 3.2);
     font(TYPE.body, false, COLORS.ink);
@@ -369,7 +515,7 @@ export function buildExecutiveReportPdf(
       const cx = L + (i % 3) * (cw3 + SPACE.s3);
       const cy = y + Math.floor(i / 3) * (cellH + SPACE.s2);
       const tc = tcol(r.tone, r.value);
-      topBarCard(cx, cy, cw3, cellH, tc.t, tc.b, tc.f);
+      glassCard(cx, cy, cw3, cellH, toneOpts(tc));
       font(TYPE.label, true, COLORS.muted);
       doc.text(up(r.label), cx + 2.8, cy + 5.8);
       font(TYPE.kpi, true, tc.v);
@@ -384,33 +530,31 @@ export function buildExecutiveReportPdf(
           const good = (r.delta >= 0) !== (r.label === 'Tổng chi');
           font(TYPE.caption, true, good ? COLORS.pos : COLORS.neg);
           const tw = doc.getTextWidth(txt) + 3.4;
-          fill(WHITE);
-          stroke(good ? COLORS.posBorder : COLORS.negBorder);
-          doc.setLineWidth(PAGE.hair);
-          rrect(cx + 2.8 + vw + 2.5, cy + 8.2, tw, 4.6, 'FD');
+          glassChip(cx + 2.8 + vw + 2.5, cy + 8.2, tw, 4.6, good ? COLORS.posFill : COLORS.negFill);
           ink(good ? COLORS.pos : COLORS.neg);
           doc.text(txt, cx + 2.8 + vw + 2.5 + tw / 2, cy + 11.5, { align: 'center' });
         }
       }
     });
     y += stripH + SPACE.s3;
+    glassCard(L, y - 3, CONTENT_W, m.trends.length ? 8 + 3 + plotH + 13 : 22);
     font(TYPE.label, true, COLORS.ink2);
-    doc.text(up('Thu · Chi theo kỳ quỹ'), L, y + 2);
+    doc.text(up('Thu · Chi theo kỳ quỹ'), L + SPACE.s3, y + 2);
     fill(COLORS.posFill);
-    doc.rect(R - 17.6, y + 0.6, 1.8, 1.8, 'F');
+    doc.rect(R - SPACE.s3 - 17.6, y + 0.6, 1.8, 1.8, 'F');
     font(TYPE.caption, false, COLORS.ink2);
-    doc.text('Thu', R - 15, y + 2.2);
+    doc.text('Thu', R - SPACE.s3 - 15, y + 2.2);
     fill(COLORS.negFill);
-    doc.rect(R - 8.6, y + 0.6, 1.8, 1.8, 'F');
-    doc.text('Chi', R - 6, y + 2.2);
+    doc.rect(R - SPACE.s3 - 8.6, y + 0.6, 1.8, 1.8, 'F');
+    doc.text('Chi', R - SPACE.s3 - 6, y + 2.2);
     y += 8;
     if (!m.trends.length) {
       font(TYPE.table, false, COLORS.muted);
       doc.text('Chưa có dữ liệu kỳ trước.', L, y + 6);
       y += 10;
     } else {
-      const px = L + 18;
-      const pw = CONTENT_W - 18;
+      const px = L + 18 + SPACE.s3 - 4;
+      const pw = CONTENT_W - 18 - (SPACE.s3 - 4) * 2 - 4;
       const baseY = y + plotH;
       const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
       const maxBarH = plotH * 0.85;
@@ -434,6 +578,11 @@ export function buildExecutiveReportPdf(
         doc.rect(cx - barW - 0.75, baseY - hThu, barW, hThu, 'F');
         fill(COLORS.negFill);
         doc.rect(cx + 0.75, baseY - hChi, barW, hChi, 'F');
+        fill(WHITE);
+        alpha(0.28, () => {
+          doc.rect(cx - barW - 0.75, baseY - hThu, 0.9, hThu, 'F');
+          doc.rect(cx + 0.75, baseY - hChi, 0.9, hChi, 'F');
+        });
         if (!dense) {
           font(TYPE.caption, true, COLORS.pos);
           doc.text(t.thuLabel, cx - barW / 2 - 0.75, baseY - hThu - 1, { align: 'center' });
@@ -453,10 +602,7 @@ export function buildExecutiveReportPdf(
     ensure(10.5 + SPACE.s2 + 24 + 8 + 14);
     sectionHead('04', 'Thành viên', 'Bảng xếp hạng sức khỏe', '40% tham gia · 30% đóng quỹ · 30% hạnh kiểm');
     const at = healthTone(m.avgHealth);
-    fill(WHITE);
-    stroke(B.brandBorder);
-    doc.setLineWidth(PAGE.border);
-    rrect(L, y, CONTENT_W, 19, 'FD');
+    glassCard(L, y, CONTENT_W, 19, accentOpts());
     font(TYPE.label, true, COLORS.muted);
     doc.text(up('Điểm sức khỏe TB'), L + SPACE.s3, y + 6);
     font(TYPE.display, true, at.vivid);
@@ -491,7 +637,7 @@ export function buildExecutiveReportPdf(
       head: [['#', 'Thành viên', 'Tham gia', 'Đóng quỹ', 'Đánh giá', 'Hạnh kiểm', 'Sức khỏe'].map(up)],
       body: body as any,
       styles: { font: 'BVP', fontStyle: 'normal', fontSize: TYPE.table, cellPadding: { top: 1.6, bottom: 1.6, left: 2.5, right: 2.5 }, textColor: hexToRgb(COLORS.ink), lineWidth: 0, valign: 'middle' },
-      headStyles: { font: 'BVP', fontStyle: 'bold', fontSize: TYPE.label, fillColor: hexToRgb(B.brandDeep), textColor: hexToRgb(WHITE), cellPadding: { top: 2.4, bottom: 2.4, left: 2.5, right: 2.5 } },
+      headStyles: { font: 'BVP', fontStyle: 'bold', fontSize: TYPE.label, fillColor: false as any, textColor: hexToRgb(WHITE), cellPadding: { top: 2.4, bottom: 2.4, left: 2.5, right: 2.5 } },
       columnStyles: {
         0: { halign: 'center', cellWidth: colW[0], textColor: hexToRgb(COLORS.muted) },
         1: { cellWidth: colW[1], fontStyle: 'bold' },
@@ -507,20 +653,55 @@ export function buildExecutiveReportPdf(
           d.cell.styles.halign = ha;
         } else if (d.section === 'body') {
           const r = m.members[d.row.index];
-          if (r && d.row.index % 2 === 1) d.cell.styles.fillColor = hexToRgb(COLORS.surface2);
+          d.cell.styles.fillColor = false as any; // nền kính vẽ ở willDrawCell
           if (r && d.column.index === 0 && r.rank <= 3) d.cell.text = ['']; // vẽ huy hiệu tròn ở didDrawCell
+        }
+      },
+      willDrawCell: (d) => {
+        const c = d.cell;
+        if (d.section === 'head') {
+          // dải kính chuyển sắc bo góc: vẽ MỘT lần ở ô đầu, phủ toàn bề rộng bảng
+          if (d.column.index === 0) {
+            const bw = CONTENT_W;
+            doc.saveGraphicsState();
+            rrect(c.x, c.y, bw, c.height, null as any, GLASS.radius - 1);
+            (doc as any).clip();
+            (doc as any).discardPath();
+            const N = 40;
+            for (let i = 0; i < N; i++) {
+              fill(mix(GP.mastMid, GP.mastTo, (i / (N - 1)) * 0.6));
+              doc.rect(c.x + (bw * i) / N, c.y, bw / N + 0.3, c.height, 'F');
+            }
+            fill(WHITE);
+            alpha(GLASS.gloss, () => doc.rect(c.x, c.y, bw, c.height * 0.45, 'F'));
+            doc.restoreGraphicsState();
+            stroke(WHITE);
+            doc.setLineWidth(0.25);
+            alpha(GLASS.mastRim, () => doc.line(c.x + GLASS.radius, c.y + 0.15, c.x + bw - GLASS.radius, c.y + 0.15));
+          }
+        } else if (d.section === 'body') {
+          fill(WHITE);
+          alpha(GLASS.rowAlpha, () => doc.rect(c.x, c.y, c.width, c.height, 'F'));
+          if (d.row.index % 2 === 1) {
+            fill(B.brand);
+            alpha(GLASS.zebra + 0.03, () => doc.rect(c.x, c.y, c.width, c.height, 'F'));
+          }
         }
       },
       didDrawCell: (d) => {
         const c = d.cell;
         if (d.section !== 'body') return;
-        hline(c.x, c.x + c.width, c.y + c.height);
+        stroke(WHITE);
+        doc.setLineWidth(PAGE.hair);
+        alpha(GLASS.rowLine, () => doc.line(c.x, c.y + c.height, c.x + c.width, c.y + c.height));
         const r = m.members[d.row.index];
         if (!r) return;
         const cx = c.x + c.width / 2;
         const cy = c.y + c.height / 2;
         if (d.column.index === 0 && r.rank <= 3) {
           dot(cx, cy, 2.5, B.brandDeep);
+          fill(WHITE);
+          alpha(GLASS.gloss, () => doc.circle(cx, cy - 0.7, 1.7, 'F'));
           font(TYPE.table, true, WHITE);
           doc.text(String(r.rank), cx, cy + 1, { align: 'center' });
         } else if (d.column.index === 3) {
@@ -529,10 +710,7 @@ export function buildExecutiveReportPdf(
             const txt = ok ? 'Đã đóng' : 'Nợ';
             font(TYPE.label, true, ok ? COLORS.pos : COLORS.neg);
             const tw = doc.getTextWidth(txt) + 7;
-            fill(ok ? COLORS.posTint : COLORS.negTint);
-            stroke(ok ? COLORS.posBorder : COLORS.negBorder);
-            doc.setLineWidth(PAGE.hair);
-            rrect(cx - tw / 2, cy - 2.4, tw, 4.8, 'FD', 2.4);
+            glassChip(cx - tw / 2, cy - 2.4, tw, 4.8, ok ? COLORS.posFill : COLORS.negFill);
             dot(cx - tw / 2 + 2.3, cy, 0.8, ok ? COLORS.posFill : COLORS.negFill);
             ink(ok ? COLORS.pos : COLORS.neg);
             doc.text(txt, cx - tw / 2 + 4, cy + 0.9);
@@ -546,7 +724,11 @@ export function buildExecutiveReportPdf(
           const gw = 5 * 1.8 + 4 * 0.6 + 1.6 + doc.getTextWidth(txt);
           let sx = cx - gw / 2;
           for (let i = 1; i <= 5; i++) {
-            dot(sx + 0.9, cy, 0.9, i <= r.stars ? COLORS.warnFill : COLORS.hairline);
+            if (i <= r.stars) dot(sx + 0.9, cy, 0.9, COLORS.warnFill);
+            else {
+              fill(B.brand);
+              alpha(0.16, () => doc.circle(sx + 0.9, cy, 0.9, 'F'));
+            }
             sx += 2.4;
           }
           doc.text(txt, sx + 0.4, cy + 0.9);
@@ -556,8 +738,7 @@ export function buildExecutiveReportPdf(
           font(TYPE.table, true, t.text);
           const pw = Math.max(8, doc.getTextWidth(txt) + 4);
           const px = c.x + c.width - 2.5 - pw;
-          fill(t.tint);
-          rrect(px, cy - 2.1, pw, 4.2, 'F');
+          glassChip(px, cy - 2.1, pw, 4.2, t.fill);
           ink(t.text);
           doc.text(txt, px + pw / 2, cy + 1, { align: 'center' });
         }
@@ -626,10 +807,7 @@ export function buildExecutiveReportPdf(
       }
       m.tournament.top.forEach((p) => {
         if (!dry) {
-          fill(B.brandSoft);
-          stroke(B.brandBorder);
-          doc.setLineWidth(PAGE.hair);
-          doc.circle(x + 2.5, yy + h + 2.3, 2.5, 'FD');
+          glassChip(x, yy + h - 0.2, 5, 5, B.brand);
           font(TYPE.table, true, B.brandInk);
           doc.text(String(p.rank), x + 2.5, yy + h + 3.3, { align: 'center' });
           font(TYPE.table, true, COLORS.ink);
@@ -651,7 +829,7 @@ export function buildExecutiveReportPdf(
     const w = (CONTENT_W - SPACE.s2 * 4) / 5;
     m.agents.forEach((a, i) => {
       const ax = L + i * (w + SPACE.s2);
-      topBarCard(ax, y, w, 25, WHITE, COLORS.hairline, a.accent, 1.2);
+      glassCard(ax, y, w, 25, { bar: a.accent, barH: 1.2 });
       font(TYPE.table, true, COLORS.ink);
       doc.text(a.name, ax + 2.8, y + 6.4);
       font(TYPE.kpi, true, a.accent === B.brand ? B.brandInk : a.accent);
@@ -727,12 +905,14 @@ export function buildExecutiveReportPdf(
           const lines: string[] = doc.splitTextToSize(a, w - 7);
           const ah = lines.length * 4 + 3;
           if (!dry) {
-            fill(COLORS.warnTint);
-            stroke(COLORS.warnBorder);
-            doc.setLineWidth(PAGE.hair);
-            rrect(x, yy + h, w, ah, 'FD');
+            glassCard(x, yy + h, w, ah, { tint: COLORS.warnFill, tintA: GLASS.chipFill, ring: COLORS.warnFill, ringA: GLASS.chipBorder, flat: true, r: 2 });
+            doc.saveGraphicsState();
+            rrect(x, yy + h, w, ah, null as any, 2);
+            (doc as any).clip();
+            (doc as any).discardPath();
             fill(COLORS.warnFill);
             doc.rect(x, yy + h, 1, ah, 'F');
+            doc.restoreGraphicsState();
             font(TYPE.table, false, COLORS.ink);
             doc.text(lines, x + 3.6, yy + h + 4);
           }
@@ -751,10 +931,7 @@ export function buildExecutiveReportPdf(
         font(TYPE.table, false, COLORS.ink);
         const lines: string[] = doc.splitTextToSize(r.text, w);
         if (!dry) {
-          fill(B.brandSoft);
-          stroke(B.brandBorder);
-          doc.setLineWidth(PAGE.hair);
-          rrect(x, yy + h, tw, 4.2, 'FD');
+          glassChip(x, yy + h, tw, 4.2, B.brand);
           font(TYPE.label, true, B.brandInk);
           doc.text(r.agent, x + tw / 2, yy + h + 3, { align: 'center' });
           font(TYPE.table, false, COLORS.ink);

@@ -2,9 +2,10 @@
  * Token thiết kế "Luxury SaaS" cho PDF phía SERVER (Chrome HTML→PDF + fallback jsPDF).
  * BẢN SAO có CÙNG giá trị với spec xuất tài liệu của FE (ink/ink2/muted/hairline/semantic/brand mặc định);
  * export-tokens.spec.ts khoá giá trị + tương phản WCAG ≥ 4.5 cho mọi cặp chữ/nền dùng thật.
- * Luật: màu chủ đạo = màu CLB (mặc định tím app), nền ĐẶC cho băng/bìa/header bảng (chữ trắng ≥ 4.5:1),
- * số liệu/tiêu đề dùng màu SINH ĐỘNG (xanh thu / đỏ chi), chữ nhỏ dùng bản AA; không gradient/đổ bóng/emoji,
- * chữ ≥ 7pt, đơn vị pt/mm sinh từ token.
+ * Luật: màu chủ đạo = màu CLB (mặc định tím app); LIQUID GLASS = tấm kính (gradient + rgba + viền + bóng mềm) CHỈ dùng
+ * đúng palette app ở các độ trong suốt khác nhau (không thêm màu mới); CHỮ luôn đặc, tương phản ≥ 4.5:1 so với nền xấu nhất
+ * sau lớp kính (số đậm cỡ lớn ≥ 3:1), số liệu dùng màu SINH ĐỘNG (xanh thu / đỏ chi), chữ ≥ 7pt, không emoji,
+ * đơn vị pt/mm sinh từ token.
  */
 
 // ── Màu cố định (hex) ───────────────────────────────────────────────────
@@ -52,6 +53,68 @@ export const DEFAULT_BRAND_BORDER = '#C7D2FE';
 export const DEFAULT_BRAND_DARK = '#4F46E5';
 /** Huy hiệu/đường trang trí trên nền brandDark (KHÔNG làm màu chữ). */
 export const DEFAULT_BRAND_BADGE = '#988CFC';
+
+// ── LIQUID GLASS: alpha / bán kính / bóng (độ trong suốt của chính palette app) ──────────
+export const GLASS = {
+  /** Bo góc tấm kính (mm). */
+  radius: 3.5,
+  /** Viền ngoài trắng (mm) + alpha; viền trong brand alpha. */
+  rimW: 0.3,
+  rimOuter: 0.9,
+  rimInner: 0.18,
+  /** Nền tấm kính: trắng bán trong (phẳng, vector — gradient/blur làm PDF phình). */
+  panel: 0.7,
+  /** Highlight trắng dọc cạnh trên. */
+  highlight: 0.95,
+  /** Bóng mềm (brandDark) lệch xuống: 3 lớp bậc thang không blur (vector) cho cảm giác mềm. */
+  shadowA: 0.05,
+  shadowDy: 0.5,
+  /** Tấm nhấn: nền brand + viền brand. */
+  accentFill: 0.14,
+  accentBorder: 0.35,
+  /** Tông số liệu (xanh/đỏ/cam/cyan) phủ lên thẻ: rất nhẹ để số đậm vẫn ≥ 3:1. */
+  toneFill: 0.05,
+  toneRing: 0.4,
+  /** Thân hàng bảng / zebra / đường kẻ. */
+  rowAlpha: 0.55,
+  zebra: 0.05,
+  rowLine: 0.8,
+  /** Viên trạng thái kính (nền màu + viền màu; chữ AA). */
+  chipFill: 0.08,
+  chipBorder: 0.35,
+  /** Nền trang: 2 orb mềm (brand / cyan) cắt ở mép trang. */
+  orb: 0.12,
+  /** Masthead/bìa: bóng loáng nửa trên, viền trắng, chip kính. */
+  gloss: 0.14,
+  mastRim: 0.35,
+  mastChip: 0.12,
+  mastChipBorder: 0.4,
+  /** Thanh/track mờ trong thẻ. */
+  track: 0.12,
+} as const;
+
+/** rgba() từ #RRGGBB + alpha. */
+export function rgba(hex: string, a: number): string {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+/** Phủ màu `hex` (alpha a) lên tấm kính trắng (alpha GLASS.panel) → MỘT rgba phẳng (giữ PDF nhẹ, vector). */
+export function glassTint(hex: string, a: number): string {
+  const wa = GLASS.panel;
+  const outA = a + wa * (1 - a);
+  const [r, g, b] = hexToRgb(hex);
+  const c = (v: number) => Math.round((v * a + 255 * wa * (1 - a)) / outA);
+  return `rgba(${c(r)},${c(g)},${c(b)},${Math.round(outA * 1000) / 1000})`;
+}
+/** Bóng mềm bậc thang (3 lớp không blur) màu brandDark. */
+export function softShadow(deep: string, k = 1, aMul = 1): string {
+  const d = GLASS.shadowDy;
+  return [1, 2, 3].map((i) => `0 ${mm(d * i * k)} 0 ${rgba(deep, Math.round((GLASS.shadowA * aMul * 1000) / (i * 0.9)) / 1000)}`).join(',');
+}
+/** Hợp thành: phủ `fg` (alpha a) lên `bg` → hex đặc (dùng để đo tương phản nền xấu nhất). */
+export function over(fg: string, a: number, bg: string): string {
+  return mix(bg, fg, a);
+}
 
 // ── Thang chữ (pt) — sàn 7pt ───────────────────────────────────────────
 export const TYPE = {
@@ -154,8 +217,79 @@ export function makeBrand(primary?: string | null): Brand {
   const badge = isDefault ? DEFAULT_BRAND_BADGE : mix(brandDeep, '#FFFFFF', 0.35);
   const brandInk = isDefault
     ? DEFAULT_BRAND_INK
-    : ensureContrast(mix(p, '#000000', 0.2), brandSoft, 4.5);
+    : ensureContrast(ensureContrast(mix(p, '#000000', 0.2), brandSoft, 4.5), over(p, GLASS.orb, brandSoft), 4.5); // cũng đạt trên wash+orb
   return { brand: p, brandDeep, brandInk, brandSoft, brandBorder, badge };
+}
+
+/** Tông nền wash trang (rất nhạt, chéo): brandSoft → brandSoft pha 45% trắng → brand pha 92% trắng. */
+export function washColors(B: Brand): { a: string; b: string; c: string } {
+  return { a: B.brandSoft, b: mix(B.brandSoft, '#FFFFFF', 0.45), c: mix(B.brand, '#FFFFFF', 0.92) };
+}
+
+/** Alpha orb: GLASS.orb, giảm dần cho thương hiệu sẫm để chữ muted trực tiếp trên wash vẫn ≥ 4.5:1. */
+export function orbAlphaFor(B: Brand): number {
+  const base = washColors(B).a;
+  let a: number = GLASS.orb;
+  while (a > 0.04 && contrast(COLORS.muted, over(B.brand, a, base)) < 4.5) a = Math.round((a - 0.01) * 100) / 100;
+  return a;
+}
+
+/** Bộ màu LIQUID GLASS suy ra từ thương hiệu (băng/bìa/masthead). */
+export interface GlassPalette {
+  /** Đầu tối của dải gradient (brandDeep pha ink). */
+  mastFrom: string;
+  /** Giữa dải = brandDeep. */
+  mastMid: string;
+  /** Đầu sáng của dải = brandDeep → brand, nhưng chữ trắng trên (đầu này + chip kính) vẫn ≥ 4.5:1. */
+  mastTo: string;
+  /** Nền xấu nhất sau chip kính trên masthead (để kiểm chữ trắng). */
+  mastWorst: string;
+}
+export function makeGlassPalette(B: Brand): GlassPalette {
+  // chip kính (trắng α) nằm trên băng → chữ trắng vẫn ≥ 4.6 sau chip: tối thêm brandDeep nếu cần (mặc định tím đã đạt)
+  let mastMid = B.brandDeep;
+  for (let i = 0; i < 30 && contrast('#FFFFFF', over('#FFFFFF', Math.max(GLASS.mastChip, GLASS.gloss) + 0.02, mastMid)) < 4.6; i++) mastMid = mix(mastMid, '#000000', 0.05);
+  const mastFrom = mix(mastMid, COLORS.ink, 0.35);
+  let mastTo = mastMid;
+  for (let t = 0.6; t > 0; t -= 0.05) {
+    const s = mix(mastMid, B.brand, t);
+    if (contrast('#FFFFFF', over('#FFFFFF', Math.max(GLASS.mastChip, GLASS.gloss) + 0.02, s)) >= 4.6) {
+      mastTo = s;
+      break;
+    }
+  }
+  return { mastFrom, mastMid, mastTo, mastWorst: over('#FFFFFF', GLASS.mastChip, mastTo) };
+}
+
+/**
+ * CSS dùng chung cho mọi báo cáo HTML→PDF (Chrome): wash nền trang + tấm kính + băng masthead + chip.
+ * Chrome in PDF KHÔNG đáng tin với backdrop-filter → giả kính bằng gradient + rgba + viền + box-shadow.
+ */
+export function glassCss(B: Brand): string {
+  const G = makeGlassPalette(B);
+  const w = (a: number) => `rgba(255,255,255,${a})`;
+  const WASH = washColors(B);
+  const orbA = orbAlphaFor(B);
+  const shadow = softShadow(B.brandDeep);
+  return `:root{--wash-a:${WASH.a};--wash-b:${WASH.b};--wash-c:${WASH.c};
+  --g-bg:${w(GLASS.panel)};
+  --g-rim:${mm(GLASS.rimW)} solid ${w(GLASS.rimOuter)};
+  --g-sh:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},inset 0 ${mm(0.35)} 0 ${w(GLASS.highlight)},${shadow};
+  --g-r:${mm(GLASS.radius)};
+  --acc-bg:${glassTint(B.brand, GLASS.accentFill)};
+  --acc-ring:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.accentBorder)},inset 0 ${mm(0.35)} 0 ${w(GLASS.highlight)},${shadow};
+  --mast-from:${G.mastFrom};--mast-mid:${G.mastMid};--mast-to:${G.mastTo};
+  --mast-bg:radial-gradient(ellipse 85% 85% at 20% 0%,${w(GLASS.gloss + 0.04)},${w(0)} 100%),linear-gradient(115deg,${G.mastFrom} 0%,${G.mastMid} 52%,${G.mastTo} 100%);
+  --mast-rim:${mm(GLASS.rimW)} solid ${w(GLASS.mastRim)};
+  --mast-sh:inset 0 ${mm(0.35)} 0 ${w(0.3)},${softShadow(B.brandDeep, 1.6, 4)};
+  --chip-bg:${w(GLASS.mastChip)};--chip-bd:${mm(0.25)} solid ${w(GLASS.mastChipBorder)}}
+/* Nền trang: wash chéo + 2 orb mềm (brand / cyan), lặp mỗi trang (fixed), cắt ở mép giấy */
+.wash{position:fixed;z-index:-1;left:0;top:0;width:${mm(CONTENT_W)};height:${mm(PAGE.h - PAGE.top - PAGE.bottom)};overflow:hidden;
+  background:linear-gradient(90deg,#fff 0,${w(0)} ${mm(5)}),linear-gradient(270deg,#fff 0,${w(0)} ${mm(5)}),linear-gradient(180deg,#fff 0,${w(0)} ${mm(5)}),linear-gradient(0deg,#fff 0,${w(0)} ${mm(5)}),radial-gradient(circle at 86% 12%,${rgba(B.brand, orbA)} 0,${rgba(B.brand, 0)} 70mm),radial-gradient(circle at 14% 88%,${rgba(COLORS.infoFill, orbA)} 0,${rgba(COLORS.infoFill, 0)} 64mm),linear-gradient(150deg,var(--wash-a) 0%,var(--wash-b) 52%,var(--wash-c) 100%)}
+.glass{background:var(--g-bg);border:var(--g-rim);box-shadow:var(--g-sh);border-radius:var(--g-r)}
+.glass.acc{background:var(--acc-bg);box-shadow:var(--acc-ring)}
+.mastband{background:var(--mast-bg);border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:var(--g-r);color:#fff}
+.gchip{background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};color:#fff}`;
 }
 
 // ── Định dạng số / tiền / ngày (vi-VN) ─────────────────────────────────

@@ -7,7 +7,7 @@ import {
   buildStandingsReportPDF, buildKnockoutReportPDF, buildMiniReceiptPDF, buildQuyReportPDF, buildExpenseReportPDF,
   buildPersonalReceiptPDF, buildBillingReceiptPDF, buildMiniExpensePDF,
 } from './pdf-report-core.js'
-import { THEME, MIN_PT, contrast, makeBrand, hexToRgb } from './export-theme.js'
+import { THEME, MIN_PT, contrast, makeBrand, hexToRgb, mix, glassWorstBg } from './export-theme.js'
 import { EMPTY_TEXT } from './pdf-kit.js'
 
 const req = createRequire(import.meta.url)
@@ -25,7 +25,7 @@ function makeSpy() {
   class SpyPDF extends (BaseJsPDF as any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(opts: any) {
-      super(opts)
+      super({ ...opts, compress: false }) // test soi luồng PDF → tắt nén
       const orig = this.text.bind(this)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.text = (t: any, ...rest: any[]) => {
@@ -211,7 +211,7 @@ function makeStyleSpy() {
   class StylePDF extends (BaseJsPDF as any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(opts: any) {
-      super(opts)
+      super({ ...opts, compress: false })
       const orig = this.text.bind(this)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.text = (t: any, ...rest: any[]) => {
@@ -257,12 +257,12 @@ function buildAll(primaryColor: string | null, logo: unknown = null) {
 const EMOJI = /[\u{1F300}-\u{1FAFF}☀-➿⭐⏳✓✔▲▼◆]/u
 const col = (k: string) => THEME.color[k as keyof typeof THEME.color] as number[]
 /** Chữ thường nhỏ: bản AA (≥ 4.5:1 trên trắng). */
-const AA_KEYS = ['ink', 'ink2', 'muted', 'posText', 'negText', 'warn', 'info', 'neg']
+const AA_KEYS = ['ink', 'ink2', 'muted', 'posText', 'negText', 'warn', 'info', 'neg', 'posDeep', 'negDeep', 'warnDeep']
 /** Màu SINH ĐỘNG: chỉ cho chữ ĐẬM ≥ 8.5pt (≥ 3:1 — chuẩn chữ lớn). */
 const VIVID_KEYS = ['pos', 'cyan', 'orange', 'amber']
 
 for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
-  test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 8.5pt (≥ 3:1); chữ trắng chỉ trên nền đặc ≥ 4.5:1; không #94A3B8/emoji`, () => {
+  test(`conformance (brand ${hex ?? 'mặc định'}): chữ ≥ 7pt; màu chữ ∈ THEME; thường ≥ 4.5:1, sinh động chỉ khi ĐẬM ≥ 8.5pt (≥ 3:1); chữ trắng trên băng kính; không #94A3B8/emoji`, () => {
     const { rec } = buildAll(hex)
     assert.ok(rec.length > 200, 'phải ghi được nhiều chuỗi')
     const brand = makeBrand(hex)
@@ -275,8 +275,8 @@ for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
       assert.ok(!EMOJI.test(r.text), `emoji trong "${r.text}"`)
       assert.ok(!near(r.color, [148, 163, 184], 1), `#94A3B8 làm màu chữ ở "${r.text}"`)
       if (near(r.color, THEME.color.white as number[], 1)) {
+        // chữ trắng chỉ nằm trên băng/header kính gradient — tương phản được kiểm RIÊNG ở test "LIQUID GLASS: chữ TRẮNG…" (cả 2 đầu gradient + bóng loáng)
         whiteCount++
-        assert.ok(contrast(r.fill, THEME.color.white) >= 4.4, `chữ trắng trên nền ${JSON.stringify(r.fill)} (${contrast(r.fill, THEME.color.white).toFixed(2)}) ở "${r.text}"`)
         continue
       }
       if (aa.some(c => near(r.color, c))) {
@@ -293,11 +293,78 @@ for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', null]) {
   })
 }
 
-test('toàn bộ nội dung PDF không có gradient/shading/bóng đổ (băng màu ĐẶC)', () => {
+test('LIQUID GLASS: mọi PDF dùng độ trong suốt (ExtGState ca/CA) + gradient bằng dải rect + clip; KHÔNG shading/SMask (an toàn mọi trình đọc/in)', () => {
   for (const d of buildAll(null).docs) {
     const out = String(d.output())
-    assert.ok(!/\/ShadingType|\/Shading |\/PatternType 2|\/SMask/.test(out), 'có gradient/shading/mask trong PDF')
+    assert.ok(!/\/ShadingType|\/Shading |\/PatternType 2|\/SMask/.test(out), 'có shading/mask trong PDF')
+    assert.ok(/\/ca [0-9.]+/.test(out) && /\/CA [0-9.]+/.test(out), 'thiếu ExtGState độ trong suốt')
+    assert.ok(/\nW\n/.test(out), 'thiếu clip cho gradient bo góc')
+    // số GState hợp lý (alpha lượng tử hoá, không phình theo số phần tử)
+    const gsCount = new Set(out.match(/\/ca [0-9.]+/g)).size
+    assert.ok(gsCount >= 8 && gsCount <= 40, `số GState ${gsCount}`)
   }
+})
+
+test('LIQUID GLASS: nền wash (washA → trắng → washC) + orb có mặt ở MỌI trang; trang tiếp (addPage) cũng có wash', () => {
+  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) {
+    const B = makeBrand(hex)
+    const orbRgb = pdfRgb(THEME.color.cyan) + ' rg'
+    for (const d of buildAll(hex).docs) {
+      const out = String(d.output()).replace(/(\d)\. /g, '$1 ') // jsPDF in "1." cho kênh 255
+      const pages = d.getNumberOfPages()
+      assert.ok(out.split(orbRgb).length - 1 >= pages * THEME.glass.orb.rings, `${hex}: orb cyan < ${pages} trang × ${THEME.glass.orb.rings} vòng`)
+      // dải wash đầu = mix(washA, washB, 2·(0.5/56)); dải cuối = mix(washB, washC, 2·((55.5/56) − 0.5))
+      assert.ok(out.split(pdfRgb(mix(B.washA, B.washB, 1 / 56)) + ' rg').length - 1 >= pages, `${hex}: thiếu dải wash đầu ở mỗi trang`)
+      assert.ok(out.split(pdfRgb(mix(B.washB, B.washC, 2 * (55.5 / 56 - 0.5))) + ' rg').length - 1 >= pages, `${hex}: thiếu dải wash cuối ở mỗi trang`)
+    }
+  }
+})
+
+test('LIQUID GLASS: chữ TRẮNG trên băng/header gradient đạt ≥ 4.5:1 ở CẢ HAI đầu, kể cả sau lớp bóng loáng; chip kính tối không làm giảm', () => {
+  const white = THEME.color.white
+  const G = THEME.glass
+  const samples = ['#6D5DFB', '#0F766E', '#F59E0B', '#FACC15', '#22D3EE', '#E11D48', '#10B981', '#FFFFFF']
+  for (let r = 0; r < 256; r += 85) for (let g = 0; g < 256; g += 85) for (let b = 0; b < 256; b += 85) samples.push('#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join(''))
+  for (const hex of samples) {
+    const B = makeBrand(hex)
+    for (const [name, c] of [['glassStart', B.glassStart], ['glassEnd', B.glassEnd]] as const) {
+      assert.ok(contrast(white, c) >= 4.5, `${hex} ${name}: ${contrast(white, c).toFixed(2)}`)
+      assert.ok(contrast(white, mix(c, white, G.mast.gloss)) >= 4.5, `${hex} ${name}+gloss: ${contrast(white, mix(c, white, G.mast.gloss)).toFixed(2)}`)
+    }
+    // chip kính: glassStart α0.35 phủ lên glassEnd → chỉ tối thêm
+    const chipBg = mix(B.glassEnd, B.glassStart, G.mast.chip)
+    assert.ok(contrast(white, chipBg) >= contrast(white, B.glassEnd) - 1e-6)
+  }
+})
+
+test('LIQUID GLASS: chữ trên tấm kính đạt ≥ 4.5:1 so với nền XẤU NHẤT (wash tối nhất + orb + kính α); ink/ink2/muted/brandDark/Deep', () => {
+  const C = THEME.color
+  for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B', '#2563EB', '#E11D48']) {
+    const B = makeBrand(hex)
+    const bg = glassWorstBg(B)
+    for (const [k, c] of Object.entries({ ink: C.ink, ink2: C.ink2, muted: C.muted, brandDark: B.brandDark, posText: C.posText, negText: C.negText, warn: C.warn, info: C.info, neg: C.neg })) {
+      assert.ok(contrast(c as number[], bg) >= 4.5, `${hex} ${k} trên kính: ${contrast(c as number[], bg).toFixed(2)}`)
+    }
+    // tấm nhấn (brand α) + viên (màu α trên trắng α): chữ brandDark / Deep vẫn đạt
+    const accentBg = mix(bg, B.brand, THEME.glass.accent)
+    assert.ok(contrast(B.brandDark, accentBg) >= 4.5, `${hex} brandDark trên tấm nhấn ${contrast(B.brandDark, accentBg).toFixed(2)}`)
+    for (const [deep, base] of [[C.posDeep, C.pos], [C.negDeep, C.neg], [C.warnDeep, C.amber]]) {
+      const chipBg = mix(mix(bg, C.white, THEME.glass.chip.base), base, THEME.glass.chip.tint)
+      assert.ok(contrast(deep, chipBg) >= 4.5, `${hex} chữ Deep trên viên kính ${contrast(deep, chipBg).toFixed(2)}`)
+    }
+  }
+})
+
+test('LIQUID GLASS: kích thước file — báo cáo nhiều trang < 1.5MB, tài liệu 1 trang < 600KB (font Việt nhúng, luồng nén), vẫn là PDF hợp lệ', () => {
+  const members = Array.from({ length: 32 }, (_, i) => bill({ memberName: `Thành viên ${i}`, contributionPaid: i % 3 !== 0, balance: i % 2 ? 1000 * i : -1000 * i }))
+  const big = buildQuyReportPDF({ jsPDF: BaseJsPDF, fonts, branding, summary: { clubName: 'C', periodName: 'K', totalIncome: 100, totalExpense: 95, balance: 5, memberCount: 32, sessionCount: 3, confirmedCount: 20, ...dates }, rows: members, expenseRows: [] })
+  const bytes = (big.output('arraybuffer') as ArrayBuffer).byteLength
+  assert.ok(big.getNumberOfPages() >= 7, `trang ${big.getNumberOfPages()}`)
+  assert.ok(bytes < 1.5 * 1024 * 1024, `báo cáo quỹ ${big.getNumberOfPages()} trang = ${(bytes / 1024).toFixed(0)}KB`)
+  const one = buildMiniReceiptPDF({ jsPDF: BaseJsPDF, fonts, branding, receipt: { receiptNo: 1, payerName: 'A', incomeType: 'X', amount: 1, paymentDate: '1/1', clubName: 'C', printedDateText: 'd', printedAtText: 'a' } })
+  const ab = one.output('arraybuffer') as ArrayBuffer
+  assert.ok(ab.byteLength < 600 * 1024, `phiếu 1 trang = ${(ab.byteLength / 1024).toFixed(0)}KB`)
+  assert.equal(String.fromCharCode(...new Uint8Array(ab).slice(0, 5)), '%PDF-')
 })
 
 test('brand CLB tới MỌI PDF: màu brand xuất hiện trong luồng PDF của từng tài liệu; emerald không lẫn tím mặc định', () => {
@@ -437,14 +504,15 @@ test('lề/CONTENT_W một nơi: THEME.page → 186mm', () => {
   assert.equal(THEME.page.portrait.w - THEME.page.margin * 2, 186)
 })
 
-test('masthead = băng màu ĐẶC brandDark: stream có fill brandDark + dải brand; header bảng = brandMid; mọi tài liệu', () => {
+test('masthead = băng KÍNH gradient glassStart → glassEnd (dải rect + bóng loáng): stream có màu đầu gradient + brandDark (chữ) + brand (nhấn); mọi tài liệu', () => {
   for (const hex of ['#6D5DFB', '#0F766E', '#F59E0B']) {
     const m = makeBrand(hex)
     assert.ok(contrast(m.brandMid, THEME.color.white) >= 4.5, `${hex}: chữ trắng trên brandMid`)
     for (const [i, d] of buildAll(hex).docs.entries()) {
       const out = String(d.output())
-      assert.ok(out.includes(pdfRgb(m.brandDark) + ' rg'), `tài liệu #${i} thiếu băng brandDark (${hex})`)
-      assert.ok(out.includes(pdfRgb(m.brand) + ' rg'), `tài liệu #${i} thiếu dải brand (${hex})`)
+      assert.ok(out.includes(pdfRgb(m.glassStart) + ' rg'), `tài liệu #${i} thiếu đầu gradient glassStart (${hex})`)
+      assert.ok(out.includes(pdfRgb(m.brandDark) + ' RG'), `tài liệu #${i} thiếu bóng mềm brandDark (${hex})`)
+      assert.ok(out.includes(pdfRgb(m.brand) + ' rg'), `tài liệu #${i} thiếu màu brand (${hex})`)
     }
   }
 })

@@ -1,21 +1,26 @@
 import { loadFontsBase64 } from './export-fonts';
 import {
   COLORS,
+  GLASS,
   PAGE,
   PAGE_CSS,
   SPACE,
   TYPE,
   escHtml,
+  glassCss,
+  glassTint,
   makeBrand,
   mm,
   pt,
+  rgba,
+  softShadow,
   vndCompact,
 } from './export-tokens';
 import { buildExecModel, deltaText, healthTone, toneOfValue, type NumTone } from './executive-report-model';
 
 /**
- * HTML in-ấn A4 cho Báo cáo điều hành — chuẩn "Luxury SaaS" SINH ĐỘNG (băng/bìa/header bảng nền ĐẶC màu CLB, số xanh/đỏ/tím đậm), chữ ≥ 7pt,
- * tương phản ≥ 4.5:1, không gradient/đổ bóng/emoji. Render bằng headless Chrome (Puppeteer).
+ * HTML in-ấn A4 cho Báo cáo điều hành — chuẩn "Luxury SaaS" + LIQUID GLASS (nền wash + orb, tấm kính trắng bán trong có viền sáng/highlight/bóng mềm,
+ * băng bìa/masthead/header bảng chuyển sắc kính), màu đúng palette app, số xanh/đỏ/tím đậm, chữ ≥ 7pt, tương phản ≥ 4.5:1, không emoji. Render bằng headless Chrome (Puppeteer).
  * Dùng CHUNG cho email đính kèm và nút "PDF" trên web. Token + chuỗi hiển thị lấy từ
  * export-tokens.ts / executive-report-model.ts (cùng nguồn với fallback jsPDF).
  * Font BeVietnamPro nhúng @font-face base64. Lề @page KHỚP lề page.pdf() (nếu lệch, Chrome bỏ lề và footer đè nội dung).
@@ -84,7 +89,7 @@ export function buildReportHtml(
   const dimBar = (label: string, score: number | null) =>
     score == null
       ? `<div class="dim"><div class="dim-h"><span>${esc(label)}</span><b class="mut">—</b></div><div class="bar"><i style="width:0"></i></div></div>`
-      : `<div class="dim"><div class="dim-h"><span>${esc(label)}</span><b style="color:${tone(score).vivid}">${score}</b></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, score))}%;background:${tone(score).fill}"></i></div></div>`;
+      : `<div class="dim"><div class="dim-h"><span>${esc(label)}</span><b style="color:${tone(score).vivid}">${score}</b></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, score))}%;background-color:${tone(score).fill}"></i></div></div>`;
 
   const dots = (n: number) =>
     `<span class="dots">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span><span class="dno">${n}/5</span>`;
@@ -99,7 +104,7 @@ export function buildReportHtml(
   const max = Math.max(1, ...m.trends.flatMap((t) => [t.thu, t.chi]));
   const dense = m.trends.length > 7;
   const chart = m.trends.length
-    ? `<div class="chead"><span>Thu · Chi theo kỳ quỹ</span><span class="legend"><span><i style="background:${COLORS.posFill}"></i>Thu</span><span><i style="background:${COLORS.negFill}"></i>Chi</span></span></div>
+    ? `<div class="cwrap"><div class="chead"><span>Thu · Chi theo kỳ quỹ</span><span class="legend"><span><i style="background:${COLORS.posFill}"></i>Thu</span><span><i style="background:${COLORS.negFill}"></i>Chi</span></span></div>
     <div class="cplot${dense ? ' dense' : ''}">
       <div class="gl" style="bottom:85%"><em>${esc(vndCompact(max, true))}</em></div>
       <div class="gl" style="bottom:42.5%"><em>${esc(vndCompact(max / 2, true))}</em></div>
@@ -112,7 +117,7 @@ export function buildReportHtml(
       </div><div class="tlbl">${esc(t.label)}</div></div>`,
         )
         .join('')}</div>
-    </div>`
+    </div></div>`
     : '<p class="mut sm">Chưa có dữ liệu kỳ trước.</p>';
 
   const memberRows = m.members
@@ -131,7 +136,7 @@ export function buildReportHtml(
       <td class="c">${pay}</td>
       <td class="c">${dots(r.stars)}</td>
       <td class="r">${esc(r.conduct)}</td>
-      <td class="r"><span class="pill" style="background:${t.tint};color:${t.text}">${r.health}</span></td>
+      <td class="r"><span class="pill" style="background:${rgba(t.fill, GLASS.chipFill)};border:${mm(0.2)} solid ${rgba(t.fill, GLASS.chipBorder)};color:${t.text}">${r.health}</span></td>
     </tr>`;
     })
     .join('');
@@ -143,7 +148,7 @@ export function buildReportHtml(
   const agentsHtml = `<div class="aigrid">${m.agents
     .map(
       (a) =>
-        `<div class="agent" style="border-top-color:${a.accent}"><div class="an">${esc(a.name)}</div><div class="av" style="color:${a.accent === B.brand ? B.brandInk : a.accent}">${esc(a.value)}<span class="au">${esc(a.unit)}</span></div><div class="ad">${esc(a.detail)}</div></div>`,
+        `<div class="agent" style="--f:${a.accent}"><div class="an">${esc(a.name)}</div><div class="av" style="color:${a.accent === B.brand ? B.brandInk : a.accent}">${esc(a.value)}<span class="au">${esc(a.unit)}</span></div><div class="ad">${esc(a.detail)}</div></div>`,
     )
     .join('')}</div>`;
 
@@ -167,19 +172,28 @@ export function buildReportHtml(
     : '<p class="mut sm">Không có đề xuất.</p>';
 
   const dnaTraits = m.dna.traits.map((t) => dimBar(t.label, t.score)).join('');
-  const tnCss = (n: string, t: string, b: string, f: string, v: string) => `.tn-${n}{--t:${t};--b:${b};--f:${f};--v:${v}}`;
+  const g = (a: number) => `rgba(255,255,255,${a})`;
+  const sh = softShadow(B.brandDeep);
+  const tnCss = (n: string, f: string, v: string) =>
+    `.tn-${n}{--f:${f};--v:${v};--tt:${glassTint(f, GLASS.toneFill)};--tb:${rgba(f, GLASS.toneRing)}}`;
+  // Thẻ kính có vạch màu tông phía trên + vòng viền màu tông (số đậm theo tông).
+  const toneCard = `background-color:var(--tt);border:var(--g-rim);box-shadow:inset 0 0 0 ${mm(0.2)} var(--tb),inset 0 ${mm(0.9)} 0 var(--f),${sh};border-radius:var(--g-r)`;
+  const chip = (c: string, a: number = GLASS.chipFill) => `background:${rgba(c, a)};border:${mm(0.2)} solid ${rgba(c, GLASS.chipBorder)}`;
+  const accSh = `inset 0 0 0 ${mm(0.2)} var(--acc-b),inset 0 ${mm(0.35)} 0 ${g(GLASS.highlight)},${sh}`;
 
   const css = `${fontFace}
 *{box-sizing:border-box;margin:0;padding:0}
 ${PAGE_CSS}
 :root{--ink:${COLORS.ink};--ink2:${COLORS.ink2};--muted:${COLORS.muted};--line:${COLORS.hairline};--lineStrong:${COLORS.lineStrong};--surface2:${COLORS.surface2};
-  --brand:${B.brand};--brandDeep:${B.brandDeep};--brandInk:${B.brandInk};--brandSoft:${B.brandSoft};--brandBorder:${B.brandBorder};--badge:${B.badge}}
-${tnCss('pos', COLORS.posTint, COLORS.posBorder, COLORS.posFill, COLORS.posVivid)}
-${tnCss('neg', COLORS.negTint, COLORS.negBorder, COLORS.negFill, COLORS.negVivid)}
-${tnCss('warn', COLORS.warnTint, COLORS.warnBorder, COLORS.orange, COLORS.orange)}
-${tnCss('info', COLORS.infoTint, COLORS.infoBorder, COLORS.infoFill, COLORS.infoFill)}
-${tnCss('brand', B.brandSoft, B.brandBorder, B.brand, B.brandInk)}
-${tnCss('ink', COLORS.surface2, COLORS.hairline, COLORS.lineStrong, COLORS.ink)}
+  --brand:${B.brand};--brandDeep:${B.brandDeep};--brandInk:${B.brandInk};--brandSoft:${B.brandSoft};--brandBorder:${B.brandBorder};--badge:${B.badge};
+  --acc-t:${glassTint(B.brand, GLASS.accentFill)};--acc-b:${rgba(B.brand, GLASS.accentBorder)}}
+${glassCss(B)}
+${tnCss('pos', COLORS.posFill, COLORS.posVivid)}
+${tnCss('neg', COLORS.negFill, COLORS.negVivid)}
+${tnCss('warn', COLORS.orange, COLORS.orange)}
+${tnCss('info', COLORS.infoFill, COLORS.infoFill)}
+${tnCss('brand', B.brand, B.brandInk)}
+${tnCss('ink', COLORS.lineStrong, COLORS.ink)}
 body{font-family:${fam};color:var(--ink);font-size:${pt(TYPE.body)};line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 b{font-weight:700}
 .mut{color:var(--muted)}.sm{font-size:${pt(TYPE.table)}}.okt{color:${COLORS.pos};font-weight:700}
@@ -198,46 +212,50 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .eyebrow{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .stitle,.subh{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-top:${mm(0.3)};line-height:1.25;text-transform:uppercase;letter-spacing:.2pt}
 .snote{font-size:${pt(TYPE.caption)};color:var(--muted);text-align:right;max-width:48%}
-/* Masthead trang 2+: BĂNG ĐẶC brandDeep, chữ trắng, gauge trong ô trắng */
-.mast{display:flex;align-items:center;justify-content:space-between;padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s3)};background:var(--brandDeep);color:#fff;border-radius:${mm(PAGE.radius)}}
+/* Masthead trang 2+: BĂNG KÍNH chuyển sắc chéo + bóng loáng nửa trên, chip kính chứa kỳ/giờ xuất, gauge trong kính trắng */
+.mast{display:flex;align-items:center;justify-content:space-between;padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s3)};background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:var(--g-r)}
 .mast-l{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
 .mast .lab{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
 .mast h1{font-size:${pt(TYPE.h1)};font-weight:700;line-height:1.2;margin:${mm(0.5)} 0;color:#fff}
-.mast .sub{font-size:${pt(TYPE.body)};color:#fff}
-.gauge{display:flex;align-items:center;gap:${mm(SPACE.s2)};background:#fff;border-radius:${mm(PAGE.radius)};padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
+.mast .sub{display:inline-block;font-size:${pt(TYPE.body)};color:#fff;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.4)} ${mm(2.5)}}
+.gauge{display:flex;align-items:center;gap:${mm(SPACE.s2)};background:${g(0.92)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:inset 0 0 0 ${mm(0.2)} ${rgba(B.brand, GLASS.rimInner)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.1)},0 ${mm(1.2)} 0 ${rgba(COLORS.ink, 0.05)};border-radius:var(--g-r);padding:${mm(1.2)} ${mm(SPACE.s3)} ${mm(1.2)} ${mm(SPACE.s2)}}
 .gauge .cls{font-size:${pt(TYPE.table)};font-weight:700;text-transform:uppercase;letter-spacing:.3pt}
-/* Logo: tròn trắng (nổi trên băng brand) */
-.logo{background:#fff;border:${mm(PAGE.hair)} solid var(--brandBorder);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* Logo: vòng kính trắng (nổi trên băng brand) */
+.logo{background:${g(0.94)};border:${mm(GLASS.rimW)} solid ${g(GLASS.rimOuter)};box-shadow:0 0 0 ${mm(0.5)} ${g(0.3)},0 ${mm(0.6)} 0 ${rgba(COLORS.ink, 0.12)};border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .logo img{width:86%;height:86%;object-fit:contain}
 .logo.mono{color:var(--brandDeep);font-weight:700;letter-spacing:.5pt}
 .logo.sm{width:${mm(12)};height:${mm(12)}}.logo.sm.mono{font-size:${pt(TYPE.h2)}}
 .logo.md{width:${mm(18)};height:${mm(18)}}.logo.md.mono{font-size:${pt(TYPE.h1)}}
+/* Tấm kính dùng chung: nền trắng bán trong + viền ngoài trắng + viền trong brand + highlight cạnh trên + bóng mềm */
+.dim,.avgcard,.agent,.cwrap,.cv-doc{background:var(--g-bg);border:var(--g-rim);box-shadow:var(--g-sh);border-radius:var(--g-r)}
+.kpi,.tile,.fcell,.cv-st{${toneCard}}
+.kpi.acc{background-color:var(--acc-t);box-shadow:inset 0 0 0 ${mm(0.2)} var(--acc-b),inset 0 ${mm(0.9)} 0 var(--f),${sh}}
 /* Health dims */
 .dims{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s1)} ${mm(SPACE.s3)}}
-.dim{background:var(--surface2);border:${mm(PAGE.hair)} solid var(--line);border-radius:${mm(PAGE.radius)};padding:${mm(1.1)} ${mm(2.5)}}
+.dim{padding:${mm(1.1)} ${mm(2.5)}}
 .dim-h{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};margin-bottom:${mm(1)};font-weight:700;color:var(--ink2)}
 .dim-h b{font-size:${pt(TYPE.body)}}
-.bar{height:${mm(2.2)};background:var(--line);border-radius:${mm(1.1)};overflow:hidden}.bar i{display:block;height:100%;border-radius:${mm(1.1)}}
-/* KPI / tile: thẻ trắng, vạch màu trên, số ĐẬM theo tông (xanh thu / đỏ chi / tím) */
+.bar{height:${mm(2.2)};background:${rgba(B.brand, GLASS.track)};box-shadow:inset 0 ${mm(0.2)} ${mm(0.4)} ${rgba(B.brandDeep, 0.12)};border-radius:${mm(1.1)};overflow:hidden}
+.bar i{display:block;height:100%;border-radius:${mm(1.1)};box-shadow:inset 0 ${mm(0.45)} 0 ${g(0.35)}}
+/* KPI / tile: tấm kính, vạch màu tông trên, số ĐẬM theo tông (xanh thu / đỏ chi / tím) */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:${mm(SPACE.s2)} ${mm(SPACE.s2)}}
-.kpi,.tile,.fcell{background:#fff;border:${mm(PAGE.border)} solid var(--line);border-top:${mm(0.9)} solid var(--f);border-radius:${mm(PAGE.radius)};padding:${mm(2.2)} ${mm(2.8)}}
-.kpi.acc{background:var(--brandSoft);border-color:var(--brandBorder);border-top-color:var(--f)}
-.fcell{background:var(--t);border-color:var(--b);border-top-color:var(--f)}
+.kpi,.tile,.fcell{padding:${mm(2.2)} ${mm(2.8)}}
 .kl,.tile .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .kv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--v);margin-top:${mm(1)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ks{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(0.5)}}
 .kpi2{display:grid;grid-template-columns:1fr 1fr;gap:${mm(SPACE.s2)}}
-/* AI summary: nền brandSoft + viền brandBorder + vạch brand trái */
-.aibox{background:var(--brandSoft);border:${mm(PAGE.border)} solid var(--brandBorder);border-left:${mm(1.4)} solid var(--brand);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s2)} ${mm(SPACE.s3)}}
+/* AI summary: TẤM NHẤN kính (brand α + viền brand α) + vạch brand trái */
+.aibox{background-color:var(--acc-t);border:var(--g-rim);box-shadow:inset ${mm(1.4)} 0 0 var(--brand),${accSh};border-radius:var(--g-r);padding:${mm(SPACE.s2)} ${mm(SPACE.s3)} ${mm(SPACE.s2)} ${mm(SPACE.s3 + 1)}}
 .aibox .h{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s1)};text-transform:uppercase;letter-spacing:.2pt}
 .aibox .b{font-size:${pt(TYPE.body)};line-height:1.5;white-space:pre-line;color:var(--ink)}
-/* Finance: dải KPI 3×2 + biểu đồ toàn bề rộng */
+/* Finance: dải KPI 3×2 + biểu đồ trong tấm kính toàn bề rộng */
 .fstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s3)}}
 .fval{display:flex;align-items:baseline;gap:${mm(2)};margin-top:${mm(1)};white-space:nowrap}
 .fv{font-size:${pt(TYPE.kpi)};font-weight:700;color:var(--v);line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cwrap{padding:${mm(SPACE.s2)} ${mm(SPACE.s3)} ${mm(1)}}
 .chead{display:flex;justify-content:space-between;align-items:center;font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:${mm(SPACE.s2)}}
 .cplot{position:relative;margin:0 0 ${mm(12)} ${mm(18)};height:${mm(38)}}
-.gl{position:absolute;left:0;right:0;border-top:${mm(PAGE.hair)} solid var(--line)}
+.gl{position:absolute;left:0;right:0;border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.16)}}
 .gl em{position:absolute;right:100%;margin-right:${mm(2)};transform:translateY(-50%);font-style:normal;font-size:${pt(TYPE.caption)};color:var(--muted);white-space:nowrap}
 .gl0{bottom:0;border-top:${mm(PAGE.strong)} solid ${COLORS.lineStrong}}
 .chart{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:stretch}
@@ -247,38 +265,40 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .tval{font-size:${pt(TYPE.caption)};font-weight:700;color:var(--ink2);margin-bottom:${mm(0.5)};white-space:nowrap}
 .tval.pos{color:${COLORS.pos}}.tval.neg{color:${COLORS.neg}}
 .dense .tval{display:none}
-.tb{width:100%;border-radius:${mm(0.8)} ${mm(0.8)} 0 0}
-.tb.thu{background:${COLORS.posFill}}.tb.chi{background:${COLORS.negFill}}
+.tb{width:100%;border-radius:${mm(0.8)} ${mm(0.8)} 0 0;box-shadow:inset ${mm(0.9)} 0 0 ${g(0.28)},inset 0 0 0 ${mm(0.15)} ${g(0.45)}}
+.tb.thu{background-color:${COLORS.posFill}}.tb.chi{background-color:${COLORS.negFill}}
 .tlbl{position:absolute;top:100%;left:0;right:0;margin-top:${mm(1.5)};font-size:${pt(TYPE.caption)};color:var(--ink2);text-align:center;font-weight:700;white-space:nowrap}
 .legend{display:inline-flex;gap:${mm(SPACE.s3)};font-size:${pt(TYPE.caption)};color:var(--ink2);text-transform:none;letter-spacing:0}
 .legend i{display:inline-block;width:${mm(2)};height:${mm(2)};border-radius:${mm(0.5)};margin-right:${mm(1)};vertical-align:middle}
-.delta{font-size:${pt(TYPE.caption)};font-weight:700;padding:${mm(0.3)} ${mm(1.8)};border-radius:${mm(PAGE.radius)}}
-.delta.pos{color:${COLORS.pos};background:#fff;border:${mm(PAGE.hair)} solid ${COLORS.posBorder}}.delta.neg{color:${COLORS.neg};background:#fff;border:${mm(PAGE.hair)} solid ${COLORS.negBorder}}
+.delta{font-size:${pt(TYPE.caption)};font-weight:700;padding:${mm(0.3)} ${mm(1.8)};border-radius:${mm(3)}}
+.delta.pos{color:${COLORS.pos};${chip(COLORS.posFill)}}.delta.neg{color:${COLORS.neg};${chip(COLORS.negFill)}}
 /* Tiles */
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s2)}}
 .tile{padding:${mm(SPACE.s2)} ${mm(2.5)}}
 .tile .v{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--v);margin-top:${mm(1)};white-space:nowrap;font-variant-numeric:tabular-nums}
-/* Bảng: header nền ĐẶC brandDeep chữ trắng, zebra nhẹ */
-table{width:100%;border-collapse:collapse}
-thead th{background:var(--brandDeep);color:#fff;font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;text-align:left;padding:${mm(2.2)} ${mm(2.5)}}
+/* Bảng: header = dải kính chuyển sắc chữ trắng bo góc; thân hàng bán trong + zebra brand + đường kẻ trắng */
+table{width:100%;border-collapse:separate;border-spacing:0}
+thead th{background:linear-gradient(180deg,${g(GLASS.gloss)},${g(0)} 60%),var(--mast-mid);color:#fff;font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;text-align:left;padding:${mm(2.2)} ${mm(2.5)};border-top:${mm(0.25)} solid ${g(GLASS.mastRim)};border-bottom:${mm(0.25)} solid ${g(0.2)}}
+thead th:not(:last-child){box-shadow:${mm(0.15)} 0 0 0 var(--mast-mid)}
+thead th:first-child{border-radius:${mm(GLASS.radius)} 0 0 ${mm(GLASS.radius)}}thead th:last-child{border-radius:0 ${mm(GLASS.radius)} ${mm(GLASS.radius)} 0}
 thead th.r{text-align:right}thead th.c{text-align:center}
-tbody td{padding:${mm(1.15)} ${mm(2.5)};border-bottom:${mm(PAGE.hair)} solid var(--line);font-size:${pt(TYPE.table)};color:var(--ink)}
-tbody tr:nth-child(even) td{background:var(--surface2)}
+tbody td{padding:${mm(1.15)} ${mm(2.5)};border-bottom:${mm(PAGE.hair)} solid ${g(GLASS.rowLine)};font-size:${pt(TYPE.table)};color:var(--ink);background-color:${g(GLASS.rowAlpha)}}
+tbody tr:nth-child(even) td{background-color:${glassTint(B.brand, GLASS.zebra + 0.03)}}
 td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}td.nm{font-weight:700}
 .rank{display:inline-block;min-width:${mm(5)};height:${mm(5)};line-height:${mm(5)};text-align:center;border-radius:50%;font-weight:400;color:var(--muted)}
-.rank.top{font-weight:700;color:#fff;background:var(--brandDeep)}
-.pill{display:inline-block;min-width:${mm(8)};text-align:center;padding:${mm(0.4)} ${mm(2)};border-radius:${mm(PAGE.radius)};font-weight:700;font-size:${pt(TYPE.table)}}
+.rank.top{font-weight:700;color:#fff;background:linear-gradient(180deg,${g(GLASS.gloss)},${g(0)} 60%),var(--mast-mid);box-shadow:inset 0 0 0 ${mm(0.2)} ${g(GLASS.mastRim)}}
+.pill{display:inline-block;min-width:${mm(8)};text-align:center;padding:${mm(0.4)} ${mm(2)};border-radius:${mm(3)};font-weight:700;font-size:${pt(TYPE.table)}}
 .st{display:inline-flex;align-items:center;font-size:${pt(TYPE.label)};font-weight:700;padding:${mm(0.4)} ${mm(2)};border-radius:${mm(3)}}
-.st.ok{color:${COLORS.pos};background:${COLORS.posTint};border:${mm(PAGE.hair)} solid ${COLORS.posBorder}}
-.st.bad{color:${COLORS.neg};background:${COLORS.negTint};border:${mm(PAGE.hair)} solid ${COLORS.negBorder}}
+.st.ok{color:${COLORS.pos};${chip(COLORS.posFill)}}
+.st.bad{color:${COLORS.neg};${chip(COLORS.negFill)}}
 .st i{display:inline-block;width:${mm(1.6)};height:${mm(1.6)};border-radius:50%;margin-right:${mm(1.2)}}
-.dots{display:inline-flex;gap:${mm(0.6)};vertical-align:middle}.dots i{display:inline-block;width:${mm(1.8)};height:${mm(1.8)};border-radius:50%;background:var(--line)}.dots i.on{background:${COLORS.warnFill}}
+.dots{display:inline-flex;gap:${mm(0.6)};vertical-align:middle}.dots i{display:inline-block;width:${mm(1.8)};height:${mm(1.8)};border-radius:50%;background:${rgba(B.brand, 0.16)}}.dots i.on{background:${COLORS.warnFill}}
 .dno{font-size:${pt(TYPE.caption)};color:var(--muted);margin-left:${mm(1.2)}}
-.avgcard{display:flex;align-items:center;gap:${mm(SPACE.s4)};padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s2)};background:#fff;border:${mm(PAGE.border)} solid var(--brandBorder);border-radius:${mm(PAGE.radius)}}
+.avgcard{display:flex;align-items:center;gap:${mm(SPACE.s4)};padding:${mm(SPACE.s2)} ${mm(SPACE.s3)};margin-bottom:${mm(SPACE.s2)};background:var(--acc-bg);box-shadow:var(--acc-ring)}
 .avgcard .big{font-size:${pt(TYPE.display)};font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}.avgcard .big small{font-size:${pt(TYPE.body)};color:var(--muted);font-weight:400}
 .avgcard .lbl{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .dist{display:grid;grid-template-columns:1fr 1fr;gap:${mm(SPACE.s1)} ${mm(SPACE.s3)};flex:1}
-.dist .d{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};border-bottom:${mm(PAGE.hair)} solid var(--line);padding:${mm(0.8)} 0;color:var(--ink2)}
+.dist .d{display:flex;justify-content:space-between;font-size:${pt(TYPE.table)};border-bottom:${mm(PAGE.hair)} solid ${g(GLASS.rowLine)};padding:${mm(0.8)} 0;color:var(--ink2)}
 .dist .d b{color:var(--ink)}
 .dist .d i{width:${mm(2)};height:${mm(2)};border-radius:50%;display:inline-block;margin-right:${mm(1.5)};vertical-align:middle}
 /* Hàng 2-3 cột */
@@ -286,44 +306,46 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
 .three{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:${mm(SPACE.s3)}}
 .callout{font-size:${pt(TYPE.table)};color:var(--ink2);line-height:1.5;margin-top:${mm(SPACE.s1)}}
 .callout b{color:var(--ink)}
-.pl{display:flex;align-items:center;gap:${mm(SPACE.s2)};font-size:${pt(TYPE.table)};padding:${mm(1)} 0;border-bottom:${mm(PAGE.hair)} solid var(--line)}
+.pl{display:flex;align-items:center;gap:${mm(SPACE.s2)};font-size:${pt(TYPE.table)};padding:${mm(1)} 0;border-bottom:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)}}
 .pl:last-child{border-bottom:none}
-.plr{font-weight:700;color:var(--brandInk);background:var(--brandSoft);border:${mm(PAGE.hair)} solid var(--brandBorder);border-radius:50%;width:${mm(5)};height:${mm(5)};line-height:${mm(4.6)};text-align:center}
+.plr{font-weight:700;color:var(--brandInk);${chip(B.brand)};border-radius:50%;width:${mm(5)};height:${mm(5)};line-height:${mm(4.6)};text-align:center}
 .pln{flex:1;font-weight:700}.plw{color:var(--ink2);font-size:${pt(TYPE.caption)};font-weight:700}
 /* AI agents */
 .aigrid{display:grid;grid-template-columns:repeat(5,1fr);gap:${mm(SPACE.s2)}}
-.agent{background:#fff;border:${mm(PAGE.border)} solid var(--line);border-top:${mm(1.2)} solid var(--brand);border-radius:${mm(PAGE.radius)};padding:${mm(2)} ${mm(2.5)}}
+.agent{box-shadow:var(--g-sh),inset 0 ${mm(1.2)} 0 var(--f);padding:${mm(2)} ${mm(2.5)}}
 .an{font-size:${pt(TYPE.table)};font-weight:700;color:var(--ink)}
 .av{font-size:${pt(TYPE.kpi)};font-weight:700;margin:${mm(1)} 0;line-height:1.1;font-variant-numeric:tabular-nums}
 .au{font-size:${pt(TYPE.caption)};color:var(--muted);font-weight:400;margin-left:${mm(1)}}
-.ad{font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid var(--line);margin-top:${mm(1.5)};padding-top:${mm(1.5)};line-height:1.4}
+.ad{font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.12)};margin-top:${mm(1.5)};padding-top:${mm(1.5)};line-height:1.4}
 /* Timeline / alerts / recs */
 .tl{list-style:none;border-left:${mm(PAGE.border)} solid var(--brandBorder);padding-left:${mm(SPACE.s2)};margin-left:${mm(1)}}
 .tl li{position:relative;margin-bottom:${mm(2)};font-size:${pt(TYPE.table)}}
-.tl li:before{content:'';position:absolute;left:${mm(-5.9)};top:${mm(0.8)};width:${mm(2.4)};height:${mm(2.4)};border-radius:50%;background:var(--dot)}
+.tl li:before{content:'';position:absolute;left:${mm(-5.9)};top:${mm(0.8)};width:${mm(2.4)};height:${mm(2.4)};border-radius:50%;background:var(--dot);box-shadow:0 0 0 ${mm(0.5)} ${g(0.8)}}
 .tld{font-weight:700;color:var(--ink);margin-right:${mm(1.5)}}
 .alist,.rlist{list-style:none}
-.alist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(1.5)} ${mm(2.5)};margin-bottom:${mm(1.5)};background:${COLORS.warnTint};border:${mm(PAGE.hair)} solid ${COLORS.warnBorder};border-left:${mm(1)} solid ${COLORS.warnFill};border-radius:${mm(PAGE.radius)};line-height:1.5}
+.alist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(1.5)} ${mm(2.5)} ${mm(1.5)} ${mm(3.5)};margin-bottom:${mm(1.5)};background-color:${glassTint(COLORS.warnFill, GLASS.chipFill)};border:var(--g-rim);box-shadow:inset ${mm(1)} 0 0 ${COLORS.warnFill},inset 0 0 0 ${mm(0.2)} ${rgba(COLORS.warnFill, GLASS.chipBorder)},inset 0 ${mm(0.35)} 0 ${g(GLASS.highlight)};border-radius:var(--g-r);line-height:1.5}
 .rlist li{font-size:${pt(TYPE.table)};color:var(--ink);padding:${mm(1)} 0;line-height:1.55}
-.tag{display:inline-block;background:var(--brandSoft);color:var(--brandInk);border:${mm(PAGE.hair)} solid var(--brandBorder);font-size:${pt(TYPE.label)};font-weight:700;padding:${mm(0.3)} ${mm(2)};border-radius:${mm(PAGE.radius)};margin-right:${mm(1.5)}}
-.closing{color:var(--muted);font-size:${pt(TYPE.caption)};border-top:${mm(PAGE.hair)} solid var(--line);padding-top:${mm(1)};margin-top:${mm(2)}}
-/* BÌA — panel ĐẶC brandDeep (chữ trắng) / thẻ chỉ số nhấn / thông tin tài liệu; không lặp footer Chrome */
+.tag{display:inline-block;color:var(--brandInk);${chip(B.brand)};font-size:${pt(TYPE.label)};font-weight:700;padding:${mm(0.3)} ${mm(2)};border-radius:${mm(3)};margin-right:${mm(1.5)}}
+.closing{color:var(--muted);font-size:${pt(TYPE.caption)};border-top:${mm(PAGE.hair)} solid ${rgba(B.brandDeep, 0.16)};padding-top:${mm(1)};margin-top:${mm(2)}}
+/* BÌA — băng kính lớn (gradient chéo + bóng loáng + viền trắng) / thẻ chỉ số kính / tấm thông tin tài liệu */
 .cover{height:${mm(259)};display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;break-after:page}
-.cv-hero{background:var(--brandDeep);color:#fff;border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s5)} ${mm(SPACE.s5)} ${mm(SPACE.s6)};height:${mm(150)};display:flex;flex-direction:column;justify-content:space-between}
+.cv-hero{position:relative;overflow:hidden;background:var(--mast-bg);color:#fff;border:var(--mast-rim);box-shadow:var(--mast-sh);border-radius:${mm(4)};padding:${mm(SPACE.s5)} ${mm(SPACE.s5)} ${mm(SPACE.s6)};height:${mm(150)};display:flex;flex-direction:column;justify-content:space-between}
+.cv-hero:after{content:'';position:absolute;right:${mm(-18)};bottom:${mm(-26)};width:${mm(92)};height:${mm(92)};border-radius:50%;background:radial-gradient(circle at 35% 30%,${g(0.14)},${g(0.02)} 70%);border:${mm(0.3)} solid ${g(0.22)}}
+.cv-hero>*{position:relative;z-index:1}
 .cv-top{display:flex;align-items:center;justify-content:space-between}
 .cv-id{display:flex;align-items:center;gap:${mm(SPACE.s3)}}
 .cv-brand{font-size:${pt(TYPE.h2)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase}
-.cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase;border:${mm(PAGE.border)} solid var(--badge);border-radius:${mm(3)};padding:${mm(0.8)} ${mm(3)}}
+.cv-tag{font-size:${pt(TYPE.label)};letter-spacing:.4pt;font-weight:700;color:#fff;text-transform:uppercase;background:var(--chip-bg);border:var(--chip-bd);border-radius:${mm(3)};padding:${mm(0.8)} ${mm(3)}}
 .cv-eyb{font-size:${pt(TYPE.label)};letter-spacing:.5pt;text-transform:uppercase;font-weight:700;color:#fff}
 .cv-title{font-size:${pt(TYPE.cover)};font-weight:700;line-height:1.15;color:#fff;margin:${mm(SPACE.s3)} 0 ${mm(SPACE.s2)}}
 .cv-period{font-size:${pt(TYPE.h2)};color:#fff}
-.cv-rule{width:${mm(SPACE.s6)};height:${mm(1)};background:var(--badge);margin-top:${mm(SPACE.s4)}}
+.cv-rule{width:${mm(SPACE.s6)};height:${mm(1)};border-radius:${mm(0.5)};background:var(--badge);margin-top:${mm(SPACE.s4)}}
 .cv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:${mm(SPACE.s3)}}
-.cv-st{background:var(--t);border:${mm(PAGE.border)} solid var(--b);border-top:${mm(1.2)} solid var(--f);border-radius:${mm(PAGE.radius)};padding:${mm(SPACE.s3)} ${mm(SPACE.s3)} ${mm(SPACE.s3)}}
+.cv-st{padding:${mm(SPACE.s3)}}
 .cv-st .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
 .cv-st .v{font-size:${pt(TYPE.display)};font-weight:700;color:var(--v);margin-top:${mm(SPACE.s1)};line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cv-st .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
-.cv-doc{border-top:${mm(PAGE.strong)} solid var(--brandDeep);padding-top:${mm(SPACE.s2)}}
+.cv-doc{padding:${mm(SPACE.s2)} ${mm(SPACE.s3)} ${mm(SPACE.s3)}}
 .cv-dh{font-size:${pt(TYPE.label)};letter-spacing:.4pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s2)}}
 .cv-dg{display:grid;grid-template-columns:1.3fr 1.1fr 1.2fr;gap:${mm(SPACE.s3)}}
 .cv-dg .l{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -332,6 +354,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums}td.c{text-align:center}t
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><style>
 ${css}
 </style></head><body>
+<div class="wash"></div>
 
 <section class="cover">
   <div class="cv-hero">
