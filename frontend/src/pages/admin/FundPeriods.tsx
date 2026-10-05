@@ -1917,26 +1917,26 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
   // Khoản thu mở: KHÔNG hiển thị Mục tiêu / Còn thiếu / Tiến độ (mức đóng thực tế mỗi
   // CLB khác nhau nên % theo mức cấu hình gây hiểu nhầm). Chỉ hiện SỐ TIỀN THẬT.
   return (
-    <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
+    <div className="pf-stat-card rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
         <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
       </div>
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div>
-          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Số dư</p>
-          <p className={`text-base font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
+        <div className="pf-stat-cell rounded-lg px-2 py-3" data-hi="">
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Số dư</p>
+          <p className={`text-lg font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
             <p className="text-xs text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
           )}
         </div>
-        <div>
-          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Chờ xác nhận</p>
-          <p className={`text-base font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
+        <div className="pf-stat-cell rounded-lg px-2 py-3">
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Chờ xác nhận</p>
+          <p className={`text-lg font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
         </div>
-        <div>
-          <p className="text-xs [color:var(--pf-color-muted)] uppercase font-semibold mb-0.5">Giao dịch</p>
-          <p className="text-base font-bold [color:var(--pf-text)]">{stats.txCount}</p>
+        <div className="pf-stat-cell rounded-lg px-2 py-3">
+          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Giao dịch</p>
+          <p className="text-lg font-bold [color:var(--pf-text)]">{stats.txCount}</p>
         </div>
       </div>
       {footerLabel && (
@@ -1960,10 +1960,9 @@ function FundDetailCard({ title, icon, period, color, contributions, onEdit, onV
     : period
       ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
       : 0
-  const borderColor = color === 'indigo' ? '[border-color:var(--pf-primary-soft)]' : '[border-color:var(--pf-primary-soft)]'
 
   return (
-    <div className={`[background:var(--pf-surface)] rounded-xl border ${borderColor} shadow-[var(--shadow-card)] p-5`}>
+    <div className="pf-stat-card rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
@@ -1981,11 +1980,17 @@ function FundDetailCard({ title, icon, period, color, contributions, onEdit, onV
               <span className="font-semibold text-emerald-700">+{formatVND(prevBalance)}</span>
             </div>
           )}
-          <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2">
-            <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
-            <span>Giao dịch: <strong className="[color:var(--pf-text)]">{miniMode
-              ? contributions.filter(c => c.fundSource === 'MINI').length
-              : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).length}</strong></span>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-center">
+            <div className="pf-stat-cell rounded-lg px-2 py-2.5" data-hi="">
+              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Đã thu</p>
+              <p className="text-base font-bold [color:var(--pf-text)]">{formatVND(collected)}</p>
+            </div>
+            <div className="pf-stat-cell rounded-lg px-2 py-2.5">
+              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Giao dịch</p>
+              <p className="text-base font-bold [color:var(--pf-text)]">{miniMode
+                ? contributions.filter(c => c.fundSource === 'MINI').length
+                : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).length}</p>
+            </div>
           </div>
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
