@@ -70,7 +70,7 @@ export function LisaMessagesLog() {
             {items.map((m) => (
               <div
                 key={m.id}
-                className="rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+                className="pf-glass rounded-2xl p-4"
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-text)]">

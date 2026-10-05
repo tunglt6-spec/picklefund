@@ -39,7 +39,7 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
   const hasMore = activities.length > MAX_VISIBLE
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+    <div className="pf-glass rounded-2xl shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Hoạt Động Gần Đây

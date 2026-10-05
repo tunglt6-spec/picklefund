@@ -466,7 +466,7 @@ function Composer({
   return (
     <form
       onSubmit={submit}
-      className="rounded-2xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] p-4"
+      className="pf-glass rounded-2xl p-4"
     >
       <div className="flex gap-3">
         <Avatar name={authorName} url={authorUrl} size={40} />
@@ -919,7 +919,7 @@ function PostCard({
   return (
     <article
       className={[
-        'rounded-2xl border p-4 [background:var(--pf-surface)] transition-shadow',
+        'pf-glass rounded-2xl p-4 transition-shadow',
         highlight
           ? '[border-color:var(--pf-primary)] shadow-md'
           : 'border-[color:var(--pf-border)]',
@@ -1334,7 +1334,7 @@ function MatchCard({ match, onChange }: { match: Match; onChange: (m: Match) => 
   }
 
   return (
-    <article className="rounded-2xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] p-4">
+    <article className="pf-glass rounded-2xl p-4">
       <div className="flex items-start gap-3">
         <Avatar name={match.creator.fullName} url={match.creator.avatarUrl} size={40} />
         <div className="min-w-0 flex-1">

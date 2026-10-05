@@ -174,7 +174,7 @@ export function Debts() {
             <MetricCard accent="teal" icon={<Users size={18} />} label="Tỷ lệ đã thu" value={`${stats.collectRate}%`} sub={`${stats.paid}/${rows.length} đã đóng`} />
           </div>
 
-          <div className="rounded-[20px] border p-4 sm:p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          <div className="pf-glass rounded-[20px] p-4 sm:p-5">
             <div className="mb-3">
               <ResponsiveTabs tabs={tabs} active={tab} onChange={(k) => setTab(k as 'all' | DebtStatus)} />
             </div>

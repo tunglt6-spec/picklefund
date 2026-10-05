@@ -28,7 +28,7 @@ export function CurrentRoundPanel({ round, onEnterScore, onCompleteRound }: Curr
   const allDone = completedMatches === totalMatches && totalMatches > 0
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-4 flex flex-col gap-4">
+    <div className="pf-glass rounded-2xl shadow-sm p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <PlayCircle size={20} className="[color:var(--pf-primary)] shrink-0" />

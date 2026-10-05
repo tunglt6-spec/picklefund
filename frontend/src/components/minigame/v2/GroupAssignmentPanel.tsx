@@ -37,7 +37,7 @@ export function GroupAssignmentPanel({
       : 'sm:grid-cols-2 xl:grid-cols-3'
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-4">
+    <div className="pf-glass rounded-2xl shadow-sm p-5 flex flex-col gap-4">
       {/* Panel header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">

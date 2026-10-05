@@ -289,7 +289,7 @@ export function MinigameList() {
           <div className="mt-4"><LoadingState variant="list" rows={5} /></div>
         </>
       ) : loadState === 'error' ? (
-        <div className="rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass rounded-[20px]">
           <EmptyState icon={<AlertCircle size={26} />} title="Không tải được danh sách giải đấu"
             description="Đã xảy ra lỗi khi tải dữ liệu giải đấu. Vui lòng thử lại."
             action={<ActionButton icon={<RefreshCw size={15} />} onClick={() => void fetchMinigames()}>Thử lại</ActionButton>} />
@@ -323,7 +323,7 @@ export function MinigameList() {
           </div>
 
           {/* ── Tournament list: DataTable (desktop) / MobileCardList (mobile) ── */}
-          <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          <div className="pf-glass mt-4 rounded-[20px]">
             <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Danh sách giải đấu</h3>
               <span className="text-xs [color:var(--pf-color-muted)]">{rows.length} / {minigames.length} giải</span>

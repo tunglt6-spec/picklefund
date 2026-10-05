@@ -7,7 +7,7 @@ interface MobileKpiCardProps {
 
 export function MobileKpiCard({ label, value, icon, accent = '#6D5DFB' }: MobileKpiCardProps) {
   return (
-    <div className="[background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] p-3.5 flex flex-col justify-between shadow-sm"
+    <div className="pf-glass rounded-[18px] p-3.5 flex flex-col justify-between shadow-sm"
       style={{ minHeight: 92 }}>
       <div className="flex items-center justify-between">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl"

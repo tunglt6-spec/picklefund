@@ -93,7 +93,7 @@ export function DataMonitorPage() {
           )}
 
           {/* Danh sách kiểm tra */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Database size={16} className="[color:var(--pf-color-muted)]" /> Kiểm Tra Chất Lượng Dữ Liệu

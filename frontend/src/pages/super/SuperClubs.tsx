@@ -530,7 +530,7 @@ export function SuperClubs() {
           />
         </div>
 
-        <div className="rounded-2xl border overflow-x-auto [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+        <div className="pf-glass-strong rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <table className="w-full min-w-[720px] text-sm">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>

@@ -111,7 +111,7 @@ export function Onboarding() {
         })}
       </div>
 
-      <div className="rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+      <div className="pf-glass rounded-2xl p-5">
         {/* Step 1 — CLB info */}
         {step === 0 && (
           <div className="flex flex-col gap-4">

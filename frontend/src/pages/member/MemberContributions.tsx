@@ -97,7 +97,7 @@ export function MemberContributions() {
 
   // Mục "Khoản đã báo nộp" — đóng vòng lặp báo→duyệt→báo lại (dùng chung mobile + desktop).
   const reportedSection = myPayments.length > 0 && (
-    <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-[var(--pf-shadow)] p-4">
+    <div className="pf-glass rounded-2xl shadow-[var(--pf-shadow)] p-4">
       <div className="mb-2 flex items-center gap-2">
         <Send size={15} className="[color:var(--pf-primary)]" />
         <span className="text-sm font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>

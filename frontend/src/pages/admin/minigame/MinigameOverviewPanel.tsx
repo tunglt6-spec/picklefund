@@ -167,7 +167,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
   const standingsLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/standings`
   const scheduleLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/schedule`
 
-  const card = 'rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]'
+  const card = 'pf-glass rounded-[18px] p-4'
 
   // ── Trạng thái rỗng ──
   if (!featured) {

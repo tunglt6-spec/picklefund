@@ -53,7 +53,7 @@ export function ChangePassword() {
           </p>
         </div>
 
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-lg border border-[color:var(--pf-border)] p-8">
+        <div className="pf-glass rounded-2xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Old password */}
             <div>

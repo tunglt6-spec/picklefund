@@ -32,7 +32,7 @@ export function TournamentProgressChart({ kpi }: TournamentProgressChartProps) {
   const percentage = Math.round(kpi.completionRate)
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+    <div className="pf-glass rounded-2xl shadow-sm p-5">
       <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4">
         Tiến Độ Giải Đấu
       </h3>

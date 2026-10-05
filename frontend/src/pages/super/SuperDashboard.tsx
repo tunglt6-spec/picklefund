@@ -234,7 +234,7 @@ export function SuperDashboard() {
         <ErrorState description="Không tải được dữ liệu Trung tâm điều hành." onRetry={load} />
       ) : loading && !data ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="h-24 rounded-2xl border [background:var(--pf-surface)] border-[color:var(--pf-border)] pf-skeleton" />)}
+          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="pf-glass h-24 rounded-2xl pf-skeleton" />)}
         </div>
       ) : data ? (
         <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>

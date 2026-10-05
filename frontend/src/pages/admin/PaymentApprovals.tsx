@@ -136,7 +136,7 @@ export function PaymentApprovals() {
       ) : (
         <div className="space-y-3">
           {rows.map((p) => (
-            <div key={p.id} className="rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)] shadow-[var(--pf-shadow)]">
+            <div key={p.id} className="pf-glass rounded-2xl p-4 shadow-[var(--pf-shadow)]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">

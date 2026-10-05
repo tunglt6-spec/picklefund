@@ -216,7 +216,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
 
         {/* BXH từng bảng */}
         {!hasGroups ? (
-          <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-sm flex flex-col items-center justify-center py-16 text-center px-6">
+          <div className="pf-glass rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 text-center px-6">
             <LayoutGrid size={44} className="[color:var(--pf-color-muted)] mb-3" />
             <p className="[color:var(--pf-color-muted)] font-medium">Chưa chia bảng</p>
             <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4">
@@ -230,7 +230,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.map(({ group, standings }) => (
-              <div key={group.id} className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+              <div key={group.id} className="pf-glass-strong rounded-2xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
                   <div>
                     <p className="text-sm font-bold [color:var(--pf-primary)]">{group.groupName}</p>

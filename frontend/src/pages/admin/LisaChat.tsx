@@ -186,7 +186,7 @@ export function LisaChat() {
             <div className="w-7 h-7 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
               <Bot size={14} className="[color:var(--pf-primary)]" />
             </div>
-            <div className="[background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+            <div className="pf-glass rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1">
                 <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 [background:var(--pf-primary)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

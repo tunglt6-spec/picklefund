@@ -233,7 +233,7 @@ export function SchedulerPage() {
           </div>
 
           {/* Luật & lịch chạy (workflow rules) — chỉnh chu kỳ + bật/tắt trực tiếp */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <CalendarClock size={16} className="[color:var(--pf-color-muted)]" /> Luật & Lịch Chạy
             </h3>
@@ -286,7 +286,7 @@ export function SchedulerPage() {
           </section>
 
           {/* Cron hệ thống (cố định) */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1 flex items-center gap-2">
               <Clock size={16} className="[color:var(--pf-color-muted)]" /> Cron Hệ Thống (cố định)
             </h3>
@@ -307,7 +307,7 @@ export function SchedulerPage() {
           </section>
 
           {/* Lịch sử scheduler dispatch */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <Repeat size={16} className="[color:var(--pf-color-muted)]" /> Lịch Sử Chạy Định Kỳ
             </h3>

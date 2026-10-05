@@ -35,7 +35,7 @@ export function LoadingState({
         {items.map((_, i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)]"
+            className="pf-glass flex flex-col gap-3 rounded-[20px] p-5"
           >
             <div className="flex items-center justify-between">
               <Bar className="h-3 w-20" />
@@ -54,7 +54,7 @@ export function LoadingState({
     return (
       <div
         className={cn(
-          'overflow-hidden rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)]',
+          'pf-glass-strong overflow-hidden rounded-[20px]',
           className,
         )}
       >
@@ -87,7 +87,7 @@ export function LoadingState({
       {items.map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 [background:var(--pf-surface)] border-[color:var(--pf-border)]"
+          className="pf-glass flex items-center gap-3 rounded-2xl px-4 py-3.5"
         >
           <div className="pf-skeleton h-10 w-10 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-2">

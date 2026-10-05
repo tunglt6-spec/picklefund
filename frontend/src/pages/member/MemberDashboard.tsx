@@ -183,7 +183,7 @@ export function MemberDashboard() {
         {/* Phiếu thu card */}
         {hasData && (
           <div className="px-4 pt-3 pb-28">
-            <div className="[background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+            <div className="pf-glass-strong rounded-[18px] shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
                 <p className="text-base font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
                 <button
@@ -237,7 +237,7 @@ export function MemberDashboard() {
 
             {/* Recent sessions */}
             {completedSessions.length > 0 && (
-              <div className="mt-3 [background:var(--pf-surface)] rounded-[18px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+              <div className="pf-glass-strong mt-3 rounded-[18px] shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
                   <p className="text-base font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
                   <button

@@ -494,6 +494,10 @@ select:-webkit-autofill {
   /* Nền wash phía sau app (đặt ở lớp nền, KHÔNG bọc nội dung). */
   .pf-wash { background-image: var(--pf-wash); background-attachment: fixed; }
 
+  /* Chống chồng nhiều lớp blur (hiệu năng): kính lồng trong kính thì không blur lại, nền đặc hơn. */
+  :is(.pf-glass, .pf-glass-strong, .pf-glass-bar) :is(.pf-glass, .pf-glass-strong) {
+    -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--pf-glass-bg-strong);
+  }
   /* Dự phòng: trình duyệt không hỗ trợ backdrop-filter. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .pf-glass, .pf-glass-strong { background: var(--pf-surface); }

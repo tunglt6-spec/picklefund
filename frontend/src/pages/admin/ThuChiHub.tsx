@@ -442,7 +442,7 @@ export function ThuChiHub() {
         </>
       ) : loadState === 'error' ? (
         /* ── Workspace Error + Retry (gọi lại đúng API hiện có) ── */
-        <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass mt-4 rounded-[20px]">
           <EmptyState
             icon={<AlertCircle size={26} />}
             title="Không tải được dữ liệu tài chính"
@@ -535,7 +535,7 @@ export function ThuChiHub() {
         </div>
 
         {/* ── Transaction list: DataTable (desktop) / MobileCardList (mobile) ── */}
-        <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass mt-4 rounded-[20px]">
           <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
             <h3 className="text-sm font-semibold [color:var(--pf-text)]">Lịch sử giao dịch</h3>
             <span className="text-xs [color:var(--pf-color-muted)]">{filteredTx.length} / {allTx.length} giao dịch</span>

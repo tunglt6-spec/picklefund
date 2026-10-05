@@ -108,7 +108,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-11 w-52 rounded-2xl [background:var(--pf-surface)] border border-[color:var(--pf-border)] shadow-xl overflow-hidden z-50">
+            <div className="pf-glass-strong absolute right-0 top-11 w-52 rounded-2xl shadow-xl overflow-hidden z-50">
               {/* User info */}
               <div className="px-4 py-3 border-b border-[color:var(--pf-border-soft)]">
                 <div className="flex items-center gap-2.5">

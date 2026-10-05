@@ -74,7 +74,7 @@ export function RolesPermissions() {
     <PageShell>
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
-      <div className="overflow-x-auto rounded-[20px] border [border-color:var(--pf-border)] [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
+      <div className="pf-glass-strong overflow-x-auto rounded-[20px]">
         <table className="table-base">
           <thead>
             <tr>

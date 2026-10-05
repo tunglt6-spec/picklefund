@@ -118,7 +118,7 @@ export function KpiMonitorPage() {
       ) : (
         <div className="flex flex-col gap-6">
           {/* Health score */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <HeartPulse size={16} className="[color:var(--pf-color-muted)]" /> Sức Khỏe CLB
             </h3>
@@ -184,7 +184,7 @@ export function KpiMonitorPage() {
           </section>
 
           {/* Xu hướng hoạt động 14 ngày */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <Activity size={16} className="[color:var(--pf-color-muted)]" /> Xu Hướng Hoạt Động (14 ngày)
             </h3>

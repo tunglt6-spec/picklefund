@@ -166,7 +166,7 @@ export function AlertCenterPage() {
           )}
 
           {/* Cảnh báo vận hành */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <AlertTriangle size={16} className="[color:var(--pf-color-muted)]" /> Cảnh Báo Vận Hành
             </h3>
@@ -176,7 +176,7 @@ export function AlertCenterPage() {
           </section>
 
           {/* Chất lượng dữ liệu */}
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-4 flex items-center gap-2">
               <Database size={16} className="[color:var(--pf-color-muted)]" /> Chất Lượng Dữ Liệu
             </h3>
@@ -187,7 +187,7 @@ export function AlertCenterPage() {
 
           {/* Lỗi Workflow */}
           {showErrorSections && (
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Workflow size={16} className="[color:var(--pf-color-muted)]" /> Lỗi Workflow
@@ -214,7 +214,7 @@ export function AlertCenterPage() {
 
           {/* Lỗi AI / Thực thi */}
           {showErrorSections && (
-          <section className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <section className="pf-glass rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Bot size={16} className="[color:var(--pf-color-muted)]" /> Lỗi AI / Thực Thi

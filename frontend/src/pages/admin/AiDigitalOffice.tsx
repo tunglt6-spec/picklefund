@@ -746,7 +746,7 @@ function LiveDot({ color, size = 10, active = true, ring }: { color: string; siz
 /** Khung panel dùng chung: tiêu đề + nội dung, đồng bộ với style card AIDO. */
 function Panel({ icon, title, sub, children }: { icon: React.ReactNode; title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+    <div className="pf-glass rounded-[20px] p-5">
       <SectionTitle icon={icon} title={title} sub={sub} />
       <div className="mt-3">{children}</div>
     </div>

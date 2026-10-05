@@ -39,7 +39,7 @@ function OverviewTab() {
   const [sport, setSport] = useState('PICKLEBALL')
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto flex flex-col gap-5">
-      <div className="rounded-[18px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+      <div className="pf-glass rounded-[18px] p-4">
         <h2 className="text-base font-bold [color:var(--pf-text)]">Tổng quan theo bộ môn</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {SPORTS.map(s => (
@@ -74,7 +74,7 @@ function TournamentsTab() {
         <div className="max-w-xl"><MinigameOverviewPanel sport={sport} /></div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
-          <div className="rounded-[18px] border overflow-hidden [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          <div className="pf-glass-strong rounded-[18px] overflow-hidden">
             <MinigameForm embedded onSportChange={setSport} />
           </div>
           <MinigameOverviewPanel sport={sport} />
@@ -120,7 +120,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
       </div>
 
       {error ? (
-        <div className="rounded-2xl border p-8 text-center [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <div className="pf-glass rounded-2xl p-8 text-center">
           <p className="text-sm [color:var(--pf-color-danger)]">Không tải được danh sách giải.</p>
           <button onClick={load} className="mt-3 text-xs font-semibold [color:var(--pf-primary)]">Thử lại</button>
         </div>
@@ -129,7 +129,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
           {[0, 1, 2].map(i => <div key={i} className="h-24 rounded-2xl border [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] animate-pulse" />)}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border p-10 text-center [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <div className="pf-glass rounded-2xl p-10 text-center">
           <Icon size={28} className="mx-auto [color:var(--pf-color-muted)]" />
           <p className="mt-2 text-sm [color:var(--pf-color-muted)]">{meta.empty}</p>
         </div>
@@ -139,7 +139,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
             const st = normalizeMinigameStatus(mg.status)
             return (
               <button key={mg.id} onClick={() => navigate(meta.to(mg.id))}
-                className="text-left rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
+                className="pf-glass text-left rounded-2xl p-4 hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-2xl leading-none">{sportEmoji(mg.sport) || '🏓'}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">{STATUS_LABEL[st] ?? st}</span>

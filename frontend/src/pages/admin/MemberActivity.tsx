@@ -88,7 +88,7 @@ export function MemberActivity() {
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}
-        <div className="overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass-strong overflow-hidden rounded-[20px]">
           <div className="border-b border-[color:var(--pf-border)] p-3">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
@@ -119,7 +119,7 @@ export function MemberActivity() {
         {/* Chi tiết thành viên */}
         {sel && (
           <div className="space-y-4">
-            <div className="rounded-[20px] border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div className="pf-glass rounded-[20px] p-4">
               <h3 className="text-lg font-bold [color:var(--pf-text)]">{sel.m.fullName}</h3>
               <div className="mt-3 grid grid-cols-3 gap-3">
                 <MetricCard icon={<CalendarCheck size={18} />} accent="blue" label="Buổi tham gia" value={sel.att ? `${sel.att.attendedSessions}/${sel.att.totalSessions}` : '—'} />
@@ -128,7 +128,7 @@ export function MemberActivity() {
               </div>
             </div>
 
-            <div className="rounded-[20px] border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div className="pf-glass rounded-[20px] p-4">
               <p className="mb-2 text-sm font-bold [color:var(--pf-text)]">Lịch sử đóng quỹ</p>
               {sel.contribs.length === 0 ? (
                 <p className="py-6 text-sm [color:var(--pf-color-muted)]">Chưa có khoản đóng quỹ.</p>

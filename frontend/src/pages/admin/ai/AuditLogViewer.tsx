@@ -158,7 +158,7 @@ export function AuditLogViewer() {
         ) : logs.length === 0 ? (
           <EmptyState icon={<ScrollText size={28} />} title="Chưa có nhật ký" description="Các thao tác của CLB sẽ được ghi nhận tại đây." />
         ) : (
-          <div className="[background:var(--pf-surface)] rounded-2xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+          <div className="pf-glass-strong rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

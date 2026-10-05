@@ -208,7 +208,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Create from template — nhóm theo module */}
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5">
           <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-3">Tạo rule từ template</h3>
           {templates.length === 0 ? (
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có template.</p>
@@ -265,7 +265,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Dispatch theo Trigger (Epic 6 + Live data) */}
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5">
           <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1">Chạy Dispatch theo Trigger</h3>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">
             <b>Dữ liệu thật</b>: lấy số liệu CLB hiện tại (nợ quỹ, buổi sắp tới, kỳ đã chốt) để rule khớp thực tế →
@@ -338,7 +338,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Rules list */}
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Workflow Rules</h3>
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{rules.length}</span>
@@ -411,7 +411,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Runs */}
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Lịch Sử Chạy (Runs)</h3>
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{runs.length}</span>

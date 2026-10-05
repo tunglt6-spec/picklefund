@@ -85,7 +85,7 @@ export function MaikaInsightsLog() {
               return (
                 <div
                   key={it.id}
-                  className="rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+                  className="pf-glass rounded-2xl p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

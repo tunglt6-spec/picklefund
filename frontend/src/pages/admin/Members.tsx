@@ -733,7 +733,7 @@ export function Members() {
         </>
       ) : loadState === 'error' ? (
         /* ── Workspace Error + Retry (gọi lại đúng API hiện có) ── */
-        <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass mt-4 rounded-[20px]">
           <EmptyState
             icon={<AlertTriangle size={26} />}
             title="Không tải được danh sách thành viên"
@@ -764,7 +764,7 @@ export function Members() {
       </div>
 
       {/* ── Member list: DataTable (desktop) / MobileCardList (mobile) ── */}
-      <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+      <div className="pf-glass mt-4 rounded-[20px]">
         {rows.length === 0 ? (
           hasActiveFilter ? (
             /* Lọc/tìm kiếm trả về 0 kết quả */

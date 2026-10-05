@@ -56,3 +56,22 @@ test('backdrop-filter chỉ đặt trong index.css (primitive kính), không r�
 
 // Danh sách file đã dùng backdrop-filter inline trước khi triển khai Liquid Glass (khoá lại để không phình thêm).
 const LEGACY_BACKDROP: string[] = ['pages/public/LandingHeader.tsx']
+
+test('không có phần tử position:fixed nằm trong khối .pf-glass (backdrop-filter làm lệch containing block)', () => {
+  const bad: string[] = []
+  for (const f of files) {
+    const lines = readFileSync(f, 'utf8').split('\n')
+    const stack: boolean[] = []
+    lines.forEach((l, i) => {
+      for (const m of l.matchAll(/<div\b[^>]*?(\/?)>|<\/div>|<div\b[^>]*$/g)) {
+        const t = m[0]
+        if (t === '</div>') { stack.pop(); continue }
+        if (t.endsWith('/>')) continue
+        if (/\bfixed\b/.test(t) && stack.some(Boolean)) bad.push(`${rel(f)}:${i + 1}`)
+        stack.push(t.includes('pf-glass'))
+      }
+      if (/position:\s*'fixed'/.test(l) && stack.some(Boolean)) bad.push(`${rel(f)}:${i + 1}`)
+    })
+  }
+  assert.deepEqual(bad, [])
+})

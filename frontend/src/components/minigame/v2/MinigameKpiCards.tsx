@@ -19,7 +19,7 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {/* Card 1: Thành viên */}
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
+      <div className="pf-glass rounded-2xl shadow-sm p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Thành viên
@@ -35,7 +35,7 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
       </div>
 
       {/* Card 2: Trận Hoàn Thành */}
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
+      <div className="pf-glass rounded-2xl shadow-sm p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Trận Hoàn Thành
@@ -62,7 +62,7 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
       </div>
 
       {/* Card 3: Chờ Nhập Điểm */}
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
+      <div className="pf-glass rounded-2xl shadow-sm p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Chờ Nhập Điểm
@@ -82,7 +82,7 @@ export function MinigameKpiCards({ kpi }: MinigameKpiCardsProps) {
       </div>
 
       {/* Card 4: Vòng Hiện Tại */}
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5 flex flex-col gap-3">
+      <div className="pf-glass rounded-2xl shadow-sm p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Vòng Hiện Tại

@@ -87,7 +87,7 @@ export function MitDacExecutionLog() {
               return (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+                  className="pf-glass flex items-center justify-between gap-3 rounded-2xl p-4"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

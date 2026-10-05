@@ -134,7 +134,7 @@ export function SuperUsers() {
         </div>
       </div>
 
-      <div className="rounded-[20px] border p-2 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+      <div className="pf-glass rounded-[20px] p-2">
         {loading ? (
           <LoadingState variant="table" rows={6} />
         ) : filtered.length === 0 ? (

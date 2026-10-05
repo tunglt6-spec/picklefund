@@ -143,7 +143,7 @@ export function AiApprovalInbox() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Pending queue — REAL */}
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <div className="pf-glass rounded-2xl shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Inbox size={16} className="[color:var(--pf-color-muted)]" />
@@ -206,7 +206,7 @@ export function AiApprovalInbox() {
           </div>
 
           {/* Approval evaluator — REAL read-only preview */}
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+          <div className="pf-glass rounded-2xl shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={16} className="[color:var(--pf-color-muted)]" />
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Đánh Giá Điều Kiện Duyệt</h3>
@@ -269,7 +269,7 @@ export function AiApprovalInbox() {
         </div>
 
         {/* Đã duyệt — chờ thực thi (Mít Đặc Executor) */}
-        <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Zap size={16} className="[color:var(--pf-color-muted)]" />

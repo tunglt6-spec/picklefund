@@ -133,7 +133,7 @@ export function DesktopHeader() {
         </button>
 
         {open && (
-          <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl border [background:var(--pf-surface)] shadow-xl" style={{ borderColor: 'var(--pf-border)' }}>
+          <div className="pf-glass-strong absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl shadow-xl" style={{ borderColor: 'var(--pf-border)' }}>
             <div className="border-b px-4 py-3" style={{ borderColor: 'var(--pf-border-soft, #eef0f4)' }}>
               <div className="text-sm font-semibold [color:var(--pf-text)] truncate">{user.username}</div>
               <div className="text-xs [color:var(--pf-color-muted)]">{ROLE_LABEL[user.role] ?? user.role}</div>

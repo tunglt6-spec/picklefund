@@ -443,7 +443,7 @@ export function Reports() {
       />
 
       {!hasPeriods ? (
-        <div className="rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass rounded-[20px]">
           <EmptyState icon={<FileText size={26} />} title="Chưa có kỳ quỹ nào" description="Tạo kỳ quỹ đầu tiên để xem báo cáo." />
         </div>
       ) : loadState === 'loading' ? (
@@ -452,7 +452,7 @@ export function Reports() {
           <div className="mt-4"><LoadingState variant="list" rows={5} /></div>
         </>
       ) : loadState === 'error' ? (
-        <div className="rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+        <div className="pf-glass rounded-[20px]">
           <EmptyState icon={<AlertCircle size={26} />} title="Không tải được dữ liệu báo cáo"
             description="Đã xảy ra lỗi khi tải tổng hợp báo cáo. Vui lòng thử lại."
             action={<ActionButton icon={<RefreshCw size={15} />} onClick={() => void fetchSummary()}>Thử lại</ActionButton>} />
@@ -572,7 +572,7 @@ export function Reports() {
 
           {/* ── Member bill / Personal receipt preview (backend calculator) ── */}
           {showMember && (
-            <div className="mt-4 rounded-[20px] border [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+            <div className="pf-glass mt-4 rounded-[20px]">
               <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
                 <h3 className="text-sm font-semibold [color:var(--pf-text)]">Bảng chi phí thành viên</h3>
                 <span className="text-xs [color:var(--pf-color-muted)]">Nguồn: backend calculator</span>
@@ -604,7 +604,7 @@ export function Reports() {
           )}
 
           {/* ── Export panel ── */}
-          {canExport && (<div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]">
+          {canExport && (<div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] p-5">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Xuất báo cáo</h3>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">

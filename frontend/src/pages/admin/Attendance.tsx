@@ -280,7 +280,7 @@ export function Attendance() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[...sessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate)).map(session => (
-              <div key={session.id} className="rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+              <div key={session.id} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold [color:var(--pf-text)]">{formatDate(session.sessionDate)}</p>

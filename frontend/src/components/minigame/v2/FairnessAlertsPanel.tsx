@@ -15,7 +15,7 @@ interface FairnessAlertsPanelProps {
 
 export function FairnessAlertsPanel({ alerts, onAction }: FairnessAlertsPanelProps) {
   return (
-    <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-5">
+    <div className="pf-glass rounded-2xl shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <AlertTriangle size={18} className="[color:var(--pf-color-warning)]" />
         <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">

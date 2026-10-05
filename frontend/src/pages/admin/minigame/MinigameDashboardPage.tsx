@@ -379,7 +379,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                 onCompleteRound={handleCompleteRound}
               />
             ) : (
-              <div className="[background:var(--pf-surface)] rounded-2xl shadow-sm border border-[color:var(--pf-border)] p-6 flex flex-col items-center justify-center gap-2 text-center h-full min-h-[200px]">
+              <div className="pf-glass rounded-2xl shadow-sm p-6 flex flex-col items-center justify-center gap-2 text-center h-full min-h-[200px]">
                 <p className="[color:var(--pf-color-muted)] font-medium">Chưa có lượt đấu nào</p>
                 <p className="text-sm [color:var(--pf-color-muted)]">Nhấn "Rút Thăm Vòng Mới" để bắt đầu</p>
               </div>

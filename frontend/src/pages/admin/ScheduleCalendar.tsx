@@ -286,7 +286,7 @@ export function ScheduleCalendar() {
               </div>
 
               {/* Lưới lịch */}
-              <div className="rounded-2xl border p-2.5 sm:p-3 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+              <div className="pf-glass rounded-2xl p-2.5 sm:p-3" style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                   {WEEKDAYS.map((w) => (
                     <div key={w} className="pb-1.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">{w}</div>
@@ -344,7 +344,7 @@ export function ScheduleCalendar() {
             </div>
 
             {/* Right detail panel */}
-            <div className="rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:self-start" style={{ boxShadow: 'var(--pf-shadow)' }}>
+            <div className="pf-glass rounded-2xl p-4 lg:self-start" style={{ boxShadow: 'var(--pf-shadow)' }}>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-bold [color:var(--pf-text)]">
                 <CalendarDays size={16} className="[color:var(--pf-primary)]" />
                 {selHeading}

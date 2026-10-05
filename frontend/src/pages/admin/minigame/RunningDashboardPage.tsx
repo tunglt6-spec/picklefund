@@ -129,7 +129,7 @@ export function RunningDashboardPage() {
         {loading && runners.length === 0 && <LoadingState variant="list" rows={4} />}
 
         {/* Thêm VĐV */}
-        <div className="rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <div className="pf-glass rounded-2xl p-4">
           <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-1.5"><UserPlus size={15} /> Thêm vận động viên</h3>
           <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto mb-3">
             {activeMembers.map(m => {
@@ -146,7 +146,7 @@ export function RunningDashboardPage() {
 
         {/* Nhập thời gian */}
         {runners.length > 0 && (
-          <div className="rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-2xl p-4 overflow-x-auto">
             <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-1.5"><Timer size={15} /> Nhập thời gian (mm:ss)</h3>
             <table className="w-full min-w-[420px] text-sm">
               <thead><tr className="[color:var(--pf-color-muted)] text-xs uppercase">
@@ -180,7 +180,7 @@ export function RunningDashboardPage() {
 
         {/* Leaderboard */}
         {leaderboard.length > 0 && (
-          <div className="rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+          <div className="pf-glass rounded-2xl p-4">
             <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3">🏆 Bảng xếp hạng</h3>
             <div className="divide-y divide-[color:var(--pf-border-soft)]">
               {leaderboard.map((r, i) => (

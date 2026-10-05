@@ -191,7 +191,7 @@ export function TreasurerDashboard() {
         {/* Fund split summary */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {fundCards.map(f => (
-            <div key={f.label} className="rounded-2xl border p-4 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+            <div key={f.label} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg [background:var(--pf-primary-soft)]"><f.Icon size={14} className="[color:var(--pf-primary)]" /></div>
                 <p className="text-xs font-bold uppercase tracking-wide [color:var(--pf-primary)]">{f.label}</p>
@@ -226,7 +226,7 @@ export function TreasurerDashboard() {
 
         {/* Action items */}
         {(unpaid.length > 0 || noReceipt.length > 0) && (
-          <div className="rounded-2xl border p-5 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+          <div className="pf-glass rounded-2xl p-5" style={{ boxShadow: 'var(--pf-shadow)' }}>
             <h3 className="mb-3 font-semibold [color:var(--pf-text)]">Các Khoản Cần Xử Lý</h3>
             <div className="space-y-2">
               {unpaid.map(c => (
@@ -250,7 +250,7 @@ export function TreasurerDashboard() {
         )}
 
         {/* Sổ quỹ gần đây */}
-        <div className="rounded-2xl border [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+        <div className="pf-glass rounded-2xl" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="flex items-center justify-between border-b px-5 py-4 [border-color:var(--pf-border)]">
             <h3 className="font-semibold [color:var(--pf-text)]">Sổ Quỹ Gần Đây <span className="text-xs font-normal [color:var(--pf-color-muted)]">· Quỹ Chính{activePeriod ? ` · ${activePeriod.name}` : ''}</span></h3>
             <ActionButton variant="secondary" onClick={exportLedger} disabled={exporting}>Xuất Sổ</ActionButton>

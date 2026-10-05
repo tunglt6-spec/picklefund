@@ -420,7 +420,7 @@ export function SuperClubDetail() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Club info sidebar */}
-        <div className="rounded-2xl border p-5 space-y-4 [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+        <div className="pf-glass rounded-2xl p-5 space-y-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="flex items-center gap-2 [color:var(--pf-text)] font-semibold">
             <Building2 size={16} />Thông tin CLB
           </div>
@@ -454,7 +454,7 @@ export function SuperClubDetail() {
         </div>
 
         {/* Main panel with tabs */}
-        <div className="lg:col-span-2 rounded-2xl border overflow-hidden [background:var(--pf-surface)] [border-color:var(--pf-border)]" style={{ boxShadow: 'var(--pf-shadow)' }}>
+        <div className="pf-glass-strong lg:col-span-2 rounded-2xl overflow-hidden" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <div className="px-5 pt-4">
             {tabBar}
           </div>
