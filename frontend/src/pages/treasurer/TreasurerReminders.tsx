@@ -336,11 +336,11 @@ export function TreasurerReminders() {
             <table className="table-base pf-rows">
               <thead>
                 <tr>
-                  <th>Thành viên</th>
-                  <th>Liên hệ</th>
-                  <th className="text-right">Số tiền cần đóng</th>
-                  <th className="text-center w-28">Trạng thái</th>
-                  <th className="text-center w-32">Nhắc nhở</th>
+                  <th scope="col">Thành viên</th>
+                  <th scope="col">Liên hệ</th>
+                  <th scope="col" className="text-right">Số tiền cần đóng</th>
+                  <th scope="col" className="text-center w-28">Trạng thái</th>
+                  <th scope="col" className="text-center w-32">Nhắc nhở</th>
                 </tr>
               </thead>
               <tbody>
@@ -388,9 +388,9 @@ export function TreasurerReminders() {
             <table className="table-base pf-rows">
               <thead>
                 <tr>
-                  <th>Thành viên</th>
-                  <th className="text-right">Số tiền</th>
-                  <th className="text-center">Ghi chú</th>
+                  <th scope="col">Thành viên</th>
+                  <th scope="col" className="text-right">Số tiền</th>
+                  <th scope="col" className="text-center">Ghi chú</th>
                 </tr>
               </thead>
               <tbody>

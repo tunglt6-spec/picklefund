@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ClipboardEdit, Pencil, Trash2 } from 'lucide-react'
@@ -109,7 +110,11 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameDoublesMatch | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<MiniGameDoublesMatch | null>(null)
+  const delMobileRef = useRef<HTMLDivElement>(null)
+  const delDesktopRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
+  useDialogA11y(!!deleteTarget && isMobile, delMobileRef, () => setDeleteTarget(null))
+  useDialogA11y(!!deleteTarget && !isMobile, delDesktopRef, () => setDeleteTarget(null))
 
   const filtered = myMatches.filter(m => {
     if (filter === 'all') return true
@@ -240,7 +245,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         {deleteTarget && (
           <Portal>
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
-            <div className="[background:var(--pf-surface)] rounded-t-[20px] p-6 w-full">
+            <div ref={delMobileRef} role="dialog" aria-modal="true" aria-label="Xóa trận đấu" tabIndex={-1} className="[background:var(--pf-surface)] rounded-t-[20px] p-6 w-full outline-none">
               <p className="font-semibold [color:var(--pf-text)] mb-1">Xóa trận đấu?</p>
               <p className="text-xs [color:var(--pf-color-muted)] mb-3">
                 {deleteTarget.team1.map(p => p.memberName).join(' & ')} vs {deleteTarget.team2.map(p => p.memberName).join(' & ')}
@@ -304,14 +309,14 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
-                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 1</th>
-                    <th className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 2</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
+                    <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                    <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
+                    <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 1</th>
+                    <th scope="col" className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
+                    <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Team 2</th>
+                    <th scope="col" className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
+                    <th scope="col" className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
+                    <th scope="col" className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
@@ -390,7 +395,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
       {deleteTarget && (
         <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+          <div ref={delDesktopRef} role="dialog" aria-modal="true" aria-label="Xóa trận đấu" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 outline-none">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full [background:var(--pf-color-danger-soft)] flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="[color:var(--pf-color-danger)]" />
@@ -672,15 +677,15 @@ export function MatchSchedule() {
           <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 1</th>
-                <th className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 2</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Vòng</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 1</th>
+                <th scope="col" className="text-center px-2 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">vs</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Người Chơi 2</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Tỷ Số</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trạng Thái</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hành Động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

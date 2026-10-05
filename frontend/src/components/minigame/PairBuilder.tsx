@@ -230,7 +230,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
   return (
     <div className="flex flex-col gap-4">
       {/* Card chọn/ghép */}
-      <div className="pf-glass rounded-[18px] p-4 sm:p-5">
+      <div className="pf-glass rounded-[16px] p-4 sm:p-5">
         <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]">
           {isSingle ? <UserCheck size={18} /> : <Users size={18} />} {isSingle ? 'Vận động viên thi đấu' : 'Ghép cặp thi đấu'}
         </h2>

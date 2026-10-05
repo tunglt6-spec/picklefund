@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import {
   PageShell, PageHeader, FilterBar, DataTable, StatusBadge, MetricCard,
-  LoadingState, EmptyState, type Column, type StatusTone,
+  LoadingState, EmptyState, ErrorState, type Column, type StatusTone,
 } from '../../components/shared'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import type { Role } from '../../types'
@@ -39,15 +39,21 @@ export function SuperUsers() {
   const [pendingToggle, setPendingToggle] = useState<UserRow | null>(null)
   const [toggling, setToggling] = useState(false)
 
-  useEffect(() => {
+  const [loadError, setLoadError] = useState(false)
+
+  const load = () => {
+    setLoading(true)
+    setLoadError(false)
     api.get('/users').then((res) => {
       const raw = res.data?.data ?? []
       setUsers(raw.map((u: any) => ({
         id: u.id, username: u.username, email: u.email ?? '', role: u.role as Role,
         club: u.club?.name ?? null, fullName: u.member?.fullName ?? u.username, isActive: u.isActive ?? true,
       })))
-    }).catch(() => {}).finally(() => setLoading(false))
-  }, [])
+    }).catch(() => setLoadError(true)).finally(() => setLoading(false))
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [])
 
   const toggleActive = async (u: UserRow) => {
     const next = !u.isActive
@@ -134,9 +140,11 @@ export function SuperUsers() {
         </div>
       </div>
 
-      <div className="pf-glass rounded-[20px] p-2">
+      <div className="pf-glass rounded-[16px] p-2">
         {loading ? (
           <LoadingState variant="table" rows={6} />
+        ) : loadError ? (
+          <ErrorState onRetry={load} />
         ) : filtered.length === 0 ? (
           <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description={users.length === 0 ? 'Chưa tải được dữ liệu.' : 'Không tìm thấy tài khoản phù hợp.'} />
         ) : (

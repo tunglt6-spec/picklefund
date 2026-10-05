@@ -141,7 +141,7 @@ function apiMessage(err: unknown, fallback: string): string {
   return e?.response?.data?.message ?? fallback
 }
 
-/** Chuẩn hoá URL ảnh: path cũ '/uploads/…' → '/api/uploads/…' (nginx chỉ proxy '/api'). */
+/** Chuẩn hóa URL ảnh: path cũ '/uploads/…' → '/api/uploads/…' (nginx chỉ proxy '/api'). */
 function mediaUrl(u: string | null | undefined): string {
   if (!u) return ''
   return u.startsWith('/uploads/') ? `/api${u}` : u
@@ -879,9 +879,9 @@ function PostCard({
     try {
       await api.delete(`/community/posts/${post.id}`)
       onDelete(post.id)
-      toast.success('Đã xoá bài viết')
+      toast.success('Đã xóa bài viết')
     } catch (err) {
-      toast.error(apiMessage(err, 'Không thể xoá bài viết'))
+      toast.error(apiMessage(err, 'Không thể xóa bài viết'))
     } finally {
       setConfirmDel(false)
     }
@@ -908,7 +908,7 @@ function PostCard({
       setComments((prev) => prev.filter((c) => c.id !== commentId))
       onChange({ ...post, commentCount: Math.max(0, post.commentCount - 1) })
     } catch (err) {
-      toast.error(apiMessage(err, 'Không thể xoá bình luận'))
+      toast.error(apiMessage(err, 'Không thể xóa bình luận'))
     } finally {
       setConfirmDelComment(null)
     }
@@ -958,7 +958,7 @@ function PostCard({
             {post.canDelete && (
               <button
                 type="button"
-                aria-label="Xoá bài viết"
+                aria-label="Xóa bài viết"
                 onClick={() => setConfirmDel(true)}
                 className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
               >
@@ -997,7 +997,7 @@ function PostCard({
               className="min-h-11"
               onClick={() => setEditingPost(false)}
             >
-              Huỷ
+              Hủy
             </ActionButton>
             <ActionButton
               type="button"
@@ -1082,7 +1082,7 @@ function PostCard({
                               {c.canDelete && (
                                 <button
                                   type="button"
-                                  aria-label="Xoá bình luận"
+                                  aria-label="Xóa bình luận"
                                   onClick={() => setConfirmDelComment(c.id)}
                                   className="flex h-9 w-9 items-center justify-center rounded-md [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]"
                                 >
@@ -1106,7 +1106,7 @@ function PostCard({
                                 onClick={() => setEditingCommentId(null)}
                                 className="min-h-11 rounded-full px-3 text-xs font-semibold [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"
                               >
-                                Huỷ
+                                Hủy
                               </button>
                               <button
                                 type="button"
@@ -1207,8 +1207,8 @@ function PostCard({
 
       <ConfirmDialog
         open={confirmDel}
-        title="Xoá bài viết?"
-        message="Bài viết và toàn bộ bình luận sẽ bị xoá vĩnh viễn."
+        title="Xóa bài viết?"
+        message="Bài viết và toàn bộ bình luận sẽ bị xóa vĩnh viễn."
         onConfirm={doDelete}
         onCancel={() => setConfirmDel(false)}
       />
@@ -1223,7 +1223,7 @@ function PostCard({
       />
       <ConfirmDialog
         open={confirmDelComment !== null}
-        title="Xoá bình luận?"
+        title="Xóa bình luận?"
         message="Hành động này không thể khôi phục."
         onConfirm={() => confirmDelComment && void deleteComment(confirmDelComment)}
         onCancel={() => setConfirmDelComment(null)}
@@ -1238,7 +1238,7 @@ const MATCH_STATUS: Record<MatchStatus, { tone: 'success' | 'warning' | 'neutral
   OPEN: { tone: 'success', label: 'Đang mở' },
   FULL: { tone: 'warning', label: 'Đã đủ người' },
   CLOSED: { tone: 'neutral', label: 'Đã đóng' },
-  CANCELLED: { tone: 'danger', label: 'Đã huỷ' },
+  CANCELLED: { tone: 'danger', label: 'Đã hủy' },
 }
 
 function MatchCard({ match, onChange }: { match: Match; onChange: (m: Match) => void }) {
@@ -1503,7 +1503,7 @@ function CreateMatchModal({
       footer={
         <>
           <ActionButton type="button" variant="ghost" className="min-h-11" onClick={onClose}>
-            Huỷ
+            Hủy
           </ActionButton>
           <ActionButton
             type="button"
@@ -1520,8 +1520,8 @@ function CreateMatchModal({
     >
       <div className="flex flex-col gap-3">
         <div>
-          <label className={labelCls}>Môn thể thao *</label>
-          <input
+          <label htmlFor="f-MemberCommunity-1" className={labelCls}>Môn thể thao *</label>
+          <input id="f-MemberCommunity-1"
             className={inputCls}
             value={form.sport}
             onChange={(e) => set('sport', e.target.value)}
@@ -1529,8 +1529,8 @@ function CreateMatchModal({
           />
         </div>
         <div>
-          <label className={labelCls}>Ngày chơi *</label>
-          <input
+          <label htmlFor="f-MemberCommunity-2" className={labelCls}>Ngày chơi *</label>
+          <input id="f-MemberCommunity-2"
             type="date"
             className={inputCls}
             value={form.playDate}
@@ -1539,8 +1539,8 @@ function CreateMatchModal({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>Giờ bắt đầu</label>
-            <input
+            <label htmlFor="f-MemberCommunity-3" className={labelCls}>Giờ bắt đầu</label>
+            <input id="f-MemberCommunity-3"
               type="time"
               className={inputCls}
               value={form.startTime}
@@ -1548,8 +1548,8 @@ function CreateMatchModal({
             />
           </div>
           <div>
-            <label className={labelCls}>Giờ kết thúc</label>
-            <input
+            <label htmlFor="f-MemberCommunity-4" className={labelCls}>Giờ kết thúc</label>
+            <input id="f-MemberCommunity-4"
               type="time"
               className={inputCls}
               value={form.endTime}
@@ -1559,8 +1559,9 @@ function CreateMatchModal({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>Cần thêm (người) *</label>
+            <label htmlFor="mc-needed" className={labelCls}>Cần thêm (người) *</label>
             <input
+              id="mc-needed"
               type="number"
               min={1}
               inputMode="numeric"
@@ -1570,8 +1571,9 @@ function CreateMatchModal({
             />
           </div>
           <div>
-            <label className={labelCls}>Trình độ (1-10)</label>
+            <label htmlFor="mc-skill" className={labelCls}>Trình độ (1-10)</label>
             <input
+              id="mc-skill"
               type="number"
               min={1}
               max={10}
@@ -1584,8 +1586,8 @@ function CreateMatchModal({
           </div>
         </div>
         <div>
-          <label className={labelCls}>Hình thức</label>
-          <input
+          <label htmlFor="f-MemberCommunity-5" className={labelCls}>Hình thức</label>
+          <input id="f-MemberCommunity-5"
             className={inputCls}
             value={form.format}
             onChange={(e) => set('format', e.target.value)}
@@ -1593,8 +1595,9 @@ function CreateMatchModal({
           />
         </div>
         <div>
-          <label className={labelCls}>Ghi chú</label>
+          <label htmlFor="mc-note" className={labelCls}>Ghi chú</label>
           <textarea
+            id="mc-note"
             rows={3}
             className="w-full resize-none rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-3 py-2 text-sm outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
             value={form.note}

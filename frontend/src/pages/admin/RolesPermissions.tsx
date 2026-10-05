@@ -74,14 +74,14 @@ export function RolesPermissions() {
     <PageShell>
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
-      <div className="pf-glass-strong overflow-x-auto rounded-[20px]">
+      <div className="pf-glass-strong overflow-x-auto rounded-[16px]">
         <table className="table-base pf-rows">
           <thead>
             <tr>
-              <th>Tài khoản</th><th>Họ tên</th><th>Email</th>
-              <th className="text-center w-44">Vai trò</th>
-              <th className="text-center w-28">Trạng thái</th>
-              <th className="text-center w-20">Khóa/Mở</th>
+              <th scope="col">Tài khoản</th><th scope="col">Họ tên</th><th scope="col">Email</th>
+              <th scope="col" className="text-center w-44">Vai trò</th>
+              <th scope="col" className="text-center w-28">Trạng thái</th>
+              <th scope="col" className="text-center w-20">Khóa/Mở</th>
             </tr>
           </thead>
           <tbody>

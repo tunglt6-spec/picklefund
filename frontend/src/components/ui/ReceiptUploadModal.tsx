@@ -3,6 +3,7 @@ import { X, Upload, FileText, Image, Camera } from 'lucide-react'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { Portal } from './Portal'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 
 interface Props {
   expenseId: string
@@ -67,6 +68,8 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
 
   const handleFile = (f: File) => {
     // Chấp nhận nếu hợp lệ theo đuôi HOẶC theo MIME (ảnh camera thường không có đuôi rõ).
@@ -132,7 +135,7 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
     <Portal>
     {/* z cao hơn drawer chi tiết (z-50) để không bị đè/mờ khi mở từ trong drawer */}
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.55)' }}>
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Đính kèm hóa đơn" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden outline-none">
         {/* header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <p className="font-bold [color:var(--pf-text)] text-sm">Đính Kèm Hóa Đơn</p>

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import toast from 'react-hot-toast'
 import {
   Inbox, Info, Check, X, RotateCcw, ShieldCheck,
@@ -46,7 +47,9 @@ export function AiApprovalInbox() {
 
   // Detail drawer
   const [detail, setDetail] = useState<AiActionDetail | null>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  useDialogA11y(!!detail || detailLoading, drawerRef, () => setDetail(null))
   const [busy, setBusy] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
 
@@ -326,7 +329,7 @@ export function AiApprovalInbox() {
         <Portal>
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setDetail(null)}>
           <div className="absolute inset-0 bg-black/40" />
-          <div className="relative h-full w-full max-w-md [background:var(--pf-surface)] shadow-xl overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="Chi tiết hành động AI" tabIndex={-1} className="relative h-full w-full max-w-md [background:var(--pf-surface)] shadow-xl overflow-y-auto outline-none" onClick={e => e.stopPropagation()}>
             <div className="sticky top-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-5 py-4 flex items-center justify-between">
               <h3 className="text-base font-bold [color:var(--pf-text)]">Chi Tiết Hành Động AI</h3>
               <button onClick={() => setDetail(null)} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]"><X size={18} /></button>

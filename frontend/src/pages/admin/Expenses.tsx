@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
+import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { getBrandClubName } from '../../store/brandingStore'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
@@ -99,6 +101,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 }) {
   const isEdit = !!editExpense
   const [form, setForm] = useState({ ...emptyForm, fundPeriodId: defaultPeriodId })
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(open, panelRef, onClose)
   // Sync form when editExpense changes
   if (open && isEdit && form.description !== (editExpense?.description ?? '') && form.description === emptyForm.description) {
     setForm({
@@ -135,7 +139,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
     <Portal>
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-full max-w-md [background:var(--pf-surface)] flex flex-col shadow-2xl">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label={isEdit ? 'Sửa khoản chi' : 'Thêm khoản chi'} tabIndex={-1} className="w-full max-w-md [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <div>
@@ -170,8 +174,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 2 · Kỳ quỹ (Quỹ Chính) */}
             {!isMini && allPeriods.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                <select required value={form.fundPeriodId} onChange={e => setForm(f => ({ ...f, fundPeriodId: e.target.value }))} className="input-base">
+                <label htmlFor="f-Expenses-1" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                <select id="f-Expenses-1" required value={form.fundPeriodId} onChange={e => setForm(f => ({ ...f, fundPeriodId: e.target.value }))} className="input-base">
                   <option value="">— Chọn kỳ quỹ —</option>
                   {allPeriods.map(p => (
                     <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
@@ -182,8 +186,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
             {/* 3 · Nội dung */}
             <div>
-              <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
-              <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+              <label htmlFor="f-Expenses-2" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Nội dung chi <span className="text-red-500">*</span></label>
+              <input id="f-Expenses-2" required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder={isMini ? 'VD: Thưởng đội vô địch, Chi liên hoan…' : 'VD: Tiền thuê sân T7, Nước uống…'}
                 className="input-base" />
             </div>
@@ -191,16 +195,16 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 4 · Số tiền + Ngày */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <label htmlFor="f-Expenses-3" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
+                  <input id="f-Expenses-3" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                     placeholder="0" className="input-base pr-8 text-right font-semibold tabular-nums" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold [color:var(--pf-color-muted)] pointer-events-none">đ</span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
-                <input required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
+                <label htmlFor="f-Expenses-4" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
+                <input id="f-Expenses-4" required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
               </div>
             </div>
 
@@ -208,8 +212,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {isMini ? (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Loại chi Quỹ Phụ <span className="text-red-500">*</span></label>
-                  <select required value={form.miniExpenseType}
+                  <label htmlFor="f-Expenses-5" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Loại chi Quỹ Phụ <span className="text-red-500">*</span></label>
+                  <select id="f-Expenses-5" required value={form.miniExpenseType}
                     onChange={e => setForm({ ...form, miniExpenseType: e.target.value as MiniExpenseType })} className="input-base">
                     {(Object.entries(MINI_EXPENSE_TYPE_LABELS) as [MiniExpenseType, string][]).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -217,8 +221,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Người nhận <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
-                  <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
+                  <label htmlFor="f-Expenses-6" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Người nhận <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
+                  <input id="f-Expenses-6" value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
                 <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary-text)]">
@@ -228,7 +232,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Loại chi phí <span className="text-red-500">*</span></label>
+                <div className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Loại chi phí <span className="text-red-500">*</span></div>
                 <div className="grid grid-cols-2 gap-2.5">
                   {costCards.map(c => {
                     const active = form.costType === c.key
@@ -257,7 +261,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   </div>
                 ) : (
                   <div className="mt-3">
-                    <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Cách chia sinh hoạt <span className="text-red-500">*</span></label>
+                    <div className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-2">Cách chia sinh hoạt <span className="text-red-500">*</span></div>
                     <div className="grid grid-cols-2 gap-2">
                       {livingRules.map(r => {
                         const active = form.allocationRule === r.key
@@ -283,8 +287,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             {/* 6 · Danh mục (tuỳ chọn) */}
             {categories.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Danh mục <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
-                <select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="input-base">
+                <label htmlFor="f-Expenses-7" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Danh mục <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
+                <select id="f-Expenses-7" value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="input-base">
                   <option value="">— Không phân loại —</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
@@ -295,8 +299,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
             {/* 7 · Ghi chú */}
             <div>
-              <label className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ghi chú <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
-              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+              <label htmlFor="f-Expenses-8" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ghi chú <span className="[color:var(--pf-color-muted)] font-normal">(nếu có)</span></label>
+              <textarea id="f-Expenses-8" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 maxLength={200} rows={2} className="input-base resize-none"
                 placeholder="Ghi chú thêm cho khoản chi…" />
               <p className="text-right text-xs [color:var(--pf-color-muted)] mt-1">{form.notes.length}/200</p>
@@ -324,6 +328,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
   const [rule, setRule]     = useState(values.rule)
   const [from, setFrom]     = useState(values.from)
   const [to, setTo]         = useState(values.to)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(open, panelRef, onClose)
 
   if (!open) return null
   const handleApply = () => {
@@ -340,15 +346,15 @@ function FilterPanel({ open, onClose, values, onApply }: {
     <Portal>
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Bộ lọc" tabIndex={-1} className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <h2 className="text-sm font-semibold [color:var(--pf-text)]">Bộ lọc</h2>
           <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"><X size={14} /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Trạng thái</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="input-base">
+            <label htmlFor="f-Expenses-9" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Trạng thái</label>
+            <select id="f-Expenses-9" value={status} onChange={e => setStatus(e.target.value)} className="input-base">
               <option value="all">Tất cả</option>
               <option value="approved">Đã duyệt</option>
               <option value="pending">Chờ duyệt</option>
@@ -357,8 +363,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Quy tắc phân bổ</label>
-            <select value={rule} onChange={e => setRule(e.target.value)} className="input-base">
+            <label htmlFor="f-Expenses-10" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Quy tắc phân bổ</label>
+            <select id="f-Expenses-10" value={rule} onChange={e => setRule(e.target.value)} className="input-base">
               <option value="all">Tất cả</option>
               {(Object.entries(ruleLabels) as [AllocationRule, string][]).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -366,9 +372,9 @@ function FilterPanel({ open, onClose, values, onApply }: {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-2">Khoảng thời gian</label>
+            <label htmlFor="f-Expenses-11" className="block text-xs font-medium [color:var(--pf-text)] mb-2">Khoảng thời gian</label>
             <div className="grid grid-cols-2 gap-2">
-              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
+              <input id="f-Expenses-11" type="date" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
               <input type="date" value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
             </div>
           </div>
@@ -386,6 +392,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
 function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAttach, isMember }: {
   exp: RichExpense; onClose: () => void; onDelete: () => void; onApprove: () => void; onReject: () => void; onEdit: () => void; onAttach: () => void; isMember?: boolean
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   const cfg = statusCfg[exp.status]
   const isMini = (exp.fundSource ?? 'COMMON') === 'MINI'
   const miniType = (exp as any).miniExpenseType as MiniExpenseType | undefined
@@ -419,7 +427,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
     <Portal>
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="w-full max-w-lg [background:var(--pf-surface)] flex flex-col shadow-2xl">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Chi tiết khoản chi" tabIndex={-1} className="w-full max-w-lg [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--pf-border)]">
           <button onClick={onClose} className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors">
             <ArrowLeft size={15} />Chi tiết khoản chi
@@ -533,7 +541,7 @@ export function Expenses() {
         status: e.status ?? 'pending',
         createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
       })))
-    }).catch(() => {})
+    }).catch(() => toast.error('Không tải được danh sách chi phí. Vui lòng tải lại trang.'))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId])
 
@@ -566,11 +574,13 @@ export function Expenses() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [showCatMgr, setShowCatMgr] = useState(false)
+  const catRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(showCatMgr, catRef, () => setShowCatMgr(false))
   const [newCatName, setNewCatName] = useState('')
   const [newCatIcon, setNewCatIcon] = useState('')
 
   useEffect(() => {
-    api.get('/categories').then(r => setCategories(r.data?.data ?? [])).catch(() => {})
+    api.get('/categories').then(r => setCategories(r.data?.data ?? [])).catch(() => toast.error('Không tải được danh mục chi phí.'))
   }, [clubId])
 
   const addCategory = async () => {
@@ -612,7 +622,7 @@ export function Expenses() {
   const handleBulkDelete = async () => {
     const ids = [...bulk.selectedIds]
     if (ids.length === 0) return
-    if (!confirm(`Xóa ${ids.length} khoản chi đã chọn? Hành động này không thể hoàn tác.`)) return
+    if (!(await confirmDialog({ message: `Xóa ${ids.length} khoản chi đã chọn? Hành động này không thể hoàn tác.` }))) return
     setBulkDeleting(true)
     try {
       const results = await Promise.allSettled(ids.map((id) => api.delete(`/expenses/${id}`)))
@@ -1181,7 +1191,7 @@ export function Expenses() {
       {showCatMgr && (
         <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4">
+          <div ref={catRef} role="dialog" aria-modal="true" aria-label="Danh mục chi phí" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4 outline-none">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold [color:var(--pf-text)]">Danh mục chi phí</h3>
               <button onClick={() => setShowCatMgr(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:[background:var(--pf-color-muted-soft)]"><X size={16} /></button>

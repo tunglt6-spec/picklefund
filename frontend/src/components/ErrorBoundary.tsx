@@ -24,7 +24,7 @@ function laLoiTaiChunk(err: unknown): boolean {
 }
 
 /**
- * Tự tải lại 1 lần — dùng chung khoá + cửa sổ throttle 65s với helper lz trong App.tsx.
+ * Tự tải lại 1 lần — dùng chung khóa + cửa sổ throttle 65s với helper lz trong App.tsx.
  * 65s PHẢI DÀI HƠN chu kỳ "chunk treo" (timeout 20s + thời gian load) — nếu ngắn hơn,
  * mạng treo lặp sẽ thành vòng reload vô hạn (audit FE-H1).
  */
@@ -65,7 +65,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidUpdate(prev: Props) {
-    // Người dùng chuyển route → xoá trạng thái lỗi để thử render màn mới.
+    // Người dùng chuyển route → xóa trạng thái lỗi để thử render màn mới.
     if (this.state.coLoi && prev.resetKey !== this.props.resetKey) {
       this.setState({ coLoi: false, laChunk: false })
     }

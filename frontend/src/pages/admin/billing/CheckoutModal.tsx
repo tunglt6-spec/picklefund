@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { X, ShieldCheck, Loader2, CheckCircle2, Sparkles, Tag, ChevronDown } from 'lucide-react'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
@@ -18,8 +19,8 @@ const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`
 
 /**
  * Checkout tự-thanh-toán. Backend TÍNH GIÁ + GIẢM GIÁ (không gửi số tiền/giảm từ đây). Cổng thật
- * (MoMo) → redirect payUrl; SANDBOX (MOCK, chưa có khoá) → bước giả lập gọi endpoint simulate.
- * Phase 2: mã ưu đãi + thông tin xuất hoá đơn (tùy chọn).
+ * (MoMo) → redirect payUrl; SANDBOX (MOCK, chưa có khóa) → bước giả lập gọi endpoint simulate.
+ * Phase 2: mã ưu đãi + thông tin xuất hóa đơn (tùy chọn).
  */
 export function CheckoutModal({
   plan,
@@ -30,6 +31,8 @@ export function CheckoutModal({
   onClose: () => void
   onActivated: () => void
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   const [cycle, setCycle] = useState<Cycle>('MONTHLY')
   const [agree, setAgree] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -41,7 +44,7 @@ export function CheckoutModal({
   const [promo, setPromo] = useState<{ code: string; label: string; discount: number } | null>(null)
   const [promoChecking, setPromoChecking] = useState(false)
 
-  // Thông tin xuất hoá đơn (tùy chọn)
+  // Thông tin xuất hóa đơn (tùy chọn)
   const [showInvoice, setShowInvoice] = useState(false)
   const [buyerName, setBuyerName] = useState('')
   const [taxCode, setTaxCode] = useState('')
@@ -134,7 +137,7 @@ export function CheckoutModal({
     <Portal>
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={loading ? undefined : onClose} />
-      <div className="relative w-full sm:max-w-md [background:var(--pf-surface)] rounded-t-2xl sm:rounded-2xl border border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)] max-h-[92vh] overflow-y-auto">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label={`Nâng cấp gói ${plan.name}`} tabIndex={-1} className="outline-none relative w-full sm:max-w-md [background:var(--pf-surface)] rounded-t-2xl sm:rounded-2xl border border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)] max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 [background:var(--pf-surface)] px-5 py-4 border-b border-[color:var(--pf-border)] flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="[color:var(--pf-primary-text)]" />
@@ -179,10 +182,10 @@ export function CheckoutModal({
                 </button>
               </div>
 
-              {/* Thông tin xuất hoá đơn (tùy chọn) */}
+              {/* Thông tin xuất hóa đơn (tùy chọn) */}
               <div className="rounded-xl border border-[color:var(--pf-border)]">
                 <button onClick={() => setShowInvoice((v) => !v)} className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium [color:var(--pf-text)]">
-                  Thông tin xuất hoá đơn (tùy chọn)
+                  Thông tin xuất hóa đơn (tùy chọn)
                   <ChevronDown size={16} className={`[color:var(--pf-color-muted)] transition-transform ${showInvoice ? 'rotate-180' : ''}`} />
                 </button>
                 {showInvoice && (
@@ -247,7 +250,7 @@ export function CheckoutModal({
               </div>
               <div>
                 <p className="text-lg font-bold [color:var(--pf-text)]">Đã kích hoạt {plan.name}!</p>
-                <p className="text-sm [color:var(--pf-color-muted)] mt-1">Gói đã kích hoạt và hoá đơn đã lập. Tải biên nhận ở mục Lịch sử thanh toán.</p>
+                <p className="text-sm [color:var(--pf-color-muted)] mt-1">Gói đã kích hoạt và hóa đơn đã lập. Tải biên nhận ở mục Lịch sử thanh toán.</p>
               </div>
               <button onClick={() => { onActivated(); onClose() }}
                 className="w-full h-11 rounded-xl [background:var(--pf-primary)] text-white font-semibold">

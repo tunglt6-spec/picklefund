@@ -26,7 +26,7 @@ export function ExportActions({
   onImage?: () => void | Promise<unknown>
   disabled?: boolean
 }) {
-  // Handler trả Promise → khoá cả cụm nút tới khi xong (font/render mất vài giây, tránh bấm đúp
+  // Handler trả Promise → khóa cả cụm nút tới khi xong (font/render mất vài giây, tránh bấm đúp
   // mở 2 hộp thoại lưu). Handler đồng bộ → không ảnh hưởng.
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)

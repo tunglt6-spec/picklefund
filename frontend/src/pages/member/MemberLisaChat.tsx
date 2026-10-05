@@ -97,7 +97,7 @@ export function MemberLisaChat() {
 
   useEffect(() => { initChat() }, [initChat])
 
-  // Khoá cuộn nền khi mở chat toàn màn (mobile portal).
+  // Khóa cuộn nền khi mở chat toàn màn (mobile portal).
   useEffect(() => {
     if (!isMobile) return
     const prev = document.body.style.overflow

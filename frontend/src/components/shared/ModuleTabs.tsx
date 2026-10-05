@@ -64,12 +64,23 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar py-2.5">
+          <div role="tablist" aria-label={title ?? 'Mục con'} className="flex gap-2 overflow-x-auto no-scrollbar py-2.5"
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+              const i = tabs.findIndex((t) => t.key === active)
+              const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]
+              select(n.key)
+              requestAnimationFrame(() => document.getElementById(`mtab-${n.key}`)?.focus())
+            }}>
             {tabs.map((t) => {
               const isActive = t.key === active
               return (
                 <button
                   key={t.key}
+                  id={`mtab-${t.key}`}
+                  role="tab"
+                  aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1}
                   onClick={() => select(t.key)}
                   className={cn(
                     'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 [@media(pointer:coarse)]:py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
@@ -99,7 +110,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
 
       {/* Nội dung tab = page ĐÃ CÓ (tự bọc PageShell/header của nó) */}
       <EmbeddedContext.Provider value={embedded}>
-        <div className="flex-1">{current?.element}</div>
+        <div className="flex-1" role="tabpanel" aria-labelledby={current ? `mtab-${current.key}` : undefined}>{current?.element}</div>
       </EmbeddedContext.Provider>
     </div>
   )

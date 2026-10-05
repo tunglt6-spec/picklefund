@@ -61,6 +61,7 @@ export function Contributions() {
   const [editTarget, setEditTarget] = useState<FundContribution | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [formPeriodId, setFormPeriodId] = useState<string>(activePeriod?.id ?? '')
+  const [periodError, setPeriodError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [bulkAll, setBulkAll] = useState(false)
   const [form, setForm] = useState<typeof BLANK_COMMON>({ ...BLANK_COMMON, amount: '' })
@@ -272,6 +273,7 @@ export function Contributions() {
 
     if (isCommon) {
       if (!formPeriodId) {
+        setPeriodError('Vui lòng chọn kỳ quỹ')
         toast.error('Cần có kỳ quỹ đang hoạt động để ghi nhận Quỹ Chính')
         setIsSaving(false)
         return
@@ -568,63 +570,64 @@ export function Contributions() {
                   </label>
                 )}
                 <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                  <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
+                  <label htmlFor="f-Contributions-1" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <select id="f-Contributions-1" required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                     <option value="">-- Chọn thành viên --</option>
                     {members.filter(m => m.status === 'active' || m.id === editTarget?.memberId).map(m => <option key={m.id} value={m.id}>{m.fullName}{m.status !== 'active' ? ' (tạm nghỉ)' : ''}</option>)}
                   </select>
                 </div>
                 {chungPeriods.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                    <select required value={formPeriodId} onChange={e => setFormPeriodId(e.target.value)} className="input-base">
+                    <label htmlFor="ctb-m-period" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                    <select id="ctb-m-period" required value={formPeriodId} onChange={e => { setFormPeriodId(e.target.value); setPeriodError('') }} aria-invalid={periodError ? true : undefined} aria-describedby={periodError ? 'ctb-m-period-err' : undefined} className="input-base">
                       <option value="">-- Chọn kỳ quỹ --</option>
                       {chungPeriods.map(p => (
                         <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
                       ))}
                     </select>
+                    {periodError && <p id="ctb-m-period-err" role="alert" className="mt-1 text-xs [color:var(--pf-color-danger)]">{periodError}</p>}
                   </div>
                 )}
               </>
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
-                  <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
+                  <label htmlFor="ctb-m-mini" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
+                  <select id="ctb-m-mini" required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                     {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
-                  <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                  <label htmlFor="ctb-m-payer" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
+                  <input id="ctb-m-payer" value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                     placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
                 </div>
               </>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-                <input required type="number" min={1} value={form.amount}
+                <label htmlFor="f-Contributions-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+                <input id="f-Contributions-2" required type="number" min={1} value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
-                <input type="date" value={form.paymentDate}
+                <label htmlFor="f-Contributions-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
+                <input id="f-Contributions-3" type="date" value={form.paymentDate}
                   onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
-              <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
+              <label htmlFor="ctb-m-method" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
+              <select id="ctb-m-method" value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
                 <option value="bank_transfer">Chuyển khoản</option>
                 <option value="cash">Tiền mặt</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
-              <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+              <label htmlFor="ctb-m-notes" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
+              <input id="ctb-m-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 placeholder="Thông tin thêm..." className="input-base" />
             </div>
           </form>
@@ -856,7 +859,7 @@ export function Contributions() {
           {/* Fund source selector */}
           {!editTarget && (
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Nguồn quỹ <span className="text-red-500">*</span></label>
+              <div className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Nguồn quỹ <span className="text-red-500">*</span></div>
               <div className="grid grid-cols-2 gap-2">
                 {(['COMMON', 'MINI'] as FundSource[]).map(fs => (
                   <button
@@ -893,37 +896,38 @@ export function Contributions() {
                 </label>
               )}
               <div className={bulkAll ? 'opacity-50 pointer-events-none' : ''}>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                <select required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
+                <label htmlFor="f-Contributions-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                <select id="f-Contributions-4" required={!bulkAll} disabled={bulkAll} value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} className="input-base">
                   <option value="">-- Chọn thành viên --</option>
                   {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
               </div>
               {chungPeriods.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                  <select required value={formPeriodId} onChange={e => setFormPeriodId(e.target.value)} className="input-base">
+                  <label htmlFor="ctb-d-period" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <select id="ctb-d-period" required value={formPeriodId} onChange={e => { setFormPeriodId(e.target.value); setPeriodError('') }} aria-invalid={periodError ? true : undefined} aria-describedby={periodError ? 'ctb-d-period-err' : undefined} className="input-base">
                     <option value="">-- Chọn kỳ quỹ --</option>
                     {chungPeriods.map(p => (
                       <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ' — Chuẩn bị'}</option>
                     ))}
                   </select>
+                  {periodError && <p id="ctb-d-period-err" role="alert" className="mt-1 text-xs [color:var(--pf-color-danger)]">{periodError}</p>}
                 </div>
               )}
             </>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
-                <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
+                <label htmlFor="ctb-d-mini" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu Quỹ Phụ <span className="text-red-500">*</span></label>
+                <select id="ctb-d-mini" required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })} className="input-base">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
-                <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                <label htmlFor="f-Contributions-5" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
+                <input id="f-Contributions-5" value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                   placeholder="Tên người nộp (nếu không phải thành viên)" className="input-base" />
               </div>
             </>
@@ -931,26 +935,26 @@ export function Contributions() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-              <input required type="number" min={1} value={form.amount}
+              <label htmlFor="f-Contributions-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+              <input id="f-Contributions-6" required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
-              <input type="date" value={form.paymentDate}
+              <label htmlFor="ctb-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
+              <input id="ctb-d-date" type="date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
-            <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
+            <label htmlFor="ctb-d-method" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức thanh toán</label>
+            <select id="ctb-d-method" value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })} className="input-base">
               <option value="bank_transfer">Chuyển khoản</option>
               <option value="cash">Tiền mặt</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
-            <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+            <label htmlFor="ctb-d-notes" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
+            <input id="ctb-d-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder="Thông tin thêm..." className="input-base" />
           </div>
         </form>

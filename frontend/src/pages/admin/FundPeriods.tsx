@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
@@ -268,7 +269,7 @@ export function FundPeriods() {
       api.get('/system-settings').then(res => {
         const d = res.data?.data ?? {}
         if (d.bank_account_number && d.bank_account_name) setBankInfo(d as BankInfo)
-      }).catch(() => {})
+      }).catch(() => {}) // best-effort: thiếu thông tin ngân hàng chỉ ẩn nút QR
     }
   }, [clubId, isMember])
 
@@ -490,7 +491,7 @@ export function FundPeriods() {
   }
 
   const handleDelete = async (p: FundPeriod) => {
-    if (!confirm(`Xóa kỳ quỹ "${p.name}"?`)) return
+    if (!(await confirmDialog({ message: `Xóa kỳ quỹ "${p.name}"?` }))) return
     try {
       await api.delete(`/fund-periods/${p.id}`)
       setPeriods(prev => prev.filter(x => x.id !== p.id))
@@ -512,7 +513,7 @@ export function FundPeriods() {
   const handleBulkDelete = async () => {
     const ids = [...selectedIds]
     if (ids.length === 0) return
-    if (!confirm(`Xóa ${ids.length} kỳ quỹ đã chọn? Hành động này không thể hoàn tác.`)) return
+    if (!(await confirmDialog({ message: `Xóa ${ids.length} kỳ quỹ đã chọn? Hành động này không thể hoàn tác.` }))) return
     setBulkDeleting(true)
     try {
       const results = await Promise.allSettled(ids.map(id => api.delete(`/fund-periods/${id}`)))
@@ -844,8 +845,8 @@ export function FundPeriods() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ áp dụng <span className="text-red-500">*</span></label>
-              <select value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base">
+              <label htmlFor="fp-import-period-m" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ áp dụng <span className="text-red-500">*</span></label>
+              <select id="fp-import-period-m" value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base">
                 <option value="">-- Chọn kỳ quỹ --</option>
                 {commonPeriods.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -1511,9 +1512,9 @@ export function FundPeriods() {
                   </div>
                   <table className="pf-rows w-full text-sm">
                     <thead><tr className="border-b border-red-100 text-xs [color:var(--pf-color-muted)]">
-                      <th className="text-left px-4 py-2">Dòng</th>
-                      <th className="text-left px-4 py-2">Họ và tên</th>
-                      <th className="text-left px-4 py-2">Lỗi</th>
+                      <th scope="col" className="text-left px-4 py-2">Dòng</th>
+                      <th scope="col" className="text-left px-4 py-2">Họ và tên</th>
+                      <th scope="col" className="text-left px-4 py-2">Lỗi</th>
                     </tr></thead>
                     <tbody>
                       {importResult.errors.map((e, i) => (
@@ -1540,10 +1541,10 @@ export function FundPeriods() {
                 </Button>
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">
+                <label htmlFor="f-FundPeriods-1" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">
                   Bước 2 — Chọn kỳ quỹ để nhập <span className="text-red-500">*</span>
                 </label>
-                <select value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base text-sm">
+                <select id="f-FundPeriods-1" value={importPeriodId} onChange={e => setImportPeriodId(e.target.value)} className="input-base text-sm">
                   <option value="">-- Chọn kỳ quỹ --</option>
                   {commonPeriods.map(p => (
                     <option key={p.id} value={p.id}>{p.name} ({p.status === 'active' ? 'Đang mở' : p.status === 'draft' ? 'Chuẩn bị' : 'Đã đóng'})</option>
@@ -1551,7 +1552,7 @@ export function FundPeriods() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Bước 3 — Tải lên file Excel</label>
+                <div className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Bước 3 — Tải lên file Excel</div>
                 <label
                   className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[color:var(--pf-border)] rounded-lg cursor-pointer hover:[border-color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]/30 transition-colors"
                   onDragOver={e => e.preventDefault()}
@@ -1582,12 +1583,12 @@ export function FundPeriods() {
                     <table className="pf-rows w-full text-sm">
                       <thead className="sticky top-0 [background:var(--pf-surface)]">
                         <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)]">
-                          <th className="text-left px-4 py-2">#</th>
-                          <th className="text-left px-4 py-2">Họ và tên</th>
-                          <th className="text-right px-4 py-2">Số tiền</th>
-                          <th className="text-left px-4 py-2">Ngày đóng</th>
-                          <th className="text-left px-4 py-2">Ghi chú</th>
-                          <th className="text-center px-4 py-2">Tìm thấy?</th>
+                          <th scope="col" className="text-left px-4 py-2">#</th>
+                          <th scope="col" className="text-left px-4 py-2">Họ và tên</th>
+                          <th scope="col" className="text-right px-4 py-2">Số tiền</th>
+                          <th scope="col" className="text-left px-4 py-2">Ngày đóng</th>
+                          <th scope="col" className="text-left px-4 py-2">Ghi chú</th>
+                          <th scope="col" className="text-center px-4 py-2">Tìm thấy?</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1705,12 +1706,12 @@ function HistoryTab({ contributions, periods, members }: {
           <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Ngày</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Thành viên</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Loại quỹ</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
-                <th className="px-4 py-2.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Ngày</th>
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Thành viên</th>
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ</th>
+                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Loại quỹ</th>
+                <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
+                <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
@@ -2042,33 +2043,41 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
     >
       <form id={formId} onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên kỳ <span className="text-red-500">*</span></label>
-          <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+          <label htmlFor="f-FundPeriods-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên kỳ <span className="text-red-500">*</span></label>
+          <input id="f-FundPeriods-2" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
             placeholder="VD: Quý 3/2026" className="input-base" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
-            <input required type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-base" />
+            <label htmlFor="f-FundPeriods-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
+            <input id="f-FundPeriods-3" required type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-base" />
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
-            <input required type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="input-base" />
+            <label htmlFor="f-FundPeriods-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
+            {(() => {
+              const endBeforeStart = !!(form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
+              return (
+                <>
+                  <input id="f-FundPeriods-4" required type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} aria-invalid={endBeforeStart ? true : undefined} aria-describedby={endBeforeStart ? 'f-FundPeriods-4-err' : undefined} className="input-base" />
+                  {endBeforeStart && <p id="f-FundPeriods-4-err" role="alert" className="mt-1 text-xs [color:var(--pf-color-danger)]">Ngày kết thúc phải sau ngày bắt đầu</p>}
+                </>
+              )
+            })()}
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hạn đóng quỹ</label>
-            <input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
+            <label htmlFor="f-FundPeriods-5" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hạn đóng quỹ</label>
+            <input id="f-FundPeriods-5" type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
             <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ)</label>
-            <input type="number" min={0} value={form.contributionAmount}
+            <label htmlFor="f-FundPeriods-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ)</label>
+            <input id="f-FundPeriods-6" type="number" min={0} value={form.contributionAmount}
               onChange={e => setForm({ ...form, contributionAmount: e.target.value === '' ? 0 : Number(e.target.value) })} className="input-base" />
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Tùy chọn — để trống hoặc 0 nếu là khoản thu mở.</p>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến</label>
-            <input type="number" value={form.totalSessions}
+            <label htmlFor="f-FundPeriods-7" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến</label>
+            <input id="f-FundPeriods-7" type="number" value={form.totalSessions}
               onChange={e => setForm({ ...form, totalSessions: Number(e.target.value) })} className="input-base" />
           </div>
         </div>
@@ -2130,8 +2139,8 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
         )}
 
         <div>
-          <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
-          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+          <label htmlFor="f-FundPeriods-8" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
+          <textarea id="f-FundPeriods-8" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
             rows={2} className="input-base resize-none" placeholder="Thông tin thêm về kỳ quỹ..." />
         </div>
       </form>

@@ -370,7 +370,7 @@ export function AiDigitalOffice() {
 
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
   // Lỗi tải dữ liệu vận hành → VẪN giữ Office View (banner không cần API) + báo lỗi gọn + thử
-  // lại, thay vì xoá trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
+  // lại, thay vì xóa trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
   if (error) return (
     <PageShell>
       <PageHeader title="AIDO — AI Digital Office" subtitle="Văn phòng AI của câu lạc bộ" />
@@ -746,7 +746,7 @@ function LiveDot({ color, size = 10, active = true, ring }: { color: string; siz
 /** Khung panel dùng chung: tiêu đề + nội dung, đồng bộ với style card AIDO. */
 function Panel({ icon, title, sub, children }: { icon: React.ReactNode; title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <div className="pf-glass rounded-[20px] p-5">
+    <div className="pf-glass rounded-[16px] p-5">
       <SectionTitle icon={icon} title={title} sub={sub} />
       <div className="mt-3">{children}</div>
     </div>

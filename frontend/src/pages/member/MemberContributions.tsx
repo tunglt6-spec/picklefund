@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
-import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, runExport, ActionButton, type Column } from '../../components/shared'
+import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, ErrorState, runExport, ActionButton, type Column } from '../../components/shared'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import { useAuthStore } from '../../store/authStore'
 import { useMemberPortal } from '../../hooks/useMemberPortal'
@@ -67,19 +67,26 @@ export function MemberContributions() {
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
 
+  const [loadError, setLoadError] = useState(false)
+
   const loadPayments = () => {
     if (isLocal) return
     api.get('/member/me/payments').then(res => {
       setMyPayments(res.data?.data ?? [])
-    }).catch(() => {})
+    }).catch(() => setLoadError(true))
+  }
+
+  const loadAll = () => {
+    if (isLocal) return
+    setLoadError(false)
+    api.get('/personal-receipts/mine').then(res => {
+      setReceipts(res.data?.data ?? [])
+    }).catch(() => setLoadError(true))
+    loadPayments()
   }
 
   useEffect(() => {
-    if (isLocal) return
-    api.get('/personal-receipts/mine').then(res => {
-      setReceipts(res.data?.data ?? [])
-    }).catch(() => {})
-    loadPayments()
+    loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, isLocal])
 
@@ -96,7 +103,9 @@ export function MemberContributions() {
   const isMobile = useIsMobile()
 
   // Mục "Khoản đã báo nộp" — đóng vòng lặp báo→duyệt→báo lại (dùng chung mobile + desktop).
-  const reportedSection = myPayments.length > 0 && (
+  const reportedSection = loadError ? (
+    <ErrorState description="Không tải được khoản báo nộp / sao kê. Vui lòng thử lại." onRetry={loadAll} className="py-8" />
+  ) : myPayments.length > 0 && (
     <div className="pf-glass rounded-2xl shadow-[var(--pf-shadow)] p-4">
       <div className="mb-2 flex items-center gap-2">
         <Send size={15} className="[color:var(--pf-primary-text)]" />
@@ -129,7 +138,7 @@ export function MemberContributions() {
   )
 
   const memberSlug = memberName.replace(/\s/g, '_')
-  // Chống bấm đúp (mobile dùng nút riêng, desktop dùng ExportActions tự khoá theo Promise).
+  // Chống bấm đúp (mobile dùng nút riêng, desktop dùng ExportActions tự khóa theo Promise).
   const [exporting, setExporting] = useState(false)
   const guarded = async (task: () => Promise<unknown> | unknown, ok: string) => {
     if (exporting || filtered.length === 0) return
@@ -386,7 +395,7 @@ export function MemberContributions() {
         </div>
 
         {/* CỘT PHẢI (1/3) — Khoản bạn đã báo nộp */}
-        {myPayments.length > 0 ? reportedSection : (
+        {myPayments.length > 0 || loadError ? reportedSection : (
           <ChartCard title="Khoản bạn đã báo nộp">
             <p className="py-6 text-center text-sm [color:var(--pf-color-muted)]">Chưa báo nộp khoản nào. Bấm “Báo đã nộp quỹ” sau khi bạn đã chuyển khoản.</p>
           </ChartCard>

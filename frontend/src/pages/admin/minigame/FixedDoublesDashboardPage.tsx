@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Edit2, Calendar, Trophy,
@@ -69,6 +70,8 @@ interface ScoreModalProps {
 function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, onSave, onClose }: ScoreModalProps) {
   const [s1, setS1] = useState(match.team1Score ?? 0)
   const [s2, setS2] = useState(match.team2Score ?? 0)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   const adj = (set: React.Dispatch<React.SetStateAction<number>>, d: number) =>
     set(v => Math.max(0, v + d))
   const save = () => {
@@ -82,7 +85,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
   return (
     <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)' }}>
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Nhập kết quả" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden outline-none">
         <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: T.border }}>
           <p className="font-bold [color:var(--pf-text)]">Nhập Kết Quả</p>
           <button onClick={onClose} className="p-1 rounded-lg hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
@@ -425,7 +428,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border}` }}>
               {['#', 'Đội', 'TĐ', 'H.Số', 'Điểm'].map((h, i) => (
-                <th key={i}
+                <th scope="col" key={i}
                   className={cn('py-2 text-xs font-bold uppercase tracking-wider', i === 1 ? 'text-left pl-3' : 'text-center px-2')}
                   style={{ color: T.txt2 }}>
                   {h}
@@ -557,6 +560,12 @@ export function FixedDoublesDashboardPage() {
   const [showScheduleChoice, setShowScheduleChoice] = useState(false)
   // Đổi chỗ người chơi: chọn tối đa 2 slot (teamId+slot) rồi hoán đổi.
   const [showSwap, setShowSwap] = useState(false)
+  const choiceRef = useRef<HTMLDivElement>(null)
+  const swapRef = useRef<HTMLDivElement>(null)
+  const deleteRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(showScheduleChoice, choiceRef, () => setShowScheduleChoice(false))
+  useDialogA11y(showSwap, swapRef, () => { setShowSwap(false); setSwapSel([]) })
+  useDialogA11y(!!deleteConfirm, deleteRef, () => setDeleteConfirm(null))
   const [swapSel, setSwapSel] = useState<{ teamId: string; slot: 1 | 2; label: string }[]>([])
 
   const hydrateFromApi = useCallback(async () => {
@@ -596,8 +605,8 @@ export function FixedDoublesDashboardPage() {
 
   const handleClearSchedule = useCallback(async () => {
     if (!id) return
-    // Xoá lịch = phá lịch thi đấu + kết quả + BXH hiện tại → confirm rõ ràng (Rule 3).
-    if (!window.confirm('Việc xoá lịch sẽ xoá lịch thi đấu, kết quả và bảng xếp hạng hiện tại. Tiếp tục?')) return
+    // Xóa lịch = phá lịch thi đấu + kết quả + BXH hiện tại → confirm rõ ràng (Rule 3).
+    if (!window.confirm('Việc xóa lịch sẽ xóa lịch thi đấu, kết quả và bảng xếp hạng hiện tại. Tiếp tục?')) return
     try {
       await api.delete(`/minigames/${id}/schedule`)
       setTeamMatchesFromApi(id, [])
@@ -1025,7 +1034,7 @@ export function FixedDoublesDashboardPage() {
       {showScheduleChoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div ref={choiceRef} role="dialog" aria-modal="true" aria-label="Tạo lịch thi đấu" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6 outline-none">
             <div className="flex items-center gap-2 mb-1">
               <Calendar size={18} style={{ color: T.brand }} />
               <p className="font-bold [color:var(--pf-text)]">Tạo lịch thi đấu</p>
@@ -1058,7 +1067,7 @@ export function FixedDoublesDashboardPage() {
       {showSwap && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto">
+          <div ref={swapRef} role="dialog" aria-modal="true" aria-label="Đổi chỗ người chơi" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto outline-none">
             <div className="flex items-center gap-2 mb-1">
               <Users size={18} style={{ color: T.brand }} />
               <p className="font-bold [color:var(--pf-text)]">Đổi chỗ người chơi</p>
@@ -1114,7 +1123,7 @@ export function FixedDoublesDashboardPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-xs p-6 text-center">
+          <div ref={deleteRef} role="dialog" aria-modal="true" aria-label="Xóa kết quả trận" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-xs p-6 text-center outline-none">
             <div className="w-12 h-12 rounded-full [background:var(--pf-color-danger-soft)] flex items-center justify-center mx-auto mb-3">
               <Trash2 size={20} className="[color:var(--pf-color-danger)]" />
             </div>

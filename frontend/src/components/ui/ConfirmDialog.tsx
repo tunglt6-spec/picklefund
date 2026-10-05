@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AlertTriangle, X } from 'lucide-react'
 import { Button } from './Button'
 import { Portal } from './Portal'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -25,6 +26,7 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   // onCancel qua ref → KHÔNG đưa vào deps (arrow inline đổi identity mỗi render sẽ khiến
   // effect chạy lại và cướp focus mỗi lần cha re-render). deps = [open]: focus 1 lần khi mở.
   const onCancelRef = useRef(onCancel)
@@ -37,6 +39,8 @@ export function ConfirmDialog({
     return () => { document.removeEventListener('keydown', onKey); clearTimeout(t) }
   }, [open])
 
+  useDialogA11y(open, panelRef)
+
   if (!open) return null
 
   // Token-only (dark-safe): danger → đỏ token, warning → cam token.
@@ -47,7 +51,7 @@ export function ConfirmDialog({
     <Portal>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onCancel} />
-      <div role="dialog" aria-modal="true" aria-label={title}
+      <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title}
         className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl overflow-hidden">
         {/* Close */}
         <button onClick={onCancel} aria-label="Đóng"

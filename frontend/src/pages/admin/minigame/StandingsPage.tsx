@@ -300,17 +300,17 @@ export function StandingsPage() {
           <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thành Viên</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trận</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thắng</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hòa</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thua</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm+</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm-</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hiệu Số</th>
-                <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase font-bold">Điểm</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thành Viên</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Bảng</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Trận</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thắng</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hòa</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Thua</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm+</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Điểm-</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Hiệu Số</th>
+                <th scope="col" className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase font-bold">Điểm</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

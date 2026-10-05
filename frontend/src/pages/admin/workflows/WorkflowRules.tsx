@@ -255,7 +255,7 @@ export function WorkflowRules() {
                     </button>
                     <button onClick={() => setDup(null)}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]">
-                      Huỷ
+                      Hủy
                     </button>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export function WorkflowRules() {
                 )}
                 {r.matchedRules === 0 && (
                   <p className="mt-2 text-xs text-amber-600">
-                    Không rule nào khớp {isLive ? '(số liệu CLB chưa thoả điều kiện, hoặc chưa có rule bật cho trigger này)' : '(ngữ cảnh rỗng — thử "Dữ liệu thật")'}.
+                    Không rule nào khớp {isLive ? '(số liệu CLB chưa thỏa điều kiện, hoặc chưa có rule bật cho trigger này)' : '(ngữ cảnh rỗng — thử "Dữ liệu thật")'}.
                   </p>
                 )}
                 {r.createdActions > 0 && (
@@ -394,11 +394,11 @@ export function WorkflowRules() {
                       <History size={13} /> Lịch sử
                     </button>
                     <button
-                      onClick={() => void run(() => deleteWorkflowRule(r.id), 'Đã xoá rule')}
+                      onClick={() => void run(() => deleteWorkflowRule(r.id), 'Đã xóa rule')}
                       disabled={busy}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                     >
-                      <Trash2 size={13} /> Xoá
+                      <Trash2 size={13} /> Xóa
                     </button>
                   </div>
                 </div>

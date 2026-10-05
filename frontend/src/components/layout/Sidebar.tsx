@@ -26,7 +26,7 @@ interface NavItem {
 
 // Super Admin: AI toàn hệ thống đã nằm trong Trung tâm điều hành (/super/dashboard — khối AIDO
 // AI Operations + Maika). Bỏ mục "AIDO" (màn /aido là AI Office THEO CLB — rỗng với super admin
-// vì clubId=null). Không xoá tính năng /aido của Club Admin.
+// vì clubId=null). Không xóa tính năng /aido của Club Admin.
 const superAdminNav: NavItem[] = [
   { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard', desc: 'Bảng điều khiển hệ thống' },
   { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs',     desc: 'Danh sách & chi tiết CLB' },

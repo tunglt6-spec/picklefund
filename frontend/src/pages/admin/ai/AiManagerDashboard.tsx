@@ -31,7 +31,7 @@ function buildSections(isSuper: boolean): OpsSection[] {
   return [
     // ── Điều phối & Duyệt ──
     { key: 'hermes', label: 'Hermes (AI COO)', desc: 'Trung tâm điều phối — bạn đang ở đây', icon: <Bot size={18} />, to: null, status: 'here', group: 'Điều phối & Duyệt' },
-    { key: 'workflow', label: 'Workflow Studio', desc: 'Tạo & quản lý luật tự động hoá', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active', group: 'Điều phối & Duyệt' },
+    { key: 'workflow', label: 'Workflow Studio', desc: 'Tạo & quản lý luật tự động hóa', icon: <Workflow size={18} />, to: '/admin/workflows', status: 'active', group: 'Điều phối & Duyệt' },
     { key: 'approval', label: 'Approval Center', desc: 'Duyệt/từ chối hành động AI đề xuất', icon: <ClipboardCheck size={18} />, to: '/admin/ai-approvals', status: 'active', group: 'Điều phối & Duyệt' },
     { key: 'dispatch', label: 'Nhật ký AI', desc: 'Mít Đặc thực thi · Maika phân tích · Lisa hỏi–đáp', icon: <Send size={18} />, to: '/admin/ai-log', status: 'active', group: 'Điều phối & Duyệt' },
     // ── Thông báo & Lịch ──
@@ -129,7 +129,7 @@ const fmtDur = (s?: number): string =>
 const fmtTime = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—'
 
-// ── Card khu vực vận hành (dashboard hoá): icon + tên + mô tả + số liệu runtime THẬT ──
+// ── Card khu vực vận hành (dashboard hóa): icon + tên + mô tả + số liệu runtime THẬT ──
 interface CardMetric { label: string; value: string | number }
 function SectionCard({
   s, onGo, metrics, badge, palette,

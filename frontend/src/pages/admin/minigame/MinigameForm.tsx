@@ -281,8 +281,10 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
     navigate('/minigames')
   }
 
-  const Label = ({ children }: { children: React.ReactNode }) => (
-    <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">{children}</label>
+  const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) => (
+    htmlFor
+      ? <label htmlFor={htmlFor} className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">{children}</label>
+      : <div className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5 block">{children}</div>
   )
 
   return (
@@ -327,17 +329,17 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   </div>
                 </div>
               )}
-              <div><Label>Tên Giải Đấu *</Label>
-                <input type="text" value={form.name} onChange={e => set({ name: e.target.value })} placeholder="VD: Giải Pickleball Q2/2026"
+              <div><Label htmlFor="mgf-name">Tên Giải Đấu *</Label>
+                <input id="mgf-name" type="text" value={form.name} onChange={e => set({ name: e.target.value })} placeholder="VD: Giải Pickleball Q2/2026"
                   className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
-              <div><Label>Mô tả</Label>
-                <textarea rows={2} value={form.description} onChange={e => set({ description: e.target.value })} placeholder="Mô tả giải đấu..."
+              <div><Label htmlFor="mgf-desc">Mô tả</Label>
+                <textarea id="mgf-desc" rows={2} value={form.description} onChange={e => set({ description: e.target.value })} placeholder="Mô tả giải đấu..."
                   className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Ngày bắt đầu</Label><input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
-                <div><Label>Ngày kết thúc</Label><input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <div><Label htmlFor="mgf-start">Ngày bắt đầu</Label><input id="mgf-start" type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <div><Label htmlFor="mgf-end">Ngày kết thúc</Label><input id="mgf-end" type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               </div>
-              <div><Label>Ghi chú</Label><textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
+              <div><Label htmlFor="mgf-notes">Ghi chú</Label><textarea id="mgf-notes" rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
             </div>
           )}
 
@@ -425,12 +427,12 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                     </div>
                   )}
                   {form.formatType === 'GROUP_STAGE' ? (
-                    <div><Label>Số {isPairComp ? 'cặp' : 'người'} mỗi bảng ({form.groupSize})</Label>
-                      <input type="range" min={2} max={16} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })} className="w-full accent-[var(--pf-primary)]" />
+                    <div><Label htmlFor="mgf-groupsize">Số {isPairComp ? 'cặp' : 'người'} mỗi bảng ({form.groupSize})</Label>
+                      <input id="mgf-groupsize" type="range" min={2} max={16} value={form.groupSize} onChange={e => set({ groupSize: +e.target.value })} className="w-full accent-[var(--pf-primary)]" />
                       <div className="mt-1 flex justify-between text-xs [color:var(--pf-color-muted)]"><span>2</span><span>16</span></div></div>
                   ) : (
-                    <div><Label>Chế độ bốc thăm mặc định</Label>
-                      <select value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]">
+                    <div><Label htmlFor="mgf-drawmode">Chế độ bốc thăm mặc định</Label>
+                      <select id="mgf-drawmode" value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]">
                         <option value="RANDOM">Ngẫu Nhiên (Random)</option><option value="FAIR_ROTATION">Công Bằng Theo Lượt</option><option value="BALANCED_SKILL">Cân Bằng Trình Độ</option>
                       </select></div>
                   )}
@@ -442,8 +444,8 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     {[{ label: 'Điểm thắng', key: 'winPoints', disabled: false }, { label: 'Điểm hòa', key: 'drawPoints', disabled: !form.allowDraw }, { label: 'Điểm thua', key: 'lossPoints', disabled: true }].map(({ label, key, disabled }) => (
-                      <div key={key}><Label>{label}</Label>
-                        <input type="number" min={0} value={form[key as keyof FormState] as number} onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)} disabled={disabled} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:[background:var(--pf-surface-muted)] disabled:[color:var(--pf-color-muted)]" /></div>
+                      <div key={key}><Label htmlFor={`mgf-${key}`}>{label}</Label>
+                        <input id={`mgf-${key}`} type="number" min={0} value={form[key as keyof FormState] as number} onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)} disabled={disabled} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:[background:var(--pf-surface-muted)] disabled:[color:var(--pf-color-muted)]" /></div>
                     ))}
                   </div>
                 </>
@@ -506,8 +508,8 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {/* 6 · Lịch & địa điểm */}
           {step === 'schedule' && (
             <div className="space-y-4">
-              <div><Label>Thời gian dự kiến bắt đầu</Label>
-                <input type="datetime-local" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+              <div><Label htmlFor="mgf-scheduled">Thời gian dự kiến bắt đầu</Label>
+                <input id="mgf-scheduled" type="datetime-local" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               <div className="rounded-lg border border-[color:var(--pf-color-info-soft)] [background:var(--pf-color-info-soft)] px-3 py-2.5 text-xs [color:var(--pf-color-info)] flex gap-2">
                 <Info size={15} className="shrink-0 mt-0.5" />
                 <span>Lịch thi đấu chi tiết ({preset.resourceTerm}, vòng, cặp/đội) được tạo & điều chỉnh ở tab <b>Lịch đấu</b> sau khi tạo giải — nơi bốc thăm/sinh vòng đấu và khóa lịch.</span>

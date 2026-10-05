@@ -352,7 +352,7 @@ export function MemberDashboard() {
                     onClick={() => {
                       navigator
                         .share({ title: 'Phiếu thu quỹ CLB', text: `${memberName} - Đã đóng: ${formatVND(amountPaid)}` })
-                        .catch(() => {})
+                        .catch(() => {}) // cố ý: người dùng hủy hộp thoại chia sẻ (AbortError) không phải lỗi
                     }}
                   >
                     Chia sẻ

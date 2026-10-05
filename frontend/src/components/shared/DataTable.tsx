@@ -44,7 +44,7 @@ export function DataTable<T>({
         <thead>
           <tr className="border-b border-[color:var(--pf-border)]">
             {columns.map((c) => (
-              <th
+              <th scope="col"
                 key={c.key}
                 className={cn(
                   'px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap [color:var(--pf-color-muted)]',

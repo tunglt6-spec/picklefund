@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { confirmDialog, promptDialog } from '../../components/ui/ConfirmHost'
 import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
@@ -68,12 +69,12 @@ function toApi(s: Settings): Record<string, string> {
 
 // Component định nghĩa ở MODULE SCOPE (không trong render) — nếu không sẽ bị tạo lại mỗi
 // render → input remount → mất focus khi gõ. (Sửa cả bug pre-existing của trang này.)
-const S = ({ id: _id, label, type = 'text', value, onChange, placeholder = '' }: {
+const S = ({ id, label, type = 'text', value, onChange, placeholder = '' }: {
   id: string; label: string; type?: string; value: string; onChange: (v: string) => void; placeholder?: string
 }) => (
   <div>
-    <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)}
+    <label htmlFor={`ss-${id}`} className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
+    <input id={`ss-${id}`} type={type} value={value} onChange={e => onChange(e.target.value)}
       placeholder={placeholder} className="input-base" />
   </div>
 )
@@ -108,17 +109,17 @@ export function SuperSettings() {
   const [settings, setSettings] = useState<Settings>(DEFAULTS)
   const [tgBusy, setTgBusy] = useState(false)
 
-  /** Tách 1 chat id dùng chung khỏi mọi CLB + xoá pref trùng (chấm dứt việc nhiều CLB chung 1 chat). */
+  /** Tách 1 chat id dùng chung khỏi mọi CLB + xóa pref trùng (chấm dứt việc nhiều CLB chung 1 chat). */
   const detachSharedChat = async () => {
-    const chatId = window.prompt('Nhập Chat ID cần tách khỏi tất cả CLB (vd 455750167):')?.trim()
+    const chatId = (await promptDialog('Tách chat khỏi mọi CLB', 'Nhập Chat ID cần tách khỏi tất cả CLB (vd 455750167)', '455750167'))?.trim()
     if (!chatId) return
-    if (!window.confirm(`Tách chat ${chatId} khỏi mọi CLB? Các CLB đó sẽ ngừng nhận Telegram cho tới khi liên kết chat riêng.`)) return
+    if (!(await confirmDialog({ title: 'Tách chat khỏi mọi CLB?', message: `Tách chat ${chatId} khỏi mọi CLB? Các CLB đó sẽ ngừng nhận Telegram cho tới khi liên kết chat riêng.`, confirmLabel: 'Tách', variant: 'warning' }))) return
     const t = toast.loading('Đang tách chat…')
     try {
       const res = await api.post('/telegram/detach', { chatId })
       const d = res.data?.data ?? res.data
       toast.dismiss(t)
-      toast.success(`Đã tách: gỡ ${d?.unlinkedClubs ?? 0} liên kết CLB, xoá ${d?.clearedPrefs ?? 0} pref.`)
+      toast.success(`Đã tách: gỡ ${d?.unlinkedClubs ?? 0} liên kết CLB, xóa ${d?.clearedPrefs ?? 0} pref.`)
     } catch (e: any) {
       toast.dismiss(t); toast.error(e?.response?.data?.message ?? 'Tách chat thất bại')
     }
@@ -129,7 +130,7 @@ export function SuperSettings() {
     setTgBusy(true)
     const t = toast.loading('Đang gửi thử Telegram…')
     try {
-      // Lưu Chat ID trước (backend đọc từ cài đặt đã lưu). upsert theo key — không xoá key khác.
+      // Lưu Chat ID trước (backend đọc từ cài đặt đã lưu). upsert theo key — không xóa key khác.
       await api.put('/system-settings', { superTelegramChatId: settings.superTelegramChatId })
       const res = await api.post('/account-notify/telegram-test')
       const d = res.data?.data ?? res.data
@@ -275,12 +276,12 @@ export function SuperSettings() {
           <div className="space-y-4 max-w-md">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
-                <input className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.username ?? ''} readOnly />
+                <label htmlFor="f-SuperSettings-1" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
+                <input id="f-SuperSettings-1" className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.username ?? ''} readOnly />
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Email</label>
-                <input className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.email ?? ''} readOnly />
+                <label htmlFor="f-SuperSettings-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Email</label>
+                <input id="f-SuperSettings-2" className="input-base [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] cursor-not-allowed" value={user?.email ?? ''} readOnly />
               </div>
             </div>
             {([
@@ -289,9 +290,10 @@ export function SuperSettings() {
               { label: 'Xác nhận mật khẩu mới', key: 'confirm' as const },
             ]).map(f => (
               <div key={f.key}>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{f.label}</label>
+                <label htmlFor={`ss-pw-${f.key}`} className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">{f.label}</label>
                 <div className="relative">
                   <input
+                    id={`ss-pw-${f.key}`}
                     type={showPw[f.key] ? 'text' : 'password'}
                     className="input-base pr-10"
                     value={pw[f.key]}

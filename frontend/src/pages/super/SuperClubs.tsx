@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
-import { PageShell, PageHeader, StatusBadge, ExportActions, runExport } from '../../components/shared'
+import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExport } from '../../components/shared'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -93,7 +93,9 @@ export function SuperClubs() {
   const [usersError, setUsersError] = useState(false)
   const [savingRole, setSavingRole] = useState<string | null>(null)
 
-  useEffect(() => {
+  const [clubsError, setClubsError] = useState(false)
+  const loadClubs = () => {
+    setClubsError(false)
     api.get('/clubs').then(res => {
       const raw = res.data?.data?.clubs ?? res.data?.data ?? []
       setClubs(raw.map((c: any) => ({
@@ -104,8 +106,10 @@ export function SuperClubs() {
         createdAt: c.createdAt, updatedAt: c.updatedAt,
         _count: c._count ?? { members: 0, fundPeriods: 0 },
       })))
-    }).catch(() => {})
-  }, [])
+    }).catch(() => setClubsError(true))
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadClubs() }, [])
 
   const filtered = clubs.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase())
@@ -220,25 +224,25 @@ export function SuperClubs() {
       <form onSubmit={handleCreate} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
-            <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
+            <label htmlFor="sc-name" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
+            <input id="sc-name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB *</label>
-            <input required value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
+            <label htmlFor="sc-code" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB *</label>
+            <input id="sc-code" required value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
               placeholder="VD: PBHN" className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
-            <input value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} className={inputCls} />
+            <label htmlFor="sc-phone" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
+            <input id="sc-phone" value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
-            <input type="email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} className={inputCls} />
+            <label htmlFor="sc-email" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
+            <input id="sc-email" type="email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
-            <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
+            <label htmlFor="sc-address" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
+            <input id="sc-address" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
           </div>
         </div>
 
@@ -248,20 +252,20 @@ export function SuperClubs() {
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập admin *</label>
-              <input required value={form.adminUsername}
+              <label htmlFor="sc-admin-user" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập admin *</label>
+              <input id="sc-admin-user" required value={form.adminUsername}
                 onChange={e => setForm({ ...form, adminUsername: e.target.value.trim() })}
                 placeholder="VD: admin_pbhn" className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu admin *</label>
-              <input required type="password" minLength={6} value={form.adminPassword}
+              <label htmlFor="sc-admin-pass" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu admin *</label>
+              <input id="sc-admin-pass" required type="password" minLength={6} value={form.adminPassword}
                 onChange={e => setForm({ ...form, adminPassword: e.target.value })}
                 placeholder="Tối thiểu 6 ký tự" className={inputCls} />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email cá nhân admin *</label>
-              <input required type="email" value={form.adminEmail}
+              <label htmlFor="sc-admin-email" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email cá nhân admin *</label>
+              <input id="sc-admin-email" required type="email" value={form.adminEmail}
                 onChange={e => setForm({ ...form, adminEmail: e.target.value.trim() })}
                 placeholder="email thật (không dùng đuôi .local)" className={inputCls} />
             </div>
@@ -281,20 +285,20 @@ export function SuperClubs() {
       <form onSubmit={handleEdit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
-            <input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} />
+            <label htmlFor="f-SuperClubs-1" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
+            <input id="f-SuperClubs-1" required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
-            <input value={editForm.contactPhone} onChange={e => setEditForm({ ...editForm, contactPhone: e.target.value })} className={inputCls} />
+            <label htmlFor="f-SuperClubs-2" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
+            <input id="f-SuperClubs-2" value={editForm.contactPhone} onChange={e => setEditForm({ ...editForm, contactPhone: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
-            <input type="email" value={editForm.contactEmail} onChange={e => setEditForm({ ...editForm, contactEmail: e.target.value })} className={inputCls} />
+            <label htmlFor="f-SuperClubs-3" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
+            <input id="f-SuperClubs-3" type="email" value={editForm.contactEmail} onChange={e => setEditForm({ ...editForm, contactEmail: e.target.value })} className={inputCls} />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
-            <input value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className={inputCls} />
+            <label htmlFor="f-SuperClubs-4" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
+            <input id="f-SuperClubs-4" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className={inputCls} />
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-4 border-t border-[color:var(--pf-border)]">
@@ -451,7 +455,8 @@ export function SuperClubs() {
         </div>
 
         <div className="px-4 pb-6 space-y-3">
-          {filtered.length === 0 && (
+          {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
+          {filtered.length === 0 && !clubsError && (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Không tìm thấy CLB nào</div>
           )}
           {filtered.map(club => (
@@ -530,17 +535,18 @@ export function SuperClubs() {
           />
         </div>
 
+        {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
         <div className="pf-glass-strong rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <table className="pf-rows w-full min-w-[720px] text-sm">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>
-                <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Địa chỉ</th>
-                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Thành viên</th>
-                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Kỳ quỹ</th>
-                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Gói</th>
-                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
-                <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Hành động</th>
+                <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>
+                <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Địa chỉ</th>
+                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Thành viên</th>
+                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Kỳ quỹ</th>
+                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Gói</th>
+                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
+                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

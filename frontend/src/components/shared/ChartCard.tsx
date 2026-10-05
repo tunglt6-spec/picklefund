@@ -24,7 +24,7 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        'pf-glass rounded-[20px] p-5',
+        'pf-glass rounded-[16px] p-5',
         className,
       )}
     >

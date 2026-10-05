@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { ConfirmHost } from './components/ui/ConfirmHost'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
@@ -368,6 +369,7 @@ export default function App() {
         </Routes>
         </Suspense>
         </ErrorBoundary>
+        <ConfirmHost />
         <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
       </BrowserRouter>
     </QueryClientProvider>

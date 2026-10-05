@@ -1,6 +1,6 @@
 /**
  * ThemeToggle — nút chuyển sáng/tối (Elite). Dựng sẵn; GẮN vào header ở lô cuối
- * (sau khi token-hoá đủ) để tránh bật dark khi UI chưa sẵn sàng.
+ * (sau khi token-hóa đủ) để tránh bật dark khi UI chưa sẵn sàng.
  */
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '../../lib/utils'

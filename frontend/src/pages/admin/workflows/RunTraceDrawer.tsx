@@ -5,6 +5,7 @@
  */
 import { useEffect, useState, type ReactNode } from 'react'
 import { Modal } from '../../../components/ui/Modal'
+import { ErrorState } from '../../../components/shared'
 import { fetchRunTrace, triggerLabel, type RunTrace } from '../../../hooks/useWorkflows'
 
 function fmtMs(ms: number | null): string {
@@ -36,18 +37,24 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
   const [trace, setTrace] = useState<RunTrace | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+
   useEffect(() => {
-    if (!runId) { setTrace(null); return }
+    if (!runId) { setTrace(null); setLoadError(false); return }
     setLoading(true)
-    fetchRunTrace(runId).then(setTrace).catch(() => setTrace(null)).finally(() => setLoading(false))
-  }, [runId])
+    setLoadError(false)
+    fetchRunTrace(runId).then(setTrace).catch(() => { setTrace(null); setLoadError(true) }).finally(() => setLoading(false))
+  }, [runId, reloadKey])
 
   const r = trace?.run
   const statusTone = r?.status === 'FAILED' ? 'danger' : r?.status === 'WAITING_APPROVAL' ? 'warn' : r?.status === 'COMPLETED' ? 'ok' : 'muted'
 
   return (
     <Modal open={!!runId} onClose={onClose} title="Giải trình lần chạy" subtitle={r?.ruleName ?? (r ? triggerLabel(r.triggerType) : undefined)} size="xl">
-      {loading || !trace || !r ? (
+      {loadError && !loading ? (
+        <ErrorState description="Không tải được giải trình lần chạy." onRetry={() => setReloadKey((k) => k + 1)} />
+      ) : loading || !trace || !r ? (
         <div className="py-10 text-center text-sm [color:var(--pf-color-muted)]">Đang tải giải trình…</div>
       ) : (
         <div className="space-y-3">
@@ -61,7 +68,7 @@ export function RunTraceDrawer({ runId, onClose }: { runId: string | null; onClo
           {r.error && <p className="rounded-lg [background:var(--pf-color-danger-soft)] px-3 py-2 text-xs [color:var(--pf-color-danger)]">{r.error}</p>}
 
           <QBlock n={1} q="Rule nào chạy?">
-            <strong>{trace.q1_rule.ruleName ?? '(rule đã xoá)'}</strong> · <span className="[color:var(--pf-color-muted)]">{triggerLabel(trace.q1_rule.triggerType)}</span>
+            <strong>{trace.q1_rule.ruleName ?? '(rule đã xóa)'}</strong> · <span className="[color:var(--pf-color-muted)]">{triggerLabel(trace.q1_rule.triggerType)}</span>
           </QBlock>
 
           <QBlock n={2} q="Agent nào tham gia?">

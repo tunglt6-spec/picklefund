@@ -73,24 +73,24 @@ export function DesktopHeader() {
   const iconBtn = 'flex h-9 w-9 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
 
   return (
-    <header className="pf-glass-bar relative z-30 hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b px-6">
+    <header className="pf-glass-bar relative z-30 hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b px-4 lg:px-6">
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}
         className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
         style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
-        title="Hướng dẫn sử dụng app"
+        title="Hướng dẫn sử dụng app" aria-label="Hướng dẫn sử dụng app"
       >
-        <BookOpen size={15} /> Hướng dẫn
+        <BookOpen size={15} /> <span className="hidden lg:inline">Hướng dẫn</span>
       </button>
       {user.role === 'CLUB_ADMIN' && (
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
           className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
-          title="Nâng cấp gói"
+          title="Nâng cấp gói" aria-label="Nâng cấp gói"
         >
-          <Zap size={15} /> Nâng cấp gói
+          <Zap size={15} /> <span className="hidden lg:inline">Nâng cấp gói</span>
         </button>
       )}
       <ThemeToggle className="border [border-color:var(--pf-border)]" />
@@ -120,16 +120,16 @@ export function DesktopHeader() {
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}
           title={user.username ?? 'Tài khoản'}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/20 text-sm font-extrabold">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/25 text-sm font-extrabold">
             {(user.username ?? avatarText).slice(0, 2).toUpperCase()}
           </span>
-          <div className="min-w-0 text-left leading-tight">
+          <div className="hidden min-w-0 text-left lg:block leading-tight">
             <p className="max-w-[150px] truncate text-sm font-bold">{user.username}</p>
-            <p className="max-w-[150px] truncate text-xs font-medium text-white/75">
+            <p className="max-w-[150px] truncate text-xs font-medium text-white/90">
               {ROLE_LABEL[user.role] ?? user.role}{data.settings?.code ? ` · ${data.settings.code}` : ''}
             </p>
           </div>
-          <ChevronDown size={15} className="shrink-0 text-white/70" />
+          <ChevronDown size={15} className="shrink-0 text-white/90" />
         </button>
 
         {open && (

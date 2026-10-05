@@ -3,7 +3,7 @@
  * banner + dải "Kết quả hôm nay" (SỐ THẬT từng agent) + thẻ đội ngũ có trạng thái sống.
  * Read-only: dữ liệu từ DUY NHẤT endpoint tổng hợp /aido/member-office (mở riêng cho member),
  * KHÔNG gọi endpoint quản trị (duyệt/workflow/KPI là màn của admin). Poll 60s + refresh khi
- * quay lại tab; lỗi mạng → giữ banner + báo gọn (không xoá trắng màn).
+ * quay lại tab; lỗi mạng → giữ banner + báo gọn (không xóa trắng màn).
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'

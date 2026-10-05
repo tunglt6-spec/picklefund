@@ -128,8 +128,8 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         </div>
 
         <div>
-          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
-          <input
+          <label htmlFor="f-ScoreEntryDrawer-1" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
+          <input id="f-ScoreEntryDrawer-1"
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
@@ -138,8 +138,9 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
         </div>
 
         <div>
-          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
+          <label htmlFor="sed-note" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
           <textarea
+            id="sed-note"
             rows={2}
             value={note}
             onChange={e => setNote(e.target.value)}

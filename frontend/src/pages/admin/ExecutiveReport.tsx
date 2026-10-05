@@ -151,7 +151,7 @@ export function ExecutiveReport() {
   }, [periodId, load, loadAi])
 
   // ── Export ────────────────────────────────────────────────────────────
-  // KHÔNG xoá branding toàn app: truyền kèm branding CLB hiện tại, chỉ đổi displayName theo báo cáo.
+  // KHÔNG xóa branding toàn app: truyền kèm branding CLB hiện tại, chỉ đổi displayName theo báo cáo.
   const prepBranding = () => {
     const cur = useBrandingStore.getState().branding
     setExportBranding({

@@ -12,7 +12,7 @@ export function ScheduleExportButtons({ onPng, onPdf, ariaScope, size = 'md' }: 
   ariaScope: string
   size?: 'sm' | 'md'
 }) {
-  // Handler async → khoá cả cụm nút tới khi xong (chống bấm đúp mở 2 hộp thoại lưu / render 2 lần).
+  // Handler async → khóa cả cụm nút tới khi xong (chống bấm đúp mở 2 hộp thoại lưu / render 2 lần).
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const wrap = (fn?: () => void | Promise<unknown>) => fn && (async () => {

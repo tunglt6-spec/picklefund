@@ -90,11 +90,11 @@ function PickleFundLogo({ size = 48, className = '' }: { size?: number; classNam
 }
 
 /* ─── Input component ─── */
-function Field({ label, right, children }: { label: string; right?: React.ReactNode; children: React.ReactNode }) {
+function Field({ label, right, htmlFor, children }: { label: string; right?: React.ReactNode; htmlFor: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
+        <label htmlFor={htmlFor} className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
         {right}
       </div>
       {children}
@@ -122,7 +122,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
   const refFromUrl = (searchParams.get('ref') || '').trim().toUpperCase()
   const [referralInput, setReferralInput] = useState(refFromUrl)
   const referralCode = referralInput.trim().toUpperCase() || undefined
-  const refLocked = !!refFromUrl // đến từ link giới thiệu → khoá, không cho sửa
+  const refLocked = !!refFromUrl // đến từ link giới thiệu → khóa, không cho sửa
 
   const nextClub = (e: React.FormEvent) => {
     e.preventDefault()
@@ -195,15 +195,15 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
 
         {step === 1 && (
           <form onSubmit={nextClub} className="space-y-4">
-            <Field label="Tên CLB *"><input required value={club.name} onChange={e => setClub({ ...club, name: e.target.value })} placeholder="VD: CLB Pickleball Hà Nội" className={inputBase} /></Field>
-            <Field label="Mã CLB *">
-              <input required value={club.code} onChange={e => setClub({ ...club, code: e.target.value.toUpperCase() })} placeholder="VD: PBHN" maxLength={10} className={inputBase + ' font-mono uppercase'} />
+            <Field label="Tên CLB *" htmlFor="reg-club-name"><input id="reg-club-name" required value={club.name} onChange={e => setClub({ ...club, name: e.target.value })} placeholder="VD: CLB Pickleball Hà Nội" className={inputBase} /></Field>
+            <Field label="Mã CLB *" htmlFor="reg-club-code">
+              <input id="reg-club-code" required value={club.code} onChange={e => setClub({ ...club, code: e.target.value.toUpperCase() })} placeholder="VD: PBHN" maxLength={10} className={inputBase + ' font-mono uppercase'} />
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">Mã định danh duy nhất, không thể thay đổi sau này</p>
             </Field>
-            <Field label="Địa chỉ sân"><input value={club.address} onChange={e => setClub({ ...club, address: e.target.value })} placeholder="Sân Pickleball Mỹ Đình, Hà Nội" className={inputBase} /></Field>
+            <Field label="Địa chỉ sân" htmlFor="reg-club-address"><input id="reg-club-address" value={club.address} onChange={e => setClub({ ...club, address: e.target.value })} placeholder="Sân Pickleball Mỹ Đình, Hà Nội" className={inputBase} /></Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Điện thoại"><input value={club.contactPhone} onChange={e => setClub({ ...club, contactPhone: e.target.value })} placeholder="0912345678" className={inputBase} /></Field>
-              <Field label="Email CLB"><input type="email" value={club.contactEmail} onChange={e => setClub({ ...club, contactEmail: e.target.value })} placeholder="clb@email.com" className={inputBase} /></Field>
+              <Field label="Điện thoại" htmlFor="reg-club-phone"><input id="reg-club-phone" value={club.contactPhone} onChange={e => setClub({ ...club, contactPhone: e.target.value })} placeholder="0912345678" className={inputBase} /></Field>
+              <Field label="Email CLB" htmlFor="reg-club-email"><input id="reg-club-email" type="email" value={club.contactEmail} onChange={e => setClub({ ...club, contactEmail: e.target.value })} placeholder="clb@email.com" className={inputBase} /></Field>
             </div>
             <div className="flex gap-2 pt-1">
               <OutlineButton onClick={onBack}><ArrowLeft size={15} /> Quay lại</OutlineButton>
@@ -224,8 +224,8 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
               { label: 'Tên tài khoản *', key: 'username', placeholder: 'admin_pbhn' },
               { label: 'Email', key: 'email', placeholder: 'admin@email.com', type: 'email', req: false },
             ].map(f => (
-              <Field key={f.key} label={f.label}>
-                <input required={f.req !== false} type={f.type || 'text'} value={admin[f.key as keyof AdminForm]}
+              <Field key={f.key} label={f.label} htmlFor={`reg-admin-${f.key}`}>
+                <input id={`reg-admin-${f.key}`} required={f.req !== false} type={f.type || 'text'} value={admin[f.key as keyof AdminForm]}
                   onChange={e => setAdmin({ ...admin, [f.key]: f.key === 'username' ? e.target.value.toLowerCase().replace(/\s/g, '') : e.target.value })}
                   placeholder={f.placeholder} className={inputBase} />
               </Field>
@@ -234,9 +234,9 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
               { label: 'Mật khẩu *', key: 'password', show: showPwd, toggle: () => setShowPwd(!showPwd), placeholder: 'Ít nhất 6 ký tự' },
               { label: 'Xác nhận mật khẩu *', key: 'confirmPassword', show: showCfm, toggle: () => setShowCfm(!showCfm), placeholder: 'Nhập lại mật khẩu' },
             ].map(f => (
-              <Field key={f.key} label={f.label}>
+              <Field key={f.key} label={f.label} htmlFor={`reg-admin-${f.key}`}>
                 <div className="relative">
-                  <input required type={f.show ? 'text' : 'password'} value={admin[f.key as keyof AdminForm]}
+                  <input id={`reg-admin-${f.key}`} required type={f.show ? 'text' : 'password'} value={admin[f.key as keyof AdminForm]}
                     onChange={e => setAdmin({ ...admin, [f.key]: e.target.value })} placeholder={f.placeholder}
                     className={`${inputBase} pr-11 ${f.key === 'confirmPassword' && admin.confirmPassword && admin.password !== admin.confirmPassword ? '!border-red-400 !ring-red-100' : ''}`} />
                   <button type="button" onClick={f.toggle} className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 transition-colors">{f.show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
@@ -246,10 +246,11 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
                 )}
               </Field>
             ))}
-            <Field label="Mã giới thiệu (không bắt buộc)">
+            <Field label="Mã giới thiệu (không bắt buộc)" htmlFor="reg-referral">
               <div className="relative">
                 <Gift size={16} className="absolute left-3.5 top-3.5 text-indigo-400 pointer-events-none" />
                 <input
+                  id="reg-referral"
                   value={referralInput}
                   onChange={e => setReferralInput(e.target.value.toUpperCase().replace(/\s/g, ''))}
                   disabled={refLocked}
@@ -509,19 +510,19 @@ export function Login() {
                   </div>
 
                   <form ref={formRef} onSubmit={doLogin} className="space-y-3">
-                    <Field label="Email hoặc Tên đăng nhập">
-                      <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                    <Field label="Email hoặc Tên đăng nhập" htmlFor="login-username">
+                      <input id="login-username" type="text" value={username} onChange={e => setUsername(e.target.value)}
                         placeholder="Nhập tài khoản của bạn" className={inputBase}
                         required autoComplete="username" autoFocus />
                     </Field>
 
-                    <Field label="Mật khẩu" right={
+                    <Field label="Mật khẩu" htmlFor="login-password" right={
                       <button type="button" className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors">
                         Quên mật khẩu?
                       </button>
                     }>
                       <div className="relative">
-                        <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                        <input id="login-password" type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                           placeholder="Nhập mật khẩu" className={`${inputBase} pr-11`} required autoComplete="current-password" />
                         <button type="button" onClick={() => setShowPwd(!showPwd)}
                           className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 dark:hover:text-slate-300 transition-colors">

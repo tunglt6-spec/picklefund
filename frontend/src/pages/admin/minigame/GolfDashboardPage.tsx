@@ -256,7 +256,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
         {/* ══ TAB: GOLFER ══ */}
         {tab === 'golfers' && (
           <>
-            <div className="pf-glass rounded-[18px] p-4 sm:p-5">
+            <div className="pf-glass rounded-[16px] p-4 sm:p-5">
               <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Thêm golfer</h2>
               <div className="mt-3">
                 <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
@@ -341,14 +341,14 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                   <Save size={15} /> {savingScores ? 'Đang lưu...' : 'Lưu điểm'}
                 </button>
               </div>
-              <div className="pf-glass-strong rounded-[18px] overflow-hidden">
+              <div className="pf-glass-strong rounded-[16px] overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="pf-rows w-full text-sm">
                     <thead>
                       <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
-                        <th className="text-left font-semibold px-3 py-2.5 sticky left-0 bg-[color:var(--pf-surface)]">Golfer</th>
-                        {roundList.map(r => <th key={r} className="text-center font-semibold px-2 py-2.5 min-w-[64px]">V{r}</th>)}
-                        <th className="text-center font-semibold px-3 py-2.5">Tổng</th>
+                        <th scope="col" className="text-left font-semibold px-3 py-2.5 sticky left-0 bg-[color:var(--pf-surface)]">Golfer</th>
+                        {roundList.map(r => <th scope="col" key={r} className="text-center font-semibold px-2 py-2.5 min-w-[64px]">V{r}</th>)}
+                        <th scope="col" className="text-center font-semibold px-3 py-2.5">Tổng</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -389,15 +389,15 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
                 <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
-            <div id={`golf-lb-${id}`} className="pf-glass-strong rounded-[18px] overflow-hidden">
+            <div id={`golf-lb-${id}`} className="pf-glass-strong rounded-[16px] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="pf-rows w-full text-sm">
                   <thead>
                     <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
-                      <th className="text-left font-semibold px-3 py-2.5">#</th>
-                      <th className="text-left font-semibold px-3 py-2.5">Golfer</th>
-                      <th className="text-center font-semibold px-2 py-2.5" title="Số vòng đã ghi">Vòng</th>
-                      <th className="text-center font-semibold px-3 py-2.5" title={`Tổng ${scoreWord}`}>Tổng {scoreWord}</th>
+                      <th scope="col" className="text-left font-semibold px-3 py-2.5">#</th>
+                      <th scope="col" className="text-left font-semibold px-3 py-2.5">Golfer</th>
+                      <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Số vòng đã ghi">Vòng</th>
+                      <th scope="col" className="text-center font-semibold px-3 py-2.5" title={`Tổng ${scoreWord}`}>Tổng {scoreWord}</th>
                     </tr>
                   </thead>
                   <tbody>

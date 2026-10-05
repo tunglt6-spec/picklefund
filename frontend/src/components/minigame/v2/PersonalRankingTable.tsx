@@ -70,7 +70,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
             <tr className="border-b border-[color:var(--pf-border)]">
               {['#', 'Tên', 'Bảng', 'Played', 'W/D/L', 'PF:PA', '+/-', 'Pts', 'Win%'].map(
                 (col) => (
-                  <th
+                  <th scope="col"
                     key={col}
                     className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide py-2 px-2 text-right first:text-left whitespace-nowrap"
                   >
@@ -79,7 +79,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                 )
               )}
               {(onEdit || onDelete) && (
-                <th className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide py-2 px-2 text-right whitespace-nowrap">
+                <th scope="col" className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide py-2 px-2 text-right whitespace-nowrap">
 
                 </th>
               )}

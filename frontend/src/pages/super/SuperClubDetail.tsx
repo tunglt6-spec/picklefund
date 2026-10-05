@@ -269,8 +269,8 @@ export function SuperClubDetail() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Gói</label>
-                <select
+                <label htmlFor="f-SuperClubDetail-1" className="block text-xs [color:var(--pf-color-muted)] mb-1">Gói</label>
+                <select id="f-SuperClubDetail-1"
                   value={upgradeTier}
                   onChange={e => setUpgradeTier(e.target.value as ServicePlan)}
                   className="input-base text-sm"
@@ -283,8 +283,8 @@ export function SuperClubDetail() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Số tháng</label>
-                <select
+                <label htmlFor="f-SuperClubDetail-2" className="block text-xs [color:var(--pf-color-muted)] mb-1">Số tháng</label>
+                <select id="f-SuperClubDetail-2"
                   value={upgradeMonths}
                   onChange={e => setUpgradeMonths(Number(e.target.value))}
                   className="input-base text-sm"
@@ -466,10 +466,10 @@ export function SuperClubDetail() {
               <table className="pf-rows w-full text-sm">
                 <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                   <tr>
-                    <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
-                    <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Email</th>
-                    <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Vai trò</th>
-                    <th className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
+                    <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
+                    <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Email</th>
+                    <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Vai trò</th>
+                    <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

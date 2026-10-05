@@ -145,7 +145,7 @@ export function Pricing() {
         >
           <p className="text-sm font-medium [color:var(--pf-color-muted)]">Chỉ bằng</p>
           <p className="mt-1 text-4xl font-extrabold tracking-tight [color:var(--pf-primary-text)] sm:text-5xl">3.300đ<span className="text-lg font-bold [color:var(--pf-color-muted)]">/ngày</span></p>
-          <p className="mt-1 text-sm [color:var(--pf-color-muted)]">bạn đã có trọn bộ công cụ số hoá CLB:</p>
+          <p className="mt-1 text-sm [color:var(--pf-color-muted)]">bạn đã có trọn bộ công cụ số hóa CLB:</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
             {ROI_ITEMS.map((it) => (
               <span key={it.label} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]">
@@ -221,10 +221,10 @@ export function Pricing() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]">
-                <th className="px-4 py-3 text-left font-medium [color:var(--pf-color-muted)]">Tính năng</th>
-                <th className="px-4 py-3 text-center font-semibold">Starter</th>
-                <th className="px-4 py-3 text-center font-semibold [color:var(--pf-primary-text)]">Pro</th>
-                <th className="px-4 py-3 text-center font-semibold">Enterprise</th>
+                <th scope="col" className="px-4 py-3 text-left font-medium [color:var(--pf-color-muted)]">Tính năng</th>
+                <th scope="col" className="px-4 py-3 text-center font-semibold">Starter</th>
+                <th scope="col" className="px-4 py-3 text-center font-semibold [color:var(--pf-primary-text)]">Pro</th>
+                <th scope="col" className="px-4 py-3 text-center font-semibold">Enterprise</th>
               </tr>
             </thead>
             <tbody>
@@ -259,7 +259,7 @@ export function Pricing() {
         <div className="rounded-3xl px-6 py-10 text-center text-white" style={{ background: 'linear-gradient(135deg, var(--pf-primary), var(--pf-primary-hover))' }}>
           <div className="mb-2 flex items-center justify-center gap-2">
             <Rocket size={22} />
-            <h2 className="text-xl font-extrabold sm:text-2xl">Sẵn sàng số hoá CLB của bạn?</h2>
+            <h2 className="text-xl font-extrabold sm:text-2xl">Sẵn sàng số hóa CLB của bạn?</h2>
           </div>
           <p className="mx-auto mb-6 max-w-md text-sm text-white/85">Dùng miễn phí — chỉ mất 2 phút để tạo CLB đầu tiên.</p>
           <button
@@ -268,7 +268,7 @@ export function Pricing() {
           >
             Bắt đầu miễn phí
           </button>
-          <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/80"><ShieldCheck size={13} /> Không cần thẻ · Cloud Backup · Huỷ bất cứ lúc nào</p>
+          <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-white/80"><ShieldCheck size={13} /> Không cần thẻ · Cloud Backup · Hủy bất cứ lúc nào</p>
         </div>
       </section>
     </PublicShell>

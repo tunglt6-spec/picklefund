@@ -3,7 +3,7 @@
  * kể cả "mức tự động hóa ước tính" → con số là ước tính theo giả định của chính họ, KHÔNG phải
  * cam kết/kết quả đảm bảo. Có ghi chú rõ đây là ước tính.
  */
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calculator, Clock, CalendarRange, Coins, Info, ArrowRight } from 'lucide-react'
 import { PublicPage, PageHero, PUBLIC_CONTAINER } from './PublicPage'
@@ -11,15 +11,17 @@ import { PublicPage, PageHero, PUBLIC_CONTAINER } from './PublicPage'
 function Field({
   label, value, onChange, min, max, step, suffix,
 }: { label: string; value: number; onChange: (v: number) => void; min: number; max: number; step: number; suffix?: string }) {
+  const id = useId()
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <label className="text-sm font-semibold [color:var(--pf-text)]">{label}</label>
+        <label htmlFor={id} className="text-sm font-semibold [color:var(--pf-text)]">{label}</label>
         <span className="text-sm font-bold [color:var(--pf-primary-text)]">
           {value.toLocaleString('vi-VN')}{suffix ? ` ${suffix}` : ''}
         </span>
       </div>
       <input
+        id={id}
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label={label}

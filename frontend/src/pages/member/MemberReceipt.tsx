@@ -78,7 +78,7 @@ export function MemberReceipt() {
     setLoading(true)
     api.get('/personal-receipts/mine')
       .then(r => setReceipts(r.data?.data ?? []))
-      .catch(() => {})
+      .catch(() => toast.error('Không tải được phiếu thu. Vui lòng thử lại.'))
       .finally(() => setLoading(false))
   }, [isLocal])
 
@@ -87,7 +87,7 @@ export function MemberReceipt() {
     if (isLocal) return
     api.get('/member/me/bank-info')
       .then(r => { const d = r.data?.data; if (d?.bank_account_number) setBankInfo(d as BankInfo) })
-      .catch(() => {})
+      .catch(() => {}) // best-effort: thiếu thông tin ngân hàng chỉ ẩn QR, không chặn màn hình
   }, [isLocal])
 
   const displayReceipts: PersonalReceipt[] = isLocal ? [] : receipts

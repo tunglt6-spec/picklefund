@@ -38,6 +38,7 @@ import {
   ResponsiveTabs,
 } from '../../components/shared'
 import { Portal } from '../../components/ui/Portal'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz, không phải semantic UI). */
 const CHART_INCOME = '#059669' // --pf-green
@@ -137,14 +138,17 @@ function DrawerShell({
   open: boolean; onClose: () => void; title: string; subtitle?: string
   isMobile: boolean; children: React.ReactNode; footer?: React.ReactNode
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(open, panelRef, onClose)
   if (!open) return null
   return (
     <Portal>
     <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'justify-end'}`}>
       <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={onClose} />
       <div
+        ref={panelRef} tabIndex={-1}
         role="dialog" aria-modal="true" aria-label={title}
-        className={`relative flex flex-col [background:var(--pf-surface)] ${
+        className={`outline-none relative flex flex-col [background:var(--pf-surface)] ${
           isMobile ? 'w-full max-h-[88vh] rounded-t-[24px] animate-fadeIn' : 'h-full w-full max-w-md shadow-2xl animate-fadeIn'
         }`}
       >
@@ -229,7 +233,7 @@ export function ThuChiHub() {
     void fetchSummary()
   }, [fetchSummary])
 
-  /* ── Chuẩn hoá giao dịch (read-only, từ store) ── */
+  /* ── Chuẩn hóa giao dịch (read-only, từ store) ── */
   const memberName = (id?: string) => members.find(m => m.id === id)?.fullName
   const incomeTx: Tx[] = contributions.map((c: FundContribution) => ({
     id: `c-${c.id}`,
@@ -442,7 +446,7 @@ export function ThuChiHub() {
         </>
       ) : loadState === 'error' ? (
         /* ── Workspace Error + Retry (gọi lại đúng API hiện có) ── */
-        <div className="pf-glass mt-4 rounded-[20px]">
+        <div className="pf-glass mt-4 rounded-[16px]">
           <EmptyState
             icon={<AlertCircle size={26} />}
             title="Không tải được dữ liệu tài chính"
@@ -535,7 +539,7 @@ export function ThuChiHub() {
         </div>
 
         {/* ── Transaction list: DataTable (desktop) / MobileCardList (mobile) ── */}
-        <div className="pf-glass mt-4 rounded-[20px]">
+        <div className="pf-glass mt-4 rounded-[16px]">
           <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
             <h3 className="text-sm font-semibold [color:var(--pf-text)]">Lịch sử giao dịch</h3>
             <span className="text-xs [color:var(--pf-color-muted)]">{filteredTx.length} / {allTx.length} giao dịch</span>

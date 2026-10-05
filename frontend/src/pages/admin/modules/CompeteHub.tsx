@@ -40,7 +40,7 @@ function OverviewTab() {
   const [sport, setSport] = useState('PICKLEBALL')
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-5">
-      <div className="pf-glass rounded-[18px] p-4">
+      <div className="pf-glass rounded-[16px] p-4">
         <h2 className="text-base font-bold [color:var(--pf-text)]">Tổng quan theo bộ môn</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {SPORTS.map(s => (
@@ -78,7 +78,7 @@ function TournamentsTab() {
         <div className="w-full"><MinigameOverviewPanel sport={sport} /></div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
-          <div className="pf-glass-strong rounded-[18px] overflow-hidden">
+          <div className="pf-glass-strong rounded-[16px] overflow-hidden">
             <MinigameForm embedded onSportChange={setSport} />
           </div>
           <MinigameOverviewPanel sport={sport} />

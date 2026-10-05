@@ -35,7 +35,7 @@ export function LoadingState({
         {items.map((_, i) => (
           <div
             key={i}
-            className="pf-glass flex flex-col gap-3 rounded-[20px] p-5"
+            className="pf-glass flex flex-col gap-3 rounded-[16px] p-5"
           >
             <div className="flex items-center justify-between">
               <Bar className="h-3 w-20" />
@@ -54,7 +54,7 @@ export function LoadingState({
     return (
       <div
         className={cn(
-          'pf-glass-strong overflow-hidden rounded-[20px]',
+          'pf-glass-strong overflow-hidden rounded-[16px]',
           className,
         )}
       >

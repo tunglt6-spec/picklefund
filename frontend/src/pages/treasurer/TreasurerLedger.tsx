@@ -254,11 +254,11 @@ export function TreasurerLedger() {
             <table className="table-base pf-rows">
               <thead>
                 <tr>
-                  <th>Ngày</th>
-                  <th className="text-center w-16">Loại</th>
-                  <th>Mô tả</th>
-                  <th className="text-right">Số tiền</th>
-                  <th className="text-right">Số dư</th>
+                  <th scope="col">Ngày</th>
+                  <th scope="col" className="text-center w-16">Loại</th>
+                  <th scope="col">Mô tả</th>
+                  <th scope="col" className="text-right">Số tiền</th>
+                  <th scope="col" className="text-right">Số dư</th>
                 </tr>
               </thead>
               <tbody>

@@ -33,6 +33,7 @@
   --pf-surface:       #FFFFFF; /* card trắng */
   --pf-surface-muted: #F1F5F9;
   --pf-border:        #E2E8F0;
+  --pf-border-strong: #8A97AB; /* viền control form: ≥3:1 trên nền trắng (WCAG 1.4.11) */
   --pf-text:          #0F172A;
   --pf-text-muted:    #5A6678; /* WCAG AA: đạt 4.5:1 cả trên surface-muted #F1F5F9 (slate-500 cũ #64748B rớt 4.34) */
   /* V2.2 Brand primary — TÍM (Clean Modern SaaS). Dùng cho brand/primary UI:
@@ -262,6 +263,7 @@ select:-webkit-autofill {
   --pf-surface:       #131B2E;
   --pf-surface-muted: #1C2740;
   --pf-border:        #26324C;
+  --pf-border-strong: #5E6E8C;
   --pf-border-soft:   #1E293B;
   --pf-text:          #E6EDF7;
   --pf-text-muted:    #93A2BD;
@@ -627,5 +629,13 @@ select:-webkit-autofill {
     width: 100%;
     margin: 0;
     padding: 0;
+  }
+}
+
+@layer utilities {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(:focus):not([data-bare]),
+  select:not(:focus),
+  textarea:not(:focus) {
+    border-color: var(--pf-border-strong);
   }
 }

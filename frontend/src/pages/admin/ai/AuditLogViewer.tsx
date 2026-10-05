@@ -146,7 +146,7 @@ export function AuditLogViewer() {
             <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
               className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             {(from || to) && (
-              <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary-text)] hover:underline font-medium">Xoá lọc ngày</button>
+              <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary-text)] hover:underline font-medium">Xóa lọc ngày</button>
             )}
           </div>
         </div>
@@ -163,10 +163,10 @@ export function AuditLogViewer() {
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] text-xs [color:var(--pf-color-muted)] uppercase">
-                    <th className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
-                    <th className="text-left px-4 py-3 font-semibold">Người dùng</th>
-                    <th className="text-center px-4 py-3 font-semibold">Hành động</th>
-                    <th className="text-left px-4 py-3 font-semibold">Chi tiết</th>
+                    <th scope="col" className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
+                    <th scope="col" className="text-left px-4 py-3 font-semibold">Người dùng</th>
+                    <th scope="col" className="text-center px-4 py-3 font-semibold">Hành động</th>
+                    <th scope="col" className="text-left px-4 py-3 font-semibold">Chi tiết</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

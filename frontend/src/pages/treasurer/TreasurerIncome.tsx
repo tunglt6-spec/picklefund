@@ -390,15 +390,15 @@ export function TreasurerIncome() {
             {isMini ? (
               <>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu <span className="text-red-500">*</span></label>
-                  <select required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })}
+                  <label htmlFor="f-TreasurerIncome-1" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu <span className="text-red-500">*</span></label>
+                  <select id="f-TreasurerIncome-1" required value={form.miniIncomeType} onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })}
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]">
                     {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
-                  <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                  <label htmlFor="f-TreasurerIncome-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp</label>
+                  <input id="f-TreasurerIncome-2" value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                     placeholder="Tên người nộp tiền"
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
                 </div>
@@ -406,16 +406,16 @@ export function TreasurerIncome() {
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                  <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
+                  <label htmlFor="f-TreasurerIncome-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <select id="f-TreasurerIncome-3" required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]">
                     <option value="">-- Chọn thành viên --</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                  <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
+                  <label htmlFor="ti-m-period" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <select id="ti-m-period" required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]">
                     <option value="">-- Chọn kỳ quỹ --</option>
                     {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -425,27 +425,27 @@ export function TreasurerIncome() {
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
-                <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
+                <label htmlFor="ti-m-amount" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
+                <input id="ti-m-amount" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
-                <input type="date" value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })}
+                <label htmlFor="ti-m-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
+                <input id="ti-m-date" type="date" value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức</label>
-              <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
+              <label htmlFor="ti-m-method" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức</label>
+              <select id="ti-m-method" value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]">
                 <option value="bank_transfer">Chuyển khoản</option>
                 <option value="cash">Tiền mặt</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
-              <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+              <label htmlFor="ti-m-notes" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
+              <input id="ti-m-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                 placeholder="Thông tin thêm..."
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
             </div>
@@ -545,7 +545,7 @@ export function TreasurerIncome() {
                 <table className="pf-rows w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
-                      <th className="px-3 py-3 w-8">
+                      <th scope="col" className="px-3 py-3 w-8">
                         <input
                           type="checkbox"
                           checked={allUnconfirmedSelected}
@@ -555,15 +555,15 @@ export function TreasurerIncome() {
                           title="Chọn tất cả chưa xác nhận"
                         />
                       </th>
-                      <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Nguồn quỹ</th>
-                      <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Thành viên / Người nộp</th>
-                      <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ / Loại</th>
-                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Ngày đóng</th>
-                      <th className="text-right px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
-                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Hình thức</th>
-                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
-                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-16">XN</th>
-                      <th className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-20"></th>
+                      <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Nguồn quỹ</th>
+                      <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Thành viên / Người nộp</th>
+                      <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ / Loại</th>
+                      <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Ngày đóng</th>
+                      <th scope="col" className="text-right px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
+                      <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Hình thức</th>
+                      <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
+                      <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-16">XN</th>
+                      <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-color-muted)] w-20"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
@@ -673,8 +673,8 @@ export function TreasurerIncome() {
           {isMini ? (
             <>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu <span className="text-red-500">*</span></label>
-                <select required value={form.miniIncomeType}
+                <label htmlFor="f-TreasurerIncome-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu <span className="text-red-500">*</span></label>
+                <select id="f-TreasurerIncome-4" required value={form.miniIncomeType}
                   onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
@@ -683,8 +683,8 @@ export function TreasurerIncome() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp (nếu có)</label>
-                <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
+                <label htmlFor="f-TreasurerIncome-5" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp (nếu có)</label>
+                <input id="f-TreasurerIncome-5" value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                   placeholder="Tên người nộp tiền"
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
               </div>
@@ -698,8 +698,8 @@ export function TreasurerIncome() {
                 <div className="bg-amber-50 rounded-lg px-3 py-2 text-xs text-amber-700">Chưa có thành viên. Thêm thành viên trước.</div>
               ) : (
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
-                  <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
+                  <label htmlFor="f-TreasurerIncome-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
+                  <select id="f-TreasurerIncome-6" required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                     <option value="">-- Chọn thành viên --</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
@@ -710,8 +710,8 @@ export function TreasurerIncome() {
                 <div className="bg-amber-50 rounded-lg px-3 py-2 text-xs text-amber-700">Chưa có kỳ quỹ đang mở.</div>
               ) : (
                 <div>
-                  <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
-                  <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
+                  <label htmlFor="ti-d-period" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
+                  <select id="ti-d-period" required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
                     className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                     <option value="">-- Chọn kỳ quỹ --</option>
                     {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -723,29 +723,29 @@ export function TreasurerIncome() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
-              <input required type="number" min={1} value={form.amount}
+              <label htmlFor="ti-d-amount" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
+              <input id="ti-d-amount" required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
             <div>
-              <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
-              <input type="date" value={form.paymentDate}
+              <label htmlFor="ti-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
+              <input id="ti-d-date" type="date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức</label>
-            <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
+            <label htmlFor="ti-d-method" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức</label>
+            <select id="ti-d-method" value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
               <option value="bank_transfer">Chuyển khoản</option>
               <option value="cash">Tiền mặt</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
-            <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+            <label htmlFor="ti-d-notes" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
+            <input id="ti-d-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder="Thông tin thêm..."
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
           </div>

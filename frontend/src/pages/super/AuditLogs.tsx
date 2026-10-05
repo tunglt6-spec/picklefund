@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react'
 import { ScrollText } from 'lucide-react'
 import {
-  PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState,
+  PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState, ErrorState,
   ExportActions, ChartCard, type Column, type StatusTone,
 } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
@@ -37,6 +37,8 @@ export function AuditLogs() {
   const [action, setAction] = useState('Tất cả')
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const isLocal = !accessToken || accessToken.startsWith('local-token-') || accessToken.startsWith('token-')
 
@@ -47,11 +49,12 @@ export function AuditLogs() {
     if (search) params.set('search', search)
     params.set('limit', String(LOG_LIMIT))
     setLoading(true)
+    setLoadError(false)
     api.get(`/audit-logs?${params.toString()}`)
       .then((res) => setLogs(res.data?.data ?? []))
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [accessToken, action, search, isLocal])
+  }, [accessToken, action, search, isLocal, reloadKey])
 
   const rows = isLocal ? [] : logs
 
@@ -117,6 +120,8 @@ export function AuditLogs() {
       <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} bodyClassName="!p-0">
         {loading ? (
           <LoadingState variant="table" rows={8} />
+        ) : loadError ? (
+          <ErrorState onRetry={() => setReloadKey((k) => k + 1)} />
         ) : rows.length === 0 ? (
           <EmptyState icon={<ScrollText size={24} />} title="Chưa có nhật ký" description="Hoạt động quản trị sẽ xuất hiện tại đây." />
         ) : (

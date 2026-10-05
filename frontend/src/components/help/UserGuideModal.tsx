@@ -3,7 +3,8 @@
  * Mục tiêu: người dùng mở app có thể đọc ngay cách dùng toàn bộ chức năng.
  * Nội dung viết cho NGƯỜI DÙNG (khác APP_GUIDE ở backend viết cho AI). ⚠️ Cập nhật khi đổi tính năng.
  */
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { X, BookOpen, Hand, Wallet, Users, Calendar, Trophy, Star, Settings, Bot, HandHelping, Lightbulb } from 'lucide-react'
 
 interface Section {
@@ -125,6 +126,8 @@ const SECTIONS: Section[] = [
 
 export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [active, setActive] = useState(SECTIONS[0].id)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(open, panelRef, onClose)
   if (!open) return null
 
   const jump = (id: string) => {
@@ -134,7 +137,7 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onMouseDown={onClose}>
-      <div className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl [background:var(--pf-surface)] shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Hướng dẫn sử dụng PickleFund" tabIndex={-1} className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl outline-none [background:var(--pf-surface)] shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'var(--pf-border)' }}>
           <h2 className="flex items-center gap-2 text-base font-bold [color:var(--pf-text)]">

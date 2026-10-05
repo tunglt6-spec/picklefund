@@ -141,8 +141,9 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
 
         {/* Date */}
         <div>
-          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
+          <label htmlFor="sem-date" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
           <input
+            id="sem-date"
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
@@ -152,8 +153,9 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
 
         {/* Notes */}
         <div>
-          <label className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
+          <label htmlFor="sem-notes" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ghi chú</label>
           <textarea
+            id="sem-notes"
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}

@@ -24,6 +24,7 @@ export function ResponsiveTabs({
 }: ResponsiveTabsProps) {
   return (
     <div
+      role="tablist"
       className={cn(
         // Chuẩn v2.1 — tab NÚT TO; 1 hàng cuộn ngang (mobile vuốt, không xuống dòng).
         'flex gap-2 overflow-x-auto no-scrollbar',
@@ -35,6 +36,8 @@ export function ResponsiveTabs({
         return (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onChange(t.key)}
             className={cn(
               'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',

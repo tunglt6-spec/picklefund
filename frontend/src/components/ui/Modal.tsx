@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Portal } from './Portal'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 
 interface ModalProps {
   open: boolean
@@ -45,6 +46,8 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
     const t = setTimeout(() => panelRef.current?.focus(), 0)
     return () => { document.removeEventListener('keydown', onKey); clearTimeout(t) }
   }, [open])
+
+  useDialogA11y(open, panelRef)
 
   if (!open) return null
 

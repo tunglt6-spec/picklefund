@@ -245,12 +245,12 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                 <table className="pf-rows w-full text-sm">
                   <thead>
                     <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)] uppercase">
-                      <th className="text-left px-3 py-2 font-semibold">#</th>
-                      <th className="text-left px-2 py-2 font-semibold">Người chơi</th>
-                      <th className="text-center px-2 py-2 font-semibold" title="Đã đấu">Đ</th>
-                      <th className="text-center px-2 py-2 font-semibold" title="Thắng">T</th>
-                      <th className="text-center px-2 py-2 font-semibold" title="Hiệu số">HS</th>
-                      <th className="text-center px-3 py-2 font-semibold" title="Điểm xếp hạng">Điểm</th>
+                      <th scope="col" className="text-left px-3 py-2 font-semibold">#</th>
+                      <th scope="col" className="text-left px-2 py-2 font-semibold">Người chơi</th>
+                      <th scope="col" className="text-center px-2 py-2 font-semibold" title="Đã đấu">Đ</th>
+                      <th scope="col" className="text-center px-2 py-2 font-semibold" title="Thắng">T</th>
+                      <th scope="col" className="text-center px-2 py-2 font-semibold" title="Hiệu số">HS</th>
+                      <th scope="col" className="text-center px-3 py-2 font-semibold" title="Điểm xếp hạng">Điểm</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

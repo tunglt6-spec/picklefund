@@ -96,7 +96,7 @@ export function LisaChat() {
 
   useEffect(() => { initChat() }, [initChat])
 
-  // Khoá cuộn nền khi mở chat toàn màn (mobile portal) — tránh cuộn chồng ra trang dưới.
+  // Khóa cuộn nền khi mở chat toàn màn (mobile portal) — tránh cuộn chồng ra trang dưới.
   useEffect(() => {
     if (!isMobile) return
     const prev = document.body.style.overflow

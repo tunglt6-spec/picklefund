@@ -13,6 +13,7 @@
  *  - Reports/PDF/Excel/Infographic dùng hàm/API export hiện có (không đổi contract).
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -117,6 +118,8 @@ export function Reports() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fundSummary, setFundSummary] = useState<any>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const filterSheetRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(showFilterSheet, filterSheetRef, () => setShowFilterSheet(false))
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [exporting, setExporting] = useState(false) // chống bấm đúp Excel/PDF (cả 2 cụm nút)
   const brandDisplayName = useBrandingStore((s) => s.branding.displayName)
@@ -139,7 +142,7 @@ export function Reports() {
         memberId: s.memberId, memberName: s.memberName,
         attendedSessions: s.attendedSessions ?? 0, totalSessions: s.totalSessions ?? 0,
       })))
-    }).catch(() => {})
+    }).catch(() => toast.error('Không tải được tổng hợp điểm danh.'))
   }, [user?.clubId, activePeriod?.id, setMemberAttendanceSummary])
 
   /* ── Fund period summary (backend = Source of Truth) — điều khiển Loading/Error ── */
@@ -443,7 +446,7 @@ export function Reports() {
       />
 
       {!hasPeriods ? (
-        <div className="pf-glass rounded-[20px]">
+        <div className="pf-glass rounded-[16px]">
           <EmptyState icon={<FileText size={26} />} title="Chưa có kỳ quỹ nào" description="Tạo kỳ quỹ đầu tiên để xem báo cáo." />
         </div>
       ) : loadState === 'loading' ? (
@@ -452,7 +455,7 @@ export function Reports() {
           <div className="mt-4"><LoadingState variant="list" rows={5} /></div>
         </>
       ) : loadState === 'error' ? (
-        <div className="pf-glass rounded-[20px]">
+        <div className="pf-glass rounded-[16px]">
           <EmptyState icon={<AlertCircle size={26} />} title="Không tải được dữ liệu báo cáo"
             description="Đã xảy ra lỗi khi tải tổng hợp báo cáo. Vui lòng thử lại."
             action={<ActionButton icon={<RefreshCw size={15} />} onClick={() => void fetchSummary()}>Thử lại</ActionButton>} />
@@ -572,7 +575,7 @@ export function Reports() {
 
           {/* ── Member bill / Personal receipt preview (backend calculator) ── */}
           {showMember && (
-            <div className="pf-glass mt-4 rounded-[20px]">
+            <div className="pf-glass mt-4 rounded-[16px]">
               <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
                 <h3 className="text-sm font-semibold [color:var(--pf-text)]">Bảng chi phí thành viên</h3>
                 <span className="text-xs [color:var(--pf-color-muted)]">Nguồn: backend calculator</span>
@@ -604,7 +607,7 @@ export function Reports() {
           )}
 
           {/* ── Export panel ── */}
-          {canExport && (<div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] p-5">
+          {canExport && (<div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] p-5">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Xuất báo cáo</h3>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
@@ -642,7 +645,7 @@ export function Reports() {
         <Portal>
         <div className="fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={() => setShowFilterSheet(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Bộ lọc báo cáo" className="relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
+          <div ref={filterSheetRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Bộ lọc báo cáo" className="outline-none relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
             <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
               <h2 className="text-base font-semibold [color:var(--pf-text)]">Bộ lọc báo cáo</h2>
               <button onClick={() => setShowFilterSheet(false)} aria-label="Đóng" className="flex h-9 w-9 items-center justify-center rounded-xl text-lg [color:var(--pf-color-muted)]"><span aria-hidden>✕</span></button>

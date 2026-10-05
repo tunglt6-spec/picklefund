@@ -4,6 +4,7 @@
  * màu semantic chỉ dùng khi cảnh báo. Dữ liệu THẬT; chỉ số chưa có nguồn → "chưa có dữ liệu".
  * PDF xuất server-side (bìa + 9 mục + đánh giá Maika). Đánh giá chi tiết Maika theo từng mục.
  */
+import { noticeDialog } from '../../components/ui/ConfirmHost'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -107,7 +108,7 @@ export function SuperDashboard() {
   useEffect(() => {
     api.get('/clubs', { params: { limit: 200 } })
       .then((r) => setClubs((r.data?.data ?? []).map((c: any) => ({ id: c.id, name: c.name }))))
-      .catch(() => {})
+      .catch(() => {}) // best-effort: chỉ nạp danh sách CLB cho bộ lọc, dashboard chính có error state riêng
   }, [])
 
   const load = useCallback(async () => {
@@ -185,7 +186,7 @@ export function SuperDashboard() {
       const res = await api.get('/command-center/ai-selftest', { timeout: 30000 })
       const d = res.data?.data
       toast.dismiss(t)
-      alert(d?.okModel
+      await noticeDialog('Kết quả kiểm tra AI', d?.okModel
         ? `AI OK ✓\nModel dùng được: ${d.okModel}\nVí dụ: ${d.preview}`
         : `AI KHÔNG chạy ✗ (configured=${d?.configured})\n` + (d?.attempts ?? []).map((a: any) => `• ${a.model}: ${a.ok ? 'OK' : 'lỗi — ' + a.error}`).join('\n'))
     } catch { toast.error('Không gọi được self-test', { id: t }) }

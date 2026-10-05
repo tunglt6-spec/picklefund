@@ -191,8 +191,9 @@ export function ReportPaymentModal({
 
           {/* Amount */}
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Số tiền đã chuyển</label>
+            <label htmlFor="rpm-amount" className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Số tiền đã chuyển</label>
             <input
+              id="rpm-amount"
               type="number"
               value={amount || ''}
               onChange={(e) => setAmount(Number(e.target.value))}
@@ -203,8 +204,9 @@ export function ReportPaymentModal({
 
           {/* Note */}
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Ghi chú (tùy chọn)</label>
+            <label htmlFor="rpm-note" className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Ghi chú (tùy chọn)</label>
             <textarea
+              id="rpm-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
@@ -215,8 +217,8 @@ export function ReportPaymentModal({
 
           {/* Proof link (optional) */}
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Link ảnh chứng từ (tùy chọn)</label>
-            <input
+            <label htmlFor="f-ReportPaymentModal-1" className="mb-1 block text-[12.5px] font-semibold [color:var(--pf-text)]">Link ảnh chứng từ (tùy chọn)</label>
+            <input id="f-ReportPaymentModal-1"
               value={proofUrl}
               onChange={(e) => setProofUrl(e.target.value)}
               placeholder="Dán link ảnh biên lai nếu có"

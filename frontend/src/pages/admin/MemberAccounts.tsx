@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 import {
   Users, UserPlus, RefreshCw, Lock, Unlock, CheckCircle2,
   AlertCircle, Clock, XCircle, Search, ChevronDown
@@ -104,10 +105,12 @@ function BulkCreateModal({
     }
   }
 
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   return (
     <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Tạo tài khoản hàng loạt" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col outline-none">
         <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
           <h2 className="text-base font-bold [color:var(--pf-text)]">Tạo tài khoản hàng loạt</h2>
           <p className="text-sm [color:var(--pf-color-muted)] mt-0.5">{available.length} thành viên chưa có tài khoản</p>
@@ -211,18 +214,20 @@ function CreateSingleModal({
   const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]'
   const labelCls = 'block text-sm font-medium [color:var(--pf-text)] mb-1.5'
 
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   return (
     <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Tạo tài khoản thành viên" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-md outline-none">
         <div className="px-6 py-5 border-b border-[color:var(--pf-border)]">
           <h2 className="text-base font-bold [color:var(--pf-text)]">Tạo tài khoản thành viên</h2>
         </div>
         <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
           <div>
-            <label className={labelCls}>Chọn thành viên <span className="text-red-500">*</span></label>
+            <label htmlFor="f-MemberAccounts-1" className={labelCls}>Chọn thành viên <span className="text-red-500">*</span></label>
             <div className="relative">
-              <select value={memberId} onChange={e => setMemberId(e.target.value)}
+              <select id="f-MemberAccounts-1" value={memberId} onChange={e => setMemberId(e.target.value)}
                 className={`${inputCls} pr-8 appearance-none`} required>
                 {available.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
               </select>
@@ -231,15 +236,15 @@ function CreateSingleModal({
           </div>
 
           <div>
-            <label className={labelCls}>Username</label>
-            <input value={username} onChange={e => setUsername(e.target.value)}
+            <label htmlFor="ma-username" className={labelCls}>Username</label>
+            <input id="ma-username" value={username} onChange={e => setUsername(e.target.value)}
               placeholder="Tự động sinh từ tên" className={inputCls} />
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Để trống sẽ tự động sinh từ tên thành viên</p>
           </div>
 
           <div>
-            <label className={labelCls}>Mật khẩu mặc định</label>
-            <input value="123456" readOnly className={`${inputCls} [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] font-mono cursor-not-allowed`} />
+            <label htmlFor="ma-defpass" className={labelCls}>Mật khẩu mặc định</label>
+            <input id="ma-defpass" value="123456" readOnly className={`${inputCls} [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] font-mono cursor-not-allowed`} />
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Thành viên phải đổi mật khẩu khi đăng nhập lần đầu</p>
           </div>
 
@@ -275,10 +280,12 @@ function CreateSingleModal({
 function ConfirmModal({ title, body, onConfirm, onClose, danger = false }: {
   title: string; body: string; onConfirm: () => void; onClose: () => void; danger?: boolean
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, panelRef, onClose)
   return (
     <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 outline-none">
         <h3 className="font-bold [color:var(--pf-text)]">{title}</h3>
         <p className="text-sm [color:var(--pf-color-muted)]">{body}</p>
         <div className="flex gap-2 justify-end">
@@ -518,7 +525,7 @@ export function MemberAccounts() {
         </div>
 
         {/* Table card (search header + table) */}
-        <div className="pf-glass-strong rounded-[18px] border-[var(--pf-border)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
+        <div className="pf-glass-strong rounded-[16px] border-[var(--pf-border)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] overflow-hidden">
           <div className="px-5 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-3">
             <div className="relative w-64">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
@@ -544,12 +551,12 @@ export function MemberAccounts() {
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
-                    <th className="px-4 py-3 text-left">Thành viên</th>
-                    <th className="px-4 py-3 text-left">Username</th>
-                    <th className="px-4 py-3 text-left">Trạng thái</th>
-                    <th className="px-4 py-3 text-left">Đăng nhập cuối</th>
-                    <th className="px-4 py-3 text-left">Mật khẩu</th>
-                    <th className="px-4 py-3 text-right">Thao tác</th>
+                    <th scope="col" className="px-4 py-3 text-left">Thành viên</th>
+                    <th scope="col" className="px-4 py-3 text-left">Username</th>
+                    <th scope="col" className="px-4 py-3 text-left">Trạng thái</th>
+                    <th scope="col" className="px-4 py-3 text-left">Đăng nhập cuối</th>
+                    <th scope="col" className="px-4 py-3 text-left">Mật khẩu</th>
+                    <th scope="col" className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--pf-border-soft)]">

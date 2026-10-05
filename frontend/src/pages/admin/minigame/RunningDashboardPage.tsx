@@ -150,9 +150,9 @@ export function RunningDashboardPage() {
             <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-1.5"><Timer size={15} /> Nhập thời gian (mm:ss)</h3>
             <table className="pf-rows w-full min-w-[420px] text-sm">
               <thead><tr className="[color:var(--pf-color-muted)] text-xs uppercase">
-                <th className="text-left py-2">Vận động viên</th>
-                {Array.from({ length: rounds }, (_, i) => <th key={i} className="py-2 px-1">Lần {i + 1}</th>)}
-                <th className="py-2 px-1 text-right">Tổng</th><th></th>
+                <th scope="col" className="text-left py-2">Vận động viên</th>
+                {Array.from({ length: rounds }, (_, i) => <th scope="col" key={i} className="py-2 px-1">Lần {i + 1}</th>)}
+                <th scope="col" className="py-2 px-1 text-right">Tổng</th><th scope="col"></th>
               </tr></thead>
               <tbody>
                 {runners.map(r => (

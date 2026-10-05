@@ -7,12 +7,13 @@ import { exportInfographicAsPng, exportInfographicAsPdf, shareInfographic, canSh
 import { useBrandingStore } from '../../../store/brandingStore'
 import toast from 'react-hot-toast'
 import { Portal } from '../../ui/Portal'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 
 const ID_A = 'infographic-canvas-a'
 const ID_B = 'infographic-canvas-b'
 
 /* Scale preview: overlay gốc rộng 1080 → thu nhỏ vừa modal. Chiều cao overlay biến thiên
-   (A cố định 1920; B là hoá đơn cao động theo số TV) → đo chiều cao thật để khung preview
+   (A cố định 1920; B là hóa đơn cao động theo số TV) → đo chiều cao thật để khung preview
    khớp export 100%, không cắt/không thừa. */
 const PREVIEW_SCALE = 0.46
 const PREVIEW_W = Math.round(1080 * PREVIEW_SCALE)
@@ -34,6 +35,8 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
 
   // Đo chiều cao thật của overlay preview (native size) → set chiều cao khung scale.
   const previewInnerRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(true, dialogRef, onClose)
   const [previewH, setPreviewH] = useState(Math.round(1920 * PREVIEW_SCALE))
   useLayoutEffect(() => {
     const el = previewInnerRef.current
@@ -86,7 +89,7 @@ export function InfographicPreviewModal({ data, onClose }: InfographicPreviewMod
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="relative flex flex-col w-full h-full max-w-5xl max-h-screen md:max-h-[96vh] md:rounded-2xl bg-slate-900 shadow-2xl overflow-hidden">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Xem trước infographic" tabIndex={-1} className="outline-none relative flex flex-col w-full h-full max-w-5xl max-h-screen md:max-h-[96vh] md:rounded-2xl bg-slate-900 shadow-2xl overflow-hidden">
 
         {/* Top bar */}
         <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-800 border-b border-slate-700">

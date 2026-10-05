@@ -14,7 +14,7 @@ export function PwaReloadPrompt() {
       if (r) {
         setInterval(
           () => {
-            r.update().catch(() => {})
+            r.update().catch(() => {}) // cố ý: kiểm tra cập nhật nền, lỗi mạng thì thử lại ở chu kỳ sau
           },
           30 * 60 * 1000,
         )

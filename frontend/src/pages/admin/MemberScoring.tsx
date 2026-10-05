@@ -318,7 +318,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
       </p>
 
       {/* Bảng điểm */}
-      <div className="pf-glass rounded-[20px] p-4 sm:p-5">
+      <div className="pf-glass rounded-[16px] p-4 sm:p-5">
         {loading ? (
           <LoadingState rows={4} />
         ) : error ? (
@@ -770,7 +770,7 @@ function RulesTab() {
       ) : (
         <div className="flex flex-col gap-5">
           {CATEGORY_ORDER.filter((c) => grouped[c].length > 0).map((c) => (
-            <div key={c} className="pf-glass rounded-[20px] p-4 sm:p-5">
+            <div key={c} className="pf-glass rounded-[16px] p-4 sm:p-5">
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">
                 {CATEGORY_LABELS[c]}
               </h3>

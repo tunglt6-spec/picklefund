@@ -118,11 +118,11 @@ export function ClubMemoryManager() {
     setDeleting(true)
     try {
       await api.delete(`/club-memory/${deleteTarget.memoryId}`)
-      toast.success('Đã xoá tri thức')
+      toast.success('Đã xóa tri thức')
       setDeleteTarget(null)
       load()
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Xoá thất bại')
+      toast.error(err?.response?.data?.message ?? 'Xóa thất bại')
     } finally {
       setDeleting(false)
     }
@@ -158,7 +158,7 @@ export function ClubMemoryManager() {
       render: m => (
         <div className="flex justify-end gap-1">
           <button onClick={() => openEdit(m)} className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)]" aria-label="Sửa"><Pencil size={14} /></button>
-          <button onClick={() => setDeleteTarget(m)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" aria-label="Xoá"><Trash2 size={14} /></button>
+          <button onClick={() => setDeleteTarget(m)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" aria-label="Xóa"><Trash2 size={14} /></button>
         </div>
       ),
     },
@@ -197,7 +197,7 @@ export function ClubMemoryManager() {
           <EmptyState
             icon={<BookOpen size={28} />}
             title={items.length === 0 ? 'Chưa có tri thức nào' : 'Không tìm thấy kết quả'}
-            description={items.length === 0 ? 'Thêm quy định, chính sách, ghi chú vận hành để AI (Maika) có ngữ cảnh CLB.' : 'Thử đổi từ khoá hoặc bộ lọc.'}
+            description={items.length === 0 ? 'Thêm quy định, chính sách, ghi chú vận hành để AI (Maika) có ngữ cảnh CLB.' : 'Thử đổi từ khóa hoặc bộ lọc.'}
             action={items.length === 0 ? <Button onClick={openCreate}><Plus size={14} />Thêm tri thức đầu tiên</Button> : undefined}
           />
         ) : isMobile ? (
@@ -210,7 +210,7 @@ export function ClubMemoryManager() {
                   <StatusBadge tone={TYPE_META[m.type].tone}>{TYPE_META[m.type].label}</StatusBadge>
                   <div className="flex gap-1">
                     <button onClick={() => openEdit(m)} className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)]" aria-label="Sửa"><Pencil size={14} /></button>
-                    <button onClick={() => setDeleteTarget(m)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" aria-label="Xoá"><Trash2 size={14} /></button>
+                    <button onClick={() => setDeleteTarget(m)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" aria-label="Xóa"><Trash2 size={14} /></button>
                   </div>
                 </div>
                 {m.title && <p className="font-medium text-sm [color:var(--pf-text)]">{m.title}</p>}
@@ -237,15 +237,15 @@ export function ClubMemoryManager() {
         size="lg"
         footer={
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setShowForm(false)}>Huỷ</Button>
+            <Button variant="outline" onClick={() => setShowForm(false)}>Hủy</Button>
             <Button disabled={saving} onClick={handleSubmit}>{saving ? 'Đang lưu...' : 'Lưu'}</Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Loại tri thức</label>
-            <select
+            <label htmlFor="f-ClubMemoryManager-1" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Loại tri thức</label>
+            <select id="f-ClubMemoryManager-1"
               value={form.type}
               onChange={e => setForm(f => ({ ...f, type: e.target.value as MemoryType }))}
               disabled={!!editing}
@@ -258,15 +258,17 @@ export function ClubMemoryManager() {
             {editing && <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không đổi được loại sau khi tạo — tạo mới nếu cần loại khác.</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tiêu đề (không bắt buộc)</label>
+            <label htmlFor="cmm-title" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tiêu đề (không bắt buộc)</label>
             <input
+              id="cmm-title"
               value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
               className="input-base" placeholder="VD: Quy định điểm danh"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nội dung <span className="text-red-500">*</span></label>
+            <label htmlFor="cmm-content" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nội dung <span className="text-red-500">*</span></label>
             <textarea
+              id="cmm-content"
               value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
               rows={6} className="input-base resize-y"
               placeholder="VD: Thành viên vắng quá 50% buổi trong kỳ sẽ được nhắc nhở qua Lisa..."
@@ -274,8 +276,9 @@ export function ClubMemoryManager() {
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không nhập số liệu tài chính/PII cụ thể — hệ thống sẽ tự lọc trước khi đưa vào ngữ cảnh AI, nhưng tốt nhất nên tránh từ đầu.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nhãn (phân tách bằng dấu phẩy)</label>
+            <label htmlFor="cmm-tags" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Nhãn (phân tách bằng dấu phẩy)</label>
             <input
+              id="cmm-tags"
               value={form.tagsText} onChange={e => setForm(f => ({ ...f, tagsText: e.target.value }))}
               className="input-base" placeholder="VD: điểm danh, vận hành"
             />
@@ -283,21 +286,21 @@ export function ClubMemoryManager() {
         </div>
       </Modal>
 
-      {/* Confirm xoá */}
+      {/* Confirm xóa */}
       <Modal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Xoá tri thức?"
+        title="Xóa tri thức?"
         size="sm"
         footer={
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Huỷ</Button>
-            <Button variant="danger" disabled={deleting} onClick={handleDelete}>{deleting ? 'Đang xoá...' : 'Xoá'}</Button>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Hủy</Button>
+            <Button variant="danger" disabled={deleting} onClick={handleDelete}>{deleting ? 'Đang xóa...' : 'Xóa'}</Button>
           </div>
         }
       >
         <p className="text-sm [color:var(--pf-color-muted)]">
-          Xoá {deleteTarget?.title ? `"${deleteTarget.title}"` : 'mục tri thức này'}? Hành động không thể hoàn tác.
+          Xóa {deleteTarget?.title ? `"${deleteTarget.title}"` : 'mục tri thức này'}? Hành động không thể hoàn tác.
         </p>
       </Modal>
     </PageShell>

@@ -167,7 +167,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
   const standingsLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/standings`
   const scheduleLink = useDashboardViews ? dashLink : `/minigames/${featured?.id}/schedule`
 
-  const card = 'pf-glass rounded-[18px] p-4'
+  const card = 'pf-glass rounded-[16px] p-4'
 
   // ── Trạng thái rỗng ──
   if (!featured) {
@@ -236,7 +236,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
             <div className="overflow-x-auto">
             <table className="pf-rows mt-2 w-full text-sm">
-              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
+              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th scope="col" className="text-left font-semibold py-1">#</th><th scope="col" className="text-left font-semibold py-1">Golfer</th><th scope="col" className="text-center font-semibold py-1">Vòng</th><th scope="col" className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
               <tbody>
                 {golfStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">
@@ -254,7 +254,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           teamStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có đội.</p> : (
             <div className="overflow-x-auto">
             <table className="pf-rows mt-2 w-full text-sm">
-              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
+              <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th scope="col" className="text-left font-semibold py-1">#</th><th scope="col" className="text-left font-semibold py-1">Đội</th><th scope="col" className="text-center font-semibold py-1">Trận</th><th scope="col" className="text-center font-semibold py-1">Thắng</th><th scope="col" className="text-center font-semibold py-1">Thua</th><th scope="col" className="text-right font-semibold py-1">Điểm</th></tr></thead>
               <tbody>
                 {teamStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">

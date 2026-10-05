@@ -66,8 +66,9 @@ function BrandingTab() {
 
   const textField = (label: string, key: keyof ClubBranding, ph = '', max = 200) => (
     <div>
-      <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
+      <label htmlFor={`brand-${key}`} className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
       <input
+        id={`brand-${key}`}
         className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
         value={(form[key] as string | null) ?? ''}
         maxLength={max}
@@ -78,12 +79,13 @@ function BrandingTab() {
   )
   const colorField = (label: string, key: 'primaryColor' | 'secondaryColor') => (
     <div>
-      <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
+      <label htmlFor={`brand-${key}-hex`} className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{label}</label>
       <div className="flex items-center gap-2">
-        <input type="color" className="h-9 w-12 rounded border border-[color:var(--pf-border)] cursor-pointer"
+        <input type="color" aria-label={`${label} (bảng chọn màu)`} className="h-9 w-12 rounded border border-[color:var(--pf-border)] cursor-pointer"
           value={HEX_RE.test(form[key]) ? form[key] : '#6D5DFB'}
           onChange={e => set({ [key]: e.target.value.toUpperCase() })} />
         <input
+          id={`brand-${key}-hex`}
           className={cn('flex-1 rounded-lg border px-3 py-2 text-sm font-mono outline-none focus:ring-1',
             badHex(form[key]) ? 'border-red-400 focus:ring-red-400' : 'border-[color:var(--pf-border)] focus:[border-color:var(--pf-primary)] focus:ring-[color:var(--pf-primary-text)]')}
           value={form[key]} maxLength={7} placeholder="#RRGGBB"
@@ -162,16 +164,16 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Thông tin cơ bản</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB <span className="text-red-500">*</span></label>
-            <input
+            <label htmlFor="f-Settings-1" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB <span className="text-red-500">*</span></label>
+            <input id="f-Settings-1"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.name}
               onChange={e => set({ name: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB</label>
-            <input
+            <label htmlFor="f-Settings-2" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mã CLB</label>
+            <input id="f-Settings-2"
               className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={form.code}
               readOnly
@@ -179,24 +181,24 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Không thể thay đổi sau khi tạo</p>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ</label>
-            <input
+            <label htmlFor="f-Settings-3" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ</label>
+            <input id="f-Settings-3"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.address}
               onChange={e => set({ address: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số điện thoại</label>
-            <input
+            <label htmlFor="f-Settings-4" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số điện thoại</label>
+            <input id="f-Settings-4"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.contactPhone}
               onChange={e => set({ contactPhone: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
-            <input
+            <label htmlFor="f-Settings-5" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
+            <input id="f-Settings-5"
               type="email"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.contactEmail}
@@ -204,8 +206,8 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mô tả CLB</label>
-            <textarea
+            <label htmlFor="f-Settings-6" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mô tả CLB</label>
+            <textarea id="f-Settings-6"
               rows={3}
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none resize-none"
               value={form.description}
@@ -220,8 +222,8 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Cài đặt quỹ mặc định</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số thành viên tối đa</label>
-            <input
+            <label htmlFor="f-Settings-7" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số thành viên tối đa</label>
+            <input id="f-Settings-7"
               type="number"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.maxMembers}
@@ -229,8 +231,8 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mức đóng quỹ mặc định (₫)</label>
-            <input
+            <label htmlFor="f-Settings-8" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mức đóng quỹ mặc định (₫)</label>
+            <input id="f-Settings-8"
               type="number"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.defaultContribution}
@@ -239,8 +241,8 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Áp dụng khi tạo kỳ quỹ mới</p>
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến/kỳ</label>
-            <input
+            <label htmlFor="f-Settings-9" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số buổi dự kiến/kỳ</label>
+            <input id="f-Settings-9"
               type="number"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={form.defaultSessions}
@@ -304,16 +306,16 @@ function AccountTab() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
-            <input
+            <label htmlFor="f-Settings-10" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập</label>
+            <input id="f-Settings-10"
               className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={user?.username ?? ''}
               readOnly
             />
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email</label>
-            <input
+            <label htmlFor="f-Settings-11" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email</label>
+            <input id="f-Settings-11"
               className="w-full rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] px-3 py-2 text-sm [color:var(--pf-color-muted)] cursor-not-allowed"
               value={user?.email ?? ''}
               readOnly
@@ -332,9 +334,10 @@ function AccountTab() {
             { label: 'Xác nhận mật khẩu mới', key: 'confirm' as const, show: showConfirm, toggle: () => setShowConfirm(v => !v) },
           ].map(field => (
             <div key={field.key}>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{field.label}</label>
+              <label htmlFor={`settings-pw-${field.key}`} className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">{field.label}</label>
               <div className="relative">
                 <input
+                  id={`settings-pw-${field.key}`}
                   type={field.show ? 'text' : 'password'}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 pr-10 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
                   value={pw[field.key]}
@@ -370,8 +373,8 @@ function AccountTab() {
       <div className="pf-glass rounded-xl border-red-200 p-5 md:p-6">
         <h3 className="font-semibold text-red-700 mb-1">Vùng nguy hiểm</h3>
         <p className="text-sm [color:var(--pf-color-muted)] mb-4">Các thao tác dưới đây không thể hoàn tác.</p>
-        <Button variant="danger" size="sm" onClick={() => toast.error('Liên hệ Super Admin để xoá tài khoản')}>
-          Yêu cầu xoá tài khoản
+        <Button variant="danger" size="sm" onClick={() => toast.error('Liên hệ Super Admin để xóa tài khoản')}>
+          Yêu cầu xóa tài khoản
         </Button>
       </div>
     </div>
@@ -427,11 +430,11 @@ function NotificationsTab(_: { clubId: string }) {
         const channels = d?.channels?.length ? d.channels : [d?.preferredChannel ?? 'IN_APP']
         setPref({ ...defaultPref, ...d, channels })
       })
-      .catch(() => {})
+      .catch(() => toast.error('Không tải được cấu hình thông báo. Vui lòng thử lại.'))
       .finally(() => setLoading(false))
     api.get('/telegram/link')
       .then(res => setClubChatId(res.data?.data?.chatId ?? null))
-      .catch(() => {})
+      .catch(() => {}) // best-effort: chưa liên kết Telegram thì để trống
   }, [])
 
   /** Xóa Chat ID cũ (per-user) ở tab Thông báo — cơ chế đã ngừng dùng để gửi. */
@@ -557,8 +560,8 @@ function NotificationsTab(_: { clubId: string }) {
         <p className="text-xs [color:var(--pf-color-muted)] mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
         <div className="flex items-center gap-3">
           <div>
-            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Từ</label>
-            <input type="number" min={0} max={23}
+            <label htmlFor="f-Settings-12" className="block text-xs [color:var(--pf-color-muted)] mb-1">Từ</label>
+            <input id="f-Settings-12" type="number" min={0} max={23}
               className="w-20 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursStart}
               onChange={e => set({ quietHoursStart: +e.target.value })} />
@@ -566,8 +569,8 @@ function NotificationsTab(_: { clubId: string }) {
           </div>
           <span className="[color:var(--pf-color-muted)] mt-4">—</span>
           <div>
-            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Đến</label>
-            <input type="number" min={0} max={23}
+            <label htmlFor="f-Settings-13" className="block text-xs [color:var(--pf-color-muted)] mb-1">Đến</label>
+            <input id="f-Settings-13" type="number" min={0} max={23}
               className="w-20 rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.quietHoursEnd}
               onChange={e => set({ quietHoursEnd: +e.target.value })} />
@@ -581,15 +584,15 @@ function NotificationsTab(_: { clubId: string }) {
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Giới hạn thông báo mỗi ngày</h3>
         <div className="grid grid-cols-2 gap-4 max-w-sm">
           <div>
-            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Email tối đa</label>
-            <input type="number" min={0} max={10}
+            <label htmlFor="f-Settings-14" className="block text-xs [color:var(--pf-color-muted)] mb-1">Email tối đa</label>
+            <input id="f-Settings-14" type="number" min={0} max={10}
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyEmail}
               onChange={e => set({ maxDailyEmail: +e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs [color:var(--pf-color-muted)] mb-1">Telegram tối đa</label>
-            <input type="number" min={0} max={20}
+            <label htmlFor="f-Settings-15" className="block text-xs [color:var(--pf-color-muted)] mb-1">Telegram tối đa</label>
+            <input id="f-Settings-15" type="number" min={0} max={20}
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm outline-none focus:[border-color:var(--pf-primary)]"
               value={pref.maxDailyTelegram}
               onChange={e => set({ maxDailyTelegram: +e.target.value })} />
@@ -642,7 +645,7 @@ function TelegramTab() {
     api.get('/telegram/bot-info').then(res => {
       setBotUsername(res.data?.data?.username ?? null)
       setHasOwnBot(!!res.data?.data?.hasOwnBot)
-    }).catch(() => {})
+    }).catch(() => toast.error('Không tải được thông tin bot Telegram.'))
 
   /** Đăng ký bot RIÊNG của CLB (token từ @BotFather). App xác thực token trước khi lưu. */
   const handleSaveBot = async () => {
@@ -710,7 +713,7 @@ function TelegramTab() {
       const id = res.data?.data?.chatId ?? null
       setCurrentChatId(id)
       if (id) setChatId(id)
-    }).catch(() => {})
+    }).catch(() => {}) // best-effort: chưa liên kết thì để trống (lỗi bot-info đã có toast riêng)
     loadBotInfo()
   }, [])
 
@@ -820,8 +823,8 @@ function TelegramTab() {
         </div>
 
         <div className="space-y-3">
-          <label className="block text-sm font-medium [color:var(--pf-text)]">Chat ID</label>
-          <input
+          <label htmlFor="f-Settings-16" className="block text-sm font-medium [color:var(--pf-text)]">Chat ID</label>
+          <input id="f-Settings-16"
             className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm font-mono focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
             placeholder="Ví dụ: -1001234567890 hoặc 123456789"
             value={chatId}
@@ -929,8 +932,8 @@ function PaymentTab() {
         <p className="text-xs [color:var(--pf-color-muted)] mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Ngân hàng</label>
-            <select
+            <label htmlFor="f-Settings-17" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Ngân hàng</label>
+            <select id="f-Settings-17"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none"
               value={info.bank_code}
               onChange={e => set({ bank_code: e.target.value })}>
@@ -938,16 +941,18 @@ function PaymentTab() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
+            <label htmlFor="settings-bank-number" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Số tài khoản <span className="text-red-500">*</span></label>
             <input
+              id="settings-bank-number"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none font-mono"
               placeholder="Ví dụ: 0123456789"
               value={info.bank_account_number}
               onChange={e => set({ bank_account_number: e.target.value })} />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
+            <label htmlFor="settings-bank-name" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên chủ tài khoản <span className="text-red-500">*</span></label>
             <input
+              id="settings-bank-name"
               className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:ring-1 focus:ring-[color:var(--pf-primary-text)] outline-none uppercase"
               placeholder="VD: NGUYEN VAN A"
               value={info.bank_account_name}
@@ -1013,7 +1018,7 @@ function BillingTab() {
       const list = r.data?.data ?? []
       setClubs(list)
       if (list.length > 0) setSelected(list[0].id)
-    }).catch(() => {})
+    }).catch(() => toast.error('Không tải được danh sách CLB.'))
   }, [])
 
   useEffect(() => {
@@ -1079,8 +1084,9 @@ function BillingTab() {
         <h3 className="text-sm font-semibold [color:var(--pf-text)]">Nâng cấp gói</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs [color:var(--pf-color-muted)] mb-1 block">Gói</label>
+            <label htmlFor="settings-upgrade-tier" className="text-xs [color:var(--pf-color-muted)] mb-1 block">Gói</label>
             <select
+              id="settings-upgrade-tier"
               className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm"
               value={upgradeForm.tier}
               onChange={e => setUpgradeForm(p => ({ ...p, tier: e.target.value as ServicePlan }))}
@@ -1091,8 +1097,9 @@ function BillingTab() {
             </select>
           </div>
           <div>
-            <label className="text-xs [color:var(--pf-color-muted)] mb-1 block">Số tháng</label>
+            <label htmlFor="settings-upgrade-months" className="text-xs [color:var(--pf-color-muted)] mb-1 block">Số tháng</label>
             <input
+              id="settings-upgrade-months"
               type="number"
               min={1}
               max={24}

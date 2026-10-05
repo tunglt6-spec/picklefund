@@ -98,13 +98,13 @@ export function Billing() {
         api.get('/billing/subscription'),
         api.get('/billing/plans'),
         api.get('/billing/ai-usage'),
-        api.get('/billing/orders').catch(() => null),
+        api.get('/billing/orders').catch(() => null), // cố ý: lịch sử đơn lỗi không chặn trang gói
       ])
       setSub(subRes.data?.data ?? subRes.data)
       setPlans(planRes.data?.data ?? planRes.data)
       setUsage(usageRes.data?.data ?? usageRes.data)
       if (orderRes) setOrders(orderRes.data?.data ?? orderRes.data ?? [])
-    } catch { /* noop */ }
+    } catch { toast.error('Không tải được thông tin gói dịch vụ. Vui lòng thử lại.') }
     finally { setLoading(false) }
   }, [user])
 
@@ -233,9 +233,9 @@ export function Billing() {
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
-                    <th className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>
+                    <th scope="col" className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>
                     {plans.map(p => (
-                      <th key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
+                      <th scope="col" key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${PLAN_BADGE[p.tier]}`}>
                           {p.tier === currentTier && <Check size={11} className="shrink-0" />}{p.name ?? PLAN_LABEL[p.tier]}
                         </span>
@@ -326,7 +326,7 @@ export function Billing() {
                 <h3 className="font-semibold">Nâng cấp để dùng AI đầy đủ</h3>
               </div>
               <p className="text-sm text-white/80 mb-4">
-                Gói Pro (99.000đ/tháng · 990.000đ/năm) mở khoá không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
+                Gói Pro (99.000đ/tháng · 990.000đ/năm) mở khóa không giới hạn thành viên, Maika AI, Lisa AI, minigame/giải đấu và báo cáo PDF/Excel.
               </p>
               <button
                 onClick={() => { const pro = plans.find(p => p.tier === 'PRO'); if (pro) setCheckout(pro) }}

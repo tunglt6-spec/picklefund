@@ -57,10 +57,11 @@ export function ChangePassword() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Old password */}
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu hiện tại</label>
+              <label htmlFor="cp-old" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu hiện tại</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
+                  id="cp-old"
                   type={show.old ? 'text' : 'password'}
                   value={form.oldPassword}
                   onChange={e => setForm(f => ({ ...f, oldPassword: e.target.value }))}
@@ -77,10 +78,11 @@ export function ChangePassword() {
 
             {/* New password */}
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu mới</label>
+              <label htmlFor="cp-new" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Mật khẩu mới</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
+                  id="cp-new"
                   type={show.new ? 'text' : 'password'}
                   value={form.newPassword}
                   onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
@@ -97,10 +99,11 @@ export function ChangePassword() {
 
             {/* Confirm */}
             <div>
-              <label className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Xác nhận mật khẩu mới</label>
+              <label htmlFor="cp-confirm" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Xác nhận mật khẩu mới</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                 <input
+                  id="cp-confirm"
                   type={show.confirm ? 'text' : 'password'}
                   value={form.confirm}
                   onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}

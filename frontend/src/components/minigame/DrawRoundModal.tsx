@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { X, ChevronRight, RefreshCw, Check, AlertCircle, Users, Zap, Pencil } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useMinigameStore } from '../../store/minigameStore'
@@ -91,6 +92,8 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
   const [acknowledgeInProgress, setAcknowledgeInProgress] = useState(false)
   const [isManualEdit, setIsManualEdit] = useState(false)
   const [selectedChip, setSelectedChip] = useState<SelectedChip | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(isOpen, panelRef, onClose)
 
   useEffect(() => {
     if (isOpen) {
@@ -193,8 +196,8 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      <div className={cn(
-        'relative w-full sm:max-w-lg [background:var(--pf-surface)] shadow-2xl z-10 flex flex-col',
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Rút thăm vòng mới" tabIndex={-1} className={cn(
+        'relative w-full sm:max-w-lg [background:var(--pf-surface)] shadow-2xl z-10 flex flex-col outline-none',
         'rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[85vh]',
       )}>
         {/* Drag handle (mobile) */}
@@ -241,7 +244,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
               {/* Mode selector */}
               <div>
-                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Chế độ bốc thăm</label>
+                <div className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Chế độ bốc thăm</div>
                 <div className="space-y-2">
                   {MODES.map(m => (
                     <button
@@ -274,7 +277,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
 
               {/* Options */}
               <div>
-                <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Tùy chọn</label>
+                <div className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide block mb-2">Tùy chọn</div>
                 <div className="space-y-2">
                   {[
                     { key: 'avoidRepeatPartners', label: 'Tránh ghép cặp lặp lại', value: avoidRepeatPartners, set: setAvoidRepeatPartners },
@@ -316,8 +319,9 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                   {/* Court count / max matches */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
-                      <label className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số sân đang có</label>
+                      <label htmlFor="drm-courts" className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số sân đang có</label>
                       <input
+                        id="drm-courts"
                         type="number"
                         min={1}
                         value={courtCount}
@@ -326,9 +330,10 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                       />
                     </div>
                     <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
-                      <label className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số trận tối đa</label>
+                      <label htmlFor="drm-maxmatches" className="text-xs [color:var(--pf-color-muted)] block mb-1.5">Số trận tối đa</label>
                       <div className="flex items-center gap-2">
                         <input
+                          id="drm-maxmatches"
                           type="number"
                           min={1}
                           disabled={maxMatchesAuto}
@@ -354,9 +359,9 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
               {/* Member selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">
+                  <span className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">
                     Thành viên tham gia
-                  </label>
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs [color:var(--pf-color-muted)]">{selectedCount}/{activeParts.length}</span>
                     <button

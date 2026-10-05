@@ -482,15 +482,15 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     <table className="pf-rows w-full text-sm">
       <thead>
         <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
-          <th className="text-left font-semibold px-3 py-2.5">#</th>
-          <th className="text-left font-semibold px-3 py-2.5">Đội</th>
-          <th className="text-center font-semibold px-2 py-2.5" title="Số trận">T</th>
-          <th className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
-          <th className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
-          <th className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
-          <th className="text-center font-semibold px-2 py-2.5" title={ui.gfgaTitle}>{ui.gfgaShort}</th>
-          <th className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
-          <th className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
+          <th scope="col" className="text-left font-semibold px-3 py-2.5">#</th>
+          <th scope="col" className="text-left font-semibold px-3 py-2.5">Đội</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Số trận">T</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Thắng">Th</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Hòa">H</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Thua">B</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title={ui.gfgaTitle}>{ui.gfgaShort}</th>
+          <th scope="col" className="text-center font-semibold px-2 py-2.5" title="Hiệu số">HS</th>
+          <th scope="col" className="text-center font-semibold px-3 py-2.5" title="Điểm">Điểm</th>
         </tr>
       </thead>
       <tbody>
@@ -583,7 +583,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             ) : (
               <>
             {/* Tạo đội mới */}
-            <div className="pf-glass rounded-[18px] p-4 sm:p-5">
+            <div className="pf-glass rounded-[16px] p-4 sm:p-5">
               <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Tạo đội mới</h2>
               <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="Tên đội (vd: FC Sấm Sét)"
                 className="mt-3 w-full rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
@@ -643,7 +643,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {teams.map(team => (
-                  <div key={team.id} className="pf-glass rounded-[18px] p-4">
+                  <div key={team.id} className="pf-glass rounded-[16px] p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-semibold [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={16} className="[color:var(--pf-color-success)]" /> {team.name}</p>
@@ -691,7 +691,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
             {/* M2b — Xếp bảng đội thủ công (tùy chọn) */}
             {teams.length >= 2 && matches.length === 0 && (
-              <div className="pf-glass rounded-[18px] p-4 sm:p-5">
+              <div className="pf-glass rounded-[16px] p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Users size={18} /> Xếp bảng đội (tùy chọn)</h2>
                   <button onClick={addTeamGroup} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors"><Plus size={14} /> Thêm bảng</button>
@@ -732,7 +732,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             {matches.length === 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Vòng tròn */}
-                <div className="pf-glass rounded-[18px] p-5">
+                <div className="pf-glass rounded-[16px] p-5">
                   <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><CalendarDays size={18} /> Vòng tròn</h2>
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Mỗi đội gặp tất cả các đội còn lại — tính bảng xếp hạng. Cần ít nhất 2 đội ({teams.length} đội hiện có).</p>
                   <label className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)] cursor-pointer w-fit">
@@ -745,7 +745,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                   </button>
                 </div>
                 {/* Loại trực tiếp */}
-                <div className="pf-glass rounded-[18px] p-5">
+                <div className="pf-glass rounded-[16px] p-5">
                   <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Swords size={18} /> Loại trực tiếp</h2>
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Đấu loại một trận, đội thắng đi tiếp tới khi tìm ra nhà vô địch. Đội lẻ sẽ có suất đi tiếp (BYE) ở vòng 1.</p>
                   <button onClick={generateKnockout} disabled={genLoading || teams.length < 2}
@@ -847,7 +847,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 <button onClick={() => exportStandings('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
               {isKnockout ? (
-            <div id={`std-${id}`} className="pf-glass rounded-[18px] p-5">
+            <div id={`std-${id}`} className="pf-glass rounded-[16px] p-5">
               {champion ? (
                 <div className="flex items-center gap-3 rounded-[14px] border border-[color:var(--pf-color-warning-soft)] [background:var(--pf-color-warning-soft)] p-4">
                   <Crown size={30} className="[color:var(--pf-color-warning)]" />
@@ -874,7 +874,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <div id={`std-${id}`} className="flex flex-col gap-4">
               {groupTables ? (
                 groupTables.map(gt => (
-                  <div key={gt.name} className="pf-glass-strong rounded-[18px] overflow-hidden">
+                  <div key={gt.name} className="pf-glass-strong rounded-[16px] overflow-hidden">
                     <div className="px-4 py-2.5 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
                       <p className="text-sm font-bold [color:var(--pf-primary-text)]">{gt.name}</p>
                     </div>
@@ -882,7 +882,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                   </div>
                 ))
               ) : (
-                <div className="pf-glass-strong rounded-[18px] overflow-hidden">
+                <div className="pf-glass-strong rounded-[16px] overflow-hidden">
                   <div className="overflow-x-auto">{renderTable(standings)}</div>
                   <p className="px-3 py-2 text-xs [color:var(--pf-color-muted)] border-t border-[color:var(--pf-border)]">
                     Xếp theo: Điểm → Hiệu số → {ui.scoreWord}. Điểm: thắng {mg.winPoints} · hòa {mg.drawPoints} · thua {mg.lossPoints}.

@@ -10,6 +10,7 @@
  * các sub-page hiện có, điều hướng qua "Xem". Thiếu dữ liệu → "Chưa có dữ liệu"; không bịa state.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
@@ -130,6 +131,10 @@ export function MinigameList() {
   const [modeTab, setModeTab] = useState<ModeTab>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [showFilterSheet, setShowFilterSheet] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
+  const delegateRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(showFilterSheet, filterRef, () => setShowFilterSheet(false))
+  useDialogA11y(showDelegateModal, delegateRef, () => setShowDelegateModal(false))
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
 
   /* ── Fetch danh sách giải đấu (ĐÚNG endpoint hiện có: GET /minigames) — Loading/Error ── */
@@ -289,7 +294,7 @@ export function MinigameList() {
           <div className="mt-4"><LoadingState variant="list" rows={5} /></div>
         </>
       ) : loadState === 'error' ? (
-        <div className="pf-glass rounded-[20px]">
+        <div className="pf-glass rounded-[16px]">
           <EmptyState icon={<AlertCircle size={26} />} title="Không tải được danh sách giải đấu"
             description="Đã xảy ra lỗi khi tải dữ liệu giải đấu. Vui lòng thử lại."
             action={<ActionButton icon={<RefreshCw size={15} />} onClick={() => void fetchMinigames()}>Thử lại</ActionButton>} />
@@ -323,7 +328,7 @@ export function MinigameList() {
           </div>
 
           {/* ── Tournament list: DataTable (desktop) / MobileCardList (mobile) ── */}
-          <div className="pf-glass mt-4 rounded-[20px]">
+          <div className="pf-glass mt-4 rounded-[16px]">
             <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Danh sách giải đấu</h3>
               <span className="text-xs [color:var(--pf-color-muted)]">{rows.length} / {minigames.length} giải</span>
@@ -381,7 +386,7 @@ export function MinigameList() {
         <Portal>
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowDelegateModal(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
+          <div ref={delegateRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="outline-none relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
             <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
               <h2 className="flex items-center gap-2 text-base font-semibold [color:var(--pf-text)]">
                 <UserCheck size={18} className="[color:var(--pf-primary-text)]" />Ủy quyền quản lý minigame
@@ -430,7 +435,7 @@ export function MinigameList() {
         <Portal>
         <div className="fixed inset-0 z-50 flex items-end">
           <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={() => setShowFilterSheet(false)} />
-          <div role="dialog" aria-modal="true" aria-label="Bộ lọc giải đấu" className="relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
+          <div ref={filterRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Bộ lọc giải đấu" className="outline-none relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
             <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
               <h2 className="text-base font-semibold [color:var(--pf-text)]">Bộ lọc giải đấu</h2>
               <button onClick={() => setShowFilterSheet(false)} aria-label="Đóng" className="flex h-9 w-9 items-center justify-center rounded-xl text-lg [color:var(--pf-color-muted)]"><span aria-hidden>✕</span></button>

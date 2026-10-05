@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
 
@@ -40,6 +41,12 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
   const [now] = useState(() => Date.now())
   // Chặn double-submit cho các thao tác async (bốc vòng / kết thúc / lưu điểm).
   const [busy, setBusy] = useState(false)
+  const scoreRef = useRef<HTMLDivElement>(null)
+  const deleteRef = useRef<HTMLDivElement>(null)
+  const editRef = useRef<HTMLDivElement>(null)
+  useDialogA11y(!!scoreEntryMatchId, scoreRef, () => setScoreEntryMatchId(null))
+  useDialogA11y(!!deleteTarget, deleteRef, () => setDeleteTarget(null))
+  useDialogA11y(!!editTarget, editRef, () => setEditTarget(null))
 
   const { getMinigame, getTournamentDashboard, getRecentActivity, lockRound, enterDoublesMatchResult, removeParticipant, updateParticipant } = useMinigameStore()
 
@@ -414,7 +421,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {scoreEntryMatchId && scoreEntryMatch && (
         <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-md shadow-xl">
+          <div ref={scoreRef} role="dialog" aria-modal="true" aria-label="Nhập kết quả trận" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-md shadow-xl outline-none">
             <div className="flex items-center gap-2 mb-4">
               <Trophy size={20} className="[color:var(--pf-primary-text)]" />
               <h3 className="text-lg font-bold [color:var(--pf-text)]">
@@ -432,8 +439,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
               <div className="flex items-center gap-4 justify-center py-2">
                 <div className="flex flex-col items-center gap-1.5">
-                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 1</label>
+                  <label htmlFor="mdp-score1" className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 1</label>
                   <input
+                    id="mdp-score1"
                     type="number"
                     min={0}
                     max={21}
@@ -444,8 +452,9 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                 </div>
                 <span className="text-2xl font-bold [color:var(--pf-color-muted)] mt-5">—</span>
                 <div className="flex flex-col items-center gap-1.5">
-                  <label className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 2</label>
+                  <label htmlFor="mdp-score2" className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Đội 2</label>
                   <input
+                    id="mdp-score2"
                     type="number"
                     min={0}
                     max={21}
@@ -494,7 +503,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {deleteTarget && (
         <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <div ref={deleteRef} role="dialog" aria-modal="true" aria-label="Xóa thành viên" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl outline-none">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full [background:var(--pf-color-danger-soft)] flex items-center justify-center shrink-0">
                 <UserMinus size={18} className="[color:var(--pf-color-danger)]" />
@@ -532,7 +541,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
       {editTarget && (
         <Portal>
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <div ref={editRef} role="dialog" aria-modal="true" aria-label="Sửa thành viên" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl outline-none">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
                 <UserPen size={18} className="[color:var(--pf-primary-text)]" />
@@ -541,10 +550,11 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             </div>
             <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5">
+                <label htmlFor="mdp-editname" className="block text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1.5">
                   Tên hiển thị
                 </label>
                 <input
+                  id="mdp-editname"
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}

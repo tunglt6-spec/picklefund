@@ -435,7 +435,7 @@ export function Members() {
   }, [accessToken, clubId])
 
   /* ── Kỳ quỹ hiện tại + dữ liệu phái sinh (chỉ đọc, dữ liệu thật) ──
-     React Compiler tự memo hoá (không dùng useMemo thủ công để tránh xung đột). */
+     React Compiler tự memo hóa (không dùng useMemo thủ công để tránh xung đột). */
   const periods = clubData.fundPeriods ?? []
   const currentPeriod =
     getActiveChungPeriod(periods)
@@ -527,7 +527,7 @@ export function Members() {
       if (editMember) {
         // SỬA: gửi TƯỜNG MINH optional field; rỗng → null để XÓA được giá trị cũ
         // (backend @IsOptional cho qua null → Prisma set null). Nếu omit như tạo mới thì
-        // không thể xoá trắng email/sđt/ghi chú đã có.
+        // không thể xóa trắng email/sđt/ghi chú đã có.
         const payload = {
           ...base,
           phone: form.phone.trim() || null,
@@ -733,7 +733,7 @@ export function Members() {
         </>
       ) : loadState === 'error' ? (
         /* ── Workspace Error + Retry (gọi lại đúng API hiện có) ── */
-        <div className="pf-glass mt-4 rounded-[20px]">
+        <div className="pf-glass mt-4 rounded-[16px]">
           <EmptyState
             icon={<AlertTriangle size={26} />}
             title="Không tải được danh sách thành viên"
@@ -764,7 +764,7 @@ export function Members() {
       </div>
 
       {/* ── Member list: DataTable (desktop) / MobileCardList (mobile) ── */}
-      <div className="pf-glass mt-4 rounded-[20px]">
+      <div className="pf-glass mt-4 rounded-[16px]">
         {rows.length === 0 ? (
           hasActiveFilter ? (
             /* Lọc/tìm kiếm trả về 0 kết quả */

@@ -59,7 +59,7 @@ export function AidoShowcase() {
         <div className={`${PUBLIC_CONTAINER} py-14`}>
           <div className="mb-8 text-center">
             <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><Workflow size={14} /> Cách vận hành</div>
-            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Tự động hoá có kiểm soát</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Tự động hóa có kiểm soát</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {FLOW.map((f) => (
