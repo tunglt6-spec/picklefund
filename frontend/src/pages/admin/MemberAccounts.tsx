@@ -425,7 +425,7 @@ export function MemberAccounts() {
             </div>
           ) : (
             filtered.map(acc => (
-              <div key={acc.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div key={acc.id} className="pf-glass rounded-xl p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <p className="font-medium [color:var(--pf-text)] text-sm">{acc.member?.fullName ?? '—'}</p>

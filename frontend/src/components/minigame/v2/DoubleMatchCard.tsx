@@ -74,7 +74,7 @@ export function DoubleMatchCard({ match, onEnterScore }: DoubleMatchCardProps) {
   }
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm flex flex-col gap-2">
+    <div className="pf-glass rounded-xl p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>

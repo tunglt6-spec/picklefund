@@ -224,7 +224,7 @@ export function Billing() {
           </div>
 
           {/* Plan comparison */}
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] overflow-hidden">
+          <div className="pf-glass-strong rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-[color:var(--pf-border)]">
               <h3 className="font-semibold [color:var(--pf-text)]">Bảng so sánh gói dịch vụ</h3>
               <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Chọn gói và tự nâng cấp — kích hoạt ngay sau khi thanh toán</p>
@@ -293,7 +293,7 @@ export function Billing() {
 
           {/* AI Usage */}
           {usage.length > 0 && (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+            <div className="pf-glass rounded-xl p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={18} className="[color:var(--pf-primary)]" />
                 <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử sử dụng AI</h3>
@@ -338,7 +338,7 @@ export function Billing() {
 
           {/* Lịch sử thanh toán */}
           {orders.length > 0 && (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+            <div className="pf-glass rounded-xl p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Receipt size={18} className="[color:var(--pf-primary)]" />
                 <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử thanh toán</h3>

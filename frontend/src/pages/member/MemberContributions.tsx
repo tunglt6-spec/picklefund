@@ -320,7 +320,7 @@ export function MemberContributions() {
                 const balance = toNum(r.balance)
                 const isExpanded = expandedReceipt === r.id
                 return (
-                  <div key={r.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+                  <div key={r.id} className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
                     <button
                       onClick={() => setExpandedReceipt(isExpanded ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 hover:[background:var(--pf-surface-muted)] transition-colors"

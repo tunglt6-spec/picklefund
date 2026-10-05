@@ -300,7 +300,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
               onChange={(k) => setFilter(k)}
             />
 
-            <div id={MS_DOUBLES_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
+            <div id={MS_DOUBLES_ID} className="pf-glass-strong rounded-xl overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
@@ -668,7 +668,7 @@ export function MatchSchedule() {
           onChange={(k) => setFilter(k)}
         />
 
-        <div id={MS_GROUP_ID} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
+        <div id={MS_GROUP_ID} className="pf-glass-strong rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">

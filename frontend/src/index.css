@@ -414,7 +414,7 @@ select:-webkit-autofill {
    3) Công tắc dừng khẩn cấp: <html data-glass="off"> (localStorage pf-glass=off hoặc ?glass=off).
    4) Trình duyệt không có backdrop-filter → nền đặc dự phòng (@supports not). */
 :root {
-  --pf-glass-bg:        rgb(255 255 255 / 0.74);
+  --pf-glass-bg:        rgb(255 255 255 / 0.60);
   --pf-glass-bg-strong: rgb(255 255 255 / 0.86);
   --pf-glass-border:    rgb(255 255 255 / 0.72);
   --pf-glass-edge:      rgb(15 23 42 / 0.07);
@@ -424,9 +424,9 @@ select:-webkit-autofill {
   --pf-glass-shadow:    0 1px 1px rgb(15 23 42 / 0.04), 0 8px 24px -8px rgb(15 23 42 / 0.12), 0 24px 48px -24px rgb(109 93 251 / 0.14);
   --pf-skeleton-hi:     #e9eef6;
   --pf-wash:
-    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.10), transparent 60%),
-    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.08), transparent 60%),
-    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.05), transparent 60%);
+    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.20), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.15), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.11), transparent 60%);
 }
 [data-theme="dark"] {
   --pf-glass-bg:        rgb(24 33 56 / 0.56);
@@ -437,9 +437,9 @@ select:-webkit-autofill {
   --pf-glass-shadow:    0 1px 1px rgb(0 0 0 / 0.4), 0 10px 28px -10px rgb(0 0 0 / 0.6), 0 24px 48px -24px rgb(109 93 251 / 0.22);
   --pf-skeleton-hi:     #26324c;
   --pf-wash:
-    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.22), transparent 60%),
-    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.12), transparent 60%),
-    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.08), transparent 60%);
+    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.32), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.20), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.14), transparent 60%);
 }
 
 /* Chế độ tắt: mọi nơi dùng token kính tự thành nền ĐẶC (kể cả style inline dùng var(--pf-glass-bg)). */
@@ -492,10 +492,11 @@ select:-webkit-autofill {
     .pf-glass-interactive:hover { transform: translateY(-2px); }
   }
   /* Nền wash phía sau app (đặt ở lớp nền, KHÔNG bọc nội dung). */
+  .pf-glass-tint { -webkit-backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat)); backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat)); box-shadow: inset 0 1px 0 var(--pf-glass-hi), var(--pf-glass-shadow); }
   .pf-wash { background-image: var(--pf-wash); background-attachment: fixed; }
 
   /* Chống chồng nhiều lớp blur (hiệu năng): kính lồng trong kính thì không blur lại, nền đặc hơn. */
-  :is(.pf-glass, .pf-glass-strong, .pf-glass-bar) :is(.pf-glass, .pf-glass-strong) {
+  :is(.pf-glass, .pf-glass-strong, .pf-glass-bar) :is(.pf-glass, .pf-glass-strong, .pf-glass-tint) {
     -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--pf-glass-bg-strong);
   }
   /* Dự phòng: trình duyệt không hỗ trợ backdrop-filter. */

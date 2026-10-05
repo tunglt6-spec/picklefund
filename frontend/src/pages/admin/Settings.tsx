@@ -102,7 +102,7 @@ function BrandingTab() {
           Logo/nền/favicon nhập bằng URL ảnh. Màu áp dụng dần trên giao diện & PDF ở các bản cập nhật tiếp theo.
         </p>
       </div>
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6 space-y-4">
+      <div className="pf-glass rounded-xl p-5 md:p-6 space-y-4">
         <h3 className="font-semibold [color:var(--pf-text)]">Nhận diện</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {textField('Tên hiển thị', 'displayName', 'PickleFund', 60)}
@@ -158,7 +158,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
   return (
     <div className="space-y-6">
       {/* Basic info */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Thông tin cơ bản</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -216,7 +216,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
       </div>
 
       {/* Fund settings */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Cài đặt quỹ mặc định</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -291,7 +291,7 @@ function AccountTab() {
   return (
     <div className="space-y-6">
       {/* Profile */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Thông tin tài khoản</h3>
         <div className="flex items-center gap-4 mb-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl [background:var(--pf-primary)] text-2xl font-bold text-white">
@@ -323,7 +323,7 @@ function AccountTab() {
       </div>
 
       {/* Change password */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Đổi mật khẩu</h3>
         <div className="space-y-4 max-w-md">
           {[
@@ -367,7 +367,7 @@ function AccountTab() {
       </div>
 
       {/* Danger zone */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-red-200 p-5 md:p-6">
+      <div className="pf-glass rounded-xl border-red-200 p-5 md:p-6">
         <h3 className="font-semibold text-red-700 mb-1">Vùng nguy hiểm</h3>
         <p className="text-sm [color:var(--pf-color-muted)] mb-4">Các thao tác dưới đây không thể hoàn tác.</p>
         <Button variant="danger" size="sm" onClick={() => toast.error('Liên hệ Super Admin để xoá tài khoản')}>
@@ -485,7 +485,7 @@ function NotificationsTab(_: { clubId: string }) {
   return (
     <div className="space-y-6">
       {/* Bật/tắt thông báo */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold [color:var(--pf-text)]">Nhận thông báo</h3>
@@ -496,7 +496,7 @@ function NotificationsTab(_: { clubId: string }) {
       </div>
 
       {/* Kênh ưu tiên */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Kênh nhận thông báo ưu tiên</h3>
         <div className="space-y-2">
           {(['IN_APP', 'EMAIL', 'TELEGRAM'] as const).map(ch => (
@@ -532,7 +532,7 @@ function NotificationsTab(_: { clubId: string }) {
       {/* Chỉ hiện khi CÒN Chat ID cũ (per-user, đã ngừng dùng để gửi) → cho dọn.
           Không còn ID cũ thì ẩn hẳn (tránh card vô nghĩa) — quản lý Telegram ở tab Telegram. */}
       {pref.telegramChatId && (
-        <div className="[background:var(--pf-surface)] rounded-xl border border-amber-200 bg-amber-50 p-5 md:p-6 space-y-2">
+        <div className="pf-glass rounded-xl border-amber-200 bg-amber-50 p-5 md:p-6 space-y-2">
           <h3 className="font-semibold text-amber-800">Chat ID Telegram cũ cần dọn</h3>
           <p className="text-sm text-amber-800">
             Ô cũ còn lưu Chat ID: <code className="font-mono font-semibold">{pref.telegramChatId}</code>{' '}
@@ -552,7 +552,7 @@ function NotificationsTab(_: { clubId: string }) {
       )}
 
       {/* Giờ yên tĩnh */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Giờ yên tĩnh</h3>
         <p className="text-xs [color:var(--pf-color-muted)] mb-4">Trong khoảng giờ này chỉ nhận thông báo In-App</p>
         <div className="flex items-center gap-3">
@@ -577,7 +577,7 @@ function NotificationsTab(_: { clubId: string }) {
       </div>
 
       {/* Giới hạn/ngày */}
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Giới hạn thông báo mỗi ngày</h3>
         <div className="grid grid-cols-2 gap-4 max-w-sm">
           <div>
@@ -731,7 +731,7 @@ function TelegramTab() {
 
   return (
     <div className="space-y-5">
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Kết nối Telegram Bot</h3>
         <p className="text-sm [color:var(--pf-color-muted)] mb-4">
           Liên kết Telegram Bot với CLB <strong>{user?.clubId ? `(CLB hiện tại)` : ''}</strong> để nhận thông báo và tra cứu quỹ qua Telegram.
@@ -846,7 +846,7 @@ function TelegramTab() {
         </div>
       </div>
 
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Các lệnh Bot hỗ trợ</h3>
         <p className="text-xs [color:var(--pf-color-muted)] mb-3">
           Các lệnh tra cứu dưới đây hoạt động trên <b>cả bot riêng của CLB và bot chung</b>. Cần liên kết Chat ID với CLB trước để bot biết trả dữ liệu của CLB nào.
@@ -924,7 +924,7 @@ function PaymentTab() {
 
   return (
     <div className="space-y-6">
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+      <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-1">Tài khoản ngân hàng nhận tiền quỹ</h3>
         <p className="text-xs [color:var(--pf-color-muted)] mb-4">Dùng để tạo mã QR VietQR khi thu quỹ thành viên</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -958,7 +958,7 @@ function PaymentTab() {
       </div>
 
       {qrUrl && (
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+        <div className="pf-glass rounded-xl p-5 md:p-6">
           <h3 className="font-semibold [color:var(--pf-text)] mb-3">Xem trước mã QR</h3>
           <div className="flex items-start gap-6">
             <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-[color:var(--pf-border)] object-contain" />
@@ -1047,7 +1047,7 @@ function BillingTab() {
 
   return (
     <div className="space-y-6">
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5">
+      <div className="pf-glass rounded-xl p-5">
         <h3 className="text-sm font-semibold [color:var(--pf-text)] mb-4">Chọn CLB</h3>
         <select
           className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm"
@@ -1061,7 +1061,7 @@ function BillingTab() {
       {loading && <div className="text-center text-sm [color:var(--pf-color-muted)]">Đang tải...</div>}
 
       {!loading && sub && (
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 space-y-4">
+        <div className="pf-glass rounded-xl p-5 space-y-4">
           <h3 className="text-sm font-semibold [color:var(--pf-text)]">Subscription hiện tại</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div><span className="[color:var(--pf-color-muted)]">Gói:</span> <span className="font-medium">{sub.plan.name}</span></div>
@@ -1075,7 +1075,7 @@ function BillingTab() {
         </div>
       )}
 
-      <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 space-y-4">
+      <div className="pf-glass rounded-xl p-5 space-y-4">
         <h3 className="text-sm font-semibold [color:var(--pf-text)]">Nâng cấp gói</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -1175,7 +1175,7 @@ export function Settings() {
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-4xl">
         {/* Tab bar */}
-        <div className="flex gap-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-xl p-1">
+        <div className="pf-glass flex gap-1 rounded-xl p-1">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(

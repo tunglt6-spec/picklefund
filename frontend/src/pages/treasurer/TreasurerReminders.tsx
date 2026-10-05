@@ -291,7 +291,7 @@ export function TreasurerReminders() {
       <div className="p-6 max-w-[900px] mx-auto space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-red-50 flex items-center justify-center">
                 <Bell size={14} className="text-red-500" />
@@ -301,7 +301,7 @@ export function TreasurerReminders() {
             <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} người</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(totalOwed)}</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock size={14} className="text-amber-600" />
@@ -311,7 +311,7 @@ export function TreasurerReminders() {
             <p className="text-2xl font-bold text-amber-600">{pendingMembers.length} người</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Đã nộp tiền, chưa duyệt</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle size={14} className="text-emerald-600" />
@@ -327,7 +327,7 @@ export function TreasurerReminders() {
 
         {/* Unpaid members */}
         {unpaidMembers.length > 0 && (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
             <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Bell size={14} className="text-red-500" />
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Thành viên chưa đóng quỹ</h3>
@@ -379,7 +379,7 @@ export function TreasurerReminders() {
 
         {/* Pending confirmation */}
         {pendingMembers.length > 0 && (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
             <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Clock size={14} className="text-amber-500" />
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Chờ xác nhận thanh toán</h3>

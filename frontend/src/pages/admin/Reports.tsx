@@ -65,7 +65,7 @@ const REPORT_TABS = [
 function VNDTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border px-3 py-2 text-xs [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)]">
+    <div className="pf-glass rounded-xl px-3 py-2 text-xs [box-shadow:var(--pf-shadow-hover)]">
       <p className="mb-1 font-semibold [color:var(--pf-text)]">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="flex items-center gap-2">
@@ -80,7 +80,7 @@ function VNDTooltip({ active, payload, label }: any) {
 function PctTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border px-3 py-2 text-xs [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)]">
+    <div className="pf-glass rounded-xl px-3 py-2 text-xs [box-shadow:var(--pf-shadow-hover)]">
       <p className="[color:var(--pf-text)]">{label}: <span className="font-semibold" style={{ color: 'var(--pf-green)' }}>{payload[0].value}%</span></p>
     </div>
   )

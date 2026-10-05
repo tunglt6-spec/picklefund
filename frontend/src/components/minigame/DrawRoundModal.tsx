@@ -446,7 +446,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Danh sách trận</p>
                 <div className="space-y-2">
                   {preview.matches.map((m, matchIdx) => (
-                    <div key={m.matchNumber} className="[background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-xl p-3">
+                    <div key={m.matchNumber} className="pf-glass rounded-xl p-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{m.matchNumber}</span>
                         <div className="flex items-center gap-1.5">

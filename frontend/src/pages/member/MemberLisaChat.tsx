@@ -133,15 +133,15 @@ export function MemberLisaChat() {
     <>
       {brief && messages.length <= 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+          <div className="pf-glass rounded-xl p-3">
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Đóng quỹ</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.paymentStatus}</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+          <div className="pf-glass rounded-xl p-3">
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Hoạt động</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.activitySummary}</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-3 shadow-sm">
+          <div className="pf-glass rounded-xl p-3">
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wider mb-1">Gợi ý</p>
             <p className="text-xs font-medium [color:var(--pf-text)]">{brief.tips[0] ?? '—'}</p>
           </div>

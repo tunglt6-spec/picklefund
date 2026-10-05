@@ -524,7 +524,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
         ) : (
           <ul className="space-y-2">
             {pendList.map((e: any) => (
-              <li key={e.id} className="rounded-xl border p-3 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
+              <li key={e.id} className="pf-glass rounded-xl p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold [color:var(--pf-text)]">{e.description || '(không có mô tả)'}</p>

@@ -490,7 +490,7 @@ export function TreasurerIncome() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="pf-glass rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                     <CheckCircle size={14} className="text-emerald-600" />
@@ -500,7 +500,7 @@ export function TreasurerIncome() {
                 <p className="text-xl font-bold text-emerald-600">{formatVND(totalConfirmed)}</p>
                 <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{commonContribs.filter(c => c.isConfirmed).length} khoản</p>
               </div>
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="pf-glass rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                     <XCircle size={14} className="text-amber-600" />
@@ -510,7 +510,7 @@ export function TreasurerIncome() {
                 <p className="text-xl font-bold text-amber-600">{unconfirmedCount} khoản</p>
                 <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(contributions.filter(c => !c.isConfirmed).reduce((a, c) => a + c.amount, 0))}</p>
               </div>
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="pf-glass rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                     <Wallet size={14} className="[color:var(--pf-primary)]" />
@@ -541,7 +541,7 @@ export function TreasurerIncome() {
                 <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu nào. Bấm "Ghi nhận thu" để bắt đầu.</p>
               </div>
             ) : (
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
+              <div className="pf-glass-strong rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>

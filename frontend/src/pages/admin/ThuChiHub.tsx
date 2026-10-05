@@ -103,7 +103,7 @@ interface Tx {
 function BarTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border px-3 py-2.5 text-xs min-w-[160px] [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)]">
+    <div className="pf-glass rounded-xl px-3 py-2.5 text-xs min-w-[160px] [box-shadow:var(--pf-shadow-hover)]">
       <p className="mb-1.5 font-semibold [color:var(--pf-text)] truncate max-w-[160px]">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} className="mb-0.5 flex items-center gap-2">
@@ -119,7 +119,7 @@ function DonutTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null
   const d = payload[0]
   return (
-    <div className="rounded-xl border px-3 py-2 text-xs [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)]">
+    <div className="pf-glass rounded-xl px-3 py-2 text-xs [box-shadow:var(--pf-shadow-hover)]">
       <p className="font-semibold [color:var(--pf-text)]">{d.name}</p>
       <p className="mt-0.5 tabular-nums [color:var(--pf-color-muted)]">{formatVND(d.value)}</p>
     </div>

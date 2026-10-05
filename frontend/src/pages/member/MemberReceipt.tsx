@@ -422,7 +422,7 @@ export function MemberReceipt() {
               const totalCostR = n(r.totalCost)
 
               return (
-                <div key={r.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+                <div key={r.id} className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
                   {/* Header row */}
                   <button
                     className="w-full flex items-center justify-between px-5 py-4 hover:[background:var(--pf-surface-muted)] transition-colors"

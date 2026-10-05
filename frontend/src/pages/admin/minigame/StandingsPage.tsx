@@ -278,7 +278,7 @@ export function StandingsPage() {
         <div id={EXPORT_ID} className="space-y-4">
         {/* Bar chart */}
         {sorted.length > 0 && (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-4">
+          <div className="pf-glass rounded-xl p-4">
             <p className="text-sm font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
@@ -296,7 +296,7 @@ export function StandingsPage() {
         )}
 
         {/* Standings table */}
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
+        <div className="pf-glass-strong rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">

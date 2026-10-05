@@ -58,7 +58,7 @@ export function ReferralCard() {
   if (loading || !info) return null
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-5 md:p-6">
+    <div className="pf-glass rounded-xl p-5 md:p-6">
       <div className="flex items-center gap-2 mb-1">
         <Gift size={18} className="[color:var(--pf-primary)]" />
         <h3 className="font-semibold [color:var(--pf-text)]">Giới thiệu bạn bè — nhận Pro miễn phí</h3>

@@ -1044,7 +1044,7 @@ export function FundPeriods() {
         </div>
 
         {/* Tabs */}
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-hidden">
+        <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
           <div className="flex border-b border-[color:var(--pf-border)] px-2 pt-1">
             {([['list', 'Danh sách kỳ quỹ'], ['history', 'Lịch sử giao dịch'], ['highlights', 'Giao dịch nổi bật']] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
@@ -1170,7 +1170,7 @@ export function FundPeriods() {
         {/* Bottom row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Recent transactions */}
-          <div className="md:col-span-2 [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+          <div className="pf-glass md:col-span-2 rounded-xl shadow-[var(--shadow-card)] p-5">
             <h3 className="font-bold [color:var(--pf-text)] text-sm mb-4">Lịch sử giao dịch gần đây</h3>
             {recentTx.length === 0 ? (
               <p className="text-xs [color:var(--pf-color-muted)] text-center py-6">Chưa có giao dịch nào</p>
@@ -1214,7 +1214,7 @@ export function FundPeriods() {
 
           <div className="space-y-4">
             {/* Donut chart */}
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
               <h3 className="font-bold [color:var(--pf-text)] text-sm mb-3">Biểu đồ thu theo loại quỹ</h3>
               <div className="h-36">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1240,7 +1240,7 @@ export function FundPeriods() {
             </div>
 
             {/* QR thanh toán */}
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">
                   <QrCode size={15} className="[color:var(--pf-primary)]" />QR thanh toán
@@ -1917,7 +1917,7 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
   // Khoản thu mở: KHÔNG hiển thị Mục tiêu / Còn thiếu / Tiến độ (mức đóng thực tế mỗi
   // CLB khác nhau nên % theo mức cấu hình gây hiểu nhầm). Chỉ hiện SỐ TIỀN THẬT.
   return (
-    <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-5">
+    <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
         <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>

@@ -139,7 +139,7 @@ function MatchMenu({ onScore, onDelete, isDone }: { onScore: () => void; onDelet
         <MoreVertical size={13} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-36 [background:var(--pf-surface)] rounded-xl shadow-lg border py-1 z-30" style={{ borderColor: T.border }}>
+        <div className="pf-glass absolute right-0 top-full mt-1 w-36 rounded-xl shadow-lg py-1 z-30" style={{ borderColor: T.border }}>
           <button onClick={() => { onScore(); setOpen(false) }}
             className="w-full text-left text-sm px-3 py-2 hover:[background:var(--pf-surface-muted)] flex items-center gap-2 [color:var(--pf-text)]">
             <Plus size={13} /> {isDone ? 'Sửa điểm' : 'Nhập điểm'}

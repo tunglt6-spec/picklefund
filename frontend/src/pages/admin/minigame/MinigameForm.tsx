@@ -305,7 +305,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
       </div>
 
       <div className={embedded ? 'pt-4' : 'p-6 max-w-2xl'}>
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm p-6">
+        <div className="pf-glass rounded-xl p-6">
 
           {/* 1 · Thông tin giải */}
           {step === 'info' && (

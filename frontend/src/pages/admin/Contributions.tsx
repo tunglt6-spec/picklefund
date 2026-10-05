@@ -714,7 +714,7 @@ export function Contributions() {
         {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
           {/* Quỹ Chính */}
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <DollarSign size={14} className="[color:var(--pf-primary)]" />
@@ -728,7 +728,7 @@ export function Contributions() {
             </div>
           </div>
           {/* Quỹ Phụ */}
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <Wallet size={14} className="[color:var(--pf-primary)]" />
@@ -771,7 +771,7 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
+            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
               <DataTable columns={commonColumns} rows={commonPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}
@@ -797,7 +797,7 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
-            <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
+            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
               <DataTable columns={miniColumns} rows={miniPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}

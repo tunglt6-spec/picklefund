@@ -323,12 +323,12 @@ export function TreasurerExpense() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4">
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="pf-glass rounded-xl p-4">
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Tổng đã chi</p>
                 <p className="text-2xl font-bold text-red-600">{formatVND(totalExpenses)}</p>
                 <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{expenses.length} khoản</p>
               </div>
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div className="pf-glass rounded-xl p-4">
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2">Thiếu hóa đơn</p>
                 <p className="text-2xl font-bold text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</p>
                 <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">khoản chưa có chứng từ</p>
@@ -340,7 +340,7 @@ export function TreasurerExpense() {
                 <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản chi nào. Bấm "Thêm khoản chi" để bắt đầu.</p>
               </div>
             ) : (
-              <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-x-auto">
+              <div className="pf-glass-strong rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>

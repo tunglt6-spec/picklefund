@@ -138,7 +138,7 @@ export function AlertCenterPage() {
           </div>
 
           {/* Lọc theo mức */}
-          <div className="flex gap-1 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface)] p-1 w-fit overflow-x-auto">
+          <div className="pf-glass-strong flex gap-1 rounded-xl p-1 w-fit overflow-x-auto">
             {LEVEL_TABS.map(t => (
               <button
                 key={t.id}

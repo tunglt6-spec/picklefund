@@ -219,7 +219,7 @@ export function GroupAssignment() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myGroups.map(grp => (
-                <div key={grp.id} className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+                <div key={grp.id} className="pf-glass-strong rounded-xl overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)] gap-2">
                     {editingGroup === grp.id ? (
                       <input autoFocus value={editName} onChange={e => setEditName(e.target.value)}

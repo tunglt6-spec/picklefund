@@ -281,7 +281,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
           <select
             value={month}
             onChange={(e) => onMonthChange(e.target.value)}
-            className="min-h-11 rounded-xl border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]"
+            className="pf-glass min-h-11 rounded-xl px-3 text-sm [color:var(--pf-text)]"
           >
             {months.map((m) => (
               <option key={m} value={m}>{monthLabel(m)}</option>
@@ -562,7 +562,7 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
                   <select
                     value={ruleId}
                     onChange={(e) => onSelectRule(e.target.value)}
-                    className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]"
+                    className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)]"
                   >
                     <option value="">— Nhập tay —</option>
                     {activeRules.map((r) => (
@@ -580,7 +580,7 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
                       value={category}
                       onChange={(e) => setCategory(e.target.value as Category)}
                       disabled={!!ruleId}
-                      className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-60"
+                      className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)] disabled:opacity-60"
                     >
                       {CATEGORY_ORDER.map((c) => (
                         <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
@@ -596,7 +596,7 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
                       value={delta}
                       onChange={(e) => setDelta(e.target.value)}
                       disabled={!!ruleId}
-                      className="min-h-11 rounded-xl border px-3 tabular-nums [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-60"
+                      className="pf-glass min-h-11 rounded-xl px-3 tabular-nums [color:var(--pf-text)] disabled:opacity-60"
                     />
                   </label>
                 </div>
@@ -609,7 +609,7 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
                     onChange={(e) => setLabel(e.target.value)}
                     disabled={!!ruleId}
                     placeholder="Vd: Tham gia đầy đủ buổi sinh hoạt"
-                    className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-60"
+                    className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)] disabled:opacity-60"
                   />
                 </label>
 
@@ -619,7 +619,7 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
                     type="text"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]"
+                    className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)]"
                   />
                 </label>
 
@@ -924,7 +924,7 @@ function RuleFormModal({ mode, rule, onClose, onSaved }: RuleFormModalProps) {
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
             disabled={mode === 'edit'}
-            className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-60"
+            className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)] disabled:opacity-60"
           >
             {CATEGORY_ORDER.map((c) => (
               <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
@@ -939,7 +939,7 @@ function RuleFormModal({ mode, rule, onClose, onSaved }: RuleFormModalProps) {
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Vd: Đi trễ buổi sinh hoạt"
-            className="min-h-11 rounded-xl border px-3 [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]"
+            className="pf-glass min-h-11 rounded-xl px-3 [color:var(--pf-text)]"
           />
         </label>
 
@@ -951,7 +951,7 @@ function RuleFormModal({ mode, rule, onClose, onSaved }: RuleFormModalProps) {
             max={100}
             value={delta}
             onChange={(e) => setDelta(e.target.value)}
-            className="min-h-11 rounded-xl border px-3 tabular-nums [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]"
+            className="pf-glass min-h-11 rounded-xl px-3 tabular-nums [color:var(--pf-text)]"
           />
         </label>
 

@@ -268,7 +268,7 @@ export function TreasurerDashboard() {
                     items={recent}
                     itemKey={(r) => r.id}
                     renderCard={(row) => (
-                      <div className="flex items-center gap-3 rounded-xl border p-3 [background:var(--pf-surface)] [border-color:var(--pf-border)]">
+                      <div className="pf-glass flex items-center gap-3 rounded-xl p-3">
                         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] ${row.type === 'income' ? 'bg-emerald-50' : 'bg-red-50'}`}>
                           {row.type === 'income' ? <TrendingUp size={13} className="text-emerald-600" /> : <TrendingDown size={13} className="text-red-500" />}
                         </div>

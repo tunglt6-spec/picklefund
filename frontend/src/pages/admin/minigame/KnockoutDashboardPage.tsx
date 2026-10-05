@@ -146,7 +146,7 @@ export function KnockoutDashboardPage() {
     const bye = !m.teamBId
     const e = edits[m.id] ?? { a: done ? String(m.scoreA ?? '') : '', b: done ? String(m.scoreB ?? '') : '' }
     return (
-      <div key={m.id} className="rounded-xl border [background:var(--pf-surface)] border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+      <div key={m.id} className="pf-glass-strong rounded-xl overflow-hidden">
         {[{ tid: m.teamAId, sc: m.scoreA, key: 'a' as const }, { tid: m.teamBId, sc: m.scoreB, key: 'b' as const }].map((side, i) => (
           <div key={i} className={cn('flex items-center justify-between gap-2 px-3 py-2', i === 0 && 'border-b border-[color:var(--pf-border-soft)]', done && m.winnerId === side.tid && '[background:var(--pf-color-success-soft)]')}>
             <span className={cn('text-sm truncate', done && m.winnerId === side.tid ? 'font-bold [color:var(--pf-color-success)]' : '[color:var(--pf-text)]')}>{side.tid ? nameOf(side.tid) : (bye ? 'BYE' : 'Chờ...')}</span>

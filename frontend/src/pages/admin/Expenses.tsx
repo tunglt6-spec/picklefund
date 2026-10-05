@@ -1085,7 +1085,7 @@ export function Expenses() {
         </div>
 
         {/* Table card */}
-        <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)]">
+        <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
           {/* Tabs + Search */}
           <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-[color:var(--pf-border)] flex-wrap gap-3">
             <div className="flex items-center gap-0.5 -mb-px">

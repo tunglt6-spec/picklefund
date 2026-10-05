@@ -181,7 +181,7 @@ export function TreasurerLedger() {
       <div className="flex flex-col gap-5">
         {/* KPI */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <ArrowUpCircle size={14} className="text-emerald-600" />
@@ -191,7 +191,7 @@ export function TreasurerLedger() {
             <p className="text-xl font-bold text-emerald-600">{formatVND(totalIncome)}</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.filter(r => r.type === 'Thu').length} khoản</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-red-50 flex items-center justify-center">
                 <ArrowDownCircle size={14} className="text-red-500" />
@@ -201,7 +201,7 @@ export function TreasurerLedger() {
             <p className="text-xl font-bold text-red-500">{formatVND(totalExpense)}</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{rowsWithBalance.filter(r => r.type === 'Chi').length} khoản</p>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] p-4">
+          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <Wallet size={14} className="[color:var(--pf-primary)]" />
@@ -250,7 +250,7 @@ export function TreasurerLedger() {
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có giao dịch nào</p>
           </div>
         ) : (
-          <div className="[background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
             <table className="table-base">
               <thead>
                 <tr>
