@@ -54,7 +54,7 @@ export class CommandCenterController {
     @Query('to') to?: string,
   ) {
     const r = await this.service.aiReview({ range: (range as any) ?? '30d', clubId: clubId || null, from, to });
-    return ok({ generatedAt: r.generatedAt, sections: r.sections, byAi: r.byAi });
+    return ok({ generatedAt: r.generatedAt, sections: r.sections, byAi: r.byAi, pending: r.pending });
   }
 
   /** Chẩn đoán đường AI của Maika (model nào chạy / lỗi) — để soi vì sao đánh giá rơi rule-based. */

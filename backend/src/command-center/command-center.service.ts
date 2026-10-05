@@ -342,48 +342,57 @@ export class CommandCenterService {
    * → rủi ro → khuyến nghị hành động → định hướng tương lai. Chạy song song; fallback rule-based
    * nếu không có LLM. KHÔNG bịa số ngoài dữ liệu.
    */
-  async aiReview(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<{ generatedAt: string; sections: ReviewSections; byAi: boolean; data: any }> {
+  async aiReview(
+    opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string },
+    budgetMs = 40000,
+  ): Promise<{ generatedAt: string; sections: ReviewSections; byAi: boolean; pending: number; data: any }> {
     const data = await this.overview(opts);
     const fallback = this.ruleBasedReview(data);
     const digest = this.buildDigest(data);
+    const key = JSON.stringify([opts.range, opts.clubId ?? null, opts.from ?? null, opts.to ?? null]);
 
-    // MỖI mục = MỘT lời gọi LLM riêng với PERSONA chuyên gia của mảng đó → phân tích SÂU,
-    // tránh nông như khi gộp 10 mục vào 1 lời gọi (nguyên nhân báo cáo trước bị sơ sài).
+    // Cache các mục ĐÃ do AI viết (TTL) → màn hình và PDF luôn dùng CÙNG một nội dung; gọi lại chỉ viết nốt mục còn thiếu.
+    const now = Date.now();
+    for (const [k, v] of this.reviewCache) if (now - v.at > CommandCenterService.REVIEW_TTL_MS) this.reviewCache.delete(k);
+    const cached = this.reviewCache.get(key) ?? { at: now, sections: {} as Partial<ReviewSections> };
+
     const tasks: { key: keyof ReviewSections; prompt: string }[] = [
       ...this.REVIEW_SPECS.map((s) => ({ key: s.key, prompt: this.sectionPrompt(s, digest) })),
       { key: 'conclusion' as const, prompt: this.conclusionPrompt(digest) },
-    ];
+    ].filter((t) => !cached.sections[t.key]);
 
-    const sections = { ...fallback } as ReviewSections;
-    let aiCount = 0;
-    // Chạy song song theo LÔ (đồng thời tối đa 3) — an toàn rate-limit Gemini, vẫn trong timeout 60s.
-    // Mục nào lỗi/không có LLM → GIỮ bản rule-based cho riêng mục đó (không kéo tụt cả báo cáo).
-    const CONCURRENCY = 3;
-    for (let i = 0; i < tasks.length; i += CONCURRENCY) {
-      const batch = tasks.slice(i, i + CONCURRENCY);
-      const results = await Promise.all(
-        batch.map(async (t) => {
+    // Mỗi mục = một lời gọi LLM riêng (persona chuyên gia). Chạy song song hạn chế + THỬ LẠI có backoff
+    // (lỗi rate-limit khi gọi dồn là nguyên nhân PDF rơi về bản tóm tắt). Hết ngân sách thời gian → trả phần đã có.
+    const deadline = Date.now() + budgetMs;
+    const queue = [...tasks];
+    const worker = async () => {
+      while (queue.length && Date.now() < deadline) {
+        const t = queue.shift()!;
+        for (let attempt = 0; attempt < 3 && Date.now() < deadline; attempt++) {
           try {
             const r = await this.maika.composeLong(t.prompt, '§NO_LLM§');
             const text = (r.text ?? '').trim();
             if (r.byAi && text.length > 60 && !text.includes('§NO_LLM§')) {
-              return { key: t.key, text };
+              cached.sections[t.key] = text;
+              break;
             }
           } catch {
-            /* giữ fallback cho mục này */
+            /* thử lại */
           }
-          return { key: t.key, text: null as string | null };
-        }),
-      );
-      for (const res of results) {
-        if (res.text) {
-          sections[res.key] = res.text;
-          aiCount++;
+          await new Promise((res) => setTimeout(res, 1500 * (attempt + 1)));
         }
       }
-    }
-    return { generatedAt: data.generatedAt, sections, byAi: aiCount > 0, data };
+    };
+    await Promise.all(Array.from({ length: Math.min(3, tasks.length) }, worker));
+
+    if (Object.keys(cached.sections).length) this.reviewCache.set(key, cached);
+    const sections = { ...fallback, ...cached.sections } as ReviewSections;
+    const aiCount = Object.keys(cached.sections).length;
+    return { generatedAt: data.generatedAt, sections, byAi: aiCount > 0, pending: 10 - aiCount, data };
   }
+
+  private static readonly REVIEW_TTL_MS = 30 * 60 * 1000;
+  private readonly reviewCache = new Map<string, { at: number; sections: Partial<ReviewSections> }>();
 
   /** Đặc tả từng mục báo cáo — persona chuyên gia + trọng tâm chuyên môn của mảng đó. */
   private readonly REVIEW_SPECS: {
@@ -443,7 +452,7 @@ export class CommandCenterService {
 
   /** Xuất PDF Command Center (bìa + 9 mục + đánh giá Maika) qua headless Chrome. null nếu không render được. */
   async pdf(opts: { range: RangeKey; clubId?: string | null; from?: string; to?: string }): Promise<Buffer | null> {
-    const review = await this.aiReview(opts);
+    const review = await this.aiReview(opts, 35000);
     const now = new Date();
     const exportedAt = dateTimeVN(now);
     const html = buildCommandCenterHtml(review.data, review.sections, exportedAt);

@@ -140,16 +140,31 @@ export function SuperDashboard() {
     return p
   }
 
+  // Viết đánh giá Maika: mỗi lần gọi có ngân sách thời gian (< timeout proxy); mục nào còn thiếu thì gọi tiếp (server cache phần đã xong).
+  const fetchReview = async () => {
+    let last: { sections: any; byAi: boolean; pending: number } | null = null
+    for (let i = 0; i < 4; i++) {
+      const res = await api.get('/command-center/ai-review', { params: params(), timeout: 60000 })
+      const d = res.data?.data
+      last = { sections: d?.sections ?? {}, byAi: !!d?.byAi, pending: Number(d?.pending ?? 0) }
+      if (last.pending === 0 || !last.byAi && i >= 1) break
+    }
+    return last
+  }
+
   const doPdf = async () => {
     setPdfLoading(true)
-    const t = toast.loading('Đang tạo PDF (bìa + đánh giá Maika)…')
+    const t = toast.loading('Maika đang viết đánh giá cho PDF…')
     try {
+      const r = await fetchReview()
+      if (r) setReview({ sections: r.sections, byAi: r.byAi })
+      toast.loading('Đang tạo PDF…', { id: t })
       const res = await api.get('/command-center/pdf', { params: params(), responseType: 'blob', timeout: 60000 })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
       a.href = url; a.download = exportFileName('Trung_tam_dieu_hanh', 'pdf'); a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
-      toast.success('Đã tạo PDF', { id: t })
+      toast.success(r && r.pending > 0 ? `Đã tạo PDF (${r.pending} mục Maika dùng bản tóm tắt)` : 'Đã tạo PDF', { id: t })
     } catch (e) {
       const busy = (e as { response?: { status?: number } })?.response?.status === 503
       toast.error(busy ? 'Máy chủ đang bận tạo PDF — vui lòng thử lại sau ít phút' : 'Không tạo được PDF', { id: t })
@@ -159,9 +174,10 @@ export function SuperDashboard() {
   const runReview = async () => {
     setReviewLoading(true)
     try {
-      const res = await api.get('/command-center/ai-review', { params: params(), timeout: 60000 })
-      setReview({ sections: res.data?.data?.sections ?? {}, byAi: !!res.data?.data?.byAi })
-      if (!res.data?.data?.byAi) toast('Maika chưa viết được (dùng bản tóm tắt). Bấm "Kiểm tra AI" để xem lý do.', { icon: '⚠️' })
+      const r = await fetchReview()
+      setReview({ sections: r?.sections ?? {}, byAi: !!r?.byAi })
+      if (!r?.byAi) toast('Maika chưa viết được (dùng bản tóm tắt). Bấm "Kiểm tra AI" để xem lý do.', { icon: '⚠️' })
+      else if (r.pending > 0) toast(`${r.pending} mục chưa viết được — bấm "Maika đánh giá" lần nữa để viết nốt.`, { icon: '⚠️' })
     } catch {
       toast.error('Không tạo được đánh giá Maika')
     } finally { setReviewLoading(false) }
