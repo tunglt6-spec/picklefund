@@ -873,9 +873,11 @@ export function Expenses() {
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
-            <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] px-3 py-2.5 shadow-sm">
-              <p className="text-xs [color:var(--pf-color-muted)] truncate">{k.label}</p>
-              <p className={`text-sm font-[700] tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
+            <div key={k.label} className="pf-stat-card rounded-xl p-3">
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 truncate">{k.label}</p>
+                <p className={`text-base font-bold tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
+              </div>
             </div>
           ))}
         </div>

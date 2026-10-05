@@ -211,9 +211,9 @@ export function MemberReceipt() {
               { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
               { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
             ].map(k => (
-              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-sm font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</div>
+              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
+                <div className={`text-base font-bold ${k.color}`}>{k.value}</div>
               </div>
             ))}
           </div>

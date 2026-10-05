@@ -181,9 +181,9 @@ export function TreasurerReminders() {
               { label: 'Chờ xác nhận', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
               { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
             ].map(k => (
-              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-base font-[800] ${k.color}`}>{k.value}</div>
-                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
+              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
+                <div className={`text-base font-bold ${k.color}`}>{k.value}</div>
               </div>
             ))}
           </div>
@@ -288,10 +288,10 @@ export function TreasurerReminders() {
         }
       />
 
-      <div className="p-6 max-w-[900px] mx-auto space-y-5">
+      <div className="p-6 space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
+          <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-red-50 flex items-center justify-center">
                 <Bell size={14} className="text-red-500" />
@@ -301,7 +301,7 @@ export function TreasurerReminders() {
             <p className="text-2xl font-bold text-red-500">{unpaidMembers.length} người</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{formatVND(totalOwed)}</p>
           </div>
-          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
+          <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Clock size={14} className="text-amber-600" />
@@ -311,7 +311,7 @@ export function TreasurerReminders() {
             <p className="text-2xl font-bold text-amber-600">{pendingMembers.length} người</p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Đã nộp tiền, chưa duyệt</p>
           </div>
-          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
+          <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <CheckCircle size={14} className="text-emerald-600" />

@@ -260,7 +260,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
     </>
   )
 
-  return embedded ? body : <PageShell maxWidth={1100}>{body}</PageShell>
+  return embedded ? body : <PageShell maxWidth={1760}>{body}</PageShell>
 }
 
 export default CommunityModeration

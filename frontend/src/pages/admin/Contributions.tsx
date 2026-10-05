@@ -432,13 +432,17 @@ export function Contributions() {
 
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
-          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
-            <p className="text-xs [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Chính</p>
-            <p className="text-lg font-[700] [color:var(--pf-primary)] tabular-nums">{formatVND(commonTotal)}</p>
+          <div className="pf-stat-card rounded-xl p-4">
+            <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Chính</p>
+              <p className="text-base font-bold tabular-nums [color:var(--pf-primary)]">{formatVND(commonTotal)}</p>
+            </div>
           </div>
-          <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
-            <p className="text-xs [color:var(--pf-color-muted)] uppercase tracking-wide">Quỹ Phụ</p>
-            <p className="text-lg font-[700] [color:var(--pf-color-info)] tabular-nums">{formatVND(miniTotal)}</p>
+          <div className="pf-stat-card rounded-xl p-4">
+            <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Phụ</p>
+              <p className="text-base font-bold tabular-nums [color:var(--pf-color-info)]">{formatVND(miniTotal)}</p>
+            </div>
           </div>
         </div>
 
@@ -714,28 +718,50 @@ export function Contributions() {
         {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
           {/* Quỹ Chính */}
-          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
+          <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <DollarSign size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
-            <p className="text-2xl font-bold [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
-            <div className="flex gap-4 mt-2 text-xs [color:var(--pf-color-muted)]">
-              <span className="inline-flex items-center gap-1 [color:var(--pf-color-success)]"><CheckCircle size={13} /> {confirmed.length} xác nhận ({formatVND(confirmed.reduce((s, c) => s + c.amount, 0))})</span>
-              <span className="inline-flex items-center gap-1 [color:var(--pf-color-warning)]"><Clock size={13} /> {unconfirmed.length} chờ ({formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))})</span>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
+              </div>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({confirmed.length})</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(confirmed.reduce((s, c) => s + c.amount, 0))}</p>
+              </div>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({unconfirmed.length})</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))}</p>
+              </div>
             </div>
           </div>
           {/* Quỹ Phụ */}
-          <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-4">
+          <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
                 <Wallet size={14} className="[color:var(--pf-primary)]" />
               </div>
               <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
-            <p className="text-2xl font-bold [color:var(--pf-text)]">{formatVND(miniTotal)}</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(miniTotal)}</p>
+              </div>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({miniContribs.filter(c => c.isConfirmed).length})</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(miniTotal)}</p>
+              </div>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({miniContribs.filter(c => !c.isConfirmed).length})</p>
+                <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(miniContribs.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
+              </div>
+            </div>
             <div className="flex gap-3 mt-2 flex-wrap">
               {Object.entries(MINI_INCOME_TYPE_LABELS).map(([k, label]) => {
                 const amt = miniContribs.filter(c => c.miniIncomeType === k).reduce((s, c) => s + c.amount, 0)

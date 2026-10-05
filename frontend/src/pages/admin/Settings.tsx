@@ -1173,7 +1173,7 @@ export function Settings() {
     <div className="min-h-screen [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar" title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
 
-      <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-4xl">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Tab bar */}
         <div className="pf-glass flex gap-1 rounded-xl p-1">
           {tabs.map(tab => (

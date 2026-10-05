@@ -114,7 +114,7 @@ export function PaymentApprovals() {
   }
 
   return (
-    <PageShell maxWidth={1100}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Xác Nhận Nộp Quỹ"
         subtitle="Duyệt các khoản thành viên báo đã chuyển khoản"

@@ -624,12 +624,12 @@ export function FundPeriods() {
           {filtered.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={exporting} />}
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+            <div className="pf-stat-card rounded-xl p-4">
               <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
               <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
             </div>
-            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+            <div className="pf-stat-card rounded-xl p-4">
               <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
               <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>

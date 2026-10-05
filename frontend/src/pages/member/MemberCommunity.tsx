@@ -1781,7 +1781,7 @@ export default function MemberCommunity() {
   ]
 
   return (
-    <PageShell maxWidth={900}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Cộng đồng CLB"
         subtitle="Kết nối, chia sẻ và tìm bạn chơi cùng"

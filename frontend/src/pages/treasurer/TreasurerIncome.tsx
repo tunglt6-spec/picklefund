@@ -297,9 +297,9 @@ export function TreasurerIncome() {
               { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600' },
               { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '[color:var(--pf-primary)]' },
             ].map(k => (
-              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 text-center shadow-sm">
-                <div className={`text-xs font-[800] ${k.color} truncate`}>{k.value}</div>
-                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5 leading-tight">{k.label}</div>
+              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
+                <div className={`text-base font-bold ${k.color} truncate`}>{k.value}</div>
               </div>
             ))}
           </div>
@@ -458,7 +458,7 @@ export function TreasurerIncome() {
   }
 
   return (
-    <PageShell maxWidth={1000}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhập Khoản Thu"
         subtitle="Ghi nhận thu quỹ cho Quỹ Chính và Quỹ Phụ"

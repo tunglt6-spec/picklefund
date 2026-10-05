@@ -184,13 +184,13 @@ export function TreasurerExpense() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-2">
-                <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
-                  <div className="text-base font-[800] text-red-600">{formatVND(totalExpenses)}</div>
-                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">Tổng đã chi · {expenses.length} khoản</div>
+                <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                  <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng đã chi · {expenses.length} khoản</div>
+                  <div className="text-base font-bold text-red-600">{formatVND(totalExpenses)}</div>
                 </div>
-                <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
-                  <div className="text-base font-[800] text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
-                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">Thiếu hóa đơn</div>
+                <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                  <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Thiếu hóa đơn</div>
+                  <div className="text-base font-bold text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
                 </div>
               </div>
 
@@ -295,7 +295,7 @@ export function TreasurerExpense() {
   }
 
   return (
-    <PageShell maxWidth={1000}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhập Khoản Chi"
         subtitle="Ghi nhận chi phí của CLB"

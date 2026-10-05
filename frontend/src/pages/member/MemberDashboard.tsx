@@ -144,9 +144,9 @@ export function MemberDashboard() {
               { label: 'Chi phí TT', value: formatVND(myCost), color: 'text-rose-500' },
               { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? 'text-emerald-600' : 'text-amber-500' },
             ].map(k => (
-              <div key={k.label} className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-3 py-3 text-center">
-                <p className={`text-base font-[800] ${k.color} tabular-nums`}>{k.value}</p>
-                <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
+              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</p>
+                <p className={`text-base font-bold ${k.color} tabular-nums`}>{k.value}</p>
               </div>
             ))}
           </div>

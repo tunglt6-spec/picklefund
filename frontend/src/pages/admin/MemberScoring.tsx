@@ -510,10 +510,10 @@ function MemberDetailModal({ memberId, month, isAdmin, isMember, onClose, onChan
       ) : (
         <div className="flex flex-col gap-4">
           {/* Tổng + xếp loại */}
-          <div className="flex items-center justify-between rounded-[16px] border p-4 [background:var(--pf-primary-soft)] border-[color:var(--pf-border)]">
+          <div className="pf-stat-card rounded-xl p-4 flex items-center justify-between" data-hi="">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng điểm</p>
-              <p className="text-3xl font-bold tabular-nums [color:var(--pf-text)]">{detail.total}</p>
+              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng điểm</p>
+              <p className="text-2xl font-bold tabular-nums [color:var(--pf-text)]">{detail.total}</p>
             </div>
             <StatusBadge tone={classificationTone(detail.classification)}>{detail.classification}</StatusBadge>
           </div>

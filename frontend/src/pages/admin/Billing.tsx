@@ -149,7 +149,7 @@ export function Billing() {
   }
 
   const content = (
-    <div className="space-y-6 max-w-[860px]">
+    <div className="space-y-6">
       {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-12">Đang tải...</p>}
 
       {!loading && sub && (
@@ -199,16 +199,16 @@ export function Billing() {
 
             {/* Usage */}
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="[background:var(--pf-surface)] rounded-lg p-3">
-                <p className="text-xs [color:var(--pf-color-muted)]">Thành viên</p>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Thành viên</p>
                 <p className="text-lg font-bold [color:var(--pf-text)]">{sub.usage.members} <span className="text-sm font-normal [color:var(--pf-color-muted)]">/ {sub.plan.maxMembers >= 9999 ? '∞' : sub.plan.maxMembers}</span></p>
                 <div className="mt-1.5 h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
                   <div className="h-full [background:var(--pf-primary)] rounded-full transition-all"
                     style={{ width: sub.plan.maxMembers >= 9999 ? '4px' : `${Math.min(100, (sub.usage.members / sub.plan.maxMembers) * 100)}%` }} />
                 </div>
               </div>
-              <div className="[background:var(--pf-surface)] rounded-lg p-3">
-                <p className="text-xs [color:var(--pf-color-muted)]">Tính năng AI</p>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tính năng AI</p>
                 <p className="text-sm font-semibold mt-1">
                   {sub.plan.aiFeatures
                     ? <span className="inline-flex items-center gap-1 [color:var(--pf-green)]"><CheckCircle2 size={15} />Đã kích hoạt</span>

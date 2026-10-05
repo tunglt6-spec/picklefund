@@ -227,9 +227,9 @@ export function StandingsPage() {
                   { label: 'Thua', value: s.lost, cls: '[color:var(--pf-color-danger)]' },
                   { label: 'Hiệu số', value: `${s.pointDifference > 0 ? '+' : ''}${s.pointDifference}`, cls: s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]' },
                 ].map(item => (
-                  <div key={item.label} className="[background:var(--pf-surface-muted)] rounded-[8px] py-1.5 text-center">
-                    <p className={cn('text-sm font-bold', item.cls)}>{item.value}</p>
-                    <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{item.label}</p>
+                  <div key={item.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                    <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{item.label}</p>
+                    <p className={cn('text-base font-bold', item.cls)}>{item.value}</p>
                   </div>
                 ))}
               </div>

@@ -402,9 +402,9 @@ export function MemberAccounts() {
               { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
               { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
             ].map(s => (
-              <div key={s.label} className="[background:var(--pf-surface-muted)] rounded-[10px] py-2 text-center">
-                <div className={`text-sm font-[800] ${s.color}`}>{s.value}</div>
-                <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{s.label}</div>
+              <div key={s.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</div>
+                <div className={`text-base font-bold ${s.color}`}>{s.value}</div>
               </div>
             ))}
           </div>
@@ -505,12 +505,14 @@ export function MemberAccounts() {
             { label: 'Chưa kích hoạt', value: accounts.filter(a => ['pending', 'must_change'].includes(getStatus(a))).length, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Bị khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600', bg: 'bg-red-50' },
           ].map(s => (
-            <div key={s.label} className="pf-glass rounded-[18px] border-[var(--pf-border)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] p-4">
+            <div key={s.label} className="pf-stat-card rounded-xl p-4">
               <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
                 <Users size={16} className={s.color} />
               </div>
-              <p className="text-2xl font-bold text-[var(--pf-text)]">{s.value}</p>
-              <p className="text-xs text-[var(--pf-color-muted)] mt-0.5">{s.label}</p>
+              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</p>
+                <p className="text-lg font-bold text-[var(--pf-text)]">{s.value}</p>
+              </div>
             </div>
           ))}
         </div>

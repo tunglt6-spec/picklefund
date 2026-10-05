@@ -90,7 +90,7 @@ export function AuditLogs() {
   ]
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhật ký kiểm toán"
         subtitle={`${rows.length} thao tác · lịch sử hoạt động toàn hệ thống`}

@@ -107,7 +107,7 @@ export function SuperUsers() {
   ]
 
   return (
-    <PageShell maxWidth={1200}>
+    <PageShell maxWidth={1760}>
       <PageHeader title="Quản lý người dùng" subtitle={`${users.length} tài khoản toàn hệ thống`} />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

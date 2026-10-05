@@ -197,11 +197,11 @@ export function WorkflowRules() {
             return (
               <div
                 key={k.label}
-                className="rounded-2xl border shadow-sm px-4 py-3"
-                style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+                className="pf-stat-card rounded-xl px-4 py-3"
+                style={{ borderTop: `3px solid ${c.bar}` }}
               >
-                <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
-                <p className="text-xs font-medium [color:var(--pf-color-muted)] mt-0.5">{k.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k.label}</p>
+                <p className="text-2xl font-bold tabular-nums mt-0.5" style={{ color: c.fg }}>{k.value}</p>
               </div>
             )
           })}
@@ -430,11 +430,11 @@ export function WorkflowRules() {
                 return (
                   <div
                     key={k.label}
-                    className="rounded-2xl border shadow-sm px-4 py-3"
-                    style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+                    className="pf-stat-card rounded-xl px-4 py-3"
+                    style={{ borderTop: `3px solid ${c.bar}` }}
                   >
-                    <p className="text-2xl font-bold tabular-nums" style={{ color: c.fg }}>{k.value}</p>
-                    <p className="mt-0.5 text-xs font-medium [color:var(--pf-color-muted)]">{k.label}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k.label}</p>
+                    <p className="text-2xl font-bold tabular-nums mt-0.5" style={{ color: c.fg }}>{k.value}</p>
                     <p className="text-xs [color:var(--pf-color-muted)]">{k.sub}</p>
                   </div>
                 )

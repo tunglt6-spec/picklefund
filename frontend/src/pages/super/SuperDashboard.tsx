@@ -47,12 +47,8 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
       tabIndex={clickable ? 0 : undefined}
       onClick={onClick}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
-      className={`flex h-full flex-col rounded-2xl border p-3.5${clickable ? ' cursor-pointer transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]' : ''}`}
-      style={{
-        borderColor: `color-mix(in srgb, ${accent} 22%, var(--pf-border))`,
-        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 6%, var(--pf-surface)), var(--pf-surface))`,
-        boxShadow: 'var(--pf-shadow)',
-      }}
+      className={`pf-stat-card flex h-full flex-col rounded-xl p-4${clickable ? ' cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]' : ''}`}
+      {...(alert ? { 'data-hi': '' } : {})}
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <p className="text-[10.5px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{label}</p>

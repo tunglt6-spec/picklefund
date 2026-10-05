@@ -477,16 +477,16 @@ function QuickStatsCard({ totalFor, totalAgainst, completedMatches }: {
     { label: 'Điểm TB/trận',  value: avg,         color: T.brand },
   ]
   return (
-    <div style={CARD} className="overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: T.border }}>
+    <div className="pf-stat-card rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
         <TrendingUp size={14} style={{ color: T.brand }} />
         <span className="font-bold text-sm" style={{ color: T.txt1 }}>Thống Kê Nhanh</span>
       </div>
-      <div className="grid grid-cols-2 gap-px" style={{ background: T.border }}>
+      <div className="grid grid-cols-2 gap-2">
         {stats.map((s, i) => (
-          <div key={i} className="[background:var(--pf-surface)] px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: T.txt2 }}>{s.label}</p>
-            <p className="text-xl font-extrabold mt-1 leading-none" style={{ color: s.color }}>{s.value}</p>
+          <div key={i} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+            <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</p>
+            <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
           </div>
         ))}
       </div>

@@ -38,7 +38,7 @@ const STATUS_LABEL: Partial<Record<MinigameStatus, string>> = {
 function OverviewTab() {
   const [sport, setSport] = useState('PICKLEBALL')
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto flex flex-col gap-5">
+    <div className="p-4 sm:p-6 flex flex-col gap-5">
       <div className="pf-glass rounded-[18px] p-4">
         <h2 className="text-base font-bold [color:var(--pf-text)]">Tổng quan theo bộ môn</h2>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -51,7 +51,7 @@ function OverviewTab() {
           ))}
         </div>
       </div>
-      <div className="max-w-xl"><MinigameOverviewPanel sport={sport} /></div>
+      <div className="w-full"><MinigameOverviewPanel sport={sport} /></div>
     </div>
   )
 }
@@ -64,14 +64,14 @@ function TournamentsTab() {
   const [sport, setSport] = useState('PICKLEBALL')
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto flex flex-col gap-4">
+    <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-end">
         <button onClick={() => navigate('/minigames')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
           <ListChecks size={14} /> Danh sách giải đầy đủ
         </button>
       </div>
       {isMember ? (
-        <div className="max-w-xl"><MinigameOverviewPanel sport={sport} /></div>
+        <div className="w-full"><MinigameOverviewPanel sport={sport} /></div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
           <div className="pf-glass-strong rounded-[18px] overflow-hidden">
@@ -108,7 +108,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
 
   const Icon = meta.icon
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto flex flex-col gap-4">
+    <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h2 className="text-base font-bold [color:var(--pf-text)]">{meta.title}</h2>
