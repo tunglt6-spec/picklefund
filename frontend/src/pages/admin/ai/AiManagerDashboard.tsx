@@ -156,6 +156,7 @@ function SectionCard({
       disabled={!clickable}
       onClick={() => clickable && onGo(s.to!)}
       style={cardStyle}
+      data-hi={s.status === 'here' ? '' : undefined}
       className={`pf-stat-card group relative flex flex-col gap-2 rounded-xl p-3 text-left transition-all ${
         clickable ? 'hover:shadow-sm cursor-pointer' : 'cursor-default'
       } ${s.status === 'here' ? 'ring-1 ring-inset' : ''}`}
@@ -187,8 +188,8 @@ function SectionCard({
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
             <div key={m.label} className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
-              <p className="text-sm font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
-              <p className="mt-0.5 text-xs leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
+              <p className="mt-1 text-base font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
             </div>
           ))}
         </div>
@@ -614,8 +615,8 @@ export function AiManagerDashboard() {
                     <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                       {t.stats.map(s => (
                         <div key={s.l} className="pf-stat-cell rounded-lg py-1.5">
-                          <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
-                          <p className="text-xs [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
+                          <p className="mt-1 text-base font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
                         </div>
                       ))}
                     </div>
