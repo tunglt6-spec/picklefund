@@ -200,6 +200,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
 
       {loading && <p className="text-xs [color:var(--pf-color-muted)] px-1">Đang tải tổng quan…</p>}
 
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
       {/* Lịch thi đấu (môn theo trận) */}
       {!isGolf && (
         <div className={card}>
@@ -239,10 +240,10 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
               <tbody>
                 {golfStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">
-                    <td className="py-1.5 [color:var(--pf-color-muted)]">{i + 1}</td>
+                    <td className="py-1.5 pl-3 [color:var(--pf-color-muted)]">{i + 1}</td>
                     <td className="py-1.5 font-medium [color:var(--pf-text)] truncate">{s.name}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-muted)]">{s.played}/{rounds}</td>
-                    <td className="py-1.5 text-right font-bold [color:var(--pf-primary)]">{s.played > 0 ? s.total : '—'}</td>
+                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary)]">{s.played > 0 ? s.total : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -257,12 +258,12 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
               <tbody>
                 {teamStandings.slice(0, 5).map((s, i) => (
                   <tr key={s.id} className="border-t border-[color:var(--pf-border)]">
-                    <td className="py-1.5 [color:var(--pf-color-muted)]">{i + 1}</td>
+                    <td className="py-1.5 pl-3 [color:var(--pf-color-muted)]">{i + 1}</td>
                     <td className="py-1.5 font-medium [color:var(--pf-text)] truncate">{s.name}</td>
                     <td className="py-1.5 text-center">{s.P}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-success)] font-medium">{s.W}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-danger)]">{s.L}</td>
-                    <td className="py-1.5 text-right font-bold [color:var(--pf-primary)]">{s.Pts}</td>
+                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary)]">{s.Pts}</td>
                   </tr>
                 ))}
               </tbody>
@@ -306,6 +307,8 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
             ))}
           </ul>
         )}
+      </div>
+
       </div>
 
       {/* Lối vào màn QUẢN LÝ GIẢI (danh sách giải đầy đủ) — KHÔNG mở thẳng 1 giải cụ thể. */}
