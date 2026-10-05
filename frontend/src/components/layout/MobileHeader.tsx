@@ -53,11 +53,11 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   return (
     <header
-      className="pf-glass-bar sticky top-0 z-40 border-b px-4 flex items-center justify-between"
+      className="pf-glass-bar sticky top-0 z-40 border-b px-3 flex items-center justify-between"
       style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Left: Hamburger + Logo + Name */}
-      <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+      <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-1">
         <button
           onClick={onMenuClick}
           aria-label="Mở menu"
@@ -70,11 +70,11 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         ) : (
           <div className="shrink-0"><PickleFundLogoMark size={26} /></div>
         )}
-        <span className="text-lg font-[800] [color:var(--pf-text)] tracking-tight truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
+        <span className="text-[15px] font-[800] [color:var(--pf-text)] tracking-tighter truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
       </div>
 
       {/* Right: Hướng dẫn + Bell + Avatar */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={openGuide}
           aria-label="Hướng dẫn sử dụng"

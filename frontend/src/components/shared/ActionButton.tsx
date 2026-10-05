@@ -67,7 +67,7 @@ export function ActionButton({
       aria-label={accessibleName}
       className={cn(
         'inline-flex items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[color:var(--pf-primary-text)]',
-        iconOnly ? 'h-10 w-10 p-0 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11' : 'px-4 py-2 [@media(pointer:coarse)]:min-h-11',
+        iconOnly ? 'h-10 w-10 p-0 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11' : 'px-4 py-2 min-h-10 [@media(pointer:coarse)]:min-h-11',
         VARIANT_CLASS[variant],
         fullWidth && 'w-full',
         className,

@@ -16,7 +16,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'}
       title={isDark ? 'Giao diện sáng' : 'Giao diện tối'}
       className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
+        'flex h-9 w-9 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 items-center justify-center rounded-xl transition-colors',
         '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)]',
         className,
       )}
