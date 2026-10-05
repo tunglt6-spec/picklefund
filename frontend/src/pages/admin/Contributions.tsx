@@ -384,7 +384,7 @@ export function Contributions() {
 
   const [mobileTab, setMobileTab] = useState<'COMMON' | 'MINI'>('COMMON')
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   /* ── Mobile layout ── */
   if (isMobile) {

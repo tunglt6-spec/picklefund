@@ -369,7 +369,7 @@ export function Members() {
   // Option 3: self-fetch cục bộ (không đọc global store) — cột "đóng góp" + lịch sử theo TV.
   const { data: contributions } = useClubContributions(clubId)
   const clubName = (clubData.settings?.name as string | undefined) ?? getBrandClubName()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   const setMembers = (fn: (prev: Member[]) => Member[]) =>
     saveMembers(clubId, fn(getClubData(clubId).members))

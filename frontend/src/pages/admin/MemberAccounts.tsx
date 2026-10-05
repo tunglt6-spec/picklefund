@@ -547,7 +547,36 @@ export function MemberAccounts() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <ul className="flex flex-col gap-3 p-3 lg:hidden">
+              {filtered.map(acc => (
+                <li key={acc.id} className="pf-rowcard p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold [color:var(--pf-text)]">{acc.member?.fullName ?? '—'}</p>
+                      <p className="truncate text-xs [color:var(--pf-color-muted)]">{acc.member?.phone ?? acc.email}</p>
+                    </div>
+                    <StatusBadge acc={acc} />
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs [color:var(--pf-color-muted)]">
+                    <span className="rounded-md px-2 py-0.5 font-mono [background:var(--pf-color-muted-soft)] [color:var(--pf-text)]">{acc.username}</span>
+                    <span className={`font-medium ${acc.mustChangePassword ? 'text-amber-600' : 'text-emerald-600'}`}>MK: {acc.mustChangePassword ? 'chưa đổi' : 'đã đổi'}</span>
+                    <span>Đăng nhập: {formatDate(acc.lastLoginAt)}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button onClick={() => handleReset(acc)}
+                      className="inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border text-sm font-semibold [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
+                      <RefreshCw size={14} /> Reset MK
+                    </button>
+                    <button onClick={() => handleToggleLock(acc)}
+                      className={`inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border text-sm font-semibold ${acc.isActive ? 'border-red-200 text-red-600' : 'border-emerald-200 text-emerald-600'}`}>
+                      {acc.isActive ? <><Lock size={14} /> Khóa</> : <><Unlock size={14} /> Mở khóa</>}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto lg:block">
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
@@ -603,6 +632,7 @@ export function MemberAccounts() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
       </div>
