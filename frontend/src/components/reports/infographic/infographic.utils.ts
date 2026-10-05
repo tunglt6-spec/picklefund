@@ -289,6 +289,7 @@ export function mapToInfographicData(src: ReportSource): InfographicReportData {
 const forceLightClone = (doc: Document) => {
   doc.documentElement.removeAttribute('data-theme')
   doc.documentElement.setAttribute('data-theme', 'light')
+  doc.documentElement.setAttribute('data-glass', 'off')
   doc.documentElement.style.colorScheme = 'light'
 }
 

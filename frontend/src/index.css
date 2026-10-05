@@ -208,7 +208,7 @@ select:-webkit-autofill {
   background: linear-gradient(
     100deg,
     var(--pf-surface-muted) 30%,
-    #e9eef6 50%,
+    var(--pf-skeleton-hi) 50%,
     var(--pf-surface-muted) 70%
   );
   background-size: 200% 100%;
@@ -404,12 +404,100 @@ select:-webkit-autofill {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.18);
 }
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset;
-  -webkit-text-fill-color: #0f172a;
-  transition: background-color 5000s ease-in-out 0s;
+
+/* ══ LIQUID GLASS (Phương án B) — lớp token + primitive ══════════════════════════════════
+   Quy tắc an toàn:
+   1) Chỉ ĐỔI GIAO DIỆN. Không phần tử nào bọc Modal/drawer/FAB bằng blur (backdrop-filter tạo
+      containing block làm position:fixed con bị lệch).
+   2) Cách ly xuất báo cáo: html2canvas/PDF/in luôn chạy với [data-glass="off"] trên <html> hoặc
+      trên gốc bề mặt chụp → nền ĐẶC, không blur, không gradient trong suốt.
+   3) Công tắc dừng khẩn cấp: <html data-glass="off"> (localStorage pf-glass=off hoặc ?glass=off).
+   4) Trình duyệt không có backdrop-filter → nền đặc dự phòng (@supports not). */
+:root {
+  --pf-glass-bg:        rgb(255 255 255 / 0.62);
+  --pf-glass-bg-strong: rgb(255 255 255 / 0.86);
+  --pf-glass-border:    rgb(255 255 255 / 0.72);
+  --pf-glass-edge:      rgb(15 23 42 / 0.07);
+  --pf-glass-hi:        rgb(255 255 255 / 0.85);
+  --pf-glass-blur:      18px;
+  --pf-glass-sat:       160%;
+  --pf-glass-shadow:    0 1px 1px rgb(15 23 42 / 0.04), 0 8px 24px -8px rgb(15 23 42 / 0.12), 0 24px 48px -24px rgb(109 93 251 / 0.14);
+  --pf-skeleton-hi:     #e9eef6;
+  --pf-wash:
+    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.14), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.10), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.07), transparent 60%);
+}
+[data-theme="dark"] {
+  --pf-glass-bg:        rgb(24 33 56 / 0.56);
+  --pf-glass-bg-strong: rgb(19 27 46 / 0.86);
+  --pf-glass-border:    rgb(255 255 255 / 0.10);
+  --pf-glass-edge:      rgb(0 0 0 / 0.35);
+  --pf-glass-hi:        rgb(255 255 255 / 0.10);
+  --pf-glass-shadow:    0 1px 1px rgb(0 0 0 / 0.4), 0 10px 28px -10px rgb(0 0 0 / 0.6), 0 24px 48px -24px rgb(109 93 251 / 0.22);
+  --pf-skeleton-hi:     #26324c;
+  --pf-wash:
+    radial-gradient(60rem 40rem at 8% -10%, rgb(109 93 251 / 0.22), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, rgb(6 182 212 / 0.12), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.08), transparent 60%);
+}
+
+@layer components {
+  /* Thẻ kính tiêu chuẩn (card/panel/stat). */
+  .pf-glass {
+    background: var(--pf-glass-bg);
+    -webkit-backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat));
+    backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat));
+    border: 1px solid var(--pf-glass-border);
+    box-shadow: var(--pf-glass-shadow), inset 0 1px 0 var(--pf-glass-hi);
+    border-radius: var(--pf-radius-lg);
+  }
+  /* Kính "đặc" cho bảng/biểu mẫu dày chữ: giữ tương phản WCAG AA. */
+  .pf-glass-strong {
+    background: var(--pf-glass-bg-strong);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid var(--pf-glass-border);
+    box-shadow: var(--pf-glass-shadow), inset 0 1px 0 var(--pf-glass-hi);
+    border-radius: var(--pf-radius-lg);
+  }
+  /* Kính nhẹ không blur (lồng trong kính khác, tránh chồng nhiều lớp blur). */
+  .pf-glass-flat {
+    background: var(--pf-glass-bg);
+    border: 1px solid var(--pf-glass-border);
+    border-radius: var(--pf-radius);
+  }
+  @media (hover: hover) {
+    .pf-glass-interactive { transition: transform var(--pf-dur-fast) var(--pf-ease), box-shadow var(--pf-dur-fast) var(--pf-ease); }
+    .pf-glass-interactive:hover { transform: translateY(-2px); }
+  }
+  /* Nền wash phía sau app (đặt ở lớp nền, KHÔNG bọc nội dung). */
+  .pf-wash { background-image: var(--pf-wash); background-attachment: fixed; }
+
+  /* Dự phòng: trình duyệt không hỗ trợ backdrop-filter. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .pf-glass, .pf-glass-strong { background: var(--pf-surface); }
+  }
+  /* Công tắc tắt / bề mặt xuất báo cáo / in: nền ĐẶC, không blur. */
+  :root[data-glass="off"] .pf-glass,
+  :root[data-glass="off"] .pf-glass-strong,
+  :root[data-glass="off"] .pf-glass-flat,
+  [data-glass="off"] .pf-glass,
+  [data-glass="off"] .pf-glass-strong,
+  [data-glass="off"] .pf-glass-flat {
+    background: var(--pf-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--pf-border);
+    box-shadow: var(--pf-shadow);
+  }
+  :root[data-glass="off"] .pf-wash, [data-glass="off"] .pf-wash { background-image: none; }
+  @media print {
+    .pf-glass, .pf-glass-strong, .pf-glass-flat {
+      background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none;
+    }
+    .pf-wash { background-image: none; }
+  }
 }
 
 /* In "gọn" Báo cáo điều hành: chỉ hiện vùng #exec-report-capture, ẩn app chrome.

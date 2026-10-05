@@ -37,6 +37,10 @@
           var t = localStorage.getItem('pf-theme') || 'light';
           var dark = !preAuth && (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
           if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+          // Công tắc dừng khẩn cấp Liquid Glass: ?glass=off hoặc localStorage pf-glass=off.
+          if (/[?&]glass=off/.test(location.search)) localStorage.setItem('pf-glass', 'off');
+          if (/[?&]glass=on/.test(location.search)) localStorage.removeItem('pf-glass');
+          if (localStorage.getItem('pf-glass') === 'off') document.documentElement.setAttribute('data-glass', 'off');
         } catch (e) {}
       })();
     </script>

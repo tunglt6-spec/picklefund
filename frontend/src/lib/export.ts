@@ -335,6 +335,7 @@ async function renderReportPng(sectionsHtml: string, fileBase: string) {
   const [{ default: html2canvas }] = await Promise.all([import('html2canvas-pro'), ensureReportFont()])
   const container = document.createElement('div')
   container.className = PNG_ROOT
+  container.setAttribute('data-glass', 'off')
   container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;background:#fff;'
   container.innerHTML = `<style>${pngCss()}</style><div class="page">${sectionsHtml}</div>`
   document.body.appendChild(container)
@@ -368,6 +369,7 @@ async function captureReportCanvas(
 
   const wrap = document.createElement('div')
   wrap.className = `${PNG_ROOT} wash`
+  wrap.setAttribute('data-glass', 'off')
   wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;width:${width + 84}px;`
   wrap.innerHTML = `<style>${pngCss()}</style><div style="padding:24px 24px 0;">${reportMastheadHtml({ ...report, logo, docCode })}</div><div style="padding:18px 0;"><div data-pf-body class="glass-body"></div></div><div style="padding:0 24px 20px;">${reportFooterHtml(report.title, docCode)}</div>`
   const body = wrap.querySelector('[data-pf-body]') as HTMLElement
@@ -389,6 +391,7 @@ async function captureReportCanvas(
       scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
       onclone: (doc) => {
         doc.documentElement.setAttribute('data-theme', 'light')
+        doc.documentElement.setAttribute('data-glass', 'off')
         doc.documentElement.style.colorScheme = 'light'
         // Đồng bộ giao diện: phần DOM chụp KHÔNG mang màu thương hiệu riêng của CLB (useApplyBranding đặt --color-primary theo CLB).
         if (!EXPORT_USE_CLUB_COLOR) {
