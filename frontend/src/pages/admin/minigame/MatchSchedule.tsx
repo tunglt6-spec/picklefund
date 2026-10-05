@@ -301,7 +301,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             />
 
             <div id={MS_DOUBLES_ID} className="pf-glass-strong rounded-xl overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                     <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>
@@ -669,7 +669,7 @@ export function MatchSchedule() {
         />
 
         <div id={MS_GROUP_ID} className="pf-glass-strong rounded-xl overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                 <th className="text-left px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>

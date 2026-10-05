@@ -234,7 +234,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         {isGolf ? (
           golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
             <div className="overflow-x-auto">
-            <table className="mt-2 w-full text-sm">
+            <table className="pf-rows mt-2 w-full text-sm">
               <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Golfer</th><th className="text-center font-semibold py-1">Vòng</th><th className="text-right font-semibold py-1">Tổng gậy</th></tr></thead>
               <tbody>
                 {golfStandings.slice(0, 5).map((s, i) => (
@@ -252,7 +252,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         ) : (
           teamStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có đội.</p> : (
             <div className="overflow-x-auto">
-            <table className="mt-2 w-full text-sm">
+            <table className="pf-rows mt-2 w-full text-sm">
               <thead><tr className="text-xs uppercase [color:var(--pf-color-muted)]"><th className="text-left font-semibold py-1">#</th><th className="text-left font-semibold py-1">Đội</th><th className="text-center font-semibold py-1">Trận</th><th className="text-center font-semibold py-1">Thắng</th><th className="text-center font-semibold py-1">Thua</th><th className="text-right font-semibold py-1">Điểm</th></tr></thead>
               <tbody>
                 {teamStandings.slice(0, 5).map((s, i) => (

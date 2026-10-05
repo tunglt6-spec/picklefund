@@ -531,7 +531,7 @@ export function SuperClubs() {
         </div>
 
         <div className="pf-glass-strong rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="pf-rows w-full min-w-[720px] text-sm">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>

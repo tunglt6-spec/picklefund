@@ -148,7 +148,7 @@ export function RunningDashboardPage() {
         {runners.length > 0 && (
           <div className="pf-glass-strong rounded-2xl p-4 overflow-x-auto">
             <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-1.5"><Timer size={15} /> Nhập thời gian (mm:ss)</h3>
-            <table className="w-full min-w-[420px] text-sm">
+            <table className="pf-rows w-full min-w-[420px] text-sm">
               <thead><tr className="[color:var(--pf-color-muted)] text-xs uppercase">
                 <th className="text-left py-2">Vận động viên</th>
                 {Array.from({ length: rounds }, (_, i) => <th key={i} className="py-2 px-1">Lần {i + 1}</th>)}

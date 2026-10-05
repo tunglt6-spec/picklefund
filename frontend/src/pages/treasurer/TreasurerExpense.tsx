@@ -341,7 +341,7 @@ export function TreasurerExpense() {
               </div>
             ) : (
               <div className="pf-glass-strong rounded-xl overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="pf-rows w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
                       <th className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Mô tả</th>

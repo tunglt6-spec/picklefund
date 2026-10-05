@@ -542,7 +542,7 @@ export function TreasurerIncome() {
               </div>
             ) : (
               <div className="pf-glass-strong rounded-xl overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="pf-rows w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
                       <th className="px-3 py-3 w-8">

@@ -421,7 +421,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
           <p className="text-xs">Chưa có dữ liệu</p>
         </div>
       ) : (
-        <table className="w-full text-sm">
+        <table className="pf-rows w-full text-sm">
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border}` }}>
               {['#', 'Đội', 'TĐ', 'H.Số', 'Điểm'].map((h, i) => (

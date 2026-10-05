@@ -251,7 +251,7 @@ export function TreasurerLedger() {
           </div>
         ) : (
           <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
-            <table className="table-base">
+            <table className="table-base pf-rows">
               <thead>
                 <tr>
                   <th>Ngày</th>

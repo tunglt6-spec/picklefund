@@ -230,7 +230,7 @@ export function Billing() {
               <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Chọn gói và tự nâng cấp — kích hoạt ngay sau khi thanh toán</p>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                     <th className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>

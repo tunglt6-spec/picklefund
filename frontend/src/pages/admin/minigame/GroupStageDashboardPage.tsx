@@ -242,7 +242,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                     {group.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
                   </span>
                 </div>
-                <table className="w-full text-sm">
+                <table className="pf-rows w-full text-sm">
                   <thead>
                     <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)] uppercase">
                       <th className="text-left px-3 py-2 font-semibold">#</th>

@@ -343,7 +343,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
               </div>
               <div className="pf-glass-strong rounded-[18px] overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="pf-rows w-full text-sm">
                     <thead>
                       <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
                         <th className="text-left font-semibold px-3 py-2.5 sticky left-0 bg-[color:var(--pf-surface)]">Golfer</th>
@@ -391,7 +391,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
               </div>
             <div id={`golf-lb-${id}`} className="pf-glass-strong rounded-[18px] overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="pf-rows w-full text-sm">
                   <thead>
                     <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
                       <th className="text-left font-semibold px-3 py-2.5">#</th>

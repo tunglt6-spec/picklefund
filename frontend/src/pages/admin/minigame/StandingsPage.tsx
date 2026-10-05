@@ -297,7 +297,7 @@ export function StandingsPage() {
 
         {/* Standings table */}
         <div className="pf-glass-strong rounded-xl overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
                 <th className="text-center px-3 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">#</th>

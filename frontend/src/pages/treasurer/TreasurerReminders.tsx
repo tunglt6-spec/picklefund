@@ -333,7 +333,7 @@ export function TreasurerReminders() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Thành viên chưa đóng quỹ</h3>
               <Badge variant="red" className="ml-auto">{unpaidMembers.length}</Badge>
             </div>
-            <table className="table-base">
+            <table className="table-base pf-rows">
               <thead>
                 <tr>
                   <th>Thành viên</th>
@@ -385,7 +385,7 @@ export function TreasurerReminders() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Chờ xác nhận thanh toán</h3>
               <Badge variant="yellow" className="ml-auto">{pendingMembers.length}</Badge>
             </div>
-            <table className="table-base">
+            <table className="table-base pf-rows">
               <thead>
                 <tr>
                   <th>Thành viên</th>

@@ -40,7 +40,7 @@ export function DataTable<T>({
 
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
-      <table className="w-full text-sm border-collapse">
+      <table className="pf-rows w-full text-sm">
         <thead>
           <tr className="border-b border-[color:var(--pf-border)]">
             {columns.map((c) => (

@@ -65,7 +65,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="pf-rows w-full text-sm">
           <thead>
             <tr className="border-b border-[color:var(--pf-border)]">
               {['#', 'Tên', 'Bảng', 'Played', 'W/D/L', 'PF:PA', '+/-', 'Pts', 'Win%'].map(

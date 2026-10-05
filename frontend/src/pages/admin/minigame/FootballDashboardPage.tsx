@@ -479,7 +479,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
 
   // Bảng BXH (dùng cho toàn giải & từng bảng)
   const renderTable = (rows: typeof standings) => (
-    <table className="w-full text-sm">
+    <table className="pf-rows w-full text-sm">
       <thead>
         <tr className="text-xs uppercase tracking-wide [color:var(--pf-color-muted)] border-b border-[color:var(--pf-border)]">
           <th className="text-left font-semibold px-3 py-2.5">#</th>

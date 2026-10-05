@@ -75,7 +75,7 @@ export function RolesPermissions() {
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
       <div className="pf-glass-strong overflow-x-auto rounded-[20px]">
-        <table className="table-base">
+        <table className="table-base pf-rows">
           <thead>
             <tr>
               <th>Tài khoản</th><th>Họ tên</th><th>Email</th>

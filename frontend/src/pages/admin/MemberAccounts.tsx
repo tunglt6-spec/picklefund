@@ -539,7 +539,7 @@ export function MemberAccounts() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                     <th className="px-4 py-3 text-left">Thành viên</th>

@@ -1509,7 +1509,7 @@ export function FundPeriods() {
                   <div className="bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 flex items-center gap-1.5">
                     <AlertCircle size={13} />Dòng bị lỗi ({importResult.errors.length})
                   </div>
-                  <table className="w-full text-sm">
+                  <table className="pf-rows w-full text-sm">
                     <thead><tr className="border-b border-red-100 text-xs [color:var(--pf-color-muted)]">
                       <th className="text-left px-4 py-2">Dòng</th>
                       <th className="text-left px-4 py-2">Họ và tên</th>
@@ -1579,7 +1579,7 @@ export function FundPeriods() {
                     <button onClick={resetImport} className="[color:var(--pf-color-muted)] hover:text-red-500 text-xs">Xóa</button>
                   </div>
                   <div className="overflow-x-auto max-h-56 overflow-y-auto">
-                    <table className="w-full text-sm">
+                    <table className="pf-rows w-full text-sm">
                       <thead className="sticky top-0 [background:var(--pf-surface)]">
                         <tr className="border-b border-[color:var(--pf-border)] text-xs [color:var(--pf-color-muted)]">
                           <th className="text-left px-4 py-2">#</th>
@@ -1702,7 +1702,7 @@ function HistoryTab({ contributions, periods, members }: {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-[color:var(--pf-border)]">
-          <table className="w-full text-sm">
+          <table className="pf-rows w-full text-sm">
             <thead>
               <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                 <th className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Ngày</th>

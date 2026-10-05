@@ -160,7 +160,7 @@ export function AuditLogViewer() {
         ) : (
           <div className="pf-glass-strong rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] text-xs [color:var(--pf-color-muted)] uppercase">
                     <th className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
