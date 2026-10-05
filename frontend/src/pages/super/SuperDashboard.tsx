@@ -143,7 +143,7 @@ export function SuperDashboard() {
   // Viết đánh giá Maika: mỗi lần gọi có ngân sách thời gian (< timeout proxy); mục nào còn thiếu thì gọi tiếp (server cache phần đã xong).
   const fetchReview = async () => {
     let last: { sections: any; byAi: boolean; pending: number } | null = null
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       const res = await api.get('/command-center/ai-review', { params: params(), timeout: 60000 })
       const d = res.data?.data
       last = { sections: d?.sections ?? {}, byAi: !!d?.byAi, pending: Number(d?.pending ?? 0) }

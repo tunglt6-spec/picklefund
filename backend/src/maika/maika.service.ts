@@ -193,8 +193,9 @@ export class MaikaService {
     prompt: string,
     fallback: string,
     clubId?: string,
+    maxTokens = 8192,
   ): Promise<{ text: string; byAi: boolean }> {
-    const text = await this.askAI(prompt, fallback, clubId, 8192);
+    const text = await this.askAI(prompt, fallback, clubId, maxTokens);
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 

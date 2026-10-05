@@ -361,29 +361,27 @@ export class CommandCenterService {
       { key: 'conclusion' as const, prompt: this.conclusionPrompt(digest) },
     ].filter((t) => !cached.sections[t.key]);
 
-    // Mỗi mục = một lời gọi LLM riêng (persona chuyên gia). Chạy song song hạn chế + THỬ LẠI có backoff
-    // (lỗi rate-limit khi gọi dồn là nguyên nhân PDF rơi về bản tóm tắt). Hết ngân sách thời gian → trả phần đã có.
+    // GỘP mọi mục còn thiếu vào MỘT lời gọi LLM (giảm mạnh số request → tránh 429 quota của Gemini), tách theo thẻ [[key]].
+    // Tối đa 2 lần thử; hết ngân sách thời gian → trả phần đã có (pending > 0).
     const deadline = Date.now() + budgetMs;
-    const queue = [...tasks];
-    const worker = async () => {
-      while (queue.length && Date.now() < deadline) {
-        const t = queue.shift()!;
-        for (let attempt = 0; attempt < 3 && Date.now() < deadline; attempt++) {
-          try {
-            const r = await this.maika.composeLong(t.prompt, '§NO_LLM§');
-            const text = (r.text ?? '').trim();
-            if (r.byAi && text.length > 60 && !text.includes('§NO_LLM§')) {
-              cached.sections[t.key] = text;
-              break;
-            }
-          } catch {
-            /* thử lại */
+    for (let attempt = 0; attempt < 2 && tasks.length && Date.now() < deadline; attempt++) {
+      const missing = tasks.filter((t) => !cached.sections[t.key]);
+      if (!missing.length) break;
+      try {
+        const r = await this.maika.composeLong(this.combinedPrompt(missing.map((t) => t.key), digest), '§NO_LLM§', undefined, 32768);
+        if (r.byAi && !r.text.includes('§NO_LLM§')) {
+          const parts = r.text.split(/^\s*\[\[(\w+)\]\]\s*$/m);
+          for (let i = 1; i + 1 < parts.length; i += 2) {
+            const k = parts[i] as keyof ReviewSections;
+            const text = parts[i + 1].trim();
+            if (missing.some((t) => t.key === k) && text.length > 60) cached.sections[k] = text;
           }
-          await new Promise((res) => setTimeout(res, 1500 * (attempt + 1)));
         }
+      } catch {
+        /* thử lại */
       }
-    };
-    await Promise.all(Array.from({ length: Math.min(3, tasks.length) }, worker));
+      if (tasks.some((t) => !cached.sections[t.key]) && attempt === 0) await new Promise((res) => setTimeout(res, 3000));
+    }
 
     if (Object.keys(cached.sections).length) this.reviewCache.set(key, cached);
     const sections = { ...fallback, ...cached.sections } as ReviewSections;
@@ -428,6 +426,33 @@ export class CommandCenterService {
       `TUYỆT ĐỐI không bịa số ngoài dữ liệu; chỉ số nào "chưa có dữ liệu" thì nêu rõ và đề xuất bổ sung đo lường. ` +
       `KHÔNG markdown, KHÔNG in lại tiêu đề, KHÔNG lặp lại đề bài — chỉ trả về đoạn văn phân tích.\n\n` +
       `SỐ LIỆU TOÀN HỆ THỐNG (chỉ viết về phần của bạn, các số khác dùng để đối chiếu):\n${digest}`
+    );
+  }
+
+  /** Prompt GỘP: nhiều mục trong một lần gọi, mỗi mục sau một thẻ [[key]] riêng một dòng. */
+  private combinedPrompt(keys: (keyof ReviewSections)[], digest: string): string {
+    const blocks = keys.map((k) => {
+      if (k === 'conclusion') {
+        return `[[conclusion]]
+KẾT LUẬN & KHUYẾN NGHỊ ƯU TIÊN — tổng hợp mọi mảng. Một đoạn kết luận chung (90–140 từ) bám số liệu; sau đó 4–6 dòng khuyến nghị, MỖI dòng riêng bắt đầu "P1: ", "P2: "… nêu hành động cụ thể + lý do bám số liệu + tác động kỳ vọng.`;
+      }
+      const spec = this.REVIEW_SPECS.find((x) => x.key === k)!;
+      return `[[${k}]]
+"${spec.title}" — vai trò: ${spec.persona}. Tập trung: ${spec.focus}. 150–250 từ, 2–4 đoạn theo mạch: nhận định hiện trạng (trích số cụ thể) → xu hướng/nguyên nhân → rủi ro → khuyến nghị cụ thể → định hướng tiếp theo.`;
+    });
+    return (
+      `Bạn là hội đồng chuyên gia điều hành nền tảng SaaS thể thao PickleFund. Viết các phần của BÁO CÁO ĐIỀU HÀNH cấp hệ thống gửi Ban lãnh đạo, tiếng Việt, ` +
+      `mỗi phần theo giọng chuyên gia của mảng đó, sắc bén, bám CHẶT số liệu, TUYỆT ĐỐI không bịa số ngoài dữ liệu (chỉ số "chưa có dữ liệu" thì nêu rõ). ` +
+      `KHÔNG markdown, KHÔNG in lại tiêu đề.
+` +
+      `ĐỊNH DẠNG BẮT BUỘC: mỗi phần bắt đầu bằng đúng một dòng thẻ [[key]] (key theo danh sách dưới), nội dung ngay sau thẻ; không thêm gì ngoài các phần.
+
+` +
+      `CÁC PHẦN CẦN VIẾT:
+${blocks.join('\n\n')}
+
+SỐ LIỆU TOÀN HỆ THỐNG:
+${digest}`
     );
   }
 
