@@ -260,12 +260,12 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
               <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Thêm golfer</h2>
               <div className="mt-3">
                 <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
-                  <Users size={14} /> Thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
+                  <Users size={14} /> Thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary-text)]">({pickIds.length} đã chọn)</span>}
                 </div>
                 <div className="mt-2 relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm thành viên..."
-                    className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
                   {filteredMembers.map(m => (
@@ -284,7 +284,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                 <div className="mt-2 flex gap-2">
                   <input value={guestName} onChange={e => setGuestName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuestToForm() } }}
-                    placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                   <button onClick={addGuestToForm} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
                 </div>
                 {guests.length > 0 && (
@@ -361,10 +361,10 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                               <td key={r} className="px-1.5 py-1.5 text-center">
                                 <input inputMode="numeric" value={cellValue(g, r)}
                                   onChange={e => setEdits(s => ({ ...s, [`${g.id}:${r}`]: e.target.value.replace(/\D/g, '') }))}
-                                  className="w-12 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                                  className="w-12 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                               </td>
                             ))}
-                            <td className="px-3 py-2 text-center font-bold [color:var(--pf-primary)]">{total || '—'}</td>
+                            <td className="px-3 py-2 text-center font-bold [color:var(--pf-primary-text)]">{total || '—'}</td>
                           </tr>
                         )
                       })}
@@ -408,7 +408,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
                         </td>
                         <td className="px-3 py-2.5 font-medium [color:var(--pf-text)]">{s.name}</td>
                         <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.played}/{rounds}</td>
-                        <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary)]">{s.played > 0 ? s.total : '—'}</td>
+                        <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary-text)]">{s.played > 0 ? s.total : '—'}</td>
                       </tr>
                     ))}
                   </tbody>

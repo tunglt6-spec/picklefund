@@ -29,7 +29,7 @@ function Card({ post }: { post: BlogPost }) {
       </div>
       <h3 className="mt-3 text-base font-extrabold leading-snug [color:var(--pf-text)]">{post.title}</h3>
       <p className="mt-2 flex-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{post.excerpt}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-primary)]">
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-primary-text)]">
         Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
@@ -83,7 +83,7 @@ export function BlogArticle() {
     <PublicPage title={post.title}>
       <article className={`${PUBLIC_CONTAINER} py-12`}>
         <div className="mx-auto max-w-3xl">
-          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
+          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)]">
             <ArrowLeft size={15} /> Tất cả bài viết
           </Link>
           <div className="mt-5 flex items-center gap-2">
@@ -116,7 +116,7 @@ export function BlogArticle() {
           </div>
 
           <div className="mt-10 rounded-2xl border p-6 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
-            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><Rss size={14} /> Sẵn sàng áp dụng?</div>
+            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><Rss size={14} /> Sẵn sàng áp dụng?</div>
             <p className="text-base font-bold [color:var(--pf-text)]">Đưa những nguyên tắc này vào CLB của bạn</p>
             <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Bắt đầu miễn phí — không cần cài đặt, chạy ngay trên trình duyệt.</p>
             <Link to="/login" className="mt-4 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>

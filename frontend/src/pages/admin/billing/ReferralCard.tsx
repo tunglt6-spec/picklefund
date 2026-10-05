@@ -60,7 +60,7 @@ export function ReferralCard() {
   return (
     <div className="pf-glass rounded-xl p-5 md:p-6">
       <div className="flex items-center gap-2 mb-1">
-        <Gift size={18} className="[color:var(--pf-primary)]" />
+        <Gift size={18} className="[color:var(--pf-primary-text)]" />
         <h3 className="font-semibold [color:var(--pf-text)]">Giới thiệu bạn bè — nhận Pro miễn phí</h3>
       </div>
       <p className="text-sm [color:var(--pf-color-muted)] mb-4">
@@ -70,8 +70,8 @@ export function ReferralCard() {
       {/* Mã của tôi */}
       <div className="flex items-center gap-2">
         <div className="flex-1 flex items-center justify-between rounded-xl border border-dashed px-4 py-3 [border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
-          <span className="text-lg font-extrabold tracking-widest [color:var(--pf-primary)]">{info.code}</span>
-          <button onClick={copy} className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)]">
+          <span className="text-lg font-extrabold tracking-widest [color:var(--pf-primary-text)]">{info.code}</span>
+          <button onClick={copy} className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]">
             {copied ? <><Check size={14} /> Đã copy</> : <><Copy size={14} /> Copy</>}
           </button>
         </div>
@@ -107,7 +107,7 @@ export function ReferralCard() {
           <div className="flex items-center gap-2">
             <input value={applyInput} onChange={(e) => setApplyInput(e.target.value.toUpperCase())}
               placeholder="VD: PFAB12CD"
-              className="flex-1 h-10 rounded-lg border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              className="flex-1 h-10 rounded-lg border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             <button onClick={apply} disabled={applying || !applyInput.trim()}
               className="h-10 px-4 rounded-lg text-sm font-semibold [background:var(--pf-primary)] text-white disabled:opacity-50 inline-flex items-center gap-1.5">
               {applying ? <Loader2 size={14} className="animate-spin" /> : null} Áp dụng

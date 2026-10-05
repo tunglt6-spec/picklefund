@@ -346,7 +346,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
             <button
               onClick={() => handleDrawRound('mexicano')}
               disabled={busy}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
             >
               <Shuffle size={16} />
               Bốc theo BXH (Mexicano)
@@ -416,7 +416,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center gap-2 mb-4">
-              <Trophy size={20} className="[color:var(--pf-primary)]" />
+              <Trophy size={20} className="[color:var(--pf-primary-text)]" />
               <h3 className="text-lg font-bold [color:var(--pf-text)]">
                 Nhập Kết Quả Trận #{scoreEntryMatch.matchNumber}
               </h3>
@@ -424,7 +424,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
 
             <div className="space-y-4">
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
-                <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 1</p>
+                <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide mb-1">Đội 1</p>
                 <p className="text-sm font-medium [color:var(--pf-text)]">
                   {scoreEntryMatch.team1?.[0]?.memberName ?? 'VĐV'} &amp; {scoreEntryMatch.team1?.[1]?.memberName ?? 'VĐV'}
                 </p>
@@ -439,7 +439,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                     max={21}
                     value={score1}
                     onChange={e => setScore1(Math.max(0, Math.min(21, Number(e.target.value))))}
-                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
+                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary-text)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
                 </div>
                 <span className="text-2xl font-bold [color:var(--pf-color-muted)] mt-5">—</span>
@@ -451,13 +451,13 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                     max={21}
                     value={score2}
                     onChange={e => setScore2(Math.max(0, Math.min(21, Number(e.target.value))))}
-                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
+                    className="w-20 h-12 text-center text-2xl font-bold [color:var(--pf-primary-text)] border-2 [border-color:var(--pf-primary-soft)] rounded-xl focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
                 </div>
               </div>
 
               <div className="[background:var(--pf-primary-soft)] rounded-xl p-3">
-                <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide mb-1">Đội 2</p>
+                <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide mb-1">Đội 2</p>
                 <p className="text-sm font-medium [color:var(--pf-text)]">
                   {scoreEntryMatch.team2?.[0]?.memberName ?? 'VĐV'} &amp; {scoreEntryMatch.team2?.[1]?.memberName ?? 'VĐV'}
                 </p>
@@ -535,7 +535,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
           <div className="[background:var(--pf-surface)] rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
-                <UserPen size={18} className="[color:var(--pf-primary)]" />
+                <UserPen size={18} className="[color:var(--pf-primary-text)]" />
               </div>
               <h3 className="text-base font-bold [color:var(--pf-text)]">Sửa thành viên</h3>
             </div>
@@ -549,7 +549,7 @@ export function MinigameDashboardPage({ resync }: { resync?: () => void }) {
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleConfirmEdit()}
-                  className="w-full border border-[color:var(--pf-border)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                  className="w-full border border-[color:var(--pf-border)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] focus:border-transparent"
                   placeholder="Nhập tên..."
                   autoFocus
                 />

@@ -48,7 +48,7 @@ function OverviewTab() {
               className={cn('inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
                 sport === s.v
                   ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
-                  : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]')}
+                  : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]')}
               style={sport === s.v ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' } : undefined}>
               {sportEmoji(s.v) || '🏓'} {s.label}
             </button>
@@ -70,7 +70,7 @@ function TournamentsTab() {
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <button onClick={() => navigate('/minigames')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
+        <button onClick={() => navigate('/minigames')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
           <ListChecks size={14} /> Danh sách giải đầy đủ
         </button>
       </div>
@@ -126,7 +126,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
       {error ? (
         <div className="pf-glass rounded-2xl p-8 text-center">
           <p className="text-sm [color:var(--pf-color-danger)]">Không tải được danh sách giải.</p>
-          <button onClick={load} className="mt-3 text-xs font-semibold [color:var(--pf-primary)]">Thử lại</button>
+          <button onClick={load} className="mt-3 text-xs font-semibold [color:var(--pf-primary-text)]">Thử lại</button>
         </div>
       ) : items === null ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -149,7 +149,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
                   <StatusBadge tone="neutral">{STATUS_LABEL[st] ?? st}</StatusBadge>
                 </div>
                 <div className="mt-2 text-sm font-bold [color:var(--pf-text)] line-clamp-2">{mg.name}</div>
-                <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)]">
+                <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary-text)]">
                   <Icon size={13} /> {meta.title}
                 </div>
               </button>

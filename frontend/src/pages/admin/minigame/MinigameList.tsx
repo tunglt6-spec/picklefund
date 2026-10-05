@@ -384,7 +384,7 @@ export function MinigameList() {
           <div role="dialog" aria-modal="true" aria-label="Ủy quyền quản lý minigame" className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl [background:var(--pf-surface)] [box-shadow:var(--pf-shadow)]">
             <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
               <h2 className="flex items-center gap-2 text-base font-semibold [color:var(--pf-text)]">
-                <UserCheck size={18} className="[color:var(--pf-primary)]" />Ủy quyền quản lý minigame
+                <UserCheck size={18} className="[color:var(--pf-primary-text)]" />Ủy quyền quản lý minigame
               </h2>
               <button onClick={() => setShowDelegateModal(false)} aria-label="Đóng" className="flex h-9 w-9 items-center justify-center rounded-xl text-lg [color:var(--pf-color-muted)]"><span aria-hidden>✕</span></button>
             </div>

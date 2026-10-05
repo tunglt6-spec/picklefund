@@ -217,7 +217,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                     <div className="flex gap-2">
                       <button
                         onClick={() => setScoreMatch(m)}
-                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
+                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                       >
                         <Pencil size={12} /> {m.status === 'PENDING' ? 'Nhập KQ' : 'Sửa KQ'}
                       </button>
@@ -354,7 +354,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                             ) : (
                               <button
                                 onClick={() => setScoreMatch(m)}
-                                className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                                className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors"
                                 title="Sửa kết quả"
                               >
                                 <Pencil size={14} />
@@ -619,7 +619,7 @@ export function MatchSchedule() {
                 {m.status === 'PENDING' && (
                   <button
                     onClick={() => setScoreMatch(m)}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-medium [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] py-2 rounded-[10px]"
                   >
                     <ClipboardEdit size={12} /> Nhập Kết Quả
                   </button>

@@ -120,7 +120,7 @@ function BulkCreateModal({
             <>
               <div className="flex items-center justify-between mb-3">
                 <button onClick={() => setSelected(new Set(available.map(m => m.id)))}
-                  className="text-xs [color:var(--pf-primary)] hover:underline">Chọn tất cả</button>
+                  className="text-xs [color:var(--pf-primary-text)] hover:underline">Chọn tất cả</button>
                 <button onClick={() => setSelected(new Set())}
                   className="text-xs [color:var(--pf-color-muted)] hover:underline">Bỏ chọn tất cả</button>
               </div>
@@ -138,7 +138,7 @@ function BulkCreateModal({
                   <label key={m.id}
                     className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-center px-3 py-2.5 rounded-lg hover:[background:var(--pf-surface-muted)] cursor-pointer border border-transparent has-[:checked]:[border-color:var(--pf-primary-soft)] has-[:checked]:[background:var(--pf-primary-soft)] transition-colors">
                     <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)}
-                      className="rounded [color:var(--pf-primary)]" />
+                      className="rounded [color:var(--pf-primary-text)]" />
                     <span className="text-sm font-medium [color:var(--pf-text)]">{m.fullName}</span>
                     <span className="text-sm [color:var(--pf-color-muted)] font-mono">{slugify(m.fullName) || 'user'}</span>
                     <span className="text-sm [color:var(--pf-color-muted)] font-mono">123456</span>
@@ -208,7 +208,7 @@ function CreateSingleModal({
     }
   }
 
-  const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]'
+  const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]'
   const labelCls = 'block text-sm font-medium [color:var(--pf-text)] mb-1.5'
 
   return (
@@ -385,7 +385,7 @@ export function MemberAccounts() {
             <div className="flex items-center gap-1.5">
               {noAccountMembers.length > 0 && (
                 <button onClick={() => setShowBulk(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary)] [background:var(--pf-primary-soft)] active:opacity-80">
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] active:opacity-80">
                   <Users size={11} />{noAccountMembers.length}
                 </button>
               )}
@@ -397,7 +397,7 @@ export function MemberAccounts() {
           {/* KPI mini stats */}
           <div className="grid grid-cols-2 gap-1.5 mb-3 sm:grid-cols-4">
             {[
-              { label: 'Tổng', value: accounts.length, color: '[color:var(--pf-primary)]' },
+              { label: 'Tổng', value: accounts.length, color: '[color:var(--pf-primary-text)]' },
               { label: 'Hoạt động', value: accounts.filter(a => getStatus(a) === 'active').length, color: 'text-emerald-600' },
               { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
               { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
@@ -486,7 +486,7 @@ export function MemberAccounts() {
             <Button variant="outline" size="sm" onClick={() => setShowBulk(true)} disabled={noAccountMembers.length === 0}>
               <Users size={14} /> Tạo hàng loạt
               {noAccountMembers.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] text-xs">{noAccountMembers.length}</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] text-xs">{noAccountMembers.length}</span>
               )}
             </Button>
             <Button onClick={() => setShowSingle(true)} disabled={noAccountMembers.length === 0}>
@@ -500,7 +500,7 @@ export function MemberAccounts() {
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Tổng tài khoản', value: accounts.length, color: '[color:var(--pf-primary)]', bg: '[background:var(--pf-primary-soft)]' },
+            { label: 'Tổng tài khoản', value: accounts.length, color: '[color:var(--pf-primary-text)]', bg: '[background:var(--pf-primary-soft)]' },
             { label: 'Hoạt động', value: accounts.filter(a => getStatus(a) === 'active').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             { label: 'Chưa kích hoạt', value: accounts.filter(a => ['pending', 'must_change'].includes(getStatus(a))).length, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Bị khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600', bg: 'bg-red-50' },

@@ -140,7 +140,7 @@ export function PaymentApprovals() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><User size={15} /></span>
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]"><User size={15} /></span>
                     <div className="min-w-0">
                       <p className="truncate text-base font-bold [color:var(--pf-text)]">{p.member?.fullName ?? 'Thành viên'}</p>
                       <p className="text-[11.5px] [color:var(--pf-color-muted)]">{formatDate(p.createdAt)}{p.member?.phone ? ` · ${p.member.phone}` : ''}</p>
@@ -149,13 +149,13 @@ export function PaymentApprovals() {
                   <p className="mt-2 text-[12.5px] [color:var(--pf-color-muted)]">Nội dung: <span className="[color:var(--pf-text)]">{p.description}</span></p>
                   {p.memberNote && <p className="mt-0.5 text-[12.5px] [color:var(--pf-color-muted)]">Ghi chú: <span className="[color:var(--pf-text)]">{p.memberNote}</span></p>}
                   {p.proofUrl && /^https?:\/\//i.test(p.proofUrl) && (
-                    <a href={p.proofUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-primary)]">
+                    <a href={p.proofUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold [color:var(--pf-primary-text)]">
                       <ExternalLink size={13} /> Xem chứng từ
                     </a>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-extrabold [color:var(--pf-primary)]">{formatVND(Number(p.amount))}</div>
+                  <div className="text-lg font-extrabold [color:var(--pf-primary-text)]">{formatVND(Number(p.amount))}</div>
                   {p.reportedByMember && <StatusBadge tone="info">Member báo</StatusBadge>}
                 </div>
               </div>

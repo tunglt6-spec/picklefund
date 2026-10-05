@@ -11,7 +11,7 @@ function FooterLink({ item, onNavigate }: { item: MenuItem; onNavigate: (href?: 
     return <span className="cursor-default text-sm [color:var(--pf-color-muted)] opacity-70">{item.title} · <span className="text-xs">đang cập nhật</span></span>
   }
   return (
-    <button onClick={() => onNavigate(item.href)} className="text-left text-sm [color:var(--pf-color-muted)] transition-colors hover:[color:var(--pf-primary)]">
+    <button onClick={() => onNavigate(item.href)} className="text-left text-sm [color:var(--pf-color-muted)] transition-colors hover:[color:var(--pf-primary-text)]">
       {item.title}
     </button>
   )
@@ -31,7 +31,7 @@ export function LandingFooter() {
               <span className="text-lg">Pickle<span style={{ color: 'var(--pf-primary)' }}>Fund</span></span>
             </Link>
             <p className="mt-3 max-w-xs text-xs leading-relaxed [color:var(--pf-color-muted)]">{CONTACT.brandDesc}</p>
-            <a href={`mailto:${CONTACT.email}`} className="mt-3 inline-block text-xs font-semibold [color:var(--pf-primary)]">{CONTACT.email}</a>
+            <a href={`mailto:${CONTACT.email}`} className="mt-3 inline-block text-xs font-semibold [color:var(--pf-primary-text)]">{CONTACT.email}</a>
           </div>
 
           {FOOTER_GROUPS.map((group) => (

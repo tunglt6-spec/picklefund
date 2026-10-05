@@ -15,9 +15,9 @@ const variantClasses: Record<Variant, string> = {
 }
 
 const sizeClasses: Record<Size, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5',
-  md: 'h-9 px-4 text-sm gap-2',
-  lg: 'h-10 px-5 text-sm gap-2',
+  sm: 'h-8 [@media(pointer:coarse)]:h-11 px-3 text-xs gap-1.5',
+  md: 'h-9 [@media(pointer:coarse)]:h-11 px-4 text-sm gap-2',
+  lg: 'h-10 [@media(pointer:coarse)]:h-11 px-5 text-sm gap-2',
 }
 
 export const Button = forwardRef<
@@ -29,7 +29,7 @@ export const Button = forwardRef<
       ref={ref}
       className={cn(
         'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)] focus-visible:ring-offset-1',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)] focus-visible:ring-offset-1',
         'disabled:opacity-50 disabled:pointer-events-none select-none',
         variantClasses[variant],
         sizeClasses[size],

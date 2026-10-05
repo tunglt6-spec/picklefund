@@ -170,7 +170,7 @@ export function ReportPaymentModal({
               ))}
               <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-[color:var(--pf-border)] pt-2">
                 <span className="text-[12.5px] [color:var(--pf-color-muted)]">Nội dung CK</span>
-                <button onClick={() => copy(ctx.memo, 'nội dung')} className="inline-flex items-center gap-1 text-right text-sm font-semibold [color:var(--pf-primary)]">
+                <button onClick={() => copy(ctx.memo, 'nội dung')} className="inline-flex items-center gap-1 text-right text-sm font-semibold [color:var(--pf-primary-text)]">
                   {ctx.memo} <Copy size={12} />
                 </button>
               </div>

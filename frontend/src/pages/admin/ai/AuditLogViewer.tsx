@@ -121,7 +121,7 @@ export function AuditLogViewer() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm theo người dùng, mô tả, tài nguyên…"
-                className="w-full rounded-xl border border-[color:var(--pf-border)] py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
               />
             </div>
             <div className="pf-glass-strong flex gap-1 rounded-xl p-1 overflow-x-auto">
@@ -141,12 +141,12 @@ export function AuditLogViewer() {
           <div className="flex flex-wrap items-center gap-2 text-xs [color:var(--pf-color-muted)]">
             <span>Từ ngày</span>
             <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
-              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             <span>đến</span>
             <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
-              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+              className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             {(from || to) && (
-              <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary)] hover:underline font-medium">Xoá lọc ngày</button>
+              <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary-text)] hover:underline font-medium">Xoá lọc ngày</button>
             )}
           </div>
         </div>

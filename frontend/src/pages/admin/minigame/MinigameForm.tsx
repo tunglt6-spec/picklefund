@@ -329,15 +329,15 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               )}
               <div><Label>Tên Giải Đấu *</Label>
                 <input type="text" value={form.name} onChange={e => set({ name: e.target.value })} placeholder="VD: Giải Pickleball Q2/2026"
-                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" /></div>
+                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               <div><Label>Mô tả</Label>
                 <textarea rows={2} value={form.description} onChange={e => set({ description: e.target.value })} placeholder="Mô tả giải đấu..."
-                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" /></div>
+                  className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Ngày bắt đầu</Label><input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" /></div>
-                <div><Label>Ngày kết thúc</Label><input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" /></div>
+                <div><Label>Ngày bắt đầu</Label><input type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <div><Label>Ngày kết thúc</Label><input type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               </div>
-              <div><Label>Ghi chú</Label><textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none" /></div>
+              <div><Label>Ghi chú</Label><textarea rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
             </div>
           )}
 
@@ -430,7 +430,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                       <div className="mt-1 flex justify-between text-xs [color:var(--pf-color-muted)]"><span>2</span><span>16</span></div></div>
                   ) : (
                     <div><Label>Chế độ bốc thăm mặc định</Label>
-                      <select value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]">
+                      <select value={form.drawMode} onChange={e => set({ drawMode: e.target.value as DrawMode })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]">
                         <option value="RANDOM">Ngẫu Nhiên (Random)</option><option value="FAIR_ROTATION">Công Bằng Theo Lượt</option><option value="BALANCED_SKILL">Cân Bằng Trình Độ</option>
                       </select></div>
                   )}
@@ -443,7 +443,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   <div className="grid grid-cols-3 gap-4">
                     {[{ label: 'Điểm thắng', key: 'winPoints', disabled: false }, { label: 'Điểm hòa', key: 'drawPoints', disabled: !form.allowDraw }, { label: 'Điểm thua', key: 'lossPoints', disabled: true }].map(({ label, key, disabled }) => (
                       <div key={key}><Label>{label}</Label>
-                        <input type="number" min={0} value={form[key as keyof FormState] as number} onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)} disabled={disabled} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:[background:var(--pf-surface-muted)] disabled:[color:var(--pf-color-muted)]" /></div>
+                        <input type="number" min={0} value={form[key as keyof FormState] as number} onChange={e => set({ [key]: +e.target.value } as Partial<FormState>)} disabled={disabled} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:[background:var(--pf-surface-muted)] disabled:[color:var(--pf-color-muted)]" /></div>
                     ))}
                   </div>
                 </>
@@ -474,7 +474,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               <div className="mt-4 pt-4 border-t border-[color:var(--pf-border)]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Khách Mời</span>
-                  {!showAddGuest && <button type="button" onClick={() => { setShowAddGuest(true); setTimeout(() => guestInputRef.current?.focus(), 50) }} className="flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] transition-colors"><UserPlus size={14} /> Thêm Khách</button>}
+                  {!showAddGuest && <button type="button" onClick={() => { setShowAddGuest(true); setTimeout(() => guestInputRef.current?.focus(), 50) }} className="flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary-text)] transition-colors"><UserPlus size={14} /> Thêm Khách</button>}
                 </div>
                 {form.guestMembers.length > 0 && (
                   <div className="space-y-1.5 mb-2">
@@ -484,7 +484,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                         <div key={g.id} className={cn('flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors', checked ? '[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]' : '[background:var(--pf-surface-muted)] border border-transparent')}>
                           <input type="checkbox" checked={checked} onChange={() => toggleMember(g.id)} className="accent-[var(--pf-primary)] h-4 w-4 cursor-pointer" />
                           <span className="text-sm font-medium [color:var(--pf-text)] flex-1">{g.name}</span>
-                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Khách</span>
                           <button type="button" onClick={() => removeGuest(g.id)} className="[color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors ml-1"><X size={14} /></button>
                         </div>
                       )
@@ -493,7 +493,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                 )}
                 {showAddGuest && (
                   <div className="flex items-center gap-2 p-2 [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg">
-                    <input ref={guestInputRef} type="text" value={guestName} onChange={e => setGuestName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') { setShowAddGuest(false); setGuestName('') } }} placeholder="Tên khách mời..." className="flex-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                    <input ref={guestInputRef} type="text" value={guestName} onChange={e => setGuestName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') { setShowAddGuest(false); setGuestName('') } }} placeholder="Tên khách mời..." className="flex-1 [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
                     <button type="button" onClick={addGuest} disabled={!guestName.trim()} className="px-3 py-1.5 rounded-lg [background:var(--pf-primary)] text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Thêm</button>
                     <button type="button" onClick={() => { setShowAddGuest(false); setGuestName('') }} className="[color:var(--pf-color-muted)] transition-colors"><X size={16} /></button>
                   </div>
@@ -507,7 +507,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {step === 'schedule' && (
             <div className="space-y-4">
               <div><Label>Thời gian dự kiến bắt đầu</Label>
-                <input type="datetime-local" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" /></div>
+                <input type="datetime-local" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               <div className="rounded-lg border border-[color:var(--pf-color-info-soft)] [background:var(--pf-color-info-soft)] px-3 py-2.5 text-xs [color:var(--pf-color-info)] flex gap-2">
                 <Info size={15} className="shrink-0 mt-0.5" />
                 <span>Lịch thi đấu chi tiết ({preset.resourceTerm}, vòng, cặp/đội) được tạo & điều chỉnh ở tab <b>Lịch đấu</b> sau khi tạo giải — nơi bốc thăm/sinh vòng đấu và khóa lịch.</span>

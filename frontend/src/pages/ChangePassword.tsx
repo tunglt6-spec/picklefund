@@ -65,7 +65,7 @@ export function ChangePassword() {
                   value={form.oldPassword}
                   onChange={e => setForm(f => ({ ...f, oldPassword: e.target.value }))}
                   placeholder="Nhập mật khẩu hiện tại"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, old: !s.old }))}
@@ -85,7 +85,7 @@ export function ChangePassword() {
                   value={form.newPassword}
                   onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, new: !s.new }))}
@@ -105,7 +105,7 @@ export function ChangePassword() {
                   value={form.confirm}
                   onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
                 <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}

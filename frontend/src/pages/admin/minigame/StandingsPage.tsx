@@ -143,10 +143,10 @@ export function StandingsPage() {
             <p className="text-xs [color:var(--pf-color-muted)] truncate">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:opacity-70">
               <ImageIcon size={14} /> Ảnh
             </button>
-            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:opacity-70">
+            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:opacity-70">
               <FileText size={14} /> PDF
             </button>
             {canShare() && (
@@ -210,11 +210,11 @@ export function StandingsPage() {
                   {s.overallRank === 1 ? '🥇' : s.overallRank === 2 ? '🥈' : s.overallRank === 3 ? '🥉' : s.overallRank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</p>
+                  <p className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">{s.memberName}{isGuestId(s.memberId) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Khách</span>}</p>
                   <p className="text-xs [color:var(--pf-color-muted)]">{s.groupName}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-black [color:var(--pf-primary)] leading-tight">{s.rankingPoints}</p>
+                  <p className="text-xl font-black [color:var(--pf-primary-text)] leading-tight">{s.rankingPoints}</p>
                   <p className="text-xs [color:var(--pf-color-muted)]">điểm</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export function StandingsPage() {
         subtitle={`${standings.length} thành viên`}
         actions={
           <div className="flex items-center gap-2">
-            <button onClick={doExportPng} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:opacity-90">
+            <button onClick={doExportPng} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] hover:opacity-90">
               <ImageIcon size={14} />Ảnh
             </button>
             <button onClick={doExportPdf} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
@@ -340,7 +340,7 @@ export function StandingsPage() {
                   <td className={cn('px-3 py-2.5 text-center font-semibold', s.pointDifference >= 0 ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-danger)]')}>
                     {s.pointDifference > 0 ? '+' : ''}{s.pointDifference}
                   </td>
-                  <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary)] text-base">{s.rankingPoints}</td>
+                  <td className="px-3 py-2.5 text-center font-bold [color:var(--pf-primary-text)] text-base">{s.rankingPoints}</td>
                 </tr>
               ))}
             </tbody>

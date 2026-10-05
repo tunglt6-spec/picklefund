@@ -117,7 +117,7 @@ export function DataMonitorPage() {
                       {c.level !== 'ok' && FIX_LINK[c.key] && (
                         <button
                           onClick={() => navigate(FIX_LINK[c.key].to)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)] hover:underline"
                         >
                           {FIX_LINK[c.key].label} <ArrowRight size={12} />
                         </button>

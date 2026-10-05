@@ -58,7 +58,7 @@ export function AidoShowcase() {
       <section className="border-y [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
         <div className={`${PUBLIC_CONTAINER} py-14`}>
           <div className="mb-8 text-center">
-            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><Workflow size={14} /> Cách vận hành</div>
+            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><Workflow size={14} /> Cách vận hành</div>
             <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Tự động hoá có kiểm soát</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -84,7 +84,7 @@ export function AidoShowcase() {
         <div className="overflow-hidden rounded-3xl border [border-color:var(--pf-border)]" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--pf-primary) 10%, var(--pf-surface)), var(--pf-surface))' }}>
           <div className="grid items-center gap-6 p-8 md:grid-cols-[1.3fr_1fr] md:p-10">
             <div>
-              <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><FileBarChart size={14} /> AIDO Executive Report</div>
+              <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><FileBarChart size={14} /> AIDO Executive Report</div>
               <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Báo cáo điều hành cho Ban quản trị</h2>
               <p className="mt-3 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                 Một cú nhấp: tổng hợp sức khỏe CLB, tài chính, thành viên, hoạt động, thi đấu và hiệu suất AI theo từng kỳ quỹ — kèm tóm tắt do AI viết, dự báo và xuất PDF/Excel. Có thể tự gửi email đầu mỗi tháng.
@@ -96,7 +96,7 @@ export function AidoShowcase() {
             <ul className="space-y-2 text-sm">
               {['Điểm sức khỏe CLB (6 chiều)', 'Tóm tắt điều hành do AI viết', 'Dự báo 30–90 ngày', 'Xuất PDF · Excel · Ảnh', 'Tự gửi email hằng tháng'].map((x) => (
                 <li key={x} className="flex items-center gap-2 rounded-xl border px-3 py-2 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-                  <Sparkles size={14} className="[color:var(--pf-primary)]" /> {x}
+                  <Sparkles size={14} className="[color:var(--pf-primary-text)]" /> {x}
                 </li>
               ))}
             </ul>

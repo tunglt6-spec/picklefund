@@ -158,7 +158,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
                   className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all ${
                     form.fundSource === fs
-                      ? '[background:var(--pf-surface)] shadow-sm [color:var(--pf-primary)]'
+                      ? '[background:var(--pf-surface)] shadow-sm [color:var(--pf-primary-text)]'
                       : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                   }`}>
                   {fs === 'COMMON' ? <DollarSign size={15} /> : <Wallet size={15} />}
@@ -221,7 +221,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                   <input value={form.receiverName} onChange={e => setForm({ ...form, receiverName: e.target.value })}
                     placeholder="Tên người/đội nhận tiền" className="input-base" />
                 </div>
-                <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
+                <div className="flex items-start gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary-text)]">
                   <Wallet size={13} className="mt-0.5 shrink-0" />
                   <span>Khoản Quỹ Phụ không phân bổ cho thành viên, không ảnh hưởng công nợ cá nhân.</span>
                 </div>
@@ -241,8 +241,8 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                             : 'border-[color:var(--pf-border)] hover:[border-color:var(--pf-primary)]'
                         }`}>
                         {active && <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-white" style={{ background: 'var(--pf-primary)' }}><Check size={11} /></span>}
-                        <span className={active ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}>{c.icon}</span>
-                        <span className={`text-sm font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{c.title}</span>
+                        <span className={active ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-color-muted)]'}>{c.icon}</span>
+                        <span className={`text-sm font-semibold ${active ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{c.title}</span>
                         <span className="text-[10.5px] leading-tight [color:var(--pf-color-muted)]">{c.hint}</span>
                       </button>
                     )
@@ -251,7 +251,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
                 {/* Sân → chia đều; Sinh hoạt → chọn cách chia bằng chip */}
                 {form.costType === 'COURT' ? (
-                  <div className="mt-2.5 flex items-center gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
+                  <div className="mt-2.5 flex items-center gap-2 rounded-lg [background:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary-text)]">
                     <Users size={13} className="shrink-0" />
                     <span>Chia đều cho <b>{memberCount > 0 ? `${memberCount} thành viên` : 'tất cả thành viên'}</b> (luật Quỹ).</span>
                   </div>
@@ -269,7 +269,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                                 ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
                                 : 'border-[color:var(--pf-border)] hover:[border-color:var(--pf-primary)]'
                             }`}>
-                            <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{r.label}</span>
+                            <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{r.label}</span>
                             <span className="block text-xs leading-tight [color:var(--pf-color-muted)]">{r.hint}</span>
                           </button>
                         )
@@ -393,7 +393,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
 
   type FieldRow = { label: string; value: React.ReactNode; span?: boolean }
   const fields: FieldRow[] = [
-    { label: 'Mã chi',     value: <span className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</span> },
+    { label: 'Mã chi',     value: <span className="font-mono text-xs [color:var(--pf-primary-text)]">{exp.code}</span> },
     { label: 'Nguồn quỹ', value: isMini
       ? <Badge variant="indigo"><Wallet size={11} className="inline mr-1" />Quỹ Phụ</Badge>
       : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chính</Badge> },
@@ -458,14 +458,14 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
                   </a>
                 ) : (
                   <div className="h-16 w-16 rounded-lg [background:var(--pf-surface)] border border-[color:var(--pf-border)] flex items-center justify-center shrink-0">
-                    <FileText size={22} className="[color:var(--pf-primary)]" />
+                    <FileText size={22} className="[color:var(--pf-primary-text)]" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium [color:var(--pf-text)]">Đã đính kèm hóa đơn</p>
                   <div className="flex items-center gap-3 mt-1.5">
                     <a href={resolveReceiptUrl(exp.receiptUrl)} target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
+                      className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)] hover:underline">
                       <Eye size={12} />Xem
                     </a>
                     {!isMember && (
@@ -480,7 +480,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
               <p className="text-xs [color:var(--pf-color-muted)]">Chưa có hóa đơn đính kèm</p>
             ) : (
               <button onClick={onAttach}
-                className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[color:var(--pf-border)] py-3 text-sm font-semibold [color:var(--pf-color-muted)] hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors">
+                className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[color:var(--pf-border)] py-3 text-sm font-semibold [color:var(--pf-color-muted)] hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary-text)] transition-colors">
                 <Paperclip size={15} />Đính kèm hóa đơn
               </button>
             )}
@@ -868,7 +868,7 @@ export function Expenses() {
         {/* KPI strip */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
           {[
-            { label: 'Quỹ Chính', val: commonAmt, color: '[color:var(--pf-primary)]' },
+            { label: 'Quỹ Chính', val: commonAmt, color: '[color:var(--pf-primary-text)]' },
             { label: 'Quỹ Phụ', val: miniAmt, color: '[color:var(--pf-color-info)]' },
             { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
@@ -927,7 +927,7 @@ export function Expenses() {
                 {!isMember && (
                   <>
                     <button onClick={() => setEditTarget(e)}
-                      className="p-1.5 [color:var(--pf-color-muted)] active:[color:var(--pf-primary)]">
+                      className="p-1.5 [color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)]">
                       <Pencil size={13} />
                     </button>
                     <button onClick={() => setConfirmId(e.id)}
@@ -977,7 +977,7 @@ export function Expenses() {
         </>
       )}
       <button onClick={() => setDetailExp(exp)} title="Xem"
-        className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+        className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary-text)] transition-colors">
         <Eye size={13} />
       </button>
       {!isMember && (
@@ -1004,7 +1004,7 @@ export function Expenses() {
       render: (e: RichExpense) => <RowCheckbox label={`Chọn khoản chi ${e.code}`}
         checked={bulk.selectedIds.has(e.id)} onChange={() => bulk.toggleOne(e.id)} />,
     }] as Column<RichExpense>[]) : []),
-    { key: 'code', header: 'Mã chi', render: (e) => <span className="font-mono text-xs [color:var(--pf-primary)]">{e.code}</span> },
+    { key: 'code', header: 'Mã chi', render: (e) => <span className="font-mono text-xs [color:var(--pf-primary-text)]">{e.code}</span> },
     { key: 'description', header: 'Nội dung', render: (e) => <span className="font-medium [color:var(--pf-text)] block max-w-[200px] truncate">{e.description}</span> },
     { key: 'fund', header: 'Nguồn quỹ', align: 'center', render: fundBadge },
     { key: 'date', header: 'Ngày chi', align: 'center', render: (e) => <span className="[color:var(--pf-color-muted)] text-xs">{e.expenseDate}</span> },
@@ -1021,7 +1021,7 @@ export function Expenses() {
         <div className="flex items-center gap-2 min-w-0">
           {!isMember && <RowCheckbox label={`Chọn khoản chi ${exp.code}`}
             checked={bulk.selectedIds.has(exp.id)} onChange={() => bulk.toggleOne(exp.id)} />}
-          <span className="font-mono text-xs [color:var(--pf-primary)]">{exp.code}</span>
+          <span className="font-mono text-xs [color:var(--pf-primary-text)]">{exp.code}</span>
         </div>
         <Badge variant={statusCfg[exp.status].variant} dot>{statusCfg[exp.status].label}</Badge>
       </div>
@@ -1095,7 +1095,7 @@ export function Expenses() {
                 <button key={t.key} onClick={() => { setTab(t.key as 'all' | ExpenseStatus); setPage(1) }}
                   className={`px-3 py-2.5 text-xs font-medium border-b-2 transition-colors ${
                     tab === t.key
-                      ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
+                      ? '[border-color:var(--pf-primary)] [color:var(--pf-primary-text)]'
                       : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
                   }`}>
                   {t.label}

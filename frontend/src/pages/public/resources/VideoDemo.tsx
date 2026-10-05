@@ -30,7 +30,7 @@ export function VideoDemo() {
         <div className="overflow-hidden rounded-3xl border [border-color:var(--pf-border)]" style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--pf-primary) 12%, var(--pf-surface)), var(--pf-surface))' }}>
           <div className="grid items-center gap-6 p-8 md:grid-cols-[1.2fr_1fr] md:p-10">
             <div>
-              <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><MousePointerClick size={14} /> Demo tương tác</div>
+              <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><MousePointerClick size={14} /> Demo tương tác</div>
               <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Trải nghiệm trực tiếp, không chỉ xem</h2>
               <p className="mt-3 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                 Vào thẳng sản phẩm với dữ liệu mẫu để tự bấm thử: quản lý quỹ, điểm danh, giải đấu, báo cáo và đội ngũ AI. Đây là sản phẩm thật, không phải video dựng sẵn.
@@ -46,7 +46,7 @@ export function VideoDemo() {
             </div>
             <div className="flex aspect-video items-center justify-center rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)]">
               <div className="text-center">
-                <PlayCircle size={44} className="mx-auto [color:var(--pf-primary)]" />
+                <PlayCircle size={44} className="mx-auto [color:var(--pf-primary-text)]" />
                 <p className="mt-3 px-6 text-sm leading-relaxed [color:var(--pf-color-muted)]">
                   Video hướng dẫn quay sẵn đang được sản xuất. Trong lúc chờ, bản demo tương tác cho bạn trải nghiệm đầy đủ hơn cả video.
                 </p>

@@ -134,7 +134,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                 onClick={handleAdvanceKo}
                 disabled={busy}
                 title="Sinh vòng KO kế tiếp (khi vòng KO hiện tại đủ kết quả)"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed md:w-auto"
               >
                 Vòng KO kế tiếp
               </button>
@@ -199,7 +199,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {navCards.map(c => (
             <button key={c.label} onClick={() => navigate(c.to)}
-              className={cn('rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary)]', c.bg)}>
+              className={cn('rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary-text)]', c.bg)}>
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 shrink-0">{c.icon}</span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-white">{c.label}</span>
@@ -233,11 +233,11 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
               <div key={group.id} className="pf-glass-strong rounded-2xl shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
                   <div>
-                    <p className="text-sm font-bold [color:var(--pf-primary)]">{group.groupName}</p>
-                    <p className="text-xs [color:var(--pf-primary)]">{group.memberIds.length} người chơi</p>
+                    <p className="text-sm font-bold [color:var(--pf-primary-text)]">{group.groupName}</p>
+                    <p className="text-xs [color:var(--pf-primary-text)]">{group.memberIds.length} người chơi</p>
                   </div>
                   <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
-                    group.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+                    group.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]',
                   )}>
                     {group.status === 'LOCKED' ? '🔒 Đã khóa' : 'Mở'}
                   </span>
@@ -263,7 +263,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
                           <span className="inline-flex items-center gap-1.5">
                             {s.memberName}
                             {isGuestId(s.memberId) && (
-                              <span className="text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>
+                              <span className="text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Khách</span>
                             )}
                           </span>
                         </td>

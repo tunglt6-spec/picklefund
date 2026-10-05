@@ -47,7 +47,7 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
       tabIndex={clickable ? 0 : undefined}
       onClick={onClick}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
-      className={`pf-stat-card flex h-full flex-col rounded-xl p-4${clickable ? ' cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]' : ''}`}
+      className={`pf-stat-card flex h-full flex-col rounded-xl p-4${clickable ? ' cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]' : ''}`}
       {...(alert ? { 'data-hi': '' } : {})}
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
@@ -74,7 +74,7 @@ function Section({ title, desc, icon, children }: { title: string; desc?: string
   return (
     <section className="mt-6">
       <div className="mb-3 flex items-center gap-2">
-        {icon && <span className="[color:var(--pf-primary)]">{icon}</span>}
+        {icon && <span className="[color:var(--pf-primary-text)]">{icon}</span>}
         <h2 className="text-base font-extrabold tracking-tight [color:var(--pf-text)]">{title}</h2>
         {desc && <span className="text-xs [color:var(--pf-color-muted)]">· {desc}</span>}
       </div>
@@ -254,7 +254,7 @@ function MaikaNote({ review, k }: { review: { sections: any } | null; k: string 
   if (!t) return null
   return (
     <div className="mt-3 rounded-xl border p-3" style={{ borderColor: 'color-mix(in srgb, var(--pf-primary) 24%, var(--pf-border))', background: 'color-mix(in srgb, var(--pf-primary) 5%, var(--pf-surface))' }}>
-      <p className="mb-1 inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider [color:var(--pf-primary)]"><Sparkles size={12} /> Maika nhận định</p>
+      <p className="mb-1 inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider [color:var(--pf-primary-text)]"><Sparkles size={12} /> Maika nhận định</p>
       <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]">{t}</p>
     </div>
   )
@@ -327,7 +327,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       <div className="mt-4">
         <ChartCard title="AIDO Executive Summary" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}
           actions={<div className="flex items-center gap-1.5">
-            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
+            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
             <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
           </div>}>
           <SummaryBlock summary={data.summary} />
@@ -468,7 +468,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                     <p className="text-sm font-medium [color:var(--pf-text)]">{a.title}</p>
                     <p className="text-xs [color:var(--pf-color-muted)]">{a.source}{a.clubName ? ` · ${a.clubName}` : ''} · {new Date(a.time).toLocaleString('vi-VN')}</p>
                   </div>
-                  {a.clubId && <Link to={`/super/clubs/${a.clubId}`} className="shrink-0 text-xs font-semibold [color:var(--pf-primary)]">Chi tiết</Link>}
+                  {a.clubId && <Link to={`/super/clubs/${a.clubId}`} className="shrink-0 text-xs font-semibold [color:var(--pf-primary-text)]">Chi tiết</Link>}
                 </li>
               ))}
             </ul>
@@ -506,7 +506,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             </ul>
           ) : <EmptyState icon={<ClipboardList size={22} />} title="Chưa có nhật ký" />}
           <MaikaNote review={review} k="syslog" />
-          <div className="mt-3"><Link to="/super/audit-logs" className="text-xs font-semibold [color:var(--pf-primary)]">Xem toàn bộ nhật ký →</Link></div>
+          <div className="mt-3"><Link to="/super/audit-logs" className="text-xs font-semibold [color:var(--pf-primary-text)]">Xem toàn bộ nhật ký →</Link></div>
         </ChartCard>
       </Section>
 
@@ -533,7 +533,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                   </div>
                   <div className="shrink-0 text-right">
                     <span className="text-sm font-extrabold [color:var(--pf-color-warning)]">{vnd(e.amount)}</span>
-                    {e.clubId && <Link to={`/super/clubs/${e.clubId}`} className="mt-1 block text-[11.5px] font-semibold [color:var(--pf-primary)]">Vào CLB →</Link>}
+                    {e.clubId && <Link to={`/super/clubs/${e.clubId}`} className="mt-1 block text-[11.5px] font-semibold [color:var(--pf-primary-text)]">Vào CLB →</Link>}
                   </div>
                 </div>
               </li>
@@ -580,7 +580,7 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
       }}
     >
       <div className="mb-2.5 flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary-text)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>
         <div className="min-w-0"><p className="text-sm font-extrabold [color:var(--pf-text)]">{name}</p><p className="truncate text-xs [color:var(--pf-color-muted)]">{role}</p></div>
       </div>
       <div className="mt-auto grid grid-cols-2 gap-1.5">
@@ -603,7 +603,7 @@ function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: n
         <ol className="space-y-1">
           {rows.map((r, i) => (
             <li key={r.clubId ?? i} className="flex items-center gap-2 text-sm">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{i + 1}</span>
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{i + 1}</span>
               <span className="min-w-0 flex-1 truncate [color:var(--pf-text)]">{r.name}</span>
               <span className="shrink-0 font-semibold [color:var(--pf-text)]">{fmt(r.value)}</span>
             </li>

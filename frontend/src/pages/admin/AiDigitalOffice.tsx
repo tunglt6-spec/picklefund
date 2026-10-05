@@ -492,12 +492,12 @@ export function AiDigitalOffice() {
                 <div className="space-y-2">
                   {todaySessions.slice(0, 5).map((s: any) => (
                     <div key={s.id} className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Clock size={14} /></span>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]"><Clock size={14} /></span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium [color:var(--pf-text)]">{[s.startTime, s.endTime].filter(Boolean).join(' – ') || 'Buổi chơi'}</p>
                         <p className="truncate text-xs [color:var(--pf-color-muted)]">{s.courtName || 'Chưa rõ sân'}</p>
                       </div>
-                      <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{s._count?.attendanceRecords ?? 0} người</span>
+                      <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{s._count?.attendanceRecords ?? 0} người</span>
                     </div>
                   ))}
                 </div>
@@ -568,7 +568,7 @@ export function AiDigitalOffice() {
                   })}
                   {pending > Math.min(pendingList.length, 8) && (
                     <button onClick={() => navigate('/admin/ai-approvals?from=aido')}
-                      className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold [color:var(--pf-primary)]">
+                      className="mt-1 flex w-full items-center justify-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]">
                       Xem tất cả hàng đợi <ArrowRight size={13} />
                     </button>
                   )}
@@ -756,7 +756,7 @@ function Panel({ icon, title, sub, children }: { icon: React.ReactNode; title: s
 function SectionTitle({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
   return (
     <div className="mb-1 flex items-center gap-2">
-      <span className="[color:var(--pf-primary)]">{icon}</span>
+      <span className="[color:var(--pf-primary-text)]">{icon}</span>
       <h2 className="text-sm font-bold [color:var(--pf-text)]">{title}</h2>
       {sub && <span className="text-xs [color:var(--pf-color-muted)]">· {sub}</span>}
     </div>

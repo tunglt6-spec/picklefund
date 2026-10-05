@@ -32,7 +32,7 @@ const STATUS_STYLE: Record<string, string> = {
   EXECUTING: 'bg-sky-100 text-sky-700',
   EXECUTED: 'bg-green-100 text-green-700',
   FAILED: 'bg-red-100 text-red-700',
-  RETRY_PENDING: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  RETRY_PENDING: '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]',
   EXPIRED: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
 }
 
@@ -114,7 +114,7 @@ export function AiApprovalInbox() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
-              <Inbox size={20} className="[color:var(--pf-primary)]" />
+              <Inbox size={20} className="[color:var(--pf-primary-text)]" />
             </span>
             <div>
               <h1 className="text-xl font-bold [color:var(--pf-text)]">Hộp Duyệt AI</h1>
@@ -166,7 +166,7 @@ export function AiApprovalInbox() {
                   <div key={a.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <Bot size={13} className="[color:var(--pf-primary)] shrink-0" />
+                        <Bot size={13} className="[color:var(--pf-primary-text)] shrink-0" />
                         <span className="text-xs font-semibold [color:var(--pf-color-muted)]">{a.requestedByAi}</span>
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${RISK_STYLE[a.riskLevel] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
                           {a.riskLevel}
@@ -216,7 +216,7 @@ export function AiApprovalInbox() {
                 value={actionType}
                 onChange={e => setActionType(e.target.value)}
                 placeholder="Loại hành động (VD: send-reminder)…"
-                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] focus:border-transparent"
               />
               <div className="flex flex-wrap gap-1.5">
                 {RISK_OPTS.map(o => (
@@ -236,7 +236,7 @@ export function AiApprovalInbox() {
                 onChange={e => setObjective(e.target.value)}
                 rows={2}
                 placeholder="Mục tiêu (tuỳ chọn)…"
-                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] focus:border-transparent"
               />
               <button
                 onClick={() => void handleEvaluate()}
@@ -406,7 +406,7 @@ export function AiApprovalInbox() {
                       onChange={e => setRejectReason(e.target.value)}
                       rows={2}
                       placeholder="Lý do từ chối (tuỳ chọn)…"
-                      className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] focus:border-transparent"
+                      className="w-full rounded-xl border border-[color:var(--pf-border)] px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] focus:border-transparent"
                     />
                     <div className="flex gap-2">
                       <button

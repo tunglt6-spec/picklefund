@@ -30,8 +30,8 @@ const BORDER_COLORS = [
 ] as const
 
 const LABEL_COLORS = [
-  '[color:var(--pf-primary)]',
-  '[color:var(--pf-primary)]',
+  '[color:var(--pf-primary-text)]',
+  '[color:var(--pf-primary-text)]',
   '[color:var(--pf-color-success)]',
   '[color:var(--pf-color-warning)]',
   '[color:var(--pf-color-danger)]',
@@ -124,7 +124,7 @@ export function GroupCard({ group, colorIndex, onViewGroup }: GroupCardProps) {
         {onViewGroup && (
           <button
             onClick={onViewGroup}
-            className="inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"
+            className="inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"
           >
             <Eye size={13} />
             Xem chi tiết

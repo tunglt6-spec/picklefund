@@ -63,7 +63,7 @@ export function SuccessStories() {
         <div className="grid grid-cols-2 gap-3 rounded-3xl border p-6 sm:grid-cols-3 lg:grid-cols-5 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
           {STATS.map((s) => (
             <div key={s.label} className="text-center">
-              <p className="text-2xl font-extrabold tracking-tight [color:var(--pf-primary)]">{s.value}</p>
+              <p className="text-2xl font-extrabold tracking-tight [color:var(--pf-primary-text)]">{s.value}</p>
               <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{s.label}</p>
             </div>
           ))}

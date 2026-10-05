@@ -435,7 +435,7 @@ export function Contributions() {
           <div className="pf-stat-card rounded-xl p-4">
             <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Chính</p>
-              <p className="text-base font-bold tabular-nums [color:var(--pf-primary)]">{formatVND(commonTotal)}</p>
+              <p className="text-base font-bold tabular-nums [color:var(--pf-primary-text)]">{formatVND(commonTotal)}</p>
             </div>
           </div>
           <div className="pf-stat-card rounded-xl p-4">
@@ -450,13 +450,13 @@ export function Contributions() {
         <div className="flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
-            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
+            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary-text)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Chính
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
-            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
+            className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary-text)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Phụ
           </button>
@@ -485,7 +485,7 @@ export function Contributions() {
                       <button onClick={() => toggleConfirm(c.id)} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
@@ -515,7 +515,7 @@ export function Contributions() {
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
                       <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-2" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
@@ -545,7 +545,7 @@ export function Contributions() {
                     onClick={() => setForm(f => ({ ...f, fundSource: fs, amount: '' }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                       form.fundSource === fs
-                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                         : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)]'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -657,7 +657,7 @@ export function Contributions() {
           className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-violet-50 hover:text-violet-600 transition-colors"><FileText size={13} /></button>
       )}
       <button onClick={() => openEdit(c)} title="Sửa"
-        className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors"><Edit2 size={13} /></button>
+        className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary-text)] transition-colors"><Edit2 size={13} /></button>
       <button onClick={() => setDeleteId(c.id)} title="Xóa"
         className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={13} /></button>
     </div>
@@ -679,7 +679,7 @@ export function Contributions() {
     { key: 'payer', header: 'Người nộp', render: (c) => <span className="font-medium [color:var(--pf-text)]">{c.payerName ?? c.member?.fullName ?? 'Không rõ'}</span> },
     { key: 'type', header: 'Loại thu', render: (c) => <Badge variant="indigo">{MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}</Badge> },
     { key: 'date', header: 'Ngày', align: 'center', render: (c) => <span className="[color:var(--pf-color-muted)] text-xs">{formatDate(c.paymentDate)}</span> },
-    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold [color:var(--pf-primary)]">{formatVND(c.amount)}</span> },
+    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold [color:var(--pf-primary-text)]">{formatVND(c.amount)}</span> },
     { key: 'method', header: 'Hình thức', align: 'center', render: methodBadge },
     { key: 'status', header: 'Trạng thái', align: 'center', render: statusBadge },
     ...(!isMember ? ([
@@ -721,9 +721,9 @@ export function Contributions() {
           <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
-                <DollarSign size={14} className="[color:var(--pf-primary)]" />
+                <DollarSign size={14} className="[color:var(--pf-primary-text)]" />
               </div>
-              <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Chính</p>
+              <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
@@ -744,9 +744,9 @@ export function Contributions() {
           <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
-                <Wallet size={14} className="[color:var(--pf-primary)]" />
+                <Wallet size={14} className="[color:var(--pf-primary-text)]" />
               </div>
-              <p className="text-xs font-semibold [color:var(--pf-primary)] uppercase tracking-wide">Quỹ Phụ</p>
+              <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
@@ -789,7 +789,7 @@ export function Contributions() {
         {/* COMMON contributions table */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><DollarSign size={11} className="[color:var(--pf-primary)]" /></div>
+            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><DollarSign size={11} className="[color:var(--pf-primary-text)]" /></div>
             <h3 className="text-sm font-semibold [color:var(--pf-text)]">Quỹ Chính</h3>
           </div>
           {commonContribs.length === 0 ? (
@@ -815,7 +815,7 @@ export function Contributions() {
         {/* MINI contributions table */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><Wallet size={11} className="[color:var(--pf-primary)]" /></div>
+            <div className="h-5 w-5 rounded [background:var(--pf-primary-soft)] flex items-center justify-center"><Wallet size={11} className="[color:var(--pf-primary-text)]" /></div>
             <h3 className="text-sm font-semibold [color:var(--pf-text)]">Quỹ Phụ</h3>
           </div>
           {miniContribs.length === 0 ? (
@@ -866,8 +866,8 @@ export function Contributions() {
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all text-left flex items-center gap-2 ${
                       form.fundSource === fs
                         ? fs === 'COMMON'
-                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                          : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
+                          : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                         : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'
                     }`}
                   >

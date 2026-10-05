@@ -217,7 +217,7 @@ export function TreasurerExpense() {
                               : <Badge variant="yellow" dot>Chưa có HĐ</Badge>}
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary)]">
+                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
                               <Edit2 size={14} />
                             </button>
                             <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:bg-red-50 active:text-red-500">
@@ -372,7 +372,7 @@ export function TreasurerExpense() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+                              <button onClick={() => openEdit(e)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary-text)] transition-colors">
                                 <Edit2 size={13} />
                               </button>
                               <button onClick={() => setDeleteId(e.id)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
@@ -408,12 +408,12 @@ export function TreasurerExpense() {
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mô tả khoản chi <span className="text-red-500">*</span></label>
             <input required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               placeholder="VD: Tiền sân buổi 5, Nước uống, Giải thưởng..."
-              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
             <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
               <option value="">-- Chọn kỳ quỹ --</option>
               {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -423,12 +423,12 @@ export function TreasurerExpense() {
               <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                 placeholder="VD: 450000"
-                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
             <div>
               <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
               <input type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
-                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
           </div>
           <div>
@@ -437,14 +437,14 @@ export function TreasurerExpense() {
               {([['COURT', 'Tiền thuê sân'], ['LIVING', 'Chi phí sinh hoạt']] as [CostType, string][]).map(([k, v]) => (
                 <button key={k} type="button"
                   onClick={() => setForm({ ...form, costType: k, ...(k === 'COURT' ? { allocationRule: 'EQUAL' as AllocationRule } : {}) })}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium ${form.costType === k ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'}`}>
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium ${form.costType === k ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'}`}>
                   {v}
                 </button>
               ))}
             </div>
           </div>
           {form.costType === 'COURT' ? (
-            <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
+            <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary-text)]">
               Tiền thuê sân luôn <b>chia đều</b> cho tất cả thành viên (luật Quỹ).
             </div>
           ) : (

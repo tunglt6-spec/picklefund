@@ -257,16 +257,16 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                       <span className="text-xl shrink-0">{m.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={cn('text-sm font-semibold', drawMode === m.mode ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]')}>
+                          <span className={cn('text-sm font-semibold', drawMode === m.mode ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]')}>
                             {m.label}
                           </span>
                           {m.mode === 'SMART_DRAW' && (
-                            <span className="text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-1.5 py-0.5 rounded-full">MẶC ĐỊNH</span>
+                            <span className="text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] px-1.5 py-0.5 rounded-full">MẶC ĐỊNH</span>
                           )}
                         </div>
                         <p className="text-xs [color:var(--pf-color-muted)] truncate">{m.sublabel}</p>
                       </div>
-                      {drawMode === m.mode && <Check size={16} className="[color:var(--pf-primary)] shrink-0" />}
+                      {drawMode === m.mode && <Check size={16} className="[color:var(--pf-primary-text)] shrink-0" />}
                     </button>
                   ))}
                 </div>
@@ -322,7 +322,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         min={1}
                         value={courtCount}
                         onChange={e => setCourtCount(Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                        className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                       />
                     </div>
                     <div className="p-3 rounded-xl [background:var(--pf-surface-muted)]">
@@ -334,7 +334,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                           disabled={maxMatchesAuto}
                           value={maxMatches}
                           onChange={e => setMaxMatches(Math.max(1, Number(e.target.value) || 1))}
-                          className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:[background:var(--pf-color-muted-soft)] disabled:[color:var(--pf-color-muted)]"
+                          className="w-full border border-[color:var(--pf-border)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:[background:var(--pf-color-muted-soft)] disabled:[color:var(--pf-color-muted)]"
                         />
                       </div>
                       <label className="flex items-center gap-1.5 mt-1.5 text-xs [color:var(--pf-color-muted)] cursor-pointer">
@@ -364,7 +364,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         if (selectedCount === activeParts.length) setSelectedIds(new Set())
                         else setSelectedIds(new Set(activeParts.map(p => p.memberId)))
                       }}
-                      className="text-xs [color:var(--pf-primary)] hover:underline"
+                      className="text-xs [color:var(--pf-primary-text)] hover:underline"
                     >
                       {selectedCount === activeParts.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
                     </button>
@@ -377,7 +377,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                       className={cn(
                         'flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-sm transition-all',
                         selectedIds.has(p.memberId)
-                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                          ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                           : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:border-[color:var(--pf-border)]',
                       )}
                     >
@@ -388,7 +388,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                         className="w-3.5 h-3.5 accent-[var(--pf-primary)] shrink-0"
                       />
                       <span className="truncate font-medium text-xs">{p.memberName}</span>
-                      {isGuestId(p.memberId) && <span className="shrink-0 text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}
+                      {isGuestId(p.memberId) && <span className="shrink-0 text-xs font-medium px-1 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Khách</span>}
                     </label>
                   ))}
                 </div>
@@ -438,7 +438,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
               )}
 
               {isManualEdit && (
-                <p className="text-xs [color:var(--pf-primary)] font-medium">Chọn 2 người để đổi chỗ</p>
+                <p className="text-xs [color:var(--pf-primary-text)] font-medium">Chọn 2 người để đổi chỗ</p>
               )}
 
               {/* Matches */}
@@ -459,11 +459,11 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                       {!isManualEdit ? (
                         <div className="flex items-center gap-2">
                           <div className="flex-1 [background:var(--pf-primary-soft)] rounded-lg px-2.5 py-1.5">
-                            <p className="text-xs font-semibold [color:var(--pf-primary)] truncate">{m.team1.map(p => p.memberName).join(' & ')}</p>
+                            <p className="text-xs font-semibold [color:var(--pf-primary-text)] truncate">{m.team1.map(p => p.memberName).join(' & ')}</p>
                           </div>
                           <span className="text-xs font-bold [color:var(--pf-color-muted)] shrink-0">vs</span>
                           <div className="flex-1 [background:var(--pf-primary-soft)] rounded-lg px-2.5 py-1.5">
-                            <p className="text-xs font-semibold [color:var(--pf-primary)] truncate">{m.team2.map(p => p.memberName).join(' & ')}</p>
+                            <p className="text-xs font-semibold [color:var(--pf-primary-text)] truncate">{m.team2.map(p => p.memberName).join(' & ')}</p>
                           </div>
                         </div>
                       ) : (
@@ -478,7 +478,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                                   onClick={() => handleChipClick(chip)}
                                   className={cn(
                                     'text-xs font-semibold px-2 py-1 rounded-lg transition-colors',
-                                    isSelected ? '[background:var(--pf-primary)] text-white' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]',
+                                    isSelected ? '[background:var(--pf-primary)] text-white' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)]',
                                   )}
                                 >
                                   {p.memberName}
@@ -497,7 +497,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                                   onClick={() => handleChipClick(chip)}
                                   className={cn(
                                     'text-xs font-semibold px-2 py-1 rounded-lg transition-colors',
-                                    isSelected ? '[background:var(--pf-primary)] text-white' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]',
+                                    isSelected ? '[background:var(--pf-primary)] text-white' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)]',
                                   )}
                                 >
                                   {p.memberName}
@@ -598,7 +598,7 @@ export function DrawRoundModal({ minigameId, isOpen, onClose }: Props) {
                 className={cn(
                   'py-2.5 px-3 rounded-xl border text-sm font-medium transition-colors flex items-center gap-1.5',
                   isManualEdit
-                    ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                    ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                     : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]',
                 )}
               >

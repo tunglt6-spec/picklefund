@@ -199,7 +199,7 @@ export function MemberReceipt() {
             <div className="text-lg font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{memberName}</div>
           </div>
-          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50">
+          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70 disabled:opacity-50">
             <Download size={13} />Xuất PDF
           </button>
         </div>
@@ -207,7 +207,7 @@ export function MemberReceipt() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Đã đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
+              { label: 'Đã đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary-text)]' },
               { label: 'Chi phí', value: formatVND(totalCost), color: '[color:var(--pf-color-warning)]' },
               { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]' },
             ].map(k => (
@@ -430,7 +430,7 @@ export function MemberReceipt() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-xl [background:var(--pf-primary-soft)] flex items-center justify-center shrink-0">
-                        <Calendar size={16} className="[color:var(--pf-primary)]" />
+                        <Calendar size={16} className="[color:var(--pf-primary-text)]" />
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
@@ -482,7 +482,7 @@ export function MemberReceipt() {
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-[color:var(--pf-border)]">
                           <span className="[color:var(--pf-color-muted)] font-semibold">Đã đóng</span>
-                          <span className="font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
+                          <span className="font-bold [color:var(--pf-primary-text)]">{formatVND(amountPaid)}</span>
                         </div>
                       </div>
 

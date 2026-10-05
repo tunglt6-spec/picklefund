@@ -100,7 +100,7 @@ function ScoreModal({ match, team1Name, team1Members, team2Name, team2Members, o
                   style={{ borderColor: T.border }}>−</button>
                 <input type="number" min={0} value={side.val}
                   onChange={e => side.set(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="flex-1 text-center text-2xl font-extrabold border rounded-xl py-2 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+                  className="flex-1 text-center text-2xl font-extrabold border rounded-xl py-2 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   style={{ borderColor: T.border }} />
                 <button onClick={() => adj(side.set, 1)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg text-white"
@@ -383,7 +383,7 @@ function ExportButtons({ onPng, onPdf, ariaScope }: {
     <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
       {onPng && (
         <button onClick={onPng} aria-label={`Xuất ảnh ${ariaScope}`} title="Xuất ảnh"
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-90 transition-opacity">
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:opacity-90 transition-opacity">
           <ImageIcon size={15} /> Xuất ảnh
         </button>
       )}
@@ -914,7 +914,7 @@ export function FixedDoublesDashboardPage() {
                   {canEnter && teams.length >= 2 && (
                     <button
                       onClick={() => { setSwapSel([]); setShowSwap(true) }}
-                      className="text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
+                      className="text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors"
                     >
                       <Users size={12} /> Đổi chỗ người chơi
                     </button>

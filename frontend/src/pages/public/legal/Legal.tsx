@@ -11,10 +11,10 @@ function ContactCard({ org, website, email }: { org: string; website: string; em
     <div className="my-3 rounded-2xl border p-5 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
       <p className="text-base font-extrabold [color:var(--pf-text)]">{org}</p>
       <div className="mt-2 space-y-1.5">
-        <a href={website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary)]">
+        <a href={website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary-text)]">
           <Globe size={14} /> {website.replace(/^https?:\/\//, '')}
         </a>
-        <a href={`mailto:${email}`} className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary)]">
+        <a href={`mailto:${email}`} className="flex items-center gap-2 text-sm font-medium [color:var(--pf-primary-text)]">
           <Mail size={14} /> {email}
         </a>
       </div>

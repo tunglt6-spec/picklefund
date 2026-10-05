@@ -60,7 +60,7 @@ export function RuleVersionsModal({
             <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full [background:var(--pf-primary-soft)] px-2 py-0.5 text-xs font-bold [color:var(--pf-primary)]">v{v.version}</span>
+                  <span className="rounded-full [background:var(--pf-primary-soft)] px-2 py-0.5 text-xs font-bold [color:var(--pf-primary-text)]">v{v.version}</span>
                   {idx === 0 && <span className="rounded-full [background:var(--pf-color-success-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-success)]">Hiện tại</span>}
                   <span className="truncate text-sm font-semibold [color:var(--pf-text)]">{v.name}</span>
                 </div>

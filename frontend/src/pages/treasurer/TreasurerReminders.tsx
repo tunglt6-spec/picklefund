@@ -166,7 +166,7 @@ export function TreasurerReminders() {
             <button
               onClick={sendAll}
               disabled={sendingAll}
-              className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70 disabled:opacity-50"
+              className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70 disabled:opacity-50"
             >
               <Send size={13} />{sendingAll ? 'Đang gửi…' : 'Nhắc tất cả'}
             </button>
@@ -361,7 +361,7 @@ export function TreasurerReminders() {
                           <button
                             onClick={() => sendReminder(m)}
                             disabled={sent || loadingIds.has(m.id)}
-                            className="h-7 px-3 flex items-center gap-1 mx-auto rounded-md text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="h-7 px-3 flex items-center gap-1 mx-auto rounded-md text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           >
                             <Send size={11} />{loadingIds.has(m.id) ? 'Đang gửi…' : 'Nhắc nhở'}
                           </button>

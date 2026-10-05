@@ -51,7 +51,7 @@ export function ConfirmDialog({
         className="relative w-full max-w-sm [background:var(--pf-surface)] rounded-2xl shadow-2xl overflow-hidden">
         {/* Close */}
         <button onClick={onCancel} aria-label="Đóng"
-          className="absolute right-4 top-4 h-9 w-9 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]">
+          className="absolute right-4 top-4 h-9 w-9 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]">
           <X size={15} />
         </button>
 
@@ -71,7 +71,7 @@ export function ConfirmDialog({
           <button
             onClick={onConfirm}
             style={{ background: accent }}
-            className="flex-1 min-h-11 px-4 text-sm font-medium rounded-lg text-white flex items-center justify-center gap-2 transition-all hover:brightness-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]"
+            className="flex-1 min-h-11 px-4 text-sm font-medium rounded-lg text-white flex items-center justify-center gap-2 transition-all hover:brightness-95 active:brightness-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]"
           >
             <X size={14} />{confirmLabel}
           </button>

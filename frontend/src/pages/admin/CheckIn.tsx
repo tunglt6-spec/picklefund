@@ -205,7 +205,7 @@ export function CheckIn() {
               {!isMember && (
                 <div className="flex justify-end">
                   <button type="button" onClick={toggleAllCheckin}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors">
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
                     <Check size={13} />{allCheckedIn ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
                   </button>
                 </div>

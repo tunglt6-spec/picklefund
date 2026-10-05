@@ -168,7 +168,7 @@ export function LisaChat() {
             {/* Avatar */}
             <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5
               ${m.role === 'lisa' ? '[background:var(--pf-primary-soft)]' : '[background:var(--pf-color-muted-soft)]'}`}>
-              {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary)]" /> : <User size={14} className="[color:var(--pf-color-muted)]" />}
+              {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary-text)]" /> : <User size={14} className="[color:var(--pf-color-muted)]" />}
             </div>
             {/* Bubble */}
             <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm
@@ -184,7 +184,7 @@ export function LisaChat() {
         {loading && (
           <div className="flex gap-2">
             <div className="w-7 h-7 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
-              <Bot size={14} className="[color:var(--pf-primary)]" />
+              <Bot size={14} className="[color:var(--pf-primary-text)]" />
             </div>
             <div className="pf-glass rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1">
@@ -203,7 +203,7 @@ export function LisaChat() {
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map(s => (
             <button key={s} onClick={() => sendMessage(s)}
-              className="text-xs [background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary)] transition-colors shadow-sm">
+              className="text-xs [background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary-text)] transition-colors shadow-sm">
               {s}
             </button>
           ))}
@@ -253,7 +253,7 @@ export function LisaChat() {
             <input
               value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
-              className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+              className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
             />
             <button type="submit" disabled={!input.trim() || loading}
               className="shrink-0 w-10 h-10 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
@@ -273,10 +273,10 @@ export function LisaChat() {
         subtitle="Trợ lý cá nhân thông minh"
         actions={
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/aido')} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
+            <button onClick={() => navigate('/aido')} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)]">
               <ArrowLeft size={13} /> AI Office
             </button>
-            <button onClick={() => fetchBrief()} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] disabled:opacity-60 disabled:pointer-events-none">
+            <button onClick={() => fetchBrief()} disabled={briefLoading} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] disabled:opacity-60 disabled:pointer-events-none">
               <RefreshCw size={13} className={briefLoading ? 'animate-spin' : ''} />{briefLoading ? 'Đang tải…' : 'Làm mới'}
             </button>
           </div>
@@ -290,7 +290,7 @@ export function LisaChat() {
           <input
             value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa bất cứ điều gì về CLB của bạn..."
-            className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] transition-all"
+            className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] transition-all"
           />
           <button type="submit" disabled={!input.trim() || loading}
             className="px-5 py-3 rounded-xl [background:var(--pf-primary)] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:[background:var(--pf-primary-hover)] transition-colors">

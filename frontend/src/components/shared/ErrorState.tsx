@@ -54,7 +54,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-1 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+          className="mt-1 inline-flex min-h-10 items-center gap-2 rounded-full px-5 py-2 [@media(pointer:coarse)]:min-h-11 text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
           style={{ background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }}
         >
           {retryLabel}

@@ -99,7 +99,7 @@ export function QuickActionsPanel({
             disabled={action.disabled}
             title={action.disabled ? action.disabledTitle : undefined}
             aria-disabled={action.disabled}
-            className={`${action.bgClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary)] ${
+            className={`${action.bgClass} rounded-xl p-3 flex flex-col items-start gap-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary-text)] ${
               action.disabled
                 ? 'opacity-50 cursor-not-allowed'
                 : `${action.hoverClass} cursor-pointer`

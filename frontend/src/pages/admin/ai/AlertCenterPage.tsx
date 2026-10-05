@@ -192,7 +192,7 @@ export function AlertCenterPage() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Workflow size={16} className="[color:var(--pf-color-muted)]" /> Lỗi Workflow
               </h3>
-              <button onClick={() => navigate('/admin/workflows?from=aido')} className="text-xs font-medium [color:var(--pf-primary)] hover:underline">Xem Workflow</button>
+              <button onClick={() => navigate('/admin/workflows?from=aido')} className="text-xs font-medium [color:var(--pf-primary-text)] hover:underline">Xem Workflow</button>
             </div>
             {failedRuns.length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Không có workflow lỗi.</p>
@@ -219,7 +219,7 @@ export function AlertCenterPage() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide flex items-center gap-2">
                 <Bot size={16} className="[color:var(--pf-color-muted)]" /> Lỗi AI / Thực Thi
               </h3>
-              <button onClick={() => navigate('/admin/execution-log?from=aido')} className="text-xs font-medium [color:var(--pf-primary)] hover:underline">Nhật ký thực thi</button>
+              <button onClick={() => navigate('/admin/execution-log?from=aido')} className="text-xs font-medium [color:var(--pf-primary-text)] hover:underline">Nhật ký thực thi</button>
             </div>
             {failedActions.length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Không có hành động AI lỗi.</p>

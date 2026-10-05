@@ -100,14 +100,14 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
               <div key={i} className="flex items-center gap-2">
                 <span className="text-xs [color:var(--pf-color-muted)] w-10">Set {i + 1}</span>
                 <input inputMode="numeric" value={st.a} onChange={e => setSets(s => s.map((x, j) => j === i ? { ...x, a: e.target.value.replace(/\D/g, '') } : x))}
-                  className="flex-1 text-center text-lg font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                  className="flex-1 text-center text-lg font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
                 <span className="[color:var(--pf-color-muted)]">-</span>
                 <input inputMode="numeric" value={st.b} onChange={e => setSets(s => s.map((x, j) => j === i ? { ...x, b: e.target.value.replace(/\D/g, '') } : x))}
-                  className="flex-1 text-center text-lg font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                  className="flex-1 text-center text-lg font-bold border border-[color:var(--pf-border)] rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
                 {sets.length > 1 && <button onClick={() => setSets(s => s.filter((_, j) => j !== i))} className="[color:var(--pf-color-danger)] text-xs px-1">✕</button>}
               </div>
             ))}
-            <button onClick={() => setSets(s => [...s, { a: '', b: '' }])} className="text-xs font-semibold [color:var(--pf-primary)]">+ Thêm set</button>
+            <button onClick={() => setSets(s => [...s, { a: '', b: '' }])} className="text-xs font-semibold [color:var(--pf-primary-text)]">+ Thêm set</button>
             {validSets.length > 0 && <p className="text-xs [color:var(--pf-color-muted)]">Tỉ số set: <b>{setsWonA} - {setsWonB}</b></p>}
           </div>
         ) : (
@@ -116,12 +116,12 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
             <div className="text-center">
               <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{match.player1Name}</p>
               <input type="number" min={0} value={p1Score} onChange={e => setP1Score(e.target.value)} placeholder="0"
-                className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [color:var(--pf-text)]" />
+                className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [color:var(--pf-text)]" />
             </div>
             <div className="text-center">
               <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{match.player2Name}</p>
               <input type="number" min={0} value={p2Score} onChange={e => setP2Score(e.target.value)} placeholder="0"
-                className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [color:var(--pf-text)]" />
+                className="w-full text-center text-3xl font-bold border border-[color:var(--pf-border)] rounded-xl py-4 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [color:var(--pf-text)]" />
             </div>
           </div>
         )}
@@ -146,7 +146,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
             type="date"
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
-            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
           />
         </div>
 
@@ -158,7 +158,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ghi chú về trận đấu..."
-            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] resize-none"
+            className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none"
           />
         </div>
       </div>

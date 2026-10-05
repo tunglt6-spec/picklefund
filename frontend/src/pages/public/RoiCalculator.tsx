@@ -15,7 +15,7 @@ function Field({
     <div>
       <div className="mb-1.5 flex items-center justify-between">
         <label className="text-sm font-semibold [color:var(--pf-text)]">{label}</label>
-        <span className="text-sm font-bold [color:var(--pf-primary)]">
+        <span className="text-sm font-bold [color:var(--pf-primary-text)]">
           {value.toLocaleString('vi-VN')}{suffix ? ` ${suffix}` : ''}
         </span>
       </div>
@@ -69,7 +69,7 @@ export function RoiCalculator() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           {/* Inputs */}
           <div className="rounded-3xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-            <div className="mb-5 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]">
+            <div className="mb-5 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]">
               <Calculator size={14} /> Thông số CLB của bạn
             </div>
             <div className="space-y-6">

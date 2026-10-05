@@ -137,7 +137,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             href={n.href}
             className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium [color:var(--pf-color-muted)]"
           >
-            <span className="[color:var(--pf-primary)]">{n.icon}</span>
+            <span className="[color:var(--pf-primary-text)]">{n.icon}</span>
             {n.label}
           </a>
         ))}

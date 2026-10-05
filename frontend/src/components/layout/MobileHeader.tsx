@@ -61,7 +61,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <button
           onClick={onMenuClick}
           aria-label="Mở menu"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
         >
           <Menu size={20} />
         </button>
@@ -78,7 +78,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <button
           onClick={openGuide}
           aria-label="Hướng dẫn sử dụng"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-white active:opacity-80"
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-white active:opacity-80"
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         >
           <BookOpen size={18} />
@@ -86,7 +86,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <ThemeToggle className="border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]" />
         <button
           onClick={() => navigate(notifRoute)}
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
+          className="relative flex h-11 w-11 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
         >
           <Bell size={18} />
           {unreadCount > 0 && (
@@ -101,7 +101,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
         <div className="relative" ref={ref}>
           <button
             onClick={() => setOpen(v => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-[800] text-white active:opacity-80"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-xs font-[800] text-white active:opacity-80"
             style={{ background: 'var(--pf-primary)' }}
           >
             {initials}

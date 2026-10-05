@@ -56,7 +56,7 @@ export function PushEnableBanner() {
       className="sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-2.5 sm:px-6"
       style={{ background: 'var(--pf-primary-soft)', borderColor: 'var(--pf-border)' }}
     >
-      <BellRing size={18} className="shrink-0 [color:var(--pf-primary)]" />
+      <BellRing size={18} className="shrink-0 [color:var(--pf-primary-text)]" />
       <p className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug [color:var(--pf-text)]">
         Bật thông báo trên điện thoại để nhận tin CLB, nhắc nhở & cập nhật quan trọng ngay cả khi không mở app.
       </p>

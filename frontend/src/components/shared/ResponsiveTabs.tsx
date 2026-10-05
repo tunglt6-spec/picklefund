@@ -40,7 +40,7 @@ export function ResponsiveTabs({
               'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
               isActive
                 ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
-                : '[border-color:var(--pf-border)] [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
+                : '[border-color:var(--pf-border)] [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
             )}
             style={isActive ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' } : undefined}
           >

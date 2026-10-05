@@ -135,7 +135,7 @@ export function GroupAssignment() {
   const MoveMenu = ({ memberId, excludeGroupId }: { memberId: string; excludeGroupId?: string }) => (
     <div className="relative">
       <button onClick={() => setOpenMove(openMove === memberId ? null : memberId)}
-        className="flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]">
+        className="flex items-center gap-1 text-xs [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors px-2 py-1 rounded hover:[background:var(--pf-primary-soft)]">
         {excludeGroupId ? 'Chuyển' : 'Gán vào'} <ChevronDown size={12} />
       </button>
       {openMove === memberId && (
@@ -143,7 +143,7 @@ export function GroupAssignment() {
           {myGroups.filter(g => g.id !== excludeGroupId).length === 0 && <span className="block px-3 py-1.5 text-xs [color:var(--pf-color-muted)]">Chưa có bảng — bấm "Thêm bảng"</span>}
           {myGroups.filter(g => g.id !== excludeGroupId).map(target => (
             <button key={target.id} onClick={() => handleMove(memberId, target.id)}
-              className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] [color:var(--pf-text)] hover:[color:var(--pf-primary)] transition-colors">
+              className="w-full text-left px-3 py-1.5 text-xs hover:[background:var(--pf-primary-soft)] [color:var(--pf-text)] hover:[color:var(--pf-primary-text)] transition-colors">
               → {target.groupName}
             </button>
           ))}
@@ -225,22 +225,22 @@ export function GroupAssignment() {
                       <input autoFocus value={editName} onChange={e => setEditName(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') saveRename(grp.id); if (e.key === 'Escape') setEditingGroup(null) }}
                         onBlur={() => saveRename(grp.id)}
-                        className="flex-1 min-w-0 text-sm font-bold [color:var(--pf-primary)] bg-white/70 border border-[color:var(--pf-primary-soft)] rounded px-2 py-1" />
+                        className="flex-1 min-w-0 text-sm font-bold [color:var(--pf-primary-text)] bg-white/70 border border-[color:var(--pf-primary-soft)] rounded px-2 py-1" />
                     ) : (
                       <div className="min-w-0">
-                        <p className="text-sm font-bold [color:var(--pf-primary)] truncate">{grp.groupName}</p>
-                        <p className="text-xs [color:var(--pf-primary)]">{grp.memberIds.length} thành viên</p>
+                        <p className="text-sm font-bold [color:var(--pf-primary-text)] truncate">{grp.groupName}</p>
+                        <p className="text-xs [color:var(--pf-primary-text)]">{grp.memberIds.length} thành viên</p>
                       </div>
                     )}
                     <div className="flex items-center gap-1 shrink-0">
                       {grp.status !== 'LOCKED' && editingGroup !== grp.id && (
                         <>
-                          <button onClick={() => startRename(grp.id, grp.groupName)} title="Đổi tên" className="p-1 rounded [color:var(--pf-primary)] hover:bg-white/50"><Pencil size={13} /></button>
+                          <button onClick={() => startRename(grp.id, grp.groupName)} title="Đổi tên" className="p-1 rounded [color:var(--pf-primary-text)] hover:bg-white/50"><Pencil size={13} /></button>
                           <button onClick={() => handleRemoveGroup(grp.id)} title="Xóa bảng" className="p-1 rounded [color:var(--pf-color-danger)] hover:bg-white/50"><Trash2 size={13} /></button>
                         </>
                       )}
                       {editingGroup === grp.id && <button onMouseDown={e => e.preventDefault()} onClick={() => saveRename(grp.id)} className="p-1 rounded [color:var(--pf-color-success)] hover:bg-white/50"><Check size={14} /></button>}
-                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', grp.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]')}>
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', grp.status === 'LOCKED' ? '[background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]')}>
                         {grp.status === 'LOCKED' ? '🔒' : 'Mở'}
                       </span>
                     </div>
@@ -252,7 +252,7 @@ export function GroupAssignment() {
                       if (!part) return null
                       return (
                         <div key={memberId} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Khách</span>}</span>
+                          <span className="text-sm [color:var(--pf-text)] flex items-center gap-1.5">{part.memberName}{(part.isGuest || isGuestId(part.memberId)) && <span className="text-xs font-medium px-1.5 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Khách</span>}</span>
                           {grp.status !== 'LOCKED' && <MoveMenu memberId={memberId} excludeGroupId={grp.id} />}
                         </div>
                       )

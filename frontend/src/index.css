@@ -41,6 +41,8 @@
   --pf-primary-hover: #5B4BE8;
   --pf-primary-soft:  #EEEDFE;
   --pf-primary-on:    #FFFFFF;
+  /* Tím dùng làm CHỮ/link: đạt >=4.5:1 trên nền sáng (#6D5DFB chỉ ~3.9 trên primary-soft). */
+  --pf-primary-text:  #5B4BE8;
   /* Green — DÀNH cho ngữ nghĩa TIỀN/thu-dương/success (KHÔNG còn là brand primary). */
   --pf-green:       #059669;
   --pf-green-hover: #047857;
@@ -99,6 +101,11 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+  }
+  /* Viền focus bàn phím rõ ràng toàn app (chỉ hiện khi dùng phím, không hiện khi click chuột). */
+  :focus-visible {
+    outline: 2px solid var(--pf-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -264,6 +271,7 @@ select:-webkit-autofill {
   --pf-primary-soft:       #241E52;
   --pf-color-primary-soft: #241E52;
   --pf-primary-on:         #FFFFFF;
+  --pf-primary-text:       #A79BFF;
   --pf-text-on-primary:    #FFFFFF;
   /* Semantic softs (nền tint) tối lại — fg giữ sáng */
   --pf-color-success-soft: #10261B;

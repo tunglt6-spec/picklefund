@@ -206,7 +206,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
         <div className={card}>
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-text)]"><CalendarDays size={16} /> Lịch thi đấu</h3>
-            <button onClick={() => navigate(scheduleLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem toàn bộ <ChevronRight size={12} /></button>
+            <button onClick={() => navigate(scheduleLink)} className="text-xs font-medium [color:var(--pf-primary-text)] hover:underline inline-flex items-center gap-0.5">Xem toàn bộ <ChevronRight size={12} /></button>
           </div>
           {scheduleRows.length === 0 ? (
             <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có lịch. Tạo lịch trong màn giải.</p>
@@ -230,7 +230,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
       <div className={card}>
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-text)]"><BarChart2 size={16} /> Bảng xếp hạng</h3>
-          <button onClick={() => navigate(standingsLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem chi tiết <ChevronRight size={12} /></button>
+          <button onClick={() => navigate(standingsLink)} className="text-xs font-medium [color:var(--pf-primary-text)] hover:underline inline-flex items-center gap-0.5">Xem chi tiết <ChevronRight size={12} /></button>
         </div>
         {isGolf ? (
           golfStandings.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có golfer.</p> : (
@@ -243,7 +243,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
                     <td className="py-1.5 pl-3 [color:var(--pf-color-muted)]">{i + 1}</td>
                     <td className="py-1.5 font-medium [color:var(--pf-text)] truncate">{s.name}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-muted)]">{s.played}/{rounds}</td>
-                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary)]">{s.played > 0 ? s.total : '—'}</td>
+                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary-text)]">{s.played > 0 ? s.total : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -263,7 +263,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
                     <td className="py-1.5 text-center">{s.P}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-success)] font-medium">{s.W}</td>
                     <td className="py-1.5 text-center [color:var(--pf-color-danger)]">{s.L}</td>
-                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary)]">{s.Pts}</td>
+                    <td className="py-1.5 pr-3 text-right font-bold [color:var(--pf-primary-text)]">{s.Pts}</td>
                   </tr>
                 ))}
               </tbody>
@@ -294,7 +294,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
       <div className={card}>
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-text)]"><Activity size={16} /> Hoạt động gần đây</h3>
-          <button onClick={() => navigate(dashLink)} className="text-xs font-medium [color:var(--pf-primary)] hover:underline inline-flex items-center gap-0.5">Xem tất cả <ChevronRight size={12} /></button>
+          <button onClick={() => navigate(dashLink)} className="text-xs font-medium [color:var(--pf-primary-text)] hover:underline inline-flex items-center gap-0.5">Xem tất cả <ChevronRight size={12} /></button>
         </div>
         {activity.length === 0 ? <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có hoạt động.</p> : (
           <ul className="mt-2 space-y-2">

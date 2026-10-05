@@ -37,7 +37,7 @@ export function ExecutiveReportShowcase() {
       {/* 6 chiều sức khỏe */}
       <section className={`${PUBLIC_CONTAINER} py-12`}>
         <div className="rounded-3xl border p-8 text-center [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-          <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><HeartPulse size={14} /> Điểm sức khỏe CLB</div>
+          <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><HeartPulse size={14} /> Điểm sức khỏe CLB</div>
           <h2 className="text-2xl font-extrabold tracking-tight">Đánh giá trên 6 chiều vận hành</h2>
           <div className="mt-6 flex flex-wrap justify-center gap-2.5">
             {DIMENSIONS.map((d) => (
@@ -54,7 +54,7 @@ export function ExecutiveReportShowcase() {
       <section className="border-y [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
         <div className={`${PUBLIC_CONTAINER} py-12`}>
           <div className="mb-8 text-center">
-            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><FileBarChart size={14} /> Trong một báo cáo</div>
+            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><FileBarChart size={14} /> Trong một báo cáo</div>
             <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Đủ để họp Ban quản trị</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

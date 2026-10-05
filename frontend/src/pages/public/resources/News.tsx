@@ -31,7 +31,7 @@ export function News() {
       <section className={`${PUBLIC_CONTAINER} py-12`}>
         {/* Điểm cập nhật sản phẩm */}
         <div className="mb-10 flex flex-col items-center gap-4 rounded-3xl border p-6 text-center [border-color:var(--pf-border)] sm:flex-row sm:text-left" style={{ background: 'var(--pf-primary-soft)' }}>
-          <Megaphone size={28} className="shrink-0 [color:var(--pf-primary)]" />
+          <Megaphone size={28} className="shrink-0 [color:var(--pf-primary-text)]" />
           <div className="flex-1">
             <p className="text-base font-bold [color:var(--pf-text)]">Có gì mới trong sản phẩm?</p>
             <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Xem nhật ký các tính năng đã phát hành, nhóm theo chủ đề.</p>
@@ -43,7 +43,7 @@ export function News() {
 
         {/* Bài viết mới nhất (thật) */}
         <div className="mb-4 flex items-center gap-2">
-          <Rss size={18} className="[color:var(--pf-primary)]" />
+          <Rss size={18} className="[color:var(--pf-primary-text)]" />
           <h2 className="text-lg font-extrabold tracking-tight [color:var(--pf-text)]">Bài viết mới nhất</h2>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,17 +52,17 @@ export function News() {
               <span className="inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={12} /> {p.readMins} phút đọc</span>
               <h3 className="mt-2 text-base font-extrabold leading-snug [color:var(--pf-text)]">{p.title}</h3>
               <p className="mt-2 flex-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{p.excerpt}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-primary)]">Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold [color:var(--pf-primary-text)]">Đọc bài <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" /></span>
             </Link>
           ))}
         </div>
         <div className="mt-4 text-center">
-          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary)]">Xem tất cả bài viết <ArrowRight size={14} /></Link>
+          <Link to="/resources/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary-text)]">Xem tất cả bài viết <ArrowRight size={14} /></Link>
         </div>
 
         {/* Đăng ký nhận thông báo */}
         <div className="mx-auto mt-12 max-w-2xl rounded-3xl border p-6 text-center [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><Newspaper size={14} /> Nhận thông báo</div>
+          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><Newspaper size={14} /> Nhận thông báo</div>
           <p className="text-base font-bold [color:var(--pf-text)]">Không bỏ lỡ cập nhật quan trọng</p>
           <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Để lại email — chúng tôi sẽ báo khi có tính năng mới hoặc thông báo đáng chú ý.</p>
           <div className="mx-auto mt-4 flex max-w-md flex-col gap-2 sm:flex-row">

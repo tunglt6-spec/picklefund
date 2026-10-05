@@ -266,7 +266,7 @@ function ReactionBar({
             className={[
               'inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all active:scale-[0.96] disabled:opacity-50',
               active
-                ? '[border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                ? '[border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                 : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:[border-color:var(--pf-primary-soft)]',
             ].join(' ')}
           >
@@ -485,7 +485,7 @@ function Composer({
           {mentions.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {mentions.map((m) => (
-                <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                   @{m.fullName}
                   <button type="button" aria-label={`Bỏ thẻ ${m.fullName}`} onClick={() => removeMention(m.id)} className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:[background:var(--pf-primary)] hover:[color:var(--pf-primary-on)]">
                     <X size={11} />
@@ -529,7 +529,7 @@ function Composer({
                 className={[
                   'flex h-11 w-11 items-center justify-center rounded-full transition-colors',
                   showMention
-                    ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                    ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                     : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
                 ].join(' ')}
               >
@@ -543,7 +543,7 @@ function Composer({
                 className={[
                   'flex h-11 w-11 items-center justify-center rounded-full transition-colors disabled:opacity-50',
                   imageUrl
-                    ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                    ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                     : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
                 ].join(' ')}
               >
@@ -596,7 +596,7 @@ function linkify(text: string, keyBase: string): ReactNode[] {
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="break-all underline [color:var(--pf-primary)] hover:opacity-80"
+        className="break-all underline [color:var(--pf-primary-text)] hover:opacity-80"
       >
         {url}
       </a>,
@@ -622,7 +622,7 @@ function renderWithMentions(text: string, members: MentionMember[]): ReactNode {
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) out.push(...linkify(text.slice(last, m.index), `t${key}`))
     out.push(
-      <span key={`men-${key++}`} className="rounded px-1 font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+      <span key={`men-${key++}`} className="rounded px-1 font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
         {m[0]}
       </span>,
     )
@@ -1038,7 +1038,7 @@ function PostCard({
         <button
           type="button"
           onClick={toggleComments}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-primary)]"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold [color:var(--pf-color-muted)] transition-colors hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-primary-text)]"
         >
           <MessageCircle size={15} />
           Bình luận ({post.commentCount})
@@ -1152,7 +1152,7 @@ function PostCard({
                 {cmtMentions.length > 0 && (
                   <div className="mb-1.5 flex flex-wrap gap-1.5">
                     {cmtMentions.map((m) => (
-                      <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                      <span key={m.id} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                         @{m.fullName}
                         <button type="button" aria-label={`Bỏ thẻ ${m.fullName}`} onClick={() => setCmtMentions((p) => p.filter((x) => x.id !== m.id))} className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:[background:var(--pf-primary)] hover:[color:var(--pf-primary-on)]">
                           <X size={11} />
@@ -1177,7 +1177,7 @@ function PostCard({
                     aria-label="Gắn thẻ thành viên"
                     className={[
                       'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors',
-                      showCmtMention ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
+                      showCmtMention ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]',
                     ].join(' ')}
                   >
                     <AtSign size={17} />
@@ -1840,7 +1840,7 @@ export default function MemberCommunity() {
                     type="button"
                     onClick={() => void loadMore()}
                     disabled={loadingMore}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--pf-border)] px-5 text-sm font-semibold [color:var(--pf-primary)] transition-colors hover:[background:var(--pf-primary-soft)] disabled:opacity-50"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--pf-border)] px-5 text-sm font-semibold [color:var(--pf-primary-text)] transition-colors hover:[background:var(--pf-primary-soft)] disabled:opacity-50"
                   >
                     {loadingMore && <Loader2 size={16} className="animate-spin" />}
                     Xem thêm

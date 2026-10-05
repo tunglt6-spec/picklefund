@@ -57,7 +57,7 @@ interface ClubUser {
   isActive: boolean
 }
 
-const inputCls = 'w-full rounded-lg border border-[color:var(--pf-border)] px-4 py-2.5 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]'
+const inputCls = 'w-full rounded-lg border border-[color:var(--pf-border)] px-4 py-2.5 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]'
 
 export function SuperClubs() {
   const navigate = useNavigate()
@@ -378,7 +378,7 @@ export function SuperClubs() {
               value={u.role}
               disabled={savingRole === u.id}
               onChange={e => handleRoleChange(u.id, e.target.value)}
-              className="rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm [background:var(--pf-surface)] focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-60"
+              className="rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm [background:var(--pf-surface)] focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:opacity-60"
             >
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               {!ROLES.find(r => r.value === u.role) && (
@@ -474,10 +474,10 @@ export function SuperClubs() {
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
                 <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                 <div className="flex items-center gap-2 ml-auto">
-                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
+                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
+                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <ShieldCheck size={14} />
                   </button>
                   <button
@@ -526,7 +526,7 @@ export function SuperClubs() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm CLB theo tên hoặc mã..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[color:var(--pf-border)] text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[color:var(--pf-border)] text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]"
           />
         </div>
 
@@ -566,10 +566,10 @@ export function SuperClubs() {
                       <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
                       </button>
-                      <button className="[color:var(--pf-primary)] hover:[color:var(--pf-primary)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
+                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
                         <Pencil size={15} />
                       </button>
-                      <button className="[color:var(--pf-primary)] hover:[color:var(--pf-primary)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Phân quyền thành viên" onClick={() => openRoles(club)}>
+                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Phân quyền thành viên" onClick={() => openRoles(club)}>
                         <ShieldCheck size={15} />
                       </button>
                       <button

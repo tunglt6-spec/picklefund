@@ -474,12 +474,12 @@ export function AiManagerDashboard() {
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
-              <Bot size={20} className="[color:var(--pf-primary)]" />
+              <Bot size={20} className="[color:var(--pf-primary-text)]" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold [color:var(--pf-text)]">AI Operations Center</h1>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                   <span className="h-1.5 w-1.5 rounded-full [background:var(--pf-primary)] animate-pulse" />
                   Hermes · AI COO
                 </span>
@@ -761,10 +761,10 @@ export function AiManagerDashboard() {
                           className="group flex w-full items-center justify-between rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-left transition-colors hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-medium [color:var(--pf-text)] truncate group-hover:[color:var(--pf-primary)]">{a.label}</p>
+                            <p className="text-xs font-medium [color:var(--pf-text)] truncate group-hover:[color:var(--pf-primary-text)]">{a.label}</p>
                             <p className="text-xs [color:var(--pf-color-muted)] truncate">{a.method} {a.endpoint}</p>
                           </div>
-                          <ChevronRight size={14} className="[color:var(--pf-color-muted)] shrink-0 transition-colors group-hover:[color:var(--pf-primary)]" />
+                          <ChevronRight size={14} className="[color:var(--pf-color-muted)] shrink-0 transition-colors group-hover:[color:var(--pf-primary-text)]" />
                         </button>
                       )
                     }

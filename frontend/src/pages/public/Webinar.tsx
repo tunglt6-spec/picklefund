@@ -35,7 +35,7 @@ export function Webinar() {
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           {/* Đăng ký nhận thông báo — trung thực, chưa có lịch */}
           <div className="rounded-3xl border p-6 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><CalendarClock size={14} /> Lịch sắp tới</div>
+            <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><CalendarClock size={14} /> Lịch sắp tới</div>
             <p className="text-base font-extrabold [color:var(--pf-text)]">Chưa có buổi nào được lên lịch công khai</p>
             <p className="mt-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
               Chúng tôi sẽ thông báo ngay khi có lịch. Nhập email để được nhắc — email của bạn chỉ dùng cho mục đích này.
@@ -75,7 +75,7 @@ export function Webinar() {
 
         {/* On-demand: demo tương tác thật */}
         <div className="mx-auto mt-10 flex max-w-3xl flex-col items-center gap-4 rounded-2xl border p-6 text-center [border-color:var(--pf-border)] sm:flex-row sm:text-left" style={{ background: 'var(--pf-primary-soft)' }}>
-          <Video size={28} className="shrink-0 [color:var(--pf-primary)]" />
+          <Video size={28} className="shrink-0 [color:var(--pf-primary-text)]" />
           <div className="flex-1">
             <p className="text-base font-bold [color:var(--pf-text)]">Không muốn chờ?</p>
             <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Trải nghiệm sản phẩm ngay với bản demo tương tác — sẵn sàng bất cứ lúc nào.</p>

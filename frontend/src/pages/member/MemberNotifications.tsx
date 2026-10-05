@@ -22,10 +22,10 @@ type HermesNotif = {
 
 function eventIcon(eventType: string) {
   if (eventType.includes('payment') || eventType.includes('fund')) return <DollarSign size={14} className="[color:var(--pf-color-success)]" />
-  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={14} className="[color:var(--pf-primary)]" />
-  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={14} className="[color:var(--pf-primary)]" />
+  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={14} className="[color:var(--pf-primary-text)]" />
+  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={14} className="[color:var(--pf-primary-text)]" />
   if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={14} className="[color:var(--pf-color-warning)]" />
-  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={14} className="[color:var(--pf-primary)]" />
+  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={14} className="[color:var(--pf-primary-text)]" />
   return <Zap size={14} className="[color:var(--pf-color-muted)]" />
 }
 
@@ -260,7 +260,7 @@ export function MemberNotifications() {
       <div key={n.id} onClick={() => openNotif(n)}
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNotif(n) } }}
-        className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
+        className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
           ${isRead ? 'opacity-60' : ''}`}>
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${eventBg(n.eventType)}`}>{eventIcon(n.eventType)}</div>
         <div className="min-w-0 flex-1">
@@ -294,13 +294,13 @@ export function MemberNotifications() {
                   <BellRing size={14} /> Đã bật
                 </span>
                 <button onClick={onTestPush} disabled={pushBusy}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
                   {pushBusy ? 'Đang gửi…' : 'Gửi thử'}
                 </button>
               </>
             )}
             {unreadCount > 0 && (
-              <button onClick={handleReadAll} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)]">
+              <button onClick={handleReadAll} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
             )}

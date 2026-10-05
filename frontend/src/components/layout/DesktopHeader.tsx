@@ -70,14 +70,14 @@ export function DesktopHeader() {
     else document.exitFullscreen?.()
   }
 
-  const iconBtn = 'flex h-9 w-9 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
+  const iconBtn = 'flex h-9 w-9 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
 
   return (
     <header className="pf-glass-bar relative z-30 hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b px-6">
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}
-        className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
+        className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
         style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         title="Hướng dẫn sử dụng app"
       >
@@ -86,7 +86,7 @@ export function DesktopHeader() {
       {user.role === 'CLUB_ADMIN' && (
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
-          className="mr-1 flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
+          className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
           title="Nâng cấp gói"
         >

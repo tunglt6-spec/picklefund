@@ -89,7 +89,7 @@ export function TreasurerLedger() {
             <button onClick={onExcel} disabled={busy} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] disabled:opacity-50 [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200">
               <FileSpreadsheet size={13} />Excel
             </button>
-            <button onClick={onPdf} disabled={busy} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] disabled:opacity-50 [background:var(--pf-primary-soft)] [color:var(--pf-primary)] active:[background:var(--pf-primary-soft)]">
+            <button onClick={onPdf} disabled={busy} className="h-8 px-3 flex items-center gap-1 rounded-[10px] text-xs font-[600] disabled:opacity-50 [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:[background:var(--pf-primary-soft)]">
               <FileText size={13} />PDF
             </button>
           </div>
@@ -100,7 +100,7 @@ export function TreasurerLedger() {
             {[
               { label: 'Tổng thu', value: formatVND(totalIncome), color: 'text-emerald-600' },
               { label: 'Tổng chi', value: formatVND(totalExpense), color: 'text-red-500' },
-              { label: 'Số dư', value: fmtBal(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500' },
+              { label: 'Số dư', value: fmtBal(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
@@ -204,11 +204,11 @@ export function TreasurerLedger() {
           <div className="pf-stat-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
-                <Wallet size={14} className="[color:var(--pf-primary)]" />
+                <Wallet size={14} className="[color:var(--pf-primary-text)]" />
               </div>
               <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Số dư</p>
             </div>
-            <p className={`text-xl font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
+            <p className={`text-xl font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500'}`}>
               {fmtBal(currentBalance)}
             </p>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{blocked ? 'Đang tải số dư chuyển kỳ…' : `${rowsWithBalance.length} giao dịch`}</p>
@@ -282,7 +282,7 @@ export function TreasurerLedger() {
                 <tr className="border-t-2 border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]">
                   <td colSpan={3} className="px-4 py-3 text-xs font-semibold [color:var(--pf-color-muted)] uppercase">Số dư cuối kỳ</td>
                   <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{!blocked && currentBalance >= 0 ? '+' : ''}{fmtBal(currentBalance)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-600'}`}>{fmtBal(currentBalance)}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${currentBalance >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-600'}`}>{fmtBal(currentBalance)}</td>
                 </tr>
               </tfoot>
             </table>

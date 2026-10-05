@@ -140,7 +140,7 @@ export function MemberDashboard() {
         {hasData && (
           <div className="px-4 pt-4 grid grid-cols-3 gap-2">
             {[
-              { label: 'Đã đóng', value: formatVND(amountPaid), color: '[color:var(--pf-primary)]' },
+              { label: 'Đã đóng', value: formatVND(amountPaid), color: '[color:var(--pf-primary-text)]' },
               { label: 'Chi phí TT', value: formatVND(myCost), color: '[color:var(--pf-color-danger)]' },
               { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-warning)]' },
             ].map(k => (
@@ -159,7 +159,7 @@ export function MemberDashboard() {
             className="pf-rowcard px-4 py-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
-              <Send size={15} className="[color:var(--pf-primary)]" />
+              <Send size={15} className="[color:var(--pf-primary-text)]" />
             </div>
             <div className="text-left">
               <p className="text-sm font-[700] [color:var(--pf-text)]">Báo nộp quỹ</p>
@@ -189,7 +189,7 @@ export function MemberDashboard() {
                 <button
                   onClick={handleExportPDF}
                   disabled={exporting}
-                  className="flex items-center gap-1.5 [color:var(--pf-primary)] text-xs font-[600] disabled:opacity-50"
+                  className="flex items-center gap-1.5 [color:var(--pf-primary-text)] text-xs font-[600] disabled:opacity-50"
                 >
                   <Download size={14} />
                   PDF
@@ -221,7 +221,7 @@ export function MemberDashboard() {
                 </div>
                 <div className="border-t border-[color:var(--pf-border)] pt-2.5 flex justify-between items-center">
                   <span className="font-[700] [color:var(--pf-text)]">Số dư</span>
-                  <span className={`text-lg font-[800] ${balance >= 0 ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-danger)]'}`}>
+                  <span className={`text-lg font-[800] ${balance >= 0 ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-color-danger)]'}`}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </span>
                 </div>
@@ -242,7 +242,7 @@ export function MemberDashboard() {
                   <p className="text-base font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
                   <button
                     onClick={() => navigate('/member/attendance')}
-                    className="flex items-center gap-0.5 [color:var(--pf-primary)] text-xs font-[600]"
+                    className="flex items-center gap-0.5 [color:var(--pf-primary-text)] text-xs font-[600]"
                   >
                     Xem tất cả <ChevronRight size={13} />
                   </button>
@@ -326,7 +326,7 @@ export function MemberDashboard() {
                 <div className="w-full min-w-0 flex-1">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-sm font-semibold [color:var(--pf-text)]">Đóng quỹ kỳ này</span>
-                    <span className="text-base font-bold [color:var(--pf-primary)]">{formatVND(amountPaid)}</span>
+                    <span className="text-base font-bold [color:var(--pf-primary-text)]">{formatVND(amountPaid)}</span>
                   </div>
                   <div className="mt-1">
                     <StatusBadge tone={isPaid ? 'success' : 'warning'} dot>

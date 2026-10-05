@@ -155,13 +155,13 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
               <img src={preview} alt="preview" className="max-h-32 rounded-lg object-contain" />
             ) : file ? (
               <div className="flex flex-col items-center gap-1">
-                <FileText size={28} className="[color:var(--pf-primary)]" />
+                <FileText size={28} className="[color:var(--pf-primary-text)]" />
                 <span className="text-xs [color:var(--pf-color-muted)] font-medium">{file.name}</span>
               </div>
             ) : (
               <>
                 <Image size={28} className="[color:var(--pf-color-muted)]" />
-                <p className="text-xs [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file</span></p>
+                <p className="text-xs [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary-text)] font-semibold">chọn file</span></p>
                 <p className="text-xs [color:var(--pf-color-muted)]">JPG, PNG, PDF, WEBP · Tối đa 5 MB</p>
               </>
             )}
@@ -177,11 +177,11 @@ export function ReceiptUploadModal({ expenseId, expenseLabel, onSuccess, onClose
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => cameraRef.current?.click()}
               className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-[color:var(--pf-border)] text-sm font-semibold [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
-              <Camera size={15} className="[color:var(--pf-primary)]" />Chụp ảnh
+              <Camera size={15} className="[color:var(--pf-primary-text)]" />Chụp ảnh
             </button>
             <button type="button" onClick={() => inputRef.current?.click()}
               className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-[color:var(--pf-border)] text-sm font-semibold [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] transition-colors">
-              <Image size={15} className="[color:var(--pf-primary)]" />Chọn ảnh / tệp
+              <Image size={15} className="[color:var(--pf-primary-text)]" />Chọn ảnh / tệp
             </button>
           </div>
 

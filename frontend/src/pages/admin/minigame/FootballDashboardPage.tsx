@@ -504,7 +504,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <td className="text-center px-2 py-2.5 [color:var(--pf-color-danger)]">{s.L}</td>
             <td className="text-center px-2 py-2.5 [color:var(--pf-color-muted)]">{s.GF}-{s.GA}</td>
             <td className={cn('text-center px-2 py-2.5 font-medium', s.GD > 0 ? '[color:var(--pf-color-success)]' : s.GD < 0 ? '[color:var(--pf-color-danger)]' : '[color:var(--pf-color-muted)]')}>{s.GD > 0 ? `+${s.GD}` : s.GD}</td>
-            <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary)]">{s.Pts}</td>
+            <td className="text-center px-3 py-2.5 font-bold [color:var(--pf-primary-text)]">{s.Pts}</td>
           </tr>
         ))}
         {rows.length === 0 && <tr><td colSpan={9} className="px-3 py-3 text-center text-xs [color:var(--pf-color-muted)]">Chưa có trận hoàn thành</td></tr>}
@@ -586,15 +586,15 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             <div className="pf-glass rounded-[18px] p-4 sm:p-5">
               <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Plus size={18} /> Tạo đội mới</h2>
               <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="Tên đội (vd: FC Sấm Sét)"
-                className="mt-3 w-full rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                className="mt-3 w-full rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2.5 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
               <div className="mt-3">
                 <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
-                  <Users size={14} /> <span className="capitalize">{ui.player}</span> là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary)]">({pickIds.length} đã chọn)</span>}
+                  <Users size={14} /> <span className="capitalize">{ui.player}</span> là thành viên CLB {pickIds.length > 0 && <span className="[color:var(--pf-primary-text)]">({pickIds.length} đã chọn)</span>}
                 </div>
                 <div className="mt-2 relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm thành viên..."
-                    className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
                   {filteredMembers.map(m => (
@@ -613,7 +613,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 <div className="mt-2 flex gap-2">
                   <input value={guestName} onChange={e => setGuestName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuestToForm() } }}
-                    placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                    placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                   <button onClick={addGuestToForm} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
                 </div>
                 {guests.length > 0 && (
@@ -674,13 +674,13 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                         </div>
                         <div className="mt-2 flex gap-2">
                           <input ref={addGuestRef} value={addGuest} onChange={e => setAddGuest(e.target.value)} placeholder="hoặc tên khách"
-                            className="flex-1 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                            className="flex-1 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                           <button onClick={() => submitAdd(team.id)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white [background:var(--pf-primary)]">Lưu</button>
                           <button onClick={() => setAddingTo(null)} className="rounded-lg px-3 py-1.5 text-sm [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => openAdd(team.id)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)] hover:underline">
+                      <button onClick={() => openAdd(team.id)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:underline">
                         <UserPlus size={14} /> Thêm {ui.player}
                       </button>
                     )}
@@ -694,13 +694,13 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
               <div className="pf-glass rounded-[18px] p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><Users size={18} /> Xếp bảng đội (tùy chọn)</h2>
-                  <button onClick={addTeamGroup} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors"><Plus size={14} /> Thêm bảng</button>
+                  <button onClick={addTeamGroup} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors"><Plus size={14} /> Thêm bảng</button>
                 </div>
                 <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Để trống = vòng tròn toàn giải. Có bảng = vòng tròn <b>trong từng bảng</b> khi bấm "Tạo lịch vòng tròn".</p>
                 {teamGroups.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {teamGroups.map(g => (
-                      <span key={g.id} className="inline-flex items-center gap-1.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] px-3 py-1 text-xs font-semibold">
+                      <span key={g.id} className="inline-flex items-center gap-1.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] px-3 py-1 text-xs font-semibold">
                         {g.name} ({g.memberKeys.length})
                         <button onClick={() => removeTeamGroup(g.id)} className="hover:[color:var(--pf-color-danger)]" title="Xóa bảng"><X size={12} /></button>
                       </span>
@@ -712,7 +712,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     <div key={team.id} className="flex items-center justify-between gap-2 rounded-lg [background:var(--pf-surface-muted)] px-3 py-2">
                       <span className="text-sm [color:var(--pf-text)] truncate flex items-center gap-1.5"><Shield size={14} className="[color:var(--pf-color-success)]" /> {team.name}</span>
                       <select value={groupOfTeam(team.id)} onChange={e => assignTeamToGroup(team.id, e.target.value)}
-                        className="rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-xs outline-none focus:border-[color:var(--pf-primary)]">
+                        className="rounded-lg border border-[color:var(--pf-border)] px-2 py-1 text-xs outline-none focus:border-[color:var(--pf-primary-text)]">
                         <option value="">Chưa xếp</option>
                         {teamGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                       </select>
@@ -736,7 +736,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                   <h2 className="flex items-center gap-2 font-semibold [color:var(--pf-text)]"><CalendarDays size={18} /> Vòng tròn</h2>
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Mỗi đội gặp tất cả các đội còn lại — tính bảng xếp hạng. Cần ít nhất 2 đội ({teams.length} đội hiện có).</p>
                   <label className="mt-3 flex items-center gap-2 text-sm [color:var(--pf-text)] cursor-pointer w-fit">
-                    <input type="checkbox" checked={doubleLeg} onChange={e => setDoubleLeg(e.target.checked)} className="accent-[color:var(--pf-primary)]" />
+                    <input type="checkbox" checked={doubleLeg} onChange={e => setDoubleLeg(e.target.checked)} className="accent-[color:var(--pf-primary-text)]" />
                     Đá lượt đi & lượt về (mỗi cặp gặp nhau 2 lần)
                   </label>
                   <button onClick={generateSchedule} disabled={genLoading || teams.length < 2}
@@ -804,11 +804,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                               <>
                                 <input inputMode="numeric" value={edit.a}
                                   onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: e.target.value.replace(/\D/g, ''), b: (s[m.id]?.b ?? (done ? String(m.scoreB ?? '') : '')) } }))}
-                                  className="w-11 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                                  className="w-11 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                                 <span className="[color:var(--pf-color-muted)] text-xs">-</span>
                                 <input inputMode="numeric" value={edit.b}
                                   onChange={e => setScoreEdits(s => ({ ...s, [m.id]: { a: (s[m.id]?.a ?? (done ? String(m.scoreA ?? '') : '')), b: e.target.value.replace(/\D/g, '') } }))}
-                                  className="w-11 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+                                  className="w-11 rounded-lg border border-[color:var(--pf-border)] py-1.5 text-center text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
                               </>
                             )}
                             <span className={cn('flex-1 text-left text-sm font-medium truncate', done && m.winnerId === m.teamBId ? '[color:var(--pf-color-success)] font-bold' : '[color:var(--pf-text)]')}>{walkover ? '—' : teamName(m, 'B')}</span>
@@ -876,7 +876,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                 groupTables.map(gt => (
                   <div key={gt.name} className="pf-glass-strong rounded-[18px] overflow-hidden">
                     <div className="px-4 py-2.5 [background:var(--pf-primary-soft)] border-b [border-color:var(--pf-primary-soft)]">
-                      <p className="text-sm font-bold [color:var(--pf-primary)]">{gt.name}</p>
+                      <p className="text-sm font-bold [color:var(--pf-primary-text)]">{gt.name}</p>
                     </div>
                     <div className="overflow-x-auto">{renderTable(gt.rows)}</div>
                   </div>

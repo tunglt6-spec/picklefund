@@ -30,7 +30,7 @@ export function ScheduleExportButtons({ onPng, onPdf, ariaScope, size = 'md' }: 
     <div className="flex items-center gap-2 shrink-0" data-html2canvas-ignore="true">
       {onPng && (
         <button onClick={wrap(onPng)} disabled={busy} aria-label={`Xuất ảnh ${ariaScope}`} title="Xuất ảnh"
-          className={`inline-flex items-center gap-1.5 rounded-lg font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none ${pad}`}>
+          className={`inline-flex items-center gap-1.5 rounded-lg font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none ${pad}`}>
           <ImageIcon size={icon} /> {compact ? 'Ảnh' : 'Xuất ảnh'}
         </button>
       )}

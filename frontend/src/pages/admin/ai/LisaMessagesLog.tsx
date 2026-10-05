@@ -83,7 +83,7 @@ export function LisaMessagesLog() {
                   {m.question}
                 </p>
                 <div className="mt-2 flex gap-2">
-                  <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                  <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                     <Sparkles size={13} />
                   </span>
                   <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]">{m.answer}</p>

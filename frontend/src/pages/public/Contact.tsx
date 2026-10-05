@@ -38,7 +38,7 @@ export function Contact() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}><Mail size={18} /></div>
               <div className="min-w-0">
                 <p className="text-sm font-bold">Email hỗ trợ</p>
-                <p className="truncate text-sm [color:var(--pf-primary)]">{CONTACT.email}</p>
+                <p className="truncate text-sm [color:var(--pf-primary-text)]">{CONTACT.email}</p>
                 <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Kênh chính thức cho mọi yêu cầu hỗ trợ.</p>
               </div>
             </a>
@@ -47,7 +47,7 @@ export function Contact() {
               <div>
                 <p className="text-sm font-bold">Hỗ trợ trong app</p>
                 <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Đã là khách hàng? Dùng trợ lý Lisa AI và mục “Hướng dẫn” ngay trong ứng dụng.</p>
-                <Link to="/login" className="mt-2 inline-block text-sm font-semibold [color:var(--pf-primary)]">Đăng nhập →</Link>
+                <Link to="/login" className="mt-2 inline-block text-sm font-semibold [color:var(--pf-primary-text)]">Đăng nhập →</Link>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-2xl border p-4 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
@@ -55,7 +55,7 @@ export function Contact() {
               <div>
                 <p className="text-sm font-bold">Dùng thử trước khi hỏi</p>
                 <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Trải nghiệm đầy đủ tính năng miễn phí — nhiều câu hỏi sẽ được giải đáp ngay khi dùng.</p>
-                <Link to="/pricing" className="mt-2 inline-block text-sm font-semibold [color:var(--pf-primary)]">Xem bảng giá →</Link>
+                <Link to="/pricing" className="mt-2 inline-block text-sm font-semibold [color:var(--pf-primary-text)]">Xem bảng giá →</Link>
               </div>
             </div>
           </div>

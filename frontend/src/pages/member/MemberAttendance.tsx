@@ -105,7 +105,7 @@ export function MemberAttendance() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Tham gia', value: `${attendedCount}/${completedSessions.length}`, color: '[color:var(--pf-primary)]' },
+              { label: 'Tham gia', value: `${attendedCount}/${completedSessions.length}`, color: '[color:var(--pf-primary-text)]' },
               { label: 'Tỷ lệ', value: `${rate}%`, color: rate >= 80 ? '[color:var(--pf-green)]' : rate >= 60 ? '[color:var(--pf-color-warning)]' : '[color:var(--pf-color-danger)]' },
               { label: 'Sắp TG', value: `${periodSessions.filter(s => s.status === 'scheduled').length}`, color: '[color:var(--pf-color-warning)]' },
             ].map(k => (

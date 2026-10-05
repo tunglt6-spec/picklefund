@@ -252,7 +252,7 @@ export function Attendance() {
             {sessions.length > 0 && (
               <button
                 onClick={() => setShowMovePeriod(true)}
-                className="min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                className="min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
               >
                 Chuyển kỳ ({sessions.length} buổi)
               </button>
@@ -311,7 +311,7 @@ export function Attendance() {
                   >
                     <CheckSquare size={14} />Điểm danh
                   </button>
-                  <button onClick={() => openEdit(session)} aria-label="Sửa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-primary)]">
+                  <button onClick={() => openEdit(session)} aria-label="Sửa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-primary-text)]">
                     <Edit2 size={15} />
                   </button>
                   <button onClick={() => setDeleteId(session.id)} aria-label="Xóa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
@@ -342,7 +342,7 @@ export function Attendance() {
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs [color:var(--pf-color-muted)]">{activeMemberList.length} thành viên</span>
             <button type="button" onClick={toggleAllAttendance}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors">
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
               <CheckSquare size={13} />{allPresent ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
             </button>
           </div>

@@ -30,7 +30,7 @@ function MegaPanel({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (href?: s
       >
         {menu.heading && (
           <div className="mb-4 border-b pb-3 [border-color:var(--pf-border)]">
-            <p className="text-sm font-bold [color:var(--pf-primary)]">{menu.heading}</p>
+            <p className="text-sm font-bold [color:var(--pf-primary-text)]">{menu.heading}</p>
             {menu.description && <p className="mt-1 text-xs [color:var(--pf-color-muted)]">{menu.description}</p>}
           </div>
         )}
@@ -52,7 +52,7 @@ function MegaPanel({ menu, onNavigate }: { menu: MegaMenu; onNavigate: (href?: s
               <button
                 key={cta.label}
                 onClick={() => onNavigate(cta.href)}
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors [background:var(--pf-primary-soft)] [color:var(--pf-primary)] hover:brightness-95"
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] hover:brightness-95"
               >
                 {cta.label} <ArrowRight size={13} />
               </button>
@@ -69,7 +69,7 @@ function MegaItem({ item, onNavigate }: { item: MenuItem; onNavigate: (href?: st
   const inner = (
     <>
       {Icon && (
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
           <Icon size={16} />
         </span>
       )}

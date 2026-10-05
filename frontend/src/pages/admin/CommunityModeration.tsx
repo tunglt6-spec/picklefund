@@ -180,7 +180,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
                   </div>
 
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                       <User size={14} />
                     </span>
                     <p className="min-w-0 truncate text-sm [color:var(--pf-color-muted)]">

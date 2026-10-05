@@ -56,7 +56,7 @@ export function QuickStatsPanel({ stats }: QuickStatsPanelProps) {
   return (
     <div className="pf-glass rounded-2xl shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Zap size={18} className="[color:var(--pf-primary)]" />
+        <Zap size={18} className="[color:var(--pf-primary-text)]" />
         <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
           Thống Kê Nhanh
         </h2>
@@ -71,7 +71,7 @@ export function QuickStatsPanel({ stats }: QuickStatsPanelProps) {
                 <p className="text-xs [color:var(--pf-color-muted)] leading-tight">{row.label}</p>
                 <p className="text-sm [color:var(--pf-text)] font-medium truncate">{row.name}</p>
               </div>
-              <span className="text-sm font-semibold [color:var(--pf-primary)] shrink-0 tabular-nums">
+              <span className="text-sm font-semibold [color:var(--pf-primary-text)] shrink-0 tabular-nums">
                 {row.value}
               </span>
             </div>

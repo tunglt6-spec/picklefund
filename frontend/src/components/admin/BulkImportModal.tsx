@@ -290,7 +290,7 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
           <>
             <button
               onClick={handleDownloadTemplate}
-              className="w-full flex items-center justify-center gap-2 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)] py-2.5 text-sm font-semibold hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] py-2.5 text-sm font-semibold hover:opacity-90"
             >
               <Download size={15} />Tải file mẫu (7 sheet + hướng dẫn)
             </button>
@@ -302,7 +302,7 @@ export function BulkImportModal({ open, onClose, onImported }: { open: boolean; 
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
             >
               <Upload size={24} className="[color:var(--pf-color-muted)]" />
-              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file đã điền</span></p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary-text)] font-semibold">chọn file đã điền</span></p>
               <p className="text-xs [color:var(--pf-color-muted)]">.xlsx, .xls</p>
               <input id="bulk-import-file" type="file" accept=".xlsx,.xls" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />

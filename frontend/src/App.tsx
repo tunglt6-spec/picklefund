@@ -220,7 +220,7 @@ export default function App() {
         <Suspense fallback={
           <div className="flex min-h-screen items-center justify-center [background:var(--pf-bg)]">
             <div
-              className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary)]"
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary-text)]"
               role="status"
               aria-label="Đang tải"
             />
@@ -318,6 +318,7 @@ export default function App() {
             </Route>
             {/* Cộng đồng CLB (Member Experience v1) — mọi vai trong CLB đều vào được. */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW']} />}>
+            <Route path="/cong-dong" element={<Navigate to="/community" replace />} />
             <Route path="/community" element={<MemberCommunity />} />
             </Route>
             {/* Xác nhận nộp quỹ (Báo đã nộp quỹ) — chỉ staff tài chính. */}

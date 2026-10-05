@@ -138,7 +138,7 @@ function DashboardMock() {
         {/* Sidebar mini */}
         <div className="hidden w-24 shrink-0 flex-col gap-0.5 border-r p-2 sm:flex [border-color:var(--pf-border)]">
           {['Tổng quan', 'Quỹ & TC', 'Thành viên', 'Điểm danh', 'Hoạt động', 'Giải đấu', 'AI Center'].map((s, i) => (
-            <span key={s} className={`rounded px-1.5 py-1 text-xs font-medium ${i === 0 ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}`}>{s}</span>
+            <span key={s} className={`rounded px-1.5 py-1 text-xs font-medium ${i === 0 ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[color:var(--pf-color-muted)]'}`}>{s}</span>
           ))}
         </div>
         {/* Main */}
@@ -506,7 +506,7 @@ export function Landing() {
           </div>
           <p className="mx-auto mt-5 max-w-lg text-center text-xs [color:var(--pf-color-muted)]">
             Pro chỉ 99.000đ/tháng (hoặc 990.000đ/năm). Đăng ký & nâng cấp tự động, kích hoạt ngay.{' '}
-            <button onClick={() => navigate('/pricing')} className="font-semibold [color:var(--pf-primary)]">Xem chi tiết bảng giá</button>
+            <button onClick={() => navigate('/pricing')} className="font-semibold [color:var(--pf-primary-text)]">Xem chi tiết bảng giá</button>
           </p>
         </section>
 

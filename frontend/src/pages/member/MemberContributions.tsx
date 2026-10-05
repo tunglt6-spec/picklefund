@@ -99,7 +99,7 @@ export function MemberContributions() {
   const reportedSection = myPayments.length > 0 && (
     <div className="pf-glass rounded-2xl shadow-[var(--pf-shadow)] p-4">
       <div className="mb-2 flex items-center gap-2">
-        <Send size={15} className="[color:var(--pf-primary)]" />
+        <Send size={15} className="[color:var(--pf-primary-text)]" />
         <span className="text-sm font-bold [color:var(--pf-text)]">Khoản bạn đã báo nộp</span>
       </div>
       <div className="space-y-2">
@@ -188,7 +188,7 @@ export function MemberContributions() {
           {reportedSection}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
+              { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary-text)]' },
               { label: 'Xác nhận', value: `${confirmedCount}`, color: '[color:var(--pf-green)]' },
               { label: 'Chờ', value: `${pendingCount}`, color: '[color:var(--pf-color-warning)]' },
             ].map(k => (

@@ -295,7 +295,7 @@ export function TreasurerIncome() {
             {[
               { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: 'text-emerald-600' },
               { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600' },
-              { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '[color:var(--pf-primary)]' },
+              { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '[color:var(--pf-primary-text)]' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
@@ -345,7 +345,7 @@ export function TreasurerIncome() {
                             {c.isConfirmed ? <CheckCircle size={15} /> : <XCircle size={15} />}
                           </button>
                         )}
-                        <button onClick={() => openEdit(c)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary)]">
+                        <button onClick={() => openEdit(c)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
                           <Edit2 size={14} />
                         </button>
                         <button onClick={() => setDeleteId(c.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:bg-red-50 active:text-red-500">
@@ -378,7 +378,7 @@ export function TreasurerIncome() {
                   <button key={fs} type="button" onClick={() => setForm(f => ({ ...f, fundSource: fs }))}
                     className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium flex items-center gap-2 ${
                       form.fundSource === fs
-                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                        ? fs === 'COMMON' ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                         : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)]'
                     }`}>
                     {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -513,18 +513,18 @@ export function TreasurerIncome() {
               <div className="pf-glass rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">
-                    <Wallet size={14} className="[color:var(--pf-primary)]" />
+                    <Wallet size={14} className="[color:var(--pf-primary-text)]" />
                   </div>
                   <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide">Thu Quỹ Phụ</p>
                 </div>
-                <p className="text-xl font-bold [color:var(--pf-primary)]">{formatVND(miniTotal)}</p>
+                <p className="text-xl font-bold [color:var(--pf-primary-text)]">{formatVND(miniTotal)}</p>
                 <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{miniContribs.length} khoản</p>
               </div>
             </div>
 
             {selectedIds.size > 0 && (
               <div className="flex items-center gap-3 [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-xl px-4 py-3">
-                <span className="text-sm font-medium [color:var(--pf-primary)]">Đã chọn {selectedIds.size} khoản chưa xác nhận</span>
+                <span className="text-sm font-medium [color:var(--pf-primary-text)]">Đã chọn {selectedIds.size} khoản chưa xác nhận</span>
                 <button
                   onClick={bulkConfirm}
                   disabled={isBulkConfirming}
@@ -532,7 +532,7 @@ export function TreasurerIncome() {
                 >
                   <CheckCircle size={13} />{isBulkConfirming ? 'Đang xử lý…' : `Xác nhận (${selectedIds.size})`}
                 </button>
-                <button onClick={() => setSelectedIds(new Set())} className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">Bỏ chọn</button>
+                <button onClick={() => setSelectedIds(new Set())} className="text-xs [color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)]">Bỏ chọn</button>
               </div>
             )}
 
@@ -551,7 +551,7 @@ export function TreasurerIncome() {
                           checked={allUnconfirmedSelected}
                           onChange={toggleSelectAll}
                           disabled={unconfirmedIds.length === 0}
-                          className="rounded border-slate-300 [color:var(--pf-primary)] cursor-pointer disabled:opacity-40"
+                          className="rounded border-slate-300 [color:var(--pf-primary-text)] cursor-pointer disabled:opacity-40"
                           title="Chọn tất cả chưa xác nhận"
                         />
                       </th>
@@ -578,7 +578,7 @@ export function TreasurerIncome() {
                                 type="checkbox"
                                 checked={selectedIds.has(c.id)}
                                 onChange={() => toggleSelect(c.id)}
-                                className="rounded border-slate-300 [color:var(--pf-primary)] cursor-pointer"
+                                className="rounded border-slate-300 [color:var(--pf-primary-text)] cursor-pointer"
                               />
                             )}
                           </td>
@@ -617,7 +617,7 @@ export function TreasurerIncome() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <button onClick={() => openEdit(c)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary)] transition-colors">
+                              <button onClick={() => openEdit(c)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-primary-soft)] hover:[color:var(--pf-primary-text)] transition-colors">
                                 <Edit2 size={13} />
                               </button>
                               <button onClick={() => setDeleteId(c.id)} className="h-7 w-7 flex items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500 transition-colors">
@@ -659,8 +659,8 @@ export function TreasurerIncome() {
                   className={`py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center gap-2 ${
                     form.fundSource === fs
                       ? fs === 'COMMON'
-                        ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
-                        : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary)]'
+                        ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
+                        : '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'
                       : 'border-[color:var(--pf-border)] [color:var(--pf-color-muted)] hover:border-slate-300'
                   }`}>
                   {fs === 'COMMON' ? <DollarSign size={14} /> : <Wallet size={14} />}
@@ -676,7 +676,7 @@ export function TreasurerIncome() {
                 <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Loại thu <span className="text-red-500">*</span></label>
                 <select required value={form.miniIncomeType}
                   onChange={e => setForm({ ...form, miniIncomeType: e.target.value as MiniIncomeType })}
-                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
+                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                   {(Object.entries(MINI_INCOME_TYPE_LABELS) as [MiniIncomeType, string][]).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
                   ))}
@@ -686,9 +686,9 @@ export function TreasurerIncome() {
                 <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Người nộp (nếu có)</label>
                 <input value={form.payerName} onChange={e => setForm({ ...form, payerName: e.target.value })}
                   placeholder="Tên người nộp tiền"
-                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+                  className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
               </div>
-              <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary)]">
+              <div className="[background:var(--pf-primary-soft)] rounded-lg px-3 py-2 text-xs [color:var(--pf-primary-text)]">
                 Khoản thu này không tính vào đóng quỹ thành viên và không ảnh hưởng công nợ.
               </div>
             </>
@@ -700,7 +700,7 @@ export function TreasurerIncome() {
                 <div>
                   <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Thành viên <span className="text-red-500">*</span></label>
                   <select required value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })}
-                    className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
+                    className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                     <option value="">-- Chọn thành viên --</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                   </select>
@@ -712,7 +712,7 @@ export function TreasurerIncome() {
                 <div>
                   <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Kỳ quỹ <span className="text-red-500">*</span></label>
                   <select required value={form.fundPeriodId} onChange={e => setForm({ ...form, fundPeriodId: e.target.value })}
-                    className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
+                    className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
                     <option value="">-- Chọn kỳ quỹ --</option>
                     {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
@@ -726,19 +726,19 @@ export function TreasurerIncome() {
               <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
-                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
             <div>
               <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
               <input type="date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })}
-                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+                className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hình thức</label>
             <select value={form.paymentMethod} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
-              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]">
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]">
               <option value="bank_transfer">Chuyển khoản</option>
               <option value="cash">Tiền mặt</option>
             </select>
@@ -747,7 +747,7 @@ export function TreasurerIncome() {
             <label className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ghi chú</label>
             <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder="Thông tin thêm..."
-              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] [background:var(--pf-surface)]" />
+              className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
           </div>
         </form>
       </Modal>

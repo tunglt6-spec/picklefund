@@ -53,7 +53,7 @@ export function PageHero({
     >
       <div className={`${PUBLIC_CONTAINER} py-14 sm:py-16 text-center`}>
         {eyebrow && (
-          <div className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] [border-color:var(--pf-border)] [color:var(--pf-primary)]">
+          <div className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] [border-color:var(--pf-border)] [color:var(--pf-primary-text)]">
             {eyebrow}
           </div>
         )}

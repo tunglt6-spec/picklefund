@@ -16,7 +16,7 @@ interface Section {
 const B = ({ items }: { items: React.ReactNode[] }) => (
   <ul className="mt-1.5 space-y-1.5 text-sm leading-relaxed [color:var(--pf-color-muted)]">
     {items.map((it, i) => (
-      <li key={i} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--pf-primary)]" /><span>{it}</span></li>
+      <li key={i} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--pf-primary-text)]" /><span>{it}</span></li>
     ))}
   </ul>
 )
@@ -138,7 +138,7 @@ export function UserGuideModal({ open, onClose }: { open: boolean; onClose: () =
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'var(--pf-border)' }}>
           <h2 className="flex items-center gap-2 text-base font-bold [color:var(--pf-text)]">
-            <BookOpen size={18} className="text-[color:var(--pf-primary)]" /> Hướng dẫn sử dụng PickleFund
+            <BookOpen size={18} className="text-[color:var(--pf-primary-text)]" /> Hướng dẫn sử dụng PickleFund
           </h2>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] hover:[color:var(--pf-text)]" aria-label="Đóng"><X size={18} /></button>
         </div>

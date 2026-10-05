@@ -64,7 +64,7 @@ const PLAN_COLORS: Record<ServicePlan, string> = {
 
 const PLAN_BADGE: Record<ServicePlan, string> = {
   STARTER: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
-  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]',
   CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
 
@@ -295,7 +295,7 @@ export function Billing() {
           {usage.length > 0 && (
             <div className="pf-glass rounded-xl p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={18} className="[color:var(--pf-primary)]" />
+                <TrendingUp size={18} className="[color:var(--pf-primary-text)]" />
                 <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử sử dụng AI</h3>
               </div>
               <div className="space-y-2">
@@ -340,7 +340,7 @@ export function Billing() {
           {orders.length > 0 && (
             <div className="pf-glass rounded-xl p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Receipt size={18} className="[color:var(--pf-primary)]" />
+                <Receipt size={18} className="[color:var(--pf-primary-text)]" />
                 <h3 className="font-semibold [color:var(--pf-text)]">Lịch sử thanh toán</h3>
               </div>
               <div className="space-y-1">

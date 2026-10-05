@@ -264,7 +264,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         <button
           type="button"
           onClick={() => setDetailMemberId(r.memberId)}
-          className="min-h-11 rounded-full px-3 text-sm font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+          className="min-h-11 rounded-full px-3 text-sm font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors"
         >
           Chi tiết
         </button>
@@ -801,7 +801,7 @@ function RulesTab() {
                       <button
                         type="button"
                         onClick={() => toggleActive(rule)}
-                        className="min-h-11 rounded-full px-3 text-sm font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                        className="min-h-11 rounded-full px-3 text-sm font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors"
                       >
                         {rule.active ? 'Tắt' : 'Bật'}
                       </button>

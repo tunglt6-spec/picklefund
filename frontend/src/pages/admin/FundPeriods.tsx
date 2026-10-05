@@ -585,7 +585,7 @@ export function FundPeriods() {
           <div className="flex gap-1.5 items-center">
             {bankInfo && (
               <button
-                className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)]"
+                className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)]"
                 onClick={() => setShowQrModal(true)}
                 title="QR thanh toán"
               ><QrCode size={16} /></button>
@@ -610,7 +610,7 @@ export function FundPeriods() {
                   <Plus size={14} />Chung
                 </button>
                 <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                   onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
                 >
                   <Plus size={14} />Mini
@@ -626,12 +626,12 @@ export function FundPeriods() {
           <div className="grid grid-cols-2 gap-3">
             <div className="pf-stat-card rounded-xl p-4">
               <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
-              <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.chung.balance)}</div>
+              <div className="text-xl font-[800] [color:var(--pf-primary-text)]">{formatVND(stats.chung.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
             </div>
             <div className="pf-stat-card rounded-xl p-4">
               <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
-              <div className="text-xl font-[800] [color:var(--pf-primary)]">{formatVND(stats.game.balance)}</div>
+              <div className="text-xl font-[800] [color:var(--pf-primary-text)]">{formatVND(stats.game.balance)}</div>
               <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
             </div>
           </div>
@@ -640,7 +640,7 @@ export function FundPeriods() {
           {bankInfo && buildQrUrl(qrPeriodId) && (
             <div className="pf-glass rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
-                <QrCode size={14} className="[color:var(--pf-primary)]" />
+                <QrCode size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
               </div>
               <div className="flex gap-3 items-start">
@@ -651,7 +651,7 @@ export function FundPeriods() {
                   <div className="text-xs [color:var(--pf-color-muted)]">Số tài khoản</div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-[600] font-mono [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
-                    <button onClick={copyAcctNumber} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary)]">
+                    <button onClick={copyAcctNumber} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)]">
                       {copiedAcct ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                     </button>
                   </div>
@@ -687,7 +687,7 @@ export function FundPeriods() {
           {chungPeriods.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Building2 size={14} className="[color:var(--pf-primary)]" />
+                <Building2 size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Chính ({chungPeriods.length})</span>
               </div>
               <div className="space-y-2">
@@ -705,7 +705,7 @@ export function FundPeriods() {
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
                           onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
                         {p.status === 'draft' && (
                           <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
@@ -719,7 +719,7 @@ export function FundPeriods() {
                           <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                         )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                           onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
                         <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
                           onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
@@ -735,7 +735,7 @@ export function FundPeriods() {
           {gamePeriods.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Trophy size={14} className="[color:var(--pf-primary)]" />
+                <Trophy size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Phụ ({gamePeriods.length})</span>
               </div>
               <div className="space-y-2">
@@ -753,7 +753,7 @@ export function FundPeriods() {
                     </div>
                     {!isMember && (
                       <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
+                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
                           onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
                         {p.status === 'draft' && (
                           <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
@@ -767,7 +767,7 @@ export function FundPeriods() {
                           <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
                             onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
                         )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                           onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
                         <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
                           onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
@@ -811,7 +811,7 @@ export function FundPeriods() {
                 {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
                   <div className="flex justify-between pt-2 border-t border-[color:var(--pf-border)]">
                     <span className="[color:var(--pf-color-muted)]">Số tiền đóng quỹ</span>
-                    <span className="font-bold [color:var(--pf-primary)]">{formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}</span>
+                    <span className="font-bold [color:var(--pf-primary-text)]">{formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}</span>
                   </div>
                 )}
               </div>
@@ -857,13 +857,13 @@ export function FundPeriods() {
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
             >
               <Upload size={24} className="[color:var(--pf-color-muted)]" />
-              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary)] font-semibold">chọn file</span></p>
+              <p className="text-sm [color:var(--pf-color-muted)]">Kéo thả hoặc <span className="[color:var(--pf-primary-text)] font-semibold">chọn file</span></p>
               <p className="text-xs [color:var(--pf-color-muted)]">.xlsx, .xls</p>
               <input id="import-file-m" type="file" accept=".xlsx,.xls" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }} />
             </div>
             {importFileError && <p className="text-sm text-red-500">{importFileError}</p>}
             {importRows.length > 0 && !importResult && (
-              <p className="text-sm [color:var(--pf-primary)] font-medium">Đọc được {importRows.length} dòng dữ liệu</p>
+              <p className="text-sm [color:var(--pf-primary-text)] font-medium">Đọc được {importRows.length} dòng dữ liệu</p>
             )}
             {importResult && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm">
@@ -928,7 +928,7 @@ export function FundPeriods() {
   const periodDays = (p: FundPeriod) => Math.round((new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) / 86400000)
   const periodActions = (p: FundPeriod) => (
     <div className="flex items-center justify-center gap-1">
-      <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"><Eye size={14} /></button>
+      <button title="Xem" onClick={() => setViewPeriod(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"><Eye size={14} /></button>
       {!isMember && (
         <>
           <button title="Sửa" onClick={() => openEdit(p)} className="p-1.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:text-amber-600 transition-colors"><Pencil size={14} /></button>
@@ -941,7 +941,7 @@ export function FundPeriods() {
           {(p.status === 'closed' || p.status === 'finalized') && (
             <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors"><LockOpen size={14} /></button>
           )}
-          <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"><FileText size={14} /></button>
+          <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"><FileText size={14} /></button>
           <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 [color:var(--pf-color-muted)] hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
         </>
       )}
@@ -959,8 +959,8 @@ export function FundPeriods() {
     }] as Column<FundPeriod>[]) : []),
     { key: 'name', header: 'Tên kỳ quỹ', render: (p) => <span className="font-medium [color:var(--pf-text)]">{p.name}</span> },
     { key: 'type', header: 'Loại quỹ', render: (p) => (p.type ?? 'chung') === 'game'
-      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Wallet size={10} />Mini</span>
-      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]"><Building2 size={10} />Chung</span> },
+      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]"><Wallet size={10} />Mini</span>
+      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]"><Building2 size={10} />Chung</span> },
     { key: 'time', header: 'Thời gian', render: (p) => <span className="[color:var(--pf-color-muted)] text-xs">{periodDays(p)} ngày</span> },
     { key: 'amount', header: 'Mức đóng/người', align: 'right', render: (p) => <span className="font-medium [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span> },
     { key: 'collected', header: 'Đã thu', align: 'right', render: (p) => <span className="text-green-600 font-medium">{formatVND(periodCollected(p))}</span> },
@@ -1001,18 +1001,18 @@ export function FundPeriods() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <KpiSummaryCard
             title="TỔNG QUỸ CHÍNH"
-            icon={<Building2 size={16} className="[color:var(--pf-primary)]" />}
+            icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
             iconBg="[background:var(--pf-primary-soft)]"
-            accentColor="[color:var(--pf-primary)]"
+            accentColor="[color:var(--pf-primary-text)]"
             stats={stats.chung}
             footerLabel="Chưa đóng"
             footerValue={stats.chung.unpaidCount}
           />
           <KpiSummaryCard
             title="TỔNG QUỸ PHỤ"
-            icon={<Wallet size={16} className="[color:var(--pf-primary)]" />}
+            icon={<Wallet size={16} className="[color:var(--pf-primary-text)]" />}
             iconBg="[background:var(--pf-primary-soft)]"
-            accentColor="[color:var(--pf-primary)]"
+            accentColor="[color:var(--pf-primary-text)]"
             stats={stats.game}
           />
         </div>
@@ -1021,7 +1021,7 @@ export function FundPeriods() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FundDetailCard
             title="Quỹ Chính CLB"
-            icon={<Building2 size={16} className="[color:var(--pf-primary)]" />}
+            icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
             period={activePeriods.chung}
             color="indigo"
             contributions={contributions}
@@ -1032,7 +1032,7 @@ export function FundPeriods() {
           />
           <FundDetailCard
             title="Quỹ Phụ"
-            icon={<Wallet size={16} className="[color:var(--pf-primary)]" />}
+            icon={<Wallet size={16} className="[color:var(--pf-primary-text)]" />}
             period={activePeriods.game ?? latestGamePeriod}
             color="violet"
             contributions={contributions}
@@ -1048,7 +1048,7 @@ export function FundPeriods() {
           <div className="flex border-b border-[color:var(--pf-border)] px-2 pt-1">
             {([['list', 'Danh sách kỳ quỹ'], ['history', 'Lịch sử giao dịch'], ['highlights', 'Giao dịch nổi bật']] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]' : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'}`}>
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? '[border-color:var(--pf-primary)] [color:var(--pf-primary-text)]' : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'}`}>
                 {label}
               </button>
             ))}
@@ -1243,7 +1243,7 @@ export function FundPeriods() {
             <div className="pf-glass rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">
-                  <QrCode size={15} className="[color:var(--pf-primary)]" />QR thanh toán
+                  <QrCode size={15} className="[color:var(--pf-primary-text)]" />QR thanh toán
                 </h3>
                 {bankInfo && buildQrUrl(qrPeriodId) && (
                   <button onClick={() => setShowQrModal(true)}
@@ -1301,7 +1301,7 @@ export function FundPeriods() {
                       <div className="flex items-center gap-1">
                         <span className="font-mono font-semibold [color:var(--pf-text)]">{bankInfo.bank_account_number}</span>
                         <button onClick={copyAcctNumber}
-                          className="p-0.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] transition-colors"
+                          className="p-0.5 rounded hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"
                           title="Copy số tài khoản">
                           {copiedAcct ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
                         </button>
@@ -1314,7 +1314,7 @@ export function FundPeriods() {
                     {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
                       <div className="flex justify-between pt-1 border-t border-[color:var(--pf-border)]">
                         <span className="[color:var(--pf-color-muted)]">Số tiền</span>
-                        <span className="font-bold [color:var(--pf-primary)]">
+                        <span className="font-bold [color:var(--pf-primary-text)]">
                           {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
                         </span>
                       </div>
@@ -1391,7 +1391,7 @@ export function FundPeriods() {
             )}
             <div className="flex justify-between">
               <span className="[color:var(--pf-color-muted)]">Số tiền/người</span>
-              <span className="font-medium [color:var(--pf-primary)]">{formatVND(viewPeriod.contributionAmount)}</span>
+              <span className="font-medium [color:var(--pf-primary-text)]">{formatVND(viewPeriod.contributionAmount)}</span>
             </div>
             {viewPeriod.notes && (
               <div>
@@ -1444,7 +1444,7 @@ export function FundPeriods() {
                 <span className="[color:var(--pf-color-muted)]">Số tài khoản</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono font-bold">{bankInfo.bank_account_number}</span>
-                  <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)]">
+                  <button onClick={copyAcctNumber} className="p-1 rounded hover:bg-slate-200 [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)]">
                     {copiedAcct ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
                   </button>
                 </div>
@@ -1456,7 +1456,7 @@ export function FundPeriods() {
               {qrPeriodId && commonPeriods.find(p => p.id === qrPeriodId) && (
                 <div className="flex justify-between pt-2 border-t border-[color:var(--pf-border)]">
                   <span className="[color:var(--pf-color-muted)]">Số tiền đóng quỹ</span>
-                  <span className="font-bold [color:var(--pf-primary)] text-base">
+                  <span className="font-bold [color:var(--pf-primary-text)] text-base">
                     {formatVND(commonPeriods.find(p => p.id === qrPeriodId)!.contributionAmount)}
                   </span>
                 </div>
@@ -1532,8 +1532,8 @@ export function FundPeriods() {
             <>
               <div className="flex items-center justify-between p-3 rounded-lg [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)]">
                 <div>
-                  <p className="text-sm font-medium [color:var(--pf-primary)]">Bước 1 — Tải file mẫu</p>
-                  <p className="text-xs [color:var(--pf-primary)] mt-0.5">Điền đúng cột: Họ và tên, Số tiền, Ngày đóng, Ghi chú</p>
+                  <p className="text-sm font-medium [color:var(--pf-primary-text)]">Bước 1 — Tải file mẫu</p>
+                  <p className="text-xs [color:var(--pf-primary-text)] mt-0.5">Điền đúng cột: Họ và tên, Số tiền, Ngày đóng, Ghi chú</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={downloadTemplate}>
                   <Download size={13} />Tải mẫu
@@ -1558,7 +1558,7 @@ export function FundPeriods() {
                   onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportFile(f) }}
                 >
                   <Upload size={24} className="[color:var(--pf-color-muted)]" />
-                  <span className="text-sm [color:var(--pf-color-muted)]">Kéo thả file vào đây hoặc <span className="[color:var(--pf-primary)] font-medium">chọn file</span></span>
+                  <span className="text-sm [color:var(--pf-color-muted)]">Kéo thả file vào đây hoặc <span className="[color:var(--pf-primary-text)] font-medium">chọn file</span></span>
                   <span className="text-xs [color:var(--pf-color-muted)]">Hỗ trợ .xlsx, .xls — tối đa 500 dòng</span>
                   <input
                     ref={importFileRef}
@@ -1597,7 +1597,7 @@ export function FundPeriods() {
                             <tr key={i} className="border-b border-[color:var(--pf-border)]">
                               <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs">{i + 2}</td>
                               <td className="px-4 py-1.5 font-medium">{r.memberName}</td>
-                              <td className="px-4 py-1.5 text-right [color:var(--pf-primary)]">{r.amount.toLocaleString('vi-VN')}đ</td>
+                              <td className="px-4 py-1.5 text-right [color:var(--pf-primary-text)]">{r.amount.toLocaleString('vi-VN')}đ</td>
                               <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs">{r.paymentDate || '—'}</td>
                               <td className="px-4 py-1.5 [color:var(--pf-color-muted)] text-xs truncate max-w-[120px]">{r.notes || '—'}</td>
                               <td className="px-4 py-1.5 text-center">
@@ -1668,8 +1668,8 @@ function HistoryTab({ contributions, periods, members }: {
           <p className="text-base font-bold text-amber-700 mt-0.5">{formatVND(totalPending)}</p>
         </div>
         <div className="rounded-xl [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-4 py-3">
-          <p className="text-xs [color:var(--pf-primary)] font-medium">Số giao dịch</p>
-          <p className="text-base font-bold [color:var(--pf-primary)] mt-0.5">{sorted.length}</p>
+          <p className="text-xs [color:var(--pf-primary-text)] font-medium">Số giao dịch</p>
+          <p className="text-base font-bold [color:var(--pf-primary-text)] mt-0.5">{sorted.length}</p>
         </div>
       </div>
 
@@ -1722,7 +1722,7 @@ function HistoryTab({ contributions, periods, members }: {
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-xs font-bold [color:var(--pf-primary)] shrink-0">
+                        <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-xs font-bold [color:var(--pf-primary-text)] shrink-0">
                           {(member?.fullName ?? c.payerName ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-xs font-medium [color:var(--pf-text)]">{member?.fullName ?? c.payerName ?? '—'}</span>
@@ -1730,7 +1730,7 @@ function HistoryTab({ contributions, periods, members }: {
                     </td>
                     <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'}</td>
                     <td className="px-4 py-2.5">
-                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]'}`}>
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'}`}>
                         {c.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
                       </span>
                     </td>
@@ -1849,7 +1849,7 @@ function HighlightsTab({ contributions, periods, members }: {
         {/* Largest single transactions */}
         <div>
           <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
-            <Star size={15} className="[color:var(--pf-primary)]" />Giao dịch lớn nhất
+            <Star size={15} className="[color:var(--pf-primary-text)]" />Giao dịch lớn nhất
           </h3>
           {topTx.length === 0 ? (
             <p className="text-xs [color:var(--pf-color-muted)] py-4 text-center">Chưa có dữ liệu</p>
@@ -1878,7 +1878,7 @@ function HighlightsTab({ contributions, periods, members }: {
       {periodStats.length > 0 && (
         <div>
           <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
-            <TrendingUp size={15} className="[color:var(--pf-primary)]" />Thu quỹ theo kỳ
+            <TrendingUp size={15} className="[color:var(--pf-primary-text)]" />Thu quỹ theo kỳ
           </h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">

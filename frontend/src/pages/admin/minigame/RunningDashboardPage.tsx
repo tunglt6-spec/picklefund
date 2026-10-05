@@ -139,7 +139,7 @@ export function RunningDashboardPage() {
             })}
           </div>
           <div className="flex gap-2">
-            <input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="+ Khách (tên)" className="flex-1 border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+            <input value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="+ Khách (tên)" className="flex-1 border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             <Button onClick={addRunners} disabled={busy}>Thêm</Button>
           </div>
         </div>
@@ -164,8 +164,8 @@ export function RunningDashboardPage() {
                       return <td key={i} className="py-2 px-1">
                         <div className="flex items-center gap-1">
                           <input value={edits[key] ?? (cur ? fmt(cur) : '')} onChange={e => setEdits(s => ({ ...s, [key]: e.target.value }))}
-                            placeholder="mm:ss" className="w-16 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-[color:var(--pf-primary)]" />
-                          <button onClick={() => saveTime(r.id, round)} disabled={busy} className="[color:var(--pf-primary)]"><Save size={13} /></button>
+                            placeholder="mm:ss" className="w-16 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-[color:var(--pf-primary-text)]" />
+                          <button onClick={() => saveTime(r.id, round)} disabled={busy} className="[color:var(--pf-primary-text)]"><Save size={13} /></button>
                         </div>
                       </td>
                     })}

@@ -197,7 +197,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
   const renderPairCard = (t: PairTeam, idx: number) => (
     <div key={t.id} className="rounded-[14px] border p-3.5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)] flex items-center justify-between gap-2">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-primary)]">{t.name || `Đôi ${idx + 1}`}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-primary-text)]">{t.name || `Đôi ${idx + 1}`}</p>
         <p className="mt-0.5 text-sm font-medium [color:var(--pf-text)] flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           {slotName(t.player1, t.player1Name, t.player1GuestId)}<span className="[color:var(--pf-color-muted)]">&amp;</span>{slotName(t.player2, t.player2Name, t.player2GuestId)}
         </p>
@@ -238,12 +238,12 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
         {/* Pool thành viên CLB */}
         <div className="mt-3">
           <div className="flex items-center gap-2 text-xs font-medium [color:var(--pf-color-muted)]">
-            <Users size={14} /> Vận động viên là thành viên CLB {selectedCount > 0 && <span className="[color:var(--pf-primary)]">({selectedCount} đã chọn)</span>}
+            <Users size={14} /> Vận động viên là thành viên CLB {selectedCount > 0 && <span className="[color:var(--pf-primary-text)]">({selectedCount} đã chọn)</span>}
           </div>
           <div className="mt-2 relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm thành viên..."
-              className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+              className="w-full rounded-xl border border-[color:var(--pf-border)] pl-8 pr-3 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
           </div>
           <div className="mt-2 flex flex-wrap gap-2 max-h-44 overflow-y-auto">
             {available.map(m => (
@@ -268,7 +268,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
           <div className="mt-2 flex gap-2">
             <input value={guestName} onChange={e => setGuestName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGuest() } }}
-              placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary)]" />
+              placeholder="Tên khách" className="flex-1 rounded-xl border border-[color:var(--pf-border)] px-3.5 py-2 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
             <button onClick={addGuest} className="rounded-xl px-3 py-2 text-sm font-semibold text-white [background:var(--pf-primary)]">Thêm</button>
           </div>
           {guests.length > 0 && (
@@ -305,7 +305,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
         {selectedCount > 0 && (
           <div className="mt-3 rounded-[14px] border border-[color:var(--pf-border)] [background:var(--pf-primary-soft)] p-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold [color:var(--pf-primary)]">Đã chọn ({selectedCount}): {picks.map(x => x.name).join(' + ')}</span>
+              <span className="text-xs font-semibold [color:var(--pf-primary-text)]">Đã chọn ({selectedCount}): {picks.map(x => x.name).join(' + ')}</span>
               <button onClick={clearSel} className="shrink-0 text-xs font-semibold [color:var(--pf-color-muted)] hover:[color:var(--pf-color-danger)] transition-colors">Bỏ chọn tất cả</button>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -351,7 +351,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
               </button>
               <button onClick={manualPair} disabled={saving || selectedCount !== 2}
                 title={selectedCount !== 2 ? 'Chọn đúng 2 người' : undefined}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold border [color:var(--pf-primary)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold border [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] border-[color:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 <Plus size={16} /> Tạo cặp thủ công · {selectedCount} người
               </button>
             </div>
@@ -413,7 +413,7 @@ export function PairBuilder({ minigameId, mode = 'pair', isGroupStage = false, g
             return (
               <div key={gi}>
                 <div className="mb-2 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">Bảng {String.fromCharCode(65 + gi)}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">Bảng {String.fromCharCode(65 + gi)}</span>
                   <span className={cn('text-xs font-semibold', full ? '[color:var(--pf-color-success)]' : '[color:var(--pf-color-muted)]')}>
                     {full ? `đủ ${pairGroupSize}/${pairGroupSize} cặp` : `${slice.length}/${pairGroupSize} cặp`}
                   </span>

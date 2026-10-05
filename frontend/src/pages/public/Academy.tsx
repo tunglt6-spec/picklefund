@@ -32,7 +32,7 @@ export function Academy() {
               </div>
               <p className="mt-4 text-base font-extrabold [color:var(--pf-text)]">{r.title}</p>
               <p className="mt-1.5 flex-1 text-sm leading-relaxed [color:var(--pf-color-muted)]">{r.desc}</p>
-              <Link to={r.to} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary)]">
+              <Link to={r.to} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary-text)]">
                 {r.cta} <ArrowRight size={14} />
               </Link>
             </div>
@@ -40,7 +40,7 @@ export function Academy() {
         </div>
 
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border p-6 text-center [border-color:var(--pf-border)]" style={{ background: 'var(--pf-primary-soft)' }}>
-          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary)]"><GraduationCap size={14} /> Sắp có</div>
+          <div className="mb-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] [color:var(--pf-primary-text)]"><GraduationCap size={14} /> Sắp có</div>
           <p className="text-base font-bold [color:var(--pf-text)]">Khóa học chuyên sâu theo lộ trình</p>
           <p className="mt-1 text-sm [color:var(--pf-color-muted)]">Các khóa học có cấu trúc (video + bài tập) đang được xây dựng. Trong lúc chờ, các tài nguyên trên đã đủ để bắt đầu vận hành ngay.</p>
         </div>

@@ -215,7 +215,7 @@ export function SuperSettings() {
       />
 
       <div className="space-y-5">
-        <Section icon={<Globe size={14} className="[color:var(--pf-primary)]" />} title="Thông tin hệ thống">
+        <Section icon={<Globe size={14} className="[color:var(--pf-primary-text)]" />} title="Thông tin hệ thống">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <S id="siteName" label="Tên nền tảng" value={settings.siteName} onChange={v => setSettings(p => ({ ...p, siteName: v }))} />
             <S id="email" label="Email hỗ trợ" type="email" value={settings.supportEmail} onChange={v => setSettings(p => ({ ...p, supportEmail: v }))} />
@@ -224,7 +224,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Shield size={14} className="[color:var(--pf-primary)]" />} title="Bảo mật & Phiên đăng nhập">
+        <Section icon={<Shield size={14} className="[color:var(--pf-primary-text)]" />} title="Bảo mật & Phiên đăng nhập">
           <div className="space-y-4">
             <S id="timeout" label="Thời gian hết phiên (phút)" type="number" value={settings.sessionTimeoutMinutes} onChange={v => setSettings(p => ({ ...p, sessionTimeoutMinutes: v }))} />
             <Toggle label="Xác minh email bắt buộc" desc="Người dùng mới phải xác minh email trước khi đăng nhập"
@@ -233,7 +233,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Bell size={14} className="[color:var(--pf-primary)]" />} title="Thông báo & Đăng ký">
+        <Section icon={<Bell size={14} className="[color:var(--pf-primary-text)]" />} title="Thông báo & Đăng ký">
           <div>
             <Toggle label="Thông báo email hệ thống" desc="Gửi email khi có sự kiện quan trọng (lỗi, đăng ký mới...)"
               value={settings.emailNotifications}
@@ -248,7 +248,7 @@ export function SuperSettings() {
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
                   {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
                 </button>
                 <button type="button" onClick={detachSharedChat}
@@ -260,7 +260,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<Database size={14} className="[color:var(--pf-primary)]" />} title="Hệ thống & Backup">
+        <Section icon={<Database size={14} className="[color:var(--pf-primary-text)]" />} title="Hệ thống & Backup">
           <div>
             <Toggle label="Tự động backup dữ liệu" desc="Backup toàn bộ dữ liệu lúc 2:00 AM mỗi ngày"
               value={settings.autoBackup}
@@ -271,7 +271,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <Section icon={<KeyRound size={14} className="[color:var(--pf-primary)]" />} title="Tài khoản & Mật khẩu">
+        <Section icon={<KeyRound size={14} className="[color:var(--pf-primary-text)]" />} title="Tài khoản & Mật khẩu">
           <div className="space-y-4 max-w-md">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

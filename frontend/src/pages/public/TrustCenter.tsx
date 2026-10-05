@@ -56,7 +56,7 @@ export function TrustCenter() {
             ))}
           </ul>
           <p className="mt-4 text-sm leading-relaxed [color:var(--pf-color-muted)]">
-            Cần thông tin bảo mật cụ thể cho quyết định triển khai? <Link to="/contact" className="font-semibold [color:var(--pf-primary)]">Liên hệ đội ngũ</Link> — chúng tôi trả lời trung thực theo đúng hiện trạng.
+            Cần thông tin bảo mật cụ thể cho quyết định triển khai? <Link to="/contact" className="font-semibold [color:var(--pf-primary-text)]">Liên hệ đội ngũ</Link> — chúng tôi trả lời trung thực theo đúng hiện trạng.
           </p>
         </div>
 

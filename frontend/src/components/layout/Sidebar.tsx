@@ -204,13 +204,13 @@ export function Sidebar({ onClose }: SidebarProps) {
                 {item.desc && (
                   <span className={cn(
                     'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-xs font-extrabold',
-                    isActive ? 'bg-white/20 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary)]'
+                    isActive ? 'bg-white/20 text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary-text)]'
                   )}>
                     {i + 1}
                   </span>
                 )}
                 {/* Icon */}
-                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : '[color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary)]')}>
+                <span className={cn('shrink-0 transition-colors', isActive ? 'text-white' : '[color:var(--pf-color-muted)] group-hover:[color:var(--pf-primary-text)]')}>
                   {item.icon}
                 </span>
                 {/* Tiêu đề + mô tả */}
@@ -253,10 +253,10 @@ export function Sidebar({ onClose }: SidebarProps) {
               style={{ border: '2px solid #fff', boxShadow: '0 6px 16px -6px rgba(109,93,251,0.65)' }}
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold leading-tight [color:var(--pf-primary)]">Lisa AI</p>
+              <p className="text-sm font-bold leading-tight [color:var(--pf-primary-text)]">Lisa AI</p>
               <p className="truncate text-xs leading-tight [color:var(--pf-color-muted)]">Trợ lý AI · hỏi đáp nhanh</p>
             </div>
-            <Sparkles size={16} className="shrink-0 [color:var(--pf-primary)]" />
+            <Sparkles size={16} className="shrink-0 [color:var(--pf-primary-text)]" />
           </button>
         </div>
       )}

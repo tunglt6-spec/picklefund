@@ -33,8 +33,8 @@ const GROUP_BORDER: Record<string, string> = {
 };
 
 const GROUP_TEXT: Record<string, string> = {
-  A: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
-  B: '[color:var(--pf-primary)] [background:var(--pf-primary-soft)]',
+  A: '[color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]',
+  B: '[color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]',
   C: '[color:var(--pf-color-success)] [background:var(--pf-color-success-soft)]',
   D: '[color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)]',
   E: '[color:var(--pf-color-danger)] [background:var(--pf-color-danger-soft)]',
@@ -49,7 +49,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
     <div id="full-ranking" className="pf-glass rounded-2xl shadow-sm p-5 scroll-mt-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <BarChart2 size={18} className="[color:var(--pf-primary)]" />
+          <BarChart2 size={18} className="[color:var(--pf-primary-text)]" />
           <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
             Bảng Xếp Hạng Cá Nhân
           </h2>
@@ -57,7 +57,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
         {compact && (
           <a
             href="#full-ranking"
-            className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)] font-medium"
+            className="text-xs [color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] font-medium"
           >
             Xem tất cả
           </a>
@@ -152,7 +152,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                   </td>
 
                   {/* Points */}
-                  <td className="py-2 px-2 text-right font-bold [color:var(--pf-primary)]">{r.points}</td>
+                  <td className="py-2 px-2 text-right font-bold [color:var(--pf-primary-text)]">{r.points}</td>
 
                   {/* Win Rate */}
                   <td className="py-2 px-2 text-right min-w-[80px]">
@@ -181,7 +181,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
                         {onEdit && (
                           <button
                             onClick={() => onEdit(r.memberId, r.name)}
-                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                            className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors"
                             title="Sửa thành viên"
                           >
                             <Pencil size={14} />

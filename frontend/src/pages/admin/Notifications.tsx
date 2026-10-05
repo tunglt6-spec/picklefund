@@ -24,10 +24,10 @@ type HermesNotif = {
 
 function eventIcon(eventType: string) {
   if (eventType.includes('payment') || eventType.includes('fund')) return <DollarSign size={15} className="text-emerald-500" />
-  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={15} className="[color:var(--pf-primary)]" />
-  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={15} className="[color:var(--pf-primary)]" />
+  if (eventType.includes('session') || eventType.includes('event')) return <Calendar size={15} className="[color:var(--pf-primary-text)]" />
+  if (eventType.includes('member') || eventType.includes('inactivity')) return <Users size={15} className="[color:var(--pf-primary-text)]" />
   if (eventType.includes('anomaly') || eventType.includes('health')) return <AlertTriangle size={15} className="text-amber-500" />
-  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={15} className="[color:var(--pf-primary)]" />
+  if (eventType.includes('brief') || eventType.includes('report')) return <Brain size={15} className="[color:var(--pf-primary-text)]" />
   if (eventType.includes('reminder')) return <Receipt size={15} className="text-orange-500" />
   return <Zap size={15} className="[color:var(--pf-color-muted)]" />
 }
@@ -67,7 +67,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
       <div onClick={() => onOpen(n)}
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
-        className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
+        className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
           ${isRead ? 'opacity-60' : ''}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
@@ -87,7 +87,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
     <div onClick={() => onOpen(n)}
       role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
-      className={`pf-rowcard flex items-start gap-4 p-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
+      className={`pf-rowcard flex items-start gap-4 p-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
         ${isRead ? 'opacity-60' : ''}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <div className="flex-1 min-w-0">
@@ -353,12 +353,12 @@ export function Notifications() {
             )}
             {pushPerm === 'granted' && (
               <button onClick={onTestPush} disabled={pushBusy}
-                className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] disabled:opacity-60 active:opacity-70">
+                className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] disabled:opacity-60 active:opacity-70">
                 <BellRing size={13} />{pushBusy ? 'Đang gửi…' : 'Gửi thử'}
               </button>
             )}
             {unreadCount > 0 && (
-              <button onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary)] active:opacity-70">
+              <button onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70">
                 <Check size={13} />Đã đọc
               </button>
             )}
@@ -423,13 +423,13 @@ export function Notifications() {
                   <BellRing size={14} /> Đã bật
                 </span>
                 <button onClick={onTestPush} disabled={pushBusy}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-60 [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-primary-soft)]">
                   {pushBusy ? 'Đang gửi…' : 'Gửi thử'}
                 </button>
               </>
             )}
             {unreadCount > 0 && (
-              <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary)] hover:[color:var(--pf-primary)]">
+              <button onClick={handleReadAll} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)]">
                 <Check size={14} />Đánh dấu tất cả đã đọc
               </button>
             )}

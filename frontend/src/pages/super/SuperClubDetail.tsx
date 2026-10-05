@@ -45,7 +45,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const TIER_BADGE: Record<ServicePlan, string> = {
   STARTER: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
-  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary)]',
+  PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]',
   CLUB_PLUS: 'bg-amber-100 text-amber-700',
 }
 
@@ -173,7 +173,7 @@ export function SuperClubDetail() {
           onClick={() => setTab(t.key)}
           className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             tab === t.key
-              ? '[border-color:var(--pf-primary)] [color:var(--pf-primary)]'
+              ? '[border-color:var(--pf-primary)] [color:var(--pf-primary-text)]'
               : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
           }`}
         >
@@ -196,7 +196,7 @@ export function SuperClubDetail() {
                 <div className="text-xs [color:var(--pf-color-muted)] truncate">{m.email}</div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-xs px-2 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
+                <span className="text-xs px-2 py-0.5 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] font-medium">
                   {ROLE_LABEL[m.role] ?? m.role}
                 </span>
                 {!m.isActive && <StatusBadge tone="neutral">Tắt</StatusBadge>}
@@ -264,7 +264,7 @@ export function SuperClubDetail() {
           {/* Upgrade form */}
           <div className="rounded-xl border border-[color:var(--pf-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Zap size={15} className="[color:var(--pf-primary)]" />
+              <Zap size={15} className="[color:var(--pf-primary-text)]" />
               <span className="font-semibold text-sm [color:var(--pf-text)]">Nâng cấp gói</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -296,7 +296,7 @@ export function SuperClubDetail() {
               </div>
             </div>
             {plans.find(p => p.tier === upgradeTier) && (
-              <div className="rounded-lg [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary)]">
+              <div className="rounded-lg [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-3 py-2 text-xs [color:var(--pf-primary-text)]">
                 {(() => {
                   const price = plans.find(p => p.tier === upgradeTier)?.priceMonthly ?? null
                   return price === null
@@ -314,7 +314,7 @@ export function SuperClubDetail() {
           {aiUsage.length > 0 && (
             <div className="rounded-xl border border-[color:var(--pf-border)] p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Zap size={14} className="[color:var(--pf-primary)]" />
+                <Zap size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="font-semibold text-sm [color:var(--pf-text)]">AI Token sử dụng</span>
               </div>
               <div className="space-y-2">
@@ -326,7 +326,7 @@ export function SuperClubDetail() {
                       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 mb-1">
                         <span className="[color:var(--pf-color-muted)]">{fmtMonth(u.month)}</span>
                         <span className="[color:var(--pf-color-muted)]">
-                          {u.tokens.toLocaleString('vi-VN')} tokens · <span className="[color:var(--pf-primary)] font-medium">{u.estimatedCostVnd.toLocaleString('vi-VN')}đ</span>
+                          {u.tokens.toLocaleString('vi-VN')} tokens · <span className="[color:var(--pf-primary-text)] font-medium">{u.estimatedCostVnd.toLocaleString('vi-VN')}đ</span>
                         </span>
                       </div>
                       <div className="h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
@@ -478,7 +478,7 @@ export function SuperClubDetail() {
                       <td className="px-4 py-3 font-medium [color:var(--pf-text)]">{m.username}</td>
                       <td className="px-4 py-3 [color:var(--pf-color-muted)]">{m.email}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-block text-xs px-2.5 py-1 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary)] font-medium">
+                        <span className="inline-block text-xs px-2.5 py-1 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] font-medium">
                           {ROLE_LABEL[m.role] ?? m.role}
                         </span>
                       </td>

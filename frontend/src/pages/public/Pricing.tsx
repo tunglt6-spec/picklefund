@@ -144,12 +144,12 @@ export function Pricing() {
           }}
         >
           <p className="text-sm font-medium [color:var(--pf-color-muted)]">Chỉ bằng</p>
-          <p className="mt-1 text-4xl font-extrabold tracking-tight [color:var(--pf-primary)] sm:text-5xl">3.300đ<span className="text-lg font-bold [color:var(--pf-color-muted)]">/ngày</span></p>
+          <p className="mt-1 text-4xl font-extrabold tracking-tight [color:var(--pf-primary-text)] sm:text-5xl">3.300đ<span className="text-lg font-bold [color:var(--pf-color-muted)]">/ngày</span></p>
           <p className="mt-1 text-sm [color:var(--pf-color-muted)]">bạn đã có trọn bộ công cụ số hoá CLB:</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
             {ROI_ITEMS.map((it) => (
               <span key={it.label} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)]">
-                <span className="[color:var(--pf-primary)]">{it.icon}</span>{it.label}
+                <span className="[color:var(--pf-primary-text)]">{it.icon}</span>{it.label}
               </span>
             ))}
           </div>
@@ -180,7 +180,7 @@ export function Pricing() {
               {t.period && <span className="pb-1.5 text-sm [color:var(--pf-color-muted)]">{t.period}</span>}
               {t.sub && !t.period && <span className="pb-1.5 text-sm font-medium [color:var(--pf-color-muted)]">{t.sub}</span>}
             </div>
-            {t.sub && t.period && <p className="mt-1 text-xs font-medium [color:var(--pf-primary)]">{t.sub}</p>}
+            {t.sub && t.period && <p className="mt-1 text-xs font-medium [color:var(--pf-primary-text)]">{t.sub}</p>}
 
             <button
               onClick={() => go(t.ctaTo)}
@@ -223,7 +223,7 @@ export function Pricing() {
               <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]">
                 <th className="px-4 py-3 text-left font-medium [color:var(--pf-color-muted)]">Tính năng</th>
                 <th className="px-4 py-3 text-center font-semibold">Starter</th>
-                <th className="px-4 py-3 text-center font-semibold [color:var(--pf-primary)]">Pro</th>
+                <th className="px-4 py-3 text-center font-semibold [color:var(--pf-primary-text)]">Pro</th>
                 <th className="px-4 py-3 text-center font-semibold">Enterprise</th>
               </tr>
             </thead>
@@ -264,7 +264,7 @@ export function Pricing() {
           <p className="mx-auto mb-6 max-w-md text-sm text-white/85">Dùng miễn phí — chỉ mất 2 phút để tạo CLB đầu tiên.</p>
           <button
             onClick={() => navigate('/login')}
-            className="rounded-full bg-white px-7 py-3 text-sm font-bold [color:var(--pf-primary)] shadow-md transition-transform active:scale-[0.98]"
+            className="rounded-full bg-white px-7 py-3 text-sm font-bold [color:var(--pf-primary-text)] shadow-md transition-transform active:scale-[0.98]"
           >
             Bắt đầu miễn phí
           </button>

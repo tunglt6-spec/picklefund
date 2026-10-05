@@ -150,7 +150,7 @@ export function WorkflowRules() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
-              <Workflow size={20} className="[color:var(--pf-primary)]" />
+              <Workflow size={20} className="[color:var(--pf-primary-text)]" />
             </span>
             <div>
               <h1 className="text-xl font-bold [color:var(--pf-text)]">Hermes Workflows</h1>
@@ -288,7 +288,7 @@ export function WorkflowRules() {
                 <button
                   onClick={() => void run(async () => { setDispatchResult(await dispatchTestTrigger(t)); setLiveResult(null) }, `Đã dispatch-test: ${t}`)}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] px-3 py-2 text-xs font-semibold [color:var(--pf-primary)] hover:[background:var(--pf-primary-soft)] disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] px-3 py-2 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] disabled:opacity-50"
                 >
                   <Zap size={13} /> Test rỗng
                 </button>

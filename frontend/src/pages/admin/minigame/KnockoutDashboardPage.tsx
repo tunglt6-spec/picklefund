@@ -153,13 +153,13 @@ export function KnockoutDashboardPage() {
             {bye ? <span className="text-xs [color:var(--pf-color-muted)]">—</span>
               : done ? <span className="text-sm font-bold [color:var(--pf-text)]">{side.sc}</span>
               : side.tid ? <input inputMode="numeric" value={e[side.key]} onChange={ev => setEdits(s => ({ ...s, [m.id]: { ...e, [side.key]: ev.target.value.replace(/\D/g, '') } }))}
-                  className="w-10 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]" />
+                  className="w-10 text-center border border-[color:var(--pf-border)] rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
               : <span className="text-xs [color:var(--pf-color-muted)]">—</span>}
           </div>
         ))}
         {!done && !bye && m.teamAId && m.teamBId && (
           <button onClick={() => saveScore(m)} disabled={busy}
-            className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold [color:var(--pf-primary)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
+            className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] hover:[background:var(--pf-primary)] hover:text-white transition-colors">
             <Save size={12} /> Lưu tỉ số
           </button>
         )}

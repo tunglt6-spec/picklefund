@@ -21,11 +21,11 @@ const typeConfig: Record<
   },
   round: {
     dotColor: '[background:var(--pf-primary)]',
-    icon: <RefreshCw size={14} className="[color:var(--pf-primary)]" />,
+    icon: <RefreshCw size={14} className="[color:var(--pf-primary-text)]" />,
   },
   group: {
     dotColor: '[background:var(--pf-primary)]',
-    icon: <Users size={14} className="[color:var(--pf-primary)]" />,
+    icon: <Users size={14} className="[color:var(--pf-primary-text)]" />,
   },
   system: {
     dotColor: '[background:var(--pf-color-muted)]',
@@ -81,7 +81,7 @@ export function RecentActivitiesPanel({ activities }: RecentActivitiesPanelProps
 
       {hasMore && (
         <div className="mt-3 pt-3 border-t border-[color:var(--pf-border)]">
-          <button className="text-xs [color:var(--pf-primary)] hover:[color:var(--pf-primary)] font-medium transition-colors duration-150">
+          <button className="text-xs [color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] font-medium transition-colors duration-150">
             Xem thêm ({activities.length - MAX_VISIBLE} hoạt động)
           </button>
         </div>

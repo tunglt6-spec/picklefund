@@ -258,7 +258,7 @@ export function SchedulerPage() {
                         disabled={savingId === r.id}
                         onChange={e => saveRule(r.id, { scheduleType: e.target.value }, 'Đã đổi chu kỳ')}
                         aria-label={`Chu kỳ của ${r.name}`}
-                        className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs font-medium [color:var(--pf-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)] disabled:opacity-50"
+                        className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs font-medium [color:var(--pf-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:opacity-50"
                       >
                         {(['MANUAL', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map(v => (
                           <option key={v} value={v}>{SCHEDULE_LABEL[v]}</option>
@@ -294,7 +294,7 @@ export function SchedulerPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SYSTEM_CRONS.map((c, i) => (
                 <div key={i} className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                     {c.icon === 'lisa' ? <Sparkles size={16} /> : <Bot size={16} />}
                   </span>
                   <div className="min-w-0">

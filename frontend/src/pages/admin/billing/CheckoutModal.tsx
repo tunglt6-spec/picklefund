@@ -128,7 +128,7 @@ export function CheckoutModal({
     </div>
   )
 
-  const inputCls = 'w-full h-10 rounded-lg border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] outline-none focus:ring-2 focus:ring-[color:var(--pf-primary)]'
+  const inputCls = 'w-full h-10 rounded-lg border px-3 text-sm [background:var(--pf-surface)] border-[color:var(--pf-border)] [color:var(--pf-text)] outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]'
 
   return (
     <Portal>
@@ -137,7 +137,7 @@ export function CheckoutModal({
       <div className="relative w-full sm:max-w-md [background:var(--pf-surface)] rounded-t-2xl sm:rounded-2xl border border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow-hover)] max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 [background:var(--pf-surface)] px-5 py-4 border-b border-[color:var(--pf-border)] flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="[color:var(--pf-primary)]" />
+            <Sparkles size={18} className="[color:var(--pf-primary-text)]" />
             <h3 className="font-bold [color:var(--pf-text)]">Nâng cấp gói {plan.name}</h3>
           </div>
           <button onClick={onClose} disabled={loading} className="p-1.5 rounded-lg hover:[background:var(--pf-surface-muted)] disabled:opacity-50" aria-label="Đóng">
@@ -222,7 +222,7 @@ export function CheckoutModal({
           {step === 'sandbox' && order && (
             <div className="space-y-4 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full [background:var(--pf-primary-soft)]">
-                <ShieldCheck size={22} className="[color:var(--pf-primary)]" />
+                <ShieldCheck size={22} className="[color:var(--pf-primary-text)]" />
               </div>
               <div>
                 <p className="font-semibold [color:var(--pf-text)]">Chế độ SANDBOX (thử nghiệm)</p>
