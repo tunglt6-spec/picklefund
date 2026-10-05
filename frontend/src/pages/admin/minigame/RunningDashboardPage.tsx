@@ -182,9 +182,9 @@ export function RunningDashboardPage() {
         {leaderboard.length > 0 && (
           <div className="pf-glass rounded-2xl p-4">
             <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3">🏆 Bảng xếp hạng</h3>
-            <div className="divide-y divide-[color:var(--pf-border-soft)]">
+            <div className="space-y-2">
               {leaderboard.map((r, i) => (
-                <div key={r.id} className={cn('flex items-center justify-between py-2', i === 0 && 'font-bold')}>
+                <div key={r.id} className={cn('pf-rowcard flex items-center justify-between px-3 py-2', i === 0 && 'font-bold')}>
                   <span className="flex items-center gap-2 [color:var(--pf-text)]">
                     {i === 0 ? <Crown size={16} className="[color:var(--pf-color-warning)]" /> : <span className="w-6 text-center [color:var(--pf-color-muted)]">{i + 1}</span>}
                     {runnerName(r)}

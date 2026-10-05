@@ -246,7 +246,7 @@ export function TreasurerLedger() {
         {/* Table */}
         {filtered.length === 0 ? (
           <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-14 text-center">
-            <Wallet size={32} className="mx-auto text-slate-200 mb-3" />
+            <Wallet size={32} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có giao dịch nào</p>
           </div>
         ) : (

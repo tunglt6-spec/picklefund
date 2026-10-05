@@ -306,7 +306,7 @@ export function TreasurerIncome() {
 
           {contributions.length === 0 ? (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-14 text-center">
-              <DollarSign size={28} className="mx-auto text-slate-200 mb-2" />
+              <DollarSign size={28} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-2" />
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu nào</p>
             </div>
           ) : (
@@ -315,7 +315,7 @@ export function TreasurerIncome() {
                 const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
                 const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'
                 return (
-                  <div key={c.id} className={`[background:var(--pf-surface)] rounded-[16px] border p-4 shadow-sm ${!c.isConfirmed ? 'border-amber-100' : 'border-[color:var(--pf-border)]'}`}>
+                  <div key={c.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-[700] [color:var(--pf-text)] truncate">
@@ -484,7 +484,7 @@ export function TreasurerIncome() {
       <div className="flex flex-col gap-5">
         {members.length === 0 && activePeriods.length === 0 ? (
           <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
-            <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+            <DollarSign size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có thành viên hoặc kỳ quỹ</p>
           </div>
         ) : (

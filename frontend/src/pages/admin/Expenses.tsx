@@ -238,7 +238,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                         className={`relative flex flex-col items-start gap-1.5 rounded-xl border p-3 text-left transition-all ${
                           active
                             ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                            : 'border-[color:var(--pf-border)] hover:border-slate-300'
+                            : 'border-[color:var(--pf-border)] hover:[border-color:var(--pf-primary)]'
                         }`}>
                         {active && <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-white" style={{ background: 'var(--pf-primary)' }}><Check size={11} /></span>}
                         <span className={active ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]'}>{c.icon}</span>
@@ -267,7 +267,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                             className={`rounded-lg border px-2.5 py-2 text-left transition-all ${
                               active
                                 ? '[border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]'
-                                : 'border-[color:var(--pf-border)] hover:border-slate-300'
+                                : 'border-[color:var(--pf-border)] hover:[border-color:var(--pf-primary)]'
                             }`}>
                             <span className={`block text-[12.5px] font-semibold ${active ? '[color:var(--pf-primary)]' : '[color:var(--pf-text)]'}`}>{r.label}</span>
                             <span className="block text-xs leading-tight [color:var(--pf-color-muted)]">{r.hint}</span>
@@ -886,7 +886,7 @@ export function Expenses() {
         <div className="px-4 pt-3 pb-24 space-y-2">
           {mobileFiltered.length === 0 ? (
             <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
-              <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
+              <Receipt size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
               {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
           ) : mobileFiltered.map(e => (
@@ -1128,7 +1128,7 @@ export function Expenses() {
           {/* Table */}
           {paginated.length === 0 ? (
             <div className="py-16 text-center">
-              <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
+              <Receipt size={32} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
               <p className="text-sm [color:var(--pf-color-muted)]">Không có khoản chi nào</p>
             </div>
           ) : (

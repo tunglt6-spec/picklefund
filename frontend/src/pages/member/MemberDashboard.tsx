@@ -247,15 +247,15 @@ export function MemberDashboard() {
                     Xem tất cả <ChevronRight size={13} />
                   </button>
                 </div>
-                <div className="divide-y divide-[color:var(--pf-border-soft)]">
+                <div className="space-y-2 p-3">
                   {completedSessions.slice(-5).reverse().map(s => (
-                    <div key={s.id} className="px-4 py-2.5 flex items-center justify-between">
+                    <div key={s.id} className="pf-rowcard px-3 py-2.5 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-[600] [color:var(--pf-text)]">{s.courtName || 'Sân chơi'}</p>
                         <p className="text-xs [color:var(--pf-color-muted)]">{formatDate(s.sessionDate)}</p>
                       </div>
                       {attended.has(s.id) ? (
-                        <span className="text-xs font-[600] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">Tham gia</span>
+                        <span className="text-xs font-[600] [color:var(--pf-green)] [background:color-mix(in_srgb,var(--pf-green)_14%,transparent)] px-2 py-0.5 rounded-full">Tham gia</span>
                       ) : (
                         <span className="text-xs font-[600] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] px-2 py-0.5 rounded-full">Vắng</span>
                       )}

@@ -67,8 +67,8 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
       <div onClick={() => onOpen(n)}
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
-        className={`flex items-start gap-3 p-4 rounded-[16px] border shadow-sm cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
-          ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)]'}`}>
+        className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
+          ${isRead ? 'opacity-60' : ''}`}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
@@ -87,8 +87,8 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
     <div onClick={() => onOpen(n)}
       role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
-      className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
-        ${isRead ? '[background:var(--pf-surface)] border-[color:var(--pf-border)] opacity-60' : '[background:var(--pf-surface)] [border-color:var(--pf-primary-soft)] shadow-sm'}`}>
+      className={`pf-rowcard flex items-start gap-4 p-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary)]
+        ${isRead ? 'opacity-60' : ''}`}>
       <div className={`h-9 w-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">

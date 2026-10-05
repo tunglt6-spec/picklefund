@@ -466,7 +466,7 @@ export function Contributions() {
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
               <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
-                <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+                <DollarSign size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
                 Chưa có khoản thu nào
               </div>
             ) : sortedCommon.map(c => {
@@ -495,7 +495,7 @@ export function Contributions() {
           ) : (
             sortedMini.length === 0 ? (
               <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
-                <DollarSign size={36} className="mx-auto text-slate-200 mb-3" />
+                <DollarSign size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
                 Chưa có khoản thu Quỹ Phụ nào
               </div>
             ) : sortedMini.map(c => {

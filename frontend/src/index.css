@@ -550,6 +550,22 @@ select:-webkit-autofill {
   [data-glass="off"] .pf-rows tbody td { background-color: var(--pf-surface); background-image: none; }
   [data-glass="off"] .pf-rows tbody tr { filter: none; }
   @media print { .pf-rows tbody td { background-color: #fff; background-image: none; } .pf-rows tbody tr { filter: none; } }
+
+  /* Hàng danh sách dạng div: cùng ngôn ngữ với .pf-rows (card bo viền tím nhạt, nổi nhẹ) */
+  .pf-rowcard {
+    background-color: color-mix(in srgb, var(--pf-surface) 88%, transparent);
+    background-image: var(--pf-sheen);
+    border: 1px solid color-mix(in srgb, var(--pf-primary) 24%, var(--pf-border));
+    border-radius: 14px;
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--pf-primary) 12%, transparent);
+    transition: background-color var(--pf-dur-fast) var(--pf-ease), border-color var(--pf-dur-fast) var(--pf-ease);
+  }
+  @media (hover: hover) {
+    .pf-rowcard:hover { background-color: color-mix(in srgb, var(--pf-primary) 9%, var(--pf-surface)); }
+  }
+  .pf-rowcard[data-active] { border-color: var(--pf-primary); background-color: color-mix(in srgb, var(--pf-primary) 10%, var(--pf-surface)); }
+  [data-glass="off"] .pf-rowcard { background-color: var(--pf-surface); background-image: none; }
+  @media print { .pf-rowcard { background-color: #fff; background-image: none; box-shadow: none; } }
   .pf-wash { background-image: var(--pf-wash); background-attachment: fixed; }
 
   /* Chống chồng nhiều lớp blur (hiệu năng): kính lồng trong kính thì không blur lại, nền đặc hơn. */

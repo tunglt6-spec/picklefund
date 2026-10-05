@@ -178,7 +178,7 @@ export function TreasurerExpense() {
         <div className="px-4 pt-4 pb-24 space-y-4">
           {activePeriods.length === 0 ? (
             <div className="[background:var(--pf-surface)] rounded-[16px] border border-dashed border-[color:var(--pf-border)] py-14 text-center">
-              <Receipt size={28} className="mx-auto text-slate-200 mb-2" />
+              <Receipt size={28} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-2" />
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
             </div>
           ) : (
@@ -317,7 +317,7 @@ export function TreasurerExpense() {
       <div className="flex flex-col gap-5">
         {activePeriods.length === 0 ? (
           <div className="[background:var(--pf-surface)] rounded-xl border border-dashed border-[color:var(--pf-border)] py-16 text-center">
-            <Receipt size={36} className="mx-auto text-slate-200 mb-3" />
+            <Receipt size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có kỳ quỹ nào đang mở</p>
           </div>
         ) : (

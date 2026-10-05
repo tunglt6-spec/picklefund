@@ -210,9 +210,9 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
           {scheduleRows.length === 0 ? (
             <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa có lịch. Tạo lịch trong màn giải.</p>
           ) : (
-            <ul className="mt-2 flex flex-col divide-y divide-[color:var(--pf-border)]">
+            <ul className="mt-2 flex flex-col gap-2">
               {scheduleRows.map(m => (
-                <li key={m.id} className="flex items-center gap-2 py-1.5 text-sm">
+                <li key={m.id} className="pf-rowcard flex items-center gap-2 px-3 py-1.5 text-sm">
                   <span className="flex-1 text-right truncate [color:var(--pf-text)]">{m.teamA?.name ?? 'Đội'}</span>
                   <span className="shrink-0 text-xs font-semibold px-1.5 [color:var(--pf-color-muted)]">
                     {m.status === 'COMPLETED' ? `${m.scoreA ?? 0} - ${m.scoreB ?? 0}` : 'vs'}

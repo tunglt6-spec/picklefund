@@ -166,7 +166,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
               return (
                 <div
                   key={r.id}
-                  className="pf-glass rounded-2xl p-4 shadow-[var(--pf-shadow)]"
+                  className="pf-rowcard p-4"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge tone={isPost ? 'info' : 'ai'}>

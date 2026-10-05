@@ -106,9 +106,9 @@ export function ClubDashboard() {
                   <CalendarDays size={16} /> Hôm nay chưa có buổi chơi nào.
                 </div>
               ) : (
-                <div className="flex flex-col divide-y divide-[color:var(--pf-border-soft)]">
+                <div className="flex flex-col gap-2">
                   {todaySessions.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div key={s.id} className="pf-rowcard flex items-center justify-between gap-3 px-3 py-2.5">
                       <div className="flex min-w-0 items-center gap-2.5">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}>
                           <Clock size={15} />

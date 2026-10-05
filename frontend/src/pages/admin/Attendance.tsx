@@ -348,14 +348,12 @@ export function Attendance() {
           </div>
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {activeMemberList.map(m => (
-              <label key={m.id} className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${
-                attendance[m.id] ? 'border-emerald-200 bg-emerald-50' : 'border-[color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]'
-              }`}>
+              <label key={m.id} data-active={attendance[m.id] ? '' : undefined} className="pf-rowcard flex items-center gap-3 px-4 py-2.5 cursor-pointer">
                 <input type="checkbox" checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)}
                   className="h-4 w-4 rounded accent-emerald-500 shrink-0" />
                 <MemberAvatar name={m.fullName} id={m.id} />
                 <span className="font-medium [color:var(--pf-text)] flex-1 text-sm">{m.fullName}</span>
-                <span className={`text-xs font-medium ${attendance[m.id] ? 'text-emerald-600' : '[color:var(--pf-color-muted)]'}`}>
+                <span className={`text-xs font-medium ${attendance[m.id] ? '[color:var(--pf-green)]' : '[color:var(--pf-color-muted)]'}`}>
                   {attendance[m.id] ? 'Có mặt' : 'Vắng'}
                 </span>
               </label>

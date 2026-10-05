@@ -221,11 +221,8 @@ export function CheckIn() {
                       onClick={() => (isMember ? (isSelf && !on ? void memberCheckInSelf() : undefined) : toggle(r.memberId))}
                       aria-pressed={on}
                       disabled={disabled}
-                      className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55"
-                      style={{
-                        background: on ? 'var(--pf-primary-soft)' : 'var(--pf-surface)',
-                        borderColor: on ? 'var(--pf-primary)' : 'var(--pf-border)',
-                      }}
+                      data-active={on ? '' : undefined}
+                      className="pf-rowcard flex min-h-11 items-center justify-between gap-3 p-3.5 text-left disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium [color:var(--pf-text)]">{r.memberName}</span>

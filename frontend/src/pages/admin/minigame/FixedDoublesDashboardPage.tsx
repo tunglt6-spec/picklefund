@@ -525,9 +525,9 @@ function RecentActivityCard({ entries }: { entries: string[] }) {
           <p className="text-xs">Chưa có hoạt động nào được ghi lại</p>
         </div>
       ) : (
-        <ul className="divide-y divide-[color:var(--pf-border-soft)]">
+        <ul className="space-y-2 p-3">
           {entries.map((e, i) => (
-            <li key={i} className="flex items-start gap-3 px-4 py-3">
+            <li key={i} className="pf-rowcard flex items-start gap-3 px-3 py-3">
               <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: T.brand }} />
               <span className="text-sm" style={{ color: T.txt2 }}>{e}</span>
             </li>

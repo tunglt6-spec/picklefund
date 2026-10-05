@@ -11,7 +11,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from 'lucide-react'
-import { ModuleTabs } from '../../../components/shared'
+import { ModuleTabs, StatusBadge } from '../../../components/shared'
+import { Button } from '../../../components/ui/Button'
 import { MinigameForm } from '../minigame/MinigameForm'
 import { MinigameOverviewPanel } from '../minigame/MinigameOverviewPanel'
 import { useAuthStore } from '../../../store/authStore'
@@ -44,8 +45,11 @@ function OverviewTab() {
         <div className="mt-3 flex flex-wrap gap-2">
           {SPORTS.map(s => (
             <button key={s.v} onClick={() => setSport(s.v)}
-              className={cn('inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold border transition-colors',
-                sport === s.v ? 'text-white [background:var(--pf-primary)] border-transparent' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]')}>
+              className={cn('inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
+                sport === s.v
+                  ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
+                  : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]')}
+              style={sport === s.v ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' } : undefined}>
               {sportEmoji(s.v) || '🏓'} {s.label}
             </button>
           ))}
@@ -114,9 +118,9 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
           <h2 className="text-base font-bold [color:var(--pf-text)]">{meta.title}</h2>
           <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{meta.sub}</p>
         </div>
-        <button onClick={load} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] hover:[color:var(--pf-primary)] transition-colors">
+        <Button variant="outline" size="sm" onClick={load}>
           <RefreshCw size={13} /> Tải lại
-        </button>
+        </Button>
       </div>
 
       {error ? (
@@ -142,7 +146,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
                 className="pf-glass text-left rounded-2xl p-4 hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-2xl leading-none">{sportEmoji(mg.sport) || '🏓'}</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]">{STATUS_LABEL[st] ?? st}</span>
+                  <StatusBadge tone="neutral">{STATUS_LABEL[st] ?? st}</StatusBadge>
                 </div>
                 <div className="mt-2 text-sm font-bold [color:var(--pf-text)] line-clamp-2">{mg.name}</div>
                 <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold [color:var(--pf-primary)]">
