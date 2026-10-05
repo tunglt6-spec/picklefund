@@ -414,8 +414,8 @@ select:-webkit-autofill {
    3) Công tắc dừng khẩn cấp: <html data-glass="off"> (localStorage pf-glass=off hoặc ?glass=off).
    4) Trình duyệt không có backdrop-filter → nền đặc dự phòng (@supports not). */
 :root {
-  --pf-glass-bg:        rgb(255 255 255 / 0.60);
-  --pf-glass-bg-strong: rgb(255 255 255 / 0.86);
+  --pf-glass-bg:        rgb(255 255 255 / 0.72);
+  --pf-glass-bg-strong: rgb(255 255 255 / 0.92);
   --pf-glass-border:    rgb(255 255 255 / 0.72);
   --pf-glass-edge:      rgb(15 23 42 / 0.07);
   --pf-glass-hi:        rgb(255 255 255 / 0.85);
@@ -429,8 +429,8 @@ select:-webkit-autofill {
     radial-gradient(48rem 40rem at 50% 110%, rgb(236 72 153 / 0.11), transparent 60%);
 }
 [data-theme="dark"] {
-  --pf-glass-bg:        rgb(24 33 56 / 0.56);
-  --pf-glass-bg-strong: rgb(19 27 46 / 0.86);
+  --pf-glass-bg:        rgb(24 33 56 / 0.70);
+  --pf-glass-bg-strong: rgb(19 27 46 / 0.92);
   --pf-glass-border:    rgb(255 255 255 / 0.10);
   --pf-glass-edge:      rgb(0 0 0 / 0.35);
   --pf-glass-hi:        rgb(255 255 255 / 0.10);
@@ -493,6 +493,18 @@ select:-webkit-autofill {
   }
   /* Nền wash phía sau app (đặt ở lớp nền, KHÔNG bọc nội dung). */
   .pf-glass-tint { -webkit-backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat)); backdrop-filter: blur(var(--pf-glass-blur)) saturate(var(--pf-glass-sat)); box-shadow: inset 0 1px 0 var(--pf-glass-hi), var(--pf-glass-shadow); }
+  /* Thẻ số liệu: khung kính ĐỤC (0.86) + ô số liệu ĐẶC → chữ số/nhãn luôn rõ, không phụ thuộc nền wash. */
+  .pf-stat-card {
+    --accent: var(--pf-primary);
+    background: color-mix(in srgb, var(--accent) 5%, var(--pf-glass-bg-strong));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--pf-border));
+    border-top: 3px solid var(--accent);
+    box-shadow: inset 0 1px 0 var(--pf-glass-hi), var(--pf-glass-shadow);
+  }
+  .pf-stat-cell {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+  }
   .pf-wash { background-image: var(--pf-wash); background-attachment: fixed; }
 
   /* Chống chồng nhiều lớp blur (hiệu năng): kính lồng trong kính thì không blur lại, nền đặc hơn. */

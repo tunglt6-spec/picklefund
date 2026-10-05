@@ -75,16 +75,16 @@ function tone(bar: string): GroupTone {
   return {
     bar,
     fg: `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
-    bg: `color-mix(in srgb, ${bar} 10%, var(--pf-glass-bg))`,
-    border: `color-mix(in srgb, ${bar} 30%, var(--pf-glass-bg))`,
-    chip: `color-mix(in srgb, ${bar} 18%, var(--pf-glass-bg))`,
+    bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+    border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
+    chip: `color-mix(in srgb, ${bar} 18%, var(--pf-surface))`,
   }
 }
 const GROUP_TONE: Record<string, GroupTone> = {
   'Điều phối & Duyệt': tone('#6D5DFB'),
-  'Thông báo & Lịch': tone('#2563EB'),
-  'Giám sát': tone('#D97706'),
-  'Tri thức & Nhật ký': tone('#059669'),
+  'Thông báo & Lịch': tone('#6D5DFB'),
+  'Giám sát': tone('#6D5DFB'),
+  'Tri thức & Nhật ký': tone('#6D5DFB'),
 }
 
 // Tông màu DÙNG CHUNG cho MỌI card Khu vực vận hành — 1 màu tím Hermes cho đồng nhất.
@@ -149,14 +149,14 @@ function SectionCard({
   // 'soon' (chưa dùng hiện tại) → xám mờ; còn lại tô theo tông NHÓM (tint + viền trên + icon chip).
   const cardStyle: React.CSSProperties = soon
     ? { background: 'var(--pf-surface-muted)', borderColor: 'var(--pf-border)', borderTop: '3px solid var(--pf-border)' }
-    : { background: palette.bg, borderColor: palette.border, borderTop: `3px solid ${palette.bar}` }
+    : ({ '--accent': palette.bar } as React.CSSProperties)
   return (
     <button
       type="button"
       disabled={!clickable}
       onClick={() => clickable && onGo(s.to!)}
       style={cardStyle}
-      className={`pf-glass-tint group relative flex flex-col gap-2 rounded-xl border p-3 text-left transition-all ${
+      className={`pf-stat-card group relative flex flex-col gap-2 rounded-xl p-3 text-left transition-all ${
         clickable ? 'hover:shadow-sm cursor-pointer' : 'cursor-default'
       } ${s.status === 'here' ? 'ring-1 ring-inset' : ''}`}
     >
@@ -186,7 +186,7 @@ function SectionCard({
       {metrics && metrics.length > 0 && (
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
-            <div key={m.label} className="rounded-md px-0.5 py-1 text-center" style={{ background: `color-mix(in srgb, ${palette.bar} 8%, var(--pf-glass-bg))` }}>
+            <div key={m.label} className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
               <p className="text-sm font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
               <p className="mt-0.5 text-xs leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
             </div>
@@ -199,7 +199,7 @@ function SectionCard({
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`pf-glass rounded-2xl p-5 ${className}`}>
+    <div className={`pf-glass-strong rounded-2xl p-5 ${className}`}>
       {children}
     </div>
   )
@@ -222,8 +222,8 @@ function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children
 // số/icon theo màu — đồng bộ với thẻ "Kết quả hôm nay" ở Office View. Chỉ light theme.
 interface KpiPalette { bg: string; border: string; bar: string; fg: string }
 const kpiTone = (bar: string, fg?: string): KpiPalette => ({
-  bg: `color-mix(in srgb, ${bar} 10%, var(--pf-glass-bg))`,
-  border: `color-mix(in srgb, ${bar} 30%, var(--pf-glass-bg))`,
+  bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+  border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
   bar,
   fg: fg ?? `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
 })
@@ -528,8 +528,7 @@ export function AiManagerDashboard() {
                 return (
                   <div
                     key={k.key}
-                    className="pf-glass-tint rounded-xl border p-3 shadow-sm"
-                    style={{ background: c.bg, borderColor: c.border, borderTop: `3px solid ${c.bar}` }}
+                    className="pf-stat-card rounded-xl p-3"
                     title={k.label}
                   >
                     <span className="inline-flex" style={{ color: c.fg }}>{k.icon}</span>
@@ -595,12 +594,8 @@ export function AiManagerDashboard() {
                 return (
                 <div
                   key={t.key}
-                  className="pf-glass-tint rounded-xl border p-4 flex flex-col gap-2.5"
-                  style={{
-                    background: `color-mix(in srgb, ${color} 7%, var(--pf-glass-bg))`,
-                    borderColor: `color-mix(in srgb, ${color} 22%, var(--pf-border))`,
-                    borderTop: `3px solid ${color}`,
-                  }}
+                  className="pf-stat-card rounded-xl p-4 flex flex-col gap-2.5"
+                  style={{ '--accent': color } as React.CSSProperties}
                 >
                   <div className="flex items-center justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
@@ -618,7 +613,7 @@ export function AiManagerDashboard() {
                   {t.stats ? (
                     <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                       {t.stats.map(s => (
-                        <div key={s.l} className="rounded-lg py-1.5" style={{ background: `color-mix(in srgb, ${color} 8%, var(--pf-glass-bg))` }}>
+                        <div key={s.l} className="pf-stat-cell rounded-lg py-1.5">
                           <p className="text-sm font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
                           <p className="text-xs [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
                         </div>

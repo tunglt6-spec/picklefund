@@ -60,10 +60,11 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'pf-glass flex flex-col gap-3 rounded-[20px] p-5 pf-hover-lift',
+        t ? 'pf-stat-card' : 'pf-glass-strong',
+        'flex flex-col gap-3 rounded-[20px] p-5 pf-hover-lift',
         className,
       )}
-      style={t ? { background: t.bg, borderColor: t.border, borderTop: `3px solid ${t.bar}` } : undefined}
+      style={t ? ({ '--accent': t.bar } as React.CSSProperties) : undefined}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
