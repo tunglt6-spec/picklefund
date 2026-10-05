@@ -74,7 +74,7 @@ export function RolesPermissions() {
     <PageShell>
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
-      <ul className="flex flex-col gap-3 md:hidden">
+      <ul className="flex flex-col gap-3 lg:hidden">
         {users.map((u) => {
           const isMe = me?.username === u.username
           const locked = u.role === 'SUPER_ADMIN' || isMe
@@ -117,7 +117,7 @@ export function RolesPermissions() {
         {users.length === 0 && <li className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{loading ? 'Đang tải...' : 'Chưa có tài khoản'}</li>}
       </ul>
 
-      <div className="pf-glass-strong hidden overflow-x-auto rounded-[16px] md:block">
+      <div className="pf-glass-strong hidden overflow-x-auto rounded-[16px] lg:block">
         <table className="table-base pf-rows">
           <thead>
             <tr>

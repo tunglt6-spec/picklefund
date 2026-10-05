@@ -331,10 +331,10 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
           />
         ) : (
           <>
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <DataTable columns={columns} rows={rows} rowKey={(r) => r.memberId} />
             </div>
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <MobileCardList
                 items={rows}
                 itemKey={(r) => r.memberId}

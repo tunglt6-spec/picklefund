@@ -183,10 +183,10 @@ export function Debts() {
               <EmptyState icon={<Users size={22} />} title="Không có thành viên trong mục này" />
             ) : (
               <>
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                   <DataTable columns={columns} rows={filtered} rowKey={(r) => r.id} />
                 </div>
-                <div className="md:hidden">
+                <div className="lg:hidden">
                   <MobileCardList
                     items={filtered}
                     itemKey={(r) => r.id}

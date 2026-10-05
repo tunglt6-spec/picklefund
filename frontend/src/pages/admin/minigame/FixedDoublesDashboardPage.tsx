@@ -178,7 +178,7 @@ function MatchRow({
   // ── desktop row (grid) ─────────────────────────────────────────────────────
   const desktopRow = (
     <div
-      className="hidden md:grid items-center gap-3 px-4 py-3 hover:[background:var(--pf-color-muted-soft)] transition-colors border-b last:border-0 group"
+      className="hidden lg:grid items-center gap-3 px-4 py-3 hover:[background:var(--pf-color-muted-soft)] transition-colors border-b last:border-0 group"
       style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderColor: T.border }}
     >
       {/* match # */}
@@ -239,7 +239,7 @@ function MatchRow({
 
   // ── mobile card ────────────────────────────────────────────────────────────
   const mobileCard = (
-    <div className="md:hidden p-4 border-b last:border-0" style={{ borderColor: T.border }}>
+    <div className="lg:hidden p-4 border-b last:border-0" style={{ borderColor: T.border }}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold [color:var(--pf-color-muted)]">Trận #{matchNumber}</span>
         <div className="flex items-center gap-1.5">
@@ -348,7 +348,7 @@ function RoundCard({
         <div style={{ borderTop: `1px solid ${T.border}` }}>
           {/* desktop header row */}
           <div
-            className="hidden md:grid px-4 py-2"
+            className="hidden lg:grid px-4 py-2"
             style={{ gridTemplateColumns: '52px 1fr 36px 1fr 72px 84px 28px', borderBottom: `1px solid ${T.border}` }}
           >
             {['Trận', 'Đội 1', '', 'Đội 2', 'Tỷ số', 'Trạng thái', ''].map((h, i) => (

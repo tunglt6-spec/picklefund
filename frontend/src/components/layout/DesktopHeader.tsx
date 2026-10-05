@@ -73,7 +73,7 @@ export function DesktopHeader() {
   const iconBtn = 'flex h-9 w-9 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 items-center justify-center rounded-xl border transition-colors [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] hover:[border-color:var(--pf-primary-soft)]'
 
   return (
-    <header className="pf-glass-bar relative z-30 hidden md:flex h-14 shrink-0 items-center justify-end gap-2 border-b px-4 lg:px-6">
+    <header className="pf-glass-bar relative z-30 hidden lg:flex h-14 shrink-0 items-center justify-end gap-2 border-b px-4 lg:px-6">
       {/* Hướng dẫn sử dụng — hiện cho MỌI vai trò, đặt đầu nhóm để dễ thấy khi mới vào app */}
       <button
         onClick={openGuide}

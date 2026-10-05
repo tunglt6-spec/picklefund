@@ -48,13 +48,13 @@ export function AppLayout() {
   return (
     <div className="pf-wash flex h-[100dvh] overflow-hidden [background-color:var(--pf-bg)]">
       {/* Desktop sidebar */}
-      <div className="hidden md:flex md:flex-shrink-0">
+      <div className="hidden lg:flex lg:flex-shrink-0">
         <Sidebar />
       </div>
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-50 flex lg:hidden">
           <div className="fixed inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
           <div className="relative z-50 flex w-72 flex-col">
             <Sidebar onClose={() => setSidebarOpen(false)} />
@@ -65,7 +65,7 @@ export function AppLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header — 64px */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </div>
 
@@ -91,7 +91,7 @@ export function AppLayout() {
             <div key={location.pathname} className="pf-page">
               <Outlet />
             </div>
-            {lisaRoute && !isOnLisa && <div className="h-20 md:hidden" aria-hidden />}
+            {lisaRoute && !isOnLisa && <div className="h-20 lg:hidden" aria-hidden />}
           </div>
         </main>
 
@@ -99,7 +99,7 @@ export function AppLayout() {
         {lisaRoute && !isOnLisa && (
           <button
             onClick={() => navigate(lisaRoute)}
-            className="md:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
+            className="lg:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
             style={{
               right: 14,
               bottom: 'calc(16px + env(safe-area-inset-bottom))',

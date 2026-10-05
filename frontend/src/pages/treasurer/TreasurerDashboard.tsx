@@ -260,10 +260,10 @@ export function TreasurerDashboard() {
               <p className="py-8 text-center text-sm [color:var(--pf-color-muted)]">Chưa có giao dịch nào</p>
             ) : (
               <>
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                   <DataTable columns={ledgerColumns} rows={recent} rowKey={(r) => r.id} />
                 </div>
-                <div className="md:hidden">
+                <div className="lg:hidden">
                   <MobileCardList
                     items={recent}
                     itemKey={(r) => r.id}

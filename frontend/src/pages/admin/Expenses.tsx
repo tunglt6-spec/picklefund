@@ -1144,7 +1144,7 @@ export function Expenses() {
           ) : (
             <>
               {/* Desktop: bảng chuẩn DataTable */}
-              <div className="hidden md:block overflow-x-auto">
+              <div className="hidden lg:block overflow-x-auto">
                 <DataTable
                   columns={expenseColumns}
                   rows={paginated}
@@ -1153,7 +1153,7 @@ export function Expenses() {
                 />
               </div>
               {/* Mobile: card list (thay bảng cuộn ngang) */}
-              <div className="md:hidden p-3">
+              <div className="lg:hidden p-3">
                 <MobileCardList items={paginated} itemKey={(e) => e.id} renderCard={renderExpenseCard} />
               </div>
             </>
