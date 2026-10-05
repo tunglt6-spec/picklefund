@@ -744,7 +744,7 @@ export function Members() {
       ) : (
       <>
       {/* ── KPI Row ── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 max-lg:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
         <MetricCard label="Tổng thành viên" value={totalMembers.toLocaleString('vi-VN')} sub="Toàn CLB" accent="blue" icon={<Users size={18} />} />
         <MetricCard label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} sub="Thành viên active" accent="green" icon={<UserCheck size={18} />} />
         <MetricCard label="Tạm ngưng" value={inactiveCount.toLocaleString('vi-VN')} sub="Tạm nghỉ sinh hoạt" accent="amber" icon={<Power size={18} />} />

@@ -1088,7 +1088,7 @@ export function Expenses() {
 
       <div className="p-6 space-y-5">
         {/* KPI cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-lg:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
           <MetricCard accent="violet" icon={<DollarSign size={18} />}  label="Chi Quỹ Chính" value={formatVND(commonAmt)} />
           <MetricCard accent="violet" icon={<Wallet size={18} />}      label="Chi Quỹ Phụ"   value={formatVND(miniAmt)} />
           <MetricCard accent="green"  icon={<CheckCircle size={18} />} label="Chi đã duyệt"   value={formatVND(approvedAmt)} />

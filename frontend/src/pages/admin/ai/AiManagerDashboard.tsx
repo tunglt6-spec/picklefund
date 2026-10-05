@@ -188,7 +188,7 @@ function SectionCard({
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
             <div key={m.label} className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)] truncate">{m.label}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)] break-words">{m.label}</p>
               <p className="mt-1 text-base font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
             </div>
           ))}

@@ -74,7 +74,7 @@ export function AppLayout() {
 
         {/* Page content — không còn bottom nav; chỉ chừa safe-area đáy */}
         <main className="flex-1 flex flex-col overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             {fromAido && (
               <button
                 onClick={() => navigate('/aido?tab=ops-center')}
@@ -91,7 +91,7 @@ export function AppLayout() {
             <div key={location.pathname} className="pf-page">
               <Outlet />
             </div>
-            {lisaRoute && !isOnLisa && <div className="h-20 lg:hidden" aria-hidden />}
+            {lisaRoute && !isOnLisa && <div className="h-24 lg:hidden" aria-hidden />}
           </div>
         </main>
 

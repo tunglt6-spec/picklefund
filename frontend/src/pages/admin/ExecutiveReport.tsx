@@ -550,7 +550,7 @@ export function ExecutiveReport() {
         {/* ── AI Office ────────────────────────────────────────────── */}
         <div>
           <SectionTitle icon={<Bot size={15} />} title="Văn phòng AI (AIDO)" note={`Trong kỳ · điểm tự động hóa ${ai.automationScore.score}/100`} />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 max-lg:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
             <AiCard color="#6D5DFB" name="Hermes" main={`${ai.hermes.completed}/${ai.hermes.runs}`} unit="workflow xong" detail={`${ai.hermes.failed} lỗi · ${ai.hermes.running} đang chạy`} />
             <AiCard color="#0EA5E9" name="Lisa" main={String(ai.lisa.answered)} unit="hỏi–đáp" detail={`${ai.lisa.reminders} lượt nhắc`} />
             <AiCard color="#DB2777" name="Maika" main={String(ai.maika.insights)} unit="insight" detail={`${ai.maika.actions} đề xuất`} />

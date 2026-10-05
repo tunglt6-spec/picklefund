@@ -453,7 +453,7 @@ export function AiDigitalOffice() {
           {/* Kết quả công việc THẬT hôm nay của từng agent — xếp thẳng dưới 5 nhân vật trên banner. */}
           <div>
             <h3 className="mb-2 text-sm font-semibold [color:var(--pf-text)]">Kết quả hôm nay của từng Agent</h3>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 max-lg:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
               {resultCards.map((c) => (
                 <div
                   key={c.key}
