@@ -74,7 +74,50 @@ export function RolesPermissions() {
     <PageShell>
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
-      <div className="pf-glass-strong overflow-x-auto rounded-[16px]">
+      <ul className="flex flex-col gap-3 md:hidden">
+        {users.map((u) => {
+          const isMe = me?.username === u.username
+          const locked = u.role === 'SUPER_ADMIN' || isMe
+          return (
+            <li key={u.id} className="pf-rowcard p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-bold [color:var(--pf-text)]">{u.fullName}</p>
+                  <p className="truncate font-mono text-xs [color:var(--pf-color-muted)]">{u.username}{isMe && ' (bạn)'}</p>
+                  <p className="mt-0.5 break-all text-xs [color:var(--pf-color-muted)]">{u.email}</p>
+                </div>
+                {u.isActive ? <Badge variant="green" dot>Hoạt động</Badge> : <Badge variant="gray" dot>Đã khóa</Badge>}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  {locked ? (
+                    <Badge variant={roleVariant[u.role]}>{roleLabel[u.role]}</Badge>
+                  ) : (
+                    <select
+                      value={u.role}
+                      onChange={(e) => changeRole(u, e.target.value as Role)}
+                      aria-label={`Vai trò của ${u.fullName}`}
+                      className="input-base w-full py-2 text-sm"
+                    >
+                      {ASSIGNABLE.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
+                    </select>
+                  )}
+                </div>
+                <button
+                  onClick={() => setPendingToggle(u)}
+                  disabled={locked}
+                  className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold [border-color:var(--pf-border)] [color:var(--pf-color-muted)] disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  {u.isActive ? <><UserX size={15} /> Khóa</> : <><UserCheck size={15} /> Mở khóa</>}
+                </button>
+              </div>
+            </li>
+          )
+        })}
+        {users.length === 0 && <li className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{loading ? 'Đang tải...' : 'Chưa có tài khoản'}</li>}
+      </ul>
+
+      <div className="pf-glass-strong hidden overflow-x-auto rounded-[16px] md:block">
         <table className="table-base pf-rows">
           <thead>
             <tr>

@@ -246,7 +246,7 @@ export function Attendance() {
         {/* Bộ lọc kỳ + chuyển kỳ */}
         {allPeriods.length > 1 && (
           <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[200px] flex-1">
+            <div className="min-w-0 flex-1 basis-full sm:basis-auto">
               <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
             </div>
             {sessions.length > 0 && (

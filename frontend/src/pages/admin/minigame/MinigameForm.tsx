@@ -335,7 +335,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
               <div><Label htmlFor="mgf-desc">Mô tả</Label>
                 <textarea id="mgf-desc" rows={2} value={form.description} onChange={e => set({ description: e.target.value })} placeholder="Mô tả giải đấu..."
                   className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-4">
                 <div><Label htmlFor="mgf-start">Ngày bắt đầu</Label><input id="mgf-start" type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
                 <div><Label htmlFor="mgf-end">Ngày kết thúc</Label><input id="mgf-end" type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               </div>

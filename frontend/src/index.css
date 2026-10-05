@@ -104,6 +104,9 @@
     padding: 0;
   }
   /* Viền focus bàn phím rõ ràng toàn app (chỉ hiện khi dùng phím, không hiện khi click chuột). */
+  /* iOS: input ngày/giờ & select có độ rộng nội tại → tràn grid/flex. Cho phép co. */
+  input, select, textarea { min-width: 0; max-width: 100%; }
+  input[type='date'], input[type='time'], input[type='datetime-local'], input[type='month'] { -webkit-appearance: none; appearance: none; min-height: 2.5rem; }
   :focus-visible {
     outline: 2px solid var(--pf-primary);
     outline-offset: 2px;

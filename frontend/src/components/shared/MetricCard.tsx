@@ -42,6 +42,8 @@ interface MetricCardProps {
   /** Tông màu value-based (opt-in): nền tint + viền trên + số/icon theo màu. */
   tone?: MetricTone
   className?: string
+  /** Thu gọn (mobile 3 cột): ẩn icon, padding nhỏ, số vừa. */
+  compact?: boolean
 }
 
 export function MetricCard({
@@ -54,6 +56,7 @@ export function MetricCard({
   negative,
   tone,
   className,
+  compact,
 }: MetricCardProps) {
   const a = accentVars(accent)
   const t = tone ? TONE_PALETTE[tone] : null
@@ -62,6 +65,7 @@ export function MetricCard({
       className={cn(
         'pf-stat-card',
         'flex flex-col gap-3 rounded-[20px] p-5 pf-hover-lift',
+        compact && 'max-sm:gap-1.5 max-sm:p-3',
         className,
       )}
       data-hi={tone === 'brand' ? '' : undefined}
@@ -72,7 +76,7 @@ export function MetricCard({
         </span>
         {icon && (
           <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+            className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', compact && 'max-sm:hidden')}
             style={t ? { background: t.border, color: t.fg } : { background: a.soft, color: a.color }}
           >
             {icon}

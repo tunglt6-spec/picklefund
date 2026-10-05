@@ -140,13 +140,13 @@ export function SessionRegistration() {
       ) : (
         <div className="flex flex-col gap-5">
           {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm Danh) */}
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="text-xs [color:var(--pf-color-muted)] shrink-0">Chọn buổi:</span>
-            <div className="relative inline-flex items-center max-w-full">
+            <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">
               <select
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
-                className="max-w-full truncate pl-3 pr-8 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
+                className="w-full min-w-0 max-w-full truncate pl-3 pr-8 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
               >
                 {upcoming.map((s) => (
                   <option key={s.id} value={s.id}>

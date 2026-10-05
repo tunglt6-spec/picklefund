@@ -91,6 +91,7 @@ export function AppLayout() {
             <div key={location.pathname} className="pf-page">
               <Outlet />
             </div>
+            {lisaRoute && !isOnLisa && <div className="h-20 md:hidden" aria-hidden />}
           </div>
         </main>
 

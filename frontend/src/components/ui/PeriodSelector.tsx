@@ -15,13 +15,13 @@ interface Props {
 export function PeriodSelector({ periods, selectedId, onChange, label = 'Kỳ quỹ' }: Props) {
   if (periods.length === 0) return null
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{label}:</span>
-      <div className="relative inline-flex items-center">
+      <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">
         <select
           value={selectedId}
           onChange={e => onChange(e.target.value)}
-          className="pl-3 pr-7 py-1.5 text-sm font-medium [background:var(--pf-glass-bg-strong)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
+          className="w-full min-w-0 truncate pl-3 pr-7 py-1.5 text-sm font-medium [background:var(--pf-glass-bg-strong)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
         >
           {periods.map(p => (
             <option key={p.id} value={p.id}>

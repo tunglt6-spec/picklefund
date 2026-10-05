@@ -170,13 +170,13 @@ export function CheckIn() {
       ) : (
         <div className="flex flex-col gap-5">
           {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm Danh) */}
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="text-xs [color:var(--pf-color-muted)] shrink-0">Chọn buổi:</span>
-            <div className="relative inline-flex items-center max-w-full">
+            <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">
               <select
                 value={sessionId}
                 onChange={(e) => setSessionId(e.target.value)}
-                className="max-w-full truncate pl-3 pr-8 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
+                className="w-full min-w-0 max-w-full truncate pl-3 pr-8 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
               >
                 {sessionOptions.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -197,9 +197,9 @@ export function CheckIn() {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                <MetricCard accent="violet" icon={<UserCheck size={18} />} label="Đã đăng ký" value={registeredCount} />
-                <MetricCard accent="green" icon={<Check size={18} />} label="Đã check-in" value={present.size} />
-                <MetricCard accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} />
+                <MetricCard compact accent="violet" icon={<UserCheck size={18} />} label="Đã đăng ký" value={registeredCount} />
+                <MetricCard compact accent="green" icon={<Check size={18} />} label="Đã check-in" value={present.size} />
+                <MetricCard compact accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} />
               </div>
 
               {!isMember && (
