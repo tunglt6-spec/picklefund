@@ -181,7 +181,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="@container flex flex-col gap-4">
       {/* KPI trên nền tím (giống mockup) */}
       <div className="rounded-[18px] p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))] shadow-sm">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90">
@@ -200,7 +200,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
 
       {loading && <p className="text-xs [color:var(--pf-color-muted)] px-1">Đang tải tổng quan…</p>}
 
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-stretch gap-4 @2xl:grid-cols-2">
       {/* Lịch thi đấu (môn theo trận) */}
       {!isGolf && (
         <div className={card}>

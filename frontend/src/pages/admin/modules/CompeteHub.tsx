@@ -77,7 +77,7 @@ function TournamentsTab() {
       {isMember ? (
         <div className="w-full"><MinigameOverviewPanel sport={sport} /></div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] gap-5 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] gap-5 items-start">
           <div className="pf-glass-strong rounded-[16px] overflow-hidden">
             <MinigameForm embedded onSportChange={setSport} />
           </div>
