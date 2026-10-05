@@ -39,7 +39,7 @@ export function PageHeader({
     if (embedded) {
       if (!subtitle && !actions && !aside) return null
       return (
-        <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
+        <div className={cn('pf-glass-bar border-b px-6 py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
           {subtitle ? <p className="text-xs [color:var(--pf-color-muted)] min-w-0 truncate">{subtitle}</p> : <span />}
           {(aside || actions) && (
             <div className="flex items-center gap-2 flex-wrap lg:justify-end">
@@ -51,7 +51,7 @@ export function PageHeader({
       )
     }
     return (
-      <div className={cn('[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
+      <div className={cn('pf-glass-bar border-b px-6 py-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
         <div className="min-w-0">
           <h1 className="text-base font-bold [color:var(--pf-text)]">{title}</h1>
           {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}

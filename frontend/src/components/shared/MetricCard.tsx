@@ -15,7 +15,7 @@ import { accentVars, type ModuleAccent } from './tokens'
 export type MetricTone = 'success' | 'warning' | 'danger' | 'info' | 'brand' | 'neutral'
 // Theme-aware: tint accent lên nền TOKEN (color-mix) → tự tối ở dark; chữ blend --pf-text để đọc rõ.
 const mkTone = (bar: string, fg?: string) => ({
-  bg: `color-mix(in srgb, ${bar} 10%, var(--pf-surface))`,
+  bg: `linear-gradient(color-mix(in srgb, ${bar} 10%, transparent), color-mix(in srgb, ${bar} 10%, transparent)), var(--pf-glass-bg)`,
   border: `color-mix(in srgb, ${bar} 30%, var(--pf-surface))`,
   bar,
   fg: fg ?? `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
@@ -60,8 +60,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-[20px] border p-5 pf-hover-lift',
-        '[background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]',
+        'pf-glass flex flex-col gap-3 rounded-[20px] p-5 pf-hover-lift',
         className,
       )}
       style={t ? { background: t.bg, borderColor: t.border, borderTop: `3px solid ${t.bar}` } : undefined}

@@ -36,7 +36,7 @@ export function MobileCardList<T>({
           key={itemKey(item, i)}
           onClick={onItemClick ? () => onItemClick(item) : undefined}
           className={cn(
-            'rounded-2xl border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]',
+            'pf-glass rounded-2xl p-4',
             onItemClick && 'active:[background:var(--pf-color-muted-soft)]',
           )}
         >

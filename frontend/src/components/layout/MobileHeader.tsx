@@ -53,7 +53,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-40 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 flex items-center justify-between"
+      className="pf-glass-bar sticky top-0 z-40 border-b px-4 flex items-center justify-between"
       style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Left: Hamburger + Logo + Name */}

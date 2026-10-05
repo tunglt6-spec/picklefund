@@ -49,7 +49,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col" style={{ background: 'var(--pf-bg)' }}>
+    <div className="flex min-h-full w-full flex-col" style={{ background: 'transparent' }}>
       {/* Tiêu đề module (như mockup) — cuộn theo trang, tab bar dính bên dưới */}
       {title && (
         <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1600 }}>
@@ -60,8 +60,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
       )}
       {/* Thanh tab module — sticky trắng, full-bleed; nội dung tab căn cùng max-width page */}
       <div
-        className="sticky top-0 z-20 shrink-0 border-b [border-color:var(--pf-border)]"
-        style={{ background: 'var(--pf-surface)' }}
+        className="pf-glass-bar sticky top-0 z-20 shrink-0 border-b"
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}

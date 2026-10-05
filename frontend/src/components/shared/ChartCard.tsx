@@ -24,7 +24,7 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        'rounded-[20px] border p-5 [background:var(--pf-surface)] border-[color:var(--pf-border)] [box-shadow:var(--pf-shadow)]',
+        'pf-glass rounded-[20px] p-5',
         className,
       )}
     >
