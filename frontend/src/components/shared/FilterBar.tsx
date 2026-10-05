@@ -39,7 +39,7 @@ export function FilterBar({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder={searchPlaceholder}
-          className="h-10 w-full rounded-full border pl-9 pr-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] border-[color:var(--pf-border)] focus:outline-none focus:[box-shadow:0_0_0_3px_var(--pf-focus-ring)] focus:[border-color:var(--pf-primary)]"
+          className="h-10 w-full rounded-full border pl-9 pr-3 text-sm [background:var(--pf-glass-bg-strong)] [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] border-[color:var(--pf-border)] focus:outline-none focus:[box-shadow:0_0_0_3px_var(--pf-focus-ring)] focus:[border-color:var(--pf-primary)]"
         />
       </div>
 
@@ -50,7 +50,7 @@ export function FilterBar({
       {onOpenFilters && (
         <button
           onClick={onOpenFilters}
-          className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border [background:var(--pf-surface)] [color:var(--pf-color-muted)] border-[color:var(--pf-border)]"
+          className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] border-[color:var(--pf-border)]"
           aria-label="Bộ lọc"
         >
           <SlidersHorizontal size={16} />

@@ -24,7 +24,7 @@ interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANT_STYLE: Record<Variant, CSSProperties> = {
   primary: { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' },
   secondary: {
-    background: 'var(--pf-surface)',
+    background: 'var(--pf-glass-bg-strong)',
     color: 'var(--pf-text)',
     border: '1px solid var(--pf-border)',
   },

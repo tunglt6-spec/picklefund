@@ -21,7 +21,7 @@ export function PeriodSelector({ periods, selectedId, onChange, label = 'Kỳ qu
         <select
           value={selectedId}
           onChange={e => onChange(e.target.value)}
-          className="pl-3 pr-7 py-1.5 text-sm font-medium [background:var(--pf-surface)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
+          className="pl-3 pr-7 py-1.5 text-sm font-medium [background:var(--pf-glass-bg-strong)] border border-[color:var(--pf-border)] rounded-lg appearance-none focus:outline-none focus:[border-color:var(--pf-primary)] [color:var(--pf-text)]"
         >
           {periods.map(p => (
             <option key={p.id} value={p.id}>

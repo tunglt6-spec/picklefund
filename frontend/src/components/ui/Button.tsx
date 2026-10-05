@@ -11,7 +11,7 @@ const variantClasses: Record<Variant, string> = {
   secondary: '[background:var(--pf-color-muted-soft)] [color:var(--pf-text)] hover:brightness-95 active:brightness-90',
   danger:    'text-white shadow-sm [background:var(--pf-color-danger)] hover:brightness-95 active:brightness-90',
   ghost:     '[color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] active:[background:var(--pf-border-soft)]',
-  outline:   'border border-[color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] hover:border-[color:var(--pf-text-muted)] active:brightness-95',
+  outline:   'border border-[color:var(--pf-border)] [background:var(--pf-glass-bg-strong)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)] hover:border-[color:var(--pf-text-muted)] active:brightness-95',
 }
 
 const sizeClasses: Record<Size, string> = {
