@@ -890,7 +890,7 @@ export function Expenses() {
               {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
           ) : mobileFiltered.map(e => (
-            <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-4 py-3 shadow-sm">
+            <div key={e.id} className="pf-rowcard px-4 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
@@ -1087,7 +1087,7 @@ export function Expenses() {
         </div>
 
         {/* Table card */}
-        <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
+        <div className="pf-glass rounded-xl">
           {/* Tabs + Search */}
           <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-[color:var(--pf-border)] flex-wrap gap-3">
             <div className="flex items-center gap-0.5 -mb-px">

@@ -130,7 +130,7 @@ export function TreasurerLedger() {
           ) : (
             <div className="space-y-2">
               {[...filtered].reverse().map(row => (
-                <div key={row.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                <div key={row.id} className="pf-rowcard p-4">
                   <div className="flex items-start gap-3">
                     <div className={`h-9 w-9 rounded-[12px] flex items-center justify-center shrink-0 ${row.type === 'Thu' ? 'bg-emerald-50' : 'bg-red-50'}`}>
                       {row.type === 'Thu'
@@ -250,7 +250,7 @@ export function TreasurerLedger() {
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có giao dịch nào</p>
           </div>
         ) : (
-          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl overflow-x-auto">
             <table className="table-base pf-rows">
               <thead>
                 <tr>

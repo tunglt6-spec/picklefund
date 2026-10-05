@@ -775,7 +775,7 @@ export function Contributions() {
 
         {/* Thanh xóa hàng loạt (chung cho cả 2 bảng) */}
         {!isMember && bulk.someSelected && (
-          <div className="rounded-xl overflow-hidden border border-red-100 shadow-[var(--shadow-card)]">
+          <div className="rounded-xl overflow-hidden border border-red-100">
             <BulkActionBar
               count={bulk.selectedIds.size}
               onClear={bulk.clear}
@@ -797,7 +797,7 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Chính nào.</p>
             </div>
           ) : (
-            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
+            <div className="pf-glass rounded-xl">
               <DataTable columns={commonColumns} rows={commonPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}
@@ -823,7 +823,7 @@ export function Contributions() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu Quỹ Phụ nào.</p>
             </div>
           ) : (
-            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)]">
+            <div className="pf-glass rounded-xl">
               <DataTable columns={miniColumns} rows={miniPageRows} rowKey={(c) => c.id} rowClassName={rowCls} />
             </div>
           )}

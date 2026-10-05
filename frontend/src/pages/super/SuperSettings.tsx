@@ -92,7 +92,7 @@ const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string;
 )
 
 const Section = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-  <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+  <div className="pf-glass-strong rounded-xl overflow-hidden">
     <div className="px-5 py-3.5 border-b border-[color:var(--pf-border)] flex items-center gap-2.5">
       <div className="h-7 w-7 rounded-lg [background:var(--pf-primary-soft)] flex items-center justify-center">{icon}</div>
       <h3 className="text-sm font-semibold [color:var(--pf-text)]">{title}</h3>

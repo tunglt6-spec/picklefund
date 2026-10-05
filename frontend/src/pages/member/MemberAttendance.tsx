@@ -106,8 +106,8 @@ export function MemberAttendance() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Tham gia', value: `${attendedCount}/${completedSessions.length}`, color: '[color:var(--pf-primary)]' },
-              { label: 'Tỷ lệ', value: `${rate}%`, color: rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500' },
-              { label: 'Sắp TG', value: `${periodSessions.filter(s => s.status === 'scheduled').length}`, color: 'text-amber-600' },
+              { label: 'Tỷ lệ', value: `${rate}%`, color: rate >= 80 ? '[color:var(--pf-green)]' : rate >= 60 ? '[color:var(--pf-color-warning)]' : '[color:var(--pf-color-danger)]' },
+              { label: 'Sắp TG', value: `${periodSessions.filter(s => s.status === 'scheduled').length}`, color: '[color:var(--pf-color-warning)]' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
@@ -116,12 +116,12 @@ export function MemberAttendance() {
             ))}
           </div>
           {/* Cost */}
-          <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm flex items-center justify-between">
+          <div className="pf-glass rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin size={14} className="text-emerald-500" />
+              <MapPin size={14} className="[color:var(--pf-green)]" />
               <span className="text-sm [color:var(--pf-color-muted)]">Chi phí sân cá nhân</span>
             </div>
-            <span className="text-base font-[800] text-emerald-600">{courtCostText}</span>
+            <span className="text-base font-[800] [color:var(--pf-green)]">{courtCostText}</span>
           </div>
           {/* Search */}
           <div className="relative">
@@ -131,13 +131,13 @@ export function MemberAttendance() {
           </div>
           {/* Rate bar */}
           {completedSessions.length > 0 && (
-            <div className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] p-3 shadow-sm">
+            <div className="pf-glass rounded-xl p-3">
               <div className="flex justify-between mb-1.5">
                 <span className="text-xs font-[600] [color:var(--pf-color-muted)]">Tỷ lệ tham gia</span>
-                <span className={`text-xs font-[700] ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-red-500'}`}>{rate}%</span>
+                <span className={`text-xs font-[700] ${rate >= 80 ? '[color:var(--pf-green)]' : rate >= 60 ? '[color:var(--pf-color-warning)]' : '[color:var(--pf-color-danger)]'}`}>{rate}%</span>
               </div>
               <div className="h-2 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${rate}%` }} />
+                <div className={`h-full rounded-full ${rate >= 80 ? '[background:var(--pf-green)]' : rate >= 60 ? '[background:var(--pf-color-warning)]' : '[background:var(--pf-color-danger)]'}`} style={{ width: `${rate}%` }} />
               </div>
             </div>
           )}
@@ -149,7 +149,7 @@ export function MemberAttendance() {
               {[...filtered].reverse().map((s) => {
                 const present = s.status === 'completed' ? attended.has(s.id) : null
                 return (
-                  <div key={s.id} className={`[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm ${!present && s.status === 'completed' ? 'opacity-60' : ''}`}>
+                  <div key={s.id} className={`pf-rowcard p-4 ${!present && s.status === 'completed' ? 'opacity-60' : ''}`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-base font-[700] [color:var(--pf-text)]">{formatDate(s.sessionDate)}</span>
                       {s.status === 'cancelled'
@@ -230,11 +230,11 @@ export function MemberAttendance() {
       },
     },
   ]
-  const rateBar = rate >= 80 ? 'bg-emerald-500' : rate >= 60 ? 'bg-amber-500' : 'bg-red-500'
+  const rateBar = rate >= 80 ? '[background:var(--pf-green)]' : rate >= 60 ? '[background:var(--pf-color-warning)]' : '[background:var(--pf-color-danger)]'
   const scheduledCount = periodSessions.filter(s => s.status === 'scheduled').length
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Lịch Tham Gia"
         subtitle={activePeriod ? `${activePeriod.name} · ${myMember?.fullName ?? 'Thành viên'}` : 'Chưa có kỳ quỹ'}

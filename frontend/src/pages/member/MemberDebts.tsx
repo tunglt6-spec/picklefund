@@ -124,7 +124,7 @@ export function MemberDebts() {
   const collectRate = stats.collectRate
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
@@ -159,7 +159,7 @@ export function MemberDebts() {
                       items={filtered}
                       itemKey={(r) => r.id}
                       renderCard={(r) => (
-                        <div className="flex items-center justify-between gap-3 rounded-[16px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+                        <div className="flex items-center justify-between gap-3 pf-rowcard p-4">
                           <div className="min-w-0">
                             <p className="font-semibold [color:var(--pf-text)] truncate">{r.name}</p>
                             <p className="text-xs [color:var(--pf-color-muted)]">{r.phone || '—'}</p>

@@ -457,7 +457,7 @@ export function SuperClubs() {
           {filtered.map(club => (
             <div
               key={club.id}
-              className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm active:[background:var(--pf-surface-muted)]"
+              className="pf-rowcard p-4"
               onClick={() => navigate(`/super/clubs/${club.id}`)}
             >
               <div className="flex items-start justify-between gap-2">

@@ -185,7 +185,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
                 const team1Won = m.winningTeam === 1
                 const team2Won = m.winningTeam === 2
                 return (
-                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                  <div key={m.id} className="pf-rowcard p-4">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs [color:var(--pf-color-muted)]">Trận {idx + 1} · Vòng {rnd?.roundNumber ?? '–'}</span>
                       <span className={cn('text-xs font-medium',
@@ -286,7 +286,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
         </button>
 
         {myRounds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center [background:var(--pf-surface)] rounded-xl border border-[color:var(--pf-border)] shadow-sm">
+          <div className="flex flex-col items-center justify-center py-20 text-center pf-glass rounded-xl">
             <p className="[color:var(--pf-color-muted)] font-medium">Chưa có lịch thi đấu</p>
             <p className="[color:var(--pf-color-muted)] text-sm mt-1 mb-4">Vào trang tổng quan và bấm "Rút Thăm Vòng Mới" để tạo trận đấu</p>
             <Button onClick={() => navigate(`/minigames/${minigameId}`)}>Đi Tới Rút Thăm Vòng Mới</Button>
@@ -591,7 +591,7 @@ export function MatchSchedule() {
             const p1Won = m.winnerId === m.player1Id
             const p2Won = m.winnerId === m.player2Id
             return (
-              <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+              <div key={m.id} className="pf-rowcard p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs [color:var(--pf-color-muted)]">Trận {idx + 1} · {grp?.groupName ?? '–'} · Vòng {m.round ?? 1}</span>
                   <span className={cn('text-xs font-medium',

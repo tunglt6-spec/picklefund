@@ -15,9 +15,9 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
   const formatted = new Intl.NumberFormat('vi-VN').format(Math.abs(amount)) + 'đ'
 
   return (
-    <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] px-3 py-3 flex items-center gap-2 shadow-sm">
+    <div className="pf-rowcard px-3 py-3 flex items-center gap-2">
       <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
-        isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+        isIncome ? '[background:var(--pf-green-soft)] [color:var(--pf-green)]' : '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]'
       }`}>
         {isIncome ? '+' : '−'}
       </div>
@@ -26,7 +26,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
         <div className="text-xs [color:var(--pf-color-muted)] truncate">{description}{fundSource ? ` · ${fundSource}` : ''}</div>
       </div>
       <div className="flex flex-col items-end flex-shrink-0 max-w-[100px]">
-        <span className={`text-sm font-[700] tabular-nums ${isIncome ? 'text-emerald-600' : 'text-red-500'}`}>
+        <span className={`text-sm font-[700] tabular-nums ${isIncome ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>
           {isIncome ? '+' : '−'}{formatted}
         </span>
         {status && (

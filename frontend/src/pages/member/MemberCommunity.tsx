@@ -301,7 +301,7 @@ function MentionPicker({
   }, [query, members])
 
   return (
-    <div className="pf-glass-strong mt-2 overflow-hidden rounded-xl shadow-[var(--pf-shadow)]">
+    <div className="pf-glass mt-2 overflow-hidden rounded-xl">
       <div className="flex items-center gap-2 border-b border-[color:var(--pf-border)] px-3 py-2">
         <Search size={14} className="[color:var(--pf-color-muted)]" />
         <input

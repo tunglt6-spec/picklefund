@@ -638,7 +638,7 @@ export function FundPeriods() {
 
           {/* QR thanh toán */}
           {bankInfo && buildQrUrl(qrPeriodId) && (
-            <div className="[background:var(--pf-surface)] rounded-[16px] border [border-color:var(--pf-primary-soft)] p-4 shadow-sm">
+            <div className="pf-glass rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <QrCode size={14} className="[color:var(--pf-primary)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
@@ -692,7 +692,7 @@ export function FundPeriods() {
               </div>
               <div className="space-y-2">
                 {chungPeriods.map(p => (
-                  <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                  <div key={p.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <div className="text-base font-[700] [color:var(--pf-text)]">{p.name}</div>
@@ -740,7 +740,7 @@ export function FundPeriods() {
               </div>
               <div className="space-y-2">
                 {gamePeriods.map(p => (
-                  <div key={p.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                  <div key={p.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
                         <div className="text-base font-[700] [color:var(--pf-text)]">{p.name}</div>
@@ -1044,7 +1044,7 @@ export function FundPeriods() {
         </div>
 
         {/* Tabs */}
-        <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+        <div className="pf-glass-strong rounded-xl overflow-hidden">
           <div className="flex border-b border-[color:var(--pf-border)] px-2 pt-1">
             {([['list', 'Danh sách kỳ quỹ'], ['history', 'Lịch sử giao dịch'], ['highlights', 'Giao dịch nổi bật']] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
@@ -1170,7 +1170,7 @@ export function FundPeriods() {
         {/* Bottom row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Recent transactions */}
-          <div className="pf-glass md:col-span-2 rounded-xl shadow-[var(--shadow-card)] p-5">
+          <div className="pf-glass md:col-span-2 rounded-xl p-5">
             <h3 className="font-bold [color:var(--pf-text)] text-sm mb-4">Lịch sử giao dịch gần đây</h3>
             {recentTx.length === 0 ? (
               <p className="text-xs [color:var(--pf-color-muted)] text-center py-6">Chưa có giao dịch nào</p>
@@ -1214,7 +1214,7 @@ export function FundPeriods() {
 
           <div className="space-y-4">
             {/* Donut chart */}
-            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
+            <div className="pf-glass rounded-xl p-5">
               <h3 className="font-bold [color:var(--pf-text)] text-sm mb-3">Biểu đồ thu theo loại quỹ</h3>
               <div className="h-36">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1240,7 +1240,7 @@ export function FundPeriods() {
             </div>
 
             {/* QR thanh toán */}
-            <div className="pf-glass rounded-xl shadow-[var(--shadow-card)] p-5">
+            <div className="pf-glass rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold [color:var(--pf-text)] text-sm flex items-center gap-1.5">
                   <QrCode size={15} className="[color:var(--pf-primary)]" />QR thanh toán

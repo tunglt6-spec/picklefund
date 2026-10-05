@@ -101,7 +101,7 @@ export function MemberOffice() {
   ]
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Văn phòng AI"
         subtitle="Đội ngũ AI đang làm việc phục vụ CLB của bạn"
@@ -146,8 +146,7 @@ export function MemberOffice() {
 
         {error && !results && (
           <div
-            className="mx-auto flex w-full max-w-2xl flex-col items-center gap-2 rounded-2xl border p-5 text-center [border-color:var(--pf-border)]"
-            style={{ background: 'var(--pf-surface)' }}
+            className="pf-glass flex w-full flex-col items-center gap-2 rounded-xl p-5 text-center"
           >
             <p className="text-sm font-medium [color:var(--pf-color)]">Không tải được số liệu Văn phòng AI</p>
             <p className="text-xs [color:var(--pf-color-muted)]">Kết nối đang chập chờn — hệ thống sẽ tự thử lại.</p>

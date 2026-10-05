@@ -141,8 +141,8 @@ export function MemberDashboard() {
           <div className="px-4 pt-4 grid grid-cols-3 gap-2">
             {[
               { label: 'Đã đóng', value: formatVND(amountPaid), color: '[color:var(--pf-primary)]' },
-              { label: 'Chi phí TT', value: formatVND(myCost), color: 'text-rose-500' },
-              { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? 'text-emerald-600' : 'text-amber-500' },
+              { label: 'Chi phí TT', value: formatVND(myCost), color: '[color:var(--pf-color-danger)]' },
+              { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-warning)]' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</p>
@@ -156,7 +156,7 @@ export function MemberDashboard() {
         <div className="px-4 pt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => setReportOpen(true)}
-            className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-4 py-3 flex items-center gap-2.5"
+            className="pf-rowcard px-4 py-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center">
               <Send size={15} className="[color:var(--pf-primary)]" />
@@ -168,7 +168,7 @@ export function MemberDashboard() {
           </button>
           <button
             onClick={() => navigate('/member/attendance')}
-            className="[background:var(--pf-surface)] rounded-[14px] border border-[color:var(--pf-border)] shadow-sm px-4 py-3 flex items-center gap-2.5"
+            className="pf-rowcard px-4 py-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full [background:var(--pf-color-info-soft)] flex items-center justify-center">
               <Calendar size={15} className="[color:var(--pf-color-info)]" />
@@ -183,7 +183,7 @@ export function MemberDashboard() {
         {/* Phiếu thu card */}
         {hasData && (
           <div className="px-4 pt-3 pb-28">
-            <div className="pf-glass-strong rounded-[18px] shadow-sm overflow-hidden">
+            <div className="pf-glass rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
                 <p className="text-base font-[700] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</p>
                 <button
@@ -207,7 +207,7 @@ export function MemberDashboard() {
                 </div>
                 <div className="flex justify-between">
                   <span className="[color:var(--pf-color-muted)]">Đã đóng quỹ</span>
-                  <span className="font-[600] text-emerald-600">{formatVND(amountPaid)}</span>
+                  <span className="font-[600] [color:var(--pf-green)]">{formatVND(amountPaid)}</span>
                 </div>
                 {myContribution?.paymentDate && (
                   <div className="flex justify-between">
@@ -217,27 +217,27 @@ export function MemberDashboard() {
                 )}
                 <div className="flex justify-between">
                   <span className="[color:var(--pf-color-muted)]">Chi phí ước tính</span>
-                  <span className="font-[600] text-rose-500">{formatVND(myCost)}</span>
+                  <span className="font-[600] [color:var(--pf-color-danger)]">{formatVND(myCost)}</span>
                 </div>
                 <div className="border-t border-[color:var(--pf-border)] pt-2.5 flex justify-between items-center">
                   <span className="font-[700] [color:var(--pf-text)]">Số dư</span>
-                  <span className={`text-lg font-[800] ${balance >= 0 ? '[color:var(--pf-primary)]' : 'text-red-500'}`}>
+                  <span className={`text-lg font-[800] ${balance >= 0 ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-danger)]'}`}>
                     {balance >= 0 ? '+' : ''}{formatVND(balance)}
                   </span>
                 </div>
               </div>
 
               {!isPaid && (
-                <div className="mx-4 mb-4 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 flex items-center gap-2">
-                  <AlertCircle size={14} className="text-amber-500 shrink-0" />
-                  <p className="text-xs text-amber-700">Bạn chưa đóng quỹ kỳ này. Vui lòng đóng sớm!</p>
+                <div className="mx-4 mb-4 [background:var(--pf-color-warning-soft)] rounded-xl px-3 py-2.5 flex items-center gap-2">
+                  <AlertCircle size={14} className="[color:var(--pf-color-warning)] shrink-0" />
+                  <p className="text-xs [color:var(--pf-color-warning)]">Bạn chưa đóng quỹ kỳ này. Vui lòng đóng sớm!</p>
                 </div>
               )}
             </div>
 
             {/* Recent sessions */}
             {completedSessions.length > 0 && (
-              <div className="pf-glass-strong mt-3 rounded-[18px] shadow-sm overflow-hidden">
+              <div className="pf-glass mt-3 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center justify-between">
                   <p className="text-base font-[700] [color:var(--pf-text)]">Buổi gần đây</p>
                   <button
@@ -274,7 +274,7 @@ export function MemberDashboard() {
   /* ── Desktop layout — cùng design system Admin (read-only, self-scope) ── */
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Tổng Quan"
         subtitle={

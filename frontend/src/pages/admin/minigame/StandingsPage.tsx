@@ -174,7 +174,7 @@ export function StandingsPage() {
         <div id={EXPORT_ID} className="px-4 py-4 space-y-3">
           {/* Bar chart */}
           {sorted.length > 0 && (
-            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+            <div className="pf-rowcard p-4">
               <p className="text-sm font-semibold [color:var(--pf-text)] mb-3">Điểm Xếp Hạng</p>
               <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
@@ -198,7 +198,7 @@ export function StandingsPage() {
             </div>
           ) : sorted.map(s => (
             <div key={`${s.memberId}-${s.groupId}`}
-              className={cn('[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm', RANK_CLASS[s.overallRank] ?? '')}
+              className={cn('pf-rowcard p-4', RANK_CLASS[s.overallRank] ?? '')}
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className={cn('h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-sm font-bold',

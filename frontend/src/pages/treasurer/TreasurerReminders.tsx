@@ -199,7 +199,7 @@ export function TreasurerReminders() {
               {unpaidMembers.map(m => {
                 const sent = sentIds.has(m.id)
                 return (
-                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                  <div key={m.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
@@ -245,7 +245,7 @@ export function TreasurerReminders() {
               {pendingMembers.map(m => {
                 const contrib = commonContribs.find(c => c.memberId === m.id && (!activePeriod || c.fundPeriodId === activePeriod.id))
                 return (
-                  <div key={m.id} className="[background:var(--pf-surface)] rounded-[16px] border border-amber-100 p-4 shadow-sm flex items-center justify-between">
+                  <div key={m.id} className="pf-rowcard p-4 flex items-center justify-between">
                     <div>
                       <div className="text-sm font-[700] [color:var(--pf-text)]">{m.fullName}</div>
                       {contrib?.notes && <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{contrib.notes}</div>}
@@ -327,7 +327,7 @@ export function TreasurerReminders() {
 
         {/* Unpaid members */}
         {unpaidMembers.length > 0 && (
-          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl overflow-x-auto">
             <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Bell size={14} className="text-red-500" />
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Thành viên chưa đóng quỹ</h3>
@@ -379,7 +379,7 @@ export function TreasurerReminders() {
 
         {/* Pending confirmation */}
         {pendingMembers.length > 0 && (
-          <div className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-x-auto">
+          <div className="pf-glass-strong rounded-xl overflow-x-auto">
             <div className="px-4 py-3 border-b border-[color:var(--pf-border)] flex items-center gap-2">
               <Clock size={14} className="text-amber-500" />
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Chờ xác nhận thanh toán</h3>

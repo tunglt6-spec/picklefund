@@ -41,8 +41,8 @@ function n(v: string | number | null | undefined) {
 }
 
 function BalanceBadge({ val }: { val: number }) {
-  if (val > 0) return <span className="text-xs font-semibold text-emerald-600">+{formatVND(val)}</span>
-  if (val < 0) return <span className="text-xs font-semibold text-red-500">{formatVND(val)}</span>
+  if (val > 0) return <span className="text-xs font-semibold [color:var(--pf-green)]">+{formatVND(val)}</span>
+  if (val < 0) return <span className="text-xs font-semibold [color:var(--pf-color-danger)]">{formatVND(val)}</span>
   return <span className="text-xs font-semibold [color:var(--pf-color-muted)]">0 ₫</span>
 }
 
@@ -208,8 +208,8 @@ export function MemberReceipt() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Đã đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
-              { label: 'Chi phí', value: formatVND(totalCost), color: 'text-amber-600' },
-              { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? 'text-emerald-600' : 'text-red-500' },
+              { label: 'Chi phí', value: formatVND(totalCost), color: '[color:var(--pf-color-warning)]' },
+              { label: 'Số dư', value: `${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`, color: netBalance >= 0 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
@@ -219,7 +219,7 @@ export function MemberReceipt() {
           </div>
           {/* Kỳ hiện tại — số liệu LIVE (tạm tính) */}
           {!hasReceipts && live && activePeriod && (
-            <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm p-4">
+            <div className="pf-glass rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Kỳ hiện tại</span>
                 <span className="text-xs font-semibold [color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] px-2 py-0.5 rounded-full">Tạm tính</span>
@@ -250,7 +250,7 @@ export function MemberReceipt() {
                 const amountPaid = n(r.amountPaid)
                 const totalCostR = n(r.totalCost)
                 return (
-                  <div key={r.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+                  <div key={r.id} className="pf-rowcard overflow-hidden">
                     <button onClick={() => setExpanded(isExp ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
@@ -259,7 +259,7 @@ export function MemberReceipt() {
                       </div>
                       <div className="flex items-center gap-2">
                         {needToPay > 0 && <Badge variant="orange">Nợ {formatVND(needToPay)}</Badge>}
-                        <span className={`text-sm font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <span className={`text-sm font-[700] ${bal >= 0 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>
                           {bal >= 0 ? '+' : ''}{formatVND(bal)}
                         </span>
                         {isExp ? <ChevronUp size={14} className="[color:var(--pf-color-muted)]" /> : <ChevronDown size={14} className="[color:var(--pf-color-muted)]" />}
@@ -337,7 +337,7 @@ export function MemberReceipt() {
   )
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Phiếu Thu Cá Nhân"
         subtitle={memberName}
@@ -407,7 +407,7 @@ export function MemberReceipt() {
             <ChartCard title="Phiếu thu chính thức" subtitle={hasReceipts ? `${displayReceipts.length} kỳ đã chốt` : 'Tạo sau khi kỳ quỹ kết thúc'}>
               {!hasReceipts ? (
                 <div className="flex flex-col items-center justify-center text-center py-8">
-                  <Receipt size={32} className="mx-auto text-slate-200 mb-3" />
+                  <Receipt size={32} className="mx-auto [color:var(--pf-border)] mb-3" />
                   <p className="text-sm [color:var(--pf-color-muted)] font-medium">Chưa có phiếu thu chính thức</p>
                   <p className="text-xs [color:var(--pf-color-muted)] mt-1">Số liệu bên phải là tạm tính; phiếu thu chính thức được tạo sau khi kỳ quỹ kết thúc.</p>
                 </div>
@@ -422,7 +422,7 @@ export function MemberReceipt() {
               const totalCostR = n(r.totalCost)
 
               return (
-                <div key={r.id} className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+                <div key={r.id} className="pf-rowcard overflow-hidden">
                   {/* Header row */}
                   <button
                     className="w-full flex items-center justify-between px-5 py-4 hover:[background:var(--pf-surface-muted)] transition-colors"
@@ -438,8 +438,8 @@ export function MemberReceipt() {
                             Kỳ {period?.name ?? r.fundPeriodId}
                           </p>
                           {r.fundPeriodId === activePeriod?.id && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />LIVE
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-bold [background:var(--pf-green-soft)] [color:var(--pf-green)]">
+                              <span className="w-1.5 h-1.5 rounded-full [background:var(--pf-green)] animate-pulse" />LIVE
                             </span>
                           )}
                         </div>

@@ -201,7 +201,7 @@ export function TreasurerExpense() {
                   {expenses.map(e => {
                     const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
                     return (
-                      <div key={e.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                      <div key={e.id} className="pf-rowcard p-4">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-[700] [color:var(--pf-text)] truncate">{e.description}</div>

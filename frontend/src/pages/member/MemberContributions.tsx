@@ -189,8 +189,8 @@ export function MemberContributions() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Tổng đóng', value: formatVND(totalPaid), color: '[color:var(--pf-primary)]' },
-              { label: 'Xác nhận', value: `${confirmedCount}`, color: 'text-emerald-600' },
-              { label: 'Chờ', value: `${pendingCount}`, color: 'text-amber-600' },
+              { label: 'Xác nhận', value: `${confirmedCount}`, color: '[color:var(--pf-green)]' },
+              { label: 'Chờ', value: `${pendingCount}`, color: '[color:var(--pf-color-warning)]' },
             ].map(k => (
               <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
@@ -209,13 +209,13 @@ export function MemberContributions() {
             <div className="space-y-2">
               {filtered.map(c => {
                 return (
-                  <div key={c.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 shadow-sm">
+                  <div key={c.id} className="pf-rowcard p-4">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-base font-[700] [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span>
                       {c.isConfirmed ? <Badge variant="green" dot>Xác nhận</Badge> : <Badge variant="yellow" dot>Chờ</Badge>}
                     </div>
                     <div className="text-xs [color:var(--pf-color-muted)] mb-2">{formatDate(c.paymentDate)} · {c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</div>
-                    <div className="text-lg font-[800] text-emerald-600">{formatVND(c.amount)}</div>
+                    <div className="text-lg font-[800] [color:var(--pf-green)]">{formatVND(c.amount)}</div>
                   </div>
                 )
               })}
@@ -230,7 +230,7 @@ export function MemberContributions() {
                 const bal = toNum(r.balance)
                 const isExp = expandedReceipt === r.id
                 return (
-                  <div key={r.id} className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] shadow-sm overflow-hidden">
+                  <div key={r.id} className="pf-rowcard overflow-hidden">
                     <button onClick={() => setExpandedReceipt(isExp ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 active:[background:var(--pf-surface-muted)]">
                       <div className="text-left">
@@ -238,7 +238,7 @@ export function MemberContributions() {
                         <div className="text-xs [color:var(--pf-color-muted)]">{r.attendedSessions}/{r.totalSessions} buổi</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-[700] ${bal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <span className={`text-sm font-[700] ${bal >= 0 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>
                           {bal >= 0 ? '+' : ''}{formatVND(bal)}
                         </span>
                         {isExp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -246,7 +246,7 @@ export function MemberContributions() {
                     </button>
                     {isExp && (
                       <div className="border-t border-[color:var(--pf-border)] px-4 py-3 [background:var(--pf-color-muted-soft)] space-y-1.5 text-xs">
-                        {[['Đã đóng quỹ', toNum(r.amountPaid), 'text-emerald-600'], ['Chi phí sân', toNum(r.courtCost), ''], ['Chi phí SH', toNum(r.livingCost), ''], ['Tổng chi phí', toNum(r.totalCost), '']].map(([lbl, val, cls]) => (
+                        {[['Đã đóng quỹ', toNum(r.amountPaid), '[color:var(--pf-green)]'], ['Chi phí sân', toNum(r.courtCost), ''], ['Chi phí SH', toNum(r.livingCost), ''], ['Tổng chi phí', toNum(r.totalCost), '']].map(([lbl, val, cls]) => (
                           <div key={lbl as string} className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">{lbl}</span>
                             <span className={`font-[600] [color:var(--pf-text)] ${cls}`}>{formatVND(val as number)}</span>
@@ -270,13 +270,13 @@ export function MemberContributions() {
   const contribColumns: Column<ContribRow>[] = [
     { key: 'period', header: 'Kỳ quỹ', render: (c) => <span className="font-medium [color:var(--pf-text)]">{c.periodName ?? 'Kỳ quỹ'}</span> },
     { key: 'date', header: 'Ngày đóng', align: 'center', render: (c) => <span className="text-xs [color:var(--pf-color-muted)]">{formatDate(c.paymentDate)}</span> },
-    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold text-emerald-600">{formatVND(c.amount)}</span> },
+    { key: 'amount', header: 'Số tiền', align: 'right', render: (c) => <span className="font-semibold [color:var(--pf-green)]">{formatVND(c.amount)}</span> },
     { key: 'method', header: 'Hình thức', align: 'center', render: (c) => <StatusBadge tone="neutral">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</StatusBadge> },
     { key: 'status', header: 'Trạng thái', align: 'center', render: (c) => <StatusBadge tone={c.isConfirmed ? 'success' : 'warning'} dot>{c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}</StatusBadge> },
   ]
 
   return (
-    <PageShell>
+    <PageShell maxWidth={1760}>
       <PageHeader title="Lịch Sử Đóng Quỹ" subtitle={memberName}
         actions={
           <div className="flex items-center gap-2">
@@ -320,13 +320,13 @@ export function MemberContributions() {
                 const balance = toNum(r.balance)
                 const isExpanded = expandedReceipt === r.id
                 return (
-                  <div key={r.id} className="pf-glass-strong rounded-xl shadow-[var(--shadow-card)] overflow-hidden">
+                  <div key={r.id} className="pf-rowcard overflow-hidden">
                     <button
                       onClick={() => setExpandedReceipt(isExpanded ? null : r.id)}
                       className="w-full flex items-center justify-between px-4 py-3 hover:[background:var(--pf-surface-muted)] transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`h-2 w-2 rounded-full ${balance >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <div className={`h-2 w-2 rounded-full ${balance >= 0 ? '[background:var(--pf-green)]' : '[background:var(--pf-color-danger)]'}`} />
                         <div className="text-left">
                           <p className="text-sm font-semibold [color:var(--pf-text)]">
                             {r.fundPeriod?.name ?? 'Kỳ đã chốt'}
@@ -338,7 +338,7 @@ export function MemberContributions() {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className={`text-sm font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          <p className={`text-sm font-bold ${balance >= 0 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>
                             {balance >= 0 ? '+' : ''}{formatVND(balance)}
                           </p>
                           <p className="text-xs [color:var(--pf-color-muted)]">
@@ -354,7 +354,7 @@ export function MemberContributions() {
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-xs">
                           <div className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">Đã đóng quỹ</span>
-                            <span className="font-semibold text-emerald-600">{formatVND(toNum(r.amountPaid))}</span>
+                            <span className="font-semibold [color:var(--pf-green)]">{formatVND(toNum(r.amountPaid))}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="[color:var(--pf-color-muted)]">Chi phí sân</span>
@@ -370,8 +370,8 @@ export function MemberContributions() {
                           </div>
                           {toNum(r.needToPay) > 0 && (
                             <div className="col-span-2 flex justify-between border-t border-[color:var(--pf-border)] pt-2 mt-1">
-                              <span className="text-red-600 font-medium">Cần nộp thêm</span>
-                              <span className="font-bold text-red-600">{formatVND(toNum(r.needToPay))}</span>
+                              <span className="[color:var(--pf-color-danger)] font-medium">Cần nộp thêm</span>
+                              <span className="font-bold [color:var(--pf-color-danger)]">{formatVND(toNum(r.needToPay))}</span>
                             </div>
                           )}
                         </div>
