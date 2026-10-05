@@ -710,7 +710,7 @@ export function Contributions() {
         </div>
       )}
 
-      <div className="p-6 max-w-[1200px] mx-auto space-y-5">
+      <div className="p-6 space-y-5">
         {/* Summary cards — split by fund source */}
         <div className="grid grid-cols-2 gap-4">
           {/* Quỹ Chính */}

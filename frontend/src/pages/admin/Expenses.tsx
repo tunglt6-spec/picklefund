@@ -1074,7 +1074,7 @@ export function Expenses() {
         </div>
       </div>
 
-      <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+      <div className="p-6 space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
           <MetricCard accent="violet" icon={<DollarSign size={18} />}  label="Chi Quỹ Chính" value={formatVND(commonAmt)} />
