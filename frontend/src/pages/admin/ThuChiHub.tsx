@@ -458,7 +458,7 @@ export function ThuChiHub() {
       <>
         {/* ── KPI tài chính CHÍNH THỨC (Backend Summary = Source of Truth) ── */}
         <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp tài chính · nguồn: backend summary</p>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 max-xl:[&>:last-child:nth-child(odd)]:col-span-2 xl:grid-cols-5 xl:gap-4">
           {kpiFund('Quỹ Chính', summary?.commonBalance, 'Số dư kỳ (backend)', 'green', <Wallet size={18} />)}
           {kpiFund('Quỹ Phụ', summary?.miniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />)}
           {kpiFund('Tổng thu kỳ', summary?.commonIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
