@@ -537,10 +537,30 @@ export function FundPeriods() {
   const handleGenerateReceipts = async (periodId: string) => {
     try {
       const res = await api.post(`/personal-receipts/generate/${periodId}`)
-      const n = Array.isArray(res.data?.data) ? res.data.data.length : 0
-      toast.success(`Đã tạo ${n} phiếu thu cá nhân và gửi thông báo tới thành viên. Thành viên xem tại mục "Phiếu thu".`)
+      const d = res.data?.data
+      const n = Array.isArray(d?.receipts) ? d.receipts.length : 0
+      const t = d?.notified ?? { inApp: 0, email: 0, telegram: 0, failed: 0 }
+      toast.success(
+        `Đã tạo ${n} phiếu thu. Đã báo: ${t.inApp} trong app, ${t.email} email (kèm PDF), ${t.telegram} Telegram (kèm PDF)` +
+          (t.failed ? `, ${t.failed} lỗi.` : '.'),
+        { duration: 7000 },
+      )
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Tạo phiếu thu thất bại')
+    }
+  }
+
+  const handleDownloadReceiptsPdf = async (p: FundPeriod) => {
+    try {
+      const res = await api.get(`/personal-receipts/period/${p.id}/pdf`, { responseType: 'blob' })
+      const url = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `phieu-thu-${p.name}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err: any) {
+      toast.error('Chưa có phiếu thu để xuất — hãy bấm "Tạo phiếu thu" trước')
     }
   }
 
@@ -723,6 +743,8 @@ export function FundPeriods() {
                         )}
                         <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
                           onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
+                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
+                          onClick={() => handleDownloadReceiptsPdf(p)} aria-label="Tải PDF phiếu thu"><Download size={13} /></button>
                         <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
                           onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
                       </div>
@@ -944,6 +966,7 @@ export function FundPeriods() {
             <button title="Mở lại" onClick={() => handleSetStatus(p, 'active')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors"><LockOpen size={14} /></button>
           )}
           <button title="Tạo phiếu thu" onClick={() => handleGenerateReceipts(p.id)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"><FileText size={14} /></button>
+          <button title="Tải PDF phiếu thu" onClick={() => handleDownloadReceiptsPdf(p)} className="p-1.5 rounded hover:[background:var(--pf-primary-soft)] [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] transition-colors"><Download size={14} /></button>
           <button title="Xóa" onClick={() => handleDelete(p)} className="p-1.5 rounded hover:bg-red-50 [color:var(--pf-color-muted)] hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
         </>
       )}

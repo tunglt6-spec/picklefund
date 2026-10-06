@@ -1,13 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
+import { EmailService } from '../email/email.service';
+import { buildReceiptsPdf, type ReceiptPdfRow } from './receipt-pdf';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class PersonalReceiptsService {
+  private readonly logger = new Logger(PersonalReceiptsService.name);
+
   constructor(
     private prisma: PrismaService,
     private calculator: FinancialCalculatorService,
+    private email: EmailService,
+    private config: ConfigService,
   ) {}
 
   async findByMember(memberId: string, clubId: string) {
@@ -83,58 +90,173 @@ export class PersonalReceiptsService {
       }),
     );
 
-    await this.notifyMembers(fundPeriodId, clubId, receipts);
-    return receipts;
+    const notified = await this.notifyMembers(fundPeriodId, clubId, receipts);
+    return { receipts, notified };
   }
 
-  // Báo in-app (chuông) cho từng member có tài khoản; không báo lặp khi tạo lại phiếu cùng kỳ. Lỗi báo KHÔNG làm hỏng việc tạo phiếu.
+  private async pdfRows(fundPeriodId: string, clubId: string, memberId?: string) {
+    const period = await this.prisma.fundPeriod.findFirst({
+      where: { id: fundPeriodId, clubId },
+      select: { name: true, startDate: true, endDate: true, club: { select: { name: true } } },
+    });
+    if (!period) throw new NotFoundException('Kỳ quỹ không thuộc CLB này');
+    const list = await this.prisma.personalReceipt.findMany({
+      where: { fundPeriodId, clubId, ...(memberId ? { memberId } : {}) },
+      include: { member: { select: { fullName: true } } },
+      orderBy: { member: { fullName: 'asc' } },
+    });
+    const meta = {
+      clubName: period.club?.name ?? 'PickleFund',
+      periodName: period.name,
+      startDate: period.startDate,
+      endDate: period.endDate,
+      generatedAt: new Date(),
+    };
+    const rows: (ReceiptPdfRow & { memberId: string })[] = list.map((r) => ({
+      memberId: r.memberId,
+      memberName: r.member.fullName,
+      attendedSessions: r.attendedSessions,
+      totalSessions: r.totalSessions,
+      courtCost: Number(r.courtCost),
+      livingCost: Number(r.livingCost),
+      totalCost: Number(r.totalCost),
+      amountPaid: Number(r.amountPaid),
+      balance: Number(r.balance),
+      needToPay: Number(r.needToPay),
+    }));
+    return { meta, rows };
+  }
+
+  /** PDF gộp cả kỳ (mỗi thành viên 1 trang) hoặc riêng 1 thành viên. */
+  async pdfForPeriod(fundPeriodId: string, clubId: string, memberId?: string) {
+    const { meta, rows } = await this.pdfRows(fundPeriodId, clubId, memberId);
+    if (rows.length === 0) throw new NotFoundException('Chưa có phiếu thu — hãy tạo phiếu thu trước');
+    const buffer = buildReceiptsPdf(meta, rows);
+    return { buffer, filename: `phieu-thu-${meta.periodName}${memberId ? '-' + rows[0].memberName : ''}.pdf` };
+  }
+
+  private async sendTelegramMessage(
+    chatId: string,
+    token: string,
+    text: string,
+    pdf?: { buffer: Buffer; filename: string },
+  ) {
+    const base = `https://api.telegram.org/bot${token}`;
+    const r1 = await fetch(`${base}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (!r1.ok) throw new Error(`Telegram sendMessage ${r1.status}`);
+    if (pdf) {
+      const form = new FormData();
+      form.append('chat_id', chatId);
+      form.append('document', new Blob([new Uint8Array(pdf.buffer)], { type: 'application/pdf' }), pdf.filename);
+      const r2 = await fetch(`${base}/sendDocument`, { method: 'POST', body: form });
+      if (!r2.ok) throw new Error(`Telegram sendDocument ${r2.status}`);
+    }
+  }
+
+  /**
+   * Báo từng member qua: in-app (chuông) + email (kèm PDF) + Telegram (kèm PDF). Mỗi kênh độc lập —
+   * lỗi 1 kênh KHÔNG ảnh hưởng kênh khác hay việc tạo phiếu. In-app không báo lặp khi tạo lại.
+   * Email/Telegram tôn trọng User.notificationEnabled; Telegram cần member đã liên kết chat.
+   */
   private async notifyMembers(
     fundPeriodId: string,
     clubId: string,
     receipts: { memberId: string; needToPay: Decimal }[],
   ) {
+    const out = { inApp: 0, email: 0, telegram: 0, failed: 0 };
     try {
-      const period = await this.prisma.fundPeriod.findUnique({
-        where: { id: fundPeriodId },
-        select: { name: true },
-      });
+      const { meta, rows } = await this.pdfRows(fundPeriodId, clubId);
       const members = await this.prisma.member.findMany({
-        where: { id: { in: receipts.map((r) => r.memberId) }, userId: { not: null } },
-        select: { id: true, userId: true },
+        where: { id: { in: receipts.map((r) => r.memberId) }, isDeleted: false },
+        select: {
+          id: true,
+          email: true,
+          userId: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              notificationEnabled: true,
+              notificationPref: { select: { telegramChatId: true } },
+            },
+          },
+        },
       });
       const already = await this.prisma.notification.findMany({
-        where: {
-          clubId,
-          eventType: 'receipt_generated',
-          metadata: { path: ['fundPeriodId'], equals: fundPeriodId },
-        },
+        where: { clubId, eventType: 'receipt_generated', metadata: { path: ['fundPeriodId'], equals: fundPeriodId } },
         select: { userId: true },
       });
       const done = new Set(already.map((n) => n.userId));
       const need = new Map(receipts.map((r) => [r.memberId, r.needToPay]));
-      const data = members
-        .filter((m) => m.userId && !done.has(m.userId))
-        .map((m) => {
-          const due = need.get(m.id);
-          const owes = due && due.greaterThan(0);
-          return {
-            userId: m.userId as string,
-            clubId,
-            eventType: 'receipt_generated',
-            priority: 'MEDIUM' as const,
-            channel: 'IN_APP' as const,
-            title: `Phiếu thu kỳ ${period?.name ?? ''}`.trim(),
-            body: owes
-              ? `Phiếu thu cá nhân đã sẵn sàng. Bạn cần đóng thêm ${due.toFixed(0)} đ — xem chi tiết tại mục Phiếu thu.`
-              : 'Phiếu thu cá nhân đã sẵn sàng — xem chi tiết tại mục Phiếu thu.',
-            metadata: { fundPeriodId },
-            status: 'SENT' as const,
-            sentAt: new Date(),
-          };
-        });
-      if (data.length) await this.prisma.notification.createMany({ data });
-    } catch {
-      // best-effort
+      const setting = await this.prisma.systemSetting
+        .findUnique({ where: { key: `telegram_bot_token_${clubId}` } })
+        .catch(() => null);
+      const tgToken = setting?.value?.trim() || this.config.get<string>('TELEGRAM_BOT_TOKEN') || '';
+      const isRealEmail = (e?: string | null): e is string =>
+        !!e && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) && !/\.local$/i.test(e);
+
+      for (const m of members) {
+        const due = need.get(m.id);
+        const owes = !!due && due.greaterThan(0);
+        const title = `Phiếu thu kỳ ${meta.periodName}`;
+        const body = owes
+          ? `Phiếu thu cá nhân đã sẵn sàng. Bạn cần đóng thêm ${due!.toFixed(0)} đ. Xem chi tiết tại mục Phiếu thu.`
+          : 'Phiếu thu cá nhân đã sẵn sàng. Xem chi tiết tại mục Phiếu thu.';
+        const row = rows.find((r) => r.memberId === m.id);
+        const single = row ? buildReceiptsPdf(meta, [row]) : null;
+        const filename = `phieu-thu-${meta.periodName}.pdf`;
+
+        if (m.userId && !done.has(m.userId)) {
+          try {
+            await this.prisma.notification.create({
+              data: {
+                userId: m.userId,
+                clubId,
+                eventType: 'receipt_generated',
+                priority: 'MEDIUM',
+                channel: 'IN_APP',
+                title,
+                body,
+                metadata: { fundPeriodId },
+                status: 'SENT',
+                sentAt: new Date(),
+              },
+            });
+            out.inApp++;
+          } catch (e) {
+            out.failed++;
+            this.logger.warn(`in-app: ${String(e)}`);
+          }
+        }
+        if (m.user && m.user.notificationEnabled === false) continue;
+
+        const to = [m.email, m.user?.email].find(isRealEmail);
+        if (to && this.email.isEnabled) {
+          const sent = await this.email.send(to, title, this.email.buildNotifHtml(title, body), {
+            fromName: meta.clubName,
+            ...(single ? { attachments: [{ filename, content: single }] } : {}),
+          });
+          if (sent) out.email++;
+          else out.failed++;
+        }
+        const chatId = m.user?.notificationPref?.telegramChatId;
+        if (chatId && tgToken) {
+          try {
+            await this.sendTelegramMessage(chatId, tgToken, `${title}\n${body}`, single ? { buffer: single, filename } : undefined);
+            out.telegram++;
+          } catch (e) {
+            out.failed++;
+            this.logger.warn(`telegram: ${String(e)}`);
+          }
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`notifyMembers: ${String(e)}`);
     }
+    return out;
   }
 }
