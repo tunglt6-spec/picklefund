@@ -1283,7 +1283,20 @@ export interface ReceiptData {
   isConfirmed: boolean
 }
 
-export async function exportReceiptPDF(data: ReceiptData) {
+/** "2026-10-03" hoặc ISO "2026-10-03T00:00:00.000Z" → "03/10/2026" (cắt phần ngày, không đổi múi giờ). */
+function vnDate(v?: string): string {
+  if (!v) return ''
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : v
+}
+
+export async function exportReceiptPDF(rawData: ReceiptData) {
+  const data: ReceiptData = {
+    ...rawData,
+    periodStartDate: vnDate(rawData.periodStartDate),
+    periodEndDate: vnDate(rawData.periodEndDate),
+    paymentDate: vnDate(rawData.paymentDate),
+  }
   // PDF VECTOR (cùng engine phiếu với Quỹ Phụ / biên nhận): font Be Vietnam Pro nhúng, logo + màu CLB,
   // không emoji/gradient, không html2canvas → mọi máy giống hệt, chữ chọn/sao chép được.
   const [{ default: jsPDF }, fonts, { buildPersonalReceiptPDF }, logo] = await Promise.all([

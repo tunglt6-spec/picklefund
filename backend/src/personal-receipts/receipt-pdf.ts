@@ -22,7 +22,8 @@ export interface ReceiptPdfMeta {
 }
 
 const vnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')} đ`;
-const d = (x: Date) => x.toLocaleDateString('vi-VN');
+const d = (x: Date) =>
+  `${String(x.getUTCDate()).padStart(2, '0')}/${String(x.getUTCMonth() + 1).padStart(2, '0')}/${x.getUTCFullYear()}`;
 
 /** PDF phiếu thu cá nhân — mỗi thành viên 1 trang A4. Trả null nếu thiếu font hoặc không có dòng. */
 export function buildReceiptsPdf(meta: ReceiptPdfMeta, rows: ReceiptPdfRow[]): Buffer | null {

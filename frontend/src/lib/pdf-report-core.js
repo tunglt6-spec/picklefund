@@ -669,7 +669,7 @@ export function buildPersonalReceiptPDF({ jsPDF, fonts, receipt: d, branding }) 
     spec: {
       docType: 'PTQ',
       club: d.clubName,
-      title: 'PHIẾU THU QUỸ',
+      title: 'PHIẾU THU',
       tag: 'Quỹ Chính',
       subtitle: d.periodName,
       number: hasNo ? `Số ${padNo(d.receiptNo)}` : '',
