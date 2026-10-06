@@ -1975,15 +1975,21 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
   items: FundOverviewItem[]; contributions: import('../../types').FundContribution[]; isMember: boolean; className?: string
 }) {
   return (
-    <section className={`pf-glass divide-y divide-[color:var(--pf-border-soft)] overflow-hidden rounded-[20px] ${className ?? ''}`}>
+    <div className={`flex flex-col gap-4 ${className ?? ''}`}>
       {items.map((it) => {
         const p = it.period
         const collected = it.mini
           ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
           : p ? contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0) : 0
         const iconBtn = 'inline-flex h-10 w-10 items-center justify-center rounded-xl border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] active:scale-95'
+        const cells: [string, string, boolean][] = [
+          ['Số dư', formatVND(it.stats.balance), true],
+          ['Đã thu', formatVND(collected), false],
+          ['Chờ xác nhận', formatVND(it.stats.totalPending), false],
+          ['Giao dịch', String(it.stats.txCount), false],
+        ]
         return (
-          <div key={it.title} className="px-4 py-4 sm:px-5">
+          <section key={it.title} className="pf-stat-card rounded-[20px] p-4 sm:p-5">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{it.icon}</span>
               <div className="min-w-0 flex-1">
@@ -1997,31 +2003,21 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
               {!isMember && <button type="button" aria-label={p ? 'Sửa quỹ' : 'Tạo kỳ quỹ'} onClick={it.onEdit} className={iconBtn}>{p ? <Pencil size={16} /> : <Plus size={16} />}</button>}
             </div>
 
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p>
-                <p className="text-[28px] font-extrabold leading-none tabular-nums whitespace-nowrap [color:var(--pf-primary-text)]">{formatVND(it.stats.balance)}</p>
-              </div>
-              <dl className="grid grid-cols-3 divide-x divide-[color:var(--pf-border-soft)] text-left">
-                {[
-                  ['Đã thu', formatVND(collected)],
-                  ['Chờ xác nhận', formatVND(it.stats.totalPending)],
-                  ['Giao dịch', String(it.stats.txCount)],
-                ].map(([k, v], i) => (
-                  <div key={k} className={`min-w-0 ${i === 0 ? 'pr-4' : 'px-4'}`}>
-                    <dt className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</dt>
-                    <dd className="mt-0.5 whitespace-nowrap text-sm font-bold tabular-nums [color:var(--pf-text)]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+              {cells.map(([k, v, hi]) => (
+                <div key={k} className="pf-stat-cell rounded-2xl px-2 py-3.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</p>
+                  <p className={`text-lg font-extrabold ${hi ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{v}</p>
+                </div>
+              ))}
             </div>
             {(it.unpaid ?? 0) > 0 && (
-              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa đóng: <strong className="[color:var(--pf-text)]">{it.unpaid}</strong></p>
+              <p className="mt-3 text-xs [color:var(--pf-color-muted)]">Chưa đóng: <strong className="[color:var(--pf-text)]">{it.unpaid}</strong></p>
             )}
-          </div>
+          </section>
         )
       })}
-    </section>
+    </div>
   )
 }
 
