@@ -1956,8 +1956,8 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
         <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
       </div>
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="pf-stat-cell rounded-lg px-2 py-3" data-hi="">
+      <div className="grid grid-cols-2 gap-3 text-center lg:grid-cols-3">
+        <div className="pf-stat-cell col-span-2 rounded-lg px-2 py-3 lg:col-span-1" data-hi="">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Số dư</p>
           <p className={`text-lg font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
