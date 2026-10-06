@@ -541,7 +541,6 @@ select:-webkit-autofill {
   .pf-stat-card .pf-stat-cell, .pf-glass .pf-stat-cell, .pf-glass-strong .pf-stat-cell { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl, .pf-stat-cell > p.text-2xl { white-space: nowrap; font-variant-numeric: tabular-nums; }
   @media (max-width: 1023px) {
-    .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl { font-size: clamp(0.6875rem, 12cqw, 1.125rem); }
     .pf-rows td button, .pf-rows td a, .table-base td button, .table-base td a { white-space: nowrap; }
     .pf-rows thead th, .table-base thead th { white-space: nowrap; }
   }
@@ -661,4 +660,9 @@ select:-webkit-autofill {
   textarea:not(:focus) {
     border-color: var(--pf-border-strong);
   }
+}
+
+/* Ngoài @layer để thắng utility text-*: số tiền trong ô thống kê tự co theo bề rộng ô, không tràn card. */
+@media (max-width: 1023px) {
+  .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl, .pf-stat-cell > p.text-2xl { font-size: clamp(0.6875rem, 13cqw, 1.125rem); white-space: nowrap; }
 }
