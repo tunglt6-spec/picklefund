@@ -1,8 +1,13 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { jsPDF } from 'jspdf';
+import { PDFDocument } from 'pdf-lib';
 import { loadFontsBase64 } from '../executive-report/export-fonts';
 
+/** Dữ liệu 1 phiếu — cùng shape ReceiptData của frontend (exportReceiptPDF) để dùng ĐÚNG mẫu phiếu của app. */
 export interface ReceiptPdfRow {
   memberName: string;
+  loginName?: string;
   attendedSessions: number;
   totalSessions: number;
   courtCost: number;
@@ -11,95 +16,104 @@ export interface ReceiptPdfRow {
   amountPaid: number;
   balance: number;
   needToPay: number;
+  paymentDate?: string;
+  isConfirmed: boolean;
 }
 
 export interface ReceiptPdfMeta {
   clubName: string;
   periodName: string;
-  startDate: Date;
-  endDate: Date;
+  /** dd/mm/yyyy */
+  startDate: string;
+  endDate: string;
+  contributionAmount: number;
+  totalCourtFee?: number;
+  totalOtherFee?: number;
+  memberCountForSplit?: number;
   generatedAt: Date;
 }
 
-const vnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')} đ`;
-const d = (x: Date) =>
-  `${String(x.getUTCDate()).padStart(2, '0')}/${String(x.getUTCMonth() + 1).padStart(2, '0')}/${x.getUTCFullYear()}`;
+type CoreModule = { buildPersonalReceiptPDF: (a: unknown) => { output: (t: 'arraybuffer') => ArrayBuffer } };
+let core: CoreModule | null = null;
 
-/** PDF phiếu thu cá nhân — mỗi thành viên 1 trang A4. Trả null nếu thiếu font hoặc không có dòng. */
-export function buildReceiptsPdf(meta: ReceiptPdfMeta, rows: ReceiptPdfRow[]): Buffer | null {
+/** Lõi PDF vector của app (bản CJS sinh từ frontend/src/lib bằng `npm run sync:pdf-core`). */
+function loadCore(): CoreModule | null {
+  if (core) return core;
+  const dirs = [
+    join(__dirname, '..', 'assets', 'pdf-core'), // dist/assets/pdf-core (prod) | src/assets/pdf-core (jest)
+    join(process.cwd(), 'dist', 'assets', 'pdf-core'),
+    join(process.cwd(), 'src', 'assets', 'pdf-core'),
+  ];
+  for (const d of dirs) {
+    const f = join(d, 'pdf-report-core.js');
+    if (existsSync(f)) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      core = require(f) as CoreModule;
+      return core;
+    }
+  }
+  return null;
+}
+
+/** "dd/MM/yyyy" và "HH:mm:ss dd/MM/yyyy" theo giờ Việt Nam. */
+function vnParts(d: Date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(d);
+  const g = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  const hh = g('hour') === '24' ? '00' : g('hour');
+  return { date: `${g('day')}/${g('month')}/${g('year')}`, full: `${hh}:${g('minute')}:${g('second')} ${g('day')}/${g('month')}/${g('year')}` };
+}
+
+/** 1 phiếu thu cá nhân theo ĐÚNG mẫu PDF của app (masthead + hero số tiền + chi tiết + chữ ký). */
+export function buildReceiptPdf(meta: ReceiptPdfMeta, r: ReceiptPdfRow): Buffer | null {
   const fonts = loadFontsBase64();
-  if (!fonts || rows.length === 0) return null;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  doc.addFileToVFS('BVP-Regular.ttf', fonts.regular);
-  doc.addFileToVFS('BVP-Bold.ttf', fonts.bold);
-  doc.addFont('BVP-Regular.ttf', 'BVP', 'normal');
-  doc.addFont('BVP-Bold.ttf', 'BVP', 'bold');
-
-  const W = 210;
-  const L = 20;
-  const R = W - 20;
-  const font = (size: number, bold = false, rgb: [number, number, number] = [30, 41, 59]) => {
-    doc.setFont('BVP', bold ? 'bold' : 'normal');
-    doc.setFontSize(size);
-    doc.setTextColor(...rgb);
-  };
-
-  rows.forEach((r, i) => {
-    if (i > 0) doc.addPage();
-    doc.setFillColor(109, 93, 251);
-    doc.rect(0, 0, W, 34, 'F');
-    font(11, false, [233, 230, 255]);
-    doc.text(meta.clubName.toUpperCase(), L, 14);
-    font(20, true, [255, 255, 255]);
-    doc.text('PHIẾU THU CÁ NHÂN', L, 26);
-
-    font(10, false, [100, 116, 139]);
-    doc.text('Thành viên', L, 48);
-    doc.text('Kỳ quỹ', L, 58);
-    doc.text('Thời gian', L, 68);
-    font(12, true);
-    doc.text(r.memberName, L + 32, 48);
-    doc.text(meta.periodName, L + 32, 58);
-    font(11, false);
-    doc.text(`${d(meta.startDate)} – ${d(meta.endDate)}`, L + 32, 68);
-
-    const lines: [string, string][] = [
-      ['Số buổi tham dự', `${r.attendedSessions}/${r.totalSessions} buổi`],
-      ['Chi phí sân', vnd(r.courtCost)],
-      ['Chi phí sinh hoạt', vnd(r.livingCost)],
-      ['Tổng chi phí', vnd(r.totalCost)],
-      ['Đã đóng', vnd(r.amountPaid)],
-    ];
-    let y = 86;
-    lines.forEach(([k, v], idx) => {
-      if (idx % 2 === 0) {
-        doc.setFillColor(246, 245, 255);
-        doc.rect(L - 3, y - 6, R - L + 6, 11, 'F');
-      }
-      font(11, false);
-      doc.text(k, L, y);
-      font(11, true);
-      doc.text(v, R, y, { align: 'right' });
-      y += 11;
-    });
-
-    y += 6;
-    const owes = r.needToPay > 0;
-    if (owes) doc.setFillColor(254, 242, 242);
-    else doc.setFillColor(236, 253, 245);
-    doc.roundedRect(L - 3, y - 8, R - L + 6, 26, 4, 4, 'F');
-    font(10, false, [100, 116, 139]);
-    doc.text(owes ? 'CẦN ĐÓNG THÊM' : r.balance > 0 ? 'SỐ DƯ CÒN LẠI' : 'ĐÃ ĐỦ — KHÔNG PHẢI ĐÓNG THÊM', L + 2, y);
-    font(20, true, owes ? [220, 38, 38] : [5, 150, 105]);
-    doc.text(owes ? vnd(r.needToPay) : vnd(Math.max(r.balance, 0)), L + 2, y + 12);
-
-    font(8.5, false, [148, 163, 184]);
-    doc.text(
-      `Phiếu chốt số liệu lúc ${meta.generatedAt.toLocaleString('vi-VN')} · Tạo tự động bởi PickleFund`,
-      L,
-      285,
-    );
+  const c = loadCore();
+  if (!fonts || !c) return null;
+  const now = vnParts(meta.generatedAt);
+  const doc = c.buildPersonalReceiptPDF({
+    jsPDF,
+    fonts,
+    branding: { name: meta.clubName, footer: meta.clubName, logo: null, primaryColor: undefined },
+    receipt: {
+      memberName: r.memberName,
+      loginName: r.loginName,
+      periodName: meta.periodName,
+      periodStartDate: meta.startDate,
+      periodEndDate: meta.endDate,
+      contributionAmount: meta.contributionAmount,
+      clubName: meta.clubName,
+      amountPaid: r.amountPaid,
+      paymentDate: r.paymentDate ?? '',
+      attendedSessions: r.attendedSessions,
+      totalSessions: r.totalSessions,
+      totalCourtFee: meta.totalCourtFee,
+      memberCountForSplit: meta.memberCountForSplit,
+      courtCost: r.courtCost,
+      totalOtherFee: meta.totalOtherFee,
+      livingCost: r.livingCost,
+      totalCost: r.totalCost,
+      balance: r.balance,
+      isConfirmed: r.isConfirmed,
+      printedDateText: now.date,
+      printedAtText: now.full,
+    },
   });
-
   return Buffer.from(doc.output('arraybuffer'));
+}
+
+/** Gộp nhiều phiếu (mỗi thành viên 1 trang theo mẫu app) thành 1 file PDF. */
+export async function buildReceiptsPdf(meta: ReceiptPdfMeta, rows: ReceiptPdfRow[]): Promise<Buffer | null> {
+  if (rows.length === 0) return null;
+  const singles = rows.map((r) => buildReceiptPdf(meta, r));
+  if (singles.some((b) => !b)) return null;
+  if (singles.length === 1) return singles[0];
+  const out = await PDFDocument.create();
+  for (const buf of singles as Buffer[]) {
+    const src = await PDFDocument.load(buf);
+    const pages = await out.copyPages(src, src.getPageIndices());
+    pages.forEach((p) => out.addPage(p));
+  }
+  return Buffer.from(await out.save());
 }

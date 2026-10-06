@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { FinancialCalculatorService } from '../financial/financial-calculator.service';
 import { EmailService } from '../email/email.service';
-import { buildReceiptsPdf, type ReceiptPdfRow } from './receipt-pdf';
+import { buildReceiptPdf, buildReceiptsPdf, type ReceiptPdfMeta, type ReceiptPdfRow } from './receipt-pdf';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -97,33 +97,56 @@ export class PersonalReceiptsService {
   private async pdfRows(fundPeriodId: string, clubId: string, memberId?: string) {
     const period = await this.prisma.fundPeriod.findFirst({
       where: { id: fundPeriodId, clubId },
-      select: { name: true, startDate: true, endDate: true, club: { select: { name: true } } },
+      select: {
+        name: true, startDate: true, endDate: true, contributionAmount: true,
+        club: { select: { name: true } },
+      },
     });
     if (!period) throw new NotFoundException('Kỳ quỹ không thuộc CLB này');
     const list = await this.prisma.personalReceipt.findMany({
       where: { fundPeriodId, clubId, ...(memberId ? { memberId } : {}) },
-      include: { member: { select: { fullName: true } } },
+      include: { member: { select: { fullName: true, user: { select: { username: true } } } } },
       orderBy: { member: { fullName: 'asc' } },
     });
-    const meta = {
+    const contribs = await this.prisma.fundContribution.findMany({
+      where: { fundPeriodId, clubId, isConfirmed: true, memberId: { in: list.map((r) => r.memberId) } },
+      select: { memberId: true, paymentDate: true },
+      orderBy: { paymentDate: 'desc' },
+    });
+    const lastPaid = new Map<string, Date>();
+    for (const c of contribs) if (c.memberId && c.paymentDate && !lastPaid.has(c.memberId)) lastPaid.set(c.memberId, c.paymentDate);
+    const summary = await this.calculator.calculate(fundPeriodId, clubId).catch(() => null);
+    const ddmmyyyy = (x: Date) =>
+      `${String(x.getUTCDate()).padStart(2, '0')}/${String(x.getUTCMonth() + 1).padStart(2, '0')}/${x.getUTCFullYear()}`;
+    const meta: ReceiptPdfMeta = {
       clubName: period.club?.name ?? 'PickleFund',
       periodName: period.name,
-      startDate: period.startDate,
-      endDate: period.endDate,
+      startDate: ddmmyyyy(period.startDate),
+      endDate: ddmmyyyy(period.endDate),
+      contributionAmount: Number(period.contributionAmount),
+      totalCourtFee: summary?.commonFund.totalCourt,
+      totalOtherFee: summary?.commonFund.totalLiving,
+      memberCountForSplit: summary && summary.memberCount > 0 ? summary.memberCount : undefined,
       generatedAt: new Date(),
     };
-    const rows: (ReceiptPdfRow & { memberId: string })[] = list.map((r) => ({
-      memberId: r.memberId,
-      memberName: r.member.fullName,
-      attendedSessions: r.attendedSessions,
-      totalSessions: r.totalSessions,
-      courtCost: Number(r.courtCost),
-      livingCost: Number(r.livingCost),
-      totalCost: Number(r.totalCost),
-      amountPaid: Number(r.amountPaid),
-      balance: Number(r.balance),
-      needToPay: Number(r.needToPay),
-    }));
+    const rows: (ReceiptPdfRow & { memberId: string })[] = list.map((r) => {
+      const paid = lastPaid.get(r.memberId);
+      return {
+        memberId: r.memberId,
+        memberName: r.member.fullName,
+        loginName: r.member.user?.username,
+        attendedSessions: r.attendedSessions,
+        totalSessions: r.totalSessions,
+        courtCost: Number(r.courtCost),
+        livingCost: Number(r.livingCost),
+        totalCost: Number(r.totalCost),
+        amountPaid: Number(r.amountPaid),
+        balance: Number(r.balance),
+        needToPay: Number(r.needToPay),
+        paymentDate: paid ? ddmmyyyy(paid) : '',
+        isConfirmed: Number(r.amountPaid) > 0,
+      };
+    });
     return { meta, rows };
   }
 
@@ -131,7 +154,7 @@ export class PersonalReceiptsService {
   async pdfForPeriod(fundPeriodId: string, clubId: string, memberId?: string) {
     const { meta, rows } = await this.pdfRows(fundPeriodId, clubId, memberId);
     if (rows.length === 0) throw new NotFoundException('Chưa có phiếu thu — hãy tạo phiếu thu trước');
-    const buffer = buildReceiptsPdf(meta, rows);
+    const buffer = await buildReceiptsPdf(meta, rows);
     return { buffer, filename: `phieu-thu-${meta.periodName}${memberId ? '-' + rows[0].memberName : ''}.pdf` };
   }
 
@@ -207,7 +230,7 @@ export class PersonalReceiptsService {
           ? `Phiếu thu cá nhân đã sẵn sàng. Bạn cần đóng thêm ${due!.toFixed(0)} đ. Xem chi tiết tại mục Phiếu thu.`
           : 'Phiếu thu cá nhân đã sẵn sàng. Xem chi tiết tại mục Phiếu thu.';
         const row = rows.find((r) => r.memberId === m.id);
-        const single = row ? buildReceiptsPdf(meta, [row]) : null;
+        const single = row ? buildReceiptPdf(meta, row) : null;
         const filename = `phieu-thu-${meta.periodName}.pdf`;
 
         if (m.userId && !done.has(m.userId)) {
