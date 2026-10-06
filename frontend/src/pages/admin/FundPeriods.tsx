@@ -999,7 +999,7 @@ export function FundPeriods() {
       <div className="flex flex-col gap-5">
 
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
           <KpiSummaryCard
             title="TỔNG QUỸ CHÍNH"
             icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
@@ -1019,7 +1019,7 @@ export function FundPeriods() {
         </div>
 
         {/* Fund detail cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
           <FundDetailCard
             title="Quỹ Chính CLB"
             icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
@@ -1951,24 +1951,24 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
   // Khoản thu mở: KHÔNG hiển thị Mục tiêu / Còn thiếu / Tiến độ (mức đóng thực tế mỗi
   // CLB khác nhau nên % theo mức cấu hình gây hiểu nhầm). Chỉ hiện SỐ TIỀN THẬT.
   return (
-    <div className="pf-stat-card rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="pf-stat-card rounded-xl p-4 lg:p-5">
+      <div className="flex items-center gap-2 mb-3 lg:mb-4">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
         <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-center lg:grid-cols-3">
-        <div className="pf-stat-cell col-span-2 rounded-lg px-2 py-3 lg:col-span-1" data-hi="">
+      <div className="grid grid-cols-3 gap-2 text-center lg:gap-3">
+        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3" data-hi="">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Số dư</p>
           <p className={`text-lg font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
             <p className="text-xs text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
           )}
         </div>
-        <div className="pf-stat-cell rounded-lg px-2 py-3">
+        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Chờ xác nhận</p>
           <p className={`text-lg font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
         </div>
-        <div className="pf-stat-cell rounded-lg px-2 py-3">
+        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Giao dịch</p>
           <p className="text-lg font-bold [color:var(--pf-text)]">{stats.txCount}</p>
         </div>
@@ -1996,8 +1996,8 @@ function FundDetailCard({ title, icon, period, color, contributions, onEdit, onV
       : 0
 
   return (
-    <div className="pf-stat-card rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
+    <div className="pf-stat-card rounded-xl p-4 lg:p-5">
+      <div className="flex items-center justify-between mb-2 lg:mb-3">
         <div className="flex items-center gap-2">
           {icon}
           <span className="font-bold [color:var(--pf-text)] text-sm">{title}</span>
@@ -2006,32 +2006,29 @@ function FundDetailCard({ title, icon, period, color, contributions, onEdit, onV
       </div>
       {period ? (
         <>
-          <p className="text-xs [color:var(--pf-color-muted)] mb-1">{period.name}</p>
-          <p className="text-xs [color:var(--pf-color-muted)] mb-3">{formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
+          <p className="mb-2 text-xs [color:var(--pf-color-muted)] lg:mb-3"><span className="font-medium [color:var(--pf-text)]">{period.name}</span> · {formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
           {!miniMode && prevBalance > 0 && (
             <div className="flex items-center justify-between text-xs mt-1 mb-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
               <span className="text-emerald-700">↩ Kết dư kỳ trước</span>
               <span className="font-semibold text-emerald-700">+{formatVND(prevBalance)}</span>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2 mt-2 text-center">
-            <div className="pf-stat-cell rounded-lg px-2 py-2.5" data-hi="">
+          <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+            <div className="pf-stat-cell rounded-lg px-2 py-2" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Đã thu</p>
               <p className="text-base font-bold [color:var(--pf-text)]">{formatVND(collected)}</p>
             </div>
-            <div className="pf-stat-cell rounded-lg px-2 py-2.5">
+            <div className="pf-stat-cell rounded-lg px-2 py-2">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Giao dịch</p>
               <p className="text-base font-bold [color:var(--pf-text)]">{miniMode
                 ? contributions.filter(c => c.fundSource === 'MINI').length
                 : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).length}</p>
             </div>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" className="flex-1" onClick={onView}>
+            <Button variant="outline" size="sm" className="h-full min-h-11" onClick={onView}>
               <Eye size={13} />Chi tiết
             </Button>
             {!isMember && (
-              <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+              <Button variant="outline" size="sm" className="h-full min-h-11" onClick={onEdit}>
                 <Pencil size={13} />Sửa quỹ
               </Button>
             )}
