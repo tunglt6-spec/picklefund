@@ -536,8 +536,9 @@ export function FundPeriods() {
 
   const handleGenerateReceipts = async (periodId: string) => {
     try {
-      await api.post(`/personal-receipts/generate/${periodId}`)
-      toast.success('Đã tạo phiếu thu cho tất cả thành viên')
+      const res = await api.post(`/personal-receipts/generate/${periodId}`)
+      const n = Array.isArray(res.data?.data) ? res.data.data.length : 0
+      toast.success(`Đã tạo ${n} phiếu thu cá nhân và gửi thông báo tới thành viên. Thành viên xem tại mục "Phiếu thu".`)
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Tạo phiếu thu thất bại')
     }

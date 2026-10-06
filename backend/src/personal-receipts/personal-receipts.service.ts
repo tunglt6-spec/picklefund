@@ -83,6 +83,58 @@ export class PersonalReceiptsService {
       }),
     );
 
+    await this.notifyMembers(fundPeriodId, clubId, receipts);
     return receipts;
+  }
+
+  // Báo in-app (chuông) cho từng member có tài khoản; không báo lặp khi tạo lại phiếu cùng kỳ. Lỗi báo KHÔNG làm hỏng việc tạo phiếu.
+  private async notifyMembers(
+    fundPeriodId: string,
+    clubId: string,
+    receipts: { memberId: string; needToPay: Decimal }[],
+  ) {
+    try {
+      const period = await this.prisma.fundPeriod.findUnique({
+        where: { id: fundPeriodId },
+        select: { name: true },
+      });
+      const members = await this.prisma.member.findMany({
+        where: { id: { in: receipts.map((r) => r.memberId) }, userId: { not: null } },
+        select: { id: true, userId: true },
+      });
+      const already = await this.prisma.notification.findMany({
+        where: {
+          clubId,
+          eventType: 'receipt_generated',
+          metadata: { path: ['fundPeriodId'], equals: fundPeriodId },
+        },
+        select: { userId: true },
+      });
+      const done = new Set(already.map((n) => n.userId));
+      const need = new Map(receipts.map((r) => [r.memberId, r.needToPay]));
+      const data = members
+        .filter((m) => m.userId && !done.has(m.userId))
+        .map((m) => {
+          const due = need.get(m.id);
+          const owes = due && due.greaterThan(0);
+          return {
+            userId: m.userId as string,
+            clubId,
+            eventType: 'receipt_generated',
+            priority: 'MEDIUM' as const,
+            channel: 'IN_APP' as const,
+            title: `Phiếu thu kỳ ${period?.name ?? ''}`.trim(),
+            body: owes
+              ? `Phiếu thu cá nhân đã sẵn sàng. Bạn cần đóng thêm ${due.toFixed(0)} đ — xem chi tiết tại mục Phiếu thu.`
+              : 'Phiếu thu cá nhân đã sẵn sàng — xem chi tiết tại mục Phiếu thu.',
+            metadata: { fundPeriodId },
+            status: 'SENT' as const,
+            sentAt: new Date(),
+          };
+        });
+      if (data.length) await this.prisma.notification.createMany({ data });
+    } catch {
+      // best-effort
+    }
   }
 }
