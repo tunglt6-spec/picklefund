@@ -526,11 +526,11 @@ select:-webkit-autofill {
     box-shadow: inset 0 1px 0 var(--pf-glass-hi), 0 0 0 2px color-mix(in srgb, var(--pf-primary) 6%, transparent), 0 5px 12px color-mix(in srgb, var(--pf-primary) 13%, transparent);
   }
   /* Fold/màn hẹp: ô số liệu lồng trong thẻ/kính — bỏ blur lồng nhau (Chrome Android vẽ trống) và cho số xuống dòng thay vì bị cắt. */
-  .pf-stat-cell { min-width: 0; }
+  .pf-stat-cell { min-width: 0; container-type: inline-size; }
   .pf-stat-card .pf-stat-cell, .pf-glass .pf-stat-cell, .pf-glass-strong .pf-stat-cell { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl, .pf-stat-cell > p.text-2xl { white-space: nowrap; font-variant-numeric: tabular-nums; }
   @media (max-width: 1023px) {
-    .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl { font-size: clamp(0.8125rem, 2.9vw, 1.0625rem); }
+    .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl { font-size: clamp(0.6875rem, 12cqw, 1.125rem); }
     .pf-rows td button, .pf-rows td a, .table-base td button, .table-base td a { white-space: nowrap; }
     .pf-rows thead th, .table-base thead th { white-space: nowrap; }
   }

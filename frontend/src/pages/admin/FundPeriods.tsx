@@ -1123,7 +1123,39 @@ export function FundPeriods() {
                   <p className="text-sm [color:var(--pf-color-muted)]">Không có kỳ quỹ nào</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                <ul className="flex flex-col gap-3 p-3 lg:hidden">
+                  {paginated.map(p => (
+                    <li key={p.id} className="pf-rowcard p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          {!isMember && (
+                            <input type="checkbox" aria-label={`Chọn kỳ quỹ ${p.name}`}
+                              className="mt-1 h-5 w-5 shrink-0 rounded border-slate-300 [accent-color:var(--pf-primary)]"
+                              checked={selectedIds.has(p.id)} onChange={() => toggleOne(p.id)} />
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold [color:var(--pf-text)]">{p.name}</p>
+                            <p className="text-xs [color:var(--pf-color-muted)]">{(p.type ?? 'chung') === 'game' ? 'Quỹ Phụ' : 'Quỹ Chính'} · {periodDays(p)} ngày</p>
+                          </div>
+                        </div>
+                        <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="pf-stat-cell rounded-lg px-2 py-2 text-center">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Mức đóng/người</p>
+                          <p className="mt-0.5 text-base font-bold [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</p>
+                        </div>
+                        <div className="pf-stat-cell rounded-lg px-2 py-2 text-center">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Đã thu</p>
+                          <p className="mt-0.5 text-base font-bold text-green-600">{formatVND(periodCollected(p))}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex justify-end">{periodActions(p)}</div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden overflow-x-auto lg:block">
                   <DataTable
                     columns={periodColumns}
                     rows={paginated}
@@ -1131,6 +1163,7 @@ export function FundPeriods() {
                     rowClassName={(p) => selectedIds.has(p.id) ? 'bg-red-50/50' : 'hover:[background:var(--pf-color-muted-soft)]'}
                   />
                 </div>
+                </>
               )}
 
               {/* Pagination */}
