@@ -999,7 +999,27 @@ export function FundPeriods() {
       <div className="flex flex-col gap-5">
 
         {/* KPI cards */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
+        <FundOverviewCompact
+          className="lg:hidden"
+          isMember={isMember}
+          contributions={contributions}
+          items={[
+            {
+              title: 'Quỹ Chính', tone: 'main', icon: <Building2 size={18} />, stats: stats.chung,
+              period: activePeriods.chung, unpaid: stats.chung.unpaidCount,
+              onView: () => activePeriods.chung && setViewPeriod(activePeriods.chung),
+              onEdit: () => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true)),
+            },
+            {
+              title: 'Quỹ Phụ', tone: 'mini', icon: <Wallet size={18} />, stats: stats.game, mini: true,
+              period: activePeriods.game ?? latestGamePeriod,
+              onView: () => { const p = activePeriods.game ?? latestGamePeriod; if (p) setViewPeriod(p) },
+              onEdit: () => (activePeriods.game ?? latestGamePeriod) ? openEdit((activePeriods.game ?? latestGamePeriod)!) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true)),
+            },
+          ]}
+        />
+
+        <div className="hidden gap-4 lg:grid lg:grid-cols-2">
           <KpiSummaryCard
             title="TỔNG QUỸ CHÍNH"
             icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
@@ -1019,7 +1039,7 @@ export function FundPeriods() {
         </div>
 
         {/* Fund detail cards */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
+        <div className="hidden gap-4 lg:grid lg:grid-cols-2">
           <FundDetailCard
             title="Quỹ Chính CLB"
             icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
@@ -1942,6 +1962,67 @@ interface KpiStats {
   balance: number
   unpaidCount: number; txCount: number; totalPending: number
   prevCarryover?: number
+}
+
+interface FundOverviewItem {
+  title: string; tone: 'main' | 'mini'; icon: React.ReactNode; stats: KpiStats
+  period: FundPeriod | undefined; unpaid?: number; mini?: boolean
+  onView: () => void; onEdit: () => void
+}
+
+/** Tổng quan quỹ cho màn < 1024px: 1 khối kính, mỗi quỹ 1 hàng — không hộp lồng hộp. */
+function FundOverviewCompact({ items, contributions, isMember, className }: {
+  items: FundOverviewItem[]; contributions: import('../../types').FundContribution[]; isMember: boolean; className?: string
+}) {
+  return (
+    <section className={`pf-glass divide-y divide-[color:var(--pf-border-soft)] overflow-hidden rounded-[20px] ${className ?? ''}`}>
+      {items.map((it) => {
+        const p = it.period
+        const collected = it.mini
+          ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
+          : p ? contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0) : 0
+        const iconBtn = 'inline-flex h-10 w-10 items-center justify-center rounded-xl border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] active:scale-95'
+        return (
+          <div key={it.title} className="px-4 py-4 sm:px-5">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{it.icon}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-bold leading-tight [color:var(--pf-text)]">{it.title}</p>
+                <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">
+                  {p ? `${p.name} · ${formatDate(p.startDate)} – ${formatDate(p.endDate)}` : 'Chưa có kỳ quỹ đang mở'}
+                </p>
+              </div>
+              {p && <Badge variant={it.tone === 'main' ? 'indigo' : 'purple'} dot>{statusLabel[p.status]}</Badge>}
+              {p && <button type="button" aria-label="Chi tiết" onClick={it.onView} className={iconBtn}><Eye size={16} /></button>}
+              {!isMember && <button type="button" aria-label={p ? 'Sửa quỹ' : 'Tạo kỳ quỹ'} onClick={it.onEdit} className={iconBtn}>{p ? <Pencil size={16} /> : <Plus size={16} />}</button>}
+            </div>
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p>
+                <p className="text-[28px] font-extrabold leading-none tabular-nums whitespace-nowrap [color:var(--pf-primary-text)]">{formatVND(it.stats.balance)}</p>
+              </div>
+              <dl className="grid grid-cols-3 divide-x divide-[color:var(--pf-border-soft)] text-left">
+                {[
+                  ['Đã thu', formatVND(collected)],
+                  ['Chờ xác nhận', formatVND(it.stats.totalPending)],
+                  ['Giao dịch', String(it.stats.txCount)],
+                ].map(([k, v], i) => (
+                  <div key={k} className={`min-w-0 ${i === 0 ? 'pr-4' : 'px-4'}`}>
+                    <dt className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</dt>
+                    <dd className="mt-0.5 whitespace-nowrap text-sm font-bold tabular-nums [color:var(--pf-text)]">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            {(it.unpaid ?? 0) > 0 && (
+              <p className="mt-2 text-xs [color:var(--pf-color-muted)]">Chưa đóng: <strong className="[color:var(--pf-text)]">{it.unpaid}</strong></p>
+            )}
+          </div>
+        )
+      })}
+    </section>
+  )
 }
 
 function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, footerValue }: {
