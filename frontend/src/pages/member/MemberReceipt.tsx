@@ -8,6 +8,7 @@ import { useMemberPortal } from '../../hooks/useMemberPortal'
 import { formatDate, formatVND } from '../../lib/utils'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { PaymentQrImage } from '../../components/member/PaymentQrImage'
 import { exportReceiptPDF } from '../../lib/export'
 import { useBrandingStore } from '../../store/brandingStore'
 
@@ -159,18 +160,17 @@ export function MemberReceipt() {
   }
 
   // Tải ảnh QR (fetch blob → download; fallback mở tab mới nếu CORS chặn).
-  const downloadQr = async (url: string) => {
+  const downloadQr = async (amount: number) => {
     try {
-      const res = await fetch(url)
-      const blob = await res.blob()
-      const href = URL.createObjectURL(blob)
+      const res = await api.get('/member/me/payment-qr', { params: { amount }, responseType: 'blob' })
+      const href = URL.createObjectURL(res.data as Blob)
       const a = document.createElement('a')
-      a.href = href; a.download = 'QR-thanh-toan-quy.jpg'
+      a.href = href; a.download = 'QR-thanh-toan-quy.png'
       document.body.appendChild(a); a.click(); a.remove()
       URL.revokeObjectURL(href)
       toast.success('Đã tải mã QR')
     } catch {
-      window.open(url, '_blank')
+      toast.error('Không tải được mã QR. Vui lòng thử lại.')
     }
   }
 
@@ -288,7 +288,7 @@ export function MemberReceipt() {
                               {qr && (
                                 <>
                                   <div className="flex gap-3 items-center">
-                                    <img src={qr} alt="QR" className="w-24 h-24 rounded-lg [background:var(--pf-surface)] border border-amber-200" />
+                                    <PaymentQrImage amount={needToPay} className="h-24 w-24 rounded-lg border border-amber-200" />
                                     <div className="text-xs [color:var(--pf-color-muted)] space-y-0.5">
                                       <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
                                       <p>{bankInfo!.bank_account_name}</p>
@@ -297,7 +297,7 @@ export function MemberReceipt() {
                                     </div>
                                   </div>
                                   <div className="flex gap-2">
-                                    <button onClick={() => downloadQr(qr)}
+                                    <button onClick={() => downloadQr(needToPay)}
                                       className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] active:opacity-80">
                                       <Download size={13} />Tải QR
                                     </button>
@@ -360,7 +360,7 @@ export function MemberReceipt() {
             <div className="[background:var(--pf-color-warning-soft)] border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
               <div className="shrink-0">
                 {qr
-                  ? <img src={qr} alt="QR thanh toán" className="w-32 h-32 rounded-xl border-2 border-amber-200 [background:var(--pf-surface)] shadow-sm" />
+                  ? <PaymentQrImage amount={debt} />
                   : <div className="w-32 h-32 rounded-xl border-2 border-amber-200 [background:var(--pf-surface)] flex items-center justify-center"><QrCode size={40} className="[color:var(--pf-color-warning)]" /></div>
                 }
               </div>
@@ -378,7 +378,7 @@ export function MemberReceipt() {
                 <p className="text-xs [color:var(--pf-color-muted)] mt-2">Mở app ngân hàng → Quét mã QR → Kiểm tra số tiền → Chuyển khoản</p>
                 {qr && (
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <button onClick={() => downloadQr(qr)}
+                    <button onClick={() => downloadQr(debt)}
                       className="inline-flex items-center gap-1.5 rounded-lg px-3 min-h-11 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
                       <Download size={14} />Tải mã QR
                     </button>
@@ -496,7 +496,7 @@ export function MemberReceipt() {
                             </div>
                             {qr ? (
                               <div className="flex gap-5 items-start">
-                                <img src={qr} alt="QR thanh toán" className="w-36 h-36 rounded-lg border border-amber-200 [background:var(--pf-surface)]" />
+                                <PaymentQrImage amount={needToPay} className="h-36 w-36 rounded-lg border border-amber-200" />
                                 <div className="text-xs [color:var(--pf-color-muted)] space-y-1">
                                   <p><span className="[color:var(--pf-color-muted)]">Ngân hàng:</span> {bankInfo!.bank_code}</p>
                                   <p><span className="[color:var(--pf-color-muted)]">Số TK:</span> <span className="font-mono font-semibold">{bankInfo!.bank_account_number}</span></p>
