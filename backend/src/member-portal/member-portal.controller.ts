@@ -154,8 +154,9 @@ export class MemberPortalController {
       return;
     }
     try {
-      const r = await fetch(url);
-      if (!r.ok) {
+      const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      const ct = r.headers.get('content-type') || '';
+      if (!r.ok || !/^image\//i.test(ct)) {
         res.status(502).end();
         return;
       }

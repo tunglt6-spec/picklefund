@@ -288,7 +288,7 @@ export function MemberReceipt() {
                               {qr && (
                                 <>
                                   <div className="flex gap-3 items-center">
-                                    <PaymentQrImage amount={needToPay} className="h-24 w-24 rounded-lg border border-amber-200" />
+                                    <PaymentQrImage amount={needToPay} bank={bankInfo} memo={`Dong quy ${period?.name ?? ''} - ${memberName}`} className="h-24 w-24 rounded-lg border border-amber-200" />
                                     <div className="text-xs [color:var(--pf-color-muted)] space-y-0.5">
                                       <p className="font-mono font-semibold">{bankInfo!.bank_account_number}</p>
                                       <p>{bankInfo!.bank_account_name}</p>
@@ -360,7 +360,7 @@ export function MemberReceipt() {
             <div className="[background:var(--pf-color-warning-soft)] border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
               <div className="shrink-0">
                 {qr
-                  ? <PaymentQrImage amount={debt} />
+                  ? <PaymentQrImage amount={debt} bank={bankInfo} memo={`Dong quy ${period?.name ?? ''} - ${memberName}`} />
                   : <div className="w-32 h-32 rounded-xl border-2 border-amber-200 [background:var(--pf-surface)] flex items-center justify-center"><QrCode size={40} className="[color:var(--pf-color-warning)]" /></div>
                 }
               </div>
@@ -496,7 +496,7 @@ export function MemberReceipt() {
                             </div>
                             {qr ? (
                               <div className="flex gap-5 items-start">
-                                <PaymentQrImage amount={needToPay} className="h-36 w-36 rounded-lg border border-amber-200" />
+                                <PaymentQrImage amount={needToPay} bank={bankInfo} memo={`Dong quy ${period?.name ?? ''} - ${memberName}`} className="h-36 w-36 rounded-lg border border-amber-200" />
                                 <div className="text-xs [color:var(--pf-color-muted)] space-y-1">
                                   <p><span className="[color:var(--pf-color-muted)]">Ngân hàng:</span> {bankInfo!.bank_code}</p>
                                   <p><span className="[color:var(--pf-color-muted)]">Số TK:</span> <span className="font-mono font-semibold">{bankInfo!.bank_account_number}</span></p>
