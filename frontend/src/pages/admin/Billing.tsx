@@ -233,9 +233,9 @@ export function Billing() {
               <table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
-                    <th scope="col" className="text-left px-4 py-3 font-medium [color:var(--pf-color-muted)]">Tính năng</th>
+                    <th scope="col" className="text-left px-3 py-3 font-medium [color:var(--pf-color-muted)] sm:px-4">Tính năng</th>
                     {plans.map(p => (
-                      <th scope="col" key={p.tier} className="text-center px-4 py-3 font-medium [color:var(--pf-color-muted)] min-w-[100px]">
+                      <th scope="col" key={p.tier} className="text-center px-2 py-3 font-medium [color:var(--pf-color-muted)] sm:px-4 sm:min-w-[100px]">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${PLAN_BADGE[p.tier]}`}>
                           {p.tier === currentTier && <Check size={11} className="shrink-0" />}{p.name ?? PLAN_LABEL[p.tier]}
                         </span>
@@ -246,15 +246,15 @@ export function Billing() {
                 <tbody>
                   {[
                     { label: 'Giá', fn: (p: Plan) => <span className="font-semibold">{fmtPrice(p.priceMonthly)}</span> },
-                    { label: 'Thành viên tối đa', fn: (p: Plan) => p.maxMembers >= 9999 ? 'Không giới hạn' : p.maxMembers },
-                    { label: 'Số CLB', fn: (p: Plan) => p.maxClubs >= 999 ? 'Không giới hạn' : p.maxClubs },
+                    { label: 'Thành viên tối đa', fn: (p: Plan) => p.maxMembers >= 9999 ? <><span className="sm:hidden">∞</span><span className="hidden sm:inline">Không giới hạn</span></> : p.maxMembers },
+                    { label: 'Số CLB', fn: (p: Plan) => p.maxClubs >= 999 ? <><span className="sm:hidden">∞</span><span className="hidden sm:inline">Không giới hạn</span></> : p.maxClubs },
                     { label: 'Tính năng AI', fn: (p: Plan) => p.aiFeatures ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                     { label: 'Telegram Bot', fn: (p: Plan) => p.telegramBot ? <Check size={16} className="text-emerald-500 mx-auto" /> : '—' },
                   ].map(row => (
                     <tr key={row.label} className="border-b border-[color:var(--pf-border)] hover:[background:var(--pf-color-muted-soft)]">
-                      <td className="px-4 py-3 [color:var(--pf-text)]">{row.label}</td>
+                      <td className="px-3 py-3 text-[13px] [color:var(--pf-text)] sm:px-4 sm:text-sm">{row.label}</td>
                       {plans.map(p => (
-                        <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
+                        <td key={p.tier} className={`px-2 py-3 text-center text-[13px] sm:px-4 sm:text-sm ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
                           {row.fn(p)}
                         </td>
                       ))}
@@ -264,7 +264,7 @@ export function Billing() {
                   <tr>
                     <td className="px-4 py-3" />
                     {plans.map(p => (
-                      <td key={p.tier} className={`px-4 py-3 text-center ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
+                      <td key={p.tier} className={`px-2 py-3 text-center text-[13px] sm:px-4 sm:text-sm ${p.tier === currentTier ? '[background:var(--pf-primary-soft)]' : ''}`}>
                         {p.tier === currentTier ? (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600"><Check size={13} />Gói hiện tại</span>
                         ) : p.tier === 'STARTER' ? (

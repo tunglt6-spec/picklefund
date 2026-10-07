@@ -666,3 +666,10 @@ select:-webkit-autofill {
 @media (max-width: 1023px) {
   .pf-stat-cell > p.text-base, .pf-stat-cell > p.text-lg, .pf-stat-cell > p.text-xl, .pf-stat-cell > p.text-2xl { font-size: clamp(0.6875rem, 13cqw, 1.125rem); white-space: nowrap; }
 }
+
+/* iOS Safari: input ngày/giờ RỖNG có độ rộng nội tại lớn → tràn khỏi ô grid (ngày kết thúc bị cắt). Ép co theo cột (unlayered để thắng utility). */
+input[type='date'], input[type='time'], input[type='datetime-local'], input[type='month'] {
+  display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; contain: inline-size;
+}
+input[type='date']::-webkit-date-and-time-value, input[type='time']::-webkit-date-and-time-value,
+input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::-webkit-date-and-time-value { text-align: left; min-width: 0; }

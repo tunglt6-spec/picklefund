@@ -121,10 +121,10 @@ export function MemberActivity() {
           <div className="space-y-4">
             <div className="pf-glass rounded-[16px] p-4">
               <h3 className="text-lg font-bold [color:var(--pf-text)]">{sel.m.fullName}</h3>
-              <div className="mt-3 grid grid-cols-3 gap-3">
+              <div className="mt-3 grid grid-cols-2 gap-3 max-sm:[&>:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-3">
                 <MetricCard icon={<CalendarCheck size={18} />} accent="blue" label="Buổi tham gia" value={sel.att ? `${sel.att.attendedSessions}/${sel.att.totalSessions}` : '—'} />
                 <MetricCard icon={<TrendingUp size={18} />} accent="teal" label="Chuyên cần" value={sel.rate != null ? `${sel.rate}%` : '—'} />
-                <MetricCard icon={<DollarSign size={18} />} accent="violet" label={`Tổng đóng quỹ${periodTag}`} value={formatVND(sel.totalPaid)} />
+                <MetricCard icon={<DollarSign size={18} />} accent="violet" label="Tổng đóng quỹ" sub={periodTag.replace(/^\s*\(|\)\s*$/g, '') || undefined} value={formatVND(sel.totalPaid)} />
               </div>
             </div>
 

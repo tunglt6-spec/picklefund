@@ -63,7 +63,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'pf-stat-card',
+        'pf-stat-card @container',
         'flex flex-col gap-2 rounded-[20px] p-4 sm:gap-3 sm:p-5 pf-hover-lift',
         compact && 'max-sm:gap-1.5 max-sm:p-3',
         className,
@@ -76,7 +76,7 @@ export function MetricCard({
         </span>
         {icon && (
           <span
-            className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-xl sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
+            className={cn('hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
             style={t ? { background: t.border, color: t.fg } : { background: a.soft, color: a.color }}
           >
             {icon}
@@ -85,7 +85,7 @@ export function MetricCard({
       </div>
       <div className="min-w-0">
         <p
-          className="text-xl font-bold tabular-nums leading-tight whitespace-nowrap sm:text-2xl"
+          className="text-[clamp(0.9rem,9.5cqw,1.5rem)] font-bold tabular-nums leading-tight whitespace-nowrap"
           style={{
             letterSpacing: '-0.02em',
             color: t ? t.fg : negative ? 'var(--pf-accent-rose)' : 'var(--pf-text)',
