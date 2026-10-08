@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Copy, Landmark, QrCode, Clock, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Modal } from '../ui/Modal'
+import { PaymentQrImage } from './PaymentQrImage'
 import api from '../../lib/api'
 import { formatVND } from '../../lib/utils'
 
@@ -44,7 +45,6 @@ export function ReportPaymentModal({
   const [note, setNote] = useState('')
   const [proofUrl, setProofUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [qrObj, setQrObj] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -85,29 +85,6 @@ export function ReportPaymentModal({
       setSubmitting(false)
     }
   }
-
-  // QR same-origin: tải qua backend proxy (tránh lỗi ảnh cross-origin trên PWA/mobile).
-  // Chỉ hiện khi CLB có cấu hình NH và có số tiền để nộp (>0).
-  useEffect(() => {
-    if (!open || !ctx?.bank || !amount || amount <= 0) {
-      setQrObj('')
-      return
-    }
-    let objUrl = ''
-    let alive = true
-    api
-      .get('/member/me/payment-qr', { params: { amount }, responseType: 'blob' })
-      .then((r) => {
-        if (!alive) return
-        objUrl = URL.createObjectURL(r.data as Blob)
-        setQrObj(objUrl)
-      })
-      .catch(() => alive && setQrObj(''))
-    return () => {
-      alive = false
-      if (objUrl) URL.revokeObjectURL(objUrl)
-    }
-  }, [open, amount, ctx])
 
   return (
     <Modal open={open} onClose={onClose} title="Báo đã nộp quỹ" subtitle={ctx?.period ? `Kỳ ${ctx.period.name}` : 'Chuyển khoản quỹ CLB'} size="md">
@@ -181,11 +158,16 @@ export function ReportPaymentModal({
             </div>
           )}
 
-          {/* QR (same-origin, chỉ hiện khi có số tiền cần nộp) */}
-          {qrObj && (
+          {/* QR: qua backend (cùng origin), lỗi thì tự sinh VietQR tại máy hoặc nút Tải lại */}
+          {ctx.bank && amount > 0 && (
             <div className="flex flex-col items-center gap-2 rounded-xl border p-3 [border-color:var(--pf-border)]">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide [color:var(--pf-color-muted)]"><QrCode size={14} /> Quét QR để chuyển khoản</div>
-              <img src={qrObj} alt="QR chuyển khoản" className="h-52 w-52 max-w-full rounded-lg object-contain" />
+              <PaymentQrImage
+                amount={amount}
+                bank={ctx.bank}
+                memo={`NOP QUY ${ctx.period?.name ?? ''}`}
+                className="h-52 w-52 max-w-full rounded-lg border [border-color:var(--pf-border)]"
+              />
             </div>
           )}
 

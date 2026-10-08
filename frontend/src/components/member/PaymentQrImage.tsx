@@ -22,7 +22,8 @@ export function PaymentQrImage({ amount, className, bank, memo = '' }: {
     let alive = true
     let objUrl = ''
     setState('loading')
-    api
+    // Debounce: người dùng đang gõ số tiền thì không gọi mỗi phím.
+    const t = setTimeout(() => api
       .get('/member/me/payment-qr', { params: { amount }, responseType: 'blob' })
       .then((r) => {
         if (!alive) return
@@ -33,8 +34,8 @@ export function PaymentQrImage({ amount, className, bank, memo = '' }: {
         setSrc(objUrl)
         setState('ok')
       })
-      .catch(() => { if (alive) { setSrc(''); setState('error') } })
-    return () => { alive = false; if (objUrl) URL.revokeObjectURL(objUrl) }
+      .catch(() => { if (alive) { setSrc(''); setState('error') } }), 350)
+    return () => { alive = false; clearTimeout(t); if (objUrl) URL.revokeObjectURL(objUrl) }
   }, [amount, tick])
 
   const box = className ?? 'h-32 w-32 rounded-xl border-2 border-amber-200 shadow-sm'
