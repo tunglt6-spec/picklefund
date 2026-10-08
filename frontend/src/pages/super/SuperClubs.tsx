@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck } from 'lucide-react'
+import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck, Building2, Activity, Users, Wallet, CreditCard, CalendarClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
-import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExport } from '../../components/shared'
+import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExport, MetricCard } from '../../components/shared'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -423,6 +423,30 @@ export function SuperClubs() {
   }
   const exportButtons = filtered.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined
 
+  // KPI tổng hợp từ danh sách CLB đang tải (không thêm API).
+  const kActive = clubs.filter(c => c.status === 'active').length
+  const kSuspended = clubs.length - kActive
+  const kMembers = clubs.reduce((a, c) => a + (c._count?.members ?? 0), 0)
+  const kPeriods = clubs.reduce((a, c) => a + (c._count?.fundPeriods ?? 0), 0)
+  const planCount = (p: ServicePlan) => clubs.filter(c => (c.plan ?? 'STARTER') === p).length
+  const kPaid = planCount('PRO') + planCount('CLUB_PLUS')
+  const kExpiring = clubs.filter(c => {
+    if (!c.planExpiresAt) return false
+    const t = new Date(c.planExpiresAt).getTime()
+    return t > Date.now() && t - Date.now() <= 30 * 86400000
+  }).length
+  const kpiRow = (
+    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${kExpiring > 0 ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+      <MetricCard compact icon={<Building2 size={16} />} label="Tổng CLB" value={clubs.length.toLocaleString('vi-VN')} />
+      <MetricCard compact icon={<Activity size={16} />} label="Đang hoạt động" value={kActive.toLocaleString('vi-VN')} sub={`${clubs.length ? Math.round((kActive / clubs.length) * 100) : 0}% tổng CLB`} />
+      <MetricCard compact icon={<Lock size={16} />} label="Bị khóa" value={kSuspended.toLocaleString('vi-VN')} tone={kSuspended > 0 ? 'warning' : undefined} />
+      <MetricCard compact icon={<Users size={16} />} label="Tổng thành viên" value={kMembers.toLocaleString('vi-VN')} sub={clubs.length ? `TB ${Math.round(kMembers / clubs.length)} / CLB` : undefined} />
+      <MetricCard compact icon={<Wallet size={16} />} label="Tổng kỳ quỹ" value={kPeriods.toLocaleString('vi-VN')} />
+      <MetricCard compact icon={<CreditCard size={16} />} label="Gói trả phí" value={`${kPaid}/${clubs.length}`} sub={`Pro ${planCount('PRO')} · Ent ${planCount('CLUB_PLUS')} · Starter ${planCount('STARTER')}`} />
+      {kExpiring > 0 && <MetricCard compact icon={<CalendarClock size={16} />} label="Sắp hết hạn (30 ngày)" value={kExpiring.toLocaleString('vi-VN')} tone="warning" />}
+    </div>
+  )
+
   if (isMobile) {
     return (
       <div className="min-h-screen [background:var(--pf-bg)]">
@@ -441,6 +465,7 @@ export function SuperClubs() {
           </button>
         </div>
 
+        <div className="px-4 pt-3">{kpiRow}</div>
         <div className="px-4 py-3">
           <div className="relative">
             <Search size={15} className="absolute left-3 top-2.5 [color:var(--pf-color-muted)]" />
@@ -524,6 +549,7 @@ export function SuperClubs() {
       />
 
       <div className="flex flex-col gap-3">
+        {kpiRow}
         <div className="relative">
           <Search size={16} className="absolute left-3 top-2.5 [color:var(--pf-color-muted)]" />
           <input
