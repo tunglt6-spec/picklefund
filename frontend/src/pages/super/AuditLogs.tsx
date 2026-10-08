@@ -3,10 +3,10 @@
  * + FilterBar + DataTable + StatusBadge + Loading/Empty states (design-system UDP-01).
  */
 import { useState, useEffect } from 'react'
-import { ScrollText } from 'lucide-react'
+import { ScrollText, CalendarDays, Activity, Users, Building2, PencilLine, ShieldAlert } from 'lucide-react'
 import {
   PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState, ErrorState,
-  ExportActions, ChartCard, type Column, type StatusTone,
+  ExportActions, ChartCard, MetricCard, type Column, type StatusTone,
 } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
@@ -63,6 +63,14 @@ export function AuditLogs() {
     return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
   }
 
+  // KPI trên tập đang xem (tối đa LOG_LIMIT bản ghi gần nhất, đã lọc theo hành động/tìm kiếm).
+  const todayKey = new Date().toDateString()
+  const kToday = rows.filter((l) => new Date(l.createdAt).toDateString() === todayKey).length
+  const kUsers = new Set(rows.map((l) => l.user?.username).filter(Boolean)).size
+  const kClubs = new Set(rows.map((l) => l.club?.name).filter(Boolean)).size
+  const kWrite = rows.filter((l) => l.action === 'CREATE' || l.action === 'UPDATE').length
+  const kRisk = rows.filter((l) => l.action === 'DELETE' || l.action === 'LOCK').length
+
   const { busy, run } = useExportRunner()
   // Export = ĐÚNG tập đang xem (lọc phía server theo hành động/tìm kiếm), tối đa LOG_LIMIT dòng gần nhất.
   const scopeParts = [action !== 'Tất cả' ? `hành động ${action}` : '', search ? `tìm "${search}"` : ''].filter(Boolean)
@@ -99,6 +107,15 @@ export function AuditLogs() {
         subtitle={`${rows.length} thao tác · lịch sử hoạt động toàn hệ thống`}
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
+
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <MetricCard compact icon={<CalendarDays size={16} />} label="Sự kiện hôm nay" value={kToday.toLocaleString('vi-VN')} />
+        <MetricCard compact icon={<Activity size={16} />} label="Đang xem" value={rows.length.toLocaleString('vi-VN')} sub={`Tối đa ${LOG_LIMIT} bản ghi gần nhất`} />
+        <MetricCard compact icon={<Users size={16} />} label="Người thực hiện" value={kUsers.toLocaleString('vi-VN')} />
+        <MetricCard compact icon={<Building2 size={16} />} label="CLB liên quan" value={kClubs.toLocaleString('vi-VN')} />
+        <MetricCard compact icon={<PencilLine size={16} />} label="Thay đổi dữ liệu" value={kWrite.toLocaleString('vi-VN')} sub="Tạo mới · cập nhật" />
+        <MetricCard compact icon={<ShieldAlert size={16} />} label="Thao tác nhạy cảm" value={kRisk.toLocaleString('vi-VN')} sub="Xóa · khóa" tone={kRisk > 0 ? 'warning' : undefined} />
+      </div>
 
       <div className="mb-4 flex flex-col gap-3">
         <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
